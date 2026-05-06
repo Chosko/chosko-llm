@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+source "$SCRIPT_DIR/lib.sh"
+
+if [ -f "$CHOSKO_LLM_HOME/docs/cli-help.txt" ]; then
+  cat "$CHOSKO_LLM_HOME/docs/cli-help.txt"
+else
+  cat <<'EOF'
+chosko-llm — manage global Claude Code commands and skills.
+
+Usage:
+  chosko-llm ls [--installed|--available]
+  chosko-llm add <feature>
+  chosko-llm rm  <feature>
+  chosko-llm update <feature>
+  chosko-llm update --all
+  chosko-llm upgrade
+  chosko-llm help
+EOF
+fi

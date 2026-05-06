@@ -1,0 +1,14 @@
+# Editor / OS
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+
+# Backup files left by install.sh
+*.bak
+*.bak.*
+
+# Local-only Claude Code state, if anyone drops one in the working repo
+.claude/settings.local.json

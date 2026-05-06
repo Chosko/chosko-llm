@@ -1,0 +1,27 @@
+chosko-llm — manage global Claude Code commands and skills.
+
+Usage:
+  chosko-llm ls                       Alias for 'ls --installed'.
+  chosko-llm ls --installed           List features installed under $CLAUDE_HOME (default ~/.claude).
+  chosko-llm ls --available           List features in the managed clone that are new or upgradable.
+
+  chosko-llm add <feature>            Copy a feature from the managed clone into $CLAUDE_HOME.
+                                      Errors if the feature is already installed (use 'update').
+  chosko-llm rm  <feature>            Delete an installed feature from $CLAUDE_HOME.
+  chosko-llm update <feature>         Re-copy a feature from the managed clone (installs if missing).
+  chosko-llm update --all             Update every installed feature for which a source exists.
+
+  chosko-llm upgrade                  git pull the managed clone and refresh the CLI proxy.
+                                      Does NOT re-install features — use 'update --all' for that.
+
+  chosko-llm help                     Show this help.
+
+Feature names:
+  Bare names (e.g. 'refactor-reviewer') match commands and skills. If a name exists as both,
+  disambiguate with 'command:<name>' or 'skill:<name>'.
+
+Environment:
+  CHOSKO_LLM_HOME   Path to the managed clone. Default: ~/.chosko-llm
+  CLAUDE_HOME       Path to Claude Code's user directory. Default: ~/.claude
+  BIN_DIR           Where the CLI proxy is installed. Default: ~/bin
+  NO_COLOR          Set to disable colored log output.

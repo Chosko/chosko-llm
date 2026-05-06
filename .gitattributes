@@ -1,0 +1,10 @@
+# Shell scripts must stay LF — they run under bash on Linux/macOS.
+*.sh         text eol=lf
+bin/chosko-llm text eol=lf
+install.sh   text eol=lf
+uninstall.sh text eol=lf
+
+# Markdown and plain text — let git normalize on commit, native on checkout.
+*.md         text
+*.txt        text
+VERSION      text eol=lf

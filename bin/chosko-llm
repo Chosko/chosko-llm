@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CHOSKO_LLM_HOME="${CHOSKO_LLM_HOME:-$HOME/.chosko-llm}"
+
+if [ ! -d "$CHOSKO_LLM_HOME" ]; then
+  echo "chosko-llm: managed clone not found at $CHOSKO_LLM_HOME" >&2
+  echo "Run install.sh first." >&2
+  exit 1
+fi
+
+subcommand="${1:-}"
+[ $# -gt 0 ] && shift || true
+
+case "$subcommand" in
+  ls|add|rm|update|upgrade)
+    exec "$CHOSKO_LLM_HOME/scripts/cmd-${subcommand}.sh" "$@"
+    ;;
+  ""|-h|--help|help)
+    if [ -x "$CHOSKO_LLM_HOME/scripts/cmd-help.sh" ]; then
+      exec "$CHOSKO_LLM_HOME/scripts/cmd-help.sh" "$@"
+    else
+      cat "$CHOSKO_LLM_HOME/docs/cli-help.txt"
+    fi
+    ;;
+  *)
+    echo "chosko-llm: unknown subcommand: $subcommand" >&2
+    echo "Run 'chosko-llm help' for usage." >&2
+    exit 2
+    ;;
+esac
