@@ -1,4 +1,4 @@
-# CLAUDE.md — chosko-llm-setup
+# CLAUDE.md — chosko-llm
 
 This repo ships global Claude Code **commands** and **skills**, plus a small
 shell CLI (`chosko-llm`) that installs them into `~/.claude/` on any machine.

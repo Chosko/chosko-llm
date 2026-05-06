@@ -1,4 +1,4 @@
-# chosko-llm-setup
+# chosko-llm
 
 A development repo for global [Claude Code](https://claude.com/claude-code)
 commands and skills, plus a small CLI (`chosko-llm`) that installs them into
@@ -12,8 +12,8 @@ Clone the repo somewhere and run the bootstrap. It clones a managed copy to
 `~/.chosko-llm/` and drops a CLI proxy at `~/bin/chosko-llm`.
 
 ```sh
-git clone <this-repo-url> chosko-llm-setup
-cd chosko-llm-setup
+git clone <this-repo-url> chosko-llm
+cd chosko-llm
 ./install.sh
 ```
 
