@@ -1,7 +1,7 @@
 # Shared library
 
 `scripts/lib.sh` is sourced by every `scripts/cmd-*.sh`. It defines logging,
-frontmatter parsing, path helpers, semver comparison, and source validation.
+frontmatter parsing, path helpers, and source validation.
 
 ## Overview
 
@@ -48,12 +48,6 @@ Installed paths under `$CLAUDE_HOME` mirror the same shape:
   feature is not in the managed clone or if a bare name is ambiguous (matches
   both a command and a skill). Used by `cmd-add` / `cmd-update`.
 
-### Semver
-- `semver_cmp <a> <b>` — prints `<`, `=`, or `>`. Falls back to string
-  comparison if either side is not a dotted-number version. Currently only
-  defined; **not yet called by any subcommand** (versions are displayed but
-  not compared in `cmd-ls`).
-
 ### Validation
 - `require_versioned_source <file>` — `die`s if the file is missing or its
   frontmatter is missing a non-empty `version` or `name`. Called by
@@ -93,7 +87,5 @@ Installed paths under `$CLAUDE_HOME` mirror the same shape:
 - Adding or renaming a frontmatter field → `parse_frontmatter` in `lib.sh`.
 - Changing how feature names resolve to source paths or how `command:` /
   `skill:` prefixes are parsed → `resolve_feature` in `lib.sh`.
-- Adding semver-aware behavior (e.g. `[upgradable]` flag in `ls`) →
-  `semver_cmp` in `lib.sh` plus the consuming subcommand.
 - Changing what makes a source file installable → `require_versioned_source`
   in `lib.sh`.

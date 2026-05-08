@@ -34,7 +34,8 @@ description: One-line summary used in `chosko-llm ls`.
    user invokes `/<name>`.
 4. Add a smoke-test entry at `tests/smoke/<name>.md`.
 5. Verify the file is discoverable: from a clone where `install.sh` has been
-   run, `./bin/chosko-llm ls --available` should show `<name> command <version> [new]`.
+   run, `./bin/chosko-llm ls --available` should show
+   `<name>  command  <installed-or-—>  <version>`.
 
 The filename **must** match the `name` frontmatter field. `chosko-llm ls`
 matches by `name`, but `chosko-llm add <name>` resolves files by filename, so
@@ -60,9 +61,9 @@ Use semver. Bump rules:
 | New capability inside the same task / additional optional inputs  | minor |
 | Behavior change, removed capability, renamed flags, breaking I/O  | major |
 
-Always bump after a meaningful edit. The CLI compares versions to decide
-whether `ls --available` flags an installed feature as `[upgradable]`. If you
-forget to bump, users won't see your changes via `update --all`.
+Always bump after a meaningful edit. `ls` displays the installed and latest
+versions side by side, so a forgotten bump leaves both columns showing the
+same value and users have no signal that there is anything to refresh.
 
 ## Common mistakes
 

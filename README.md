@@ -46,7 +46,7 @@ Run `chosko-llm update --all` afterwards to pick up new versions.
 | Path                       | Purpose                                                              |
 | -------------------------- | -------------------------------------------------------------------- |
 | `bin/chosko-llm`           | Proxy script copied to `~/bin/chosko-llm` by `install.sh`.           |
-| `scripts/lib.sh`           | Shared shell helpers (logging, frontmatter, paths, semver).          |
+| `scripts/lib.sh`           | Shared shell helpers (logging, frontmatter, paths, validation).      |
 | `scripts/cmd-*.sh`         | One file per CLI subcommand. The proxy delegates here.               |
 | `commands/<name>.md`       | A Claude Code command. Frontmatter required (see authoring guide).   |
 | `skills/<name>/SKILL.md`   | A Claude Code skill. Frontmatter required.                           |

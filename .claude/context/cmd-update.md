@@ -58,9 +58,8 @@ Side effects:
 
 ## When to read the source
 
-- Changing `--all` semantics (e.g. only update if `semver_cmp` says newer)
-  → the `--all` block in `scripts/cmd-update.sh`, plus `semver_cmp` in
-  `lib.sh`.
+- Changing `--all` semantics (e.g. only update if a version comparison says
+  the source is newer) → the `--all` block in `scripts/cmd-update.sh`.
 - Changing skill-update merge vs. replace behavior → the `skill)` branch's
   `rm -rf && cp -R` in `cmd-update.sh`.
 - Adding `--dry-run` → `cmd-update.sh`.

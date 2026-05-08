@@ -130,32 +130,6 @@ resolve_feature() {
   esac
 }
 
-# ---------- semver ----------
-
-# semver_cmp <a> <b>  -> prints "<", "=", or ">"
-# Falls back to string equality if either side doesn't look like dotted numbers.
-semver_cmp() {
-  local a="$1" b="$2"
-  if [ "$a" = "$b" ]; then echo "="; return 0; fi
-  if ! [[ "$a" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]] || ! [[ "$b" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]]; then
-    # Non-semver — fall back to string comparison.
-    if [ "$a" \< "$b" ]; then echo "<"; else echo ">"; fi
-    return 0
-  fi
-  IFS=. read -r a1 a2 a3 <<<"$a"
-  IFS=. read -r b1 b2 b3 <<<"$b"
-  a1="${a1:-0}"; a2="${a2:-0}"; a3="${a3:-0}"
-  b1="${b1:-0}"; b2="${b2:-0}"; b3="${b3:-0}"
-  for pair in "$a1 $b1" "$a2 $b2" "$a3 $b3"; do
-    # shellcheck disable=SC2086
-    set -- $pair
-    if   [ "$1" -lt "$2" ]; then echo "<"; return 0
-    elif [ "$1" -gt "$2" ]; then echo ">"; return 0
-    fi
-  done
-  echo "="
-}
-
 # ---------- validation ----------
 
 # require_versioned_source <file>

@@ -25,10 +25,8 @@ installed file with no `version` frontmatter shows as `unversioned`.
 - **Two-pass listing**: commands first, then skills. Names within each pass
   are sorted and deduplicated across the two homes (managed clone +
   `$CLAUDE_HOME`).
-- **No semver comparison yet.** The `[new]` / `[upgradable]` markers
-  mentioned in `../../docs/authoring-guide.md` and command bodies are not
-  implemented here — `cmd-ls` only prints the two version strings. If you
-  add comparison, use `semver_cmp` from [shared-lib.md](./shared-lib.md).
+- **No version comparison.** `cmd-ls` only prints the two version strings
+  side by side; there are no `[new]` / `[upgradable]` markers.
 - **Filenames are the truth.** A file named `foo.md` whose frontmatter
   `name` is `bar` will be listed as `foo` (basename), which matches what
   `cmd-add` / `cmd-update` resolve against. The authoring guide warns
@@ -50,7 +48,5 @@ installed file with no `version` frontmatter shows as `unversioned`.
 
 - Changing column layout, filter flags, or output formatting →
   `scripts/cmd-ls.sh`.
-- Implementing `[new]` / `[upgradable]` markers (currently absent) →
-  `scripts/cmd-ls.sh` plus `semver_cmp` in `lib.sh`.
 - Changing how names are deduplicated across the two homes → the
   `collect_names` function in `cmd-ls.sh`.

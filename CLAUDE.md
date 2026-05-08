@@ -59,7 +59,8 @@ The CLI is a proxy: `~/bin/chosko-llm` parses the subcommand and execs
 4. Add a smoke-test checklist at `tests/smoke/<name>.md`.
 5. Tell the user the working-repo verification path:
    `cd` into a clone where `install.sh` has already run, then
-   `./bin/chosko-llm ls --available` should list the new feature with `[new]`.
+   `./bin/chosko-llm ls --available` should list the new feature with the
+   correct version.
 
 ## When asked to change CLI behavior
 

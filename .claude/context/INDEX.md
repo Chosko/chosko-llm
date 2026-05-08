@@ -15,7 +15,7 @@ Canonical project docs live outside this folder and remain authoritative:
 | File | Covers |
 | --- | --- |
 | [cli-entry.md](./cli-entry.md) | Bootstrap (`install.sh`/`uninstall.sh`) and the `bin/chosko-llm` proxy that dispatches subcommands. |
-| [shared-lib.md](./shared-lib.md) | `scripts/lib.sh` — logging, frontmatter, path resolution, semver, validation. Sourced by every subcommand. |
+| [shared-lib.md](./shared-lib.md) | `scripts/lib.sh` — logging, frontmatter, path resolution, validation. Sourced by every subcommand. |
 | [cmd-ls.md](./cmd-ls.md) | `scripts/cmd-ls.sh` — list features with installed/latest versions; `--installed` / `--available` filters. |
 | [cmd-add.md](./cmd-add.md) | `scripts/cmd-add.sh` — install a feature into `$CLAUDE_HOME`; refuses if already installed. |
 | [cmd-rm.md](./cmd-rm.md) | `scripts/cmd-rm.sh` — uninstall a feature from `$CLAUDE_HOME`. |
