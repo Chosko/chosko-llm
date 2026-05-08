@@ -35,6 +35,11 @@ The CLI is a proxy: `~/bin/chosko-llm` parses the subcommand and execs
   explains the dual-LLM author/implementer split (Claude Code authors,
   qwen2.5-coder:14b via aider implements) and the per-task body schema.
   Read when touching any `task-*` command or the body schema.
+- **Context workflow** — [.claude/domain/context-workflow.md](.claude/domain/context-workflow.md)
+  explains the navigation context layer under `.claude/context/`: why it
+  exists, the six-section per-file schema, the `INDEX.md` `Last updated`
+  anchor, and the four `/context-update` modes. Read when touching
+  `/context-build`, `/context-update`, or the context-file schema.
 
 ## Hard rules
 
