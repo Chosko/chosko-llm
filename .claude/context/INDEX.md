@@ -1,5 +1,7 @@
 # Context index
 
+Last updated: 2026-05-09
+
 Navigation layer for `chosko-llm`. Read this first, then the files relevant to
 your task. Open source files only when a context file's **When to read the
 source** section says it's necessary.
@@ -29,6 +31,7 @@ Canonical project docs live outside this folder and remain authoritative:
 | File | Covers |
 | --- | --- |
 | [../domain/task-workflow.md](../domain/task-workflow.md) | Dual-LLM task workflow: Claude Code authors via `/task-add`, qwen2.5-coder:14b via aider implements. Body schema, body↔TASKS.md split, static implement-prompt artifact. |
+| [../domain/context-workflow.md](../domain/context-workflow.md) | Navigation context layer under `.claude/context/`: six-section per-file schema, INDEX.md `Last updated` anchor, four `/context-update` modes. |
 
 ## Conventions
 
