@@ -36,7 +36,12 @@ Currently shipped:
   counter never decreases.
 - `commands/task-implement.md` — implement backlog tasks end-to-end with
   TDD. Reads each task's body file from `.claude/tasks/<N>.md` only when
-  needed; status flips happen in `.claude/TASKS.md`.
+  needed and treats it as the primary context source when the v0.3+
+  schema is present (Files to modify / Required reading / Conventions
+  to follow / Out of scope) — only fans out to CLAUDE.md and the
+  context layer when the body doesn't cover what's needed. Older
+  bodies trigger the previous "consult context layer" fallback. Status
+  flips happen in `.claude/TASKS.md`.
 - `commands/task-list.md` — print the backlog as a compact read-only
   summary. Reads only `.claude/TASKS.md`; never opens the body files.
 - No skills yet (`skills/` contains only `.gitkeep`).

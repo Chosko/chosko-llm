@@ -14,6 +14,6 @@ Preconditions: none
 
 ## 2. Task workflow — `task-implement` uses the richer body as a context starting point
 
-Status: [MISSING]
+Status: [DONE]
 Files: commands/task-implement.md, tests/smoke/task-implement.md
 Preconditions: 1

@@ -1,8 +1,8 @@
 ---
 name: task-implement
-version: 0.2.0
+version: 0.3.0
 type: command
-description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. Reads each task's full body from .claude/tasks/<N>.md only when needed; commits each task separately.
+description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. Treats each task's body file as the primary context source when available, only fanning out to CLAUDE.md / .claude/context/ when the body doesn't cover what's needed. Commits each task separately.
 ---
 
 # /task-implement
@@ -86,6 +86,25 @@ investigate.
 Status flips happen in `.claude/TASKS.md` only — the per-task body
 file does not store Status, Files, or Preconditions, so do not edit
 the body file when changing status.
+
+---
+
+USING THE TASK BODY
+
+Body files authored by `/task-add` v0.3+ embed `### Files to modify`,
+`### Required reading`, `### Relevant snippets` (optional),
+`### Conventions to follow`, and `### Out of scope` alongside the
+usual Description / Behavior change / Tests / Definition of done.
+When these sections are present, treat them as a high-quality
+starting point — they often contain enough context to implement
+without further reading. Reach for CLAUDE.md, `.claude/context/`,
+`.claude/domain/`, and other source files when they would
+meaningfully inform the change (unfamiliar subsystem, snippet too
+narrow, contradictory signals between body and code), and skip them
+when the body is already sufficient. Use judgment, not a checklist.
+
+Older bodies (pre-v0.3 schema) lack these sections — for those, fall
+back to consulting the context layer as before.
 
 ---
 
@@ -186,8 +205,10 @@ PRE-FLIGHT CHECKS (before any task)
    `.claude/tasks/<N>.md` is read only when its task becomes the
    current one (Step 2 of the per-task workflow).
 
-3. If the project has a CLAUDE.md or `.claude/` context layer, read what's
-   relevant. Don't assume any of these exist.
+3. If the project has a CLAUDE.md, read it — it's small and global.
+   Defer reading the broader `.claude/context/` and `.claude/domain/`
+   layers until per-task Step 1 indicates a need (see USING THE TASK
+   BODY). Don't assume any of these exist.
 
 4. Briefly tell the user what you're about to do — one line per task —
    then start. In full TDD mode, no per-task confirmation prompt; in
@@ -205,6 +226,12 @@ Use the Read tool to open `.claude/tasks/<N>.md` for the current task —
 this is where the Description, Behavior change, Doc updates, Tests,
 and Definition of done sections live. Hold them in mind for the rest
 of the per-task workflow.
+
+If the body contains `### Files to modify`, `### Required reading`,
+`### Relevant snippets`, `### Conventions to follow`, or `### Out of
+scope` sections (v0.3+ schema), lean on them as your primary working
+context per USING THE TASK BODY; pull in additional files when they
+genuinely add value.
 
 Use the Edit tool to change this task's `Status:` line in
 `.claude/TASKS.md` (the summary block) to `[IN PROGRESS]`. The body

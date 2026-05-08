@@ -40,3 +40,18 @@
 - Verify that a failing test stops the run without committing.
 - On a project without a test suite, verify the interactive mode prompt
   appears and both options (scaffold / skip) work as described.
+- **Context discipline (v0.3+ bodies, qualitative).** Run
+  `/task-implement <N>` against a task whose body uses the v0.3+
+  schema (contains `### Files to modify`, `### Required reading`,
+  `### Conventions to follow`, `### Out of scope`). Inspect the
+  agent's tool-call trace and confirm it leaned on the body's
+  Required reading / Conventions / Out of scope content rather than
+  bulk-reading every file under `.claude/context/` reflexively. Some
+  context reads are fine — the test is qualitative ("reduced, not
+  zero"), not strict. The implementation must still land and commit
+  cleanly.
+- **Older-body fallback.** Run `/task-implement <N>` against a body
+  that lacks the v0.3+ sections (e.g. a fixture with only Description
+  / Tests / Definition of done). The agent should fall back to
+  consulting CLAUDE.md and the context layer normally and still
+  produce a passing implementation + commit.
