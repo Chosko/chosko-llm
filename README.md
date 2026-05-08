@@ -25,9 +25,9 @@ If `~/bin` isn't on your `$PATH`, the installer will tell you how to add it.
 
 | Command                                | What it does                                                                |
 | -------------------------------------- | --------------------------------------------------------------------------- |
-| `chosko-llm ls`                        | Alias for `ls --installed`.                                                 |
-| `chosko-llm ls --installed`            | List features in `~/.claude/{commands,skills}` with their installed version.|
-| `chosko-llm ls --available`            | List features in the managed clone that are new or upgradable.              |
+| `chosko-llm ls`                        | List all features with installed and latest versions.                       |
+| `chosko-llm ls --installed`            | Same table, filtered to features currently installed under `~/.claude/`.    |
+| `chosko-llm ls --available`            | Same table, filtered to features present in the managed clone.              |
 | `chosko-llm add <feature>`             | Copy a feature from the managed clone into `~/.claude/`.                    |
 | `chosko-llm rm <feature>`              | Delete an installed feature from `~/.claude/`.                              |
 | `chosko-llm update <feature>`          | Re-copy a feature from the managed clone (installs if missing).             |

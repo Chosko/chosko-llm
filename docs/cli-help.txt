@@ -1,9 +1,9 @@
 chosko-llm — manage global Claude Code commands and skills.
 
 Usage:
-  chosko-llm ls                       Alias for 'ls --installed'.
-  chosko-llm ls --installed           List features installed under $CLAUDE_HOME (default ~/.claude).
-  chosko-llm ls --available           List features in the managed clone that are new or upgradable.
+  chosko-llm ls                       List all features with installed and latest versions.
+  chosko-llm ls --installed           Show only features currently installed under $CLAUDE_HOME.
+  chosko-llm ls --available           Show only features present in the managed clone.
 
   chosko-llm add <feature>            Copy a feature from the managed clone into $CLAUDE_HOME.
                                       Errors if the feature is already installed (use 'update').
