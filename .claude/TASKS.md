@@ -38,6 +38,6 @@ Preconditions: none
 
 ## 5. Task workflow — `/task-implement` prompts on dirty tree instead of hard-aborting
 
-Status: [MISSING]
+Status: [DONE]
 Files: commands/task-implement.md, tests/smoke/task-implement.md
 Preconditions: none

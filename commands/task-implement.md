@@ -1,8 +1,8 @@
 ---
 name: task-implement
-version: 0.3.0
+version: 0.4.0
 type: command
-description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. Treats each task's body file as the primary context source when available, only fanning out to CLAUDE.md / .claude/context/ when the body doesn't cover what's needed. Commits each task separately.
+description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed / commit-first / abort) instead of hard-aborting. Treats each task's body file as the primary context source when available, only fanning out to CLAUDE.md / .claude/context/ when the body doesn't cover what's needed. Commits each task separately.
 ---
 
 # /task-implement
@@ -186,10 +186,53 @@ per-task confirmations.
 
 PRE-FLIGHT CHECKS (before any task)
 
-1. Working tree must be clean. Run `git status --porcelain`. If anything is
-   uncommitted (other than what `.gitignore` excludes), stop and report.
-   The user must commit or stash first — this command will not mix in
-   unrelated changes.
+1. **Working-tree check (3-way prompt on dirty tree).** Run
+   `git status --porcelain` once.
+   - If output is empty (clean tree), continue silently.
+   - If non-empty, list the dirty files to the user (truncated to the
+     first 20 entries with a `(+N more)` tail when there are more) and
+     prompt:
+
+     ```
+     Working tree has uncommitted changes. Choose:
+       [1] proceed   — run the task anyway (changes will be mixed into the task's commit)
+       [2] commit    — commit the current changes first, then run the task
+       [3] abort     — stop now, leave everything as-is
+     ```
+
+   Wait for an explicit typed answer. Accept `1`/`proceed`,
+   `2`/`commit`, or `3`/`abort` (case-insensitive). EOF, an empty
+   line, an unrelated reply, or silence is treated as **abort**.
+
+   - **On 1 (proceed):** print a one-line warning that "Step 8
+     (Commit) will include these unrelated changes in this task's
+     commit", then continue. The current branch's risk profile becomes
+     the user's choice.
+   - **On 2 (commit):** ask `Commit message?` and read the answer.
+     Accept either a single line or a multi-line answer terminated by
+     an empty line. Then:
+       1. Stage tracked dirty files: `git add -u`.
+       2. If the porcelain output included untracked files, list them
+          and ask `Also include untracked? [y/N]`. On explicit yes,
+          stage them by listing each path explicitly
+          (`git add -- <path1> <path2> …`); on anything else, leave
+          them unstaged.
+       3. Create one commit using the user's message via HEREDOC
+          (`git commit -m "$(cat <<'EOF'\n…\nEOF\n)"`).
+       4. If the commit fails (e.g. pre-commit hook), surface the
+          failure to the user, do NOT retry, do NOT use `--no-verify`,
+          do NOT amend, and halt the run before any task work begins.
+       5. On success, continue to step 2 of the pre-flight checks.
+   - **On 3 (abort) / silence / EOF:** stop. Do not flip any
+     `Status:` line, do not stage, do not commit. The user is left
+     exactly where they started.
+
+   Notes:
+   - `.gitignore`-excluded files are ignored as today
+     (`git status --porcelain` already respects gitignore).
+   - The commit path (option 2) NEVER stages untracked files without
+     explicit user opt-in, and NEVER uses `git add -A`/`-u .`/`.` in
+     a way that would catch the user's untracked files implicitly.
 
 2. Use the Read tool to open `.claude/TASKS.md`. Resolve the task list
    per ARGUMENT PARSING above. For each task to be implemented:
@@ -335,7 +378,11 @@ commit, even when several were requested in the same invocation.
 BETWEEN TASKS
 
 After committing a task, before starting the next:
-1. Confirm the working tree is clean again (`git status`).
+1. Run `git status --porcelain`. If non-empty (unusual — the previous
+   task's Step 8 should have committed everything it changed), apply
+   the same 3-way prompt as PRE-FLIGHT CHECKS step 1: proceed,
+   commit, or abort. Same rules: silence/EOF/abort halts the run with
+   no `Status:` flips.
 2. Use the Read tool to re-open `.claude/TASKS.md` fresh. Task IDs are
    stable so numbers will not have moved, but statuses or
    `Preconditions:` lines may have been edited by a parallel

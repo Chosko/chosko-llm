@@ -34,6 +34,69 @@
 - Task status is `[DONE]` in `.claude/TASKS.md` in the final commit.
 - No `--no-verify` or `--amend` flags used.
 
+## Dirty-tree (3-way prompt) scenarios
+
+### Clean tree (regression)
+
+1. Working tree is clean. Run `/task-implement <N>`.
+2. No dirty-tree prompt fires; the normal flow runs end to end.
+
+### Dirty tree → proceed
+
+1. Modify a tracked file unrelated to task `<N>` (do not stage).
+2. Run `/task-implement <N>`. Observe the 3-way prompt listing the
+   dirty file. Answer `1` (proceed).
+3. Observe a one-line warning that Step 8 will include the unrelated
+   change.
+4. After Step 8, `git show --stat HEAD` includes BOTH the task's
+   files AND the unrelated dirty file in the same commit.
+
+### Dirty tree → commit (tracked only)
+
+1. Modify a tracked file unrelated to task `<N>`. Do not stage.
+2. Run `/task-implement <N>`. Answer `2` (commit).
+3. Supply a commit message at the prompt. If asked about untracked,
+   answer `n`.
+4. Verify ONE pre-task commit appears with that message and only the
+   tracked dirty file. Then the task runs and produces its OWN
+   separate commit (`Task <N>: …`).
+
+### Dirty tree → commit (with untracked)
+
+1. Modify a tracked file AND create a new untracked file (both
+   unrelated to task `<N>`).
+2. Run `/task-implement <N>`. Answer `2` (commit). Supply a message.
+   When asked about untracked, answer `y`.
+3. Verify the pre-task commit contains both the tracked-modified
+   file and the untracked file (now tracked). The task's own commit
+   follows separately.
+
+### Dirty tree → abort
+
+1. Modify a tracked file. Run `/task-implement <N>` and answer `3`
+   (abort).
+2. Verify no `Status:` flip happened in `.claude/TASKS.md`, no
+   commit was made, and the dirty file is left exactly as-is.
+3. Repeat with silence / EOF instead of `3` — same outcome.
+
+### Pre-commit hook failure on option 2
+
+1. Install a pre-commit hook that exits non-zero.
+2. With a tracked file dirty, run `/task-implement <N>` and answer
+   `2`. Supply a message.
+3. Verify the commit fails. The agent surfaces the hook output, does
+   NOT retry, does NOT use `--no-verify`, does NOT amend.
+4. Verify the run halts before any task work begins —
+   `.claude/TASKS.md` is unchanged, no task commit appears.
+
+### Between-tasks dirty
+
+1. Run `/task-implement <N> <M>` for two consecutive tasks. Contrive
+   a scenario where the working tree is dirty between tasks (e.g. a
+   file written by Step 4 of `<N>` was deliberately not staged at
+   Step 8 — adjust the spec or simulate by hand).
+2. Observe the same 3-way prompt fires before task `<M>` starts.
+
 ## Notes
 
 - Test `/task-implement all` to verify batch mode and progress reporting.
