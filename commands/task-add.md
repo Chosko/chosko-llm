@@ -1,22 +1,24 @@
 ---
 name: task-add
-version: 0.1.1
+version: 0.2.0
 type: command
-description: Plan a new task entry conversationally, confirm with the user, then append it to the project's task backlog.
+description: Plan a new task entry conversationally, confirm with the user, then write a summary to TASKS.md and a body file under .claude/tasks/.
 ---
 
 # /task-add
 # Global command: plan a new task entry conversationally, confirm with the
-# user, then append it to the project's task backlog. Creates the backlog
-# file from scratch if absent.
+# user, then write a one-block summary to `.claude/TASKS.md` and a full
+# body file at `.claude/tasks/<N>.md`. Refuses to run if the backlog has
+# not been initialized — the user must run `/task-setup` first.
 # Usage: /task-add <free-form description of the task to add>
 # Example: /task-add fix the URL normalization so two LinkedIn URLs for the
 #          same job dedupe correctly
 
 GOAL
-Add a single new task to the project's task backlog, following the conventions
-below. The flow is: READ → ASK (conversational) → DRAFT → CONFIRM → WRITE.
-Never write to the backlog file before the user confirms the draft.
+Add a single new task to the project's task backlog, following the
+conventions below. The flow is: SETUP-CHECK → READ → ASK
+(conversational) → DRAFT → CONFIRM → WRITE. Never write to any file
+before the user confirms the draft.
 
 $ARGUMENTS
 
@@ -34,73 +36,89 @@ TOOL DISCIPLINE
 
 ---
 
-LOCATING THE BACKLOG FILE
+PHASE 0 — SETUP CHECK (must pass before anything else)
 
-The backlog file is conventionally `.claude/TASKS.md`. Search order:
-1. `.claude/TASKS.md`
-2. `TASKS.md`
-3. `docs/TASKS.md`
+Before reading anything else, verify the backlog has been initialized.
+The required artifacts are:
+1. `.claude/TASKS.md` — the index file.
+2. `.claude/tasks/` — the per-task body directory.
 
-If none exist, you will create `.claude/TASKS.md` (creating the `.claude/`
-directory if needed) during the WRITE phase. The file has no header or
-preamble — task entries are the entire content.
+Probe with the Read tool / Glob. If either is missing, do NOT auto-create
+anything. Tell the user:
 
----
+> The task backlog hasn't been initialized in this project. Run
+> `/task-setup` first — it creates `.claude/TASKS.md` and the
+> `.claude/tasks/` directory. Then re-run `/task-add`.
 
-TASK ENTRY FORMAT (canonical template)
+…and stop. Do not proceed to PHASE 1, do not ask questions, do not draft.
+This rule has no exceptions: even if the user supplied a perfectly
+unambiguous description, refuse until `/task-setup` has run.
 
-Tasks are numbered, separated by `---` on its own line, and indented two
-spaces. The very first task in the file also has a leading `---`.
-
-```
-  ---
-
-  ## N. <Short imperative title — what the task accomplishes>
-
-  Status: [MISSING]
-  Files: <comma-separated list of files this task will create or modify>
-  Preconditions: <task numbers this depends on, or "none">
-  Description:
-  <Plain prose explanation of the problem and the desired behavior. Cite
-  file paths and line numbers when describing root cause; name the symbols
-  involved; quote the relevant code if it clarifies the bug. Aim for the
-  level of detail a different engineer could implement from cold.>
-
-  ### Root cause
-  <Optional. Include for bugfixes when the cause is non-obvious.>
-
-  ### Behavior change
-  <What the code should do after the task lands. Concrete rules, not
-  aspirations.>
-
-  ### Doc updates
-  <Optional. Include when the task changes behavior that is described in a
-  spec, design doc, domain reference, README, or other authoritative document
-  that lives in the repo. For each affected file: name the specific
-  section/heading and describe what must change (new content, corrected
-  format, added entry, etc.). Be as concrete as you are in ### Behavior change.
-  Omit this section entirely if the project has no documentation layer, or if
-  the task has no impact on any documented behavior.>
-
-  ### Tests
-  <Which test files to add or extend, and what each new test asserts.
-  Be explicit about regression guards.>
-
-  ### Definition of done
-  - <Bullet list of observable outcomes that prove the task is complete.>
-  - Full test suite passes.
-```
-
-Required sections: `Status`, `Files`, `Preconditions`, `Description`.
-`### Tests` and `### Definition of done` are required for any code task.
-`### Doc updates` is **optional but must be included whenever the task alters
-behavior described in a repo doc** — omit only when no relevant doc exists
-or the task genuinely has no impact on documented behavior.
-Other optional sections are included only when they add information.
+If both artifacts exist, continue.
 
 ---
 
-STATUS TAGS (the only allowed values)
+INDEX FILE FORMAT (`.claude/TASKS.md`)
+
+```
+# Tasks
+
+Last task number: <N>
+
+---
+
+## <N>. <Title>
+
+Status: [MISSING]
+Files: <comma-separated list>
+Preconditions: <comma-separated task numbers, or "none">
+
+---
+
+## <M>. <Title>
+…
+```
+
+The summary block holds only: number, title, Status, Files, Preconditions.
+No description, no behavior change, no tests — those live in the per-task
+body file.
+
+PER-TASK BODY FILE FORMAT (`.claude/tasks/<N>.md`)
+
+```
+# Task <N> — <Title>
+
+## Description
+<Plain prose explanation of the problem and the desired behavior. Cite
+file paths and line numbers when describing root cause; name the symbols
+involved; quote relevant code if it clarifies the bug. Aim for the level
+of detail a different engineer could implement from cold.>
+
+### Root cause
+<Optional. Bugfixes where the cause is non-obvious.>
+
+### Behavior change
+<What the code should do after the task lands. Concrete rules.>
+
+### Doc updates
+<Optional but required when behavior touches a documented surface. Name
+the affected files and sections; describe what changes.>
+
+### Tests
+<Which test files to add/extend and what each new test asserts.>
+
+### Definition of done
+- <Bullets — observable outcomes.>
+- Full test suite passes.
+```
+
+Required body sections: `## Description`. `### Tests` and
+`### Definition of done` are required for any code task. Other sections
+are included only when they add information.
+
+---
+
+STATUS TAGS (the only allowed values, recorded in TASKS.md)
 
 - `[MISSING]` — behavior not implemented at all. **Default for new tasks.**
 - `[STUBBED]` — placeholder/TODO exists but no real implementation.
@@ -110,97 +128,91 @@ STATUS TAGS (the only allowed values)
 - `[DONE]` — implementation has landed. (Not set by this command.)
 - `[SKIP]` — explicitly deferred or abandoned.
 
-A new task added by this command is `[MISSING]` unless the user's description
-clearly indicates a different pre-implementation state.
+A new task added by this command is `[MISSING]` unless the user's
+description clearly indicates a different pre-implementation state.
 
 ---
 
 PHASE 1 — READ (silent)
 
-1. Use the Read tool to open the backlog file if it exists. Note the highest
-   existing task number, the title style ("<Subsystem> — <thing>" vs plain
-   imperatives), and the dependency graph between existing tasks.
+1. Use the Read tool to open `.claude/TASKS.md`. Note:
+   - The current `Last task number: N` value — the new task's ID will be
+     `N + 1`.
+   - Existing summary blocks: their numbers, titles, statuses, and the
+     dependency graph implied by `Preconditions:` lines.
+   - Title style ("<Subsystem> — <thing>" vs plain imperatives) — match it.
 
 2. Read enough of the codebase to ground the task:
    - Use Grep / Glob / Read to confirm the actual files involved.
-   - If the project has a CLAUDE.md, README.md, or `.claude/` context layer,
-     read what's relevant — but do not assume any of these exist.
-   - Do not skim. A precondition you miss here becomes a stale dependency
-     reference later.
+   - If the project has a CLAUDE.md, README.md, or `.claude/context/`
+     navigation layer, read what's relevant.
+   - Do NOT read other per-task body files in `.claude/tasks/` unless
+     you genuinely need their content — TASKS.md gives you the
+     dependency graph already.
 
-3. Identify the project's documentation layer and cross-check it against the
-   task. The goal is to detect every doc that will be out of sync once the
-   code change lands:
-   - Look for authoritative reference docs: `.claude/domain/`, `docs/`,
-     `SPEC.md`, `ARCHITECTURE.md`, design docs named in CLAUDE.md, README
-     sections that describe behavior, inline doc comments that serve as specs.
-   - Skim only the sections relevant to the task — you are looking for places
-     where the current text would become false or incomplete after the task
-     lands (changed CLI flags, new API surface, altered data formats, revised
-     flows, updated notification payloads, new reserved fields, etc.).
-   - If no documentation layer exists, note that so you can omit `### Doc
-     updates` from the draft without second-guessing yourself later.
+3. Identify the project's documentation layer and cross-check it against
+   the task. Goal: detect every doc that will be out of sync once the
+   code change lands. Look for `.claude/domain/`, `docs/`, `SPEC.md`,
+   `ARCHITECTURE.md`, design docs named in CLAUDE.md, README sections
+   that describe behavior, inline doc comments that serve as specs.
 
-No user-facing output during this phase beyond a single brief sentence saying
-what you're reading.
+No user-facing output during this phase beyond a single brief sentence
+saying what you're reading.
 
 ---
 
 PHASE 2 — ASK (conversational)
 
-Identify what you genuinely don't know, and ask the user about it directly.
-This is a conversation, not a form. Keep it natural:
+Same rules as before — ask only about things you cannot resolve from the
+code or the user's initial description. 1–4 focused questions max. For
+each question, suggest the answer you'd pick and why so the user can
+confirm with a single word. Do not produce the draft until every open
+question is answered. If there are zero open questions after PHASE 1,
+say so in one line and skip to PHASE 3.
 
-- Ask only about things you can't resolve from the code or the user's
-  initial description. If everything is clear, skip straight to PHASE 3.
-- Prefer a small batch of focused questions (1–4) over a long
-  questionnaire. If new questions emerge from the answers, ask those next
-  — it's fine to take multiple turns.
-- For each question, **suggest the answer you'd pick and why**, so the user
-  can confirm with a single word instead of writing prose. Format like:
-
-  > Should the LinkedIn adapter strip all query params, or just the
-  > tracking ones? I'd lean toward stripping all — the job ID is in the
-  > path and every query param I've seen is session-specific. OK?
-
-- Common things worth asking about (only when actually ambiguous):
-  - Multiple valid implementation approaches → pick one, list alternatives.
-  - Scope boundaries — is X in or out?
-  - Acceptance criteria you can't infer from the description.
-  - Whether the task depends on existing work-in-progress.
-  - Position in the list when insertion would renumber many tasks.
-  - Doc update scope when a doc exists but it's unclear which sections are
-    affected, or when you found a relevant doc but can't tell if the task
-    should update it (suggest the sections you'd update and ask to confirm).
-
-- Do NOT ask about things that are stylistic conventions already visible in
-  the existing file (title format, indentation, status tag default). Just
-  match the existing style.
-
-- Do NOT produce the task draft during this phase. The draft comes only
-  after every open question has been answered.
-
-If there are zero open questions after PHASE 1, say so in one line and move
-straight to PHASE 3.
+Position-in-list questions are usually unnecessary now that task numbers
+are stable IDs — new tasks are appended at the end of `TASKS.md` by
+default. Only ask about position if the user has clearly indicated they
+want the new entry visually grouped with related tasks.
 
 ---
 
 PHASE 3 — DRAFT (present for confirmation)
 
-Once all questions are resolved, render the full plan in one message:
+Render the full plan in one message:
 
 ```
 PLAN — new task
 
-Backlog file: <path; "to be created" if new>
-Proposed number: N
-Position: <"appended at end" | "inserted before task M (renumbers M..K)">
+Index file: .claude/TASKS.md
+Body file:  .claude/tasks/<N>.md   (N = previous Last + 1)
+Position:   appended at end (or "inserted after task M for grouping")
 
-Draft entry:
-<render the full task entry exactly as it will appear in the file>
+Counter update: Last task number  K → N
 
-Renumbering impact: <none | "tasks 12–18 renumbered, 4 precondition
-references updated">
+Draft summary block (will be written to TASKS.md):
+  ---
+
+  ## <N>. <Title>
+
+  Status: [MISSING]
+  Files: <files>
+  Preconditions: <preconds or "none">
+
+Draft body file (will be written to .claude/tasks/<N>.md):
+  # Task <N> — <Title>
+
+  ## Description
+  …
+
+  ### Behavior change
+  …
+
+  ### Tests
+  …
+
+  ### Definition of done
+  - …
 ```
 
 End with a single explicit prompt: **"Approve and write?"**
@@ -214,30 +226,32 @@ Silence is not approval.
 
 PHASE 4 — WRITE (only after explicit approval)
 
-1. If the backlog file does not exist, use the Write tool to create it (create
-   the parent directory first if needed using Bash `mkdir -p`). The new file
-   starts empty.
+1. Use the Edit tool on `.claude/TASKS.md`:
+   a. Update the `Last task number: K` line to `Last task number: N`
+      where N = K + 1.
+   b. Insert the new summary block at the agreed position. The block
+      starts with its own `---` separator line above the `## N. Title`
+      heading. Preserve the file's existing formatting.
 
-2. Use the Edit tool to insert the new task at the agreed position (or the
-   Write tool if the file was just created). Preserve the two-space
-   indentation and the `---` separators above each task.
+2. Use the Write tool to create `.claude/tasks/<N>.md` with the full
+   draft body. This is always a brand-new file — task IDs never repeat,
+   so a collision means something is wrong; stop and report instead of
+   overwriting.
 
-3. If insertion is mid-list:
-   - Renumber every task that comes after the insertion point.
-   - Update every `Preconditions:` line in the file that references one of
-     the renumbered task numbers. Missing this silently breaks the
-     workflow — use Grep to re-check the file after editing and confirm no
-     stale references remain.
-
-4. Report to the user:
-   - The task number assigned.
-   - The file path (especially if newly created).
-   - Renumbering performed and precondition references updated.
+3. Report to the user:
+   - The task ID assigned (= the new `Last task number`).
+   - The two paths written: the index file and the new body file.
+   - Confirmation that the counter advanced.
 
 DO NOT:
-- Write to the backlog file before PHASE 4.
-- Append blindly to the bottom when dependencies imply an earlier slot.
-- Invent preconditions to make the task look rigorous — "none" is fine.
-- Change the status of any other task.
+- Write to any file before PHASE 4.
+- Renumber existing tasks. Task numbers are stable IDs, so insertions
+  never trigger renumbering — only the visual order in TASKS.md may
+  change.
+- Update any other task's `Preconditions:` line.
+- Decrement or otherwise rewrite the counter on a no-op.
+- Auto-create `.claude/TASKS.md` or `.claude/tasks/` if they are
+  missing — the user must run `/task-setup` first.
+- Change the status of any existing task.
 - Implement the task. This command only creates the entry.
 - Commit. This command does not touch git.

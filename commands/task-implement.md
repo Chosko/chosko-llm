@@ -1,8 +1,8 @@
 ---
 name: task-implement
-version: 0.1.1
+version: 0.2.0
 type: command
-description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence, committing each task separately.
+description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. Reads each task's full body from .claude/tasks/<N>.md only when needed; commits each task separately.
 ---
 
 # /task-implement
@@ -64,14 +64,28 @@ If `$ARGUMENTS` is empty, tell the user the usage and stop.
 
 ---
 
-LOCATING THE BACKLOG FILE
+LOCATING THE BACKLOG
 
-Search order:
-1. `.claude/TASKS.md`
-2. `TASKS.md`
-3. `docs/TASKS.md`
+The backlog index lives at `.claude/TASKS.md`. Per-task body content
+lives at `.claude/tasks/<N>.md` — one file per task ID.
 
-If none exist, tell the user and stop. Do NOT create the file.
+If `.claude/TASKS.md` does not exist, tell the user "No backlog file
+found — run /task-setup to initialize it, then /task-add to create
+tasks." and stop. Do NOT create anything.
+
+Read TASKS.md first to find the summary block for each requested task
+(number, title, Status, Files, Preconditions). For each task you are
+about to implement, read its `.claude/tasks/<N>.md` body file when you
+need the Description, Behavior change, Doc updates, Tests, or
+Definition of done sections — not before. Do NOT bulk-read every body
+file up front: open each one only at the moment its task becomes the
+current one. If the body file for a task you intend to implement is
+missing, stop and report — the task is corrupt and the user should
+investigate.
+
+Status flips happen in `.claude/TASKS.md` only — the per-task body
+file does not store Status, Files, or Preconditions, so do not edit
+the body file when changing status.
 
 ---
 
@@ -158,15 +172,19 @@ PRE-FLIGHT CHECKS (before any task)
    The user must commit or stash first — this command will not mix in
    unrelated changes.
 
-2. Use the Read tool to open the backlog file. Resolve the task list per
-   ARGUMENT PARSING above. For each task to be implemented:
-   - Confirm the task exists.
-   - Confirm its status is one of `[MISSING]`, `[STUBBED]`, `[INCORRECT]`,
-     `[PARTIAL]`. If it's `[DONE]`, `[SKIP]`, or `[IN PROGRESS]` and the
-     user requested it explicitly by number, ask whether to skip or
-     override. (For `all`, these statuses are silently skipped — see
-     ARGUMENT PARSING.)
-   - Read its Description, Tests, and Definition of done sections.
+2. Use the Read tool to open `.claude/TASKS.md`. Resolve the task list
+   per ARGUMENT PARSING above. For each task to be implemented:
+   - Confirm a summary block for that task ID exists in TASKS.md.
+   - Confirm its status is one of `[MISSING]`, `[STUBBED]`,
+     `[INCORRECT]`, `[PARTIAL]`. If it's `[DONE]`, `[SKIP]`, or
+     `[IN PROGRESS]` and the user requested it explicitly by number,
+     ask whether to skip or override. (For `all`, these statuses are
+     silently skipped — see ARGUMENT PARSING.)
+   - Note its Files and Preconditions fields from the summary block.
+
+   Do NOT read the per-task body files in this preflight step. Each
+   `.claude/tasks/<N>.md` is read only when its task becomes the
+   current one (Step 2 of the per-task workflow).
 
 3. If the project has a CLAUDE.md or `.claude/` context layer, read what's
    relevant. Don't assume any of these exist.
@@ -183,16 +201,24 @@ For each task, in order:
 
 ### Step 1 — Mark IN PROGRESS
 
-Use the Edit tool to change this task's `Status:` line in the backlog file
-to `[IN PROGRESS]`. Do not commit this change yet — it will be bundled into
-the task's commit.
+Use the Read tool to open `.claude/tasks/<N>.md` for the current task —
+this is where the Description, Behavior change, Doc updates, Tests,
+and Definition of done sections live. Hold them in mind for the rest
+of the per-task workflow.
+
+Use the Edit tool to change this task's `Status:` line in
+`.claude/TASKS.md` (the summary block) to `[IN PROGRESS]`. The body
+file does not contain a Status field, so do not edit it. Do not
+commit this change yet — it will be bundled into the task's commit.
 
 ### Step 2 — Update tests   [skipped in skip-tests mode]
 
-Use the Read tool to open the test files listed in the task's `Files:` field
-(or implied by the `### Tests` section). Use the Edit tool to add or modify
-tests to encode the behavior the task specifies — every assertion in
-`### Tests`, plus regression guards in `Definition of done`.
+Use the Read tool to open the test files listed in the task's `Files:`
+field on its TASKS.md summary block (or implied by the `### Tests`
+section of `.claude/tasks/<N>.md`). Use the Edit tool to add or
+modify tests to encode the behavior the task specifies — every
+assertion in `### Tests`, plus regression guards in `Definition of
+done`.
 
 If a test file doesn't exist yet but the task expects one, use the Write tool
 to create it.
@@ -236,7 +262,8 @@ commit with red tests.
 
 ### Step 7 — Mark DONE (or other terminal status)
 
-Use the Edit tool to update this task's `Status:` line in the backlog file:
+Use the Edit tool to update this task's `Status:` line in
+`.claude/TASKS.md`:
 - `[DONE]` — implementation matches the spec.
 - `[PARTIAL]` — landed, but some sub-requirements remain. Use only if
   you discovered a sub-requirement during impl that genuinely belongs in
@@ -249,10 +276,15 @@ The default is `[DONE]`.
 
 ### Step 8 — Commit
 
-Stage all files modified by this task, including the backlog file's
-status flip. Create a single commit. Commit message format follows the
-repo's existing style — read the last few `git log` entries first. If
-there's no established style, use:
+Stage all files modified by this task, including the `.claude/TASKS.md`
+status flip. The per-task body file at `.claude/tasks/<N>.md` is
+typically NOT modified during implementation — do not include it in
+the commit unless you genuinely changed it (e.g. corrected a stale
+description after discovering the spec was wrong).
+
+Create a single commit. Commit message format follows the repo's
+existing style — read the last few `git log` entries first. If there's
+no established style, use:
 
 ```
 Task <N>: <task title>
@@ -277,8 +309,10 @@ BETWEEN TASKS
 
 After committing a task, before starting the next:
 1. Confirm the working tree is clean again (`git status`).
-2. Use the Read tool to re-open the backlog file fresh — earlier tasks may
-   have renumbered or updated dependencies referenced by later tasks.
+2. Use the Read tool to re-open `.claude/TASKS.md` fresh. Task IDs are
+   stable so numbers will not have moved, but statuses or
+   `Preconditions:` lines may have been edited by a parallel
+   `/task-add` or `/task-clean` invocation.
 3. Briefly report progress: "Task N committed. Starting task M."
 4. In skip-tests mode, ask "Proceed?" before starting the next task.
 
@@ -289,8 +323,8 @@ FAILURE HANDLING
 If any step fails in a way you cannot resolve:
 - Do not commit a broken task.
 - Do not flip the status to `[DONE]`.
-- Leave the backlog file's status as `[IN PROGRESS]` so the user can see
-  where the run stopped.
+- Leave the task's status in `.claude/TASKS.md` as `[IN PROGRESS]` so
+  the user can see where the run stopped.
 - Stop the entire run — do not start subsequent tasks.
 - Report clearly what failed, what you tried, and what the user might
   want to do next (revert with `git restore`, fix manually, edit the

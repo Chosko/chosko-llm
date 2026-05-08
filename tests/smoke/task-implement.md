@@ -5,9 +5,10 @@
 
 ## Setup
 
-- A project with a test suite (e.g. pytest) and a `.claude/TASKS.md`
-  containing at least one `[MISSING]` task with `Files:` and `### Tests`
-  sections.
+- A project with a test suite (e.g. pytest), a `.claude/TASKS.md`
+  with at least one `[MISSING]` task summary block, and a matching
+  `.claude/tasks/<N>.md` body file containing `## Description`,
+  `### Tests`, and `### Definition of done` sections.
 - Working tree must be clean (`git status` shows nothing).
 
 ## Steps
@@ -20,11 +21,17 @@
 
 ## Expected
 
-- Task status flips to `[IN PROGRESS]` before any production code changes.
+- Task status flips to `[IN PROGRESS]` in `.claude/TASKS.md` (NOT in
+  the body file) before any production code changes.
+- The agent reads `.claude/tasks/<N>.md` only when its task becomes
+  current — body files for not-yet-started tasks should not be opened
+  in the preflight step.
 - New/updated tests fail before the implementation is written.
 - All tests pass after implementation.
-- Exactly one commit per task, named after the task.
-- Task status is `[DONE]` in the final commit.
+- Exactly one commit per task, named after the task. The commit
+  includes the TASKS.md status flip but does NOT include the
+  `.claude/tasks/<N>.md` body file unless it was genuinely modified.
+- Task status is `[DONE]` in `.claude/TASKS.md` in the final commit.
 - No `--no-verify` or `--amend` flags used.
 
 ## Notes

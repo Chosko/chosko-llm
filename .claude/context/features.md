@@ -17,10 +17,20 @@ Three locations, all keyed by feature name (kebab-case):
 Currently shipped:
 - `commands/context-build.md` — introduces a navigation context layer.
 - `commands/context-update.md` — refreshes an existing context layer.
-- `commands/task-add.md` — plan and append a new task entry to the backlog.
-- `commands/task-clean.md` — prune terminal-status tasks and renumber survivors.
-- `commands/task-implement.md` — implement backlog tasks end-to-end with TDD.
-- `commands/task-list.md` — print the backlog as a compact read-only summary.
+- `commands/task-setup.md` — initialize the backlog (`.claude/TASKS.md`
+  stub + `.claude/tasks/` directory). Required before `/task-add`.
+- `commands/task-add.md` — plan and append a new task: writes a summary
+  block to `.claude/TASKS.md` and a body file at `.claude/tasks/<N>.md`.
+  Refuses if `/task-setup` has not run.
+- `commands/task-clean.md` — prune terminal-status tasks. Removes summary
+  blocks AND deletes the matching body files. Never renumbers — task IDs
+  are stable across the project's lifetime; the `Last task number`
+  counter never decreases.
+- `commands/task-implement.md` — implement backlog tasks end-to-end with
+  TDD. Reads each task's body file from `.claude/tasks/<N>.md` only when
+  needed; status flips happen in `.claude/TASKS.md`.
+- `commands/task-list.md` — print the backlog as a compact read-only
+  summary. Reads only `.claude/TASKS.md`; never opens the body files.
 - No skills yet (`skills/` contains only `.gitkeep`).
 
 ## Public API (per-feature contract)

@@ -5,7 +5,9 @@
 
 ## Setup
 
-- A `.claude/TASKS.md` with tasks in several different statuses.
+- A `.claude/TASKS.md` with tasks in several different statuses, plus
+  per-task body files under `.claude/tasks/`. Note the
+  `Last task number:` value before running.
 
 ## Steps
 
@@ -16,9 +18,15 @@
 ## Expected
 
 - Output is read-only — no files modified, no git activity.
-- Status column is padded to align titles (longest tag: `[IN PROGRESS]`).
+- Only `.claude/TASKS.md` is read; verify (e.g. via tool transcript)
+  that no file under `.claude/tasks/` is opened.
+- Task IDs displayed match TASKS.md exactly — no renumbering for
+  display.
+- Status column is padded to align titles (longest tag:
+  `[IN PROGRESS]`).
 - Tasks with non-`none` preconditions show `(deps: N, M)`.
-- Summary line lists only non-zero status counts.
+- Summary line lists only non-zero status counts and includes the
+  `(last task number: N)` annotation.
 
 ## Notes
 
