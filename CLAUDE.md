@@ -1,5 +1,15 @@
 # CLAUDE.md — chosko-llm
 
+## Navigation
+
+For any task involving this codebase, start by reading
+[.claude/context/INDEX.md](.claude/context/INDEX.md). Then read only the
+context files relevant to your task. Open source files (under `scripts/`,
+`bin/`, `install.sh`, `uninstall.sh`, etc.) only when the relevant context
+file's **When to read the source** section indicates it is necessary.
+
+## About
+
 This repo ships global Claude Code **commands** and **skills**, plus a small
 shell CLI (`chosko-llm`) that installs them into `~/.claude/` on any machine.
 There are two roles for the same git repo:
