@@ -14,6 +14,11 @@ Usage:
   chosko-llm upgrade                  git pull the managed clone and refresh the CLI proxy.
                                       Does NOT re-install features — use 'update --all' for that.
 
+  chosko-llm task-impl <N> [<N>…]     Drive aider+Ollama through the 8-step /task-implement
+  chosko-llm task-impl all            sequence for one or more backlog tasks in the current
+                                      project. Requires /task-setup to have been run first.
+                                      One commit per task.
+
   chosko-llm help                     Show this help.
 
 Feature names:

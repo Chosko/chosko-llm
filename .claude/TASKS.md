@@ -22,7 +22,7 @@ Preconditions: 1
 
 ## 3. Task workflow — automate the 8-step `/task-implement` sequence for external LLMs (aider + Ollama)
 
-Status: [MISSING]
+Status: [DONE]
 Files: commands/task-setup.md, scripts/lib-task-external.sh, scripts/cmd-task-impl.sh, bin/chosko-llm, docs/cli-help.txt, .claude/domain/task-workflow.md, tests/smoke/task-setup.md, tests/smoke/cmd-task-impl.md
 Preconditions: 1, 2
 

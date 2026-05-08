@@ -16,6 +16,9 @@ case "$subcommand" in
   ls|add|rm|update|upgrade)
     exec "$CHOSKO_LLM_HOME/scripts/cmd-${subcommand}.sh" "$@"
     ;;
+  task-impl)
+    exec "$CHOSKO_LLM_HOME/scripts/cmd-task-impl.sh" "$@"
+    ;;
   ""|-h|--help|help)
     if [ -x "$CHOSKO_LLM_HOME/scripts/cmd-help.sh" ]; then
       exec "$CHOSKO_LLM_HOME/scripts/cmd-help.sh" "$@"

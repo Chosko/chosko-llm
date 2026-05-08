@@ -61,20 +61,62 @@ needs to be built.
 
 ## Static implement-procedure artifact
 
-`/task-setup` writes `.claude/external/implement-prompt.md` — the
-system-prompt analogue of `/task-implement` for an external LLM. It
-covers role, inputs, procedure, output discipline, and stop conditions.
-It is project-local (travels via git, so a teammate can clone and run)
-and idempotent (re-running `/task-setup` does not overwrite an edited
-prompt file).
+`/task-setup` writes the per-project external-LLM wiring under
+`.claude/external/`:
 
-Standard aider invocation:
+- `implement-prompt.md` — the system-prompt analogue of
+  `/task-implement` for the impl pass.
+- `tests-prompt.md` — the system-prompt for the test-writing pass
+  (runs before impl, edits only test files).
+- `run-affected-tests.sh` — wrapper that runs the project's test
+  runner against a list of test files passed on argv.
+- `run-full-tests.sh` — wrapper that runs the full suite.
+
+The two prompts cover role, inputs, procedure, output discipline, and
+stop conditions; they are static, project-agnostic templates. The two
+wrapper scripts are inferred from project files at `/task-setup` time
+(pytest, npm test, cargo test, go test, Makefile target, …) so the
+orchestrator stays runner-agnostic. All four artifacts are
+project-local (travel via git, so a teammate can clone and run) and
+idempotent (re-running `/task-setup` does not overwrite an edited
+prompt file or a real wrapper script — only the no-op stub wrappers
+written in skip-tests mode are upgradable, with user confirmation).
+
+Standard aider invocation (one-shot, by hand):
 
 ```
 aider --model ollama/qwen2.5-coder:14b \
       --read .claude/external/implement-prompt.md \
       --read .claude/tasks/<N>.md
 ```
+
+## Orchestrated path: `chosko-llm task-impl`
+
+The orchestrator (`scripts/cmd-task-impl.sh`, sourced shared helpers
+in `scripts/lib-task-external.sh`) runs the same 8-step sequence as
+`/task-implement`, but driven by aider against a single task at a
+time. It is invoked via `chosko-llm task-impl <N> [<N>…] | all` and
+performs:
+
+```
+Step 1.   flip TASKS.md Status: → [IN PROGRESS]
+Step 2.   aider with tests-prompt.md          (skipped in skip-tests mode)
+Step 3.   run-affected-tests.sh — expect FAIL (skipped in skip-tests mode)
+Step 4.   aider with implement-prompt.md, retry up to N times on
+          failure (N = $CHOSKO_TASK_IMPL_RETRIES, default 3),
+          feeding the failure log back into aider via --message.
+Step 5.   run-affected-tests.sh — expect PASS (skipped in skip-tests mode)
+Step 6.   run-full-tests.sh   — expect PASS  (skipped in skip-tests mode)
+Step 7.   flip TASKS.md Status: → [DONE]
+Step 8.   stage Files: ∪ TASKS.md, one commit, message
+          "Task <N>: <title>" (+ skip-tests note if applicable)
+```
+
+The orchestrator refuses to run if any of `implement-prompt.md`,
+`tests-prompt.md`, `run-affected-tests.sh`, `run-full-tests.sh` is
+missing — it points the user at `/task-setup`. It also refuses on a
+dirty working tree. Skip-tests mode is detected by grepping for the
+`# CHOSKO_TASK_IMPL_STUB` sentinel in `run-full-tests.sh`.
 
 ## `/task-implement` discipline
 
