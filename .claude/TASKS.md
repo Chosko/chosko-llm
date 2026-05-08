@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 3
+Last task number: 5
 
 ---
 
@@ -25,3 +25,19 @@ Preconditions: 1
 Status: [MISSING]
 Files: commands/task-setup.md, scripts/lib-task-external.sh, scripts/cmd-task-impl.sh, bin/chosko-llm, docs/cli-help.txt, .claude/domain/task-workflow.md, tests/smoke/task-setup.md, tests/smoke/cmd-task-impl.md
 Preconditions: 1, 2
+
+---
+
+## 4. Task workflow — `/task-add` offers to commit the new task at the end
+
+Status: [MISSING]
+Files: commands/task-add.md, tests/smoke/task-add.md
+Preconditions: none
+
+---
+
+## 5. Task workflow — `/task-implement` prompts on dirty tree instead of hard-aborting
+
+Status: [MISSING]
+Files: commands/task-implement.md, tests/smoke/task-implement.md
+Preconditions: none
