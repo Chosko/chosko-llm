@@ -30,7 +30,7 @@ Preconditions: 1, 2
 
 ## 4. Task workflow — `/task-add` offers to commit the new task at the end
 
-Status: [MISSING]
+Status: [DONE]
 Files: commands/task-add.md, tests/smoke/task-add.md
 Preconditions: none
 

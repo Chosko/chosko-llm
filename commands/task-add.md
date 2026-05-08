@@ -1,8 +1,8 @@
 ---
 name: task-add
-version: 0.3.0
+version: 0.4.0
 type: command
-description: Plan a new task entry conversationally, confirm with the user, then write a summary to TASKS.md and a richer body file under .claude/tasks/ that an external LLM (aider + Ollama) can implement directly.
+description: Plan a new task entry conversationally, confirm with the user, write a summary to TASKS.md and a richer body file under .claude/tasks/ that an external LLM (aider + Ollama) can implement directly, then optionally commit the two written files.
 ---
 
 # /task-add
@@ -17,8 +17,9 @@ description: Plan a new task entry conversationally, confirm with the user, then
 GOAL
 Add a single new task to the project's task backlog, following the
 conventions below. The flow is: SETUP-CHECK → READ → ASK
-(conversational) → DRAFT → CONFIRM → WRITE. Never write to any file
-before the user confirms the draft.
+(conversational) → DRAFT → CONFIRM → WRITE → OFFER COMMIT. Never write
+to any file before the user confirms the draft, and never commit
+without a separate explicit approval at PHASE 5.
 
 $ARGUMENTS
 
@@ -32,7 +33,9 @@ TOOL DISCIPLINE
   use the Write tool only when creating a new file from scratch. Never use
   shell redirection, `tee`, `Set-Content`, `Out-File`, or any shell
   mechanism to write files.
-- Bash / PowerShell are not needed by this command at all.
+- Bash / PowerShell are used ONLY by PHASE 5 (the optional commit step):
+  `git status --porcelain`, `git add -- <path> <path>`, and `git commit`.
+  No other phases shell out.
 
 ---
 
@@ -331,6 +334,54 @@ PHASE 4 — WRITE (only after explicit approval)
    - The two paths written: the index file and the new body file.
    - Confirmation that the counter advanced.
 
+After the report, continue to PHASE 5.
+
+---
+
+PHASE 5 — OFFER COMMIT (optional, requires explicit approval)
+
+The two files written by PHASE 4 (`.claude/TASKS.md` and
+`.claude/tasks/<N>.md`) are a natural, self-contained commit. PHASE 5
+asks the user whether to capture them now, then either does so or
+leaves them unstaged.
+
+1. Print exactly one prompt:
+
+   > Task <N> written. Commit `.claude/TASKS.md` + `.claude/tasks/<N>.md` now? [y/N]
+
+2. Interpret the answer:
+   - **Explicit yes** (`y`, `yes`, `commit`, `go`): proceed to step 3.
+   - **Anything else** (no, blank line, EOF, an unrelated reply, silence):
+     print `Skipped commit. Files left unstaged.` and stop. Do not
+     stage, do not commit. The user can commit by hand later.
+
+3. On yes, run exactly:
+
+   ```
+   git add -- .claude/TASKS.md .claude/tasks/<N>.md
+   git commit -m "Add task <N>: <title>" \
+              -m "<one-line summary derived from Description's first sentence, optional>"
+   ```
+
+   Use a HEREDOC for the commit message body if it is multi-line. The
+   second `-m` is optional — drop it if the description's first
+   sentence does not yield a useful one-liner.
+
+4. On success, report the resulting commit hash to the user
+   (`git rev-parse --short HEAD`).
+
+5. On failure (e.g. pre-commit hook rejects the commit): surface the
+   exact failure output to the user. Do NOT retry, do NOT amend, do
+   NOT use `--no-verify` or any hook-skipping flag. The two files
+   remain in whatever state git left them (typically staged but
+   uncommitted); tell the user that and let them decide.
+
+PHASE 5 stages ONLY the two files PHASE 4 wrote. It must not run
+`git add -A`, `git add .`, `git add -u`, or anything that could pull
+in unrelated dirty files from the working tree.
+
+---
+
 DO NOT:
 - Write to any file before PHASE 4.
 - Renumber existing tasks. Task numbers are stable IDs, so insertions
@@ -342,4 +393,10 @@ DO NOT:
   missing — the user must run `/task-setup` first.
 - Change the status of any existing task.
 - Implement the task. This command only creates the entry.
-- Commit. This command does not touch git.
+- Use `git add -A`, `git add .`, or `git add -u` in PHASE 5 — only
+  the two files written by PHASE 4 may be staged.
+- Use `--amend`, `--no-verify`, `--no-gpg-sign`, or any other
+  hook-skipping or commit-rewriting flag. If a pre-commit hook fails,
+  surface it and let the user fix it.
+- Push, branch, tag, or otherwise touch shared/visible git state.
+- Commit without an explicit yes at PHASE 5. Silence is not approval.
