@@ -6,7 +6,7 @@ Last task number: 2
 
 ## 1. Task workflow — make backlog consumable by external LLMs (aider + Ollama)
 
-Status: [MISSING]
+Status: [DONE]
 Files: commands/task-add.md, commands/task-setup.md, tests/smoke/task-add.md, tests/smoke/task-setup.md
 Preconditions: none
 

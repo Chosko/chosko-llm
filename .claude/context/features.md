@@ -17,11 +17,19 @@ Three locations, all keyed by feature name (kebab-case):
 Currently shipped:
 - `commands/context-build.md` — introduces a navigation context layer.
 - `commands/context-update.md` — refreshes an existing context layer.
-- `commands/task-setup.md` — initialize the backlog (`.claude/TASKS.md`
-  stub + `.claude/tasks/` directory). Required before `/task-add`.
+- `commands/task-setup.md` — initialize the backlog: `.claude/TASKS.md`
+  stub, `.claude/tasks/` directory, and `.claude/external/implement-prompt.md`
+  (the static system prompt fed to an external LLM via aider). Required
+  before `/task-add`. Idempotent — re-runs only fill in missing artifacts
+  and never overwrite an edited implement-prompt.
 - `commands/task-add.md` — plan and append a new task: writes a summary
-  block to `.claude/TASKS.md` and a body file at `.claude/tasks/<N>.md`.
-  Refuses if `/task-setup` has not run.
+  block to `.claude/TASKS.md` and a self-contained body file at
+  `.claude/tasks/<N>.md`. The body schema is rich enough that an
+  external LLM (target: qwen2.5-coder:14b via aider) fed only the body
+  plus `implement-prompt.md` can implement: it includes Files to
+  modify, Required reading, Relevant snippets (optional), Conventions
+  to follow, and Out of scope alongside the usual Description / Tests /
+  Definition of done. Refuses if `/task-setup` has not run.
 - `commands/task-clean.md` — prune terminal-status tasks. Removes summary
   blocks AND deletes the matching body files. Never renumbers — task IDs
   are stable across the project's lifetime; the `Last task number`

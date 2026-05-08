@@ -1,8 +1,8 @@
 ---
 name: task-add
-version: 0.2.0
+version: 0.3.0
 type: command
-description: Plan a new task entry conversationally, confirm with the user, then write a summary to TASKS.md and a body file under .claude/tasks/.
+description: Plan a new task entry conversationally, confirm with the user, then write a summary to TASKS.md and a richer body file under .claude/tasks/ that an external LLM (aider + Ollama) can implement directly.
 ---
 
 # /task-add
@@ -85,6 +85,11 @@ body file.
 
 PER-TASK BODY FILE FORMAT (`.claude/tasks/<N>.md`)
 
+The body file must be **self-contained** enough that an external LLM
+(target: qwen2.5-coder:14b via aider) fed only this file plus the
+project's `.claude/external/implement-prompt.md` can implement the
+task. That goal drives the schema below.
+
 ```
 # Task <N> — <Title>
 
@@ -93,6 +98,36 @@ PER-TASK BODY FILE FORMAT (`.claude/tasks/<N>.md`)
 file paths and line numbers when describing root cause; name the symbols
 involved; quote relevant code if it clarifies the bug. Aim for the level
 of detail a different engineer could implement from cold.>
+
+### Files to modify
+<Comma-separated list of files this task will edit. MUST be identical
+to the `Files:` field of the task's summary block in TASKS.md —
+duplicated here so the external LLM has the output surface in the body
+itself. `Status:` and `Preconditions:` are NOT replicated; those are
+backlog-flow concerns that don't belong in the implementation contract.>
+
+### Required reading
+<Bulleted list. Each entry: `path[:line-range] — why`. The implementer
+should `/add` these to aider before editing. Include CLAUDE.md, the
+relevant `.claude/context/*.md`, the relevant `.claude/domain/*.md`,
+and the source files involved.>
+
+### Relevant snippets
+<Optional. Quote 5–30 line excerpts of code that are central to the
+task and non-obvious. Each snippet prefixed with its `path:line`
+origin. Skip when "Required reading" is enough.>
+
+### Conventions to follow
+<Bulleted list of project rules the implementer must respect (e.g.
+"scripts start with `set -euo pipefail`", "no jq/yq deps", "honor
+`CHOSKO_LLM_HOME` / `CLAUDE_HOME`"). Pull from CLAUDE.md and the
+context/domain layer relevant to the touched code.>
+
+### Out of scope
+<Bulleted list of things the implementer must NOT do (e.g. "do not
+add new dependencies", "do not refactor unrelated files", "do not
+bump versions of unrelated features"). Explicit guardrails for a
+weaker model.>
 
 ### Root cause
 <Optional. Bugfixes where the cause is non-obvious.>
@@ -105,16 +140,24 @@ of detail a different engineer could implement from cold.>
 the affected files and sections; describe what changes.>
 
 ### Tests
-<Which test files to add/extend and what each new test asserts.>
+<Which test files / smoke checklists to add/extend and what each new
+assertion or checklist item must cover.>
 
 ### Definition of done
 - <Bullets — observable outcomes.>
 - Full test suite passes.
 ```
 
-Required body sections: `## Description`. `### Tests` and
-`### Definition of done` are required for any code task. Other sections
-are included only when they add information.
+Required body sections: `## Description`, `### Files to modify`,
+`### Required reading`, `### Conventions to follow`, `### Out of
+scope`, `### Tests`, `### Definition of done`. Optional sections
+(`### Relevant snippets`, `### Root cause`, `### Behavior change`,
+`### Doc updates`) are included only when they add information.
+
+`### Files to modify` MUST exactly mirror the summary block's `Files:`
+field. `/task-add` writes both at creation time; subsequent commands
+do not edit either, so drift is impossible if both are written
+consistently here.
 
 ---
 
@@ -142,10 +185,15 @@ PHASE 1 — READ (silent)
      dependency graph implied by `Preconditions:` lines.
    - Title style ("<Subsystem> — <thing>" vs plain imperatives) — match it.
 
-2. Read enough of the codebase to ground the task:
+2. Read enough of the codebase to ground the task. The body file must
+   be self-contained for an external implementer, so be more thorough
+   than a single-glance survey:
    - Use Grep / Glob / Read to confirm the actual files involved.
-   - If the project has a CLAUDE.md, README.md, or `.claude/context/`
-     navigation layer, read what's relevant.
+   - Read the project's CLAUDE.md, README.md, and the `.claude/context/`
+     navigation layer where it covers the touched code.
+   - Read any `.claude/domain/*.md` files that describe the subsystem
+     under change — domain docs hold conventions and architectural
+     rationale that belong in `### Conventions to follow`.
    - Do NOT read other per-task body files in `.claude/tasks/` unless
      you genuinely need their content — TASKS.md gives you the
      dependency graph already.
@@ -155,6 +203,24 @@ PHASE 1 — READ (silent)
    code change lands. Look for `.claude/domain/`, `docs/`, `SPEC.md`,
    `ARCHITECTURE.md`, design docs named in CLAUDE.md, README sections
    that describe behavior, inline doc comments that serve as specs.
+
+4. Gather material for the new body sections specifically:
+   - **Files to modify** — the concrete list of edit targets, which will
+     also become the summary block's `Files:` field.
+   - **Required reading** — for each file an implementer will need to
+     understand before editing, note `path[:line-range]` and a one-line
+     reason. Include CLAUDE.md and any context/domain file you read in
+     step 2 that meaningfully informs the task.
+   - **Relevant snippets** — identify any 5–30 line stretches of
+     non-obvious code that the implementer must understand. Plan to
+     quote them inline so the implementer does not have to chase
+     tangents.
+   - **Conventions to follow** — extract project rules from CLAUDE.md
+     and the relevant context/domain files (e.g. "no new deps",
+     "scripts start with `set -euo pipefail`", schema invariants).
+   - **Out of scope** — anticipate where a weaker model might
+     overreach (refactor unrelated code, bump unrelated versions, add
+     defensive scaffolding) and list explicit prohibitions.
 
 No user-facing output during this phase beyond a single brief sentence
 saying what you're reading.
@@ -169,6 +235,12 @@ each question, suggest the answer you'd pick and why so the user can
 confirm with a single word. Do not produce the draft until every open
 question is answered. If there are zero open questions after PHASE 1,
 say so in one line and skip to PHASE 3.
+
+If your PHASE 1 sweep left **Required reading**, **Conventions to
+follow**, or **Out of scope** substantially empty for a code task,
+that's a signal to ask before drafting — those sections are required
+and the body's value to an external implementer drops sharply without
+them. (An empty `### Relevant snippets` is fine; it's optional.)
 
 Position-in-list questions are usually unnecessary now that task numbers
 are stable IDs — new tasks are appended at the end of `TASKS.md` by
@@ -204,6 +276,22 @@ Draft body file (will be written to .claude/tasks/<N>.md):
 
   ## Description
   …
+
+  ### Files to modify
+  <comma-separated; MUST match the summary block's Files: field>
+
+  ### Required reading
+  - <path[:lines] — why>
+  - …
+
+  ### Relevant snippets
+  <optional; omit the section entirely if empty>
+
+  ### Conventions to follow
+  - …
+
+  ### Out of scope
+  - …
 
   ### Behavior change
   …
