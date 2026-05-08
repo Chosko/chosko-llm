@@ -31,6 +31,10 @@ The CLI is a proxy: `~/bin/chosko-llm` parses the subcommand and execs
   `CHOSKO_LLM_HOME` / `CLAUDE_HOME`, idempotency).
 - **Authoring** — [docs/authoring-guide.md](docs/authoring-guide.md) is the
   source of truth for frontmatter schema, naming, and versioning.
+- **Task workflow** — [.claude/domain/task-workflow.md](.claude/domain/task-workflow.md)
+  explains the dual-LLM author/implementer split (Claude Code authors,
+  qwen2.5-coder:14b via aider implements) and the per-task body schema.
+  Read when touching any `task-*` command or the body schema.
 
 ## Hard rules
 

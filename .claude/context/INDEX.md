@@ -24,6 +24,12 @@ Canonical project docs live outside this folder and remain authoritative:
 | [cmd-help.md](./cmd-help.md) | `scripts/cmd-help.sh` — print `docs/cli-help.txt` or fallback help. |
 | [features.md](./features.md) | Shipped artifacts under `commands/`, `skills/`, and `tests/smoke/`; cross-refs to the authoring guide. |
 
+## Domain
+
+| File | Covers |
+| --- | --- |
+| [../domain/task-workflow.md](../domain/task-workflow.md) | Dual-LLM task workflow: Claude Code authors via `/task-add`, qwen2.5-coder:14b via aider implements. Body schema, body↔TASKS.md split, static implement-prompt artifact. |
+
 ## Conventions
 
 - Source references use repo-root-relative paths and fully qualified names,
