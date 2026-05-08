@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 5
+Last task number: 6
 
 ---
 
@@ -40,4 +40,12 @@ Preconditions: none
 
 Status: [DONE]
 Files: commands/task-implement.md, tests/smoke/task-implement.md
+Preconditions: none
+
+---
+
+## 6. Task workflow — `/task-setup` offers to commit the new scaffolding at the end
+
+Status: [MISSING]
+Files: commands/task-setup.md, tests/smoke/task-setup.md
 Preconditions: none
