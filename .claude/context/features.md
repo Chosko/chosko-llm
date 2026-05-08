@@ -17,6 +17,10 @@ Three locations, all keyed by feature name (kebab-case):
 Currently shipped:
 - `commands/context-build.md` — introduces a navigation context layer.
 - `commands/context-update.md` — refreshes an existing context layer.
+- `commands/task-add.md` — plan and append a new task entry to the backlog.
+- `commands/task-clean.md` — prune terminal-status tasks and renumber survivors.
+- `commands/task-implement.md` — implement backlog tasks end-to-end with TDD.
+- `commands/task-list.md` — print the backlog as a compact read-only summary.
 - No skills yet (`skills/` contains only `.gitkeep`).
 
 ## Public API (per-feature contract)
