@@ -40,6 +40,11 @@ The CLI is a proxy: `~/bin/chosko-llm` parses the subcommand and execs
   exists, the six-section per-file schema, the `INDEX.md` `Last updated`
   anchor, and the four `/context-update` modes. Read when touching
   `/context-build`, `/context-update`, or the context-file schema.
+- **Refactor workflow** — [.claude/domain/refactor-workflow.md](.claude/domain/refactor-workflow.md)
+  explains the philosophy and invariants behind `/refactor-codebase`:
+  behaviour preservation, plan-first approval gate, the five focus
+  concerns, `scope=` semantics, and phase ordering. Read when touching
+  `/refactor-codebase` or extending its phase model.
 
 ## Hard rules
 
