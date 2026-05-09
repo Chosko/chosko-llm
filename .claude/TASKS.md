@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 6
+Last task number: 7
 
 ---
 
@@ -48,4 +48,12 @@ Preconditions: none
 
 Status: [DONE]
 Files: commands/task-setup.md, tests/smoke/task-setup.md
+Preconditions: none
+
+---
+
+## 7. Refactoring — add `/refactor-tests` command
+
+Status: [MISSING]
+Files: commands/refactor-tests.md, tests/smoke/refactor-tests.md
 Preconditions: none
