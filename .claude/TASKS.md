@@ -46,6 +46,6 @@ Preconditions: none
 
 ## 6. Task workflow — `/task-setup` offers to commit the new scaffolding at the end
 
-Status: [MISSING]
+Status: [DONE]
 Files: commands/task-setup.md, tests/smoke/task-setup.md
 Preconditions: none

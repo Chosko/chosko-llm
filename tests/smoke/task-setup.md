@@ -103,12 +103,85 @@ user has since added a test runner (e.g. installed pytest and added a
 2. Observe "Backlog already initialized" (or equivalent). No file is
    modified, no git commit is created.
 
+## PHASE — OFFER COMMIT scenarios
+
+These scenarios mirror the four canonical commit-prompt cases from
+`tests/smoke/task-add.md`, plus two cases specific to `/task-setup`'s
+idempotent re-run behavior.
+
+### 9. Commit-yes on fresh init
+
+1. Run `/task-setup` on a fresh project (per scenario 1).
+2. After the report step, observe the prompt:
+   `Scaffolding written (<N> file(s)). Commit them now? [y/N]` followed
+   by a bullet list of the paths just written.
+3. Answer `y`.
+4. Verify a single new commit exists with headline
+   `Initialize task backlog scaffolding`.
+5. Run `git show --stat HEAD` and verify it lists exactly the files
+   `/task-setup` wrote — no others.
+6. Verify `git status` is clean.
+
+### 10. Commit-no on fresh init
+
+1. Run `/task-setup` on a fresh project.
+2. At the commit prompt, answer `n` (or just press enter).
+3. Verify all scaffolding files are written to disk but unstaged
+   (`git status` shows them as untracked / modified).
+4. No new commit appears in `git log`.
+5. The agent reports `Skipped commit. Files left unstaged.`
+
+### 11. Dirty-tree safety
+
+1. Pre-create an unrelated modified file in the working tree (e.g.
+   `echo "junk" >> README.md`). Do NOT stage it.
+2. Run `/task-setup` end-to-end and answer `y` at the commit prompt.
+3. Verify the new commit lists ONLY the files `/task-setup` wrote —
+   the dirty `README.md` change is still in the working tree,
+   unstaged, untouched.
+
+### 12. Pre-commit hook failure
+
+1. Install a pre-commit hook that always exits non-zero (e.g. a
+   `.git/hooks/pre-commit` that runs `exit 1`).
+2. Run `/task-setup` end-to-end and answer `y` at the commit prompt.
+3. Verify the commit fails. The agent surfaces the hook output.
+4. Verify the agent does NOT retry, does NOT use `--no-verify`, and
+   does NOT amend any prior commit.
+5. Verify the scaffolding files remain on disk; the user is told and
+   left to fix the hook.
+
+### 13. Idempotent re-run skips the prompt
+
+1. Re-run `/task-setup` on the fully initialized project from
+   scenario 8.
+2. Verify NO commit prompt appears at all — the command exits after
+   `Backlog already initialized.`
+3. Verify `git status` is unchanged from before the re-run.
+
+### 14. Partial re-run prompts only for the regenerated file(s)
+
+1. Starting from a fully initialized project, delete only
+   `.claude/TASKS.md` and commit the deletion (or leave it dirty —
+   the test is about what `/task-setup` stages).
+2. Re-run `/task-setup`.
+3. Observe the commit prompt advertising exactly one file written:
+   `.claude/TASKS.md`.
+4. Answer `y`.
+5. Verify the resulting commit contains ONLY `.claude/TASKS.md` —
+   no other artifacts (which were not regenerated this run) appear
+   in `git show --stat HEAD`.
+
 ## Expected (cross-cutting)
 
 - Stub `TASKS.md` has `Last task number: 0` and no task entries.
 - Both prompt files are the static templates verbatim; no
   project-specific interpolation.
-- Re-invocation on a fully initialized project writes nothing.
+- Re-invocation on a fully initialized project writes nothing AND
+  does not prompt for a commit.
 - A user-edited prompt or non-stub wrapper is never overwritten.
 - Wrapper scripts always have the executable bit set.
-- No git commit is made by `/task-setup` itself.
+- `/task-setup` never commits without explicit user approval at the
+  commit prompt; silence/EOF is treated as `n`.
+- The commit (when approved) stages ONLY the files `/task-setup`
+  wrote during the run — never `git add -A`/`-u`/`.`.
