@@ -54,6 +54,6 @@ Preconditions: none
 
 ## 7. Refactoring — add `/refactor-tests` command
 
-Status: [MISSING]
+Status: [DONE]
 Files: commands/refactor-tests.md, tests/smoke/refactor-tests.md
 Preconditions: none
