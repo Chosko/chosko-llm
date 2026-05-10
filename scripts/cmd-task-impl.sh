@@ -44,6 +44,11 @@ if [ $# -lt 1 ]; then
   usage; exit 2
 fi
 
+# Fast-path: --help anywhere in argv
+for _a in "$@"; do
+  if [ "$_a" = "--help" ]; then usage; exit 0; fi
+done
+
 # ---------- argument parsing ----------
 
 declare -a TASKS=()
