@@ -1,6 +1,6 @@
 ---
 name: task-setup
-version: 0.4.0
+version: 0.5.0
 type: command
 description: Initialize the project's task backlog — creates .claude/TASKS.md, the .claude/tasks/ directory, and the external-LLM wiring under .claude/external/ (implement-prompt, tests-prompt, run-affected-tests.sh, run-full-tests.sh), then optionally commits the newly written scaffolding.
 ---
@@ -385,6 +385,20 @@ file-edit (SEARCH/REPLACE) tools.
   follow, Out of scope, Behavior change, Tests, Definition of done.
 - The project's CLAUDE.md and any context/domain layer it cites.
 
+## Execution model
+
+- You are running in a **single-shot, non-interactive aider
+  invocation** (driven by `--message`). There is no follow-up turn.
+  You cannot ask the user to confirm, cannot request additional
+  context, and cannot defer work to "the next message".
+- **Respond in English.** All prose, code comments, commit-adjacent
+  text, and any explanation you emit must be in English regardless
+  of the language used in the repo or the task body.
+- If a piece of information is missing, do not ask — encode the
+  best-guess behavior and add a brief code comment noting the
+  assumption. If the situation is genuinely a Stop condition (see
+  below), stop and report; do not request a follow-up turn.
+
 ## Procedure
 
 1. Read the task body in full. Description and Behavior change tell
@@ -409,6 +423,10 @@ file-edit (SEARCH/REPLACE) tools.
 - Do not change the task body file (`.claude/tasks/<N>.md`) or
   `.claude/TASKS.md` — those are managed by `/task-add` and
   `/task-implement`, not by the implementer.
+- **No deferred work.** Implement the full task in this single
+  pass — no `TODO` / `FIXME` markers, no "I'll add this next time"
+  comments, no half-applied edits. If you cannot complete a piece
+  of "Files to modify", treat it as a Stop condition and report.
 
 ## Stop conditions
 
@@ -449,6 +467,20 @@ tests pass afterward.
   follow, Out of scope, Behavior change, Tests, Definition of done.
 - The project's CLAUDE.md and any context/domain layer it cites.
 
+## Execution model
+
+- You are running in a **single-shot, non-interactive aider
+  invocation** (driven by `--message`). There is no follow-up turn.
+  You cannot ask the user to confirm, cannot request additional
+  context, and cannot defer work to "the next message".
+- **Respond in English.** All prose, code comments, commit-adjacent
+  text, and any explanation you emit must be in English regardless
+  of the language used in the repo or the task body.
+- If a piece of information is missing, do not ask — encode the
+  best-guess behavior and add a brief code comment noting the
+  assumption. If the situation is genuinely a Stop condition (see
+  below), stop and report; do not request a follow-up turn.
+
 ## Procedure
 
 1. Read the task body in full. The "Tests" section is the contract you
@@ -472,6 +504,13 @@ tests pass afterward.
 - Do not modify the task body file (`.claude/tasks/<N>.md`) or
   `.claude/TASKS.md` — those are managed by `/task-add` and the
   task-impl orchestrator, not by the implementer.
+- **No scaffolding-only output.** Every test named in the task
+  body's `Tests` section must have real assertions in this single
+  pass. No `pass`-bodied test functions, no `TODO` / `# implement
+  here` placeholders, no fixture-only files. If a behaviour cannot
+  be asserted yet (e.g. the production symbol does not exist),
+  write the assertion against the intended behaviour anyway — the
+  impl pass will make it pass.
 
 ## Stop conditions
 

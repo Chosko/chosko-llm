@@ -25,10 +25,17 @@ config) and a `tests/` directory. No `.claude/` artifacts yet.
 4. Open `.claude/external/implement-prompt.md` and verify it contains
    the role line ("You are an engineer implementing one task ..."),
    the Procedure section, the Output discipline section, and the Stop
-   conditions section.
+   conditions section. Verify it also contains a `## Execution model`
+   section, the literal phrase `Respond in English.`, the literal
+   phrase `single-shot` (or `non-interactive`), and an Output
+   discipline bullet forbidding deferred work (no `TODO`/`FIXME`).
 5. Open `.claude/external/tests-prompt.md` and verify it scopes the
    model to "test files only" and includes its own Stop conditions
-   section.
+   section. Verify it also contains a `## Execution model` section,
+   the literal phrase `Respond in English.`, the literal phrase
+   `single-shot` (or `non-interactive`), and an Output discipline
+   bullet matching `No scaffolding-only output` that forbids
+   `pass`-bodied test functions.
 6. Open both wrapper scripts. They should be executable and invoke
    `pytest` (e.g. `pytest "$@"` and `pytest`). Neither should contain
    the `# CHOSKO_TASK_IMPL_STUB` sentinel.
@@ -90,6 +97,12 @@ user has since added a test runner (e.g. installed pytest and added a
    custom note at the bottom). Re-invoke `/task-setup`. The edit is
    preserved.
 2. Same for `.claude/external/tests-prompt.md`.
+3. Take a project still carrying the v0.4.0 prompt files (no
+   `## Execution model` section, no `Respond in English.` phrase).
+   Re-invoke `/task-setup`. Verify both prompt files are left
+   untouched — idempotency wins over freshness; the user upgrades
+   by deleting the affected file and re-running, not by silent
+   rewrite.
 
 ### 7. User-edited (non-stub) wrappers are never clobbered
 

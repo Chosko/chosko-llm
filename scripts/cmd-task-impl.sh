@@ -181,7 +181,7 @@ implement_one() {
     # Step 2 — write/extend tests via aider
     log_info "Step 2: writing tests via aider"
     run_aider "$(external_artifact tests-prompt.md)" "$body" \
-      "Write or extend the test files for this task only. Do not modify production code yet."
+      "Write or extend the test files for this task only. Do not modify production code yet."$'\n\n'"Respond in English."
 
     # Step 3 — affected tests must fail
     log_info "Step 3: running affected tests, expecting failure"
@@ -205,6 +205,7 @@ implement_one() {
     if [ -n "$last_log" ]; then
       msg="The previous attempt did not pass the tests. Failure log follows. Fix the implementation; do not weaken the tests."$'\n\n'"$last_log"
     fi
+    msg="$msg"$'\n\n'"Respond in English."
     run_aider "$(external_artifact implement-prompt.md)" "$body" "$msg" || true
 
     if [ "$SKIP_TESTS" -eq 1 ]; then
@@ -238,7 +239,7 @@ implement_one() {
       fi
       log_warn "Full suite failing on attempt $attempt/$RETRIES — re-invoking aider"
       run_aider "$(external_artifact implement-prompt.md)" "$body" \
-        "The affected tests pass but the full suite is failing. Failure log follows. Fix without weakening any test."$'\n\n'"$last_log" || true
+        "The affected tests pass but the full suite is failing. Failure log follows. Fix without weakening any test."$'\n\n'"$last_log"$'\n\n'"Respond in English." || true
       attempt=$((attempt + 1))
     done
     if [ "$full_ok" -ne 1 ]; then

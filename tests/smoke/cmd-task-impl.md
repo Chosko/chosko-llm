@@ -32,6 +32,9 @@ involving aider invocations should fail loudly with a clear message.
 4. Inspect `git log -1` — exactly one new commit, message
    `Task <N>: <title>`, files staged include `.claude/TASKS.md` plus
    everything in the task's Files: list.
+5. Inspect aider's stdout / banner output for both invocations
+   (tests pass and impl pass). Verify the `--message` string passed
+   in each case ends with the literal line `Respond in English.`.
 
 **Expected:** working tree is clean after the run. No
 "(no tests …)" parenthetical in the commit body.
