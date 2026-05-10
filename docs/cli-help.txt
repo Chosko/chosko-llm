@@ -18,6 +18,7 @@ Usage:
   chosko-llm task-impl all            sequence for one or more backlog tasks in the current
                                       project. Requires /task-setup to have been run first.
                                       One commit per task.
+                                      Run 'chosko-llm task-impl --help' for full options.
 
   chosko-llm help                     Show this help.
 
