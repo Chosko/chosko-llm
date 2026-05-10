@@ -14,6 +14,6 @@ Preconditions: none
 
 ## 9. task-impl CLI flags — --model / --retries / --map-tokens with env-var fallback
 
-Status: [MISSING]
+Status: [DONE]
 Files: scripts/cmd-task-impl.sh, tests/smoke/cmd-task-impl.md
 Preconditions: none

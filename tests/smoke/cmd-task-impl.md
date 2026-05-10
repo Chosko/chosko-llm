@@ -17,6 +17,14 @@ involving aider invocations should fail loudly with a clear message.
   `tests-prompt.md`, `run-affected-tests.sh`, `run-full-tests.sh`.
 - One or more tasks in `.claude/TASKS.md` with status `[MISSING]` and
   matching body files under `.claude/tasks/<N>.md`.
+- The orchestrator accepts three optional CLI flags — `--model`,
+  `--retries`, `--map-tokens` — that override their respective env vars
+  (`CHOSKO_TASK_IMPL_MODEL`, `CHOSKO_TASK_IMPL_RETRIES`,
+  `CHOSKO_TASK_IMPL_AIDER_MAP_TOKENS`). Flags may appear at any
+  position relative to positional task numbers.
+- When neither `--map-tokens` nor `CHOSKO_TASK_IMPL_AIDER_MAP_TOKENS`
+  is set, the `--map-tokens` flag is omitted entirely from the aider
+  invocation (aider falls back to its own default).
 
 ## Scenarios
 
@@ -108,6 +116,29 @@ Repeat with each of the four required artifacts.
 1. Run `chosko-llm task-impl <N>` where task N is already `[DONE]`.
 2. Observe: a warning is logged and the task is skipped (no aider
    invocation, no commit). The `all` form silently skips DONE tasks.
+
+### 9. CLI flag overrides
+
+1. `chosko-llm task-impl --model ollama/some-other:7b <N>` — aider's
+   banner shows the overriding model name (`some-other:7b`).
+2. `CHOSKO_TASK_IMPL_MODEL=ollama/env-pick chosko-llm task-impl --model ollama/flag-pick <N>` —
+   flag wins; banner shows `flag-pick`.
+3. `chosko-llm task-impl --retries=1 <N>` against a body crafted to
+   fail twice — observe exactly one impl-pass aider invocation, then
+   a halt with status left as `[IN PROGRESS]`.
+4. `chosko-llm task-impl --map-tokens 4096 <N>` — aider's invocation
+   log includes `--map-tokens 4096`.
+5. `CHOSKO_TASK_IMPL_AIDER_MAP_TOKENS=8192 chosko-llm task-impl <N>` —
+   aider's invocation log includes `--map-tokens 8192`.
+6. `chosko-llm task-impl <N>` with neither flag nor env var — aider's
+   invocation log does **not** contain `--map-tokens`.
+7. `chosko-llm task-impl --retries abc <N>` — fails fast with a clear
+   error naming `--retries`; exit non-zero; no aider invocation, no
+   status flip.
+8. `chosko-llm task-impl --bogus <N>` — fails fast with "Unknown flag"
+   error; exit non-zero; no status flip.
+9. Interleaved form: `chosko-llm task-impl 3 --retries 2 4` — both
+   tasks 3 and 4 are queued, retry budget for both is 2.
 
 ## Expected (cross-cutting)
 

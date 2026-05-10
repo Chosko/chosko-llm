@@ -14,24 +14,95 @@ source "$SCRIPT_DIR/lib-task-external.sh"
 
 PROJECT_ROOT="${PROJECT_ROOT:-$PWD}"
 RETRIES="${CHOSKO_TASK_IMPL_RETRIES:-3}"
+AIDER_MODEL="${CHOSKO_TASK_IMPL_MODEL:-ollama/qwen2.5-coder:14b}"
+AIDER_MAP_TOKENS="${CHOSKO_TASK_IMPL_AIDER_MAP_TOKENS:-}"
 
 usage() {
   cat <<'EOF' >&2
-Usage: chosko-llm task-impl <N> [<N>…]
-       chosko-llm task-impl all
+Usage: chosko-llm task-impl [OPTIONS] <N> [<N>…]
+       chosko-llm task-impl [OPTIONS] all
 
 Orchestrates the 8-step task-implement sequence for the current
 project, driving aider + Ollama. Requires the project to have been
 initialized via /task-setup.
 
+Options:
+  --model <name>      Aider --model arg. Overrides CHOSKO_TASK_IMPL_MODEL.
+  --retries <N>       Retry budget per task. Overrides CHOSKO_TASK_IMPL_RETRIES.
+  --map-tokens <N>    Aider --map-tokens arg. Overrides CHOSKO_TASK_IMPL_AIDER_MAP_TOKENS.
+                      When absent and env var is unset, --map-tokens is not passed to aider.
+
 Environment:
-  CHOSKO_TASK_IMPL_RETRIES   Retry budget per task (default: 3).
-  CHOSKO_TASK_IMPL_AIDER     aider executable (default: aider).
-  CHOSKO_TASK_IMPL_MODEL     Aider --model arg (default: ollama/qwen2.5-coder:14b).
+  CHOSKO_TASK_IMPL_RETRIES          Retry budget per task (default: 3).
+  CHOSKO_TASK_IMPL_AIDER            aider executable (default: aider).
+  CHOSKO_TASK_IMPL_MODEL            Aider --model arg (default: ollama/qwen2.5-coder:14b).
+  CHOSKO_TASK_IMPL_AIDER_MAP_TOKENS Aider --map-tokens arg (default: unset, flag omitted).
 EOF
 }
 
 if [ $# -lt 1 ]; then
+  usage; exit 2
+fi
+
+# ---------- argument parsing ----------
+
+declare -a TASKS=()
+declare -a _rawargs=("$@")
+_i=0
+while [ "$_i" -lt "${#_rawargs[@]}" ]; do
+  _arg="${_rawargs[$_i]}"
+  case "$_arg" in
+    --model=*)
+      AIDER_MODEL="${_arg#--model=}"
+      [ -n "$AIDER_MODEL" ] || die "--model requires a non-empty value"
+      ;;
+    --model)
+      _i=$((_i + 1))
+      if [ "$_i" -ge "${#_rawargs[@]}" ] || [[ "${_rawargs[$_i]}" == --* ]]; then
+        die "--model requires a value"
+      fi
+      AIDER_MODEL="${_rawargs[$_i]}"
+      [ -n "$AIDER_MODEL" ] || die "--model requires a non-empty value"
+      ;;
+    --retries=*)
+      _val="${_arg#--retries=}"
+      [[ "$_val" =~ ^[0-9]+$ ]] || die "--retries value must be a non-negative integer: ${_val:-<empty>}"
+      RETRIES="$_val"
+      ;;
+    --retries)
+      _i=$((_i + 1))
+      if [ "$_i" -ge "${#_rawargs[@]}" ] || [[ "${_rawargs[$_i]}" == --* ]]; then
+        die "--retries requires a value"
+      fi
+      _val="${_rawargs[$_i]}"
+      [[ "$_val" =~ ^[0-9]+$ ]] || die "--retries value must be a non-negative integer: $_val"
+      RETRIES="$_val"
+      ;;
+    --map-tokens=*)
+      _val="${_arg#--map-tokens=}"
+      [[ "$_val" =~ ^[0-9]+$ ]] || die "--map-tokens value must be a non-negative integer: ${_val:-<empty>}"
+      AIDER_MAP_TOKENS="$_val"
+      ;;
+    --map-tokens)
+      _i=$((_i + 1))
+      if [ "$_i" -ge "${#_rawargs[@]}" ] || [[ "${_rawargs[$_i]}" == --* ]]; then
+        die "--map-tokens requires a value"
+      fi
+      _val="${_rawargs[$_i]}"
+      [[ "$_val" =~ ^[0-9]+$ ]] || die "--map-tokens value must be a non-negative integer: $_val"
+      AIDER_MAP_TOKENS="$_val"
+      ;;
+    --*)
+      die "Unknown flag: $_arg"
+      ;;
+    *)
+      TASKS+=("$_arg")
+      ;;
+  esac
+  _i=$((_i + 1))
+done
+
+if [ "${#TASKS[@]}" -eq 0 ]; then
   usage; exit 2
 fi
 
@@ -41,7 +112,6 @@ fi
 require_external_artifacts
 
 AIDER="${CHOSKO_TASK_IMPL_AIDER:-aider}"
-AIDER_MODEL="${CHOSKO_TASK_IMPL_MODEL:-ollama/qwen2.5-coder:14b}"
 command -v "$AIDER" >/dev/null 2>&1 || die "aider not found on PATH (looked for: $AIDER). Install aider or set CHOSKO_TASK_IMPL_AIDER."
 
 SKIP_TESTS=0
@@ -83,13 +153,10 @@ resolve_all() {
   ' "$(project_tasks_index)"
 }
 
-declare -a TASKS=()
-if [ "${1,,}" = "all" ]; then
+if [ "${TASKS[0],,}" = "all" ]; then
   mapfile -t TASKS < <(resolve_all)
   [ "${#TASKS[@]}" -gt 0 ] || die "No implementable tasks (MISSING/STUBBED/INCORRECT/PARTIAL) in backlog."
   log_info "Will implement (in order): ${TASKS[*]}"
-else
-  TASKS=("$@")
 fi
 
 # Validate all targets up front.
@@ -122,13 +189,17 @@ run_aider() {
   # the prompt file (system prompt) and the task body file (read-only
   # context). The <message> is the per-invocation instruction.
   local prompt="$1" body="$2" message="$3"
-  "$AIDER" \
-    --model "$AIDER_MODEL" \
-    --read "$prompt" \
-    --read "$body" \
-    --yes-always \
-    --no-auto-commits \
+  local -a _cmd=(
+    "$AIDER"
+    --model "$AIDER_MODEL"
+    --read "$prompt"
+    --read "$body"
+    --yes-always
+    --no-auto-commits
     --message "$message"
+  )
+  if [ -n "$AIDER_MAP_TOKENS" ]; then _cmd+=(--map-tokens "$AIDER_MAP_TOKENS"); fi
+  "${_cmd[@]}"
 }
 
 implement_one() {
