@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 9
+Last task number: 10
 
 ---
 
@@ -16,4 +16,12 @@ Preconditions: none
 
 Status: [DONE]
 Files: scripts/cmd-task-impl.sh, tests/smoke/cmd-task-impl.md
+Preconditions: none
+
+---
+
+## 10. cmd-ls — add STATUS column with up-to-date / updatable / not-installed / local-only labels
+
+Status: [MISSING]
+Files: scripts/cmd-ls.sh, tests/smoke/cmd-ls.md, docs/cli-help.txt
 Preconditions: none
