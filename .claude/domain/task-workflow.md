@@ -1,86 +1,123 @@
-# Task workflow — dual-LLM authoring/implementation
+# Task workflow
 
-This project's `task-*` commands are designed around a deliberate split:
-**Claude Code authors tasks; a smaller local LLM implements them.** Read
-this doc when touching any `task-*` command, when changing the per-task
-body schema, or when wiring an external implementer.
+This document is the source of truth for the task backlog schema and the
+dual-path implementation model. Read it when touching any `task-*` command
+or skill, when changing the body schema, or when wiring an external
+implementer.
 
 ## Roles
 
-- **Author** — Claude Code, via `/task-add`. Plans the task, identifies
-  files, gathers context, writes a rich body file. Has access to the
-  full repo and project conventions.
-- **Implementer** — a less-powerful local model. Target stack:
-  **qwen2.5-coder:14b via Ollama, driven by aider**. aider provides
-  file-read, repo-map, and diff-based file-edit tools. The model is
-  competent but not Claude-Code-level — it needs explicit pointers and
-  acceptance criteria, not implicit conventions.
+- **Author** — Claude Code, via `/task-add`. Plans the task conversationally,
+  captures decisions, identifies files, writes the body. Has full repo access.
+- **Claude implementer** — Claude Code, via `/task-implement`. The default
+  path. Reads the thin body, navigates context/domain files as needed, and
+  implements end-to-end.
+- **Local LLM implementer** — a less-powerful local model (e.g.
+  qwen2.5-coder:14b via Ollama + aider). Optional path. Needs a richer,
+  self-contained body to work without external reads. Use `/task-enrich` to
+  prepare a thin task for this path.
 
-`/task-implement` (run by Claude Code) is a third path: the same
-backlog, implemented by Claude itself when the user prefers. It still
-benefits from the rich body schema (less reflexive context fan-out).
+## Target field
 
-## Self-contained-body invariant
+Every task body and every TASKS.md summary block carries a `Target:` field:
 
-Per-task body files at `.claude/tasks/<N>.md` must be self-contained
-enough for the external implementer. The schema (post-Task-1) is:
+| Value | Meaning |
+| --- | --- |
+| `claude` | Thin body. Claude implements, fetching context at implementation time. **Default.** |
+| `local` | Enriched body. Self-contained; intended for a local LLM via aider. |
 
-- `## Description` — prose, problem + desired behavior, file paths and
-  line numbers when relevant.
-- `### Files to modify` — replicates the `Files:` field from the
-  TASKS.md summary block. The output surface.
-- `### Required reading` — paths + line ranges + why, for files the
-  implementer should `/add` to aider before editing.
-- `### Relevant snippets` — optional. Quoted excerpts of central,
-  non-obvious code, prefixed with `path:line` origins.
-- `### Conventions to follow` — project rules the implementer must
-  respect (pulled from CLAUDE.md and relevant context files).
-- `### Out of scope` — explicit guardrails on what NOT to do.
-- `### Behavior change` / `### Doc updates` — as applicable.
-- `### Tests` — required for any code task.
-- `### Definition of done` — required for any code task.
+`target: claude` bodies are authored lean. `target: local` bodies are
+produced by `/task-enrich` from an existing thin body.
 
-The implementer is fed the body file as the contract. If a piece of
-information is missing from the body, that's an authoring bug — fix the
-body, don't expect the implementer to discover it.
+## Thin body schema (`target: claude`)
 
-## Body vs TASKS.md — division of concerns
+```
+# Task <N> — <Title>
 
-| Field | TASKS.md summary block | Body file | Why |
-| --- | --- | --- | --- |
-| Title, number | yes | yes (heading) | identification |
-| Status | yes | no | changes during life — body would drift |
-| Preconditions | yes | no | backlog-flow concern, not implementation |
-| Files | yes | yes (`### Files to modify`) | output surface — implementer needs it |
+Target: claude
 
-Only `Files` is intentionally duplicated. `/task-add` writes both at
-creation; neither changes during implementation, so drift risk is low.
-`Status` and `Preconditions` are deliberately kept out of the body
-because they describe how the task fits into the backlog, not what
-needs to be built.
+## Goal
+<One paragraph: what and why.>
+
+## Acceptance criteria
+- <Verifiable outcome.>
+- <…>
+
+## Decisions
+<Only present when non-obvious choices were made during authoring — by the
+user or by Claude. Each bullet: the choice + a brief why. Omit the section
+entirely when no contested calls were made; its absence is meaningful.>
+- <Choice — why.>
+
+## Hints
+<Required. Always present. List the file paths the implementer should
+touch, including test files, documentation, and any collateral files
+(e.g. install scripts, context-layer files, cross-referenced commands).
+Write "none" explicitly only if genuinely nothing collateral exists.>
+- <path/to/file>
+- <…>
+```
+
+**Required sections:** Goal, Acceptance criteria, Hints.
+**Conditional section:** Decisions (present only when non-obvious choices exist).
+No snippets, no required-reading lists, no conventions blocks, no definition
+of done — Claude fetches what it needs from the project's context layer at
+implementation time.
+
+## Enriched body schema (`target: local`)
+
+An enriched body is a thin body with two additional sections appended.
+Goal, Acceptance criteria, Decisions, and Hints are unchanged.
+
+```
+## Context bundle
+<Selective excerpts of relevant code, patterns, and constraints the local LLM
+needs. Include only what is necessary; a bloated bundle causes the very context
+overflow it is meant to prevent.>
+
+## Implementation steps
+<Step-by-step guidance concrete enough to follow without any external reads.
+Each step that relies on a pattern must have that pattern present in the
+Context bundle above.>
+```
+
+`Target:` is updated to `local` when the body is enriched.
+
+## TASKS.md summary block format
+
+```
+## <N>. <Title>
+
+Status: [MISSING]
+Target: claude
+Files: <comma-separated list>
+Preconditions: <comma-separated task numbers, or "none">
+```
+
+`Target:` in the summary block mirrors the body file's `Target:` field. It is
+the only field (besides `Files:`) intentionally duplicated between the index
+and the body, so the backlog view shows implementer intent without opening
+body files.
+
+`Status:` and `Preconditions:` are deliberately absent from the body: they
+describe how the task fits into the backlog, not what needs to be built.
+
+## Body file header
+
+The `Target:` field lives on the second line of the body file, immediately
+after the `# Task N — Title` heading, as a plain `Key: value` line — no YAML
+frontmatter. This is consistent with how `Status:` and `Files:` are expressed
+in TASKS.md.
 
 ## Static implement-procedure artifact
 
 `/task-setup` writes the per-project external-LLM wiring under
 `.claude/external/`:
 
-- `implement-prompt.md` — the system-prompt analogue of
-  `/task-implement` for the impl pass.
-- `tests-prompt.md` — the system-prompt for the test-writing pass
-  (runs before impl, edits only test files).
-- `run-affected-tests.sh` — wrapper that runs the project's test
-  runner against a list of test files passed on argv.
-- `run-full-tests.sh` — wrapper that runs the full suite.
-
-The two prompts cover role, inputs, procedure, output discipline, and
-stop conditions; they are static, project-agnostic templates. The two
-wrapper scripts are inferred from project files at `/task-setup` time
-(pytest, npm test, cargo test, go test, Makefile target, …) so the
-orchestrator stays runner-agnostic. All four artifacts are
-project-local (travel via git, so a teammate can clone and run) and
-idempotent (re-running `/task-setup` does not overwrite an edited
-prompt file or a real wrapper script — only the no-op stub wrappers
-written in skip-tests mode are upgradable, with user confirmation).
+- `implement-prompt.md` — the system-prompt fed to the local LLM via aider.
+- `tests-prompt.md` — the system-prompt for the test-writing pass.
+- `run-affected-tests.sh` — run the project's test runner against given files.
+- `run-full-tests.sh` — run the full suite.
 
 Standard aider invocation (one-shot, by hand):
 
@@ -90,52 +127,49 @@ aider --model ollama/qwen2.5-coder:14b \
       --read .claude/tasks/<N>.md
 ```
 
+Always run `/task-enrich <N>` before handing a task to the local LLM.
+
 ## Orchestrated path: `chosko-llm task-impl`
 
-The orchestrator (`scripts/cmd-task-impl.sh`, sourced shared helpers
-in `scripts/lib-task-external.sh`) runs the same 8-step sequence as
-`/task-implement`, but driven by aider against a single task at a
-time. It is invoked via `chosko-llm task-impl <N> [<N>…] | all` and
-performs:
+The orchestrator (`scripts/cmd-task-impl.sh`) runs an 8-step sequence driven
+by aider against a single enriched task at a time:
 
 ```
 Step 1.   flip TASKS.md Status: → [IN PROGRESS]
 Step 2.   aider with tests-prompt.md          (skipped in skip-tests mode)
 Step 3.   run-affected-tests.sh — expect FAIL (skipped in skip-tests mode)
-Step 4.   aider with implement-prompt.md, retry up to N times on
-          failure (N = $CHOSKO_TASK_IMPL_RETRIES, default 3),
-          feeding the failure log back into aider via --message.
+Step 4.   aider with implement-prompt.md, retry up to N times on failure
+          (N = $CHOSKO_TASK_IMPL_RETRIES, default 3)
 Step 5.   run-affected-tests.sh — expect PASS (skipped in skip-tests mode)
 Step 6.   run-full-tests.sh   — expect PASS  (skipped in skip-tests mode)
 Step 7.   flip TASKS.md Status: → [DONE]
-Step 8.   stage Files: ∪ TASKS.md, one commit, message
-          "Task <N>: <title>" (+ skip-tests note if applicable)
+Step 8.   stage Files: ∪ TASKS.md, one commit
 ```
 
-The orchestrator refuses to run if any of `implement-prompt.md`,
-`tests-prompt.md`, `run-affected-tests.sh`, `run-full-tests.sh` is
-missing — it points the user at `/task-setup`. It also refuses on a
-dirty working tree. Skip-tests mode is detected by grepping for the
-`# CHOSKO_TASK_IMPL_STUB` sentinel in `run-full-tests.sh`.
+The orchestrator refuses on a dirty working tree and refuses if any of the
+four artifacts under `.claude/external/` is missing.
 
 ## `/task-implement` discipline
 
-When the body uses the v0.2+ schema, Claude Code should treat it as a
-high-quality starting point and avoid reflexive bulk-reads of the
-context layer. This is a hint, not a constraint — judgment, not a
-checklist. Reach for CLAUDE.md, `.claude/context/`, and other source
-files when they would meaningfully inform the change; skip them when
-the body is already sufficient. Older bodies (pre-Task-1 schema) lack
-the new sections — for those, consult the context layer as before.
+`/task-implement` is the Claude Code implementation path. It reads the body
+file as the primary context source, then navigates CLAUDE.md, `.claude/context/`,
+and source files as needed — it does not need an exhaustive body to work well.
+
+When the body carries `Target: local`, `/task-implement` emits a one-line
+warning before proceeding:
+
+> Note: this task was written for a local LLM (target: local) — implementing
+> with Claude anyway.
+
+No confirmation prompt is shown; implementation proceeds normally.
 
 ## Cross-references
 
-- [`../../CLAUDE.md`](../../CLAUDE.md) — hard rules (authoring,
-  versioning, copy-not-symlink, no new deps).
-- [`../context/features.md`](../context/features.md) — shipped
-  artifacts including every `task-*` command.
-- [`../../docs/authoring-guide.md`](../../docs/authoring-guide.md) —
-  frontmatter schema + semver bump rules.
+- [`../../CLAUDE.md`](../../CLAUDE.md) — hard rules (authoring, versioning,
+  copy-not-symlink, no new deps).
+- [`../context/features.md`](../context/features.md) — shipped artifacts
+  including every `task-*` command and the `task-enrich` skill.
 - `commands/task-setup.md`, `commands/task-add.md`,
   `commands/task-implement.md`, `commands/task-clean.md`,
-  `commands/task-list.md` — the command implementations.
+  `commands/task-list.md`, `skills/task-enrich/SKILL.md` — the command and
+  skill implementations.

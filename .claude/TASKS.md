@@ -30,7 +30,7 @@ Preconditions: none
 
 ## 13. task schema — introduce thin body format and target field
 
-Status: [PENDING]
+Status: [DONE]
 Target: claude
 Files: .claude/domain/task-workflow.md
 Preconditions: none
