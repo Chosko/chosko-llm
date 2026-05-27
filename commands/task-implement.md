@@ -1,8 +1,8 @@
 ---
 name: task-implement
-version: 0.5.0
+version: 0.5.1
 type: command
-description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed / commit-first / abort) instead of hard-aborting. Treats each task's body file as the primary context source when available, only fanning out to CLAUDE.md / .claude/context/ when the body doesn't cover what's needed. Commits each task separately. Supports `next` to implement the first eligible task.
+description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Commits each task separately. Supports `next` to implement the first eligible task.
 ---
 
 # /task-implement
@@ -101,20 +101,26 @@ the body file when changing status.
 
 USING THE TASK BODY
 
-Body files authored by `/task-add` v0.3+ embed `### Files to modify`,
-`### Required reading`, `### Relevant snippets` (optional),
-`### Conventions to follow`, and `### Out of scope` alongside the
-usual Description / Behavior change / Tests / Definition of done.
-When these sections are present, treat them as a high-quality
-starting point — they often contain enough context to implement
-without further reading. Reach for CLAUDE.md, `.claude/context/`,
-`.claude/domain/`, and other source files when they would
-meaningfully inform the change (unfamiliar subsystem, snippet too
-narrow, contradictory signals between body and code), and skip them
-when the body is already sufficient. Use judgment, not a checklist.
+Body files use one of two schemas:
 
-Older bodies (pre-v0.3 schema) lack these sections — for those, fall
-back to consulting the context layer as before.
+**Current schema (Goal / Acceptance criteria / Decisions / Hints):**
+Read the body, then navigate CLAUDE.md, `.claude/context/`,
+`.claude/domain/`, and source files as needed. The body provides the
+spec; the project's context layer provides conventions and patterns.
+Use judgment about how much to read — the body's Hints point to the
+right files.
+
+**Enriched schema (same as above + Context bundle / Implementation steps):**
+The body is self-contained. Use the embedded context and steps as the
+primary working material. Reach for the context layer only when something
+contradicts or significantly extends what the body provides.
+
+**Older schema (Description / Required reading / Conventions to follow /
+Out of scope / Tests / Definition of done):**
+Treat the body as a high-quality starting point per the old conventions.
+Fall back to the context layer when the body is insufficient.
+
+In all cases: use judgment, not a checklist.
 
 ---
 
@@ -275,16 +281,16 @@ For each task, in order:
 
 ### Step 1 — Mark IN PROGRESS
 
-Use the Read tool to open `.claude/tasks/<N>.md` for the current task —
-this is where the Description, Behavior change, Doc updates, Tests,
-and Definition of done sections live. Hold them in mind for the rest
-of the per-task workflow.
+Use the Read tool to open `.claude/tasks/<N>.md` for the current task.
+Hold its contents in mind for the rest of the per-task workflow.
 
-If the body contains `### Files to modify`, `### Required reading`,
-`### Relevant snippets`, `### Conventions to follow`, or `### Out of
-scope` sections (v0.3+ schema), lean on them as your primary working
-context per USING THE TASK BODY; pull in additional files when they
-genuinely add value.
+If the body's second line reads `Target: local`, emit this note before
+proceeding (no confirmation prompt — just continue):
+
+> Note: this task was written for a local LLM (Target: local) —
+> implementing with Claude anyway.
+
+Apply the body schema guidance from USING THE TASK BODY above.
 
 Use the Edit tool to change this task's `Status:` line in
 `.claude/TASKS.md` (the summary block) to `[IN PROGRESS]`. The body

@@ -117,6 +117,19 @@
 
 ---
 
+## `target: local` warning
+
+1. Create or edit a task body so its second line reads `Target: local`.
+2. Run `/task-implement <N>` for that task.
+3. Observe a one-line note: "this task was written for a local LLM
+   (Target: local) — implementing with Claude anyway."
+4. Verify implementation proceeds normally — no confirmation prompt,
+   no blocking.
+5. Verify the note does NOT appear for a task with `Target: claude` or
+   no `Target:` line.
+
+---
+
 ## Notes
 
 - Test `/task-implement all` to verify batch mode and progress reporting.

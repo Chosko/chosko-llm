@@ -57,7 +57,7 @@ Preconditions: 13, 14
 
 ## 16. task-implement — warn on target: local tasks
 
-Status: [PENDING]
+Status: [DONE]
 Target: claude
 Files: commands/task-implement.md, tests/smoke/task-implement.md
 Preconditions: 13
