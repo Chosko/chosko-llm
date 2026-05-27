@@ -23,7 +23,7 @@ applicable), and Hints. Claude navigates the project at implementation time
 and does not need more.
 
 With `--enrich`, produce a self-contained body for a local LLM implementer
-in one shot — read `skills/task-enrich/SKILL.md` for the enriched format and
+in one shot — read `commands/task-enrich.md` for the enriched format and
 apply it directly during authoring. Do not write a plain body first and then
 enrich it.
 
@@ -62,9 +62,9 @@ Probe with the Read tool / Glob. If either is missing, stop:
 Do not proceed to PHASE 1. This rule has no exceptions.
 
 If `--enrich` is present in $ARGUMENTS, also verify that
-`skills/task-enrich/SKILL.md` exists. If it does not, stop:
+`commands/task-enrich.md` exists. If it does not, stop:
 
-> `/task-add --enrich` requires the task-enrich skill to be installed.
+> `/task-add --enrich` requires the task-enrich command to be installed.
 > Run `chosko-llm update` or install it manually, then retry.
 
 If all artifacts exist, continue.
@@ -138,7 +138,7 @@ LLM needs. Include only what is necessary.>
 <Step-by-step guidance concrete enough to follow without any external reads.>
 ```
 
-In `--enrich` mode, read `skills/task-enrich/SKILL.md` for the detailed
+In `--enrich` mode, read `commands/task-enrich.md` for the detailed
 format guidance of these two sections.
 
 ---
@@ -178,7 +178,7 @@ PHASE 1 — READ (silent)
 4. Note any non-obvious choices you are making (scope, approach,
    interpretation of ambiguous requirements). These become Decisions.
 
-5. **`--enrich` mode only:** also read `skills/task-enrich/SKILL.md`
+5. **`--enrich` mode only:** also read `commands/task-enrich.md`
    for the enriched body format. Gather additional material for
    `## Context bundle` (relevant excerpts) and `## Implementation steps`
    (step-by-step guidance). Be selective — include only what is necessary.

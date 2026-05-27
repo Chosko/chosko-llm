@@ -171,5 +171,5 @@ No confirmation prompt is shown; implementation proceeds normally.
   including every `task-*` command and the `task-enrich` skill.
 - `commands/task-setup.md`, `commands/task-add.md`,
   `commands/task-implement.md`, `commands/task-clean.md`,
-  `commands/task-list.md`, `skills/task-enrich/SKILL.md` — the command and
+  `commands/task-list.md`, `commands/task-enrich.md` — the command and
   skill implementations.

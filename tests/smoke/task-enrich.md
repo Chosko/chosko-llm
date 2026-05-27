@@ -1,7 +1,7 @@
 # Smoke test: task-enrich
 
-**Type:** skill
-**Source:** skills/task-enrich/SKILL.md
+**Type:** command
+**Source:** commands/task-enrich.md
 
 ## Setup
 

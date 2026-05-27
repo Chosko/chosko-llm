@@ -1,12 +1,12 @@
 ---
 name: task-enrich
 version: 0.1.0
-type: skill
+type: command
 description: Expand a thin (target: claude) task body into a self-contained enriched body for a local LLM implementer.
 ---
 
 # /task-enrich
-# Expand a thin task body into an enriched, self-contained body suitable
+# Expand a task body into an enriched, self-contained body suitable
 # for a local LLM implementer (e.g. qwen2.5-coder via aider).
 # Usage: /task-enrich <N>   (N = task number)
 

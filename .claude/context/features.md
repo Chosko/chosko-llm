@@ -44,7 +44,7 @@ Currently shipped:
   flips happen in `.claude/TASKS.md`.
 - `commands/task-list.md` — print the backlog as a compact read-only
   summary. Reads only `.claude/TASKS.md`; never opens the body files.
-- `skills/task-enrich/SKILL.md` — expand a thin (`target: claude`) task body
+- `commands/task-enrich.md` — expand a thin (`target: claude`) task body
   into an enriched self-contained body (`target: local`) for a local LLM
   implementer. Appends `## Context bundle` and `## Implementation steps`
   sections; updates `Target:` to `local`. Does not commit.
