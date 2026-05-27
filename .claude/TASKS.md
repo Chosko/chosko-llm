@@ -48,7 +48,7 @@ Preconditions: 13
 
 ## 15. task-add — thin body by default, --enrich option
 
-Status: [PENDING]
+Status: [DONE]
 Target: claude
 Files: commands/task-add.md, tests/smoke/task-add.md
 Preconditions: 13, 14
