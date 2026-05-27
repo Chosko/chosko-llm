@@ -23,7 +23,7 @@ EOF
 esac
 
 print_header() {
-  printf '%-30s %-8s %-14s %s\n' "NAME" "KIND" "INSTALLED" "LATEST"
+  printf '%-30s %-8s %-14s %-16s %s\n' "NAME" "KIND" "INSTALLED" "LATEST" "STATUS"
 }
 
 # collect_names <kind>
@@ -82,7 +82,18 @@ list_all() {
       available) [ "$latest_col" = "—" ] && continue ;;
     esac
 
-    printf '%-30s %-8s %-14s %s\n' "$name" "command" "$inst_col" "$latest_col"
+    local status_col
+    if [ "$inst_col" = "—" ]; then
+      status_col="not installed"
+    elif [ "$latest_col" = "—" ]; then
+      status_col="local only"
+    elif [ "$inst_col" = "$latest_col" ]; then
+      status_col="up-to-date"
+    else
+      status_col="updatable"
+    fi
+
+    printf '%-30s %-8s %-14s %-16s %s\n' "$name" "command" "$inst_col" "$latest_col" "$status_col"
     found=1
   done < <(collect_names command)
 
@@ -111,7 +122,18 @@ list_all() {
       available) [ "$latest_col" = "—" ] && continue ;;
     esac
 
-    printf '%-30s %-8s %-14s %s\n' "$name" "skill" "$inst_col" "$latest_col"
+    local status_col
+    if [ "$inst_col" = "—" ]; then
+      status_col="not installed"
+    elif [ "$latest_col" = "—" ]; then
+      status_col="local only"
+    elif [ "$inst_col" = "$latest_col" ]; then
+      status_col="up-to-date"
+    else
+      status_col="updatable"
+    fi
+
+    printf '%-30s %-8s %-14s %-16s %s\n' "$name" "skill" "$inst_col" "$latest_col" "$status_col"
     found=1
   done < <(collect_names skill)
 

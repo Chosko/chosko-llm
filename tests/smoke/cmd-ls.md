@@ -1,0 +1,42 @@
+# Smoke test: cmd-ls
+
+**Type:** CLI command
+**Source:** scripts/cmd-ls.sh
+
+## Setup
+
+- `install.sh` has been run (managed clone exists at `~/.chosko-llm`).
+- At least one feature is installed (`chosko-llm add <feature>` was run).
+
+## Steps
+
+1. Run `chosko-llm ls` and inspect the output.
+2. Identify a feature that is installed and at the same version as the managed
+   clone (installed version == latest version).
+3. Identify a feature that is installed but the managed clone has a newer
+   version (e.g. bump the version in the source clone manually for testing).
+4. Identify a feature that exists only in the managed clone but is not yet
+   installed (`chosko-llm rm <feature>` to create this state).
+5. Identify a feature that is installed but NOT present in the managed clone
+   (manually remove from `~/.chosko-llm` to create this state).
+6. Run `chosko-llm ls --installed`.
+7. Run `chosko-llm ls --available`.
+
+## Expected
+
+1. The header row contains the column `STATUS` (fifth column after LATEST).
+2. A feature with installed == latest shows `up-to-date` in the STATUS column.
+3. A feature with installed < latest shows `updatable` in the STATUS column.
+4. A feature with installed == `—` (not installed) shows `not installed`.
+5. A feature with latest == `—` (no source in managed clone) shows `local only`.
+6. `chosko-llm ls --installed` output includes the STATUS column; rows with
+   `—` INSTALLED are omitted but STATUS column is still present on shown rows.
+7. `chosko-llm ls --available` output includes the STATUS column; rows with
+   `—` LATEST are omitted but STATUS column is still present on shown rows.
+
+## Notes
+
+- The `—` sentinel is an em-dash (U+2014), not a regular hyphen.
+- `unversioned` appears when a file exists but has no `version` frontmatter
+  field; this should not crash and produces `updatable` when a source version
+  exists or `local only` when no source is present.

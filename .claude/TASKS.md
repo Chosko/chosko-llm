@@ -6,7 +6,7 @@ Last task number: 11
 
 ## 10. cmd-ls — add STATUS column with up-to-date / updatable / not-installed / local-only labels
 
-Status: [MISSING]
+Status: [DONE]
 Files: scripts/cmd-ls.sh, tests/smoke/cmd-ls.md, docs/cli-help.txt
 Preconditions: none
 
