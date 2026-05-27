@@ -97,6 +97,26 @@
    Step 8 — adjust the spec or simulate by hand).
 2. Observe the same 3-way prompt fires before task `<M>` starts.
 
+## `next` — first eligible task
+
+1. Set up a backlog where tasks 1 and 2 are `[DONE]`, task 3 is
+   `[MISSING]`, and task 4 is `[MISSING]`. Working tree must be clean.
+2. Run `/task-implement next`.
+3. Observe the agent reports "Next eligible task: 3 — <title>" and
+   implements only task 3 — not task 4.
+4. Verify exactly one commit for task 3. Task 4 status is unchanged.
+
+### `next` — nothing eligible
+
+1. Set up a backlog where all tasks are `[DONE]`, `[SKIP]`, or
+   `[IN PROGRESS]`.
+2. Run `/task-implement next`.
+3. Observe the message "No eligible tasks found — all tasks are DONE,
+   SKIP, or IN PROGRESS." and that no commit was made and no status
+   line changed.
+
+---
+
 ## Notes
 
 - Test `/task-implement all` to verify batch mode and progress reporting.

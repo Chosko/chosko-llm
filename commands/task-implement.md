@@ -1,8 +1,8 @@
 ---
 name: task-implement
-version: 0.4.0
+version: 0.5.0
 type: command
-description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed / commit-first / abort) instead of hard-aborting. Treats each task's body file as the primary context source when available, only fanning out to CLAUDE.md / .claude/context/ when the body doesn't cover what's needed. Commits each task separately.
+description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed / commit-first / abort) instead of hard-aborting. Treats each task's body file as the primary context source when available, only fanning out to CLAUDE.md / .claude/context/ when the body doesn't cover what's needed. Commits each task separately. Supports `next` to implement the first eligible task.
 ---
 
 # /task-implement
@@ -12,9 +12,11 @@ description: Implement one or more tasks from the project's task backlog end-to-
 # project has no test suite the flow becomes interactive.
 # Usage: /task-implement <task-number> [<task-number> ...]
 #        /task-implement all
+#        /task-implement next
 # Examples: /task-implement 12
 #           /task-implement 12 13 14
 #           /task-implement all
+#           /task-implement next
 
 GOAL
 For each requested task, in the order given:
@@ -59,6 +61,14 @@ ARGUMENT PARSING
   list, report it to the user as a one-line summary ("Will implement: 3,
   7, 12 (5 tasks skipped: 1 DONE, 1 IN PROGRESS, 3 SKIP)") and proceed
   without asking for confirmation — the user already chose `all`.
+- The literal token `next` (case-insensitive) — find the first task in the
+  backlog (by appearance order in TASKS.md) whose status is `[MISSING]`,
+  `[STUBBED]`, `[INCORRECT]`, or `[PARTIAL]`, and implement that single
+  task. Skip tasks whose status is `[DONE]`, `[SKIP]`, or `[IN PROGRESS]`.
+  If no eligible task is found, tell the user "No eligible tasks found —
+  all tasks are DONE, SKIP, or IN PROGRESS." and stop. Otherwise, report
+  "Next eligible task: <N> — <title>" and proceed without asking for
+  confirmation.
 
 If `$ARGUMENTS` is empty, tell the user the usage and stop.
 
