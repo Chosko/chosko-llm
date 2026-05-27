@@ -1,8 +1,8 @@
 ---
 name: task-clean
-version: 0.2.0
+version: 0.3.0
 type: command
-description: Prune tasks in a terminal status — remove summary blocks from TASKS.md and delete their per-task body files. Task IDs are stable; survivors are NEVER renumbered.
+description: Prune tasks in a terminal status — remove summary blocks from TASKS.md and delete their per-task body files. Task IDs are stable; survivors are NEVER renumbered. Automatically commits the removals.
 ---
 
 # /task-clean
@@ -40,7 +40,8 @@ TOOL DISCIPLINE
   shell redirection, `tee`, `Set-Content`, `Out-File`, or any shell
   mechanism to write files.
 - Bash / PowerShell are used only to delete the per-task body files
-  (`rm .claude/tasks/<N>.md`).
+  (`rm .claude/tasks/<N>.md`) and to run git operations in PHASE 3
+  (`git add --` and `git commit`).
 
 ---
 
@@ -163,6 +164,43 @@ PHASE 2 — APPLY (only after explicit approval)
    - Final task count.
    - The unchanged `Last task number:` value.
 
+After the report, continue to PHASE 3.
+
+---
+
+PHASE 3 — COMMIT
+
+After PHASE 2 completes successfully, commit the changes automatically —
+no further prompt is needed.
+
+1. Run exactly:
+
+   ```
+   git add -- .claude/TASKS.md .claude/tasks/<N>.md .claude/tasks/<M>.md …
+   git commit -m "task-clean: remove tasks <N>[, <M>, …]"
+   ```
+
+   Stage `.claude/TASKS.md` (modified) plus each deleted body file path
+   (body files pruned in PHASE 2). Staging a deleted file via
+   `git add -- path` works identically to staging a modified one — git
+   records the deletion when the file no longer exists on disk.
+
+   PHASE 3 stages ONLY the files PHASE 2 touched. It must not run
+   `git add -A`, `git add .`, `git add -u`, or anything that could pull
+   in unrelated dirty files from the working tree.
+
+   Commit message format: `task-clean: remove tasks <N>[, <M>, …]`
+   where `<N>`, `<M>`, … are the pruned task IDs in ascending order.
+
+2. On success, report the resulting commit hash to the user:
+   `git rev-parse --short HEAD`.
+
+3. On failure (e.g. pre-commit hook rejects the commit): surface the
+   exact failure output to the user. Do NOT retry, do NOT amend, do
+   NOT use `--no-verify` or any hook-skipping flag. The files remain
+   in whatever state git left them (typically staged but uncommitted);
+   tell the user that and let them decide.
+
 DO NOT:
 - Write to any file during PHASE 1.
 - Renumber surviving tasks. Task IDs are stable — re-using a number for
@@ -172,4 +210,9 @@ DO NOT:
   the task with the highest ID.
 - Touch tasks whose status is not in the prune set.
 - Change task content other than `Preconditions:` lines on survivors.
-- Commit. This command does not touch git.
+- Use `git add -A`, `git add .`, or `git add -u` in PHASE 3 — only the
+  files touched by PHASE 2 may be staged.
+- Use `--amend`, `--no-verify`, `--no-gpg-sign`, or any other
+  hook-skipping or commit-rewriting flag. If a pre-commit hook fails,
+  surface it and let the user fix it.
+- Push, branch, tag, or otherwise touch shared/visible git state.

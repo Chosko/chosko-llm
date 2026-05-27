@@ -33,7 +33,8 @@ Currently shipped:
 - `commands/task-clean.md` — prune terminal-status tasks. Removes summary
   blocks AND deletes the matching body files. Never renumbers — task IDs
   are stable across the project's lifetime; the `Last task number`
-  counter never decreases.
+  counter never decreases. After applying, commits the changes
+  automatically (`.claude/TASKS.md` + deleted body files).
 - `commands/task-implement.md` — implement backlog tasks end-to-end with
   TDD. Reads each task's body file from `.claude/tasks/<N>.md` only when
   needed and treats it as the primary context source when the v0.3+

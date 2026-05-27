@@ -22,6 +22,6 @@ Preconditions: none
 
 ## 12. task-clean — auto-commit pruned tasks after apply
 
-Status: [MISSING]
+Status: [DONE]
 Files: commands/task-clean.md, tests/smoke/task-clean.md, .claude/context/features.md
 Preconditions: none
