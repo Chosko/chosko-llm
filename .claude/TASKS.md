@@ -39,7 +39,7 @@ Preconditions: none
 
 ## 14. task-enrich — new skill to expand thin tasks for local LLM
 
-Status: [PENDING]
+Status: [DONE]
 Target: claude
 Files: skills/task-enrich/SKILL.md, tests/smoke/task-enrich.md, .claude/context/features.md, .claude/domain/task-workflow.md
 Preconditions: 13

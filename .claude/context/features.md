@@ -22,14 +22,13 @@ Currently shipped:
   (the static system prompt fed to an external LLM via aider). Required
   before `/task-add`. Idempotent — re-runs only fill in missing artifacts
   and never overwrite an edited implement-prompt.
-- `commands/task-add.md` — plan and append a new task: writes a summary
-  block to `.claude/TASKS.md` and a self-contained body file at
-  `.claude/tasks/<N>.md`. The body schema is rich enough that an
-  external LLM (target: qwen2.5-coder:14b via aider) fed only the body
-  plus `implement-prompt.md` can implement: it includes Files to
-  modify, Required reading, Relevant snippets (optional), Conventions
-  to follow, and Out of scope alongside the usual Description / Tests /
-  Definition of done. Refuses if `/task-setup` has not run.
+- `commands/task-add.md` — plan and append a new task conversationally:
+  writes a summary block to `.claude/TASKS.md` and a thin body file at
+  `.claude/tasks/<N>.md`. The default body schema (target: claude) contains
+  Goal, Acceptance criteria, Decisions (when applicable), and Hints. With
+  `--enrich`, produces an enriched body (target: local) in one shot by
+  reading `/task-enrich` for format guidance. Refuses if `/task-setup` has
+  not run. Auto-commits the two written files.
 - `commands/task-clean.md` — prune terminal-status tasks. Removes summary
   blocks AND deletes the matching body files. Never renumbers — task IDs
   are stable across the project's lifetime; the `Last task number`
@@ -45,7 +44,10 @@ Currently shipped:
   flips happen in `.claude/TASKS.md`.
 - `commands/task-list.md` — print the backlog as a compact read-only
   summary. Reads only `.claude/TASKS.md`; never opens the body files.
-- No skills yet (`skills/` contains only `.gitkeep`).
+- `skills/task-enrich/SKILL.md` — expand a thin (`target: claude`) task body
+  into an enriched self-contained body (`target: local`) for a local LLM
+  implementer. Appends `## Context bundle` and `## Implementation steps`
+  sections; updates `Target:` to `local`. Does not commit.
 
 ## Public API (per-feature contract)
 
