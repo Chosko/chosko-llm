@@ -29,8 +29,8 @@
 6. Confirm with "yes".
 7. Observe the WRITE report: assigned task ID, both file paths,
    counter advanced.
-8. Observe the PHASE 5 prompt: `Task <N> written. Commit
-   .claude/TASKS.md + .claude/tasks/<N>.md now? [y/N]`.
+8. Observe PHASE 5 commit automatically — no prompt — and the
+   resulting commit hash reported.
 
 ## Expected
 
@@ -52,29 +52,21 @@
 - `Status:` and `Preconditions:` are NOT duplicated in the body file.
 - The `Last task number:` line in TASKS.md is incremented by 1.
 - Adding two tasks in a row produces sequential IDs (e.g. 1 then 2).
-- No git commit is made unless the user explicitly answers `y` (or
-  equivalent) at the PHASE 5 prompt.
+- A git commit is made automatically at the end of PHASE 5 — no
+  prompt is issued. The commit covers exactly the two files PHASE 4
+  wrote and nothing else.
 
 ## PHASE 5 (commit) scenarios
 
-### Commit-yes path
+### Normal commit path
 
 1. Run `/task-add` end-to-end on a clean working tree.
 2. Approve the draft (PHASE 3) and let PHASE 4 write the two files.
-3. At the PHASE 5 prompt, answer `y`.
+3. Observe PHASE 5 commits automatically and reports the commit hash.
 4. Verify a single new commit exists with message `Add task <N>: <title>`.
 5. Run `git show --stat HEAD` and verify it lists exactly two files —
    `.claude/TASKS.md` and `.claude/tasks/<N>.md` — and nothing else.
 6. Verify `git status` is clean.
-
-### Commit-no path
-
-1. Run `/task-add` end-to-end on a clean working tree.
-2. At the PHASE 5 prompt, answer `n` (or just press enter).
-3. Verify the two files are written but unstaged: `git status` shows
-   `.claude/TASKS.md` modified and `.claude/tasks/<N>.md` untracked.
-4. No new commit appears in `git log`.
-5. The agent reports `Skipped commit. Files left unstaged.`
 
 ### Dirty-tree safety
 
@@ -102,8 +94,8 @@
 - Test the "no questions" fast path with a very specific description.
 - Test repeated invocation: each call increments the counter; IDs
   never collide.
-- Verify silence is not treated as approval — agent must wait.
-- Verify silence at the PHASE 5 prompt is treated as `n` (no commit).
+- Verify silence at PHASE 3 is not treated as approval — agent must
+  wait for explicit confirmation before writing any file.
 - **Aider sanity check (qualitative, manual).** After creating a real
   task, run:
   `aider --model ollama/qwen2.5-coder:14b \`

@@ -1,8 +1,8 @@
 ---
 name: task-add
-version: 0.4.0
+version: 0.5.0
 type: command
-description: Plan a new task entry conversationally, confirm with the user, write a summary to TASKS.md and a richer body file under .claude/tasks/ that an external LLM (aider + Ollama) can implement directly, then optionally commit the two written files.
+description: Plan a new task entry conversationally, confirm with the user, write a summary to TASKS.md and a richer body file under .claude/tasks/ that an external LLM (aider + Ollama) can implement directly, then automatically commit the two written files.
 ---
 
 # /task-add
@@ -17,9 +17,8 @@ description: Plan a new task entry conversationally, confirm with the user, writ
 GOAL
 Add a single new task to the project's task backlog, following the
 conventions below. The flow is: SETUP-CHECK → READ → ASK
-(conversational) → DRAFT → CONFIRM → WRITE → OFFER COMMIT. Never write
-to any file before the user confirms the draft, and never commit
-without a separate explicit approval at PHASE 5.
+(conversational) → DRAFT → CONFIRM → WRITE → COMMIT. Never write
+to any file before the user confirms the draft.
 
 $ARGUMENTS
 
@@ -33,8 +32,8 @@ TOOL DISCIPLINE
   use the Write tool only when creating a new file from scratch. Never use
   shell redirection, `tee`, `Set-Content`, `Out-File`, or any shell
   mechanism to write files.
-- Bash / PowerShell are used ONLY by PHASE 5 (the optional commit step):
-  `git status --porcelain`, `git add -- <path> <path>`, and `git commit`.
+- Bash / PowerShell are used ONLY by PHASE 5 (the commit step):
+  `git add -- <path> <path>` and `git commit`.
   No other phases shell out.
 
 ---
@@ -338,24 +337,13 @@ After the report, continue to PHASE 5.
 
 ---
 
-PHASE 5 — OFFER COMMIT (optional, requires explicit approval)
+PHASE 5 — COMMIT
 
 The two files written by PHASE 4 (`.claude/TASKS.md` and
 `.claude/tasks/<N>.md`) are a natural, self-contained commit. PHASE 5
-asks the user whether to capture them now, then either does so or
-leaves them unstaged.
+commits them automatically — no further prompt is needed.
 
-1. Print exactly one prompt:
-
-   > Task <N> written. Commit `.claude/TASKS.md` + `.claude/tasks/<N>.md` now? [y/N]
-
-2. Interpret the answer:
-   - **Explicit yes** (`y`, `yes`, `commit`, `go`): proceed to step 3.
-   - **Anything else** (no, blank line, EOF, an unrelated reply, silence):
-     print `Skipped commit. Files left unstaged.` and stop. Do not
-     stage, do not commit. The user can commit by hand later.
-
-3. On yes, run exactly:
+1. Run exactly:
 
    ```
    git add -- .claude/TASKS.md .claude/tasks/<N>.md
@@ -367,10 +355,10 @@ leaves them unstaged.
    second `-m` is optional — drop it if the description's first
    sentence does not yield a useful one-liner.
 
-4. On success, report the resulting commit hash to the user
+2. On success, report the resulting commit hash to the user
    (`git rev-parse --short HEAD`).
 
-5. On failure (e.g. pre-commit hook rejects the commit): surface the
+3. On failure (e.g. pre-commit hook rejects the commit): surface the
    exact failure output to the user. Do NOT retry, do NOT amend, do
    NOT use `--no-verify` or any hook-skipping flag. The two files
    remain in whatever state git left them (typically staged but
@@ -399,4 +387,3 @@ DO NOT:
   hook-skipping or commit-rewriting flag. If a pre-commit hook fails,
   surface it and let the user fix it.
 - Push, branch, tag, or otherwise touch shared/visible git state.
-- Commit without an explicit yes at PHASE 5. Silence is not approval.
