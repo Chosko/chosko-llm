@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 11
+Last task number: 12
 
 ---
 
@@ -14,6 +14,14 @@ Preconditions: none
 
 ## 11. cmd-update — skip already-up-to-date and locally-ahead features in --all mode
 
-Status: [MISSING]
+Status: [DONE]
 Files: scripts/cmd-update.sh, tests/smoke/cmd-update.md, docs/cli-help.txt
+Preconditions: none
+
+---
+
+## 12. task-clean — auto-commit pruned tasks after apply
+
+Status: [MISSING]
+Files: commands/task-clean.md, tests/smoke/task-clean.md, .claude/context/features.md
 Preconditions: none

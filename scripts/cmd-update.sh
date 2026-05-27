@@ -48,6 +48,23 @@ update_one() {
   esac
 }
 
+# version_cmp <a> <b>
+# Prints -1, 0, or 1 — the ordering of semver strings a vs b.
+# Returns non-zero exit code if either string is empty or non-semver.
+version_cmp() {
+  local a="$1" b="$2"
+  [ -n "$a" ] && [ -n "$b" ] || return 1
+  awk -v a="$a" -v b="$b" 'BEGIN {
+    n = split(a, av, "."); m = split(b, bv, ".")
+    if (n != 3 || m != 3) exit 2
+    for (i = 1; i <= 3; i++) {
+      if (av[i]+0 > bv[i]+0) { print  1; exit 0 }
+      if (av[i]+0 < bv[i]+0) { print -1; exit 0 }
+    }
+    print 0; exit 0
+  }'
+}
+
 if [ "$1" = "--all" ]; then
   any=0
   if [ -d "$CLAUDE_HOME/commands" ]; then
@@ -56,6 +73,15 @@ if [ "$1" = "--all" ]; then
       base="$(basename "$f" .md)"
       # Only update if a source exists in the managed clone.
       if [ -f "$(src_command_path "$base")" ]; then
+        inst_ver="$(read_frontmatter_field "$f" version || true)"
+        src_ver="$(read_frontmatter_field "$(src_command_path "$base")" version || true)"
+        cmp="$(version_cmp "$inst_ver" "$src_ver" 2>/dev/null || echo "?")"
+        case "$cmp" in
+          0)  log_info "Already up-to-date: command '$base' (v$inst_ver)"; continue ;;
+          1)  log_info "Local version ahead: command '$base' (local v$inst_ver, latest v$src_ver) — skipping"; continue ;;
+          -1) ;; # fall through to update_one
+          *)  log_warn "Skipping command '$base': version unreadable — update manually"; continue ;;
+        esac
         update_one command "$base"
         any=1
       else
@@ -68,6 +94,17 @@ if [ "$1" = "--all" ]; then
       [ -e "$d" ] || continue
       base="$(basename "$d")"
       if [ -f "$(src_skill_path "$base")" ]; then
+        inst_skill="$(inst_skill_path "$base")"
+        src_skill="$(src_skill_path "$base")"
+        inst_ver="$(read_frontmatter_field "$inst_skill" version || true)"
+        src_ver="$(read_frontmatter_field "$src_skill" version || true)"
+        cmp="$(version_cmp "$inst_ver" "$src_ver" 2>/dev/null || echo "?")"
+        case "$cmp" in
+          0)  log_info "Already up-to-date: skill '$base' (v$inst_ver)"; continue ;;
+          1)  log_info "Local version ahead: skill '$base' (local v$inst_ver, latest v$src_ver) — skipping"; continue ;;
+          -1) ;; # fall through to update_one
+          *)  log_warn "Skipping skill '$base': version unreadable — update manually"; continue ;;
+        esac
         update_one skill "$base"
         any=1
       else

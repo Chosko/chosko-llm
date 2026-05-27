@@ -10,7 +10,8 @@ Usage:
                                       Errors if the feature is already installed (use 'update').
   chosko-llm rm  <feature>            Delete an installed feature from $CLAUDE_HOME.
   chosko-llm update <feature>         Re-copy a feature from the managed clone (installs if missing).
-  chosko-llm update --all             Update every installed feature for which a source exists.
+  chosko-llm update --all             Update every installed feature whose version is lower than the
+                                      managed clone (skips up-to-date and locally-ahead features).
 
   chosko-llm upgrade                  git pull the managed clone and refresh the CLI proxy.
                                       Does NOT re-install features — use 'update --all' for that.
