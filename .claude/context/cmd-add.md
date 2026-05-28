@@ -11,9 +11,12 @@ that, the user must call `update`.
 CLI:
 - `chosko-llm add <feature>` — `<feature>` is `<name>`, `command:<name>`, or
   `skill:<name>`.
+- `chosko-llm add --all` — install every feature present in the managed clone
+  that is not yet installed; already-installed features are skipped with an
+  info log.
 
 Exit codes:
-- 0 on successful copy.
+- 0 on successful copy (or `--all` with nothing new to install).
 - 1 (via `die`) if no argument, if the feature is not in the managed clone,
   if the source is missing required frontmatter, or if the target is already
   installed.
@@ -56,5 +59,6 @@ Side effects:
 - Changing the "already installed → error" policy (e.g. adding a `--force`
   flag) → `scripts/cmd-add.sh`.
 - Changing what gets copied for a skill (e.g. excluding patterns) → the
-  `cp -R` call in the `skill)` branch of `cmd-add.sh`.
+  `cp -R` call in the `skill)` branch and the `--all` loop of `cmd-add.sh`.
 - Tweaking the success log line format → `cmd-add.sh`.
+- Changing `--all` enumeration or skip logic → the `--all` block in `cmd-add.sh`.

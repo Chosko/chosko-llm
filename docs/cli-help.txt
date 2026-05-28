@@ -8,6 +8,8 @@ Usage:
 
   chosko-llm add <feature>            Copy a feature from the managed clone into $CLAUDE_HOME.
                                       Errors if the feature is already installed (use 'update').
+  chosko-llm add --all                Install all features from the managed clone that are not yet
+                                      installed. Already-installed features are skipped.
   chosko-llm rm  <feature>            Delete an installed feature from $CLAUDE_HOME.
   chosko-llm update <feature>         Re-copy a feature from the managed clone (installs if missing).
   chosko-llm update --all             Update every installed feature whose version is lower than the
