@@ -124,7 +124,7 @@ if [ "$1" = "--all" ]; then
   fi
   if [ -f "$CLAUDE_HOME/CLAUDE.md" ]; then
     while IFS= read -r line; do
-      local name inst_ver src_ver cmp
+      name= inst_ver= src_ver= cmp=
       name="$(printf '%s' "$line" | sed 's/<!-- chosko-llm:\([^:]*\):begin.*/\1/')"
       inst_ver="$(printf '%s' "$line" | sed 's/.*:begin v\([^ ]*\) -->.*/\1/')"
       [ -n "$name" ] || continue
