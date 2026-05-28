@@ -25,8 +25,10 @@ Usage:
   chosko-llm help                     Show this help.
 
 Feature names:
-  Bare names (e.g. 'refactor-reviewer') match commands and skills. If a name exists as both,
-  disambiguate with 'command:<name>' or 'skill:<name>'.
+  Bare names (e.g. 'refactor-reviewer') match commands, skills, and claude-md artifacts. If a
+  name is ambiguous, disambiguate with 'command:<name>', 'skill:<name>', or 'claude-md:<name>'.
+  claude-md artifacts inject managed sections into $CLAUDE_HOME/CLAUDE.md rather than copying
+  a standalone file. Sections are delimited by HTML comments so user content is preserved.
 
 Environment:
   CHOSKO_LLM_HOME   Path to the managed clone. Default: ~/.chosko-llm

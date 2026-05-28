@@ -39,4 +39,14 @@ case "$kind" in
     version="$(read_frontmatter_field "$src_skill" version)"
     log_info "Installed skill '$name' v$version -> $dst_dir"
     ;;
+  claude-md)
+    src="$(src_claudemd_path "$name")"
+    require_versioned_source "$src"
+    if claudemd_is_installed "$name"; then
+      die "claude-md '$name' is already installed. Use 'chosko-llm update claude-md:$name' to refresh."
+    fi
+    version="$(read_frontmatter_field "$src" version)"
+    inject_section "$name" "$version" "$src"
+    log_info "Installed claude-md '$name' v$version -> $CLAUDE_HOME/CLAUDE.md"
+    ;;
 esac

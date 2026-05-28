@@ -53,6 +53,24 @@ if [ -d "$CHOSKO_LLM_HOME" ] && [ -d "$CLAUDE_HOME" ]; then
         fi
       done
     fi
+    # claude-md sections
+    if [ -d "$CHOSKO_LLM_HOME/claude-md" ] && [ -f "$CLAUDE_HOME/CLAUDE.md" ]; then
+      for src in "$CHOSKO_LLM_HOME"/claude-md/*.md; do
+        [ -e "$src" ] || continue
+        base="$(basename "$src" .md)"
+        if grep -qF "<!-- chosko-llm:${base}:begin" "$CLAUDE_HOME/CLAUDE.md" 2>/dev/null; then
+          log "Removing claude-md section: $base"
+          tmp="$(mktemp)"
+          awk -v bm="<!-- chosko-llm:${base}:begin" \
+              -v em="<!-- chosko-llm:${base}:end -->" '
+            index($0, bm) { skip=1; next }
+            skip && index($0, em) { skip=0; next }
+            skip { next }
+            { print }
+          ' "$CLAUDE_HOME/CLAUDE.md" > "$tmp" && mv "$tmp" "$CLAUDE_HOME/CLAUDE.md"
+        fi
+      done
+    fi
   else
     log "Leaving installed features alone."
   fi

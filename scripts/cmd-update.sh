@@ -44,6 +44,16 @@ update_one() {
       cp -R "$src_dir" "$dst_dir"
       log_info "Updated skill '$name' -> v$(read_frontmatter_field "$src_skill" version)"
       ;;
+    claude-md)
+      local src
+      src="$(src_claudemd_path "$name")"
+      [ -f "$src" ] || die "No source for claude-md '$name' at $src"
+      require_versioned_source "$src"
+      local version
+      version="$(read_frontmatter_field "$src" version)"
+      inject_section "$name" "$version" "$src"
+      log_info "Updated claude-md '$name' -> v$version"
+      ;;
     *) die "Unknown kind: $kind" ;;
   esac
 }
@@ -111,6 +121,28 @@ if [ "$1" = "--all" ]; then
         log_warn "Skipping skill '$base': no source in managed clone."
       fi
     done
+  fi
+  if [ -f "$CLAUDE_HOME/CLAUDE.md" ]; then
+    while IFS= read -r line; do
+      local name inst_ver src_ver cmp
+      name="$(printf '%s' "$line" | sed 's/<!-- chosko-llm:\([^:]*\):begin.*/\1/')"
+      inst_ver="$(printf '%s' "$line" | sed 's/.*:begin v\([^ ]*\) -->.*/\1/')"
+      [ -n "$name" ] || continue
+      if [ -f "$(src_claudemd_path "$name")" ]; then
+        src_ver="$(read_frontmatter_field "$(src_claudemd_path "$name")" version || true)"
+        cmp="$(version_cmp "$inst_ver" "$src_ver" 2>/dev/null || echo "?")"
+        case "$cmp" in
+          0)  log_info "Already up-to-date: claude-md '$name' (v$inst_ver)"; continue ;;
+          1)  log_info "Local version ahead: claude-md '$name' (local v$inst_ver, latest v$src_ver) — skipping"; continue ;;
+          -1) ;; # fall through to update_one
+          *)  log_warn "Skipping claude-md '$name': version unreadable — update manually"; continue ;;
+        esac
+        update_one claude-md "$name"
+        any=1
+      else
+        log_warn "Skipping claude-md '$name': no source in managed clone."
+      fi
+    done < <(grep '<!-- chosko-llm:.*:begin' "$CLAUDE_HOME/CLAUDE.md" 2>/dev/null || true)
   fi
   [ $any -eq 1 ] || log_info "Nothing to update."
   exit 0

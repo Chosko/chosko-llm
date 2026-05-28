@@ -49,6 +49,20 @@ collect_names() {
         done
       done | sort -u
       ;;
+    claude-md)
+      {
+        if [ -d "$CHOSKO_LLM_HOME/claude-md" ]; then
+          for f in "$CHOSKO_LLM_HOME"/claude-md/*.md; do
+            [ -e "$f" ] || continue
+            basename "$f" .md
+          done
+        fi
+        if [ -f "$CLAUDE_HOME/CLAUDE.md" ]; then
+          grep '<!-- chosko-llm:.*:begin' "$CLAUDE_HOME/CLAUDE.md" 2>/dev/null \
+            | sed 's/<!-- chosko-llm:\([^:]*\):begin.*/\1/' || true
+        fi
+      } | sort -u
+      ;;
   esac
 }
 
@@ -136,6 +150,45 @@ list_all() {
     printf '%-30s %-8s %-14s %-16s %s\n' "$name" "skill" "$inst_col" "$latest_col" "$status_col"
     found=1
   done < <(collect_names skill)
+
+  while IFS= read -r name; do
+    [ -n "$name" ] || continue
+    local src_file inst_ver src_ver inst_col latest_col
+    src_file="$(src_claudemd_path "$name")"
+
+    if [ -f "$CLAUDE_HOME/CLAUDE.md" ] && grep -qF "<!-- chosko-llm:${name}:begin" "$CLAUDE_HOME/CLAUDE.md" 2>/dev/null; then
+      inst_ver="$(claudemd_installed_version "$name" || true)"
+      inst_col="${inst_ver:-unversioned}"
+    else
+      inst_col="—"
+    fi
+
+    if [ -f "$src_file" ]; then
+      src_ver="$(read_frontmatter_field "$src_file" version || true)"
+      [ -n "$src_ver" ] && latest_col="$src_ver" || latest_col="—"
+    else
+      latest_col="—"
+    fi
+
+    case "$filter" in
+      installed) [ "$inst_col" = "—" ] && continue ;;
+      available) [ "$latest_col" = "—" ] && continue ;;
+    esac
+
+    local status_col
+    if [ "$inst_col" = "—" ]; then
+      status_col="not installed"
+    elif [ "$latest_col" = "—" ]; then
+      status_col="local only"
+    elif [ "$inst_col" = "$latest_col" ]; then
+      status_col="up-to-date"
+    else
+      status_col="updatable"
+    fi
+
+    printf '%-30s %-8s %-14s %-16s %s\n' "$name" "claude-md" "$inst_col" "$latest_col" "$status_col"
+    found=1
+  done < <(collect_names claude-md)
 
   [ $found -eq 1 ] || log_info "No features found."
 }
