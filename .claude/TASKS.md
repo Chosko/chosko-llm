@@ -51,7 +51,7 @@ Preconditions: 19
 
 ## 22. Add `project-setup` command: interactive wizard for first-time project initialization
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/project-setup.md, tests/smoke/project-setup.md, .claude/context/features.md
 Preconditions: none

@@ -15,6 +15,15 @@ Three locations, all keyed by feature name (kebab-case):
   `tests/smoke/README.md`.
 
 Currently shipped:
+- `commands/project-setup.md` — interactive first-time project initialization
+  wizard. Two phases: a GATHER phase that collects every choice upfront (VCS
+  detection, context layer, CLAUDE.md seeding + pasted source, AGENTS.md, task
+  backlog), and an EXECUTE phase that applies them in a fixed order. Orchestrates
+  `/context-build` and `/task-setup` rather than reimplementing them — each
+  sub-command commits its own artifacts. Adds two artifacts of its own: a
+  synthesized CLAUDE.md project-info section and, for non-git VCS (e.g. Plastic
+  SCM), a `## VCS` section mapping git commands to their equivalents so the
+  other commands' commit phases work. Commits only its own artifacts.
 - `commands/context-build.md` — introduces a navigation context layer.
 - `commands/context-update.md` — refreshes an existing context layer.
 - `commands/task-setup.md` — initialize the backlog: `.claude/TASKS.md`
