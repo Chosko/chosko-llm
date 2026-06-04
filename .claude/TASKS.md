@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 21
+Last task number: 22
 
 ---
 
@@ -46,5 +46,14 @@ Status: [DONE]
 Target: claude
 Files: scripts/cmd-ls.sh, scripts/cmd-show.sh, scripts/lib.sh, .claude/context/shared-lib.md, tests/smoke/colors.md, tests/smoke/cmd-show.md
 Preconditions: 19
+
+---
+
+## 22. Add `project-setup` command: interactive wizard for first-time project initialization
+
+Status: [MISSING]
+Target: claude
+Files: commands/project-setup.md, tests/smoke/project-setup.md, .claude/context/features.md
+Preconditions: none
 
 ---
