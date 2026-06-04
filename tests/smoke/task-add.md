@@ -62,8 +62,10 @@
 - `--enrich` body contains `Target: local` on line 2, the same four
   base sections, plus Context bundle and Implementation steps.
 - `Last task number:` incremented by 1.
-- A git commit is made automatically at PHASE 5. It covers exactly the
-  two files PHASE 4 wrote and nothing else.
+- A git commit is made automatically at PHASE 5 (default, no `--no-commit`).
+  It covers exactly the two files PHASE 4 wrote and nothing else.
+- With `--no-commit`, the two files are written but NO commit is made; the
+  report reminds the user that nothing was committed.
 
 ## Commit scenarios
 
@@ -89,6 +91,17 @@
 2. Run `/task-add` end-to-end and approve.
 3. Verify the commit fails, the agent surfaces the hook output, does
    NOT retry or use `--no-verify`, and leaves the files staged.
+
+### `--no-commit`
+
+1. Run `/task-add --no-commit <description>` end-to-end and approve the draft.
+2. Verify PHASE 4 writes both files, PHASE 5 runs NO git command, and the
+   report reminds the user nothing was committed.
+3. Verify `git status` shows the two new/modified task files uncommitted and
+   `git log` has no new commit.
+4. Run `/task-add --commit --no-commit <description>`: the command stops with
+   "`--commit and --no-commit cannot be combined. Pick one.`" and writes
+   nothing.
 
 ## Notes
 

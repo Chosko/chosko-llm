@@ -87,7 +87,7 @@ Preconditions: 23, 24
 
 ## 26. Add a `--no-commit` flag to commands that auto-commit changes
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-add.md, commands/task-clean.md, commands/task-implement.md, commands/context-update.md, tests/smoke/task-add.md, tests/smoke/task-clean.md, tests/smoke/task-implement.md, tests/smoke/context-update.md, .claude/context/features.md
 Preconditions: 23, 24

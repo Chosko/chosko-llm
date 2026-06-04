@@ -39,11 +39,13 @@
 - `.claude/tasks/<N>.md` body files for pruned tasks are deleted.
 - `Preconditions:` lines that referenced removed tasks have those
   references dropped (or become `none` if the list is now empty).
-- A git commit is made automatically after PHASE 2 — no extra prompt
-  or confirmation is needed.
+- A git commit is made automatically after PHASE 2 (default, no
+  `--no-commit`) — no extra prompt or confirmation is needed.
 - The commit message follows the pattern `task-clean: remove tasks …`.
 - Only `.claude/TASKS.md` and the deleted body file paths are staged —
   no unrelated working-tree changes are included.
+- With `--no-commit`, PHASE 2's edits and deletions are applied but NO
+  commit is made; the report reminds the user that nothing was committed.
 
 ## Notes
 
@@ -57,3 +59,9 @@
 - Verify that a pre-commit hook failure surfaces the raw error and
   leaves the files staged but uncommitted, rather than retrying or
   using `--no-verify`.
+- Test `/task-clean DONE --no-commit`: the prune is applied (blocks removed,
+  body files deleted) but `git log` has no new commit and `git status` shows
+  the changes uncommitted.
+- Test `/task-clean --commit --no-commit`: the command stops with
+  "`--commit and --no-commit cannot be combined. Pick one.`" and changes
+  nothing.

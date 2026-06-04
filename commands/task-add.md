@@ -1,8 +1,8 @@
 ---
 name: task-add
-version: 0.6.0
+version: 0.7.0
 type: command
-description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit. Pass --enrich to produce a self-contained body for a local LLM in one shot.
+description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit. Pass --enrich to produce a self-contained body for a local LLM in one shot, or --no-commit to write the files but skip the commit.
 ---
 
 # /task-add
@@ -10,7 +10,7 @@ description: Plan a new task entry conversationally, confirm with the user, writ
 # user, then write a summary block to `.claude/TASKS.md` and a body file at
 # `.claude/tasks/<N>.md`. Refuses to run if the backlog has not been
 # initialized — the user must run `/task-setup` first.
-# Usage: /task-add [--enrich] <free-form description of the task>
+# Usage: /task-add [--enrich] [--no-commit] <free-form description of the task>
 # Example: /task-add fix the URL normalization so two LinkedIn URLs dedupe
 # Example: /task-add --enrich add CSV export command
 
@@ -31,6 +31,13 @@ Never write to any file before the user confirms the draft.
 
 $ARGUMENTS
 
+ARGUMENT NOTE — before PHASE 1, scan $ARGUMENTS for the optional
+`--no-commit` flag (independent of `--enrich`). If present, set
+NO_COMMIT = true and strip it; the rest is the task description.
+`--commit` and `--no-commit` are mutually exclusive — if both appear, stop
+with: `--commit and --no-commit cannot be combined. Pick one.` When
+NO_COMMIT is false (the default), PHASE 5 auto-commits as before.
+
 ---
 
 TOOL DISCIPLINE
@@ -43,6 +50,7 @@ TOOL DISCIPLINE
   mechanism to write files.
 - Bash / PowerShell are used ONLY by PHASE 5 (the commit step):
   `git add -- <path> <path>` and `git commit`. No other phases shell out.
+  Under `--no-commit`, PHASE 5 shells out for nothing — no git command runs.
 
 ---
 
@@ -272,6 +280,13 @@ Continue to PHASE 5.
 ---
 
 PHASE 5 — COMMIT
+
+If NO_COMMIT is true, skip committing entirely: the two files PHASE 4 wrote
+are left uncommitted in the working tree. Report the task ID, both paths,
+and a reminder that nothing was committed — the user should commit when
+ready. Do not run any git command. Then stop.
+
+Otherwise (the default):
 
 1. Run:
    ```

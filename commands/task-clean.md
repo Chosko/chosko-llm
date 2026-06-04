@@ -1,8 +1,8 @@
 ---
 name: task-clean
-version: 0.3.0
+version: 0.4.0
 type: command
-description: Prune tasks in a terminal status — remove summary blocks from TASKS.md and delete their per-task body files. Task IDs are stable; survivors are NEVER renumbered. Automatically commits the removals.
+description: Prune tasks in a terminal status — remove summary blocks from TASKS.md and delete their per-task body files. Task IDs are stable; survivors are NEVER renumbered. Automatically commits the removals; pass --no-commit to leave them uncommitted.
 ---
 
 # /task-clean
@@ -15,9 +15,11 @@ description: Prune tasks in a terminal status — remove summary blocks from TAS
 # explicit confirmation before writing.
 # Usage: /task-clean
 #        /task-clean <STATUS> [<STATUS> ...]
+#        /task-clean [<STATUS> ...] --no-commit   (write changes, skip the commit)
 # Examples: /task-clean
 #           /task-clean DONE
 #           /task-clean DONE SKIP
+#           /task-clean DONE --no-commit
 
 GOAL
 Remove tasks that are finished or abandoned so the backlog stays focused
@@ -29,6 +31,13 @@ renumber.
 
 $ARGUMENTS
 
+ARGUMENT NOTE — before PHASE 1, scan $ARGUMENTS for the optional
+`--no-commit` flag. If present, set NO_COMMIT = true and strip it; the rest
+is the status set (or empty for the default). `--commit` and `--no-commit`
+are mutually exclusive — if both appear, stop with:
+`--commit and --no-commit cannot be combined. Pick one.` When NO_COMMIT is
+false (the default), PHASE 3 auto-commits as before.
+
 ---
 
 TOOL DISCIPLINE
@@ -39,9 +48,10 @@ TOOL DISCIPLINE
   use the Write tool only when creating a new file from scratch. Never use
   shell redirection, `tee`, `Set-Content`, `Out-File`, or any shell
   mechanism to write files.
-- Bash / PowerShell are used only to delete the per-task body files
-  (`rm .claude/tasks/<N>.md`) and to run git operations in PHASE 3
-  (`git add --` and `git commit`).
+- Bash / PowerShell are used to delete the per-task body files
+  (`rm .claude/tasks/<N>.md`) and, unless `--no-commit` was passed, to run
+  the git operations in PHASE 3 (`git add --` and `git commit`). Under
+  `--no-commit`, the only shell use is the body-file deletion.
 
 ---
 
@@ -170,8 +180,15 @@ After the report, continue to PHASE 3.
 
 PHASE 3 — COMMIT
 
-After PHASE 2 completes successfully, commit the changes automatically —
-no further prompt is needed.
+If NO_COMMIT is true, skip committing entirely: the `.claude/TASKS.md` edits
+and the body-file deletions from PHASE 2 are left uncommitted in the working
+tree. Report what was changed (blocks removed, body files deleted,
+`Preconditions:` lines rewritten) and remind the user that nothing was
+committed — they should commit when ready. Do not run any git command. Then
+stop.
+
+Otherwise (the default), after PHASE 2 completes successfully, commit the
+changes automatically — no further prompt is needed.
 
 1. Run exactly:
 

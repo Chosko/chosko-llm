@@ -1,8 +1,8 @@
 ---
 name: context-update
-version: 1.0.0
+version: 1.1.0
 type: command
-description: Update an existing navigation context layer after code changes, then auto-commit the context files it updated.
+description: Update an existing navigation context layer after code changes, then auto-commit the context files it updated. Pass --no-commit to leave them uncommitted.
 ---
 
 # /context-update
@@ -39,6 +39,10 @@ description: Update an existing navigation context layer after code changes, the
 #   Works with any other parameter combination:
 #   /context-update full --yes
 #   /context-update git=uncommitted -y
+#
+# Usage — update the context files but skip the auto-commit:
+#   /context-update --no-commit
+#   Combinable with any mode: /context-update full --no-commit
 
 $ARGUMENTS
 
@@ -70,6 +74,13 @@ P.3 Parse $ARGUMENTS. First, check for the confirmation flag:
       cleanly without asking. AUTO_CONFIRM does not force an update when there is
       nothing to update.
     Strip the flag from $ARGUMENTS before parsing the rest.
+
+    --no-commit flag (optional, combinable with any mode):
+    If "--no-commit" is present in $ARGUMENTS, set NO_COMMIT = true and strip
+    it before parsing the rest. When NO_COMMIT is true, PHASE 3 skips the
+    auto-commit and leaves the updated context files uncommitted. `--commit`
+    and `--no-commit` are mutually exclusive — if both appear, stop with:
+    `--commit and --no-commit cannot be combined. Pick one.`
 
     Then determine the update scope. Four modes are possible:
 
@@ -210,6 +221,12 @@ PHASE 3 — Commit the updated context files
 `/task-clean`. This phase runs after Phase 2's report, with no
 confirmation prompt of its own (it is unaffected by AUTO_CONFIRM —
 committing is the default behavior).
+
+3.0 If NO_COMMIT is true, skip committing entirely: the context files Phase 2
+    updated (plus the INDEX.md "Last updated" bump) are left uncommitted in
+    the working tree. Report what was updated and remind the user that
+    nothing was committed — they should commit when ready. Do not run any git
+    command. Then stop.
 
 3.1 If Phase 2 modified NO files (e.g. Mode A found nothing to update, or
     every in-scope file was skipped), make no commit. Do not create an

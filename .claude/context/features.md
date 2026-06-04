@@ -38,7 +38,7 @@ Currently shipped:
 - `commands/context-update.md` — refreshes an existing context layer, then
   auto-commits the context files it updated (explicit paths only; no commit
   when nothing changed). Joins the auto-committing group with `/task-add`
-  and `/task-clean`.
+  and `/task-clean`. `--no-commit` leaves the updates uncommitted.
 - `commands/task-setup.md` — initialize the backlog: `.claude/TASKS.md`
   stub, `.claude/tasks/` directory, and `.claude/external/implement-prompt.md`
   (the static system prompt fed to an external LLM via aider). Required
@@ -52,12 +52,14 @@ Currently shipped:
   Goal, Acceptance criteria, Decisions (when applicable), and Hints. With
   `--enrich`, produces an enriched body (target: local) in one shot by
   reading `/task-enrich` for format guidance. Refuses if `/task-setup` has
-  not run. Auto-commits the two written files.
+  not run. Auto-commits the two written files; `--no-commit` leaves them
+  uncommitted.
 - `commands/task-clean.md` — prune terminal-status tasks. Removes summary
   blocks AND deletes the matching body files. Never renumbers — task IDs
   are stable across the project's lifetime; the `Last task number`
   counter never decreases. After applying, commits the changes
-  automatically (`.claude/TASKS.md` + deleted body files).
+  automatically (`.claude/TASKS.md` + deleted body files); `--no-commit`
+  leaves them uncommitted.
 - `commands/task-implement.md` — implement backlog tasks end-to-end with
   TDD. Reads each task's body file from `.claude/tasks/<N>.md` only when
   needed and treats it as the primary context source when the v0.3+
@@ -65,7 +67,9 @@ Currently shipped:
   to follow / Out of scope) — only fans out to CLAUDE.md and the
   context layer when the body doesn't cover what's needed. Older
   bodies trigger the previous "consult context layer" fallback. Status
-  flips happen in `.claude/TASKS.md`.
+  flips happen in `.claude/TASKS.md`. Commits each task separately;
+  `--no-commit` runs the full TDD sequence but skips the per-task commits,
+  leaving every task's changes uncommitted.
 - `commands/task-list.md` — print the backlog as a compact read-only
   summary. Reads only `.claude/TASKS.md`; never opens the body files.
 - `commands/task-enrich.md` — expand a thin (`target: claude`) task body

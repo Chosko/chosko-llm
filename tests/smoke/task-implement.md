@@ -28,11 +28,14 @@
   in the preflight step.
 - New/updated tests fail before the implementation is written.
 - All tests pass after implementation.
-- Exactly one commit per task, named after the task. The commit
-  includes the TASKS.md status flip but does NOT include the
+- Exactly one commit per task (default, no `--no-commit`), named after the
+  task. The commit includes the TASKS.md status flip but does NOT include the
   `.claude/tasks/<N>.md` body file unless it was genuinely modified.
 - Task status is `[DONE]` in `.claude/TASKS.md` in the final commit.
 - No `--no-verify` or `--amend` flags used.
+- With `--no-commit`, the full TDD sequence runs and statuses still flip to
+  `[DONE]`, but NO per-task commit is made — every task's changes accumulate
+  uncommitted in the working tree, and the run ends reminding the user.
 
 ## Dirty-tree (3-way prompt) scenarios
 
@@ -96,6 +99,20 @@
    file written by Step 4 of `<N>` was deliberately not staged at
    Step 8 — adjust the spec or simulate by hand).
 2. Observe the same 3-way prompt fires before task `<M>` starts.
+
+## `--no-commit` mode
+
+1. On a clean tree, run `/task-implement <N> <M> --no-commit` for two tasks.
+2. Observe each task runs the full TDD sequence and its status flips to
+   `[DONE]`, but Step 8 makes NO commit.
+3. Critically: the between-tasks dirty-tree prompt does NOT fire before task
+   `<M>` — the accumulating uncommitted changes from `<N>` are expected.
+4. After the run, `git log` has no new commits and `git status` shows all
+   tasks' changes (including the `[DONE]` flips) uncommitted. The final
+   report reminds the user nothing was committed.
+5. Run `/task-implement <N> --commit --no-commit`: the command stops with
+   "`--commit and --no-commit cannot be combined. Pick one.`" and does
+   nothing.
 
 ## `next` — first eligible task
 

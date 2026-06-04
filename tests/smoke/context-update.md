@@ -44,3 +44,10 @@
 - Pre-commit-hook failure: install a failing `pre-commit` hook, run
   `/context-update`, and confirm the command surfaces the hook output, does NOT
   retry / `--amend` / `--no-verify`, and leaves the files staged-but-uncommitted.
+- `--no-commit`: run `/context-update --no-commit` after a real code change.
+  Phase 2 updates the context files (and bumps INDEX), but Phase 3 makes NO
+  commit — `git log` is unchanged, `git status` shows the updated files
+  uncommitted, and the report reminds the user. Combinable with any mode
+  (e.g. `/context-update full --no-commit`).
+- Mutual exclusivity: `/context-update --commit --no-commit` stops with
+  "`--commit and --no-commit cannot be combined. Pick one.`".

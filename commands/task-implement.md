@@ -1,8 +1,8 @@
 ---
 name: task-implement
-version: 0.5.1
+version: 0.6.0
 type: command
-description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Commits each task separately. Supports `next` to implement the first eligible task.
+description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Commits each task separately; pass --no-commit to skip the per-task commits. Supports `next` to implement the first eligible task.
 ---
 
 # /task-implement
@@ -13,10 +13,12 @@ description: Implement one or more tasks from the project's task backlog end-to-
 # Usage: /task-implement <task-number> [<task-number> ...]
 #        /task-implement all
 #        /task-implement next
+#        /task-implement <args> --no-commit   (run the TDD flow, skip commits)
 # Examples: /task-implement 12
 #           /task-implement 12 13 14
 #           /task-implement all
 #           /task-implement next
+#           /task-implement all --no-commit
 
 GOAL
 For each requested task, in the order given:
@@ -27,11 +29,14 @@ For each requested task, in the order given:
 5. Re-run the affected tests and watch them pass.
 6. Run the full test suite and watch it pass.
 7. Flip status to `[DONE]` (or `[PARTIAL]` / `[INCORRECT]` if appropriate).
-8. Commit — one commit per task.
+8. Commit — one commit per task (skipped under `--no-commit`, which leaves
+   each task's changes uncommitted in the working tree).
 
 If any step fails and cannot be resolved by fixing the code, stop the entire
 run and report. Do not proceed to subsequent tasks. Do not commit a broken
-task.
+task. Under `--no-commit`, when the run completes, end with a reminder that
+nothing was committed — every task's changes sit in the working tree for the
+user to review and commit.
 
 $ARGUMENTS
 
@@ -51,7 +56,16 @@ TOOL DISCIPLINE
 
 ARGUMENT PARSING
 
-`$ARGUMENTS` is one of:
+Before resolving the task list, scan `$ARGUMENTS` for the optional
+`--no-commit` flag. If present, set NO_COMMIT = true and strip it; the
+remainder is the task selector. `--commit` and `--no-commit` are mutually
+exclusive — if both appear, stop with:
+`--commit and --no-commit cannot be combined. Pick one.` When NO_COMMIT is
+true, the run performs the full TDD sequence and the `Status:` flips but
+skips the per-task commit in Step 8 (see that step and BETWEEN TASKS). When
+false (the default), each task is committed separately as before.
+
+After stripping the flag, `$ARGUMENTS` is one of:
 - A whitespace-separated list of task numbers — implement those tasks in
   the order given.
 - The literal token `all` (case-insensitive) — implement every task in the
@@ -360,7 +374,16 @@ Use the Edit tool to update this task's `Status:` line in
 
 The default is `[DONE]`.
 
-### Step 8 — Commit
+### Step 8 — Commit   [skipped in --no-commit mode]
+
+If NO_COMMIT is true, do not commit this task. Leave all files modified by
+this task — including the `.claude/TASKS.md` status flip — uncommitted in
+the working tree, and move on to the next task (or the final report). The
+changes from each task accumulate uncommitted across the run; the final
+report reminds the user that nothing was committed. Skip the rest of this
+step.
+
+Otherwise (the default):
 
 Stage all files modified by this task, including the `.claude/TASKS.md`
 status flip. The per-task body file at `.claude/tasks/<N>.md` is
@@ -394,11 +417,14 @@ commit, even when several were requested in the same invocation.
 BETWEEN TASKS
 
 After committing a task, before starting the next:
-1. Run `git status --porcelain`. If non-empty (unusual — the previous
-   task's Step 8 should have committed everything it changed), apply
-   the same 3-way prompt as PRE-FLIGHT CHECKS step 1: proceed,
-   commit, or abort. Same rules: silence/EOF/abort halts the run with
-   no `Status:` flips.
+1. **In --no-commit mode, skip this dirty-tree check entirely** — the
+   previous task's changes are deliberately left uncommitted and will
+   accumulate, so a non-empty `git status` is expected, not a surprise.
+   Otherwise (the default): run `git status --porcelain`. If non-empty
+   (unusual — the previous task's Step 8 should have committed everything
+   it changed), apply the same 3-way prompt as PRE-FLIGHT CHECKS step 1:
+   proceed, commit, or abort. Same rules: silence/EOF/abort halts the run
+   with no `Status:` flips.
 2. Use the Read tool to re-open `.claude/TASKS.md` fresh. Task IDs are
    stable so numbers will not have moved, but statuses or
    `Preconditions:` lines may have been edited by a parallel
