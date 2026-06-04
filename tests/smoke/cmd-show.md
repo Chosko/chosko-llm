@@ -46,6 +46,25 @@
 10. Ambiguous bare name errors with a disambiguation hint; the `command:<name>`
     form resolves and prints the command's metadata.
 
+## Color checks (TTY vs piped)
+
+Run these in an interactive terminal that supports ANSI color:
+
+- `chosko-llm show <command-feature>`: header line is **bold**; `Kind:` value is
+  **blue**; `Status:` color matches its value (green / yellow / dim / cyan).
+  `—` placeholders in `Installed:` or `Latest:` are **dim**.
+- `chosko-llm show <skill-feature>`: `Kind:` value is **magenta**.
+- `chosko-llm show <claude-md-feature>`: `Kind:` value is **cyan**.
+- `chosko-llm show <up-to-date-feature>`: footer "This feature is up to date." is **green**.
+- `chosko-llm show <updatable-feature>`: footer tip prefix is **yellow**;
+  old version token is **dim**; new version token is **green**.
+- `chosko-llm show <not-installed-feature>`: footer tip prefix is **dim**.
+
+Piped and `NO_COLOR` checks:
+
+- `chosko-llm show <feature> | cat` — output is pure plain text, no ANSI codes.
+- `NO_COLOR=1 chosko-llm show <feature>` — same, no ANSI codes.
+
 ## Notes
 
 - Status vocabulary matches `ls`: `up-to-date` / `updatable` / `not installed`
@@ -54,3 +73,6 @@
   prints; with it the selected body (or the line diff) is shown.
 - For a `claude-md` feature, `Path` points at the `CLAUDE.md` section anchor and
   the version comes from the section's begin tag.
+- Kind colors match `ls`: `command` = blue, `skill` = magenta, `claude-md` = cyan.
+  The `claude-md` kind and `local only` status both use cyan — this is intentional
+  (they appear in separate fields and remain unambiguous).

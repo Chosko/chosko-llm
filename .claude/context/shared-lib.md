@@ -30,14 +30,23 @@ All functions live in `scripts/lib.sh`.
 Set at lib.sh source time based on `NO_COLOR` and `[ -t 1 ]`. Empty when color
 is disabled; scripts use them directly — never inline `\033[` escapes in `cmd-*.sh`.
 
-- `C_GREEN` / `C_YELLOW` / `C_CYAN` / `C_DIM` / `C_BOLD` / `C_RESET`
+- `C_GREEN` / `C_YELLOW` / `C_CYAN` / `C_BLUE` / `C_MAGENTA` / `C_DIM` / `C_BOLD` / `C_RESET`
 
 Palette guidance:
-- `C_GREEN` — success status or values (e.g. `up-to-date` in `ls`).
+
+*Status colors* (used in the STATUS column of `ls` and the `Status:` field of `show`):
+- `C_GREEN` — success status (e.g. `up-to-date`).
 - `C_YELLOW` — warning / attention (e.g. `updatable`).
-- `C_CYAN` — local-only or informational highlight (e.g. `local only`).
-- `C_DIM` — de-emphasised content (e.g. `not installed`, KIND column, `—` placeholders).
-- `C_BOLD` — structural emphasis (e.g. header rows, `Usage:` headings).
+- `C_DIM` — de-emphasised (e.g. `not installed`, `—` placeholders).
+- `C_CYAN` — local-only highlight (e.g. `local only`).
+
+*Kind colors* (used in the KIND column of `ls` and the `Kind:` field of `show`):
+- `C_BLUE` — `command` kind.
+- `C_MAGENTA` — `skill` kind.
+- `C_CYAN` — `claude-md` kind. (Dual-use with `local only` status — acceptable since they appear in separate columns.)
+
+*Structural*:
+- `C_BOLD` — structural emphasis (e.g. header rows, `Usage:` headings, `show` header line).
 
 Helper: `_use_color_stdout` — returns 0 when color should be applied to stdout.
 

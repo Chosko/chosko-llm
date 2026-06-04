@@ -42,7 +42,7 @@ Preconditions: none
 
 ## 21. Improve colours: color-code feature kinds and implement colors for `show` command
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/cmd-ls.sh, scripts/cmd-show.sh, scripts/lib.sh, .claude/context/shared-lib.md, tests/smoke/colors.md, tests/smoke/cmd-show.md
 Preconditions: 19

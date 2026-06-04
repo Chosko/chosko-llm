@@ -136,7 +136,7 @@ list_all() {
     [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
     [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
     _colored_cell ""              "$name"       ""        30
-    _colored_cell "$C_DIM"        "command"     "$C_RESET" 8
+    _colored_cell "$C_BLUE"       "command"     "$C_RESET" 8
     _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
     _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
     printf '%s%s%s\n' "$status_color" "$status_col" "$C_RESET"
@@ -196,7 +196,7 @@ list_all() {
     [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
     [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
     _colored_cell ""              "$name"       ""        30
-    _colored_cell "$C_DIM"        "skill"       "$C_RESET" 8
+    _colored_cell "$C_MAGENTA"    "skill"       "$C_RESET" 8
     _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
     _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
     printf '%s%s%s\n' "$status_color" "$status_col" "$C_RESET"
@@ -255,7 +255,7 @@ list_all() {
     [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
     [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
     _colored_cell ""              "$name"       ""        30
-    _colored_cell "$C_DIM"        "claude-md"   "$C_RESET" 8
+    _colored_cell "$C_CYAN"       "claude-md"   "$C_RESET" 8
     _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
     _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
     printf '%s%s%s\n' "$status_color" "$status_col" "$C_RESET"

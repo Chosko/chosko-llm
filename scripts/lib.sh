@@ -30,11 +30,13 @@ if _use_color_stdout; then
   C_GREEN=$'\033[32m'
   C_YELLOW=$'\033[33m'
   C_CYAN=$'\033[36m'
+  C_BLUE=$'\033[34m'
+  C_MAGENTA=$'\033[35m'
   C_DIM=$'\033[2m'
   C_BOLD=$'\033[1m'
   C_RESET=$'\033[0m'
 else
-  C_GREEN='' C_YELLOW='' C_CYAN='' C_DIM='' C_BOLD='' C_RESET=''
+  C_GREEN='' C_YELLOW='' C_CYAN='' C_BLUE='' C_MAGENTA='' C_DIM='' C_BOLD='' C_RESET=''
 fi
 
 # ---------- frontmatter ----------

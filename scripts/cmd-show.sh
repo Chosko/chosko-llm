@@ -188,13 +188,32 @@ print_latest_body() {
   esac
 }
 
+# ---------- colors for metadata ----------
+kind_c=""
+case "$kind" in
+  command)   kind_c="$C_BLUE" ;;
+  skill)     kind_c="$C_MAGENTA" ;;
+  claude-md) kind_c="$C_CYAN" ;;
+esac
+
+status_c=""
+case "$status" in
+  "up-to-date")    status_c="$C_GREEN"  ;;
+  "updatable")     status_c="$C_YELLOW" ;;
+  "not installed") status_c="$C_DIM"    ;;
+  "local only")    status_c="$C_CYAN"   ;;
+esac
+
+inst_c="";   [ "$inst_col"   = "—" ] && inst_c="$C_DIM"
+latest_c=""; [ "$latest_col" = "—" ] && latest_c="$C_DIM"
+
 # ---------- metadata block ----------
-printf '%s of %s "%s"\n\n' "$header" "$kind" "$name"
+printf '%s%s of %s "%s"%s\n\n' "$C_BOLD" "$header" "$kind" "$name" "$C_RESET"
 printf '  Name:        %s\n' "$name"
-printf '  Kind:        %s\n' "$kind"
-printf '  Installed:   %s\n' "$inst_col"
-printf '  Latest:      %s\n' "$latest_col"
-printf '  Status:      %s\n' "$status"
+printf '  Kind:        %s%s%s\n' "$kind_c" "$kind" "$C_RESET"
+printf '  Installed:   %s%s%s\n' "$inst_c" "$inst_col" "$C_RESET"
+printf '  Latest:      %s%s%s\n' "$latest_c" "$latest_col" "$C_RESET"
+printf '  Status:      %s%s%s\n' "$status_c" "$status" "$C_RESET"
 printf '  Description: %s\n' "${desc:-—}"
 printf '  Path:        %s\n' "$path_display"
 
@@ -241,17 +260,20 @@ esac
 echo
 case "$status" in
   "not installed")
-    printf 'Tip: run `chosko-llm add %s` to install this feature.\n' "$name"
+    printf '%sTip:%s run `chosko-llm add %s` to install this feature.\n' "$C_DIM" "$C_RESET" "$name"
     ;;
   "updatable")
-    printf 'Tip: run `chosko-llm update %s` to update (installed %s -> %s).\n' "$name" "$inst_col" "$latest_col"
+    printf '%sTip:%s run `chosko-llm update %s` to update (installed %s%s%s -> %s%s%s).\n' \
+      "$C_YELLOW" "$C_RESET" "$name" \
+      "$C_DIM" "$inst_col" "$C_RESET" \
+      "$C_GREEN" "$latest_col" "$C_RESET"
     printf '     run `chosko-llm show %s --diff --content` to preview the changes.\n' "$name"
     ;;
   "up-to-date")
-    printf 'This feature is up to date.\n'
+    printf '%sThis feature is up to date.%s\n' "$C_GREEN" "$C_RESET"
     ;;
   "local only")
-    printf 'This feature is installed but not in the managed clone; `chosko-llm upgrade` will not change it.\n'
+    printf '%sThis feature is installed but not in the managed clone; `chosko-llm upgrade` will not change it.%s\n' "$C_CYAN" "$C_RESET"
     ;;
 esac
 
