@@ -9,11 +9,11 @@ that, the user must call `update`.
 ## Public API
 
 CLI:
-- `chosko-llm add <feature>` — `<feature>` is `<name>`, `command:<name>`, or
-  `skill:<name>`.
+- `chosko-llm add <feature>` — `<feature>` is `<name>`, `command:<name>`,
+  `skill:<name>`, or `claude-md:<name>`.
 - `chosko-llm add --all` — install every feature present in the managed clone
-  that is not yet installed; already-installed features are skipped with an
-  info log.
+  (commands, skills, AND claude-md artifacts) that is not yet installed;
+  already-installed features are skipped with an info log.
 
 Exit codes:
 - 0 on successful copy (or `--all` with nothing new to install).
@@ -25,6 +25,8 @@ Side effects:
 - Creates `$CLAUDE_HOME/commands/` or `$CLAUDE_HOME/skills/` if missing.
 - For commands: copies one `.md` file.
 - For skills: recursive copy (`cp -R`) of the entire skill directory.
+- For claude-md: injects a managed section into `$CLAUDE_HOME/CLAUDE.md` via
+  `inject_section` (no file copy); refuses if the section already exists.
 - Logs a single `Installed <kind> '<name>' v<version> -> <path>` line.
 
 ## Internal patterns

@@ -9,10 +9,12 @@ unlike `add`, it does not refuse on absence.
 ## Public API
 
 CLI:
-- `chosko-llm update <feature>` — single feature; same spec syntax as `add`.
-- `chosko-llm update --all` — iterate every file in
-  `$CLAUDE_HOME/commands/*.md` and every dir in `$CLAUDE_HOME/skills/*/`,
-  updating each one for which a managed-clone source exists.
+- `chosko-llm update <feature>` — single feature; same spec syntax as `add`
+  (`<name>`, `command:`/`skill:`/`claude-md:` prefixed). Installs if missing.
+- `chosko-llm update --all` — iterate installed commands
+  (`$CLAUDE_HOME/commands/*.md`), skills (`$CLAUDE_HOME/skills/*/`), and
+  claude-md sections (markers in `$CLAUDE_HOME/CLAUDE.md`), updating only
+  those whose managed-clone source version is **newer** than installed.
 
 Exit codes:
 - 0 on success (including `--all` with nothing to update).
@@ -21,11 +23,15 @@ Exit codes:
 
 Side effects:
 - Single feature: deletes the existing target (`rm -f` for command,
-  `rm -rf` for skill), then copies fresh from the managed clone.
-- `--all`: same per matched feature; emits a `Skipping <kind> '<base>': no
-  source in managed clone.` warning for installed features whose source has
-  disappeared.
-- One `Updated <kind> '<name>' -> v<version>` log line per success.
+  `rm -rf` for skill) then copies fresh; claude-md re-injects via
+  `inject_section`.
+- `--all`: per installed feature, compares versions with `version_cmp` and
+  logs `Already up-to-date` (equal), `Local version ahead … — skipping`
+  (installed newer), or updates (source newer). Emits
+  `Skipping <kind> '<base>': no source in managed clone.` when the source has
+  disappeared, and `Skipping … version unreadable` when a version can't be
+  parsed.
+- One `Updated <kind> '<name>' -> v<version>` log line per actual update.
 
 ## Internal patterns
 
@@ -34,11 +40,14 @@ Side effects:
   installed skill folder. This is by design.
 - **Validation precedes mutation.** Same `require_versioned_source` guard as
   `cmd-add`.
-- **`--all` is best-effort.** A skip warning is *not* an error. The script
-  exits 0 even if every installed feature was skipped — only `Nothing to
-  update.` if neither `commands/` nor `skills/` produced any candidates.
-- **Single-feature path uses `resolve_feature`.** `--all` path does not — it
-  iterates `$CLAUDE_HOME` directly.
+- **`--all` is version-aware.** `version_cmp` (an awk semver comparator,
+  expects `x.y.z`) gates each update so only genuinely-newer sources are
+  copied; up-to-date and locally-ahead features are left alone. A skip
+  warning is *not* an error — the script exits 0 even if everything was
+  skipped, logging `Nothing to update.` only when no candidates were touched.
+- **Single-feature path uses `resolve_feature`** (managed clone), so it can
+  install-if-missing. The `--all` path iterates `$CLAUDE_HOME` directly,
+  including the CLAUDE.md section markers for claude-md artifacts.
 
 ## Domain dependencies
 
@@ -58,8 +67,8 @@ Side effects:
 
 ## When to read the source
 
-- Changing `--all` semantics (e.g. only update if a version comparison says
-  the source is newer) → the `--all` block in `scripts/cmd-update.sh`.
+- Changing `--all` version-comparison semantics → `version_cmp` and the
+  per-kind `--all` blocks in `scripts/cmd-update.sh`.
 - Changing skill-update merge vs. replace behavior → the `skill)` branch's
   `rm -rf && cp -R` in `cmd-update.sh`.
 - Adding `--dry-run` → `cmd-update.sh`.

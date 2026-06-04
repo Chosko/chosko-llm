@@ -9,27 +9,32 @@ resolves names against what is **installed**, not against the managed clone
 ## Public API
 
 CLI:
-- `chosko-llm rm <feature>` — `<feature>` is `<name>`, `command:<name>`, or
-  `skill:<name>`.
+- `chosko-llm rm <feature>` — `<feature>` is `<name>`, `command:<name>`,
+  `skill:<name>`, or `claude-md:<name>`.
 
 Exit codes:
 - 0 on successful removal.
-- 1 (via `die`) if no argument, if `<name>` is ambiguous (both kinds
-  installed) without a prefix, or if nothing matching is installed.
+- 1 (via `die`) if no argument, if `<name>` is ambiguous (more than one of
+  command/skill/claude-md installed) without a prefix, or if nothing matching
+  is installed.
 
 Side effects:
 - For commands: `rm -f` on the `.md` file.
 - For skills: `rm -rf` on the entire skill directory.
+- For claude-md: `remove_section` strips the managed section from
+  `$CLAUDE_HOME/CLAUDE.md` (user content around it is preserved).
 - Logs a single `Removed <kind> '<name>' (<path>)` line.
 
 ## Internal patterns
 
 - **Resolution is local, not via `resolve_feature`.** `cmd-rm.sh` parses
-  the `command:` / `skill:` prefix itself and uses `installed_kind` from
-  `lib.sh`. This is intentional — `resolve_feature` checks the managed
-  clone, which is the wrong source of truth here. Keep the prefix-parsing
-  case statement in sync with the one in `lib.sh::resolve_feature` if the
-  syntax changes.
+  the `command:` / `skill:` / `claude-md:` prefix itself (in
+  `resolve_installed`) and checks installed state directly
+  (`inst_command_path`, `inst_skill_path`, `claudemd_is_installed`). This is
+  intentional — `resolve_feature` checks the managed clone, which is the
+  wrong source of truth here. Keep the prefix-parsing case statement in sync
+  with the ones in `lib.sh::resolve_feature` and `cmd-show.sh` if the syntax
+  changes.
 - **No source-existence check.** A feature whose source has been removed
   from the managed clone is still removable from `$CLAUDE_HOME`.
 
@@ -40,8 +45,9 @@ Side effects:
 
 ## Cross-references
 
-- [shared-lib.md](./shared-lib.md) — uses `installed_kind`,
-  `inst_command_path`, `inst_skill_dir`.
+- [shared-lib.md](./shared-lib.md) — uses `inst_command_path`,
+  `inst_skill_path` / `inst_skill_dir`, and `claudemd_is_installed` /
+  `remove_section`.
 - [cmd-add.md](./cmd-add.md) — inverse operation.
 - [cli-entry.md](./cli-entry.md) — `uninstall.sh` performs a bulk variant of
   this against the managed-clone listing.

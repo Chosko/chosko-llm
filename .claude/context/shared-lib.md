@@ -60,26 +60,49 @@ Helper: `_use_color_stdout` — returns 0 when color should be applied to stdout
 
 ### Path resolution
 Source paths in the managed clone:
-- `src_command_path <name>` → `$CHOSKO_LLM_HOME/commands/<name>.md`
-- `src_skill_path <name>`   → `$CHOSKO_LLM_HOME/skills/<name>/SKILL.md`
-- `src_skill_dir <name>`    → `$CHOSKO_LLM_HOME/skills/<name>`
+- `src_command_path <name>`  → `$CHOSKO_LLM_HOME/commands/<name>.md`
+- `src_skill_path <name>`    → `$CHOSKO_LLM_HOME/skills/<name>/SKILL.md`
+- `src_skill_dir <name>`     → `$CHOSKO_LLM_HOME/skills/<name>`
+- `src_claudemd_path <name>` → `$CHOSKO_LLM_HOME/claude-md/<name>.md`
 
 Installed paths under `$CLAUDE_HOME` mirror the same shape:
 - `inst_command_path <name>`, `inst_skill_path <name>`, `inst_skill_dir <name>`.
+
+### claude-md artifacts
+A third feature kind. Instead of copying a file, a claude-md artifact injects
+a managed section into `$CLAUDE_HOME/CLAUDE.md`, delimited by
+`<!-- chosko-llm:<name>:begin v<version> -->` / `:end` comment markers so user
+content is preserved.
+- `claudemd_is_installed <name>` → 0 if a managed section exists.
+- `claudemd_installed_version <name>` → version recorded in the begin marker.
+- `inject_section <name> <version> <src_file>` → insert or replace the named
+  section (body = `src_file` minus its frontmatter).
+- `remove_section <name>` → delete the named section.
 
 ### Feature kind
 - `feature_kind <name>` → `command | skill | both | none` (looks at managed
   clone).
 - `installed_kind <name>` → same, but looks at `$CLAUDE_HOME`.
-- `resolve_feature <spec>` — accepts `<name>`, `command:<name>`, or
-  `skill:<name>`. Prints two lines on stdout: `<kind>\n<name>`. Errors if the
-  feature is not in the managed clone or if a bare name is ambiguous (matches
-  both a command and a skill). Used by `cmd-add` / `cmd-update`.
+- `resolve_feature <spec>` — accepts `<name>`, `command:<name>`,
+  `skill:<name>`, or `claude-md:<name>`. Prints two lines on stdout:
+  `<kind>\n<name>`. Errors if the feature is not in the managed clone or if a
+  bare name is ambiguous (matches more than one of command/skill/claude-md).
+  Used by `cmd-add` / `cmd-update`.
 
 ### Validation
 - `require_versioned_source <file>` — `die`s if the file is missing or its
   frontmatter is missing a non-empty `version` or `name`. Called by
   `cmd-add` and `cmd-update` before copying.
+
+### Auto-upgrade state
+Helpers over a gitignored key=value file `$CHOSKO_LLM_HOME/.auto-upgrade-state`
+(keys: `enabled`, `last_run`). Used by `scripts/auto-upgrade.sh` and
+`cmd-upgrade.sh`. See [cli-entry.md](./cli-entry.md) for the feature.
+- `auto_upgrade_state_file` → prints the state-file path.
+- `auto_upgrade_get <key>` / `auto_upgrade_set <key> <value>` → read/write one key.
+- `auto_upgrade_enabled` → succeeds unless `enabled=false` (missing file/key =
+  enabled, i.e. opt-in by default).
+- `auto_upgrade_due` → succeeds when `last_run` is not today (calendar-day).
 
 ## Internal patterns
 
@@ -89,10 +112,10 @@ Installed paths under `$CLAUDE_HOME` mirror the same shape:
 - **Path helpers are the *only* place** `$CHOSKO_LLM_HOME` and
   `$CLAUDE_HOME` should be concatenated with subpaths. New code must use the
   helpers; do not hardcode `~/.chosko-llm` / `~/.claude`.
-- **`resolve_feature` is the source of truth** for `command:` / `skill:`
-  prefix parsing. `cmd-rm.sh` parses the prefix itself because it resolves
-  against installed kind, not source kind — keep these two prefix parsers in
-  sync if syntax changes.
+- **`resolve_feature` is the source of truth** for `command:` / `skill:` /
+  `claude-md:` prefix parsing. `cmd-rm.sh` and `cmd-show.sh` parse the prefix
+  themselves (they resolve against installed/either kind, not source kind) —
+  keep all three prefix parsers in sync if the syntax changes.
 - **`die` exits 1, no other code.** Subcommand exit-code conventions live in
   the subcommand scripts, not here.
 
@@ -106,7 +129,8 @@ Installed paths under `$CLAUDE_HOME` mirror the same shape:
 
 - [cli-entry.md](./cli-entry.md) — `install.sh`, `uninstall.sh`, and
   `bin/chosko-llm` deliberately do **not** source `lib.sh` (must run before
-  the managed clone is populated).
+  the managed clone is populated). `scripts/auto-upgrade.sh`, invoked by the
+  proxy, *does* source it for the `auto_upgrade_*` helpers.
 - Every `cmd-*.md` — sources `lib.sh`. See those files for how each helper is
   consumed.
 

@@ -20,8 +20,12 @@ Side effects: prints to stdout. No filesystem writes.
 
 - **Two sources for the help text:** the shipped `docs/cli-help.txt` is the
   primary source. The inline heredoc is a minimal fallback used only when
-  someone has deleted or moved that file in the managed clone. Keep the two
-  in rough sync, but the `.txt` file is the canonical, user-visible help.
+  someone has deleted or moved that file in the managed clone (it lists the
+  core subcommands incl. `task-impl`). Keep the two in rough sync, but the
+  `.txt` file is the canonical, user-visible help.
+- **`Usage:` headings are bolded.** Both paths pipe through
+  `_bold_usage_headings` (a `sed` that wraps `Usage:` in `C_BOLD`/`C_RESET`
+  from `lib.sh`), so color applies on a TTY.
 - **The proxy short-circuits to `cmd-help.sh` for the no-arg case.** See
   the routing in [cli-entry.md](./cli-entry.md).
 

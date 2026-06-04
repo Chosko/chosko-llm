@@ -20,13 +20,15 @@ Output: a text table with header `NAME KIND INSTALLED LATEST STATUS`.
 `KIND` is `command`, `skill`, or `claude-md`. Missing values are rendered as
 `—`. An installed file with no `version` frontmatter shows as `unversioned`.
 On an interactive terminal a suggestions block follows the table (install /
-update hints); it is suppressed when stdout is piped or redirected.
+update hints, plus an always-present `show` inspect hint); it is suppressed
+when stdout is piped or redirected.
 
 ## Internal patterns
 
-- **Two-pass listing**: commands first, then skills. Names within each pass
-  are sorted and deduplicated across the two homes (managed clone +
-  `$CLAUDE_HOME`).
+- **Three-pass listing**: commands, then skills, then claude-md artifacts.
+  Names within each pass are sorted and deduplicated across the two homes
+  (managed clone + `$CLAUDE_HOME`). claude-md "installed" state is detected by
+  the managed section markers in `$CLAUDE_HOME/CLAUDE.md`, not a file.
 - **No version comparison.** `cmd-ls` only prints the two version strings
   side by side; there are no `[new]` / `[upgradable]` markers.
 - **Filenames are the truth.** A file named `foo.md` whose frontmatter
@@ -34,9 +36,11 @@ update hints); it is suppressed when stdout is piped or redirected.
   `cmd-add` / `cmd-update` resolve against. The authoring guide warns
   against this mismatch.
 - **Footer suggestions are TTY-gated.** After the table, `cmd-ls` prints
-  actionable hints (`add` an installable feature, `update` an outdated one,
-  or `Everything is up to date.`) on stdout only when stdout is a terminal
-  (`[ -t 1 ]`); piped/redirected output stays a clean table. Installable and
+  actionable hints on stdout only when stdout is a terminal (`[ -t 1 ]`);
+  piped/redirected output stays a clean table. The block contains an `add`
+  hint for installable features, an `update` hint for outdated ones (or
+  `Everything is up to date.` when neither applies), and ALWAYS ends with
+  `Run 'chosko-llm show <feature>' to inspect a feature.` Installable and
   updatable names are accumulated from the filtered rows during the three
   listing passes, so counts reflect what was actually shown.
 
@@ -51,6 +55,8 @@ update hints); it is suppressed when stdout is piped or redirected.
   `src_command_path`, and skill equivalents, plus `read_frontmatter_field`.
 - [cmd-add.md](./cmd-add.md) / [cmd-update.md](./cmd-update.md) — the
   features `ls` shows are produced/consumed by these.
+- [cmd-show.md](./cmd-show.md) — the single-feature deep-dive the footer's
+  inspect hint points at; shares the status/kind vocabulary.
 
 ## When to read the source
 

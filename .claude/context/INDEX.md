@@ -1,6 +1,6 @@
 # Context index
 
-Last updated: 2026-05-09
+Last updated: 2026-06-05
 
 Navigation layer for `chosko-llm`. Read this first, then the files relevant to
 your task. Open source files only when a context file's **When to read the
@@ -16,15 +16,17 @@ Canonical project docs live outside this folder and remain authoritative:
 
 | File | Covers |
 | --- | --- |
-| [cli-entry.md](./cli-entry.md) | Bootstrap (`install.sh`/`uninstall.sh`) and the `bin/chosko-llm` proxy that dispatches subcommands. |
-| [shared-lib.md](./shared-lib.md) | `scripts/lib.sh` — logging, frontmatter, path resolution, validation. Sourced by every subcommand. |
-| [cmd-ls.md](./cmd-ls.md) | `scripts/cmd-ls.sh` — list features with installed/latest versions; `--installed` / `--available` filters. |
-| [cmd-add.md](./cmd-add.md) | `scripts/cmd-add.sh` — install a feature into `$CLAUDE_HOME`; refuses if already installed. |
-| [cmd-rm.md](./cmd-rm.md) | `scripts/cmd-rm.sh` — uninstall a feature from `$CLAUDE_HOME`. |
-| [cmd-update.md](./cmd-update.md) | `scripts/cmd-update.sh` — re-copy a feature (or `--all`); installs if missing. |
-| [cmd-upgrade.md](./cmd-upgrade.md) | `scripts/cmd-upgrade.sh` — `git pull` the managed clone and refresh the proxy. |
+| [cli-entry.md](./cli-entry.md) | Bootstrap (`install.sh`/`uninstall.sh`), the `bin/chosko-llm` proxy that dispatches subcommands, and the daily auto-upgrade hook. |
+| [shared-lib.md](./shared-lib.md) | `scripts/lib.sh` — logging, colors, frontmatter, path resolution, claude-md sections, auto-upgrade state, validation. Sourced by every subcommand. |
+| [cmd-ls.md](./cmd-ls.md) | `scripts/cmd-ls.sh` — list features with installed/latest versions; `--installed` / `--available` filters; TTY footer hints. |
+| [cmd-show.md](./cmd-show.md) | `scripts/cmd-show.sh` — inspect one feature (versions, status, description, body/diff); handles local-only. |
+| [cmd-add.md](./cmd-add.md) | `scripts/cmd-add.sh` — install a feature (command/skill/claude-md, or `--all`) into `$CLAUDE_HOME`; refuses if already installed. |
+| [cmd-rm.md](./cmd-rm.md) | `scripts/cmd-rm.sh` — uninstall a feature (command/skill/claude-md) from `$CLAUDE_HOME`. |
+| [cmd-update.md](./cmd-update.md) | `scripts/cmd-update.sh` — re-copy a feature (or version-aware `--all`); installs if missing. |
+| [cmd-upgrade.md](./cmd-upgrade.md) | `scripts/cmd-upgrade.sh` — `git pull` the managed clone, refresh the proxy; `--enable-auto`/`--disable-auto` toggles. |
 | [cmd-help.md](./cmd-help.md) | `scripts/cmd-help.sh` — print `docs/cli-help.txt` or fallback help. |
-| [features.md](./features.md) | Shipped artifacts under `commands/`, `skills/`, and `tests/smoke/`; cross-refs to the authoring guide. |
+| [cmd-task-impl.md](./cmd-task-impl.md) | `scripts/cmd-task-impl.sh` — external-LLM (aider+Ollama) orchestrator of the 8-step task-implement flow for the current project. |
+| [features.md](./features.md) | Shipped artifacts under `commands/`, `skills/`, `claude-md/`, and `tests/smoke/`; cross-refs to the authoring guide. |
 
 ## Domain
 

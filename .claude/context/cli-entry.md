@@ -32,10 +32,14 @@ runs `git pull` in the managed clone). See [cmd-upgrade.md](./cmd-upgrade.md).
 ## Public API (CLI surface)
 
 The proxy at `bin/chosko-llm` accepts these subcommands and forwards `$@`:
-- `ls`, `add`, `rm`, `update`, `upgrade` → `scripts/cmd-<sub>.sh`
+- `ls`, `add`, `rm`, `update`, `upgrade`, `show` → `scripts/cmd-<sub>.sh`
+- `task-impl` → `scripts/cmd-task-impl.sh` (the external-LLM orchestrator;
+  see [cmd-task-impl.md](./cmd-task-impl.md)).
 - `""`, `-h`, `--help`, `help` → `scripts/cmd-help.sh` (falls back to
   `docs/cli-help.txt` if the script is missing).
 - Anything else → exits with code 2.
+- Before dispatching any of the above, the proxy runs the daily auto-upgrade
+  hook (see Internal patterns).
 
 The Windows shim `bin/chosko-llm.cmd` is transparent to the subcommand routing
 above — it locates git-bash and delegates to the bash proxy, which then routes

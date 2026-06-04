@@ -1,18 +1,24 @@
-# Features (commands & skills)
+# Features (commands, skills & claude-md)
 
 The artifacts this repo *ships*. The CLI exists to install and update them.
 
 ## Overview
 
-Three locations, all keyed by feature name (kebab-case):
+Feature kinds, all keyed by feature name (kebab-case):
 
 - `commands/<name>.md` — a single markdown file with YAML frontmatter. The
   body is the prompt Claude Code runs when the user invokes `/<name>`.
 - `skills/<name>/SKILL.md` — a folder containing `SKILL.md` plus any
   supporting files. The folder is copied recursively on install.
+- `claude-md/<name>.md` — a managed section injected into
+  `$CLAUDE_HOME/CLAUDE.md` (between `<!-- chosko-llm:<name>:begin … -->` /
+  `:end` markers) rather than copied as a standalone file, so global CLAUDE.md
+  guidance ships and updates like any other feature. `chosko-llm add/rm/update`
+  treat it as the `claude-md:` kind; surrounding user content is preserved.
+
+And the per-feature verification checklist:
 - `tests/smoke/<name>.md` — a manual checklist for verifying the feature
-  still works after edits. Format documented in
-  `tests/smoke/README.md`.
+  still works after edits. Format documented in `tests/smoke/README.md`.
 
 Currently shipped:
 - `commands/project-setup.md` — interactive first-time project initialization
@@ -77,6 +83,16 @@ Currently shipped:
   implementer. Appends `## Context bundle` and `## Implementation steps`
   sections; updates `Target:` to `local`. Does not commit by default;
   `--commit` opts in to committing the enriched body.
+- `commands/refactor-codebase.md` — behaviour-preserving, plan-first,
+  test-gated refactor: extract constants/enums, dedupe, split oversized
+  files, clean imports, rename. `scope=` / `focus=` limit the work; `--commit`
+  commits the result (default leaves it uncommitted).
+- `commands/refactor-tests.md` — split oversized test files into focused ones,
+  running the suite before/after each split to keep it green. `threshold=`
+  sets the line cutoff; `--commit` commits the splits (default uncommitted).
+- `claude-md/tool-usage-policy.md` — a claude-md artifact: global tool-usage
+  guidance injected into `$CLAUDE_HOME/CLAUDE.md`. Installed/updated/removed
+  via the `claude-md:` kind, not as a copied file.
 
 ## Public API (per-feature contract)
 
