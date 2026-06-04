@@ -15,7 +15,7 @@ subcommand="${1:-}"
 
 # Never auto-upgrade for these — and never recurse into `upgrade`.
 case "$subcommand" in
-  ""|upgrade|help|-h|--help) exit 0 ;;
+  ""|upgrade|help|-h|--help|uninstall) exit 0 ;;
 esac
 
 auto_upgrade_enabled || exit 0

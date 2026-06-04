@@ -150,7 +150,7 @@ Preconditions: none
 
 ## 33. Make `uninstall` invokable via the chosko-llm proxy
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/cmd-uninstall.sh, bin/chosko-llm, uninstall.sh, docs/cli-help.txt, README.md, .claude/context/cli-entry.md, tests/smoke/cmd-uninstall.md
 Preconditions: none

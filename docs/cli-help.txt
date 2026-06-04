@@ -35,6 +35,10 @@ Usage:
                                       One commit per task.
                                       Run 'chosko-llm task-impl --help' for full options.
 
+  chosko-llm uninstall                Remove the CLI proxy and, after confirmation, the installed
+                                      features and the managed clone. Prompts before every
+                                      destructive step; pass -y/--yes to answer all prompts yes.
+
   chosko-llm help                     Show this help.
 
 Feature names:

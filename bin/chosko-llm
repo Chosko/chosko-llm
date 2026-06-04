@@ -20,7 +20,7 @@ if [ -x "$CHOSKO_LLM_HOME/scripts/auto-upgrade.sh" ]; then
 fi
 
 case "$subcommand" in
-  ls|add|rm|update|upgrade|show)
+  ls|add|rm|update|upgrade|show|uninstall)
     exec "$CHOSKO_LLM_HOME/scripts/cmd-${subcommand}.sh" "$@"
     ;;
   task-impl)

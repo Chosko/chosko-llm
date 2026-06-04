@@ -82,14 +82,18 @@ claude-md artifacts are a third feature kind: rather than copying a standalone f
 ## Uninstall
 
 ```sh
-./uninstall.sh
+chosko-llm uninstall
 ```
 
-Prompts before each destructive step:
+(or, from a working copy, the standalone `./uninstall.sh` — same flow).
+
+Asks for an up-front confirmation, then prompts before each destructive step:
 
 1. Remove the CLI proxy at `~/bin/chosko-llm` (and `chosko-llm.cmd` on Windows).
 2. Optionally delete every installed feature under `~/.claude/` that matches a feature in the managed clone (user-authored files are left alone).
 3. Optionally remove the managed clone at `~/.chosko-llm/`.
+
+Pass `-y` (or `--yes`) to answer every prompt yes for non-interactive use.
 
 ## Configuration
 

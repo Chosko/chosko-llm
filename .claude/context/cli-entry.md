@@ -23,7 +23,9 @@ The CLI is split into four pieces:
   code with `exit /b %ERRORLEVEL%`. Contains no dispatch logic.
 - `uninstall.sh` — removes the proxy, optionally deletes installed features
   from `$CLAUDE_HOME` (matched against the managed clone), and optionally
-  deletes the managed clone itself.
+  deletes the managed clone itself. Reachable as `chosko-llm uninstall` via the
+  thin `scripts/cmd-uninstall.sh` wrapper, or run standalone. Gated by an
+  up-front confirmation before any removal; `-y`/`--yes` auto-confirms.
 
 The proxy reads from the managed clone, not from the working repo. Edits in
 the working repo reach users via `git push` → `chosko-llm upgrade` (which
@@ -32,7 +34,9 @@ runs `git pull` in the managed clone). See [cmd-upgrade.md](./cmd-upgrade.md).
 ## Public API (CLI surface)
 
 The proxy at `bin/chosko-llm` accepts these subcommands and forwards `$@`:
-- `ls`, `add`, `rm`, `update`, `upgrade`, `show` → `scripts/cmd-<sub>.sh`
+- `ls`, `add`, `rm`, `update`, `upgrade`, `show`, `uninstall` →
+  `scripts/cmd-<sub>.sh`. `cmd-uninstall.sh` is a thin wrapper that execs the
+  repo-root `uninstall.sh` (the single teardown implementation).
 - `task-impl` → `scripts/cmd-task-impl.sh` (the external-LLM orchestrator;
   see [cmd-task-impl.md](./cmd-task-impl.md)).
 - `""`, `-h`, `--help`, `help` → `scripts/cmd-help.sh` (falls back to
@@ -75,8 +79,8 @@ removing the managed clone.
   files in `~/.claude/` are left alone.
 - **Daily auto-upgrade (opt-in).** The proxy runs `scripts/auto-upgrade.sh`
   before each dispatch. It fires `chosko-llm upgrade` at most once per
-  calendar day, skipping the `upgrade`/`help`/empty subcommands and never
-  recursing. Preference + last-run date live in a **gitignored** state file
+  calendar day, skipping the `upgrade`/`help`/empty/`uninstall` subcommands and
+  never recursing (no point pulling a clone that `uninstall` may delete). Preference + last-run date live in a **gitignored** state file
   `$CHOSKO_LLM_HOME/.auto-upgrade-state` (`enabled`, `last_run`); a missing
   file means enabled (opt-in default). `install.sh` writes it with
   `enabled=true`. `cmd-upgrade.sh` exposes toggle-only `--enable-auto` /
