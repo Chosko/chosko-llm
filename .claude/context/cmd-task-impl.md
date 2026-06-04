@@ -10,10 +10,9 @@ same backlog, same per-task flow, one commit per task. It is the only
 subcommand that operates on the user's project rather than on `$CLAUDE_HOME`.
 
 Helper logic lives in `scripts/lib-task-external.sh` (sourced alongside
-`lib.sh`): backlog path/parse helpers (`project_tasks_index`,
-`task_summary_block`, `task_title`/`task_status`/`task_files`,
-`project_task_body`), `flip_task_status`, `require_clean_tree`,
-`require_external_artifacts`, `wrappers_are_stubs`, and `external_artifact`.
+`lib.sh`) — backlog path/parse helpers, `flip_task_status`,
+`require_clean_tree`, artifact/stub detection. See
+[lib-task-external.md](./lib-task-external.md).
 
 ## Public API
 
@@ -62,8 +61,10 @@ tasks complete.
 
 ## Cross-references
 
-- [shared-lib.md](./shared-lib.md) — sources `lib.sh` for logging/`die`; the
-  task-specific helpers live in the un-summarized `lib-task-external.sh`.
+- [lib-task-external.md](./lib-task-external.md) — the project-scoped backlog
+  parse/mutate/guard helpers this orchestrator is built on.
+- [shared-lib.md](./shared-lib.md) — sources `lib.sh` for logging/`die`
+  (required before `lib-task-external.sh`).
 - [cli-entry.md](./cli-entry.md) — the proxy routes `task-impl` here.
 
 ## When to read the source

@@ -26,6 +26,7 @@ Canonical project docs live outside this folder and remain authoritative:
 | [cmd-upgrade.md](./cmd-upgrade.md) | `scripts/cmd-upgrade.sh` — `git pull` the managed clone, refresh the proxy; `--enable-auto`/`--disable-auto` toggles. |
 | [cmd-help.md](./cmd-help.md) | `scripts/cmd-help.sh` — print `docs/cli-help.txt` or fallback help. |
 | [cmd-task-impl.md](./cmd-task-impl.md) | `scripts/cmd-task-impl.sh` — external-LLM (aider+Ollama) orchestrator of the 8-step task-implement flow for the current project. |
+| [lib-task-external.md](./lib-task-external.md) | `scripts/lib-task-external.sh` — project-scoped backlog parse/mutate/guard helpers beneath `cmd-task-impl.sh`. |
 | [features.md](./features.md) | Shipped artifacts under `commands/`, `skills/`, `claude-md/`, and `tests/smoke/`; cross-refs to the authoring guide. |
 
 ## Domain
