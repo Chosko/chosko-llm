@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 20
+Last task number: 21
 
 ---
 
@@ -37,5 +37,14 @@ Status: [MISSING]
 Target: claude
 Files: bin/chosko-llm.cmd, install.sh, .gitattributes, README.md, .claude/context/cli-entry.md, tests/smoke/windows-shim.md
 Preconditions: none
+
+---
+
+## 21. Improve colours: color-code feature kinds and implement colors for `show` command
+
+Status: [MISSING]
+Target: claude
+Files: scripts/cmd-ls.sh, scripts/cmd-show.sh, scripts/lib.sh, .claude/context/shared-lib.md, tests/smoke/colors.md, tests/smoke/cmd-show.md
+Preconditions: 19
 
 ---
