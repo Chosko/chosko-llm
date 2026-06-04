@@ -19,15 +19,20 @@
 1. In **git-project**, run `/project-setup`.
    - Confirm the upfront "leaves everything uncommitted" notice appears
      before any question.
+   - Confirm questions arrive **one at a time** — each prompt waits for a
+     reply before the next appears; they are not batched into one message.
    - At the VCS prompt, accept the auto-detected **git** default.
-   - Seed CLAUDE.md: **yes**; paste a short README excerpt as source.
+   - Seed CLAUDE.md: **yes**; paste a short README excerpt, then paste a
+     second note, then say **done** — confirm the wizard invites more after
+     each entry until "done".
    - Create AGENTS.md: **yes**.
    - Initialize the task backlog: **yes**.
    - Build the context layer: **yes**.
    - Approve the plan at the CONFIRM step.
 2. In **plastic-project**, run `/project-setup`.
    - At the VCS prompt, accept the auto-detected **Plastic SCM** default.
-   - Seed CLAUDE.md: **no** (paste nothing).
+   - Seed CLAUDE.md: **yes**, then say **done** immediately without providing
+     anything — confirm seeding is treated as declined.
    - Create AGENTS.md: **yes**.
    - Initialize the task backlog: **yes**.
    - Build the context layer: **no**.
@@ -46,8 +51,9 @@
 1. **git-project:**
    - An upfront notice states the wizard leaves everything uncommitted, and
      that the sub-commands it runs leave their output uncommitted too.
-   - GATHER asks exactly, in order: VCS, seed-CLAUDE.md (+paste), AGENTS.md,
-     task-backlog, context-layer. No extra prompts.
+   - GATHER asks exactly, in order, ONE QUESTION AT A TIME: VCS,
+     seed-CLAUDE.md (iterative paste/type loop ending on "done"), AGENTS.md,
+     task-backlog, context-layer. No extra prompts; no batched questions.
    - CONFIRM prints the full plan with execution order 1-6, no "commit via"
      line, and the closing "All changes are left UNCOMMITTED" note. No file
      is written before approval.

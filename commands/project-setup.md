@@ -1,6 +1,6 @@
 ---
 name: project-setup
-version: 0.2.0
+version: 0.3.0
 type: command
 description: Interactive first-time project initialization wizard. Gathers all choices upfront (VCS, CLAUDE.md content, AGENTS.md, task backlog, context layer), confirms once, then executes them in a fixed order. Orchestrates /task-setup and /context-build; injects a VCS-mapping section into CLAUDE.md for non-git projects (e.g. Plastic SCM). Authoring command — leaves all output uncommitted for one review pass by default; pass --commit to commit its own artifacts and delegate --commit to the nested commands.
 ---
@@ -121,9 +121,11 @@ matches the flag:
   > its own output (task-setup, context-build). You'll get a small series of
   > focused commits rather than one working tree to review.
 
-Then ask the questions below in order. Suggest the answer you'd pick so the
-user can confirm with a single word. Carry every answer forward into the
-CONFIRM summary — do NOT act on any answer yet.
+Then ask the questions below ONE AT A TIME — ask one, wait for the reply,
+then ask the next. Do not batch them into a single message or ask the user to
+answer them all in one go. Suggest the answer you'd pick so the user can
+confirm with a single word. Carry every answer forward into the CONFIRM
+summary — do NOT act on any answer yet.
 
 ### 1a. Detect the VCS
 
@@ -148,16 +150,21 @@ commits. If the user picks "none", skip VCS-section injection.
 
 > Seed CLAUDE.md with project information? [Y/n]
 
-If **yes**, invite the source material — this is the ONLY input the seeding
-step uses; the wizard does not read the codebase to fill CLAUDE.md:
+If **yes**, start an optional iterative input phase — this material is the
+ONLY input the seeding step uses; the wizard does not read the codebase to
+fill CLAUDE.md:
 
-> Paste the documentation, README excerpts, or notes you'd like folded into
-> CLAUDE.md. (Whatever you paste is synthesized into concise prose, never
-> inserted verbatim. If you paste nothing, I'll skip seeding — the context
-> layer in step 1d can populate codebase structure instead.)
+> Paste or type any documentation, README excerpts, or notes you'd like
+> folded into CLAUDE.md. (Whatever you provide is synthesized into concise
+> prose, never inserted verbatim.)
 
-Capture whatever they paste. If they paste nothing, treat seeding as
-declined.
+After each entry, accumulate it and invite more:
+
+> Added. Keep pasting or typing more, or say "done" when you've finished.
+
+Repeat until the user says "done". Accumulate everything they provided across
+the loop. If they say "done" without having provided anything, treat seeding
+as declined.
 
 ### 1c. AGENTS.md
 

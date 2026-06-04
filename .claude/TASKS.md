@@ -132,7 +132,7 @@ Preconditions: none
 
 ## 31. Make /project-setup GATHER ask one question at a time and seed CLAUDE.md iteratively
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/project-setup.md, tests/smoke/project-setup.md
 Preconditions: none
