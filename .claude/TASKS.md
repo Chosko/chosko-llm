@@ -96,7 +96,7 @@ Preconditions: 23, 24
 
 ## 27. Audit and update user- and developer-facing docs to reflect recent changes
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/cli-help.txt, docs/authoring-guide.md, tests/smoke/README.md
 Preconditions: 23, 24, 25, 26

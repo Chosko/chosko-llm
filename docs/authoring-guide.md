@@ -65,6 +65,37 @@ Always bump after a meaningful edit. `ls` displays the installed and latest
 versions side by side, so a forgotten bump leaves both columns showing the
 same value and users have no signal that there is anything to refresh.
 
+## Commit-control convention
+
+Commands that write files split into two groups, each exposing one opt-in
+flag so the user can override the default commit behaviour:
+
+- **Authoring commands (uncommitted by default).** `/context-build`,
+  `/task-enrich`, `/refactor-codebase`, `/refactor-tests`, `/task-setup`,
+  and `/project-setup` write their output and leave it in the working tree
+  for review. They accept **`--commit`** to commit what they wrote at the
+  end.
+- **Auto-committing commands.** `/task-add`, `/task-clean`,
+  `/task-implement`, and `/context-update` commit automatically. They accept
+  **`--no-commit`** to write their changes but skip the commit.
+
+When adding a new command that writes files, follow the same rules:
+
+- `--commit` and `--no-commit` are mutually exclusive — passing both is an
+  error with a clear message.
+- Stage ONLY the explicit paths the command wrote. Never use a catch-all
+  (`git add -A` / `git add .` / `git add -u`).
+- Make no empty commit: if the run wrote nothing, commit nothing.
+- Never use hook-skipping or history-rewriting flags (`--no-verify`,
+  `--amend`, `--no-gpg-sign`); surface a hook failure and let the user fix
+  it. Never push, branch, or tag.
+- On a non-git VCS, honour the project CLAUDE.md `## VCS` mapping
+  (e.g. git→`cm` for Plastic SCM).
+
+`/project-setup --commit` is the one orchestrator: it commits its own
+artifacts first, then invokes its nested commands with `--commit` so each
+commits its own output.
+
 ## Common mistakes
 
 - **Missing frontmatter or missing `version`.** The CLI refuses to install.
