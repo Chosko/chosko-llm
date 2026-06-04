@@ -6,6 +6,13 @@ Usage:
   chosko-llm ls --installed           Show only features currently installed under $CLAUDE_HOME.
   chosko-llm ls --available           Show only features present in the managed clone.
 
+  chosko-llm show <feature>           Inspect a single feature: name, kind, installed/latest
+                                      version, status, description, and path. Add --content to
+                                      also print its body.
+  chosko-llm show <feature> --diff    Compare the installed copy against the managed clone.
+                                      Use --diff --content for a line-by-line diff. --installed
+                                      and --latest pick which copy to show.
+
   chosko-llm add <feature>            Copy a feature from the managed clone into $CLAUDE_HOME.
                                       Errors if the feature is already installed (use 'update').
   chosko-llm add --all                Install all features from the managed clone that are not yet

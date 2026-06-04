@@ -6,7 +6,7 @@ Last task number: 19
 
 ## 17. Add `show` command to inspect a single feature
 
-Status: [IN PROGRESS]
+Status: [DONE]
 Target: claude
 Files: scripts/cmd-show.sh, bin/chosko-llm, docs/cli-help.txt, README.md, tests/smoke/cmd-show.md
 Preconditions: none

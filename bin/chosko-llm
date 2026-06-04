@@ -13,7 +13,7 @@ subcommand="${1:-}"
 [ $# -gt 0 ] && shift || true
 
 case "$subcommand" in
-  ls|add|rm|update|upgrade)
+  ls|add|rm|update|upgrade|show)
     exec "$CHOSKO_LLM_HOME/scripts/cmd-${subcommand}.sh" "$@"
     ;;
   task-impl)

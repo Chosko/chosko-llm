@@ -37,6 +37,7 @@ cd chosko-llm
 | `chosko-llm ls`                        | List all features with installed and latest versions.                       |
 | `chosko-llm ls --installed`            | Same table, filtered to features currently installed under `~/.claude/`.    |
 | `chosko-llm ls --available`            | Same table, filtered to features present in the managed clone.              |
+| `chosko-llm show <feature>`            | Inspect one feature: versions, status, description, path. `--content` prints its body; `--diff` compares installed vs latest. |
 | `chosko-llm add <feature>`             | Copy a feature from the managed clone into `~/.claude/`.                    |
 | `chosko-llm rm <feature>`              | Delete an installed feature from `~/.claude/`.                              |
 | `chosko-llm update <feature>`          | Re-copy a feature from the managed clone (installs if missing).             |
