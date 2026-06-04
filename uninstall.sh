@@ -17,12 +17,17 @@ confirm() {
   esac
 }
 
-# 1. Remove the proxy.
+# 1. Remove the proxy (and the Windows .cmd shim if present).
 if [ -e "$BIN_DIR/chosko-llm" ]; then
   log "Removing proxy: $BIN_DIR/chosko-llm"
   rm -f "$BIN_DIR/chosko-llm"
 else
   log "No proxy at $BIN_DIR/chosko-llm — skipping."
+fi
+
+if [ -e "$BIN_DIR/chosko-llm.cmd" ]; then
+  log "Removing Windows shim: $BIN_DIR/chosko-llm.cmd"
+  rm -f "$BIN_DIR/chosko-llm.cmd"
 fi
 
 # 2. Optionally remove installed features (do this BEFORE removing the managed

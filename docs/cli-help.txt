@@ -43,4 +43,4 @@ Environment:
   CHOSKO_LLM_HOME   Path to the managed clone. Default: ~/.chosko-llm
   CLAUDE_HOME       Path to Claude Code's user directory. Default: ~/.claude
   BIN_DIR           Where the CLI proxy is installed. Default: ~/bin
-  NO_COLOR          Set to disable colored log output.
+  NO_COLOR          Set to disable all colored output (table, metadata, log prefixes).
