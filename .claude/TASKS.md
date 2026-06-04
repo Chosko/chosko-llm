@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 30
+Last task number: 31
 
 ---
 
@@ -126,6 +126,15 @@ Preconditions: none
 Status: [DONE]
 Target: claude
 Files: bin/chosko-llm, scripts/auto-upgrade.sh, scripts/lib.sh, scripts/cmd-upgrade.sh, install.sh, .gitignore, docs/cli-help.txt, README.md, .claude/context/cli-entry.md, tests/smoke/auto-upgrade.md
+Preconditions: none
+
+---
+
+## 31. Make /project-setup GATHER ask one question at a time and seed CLAUDE.md iteratively
+
+Status: [MISSING]
+Target: claude
+Files: commands/project-setup.md, tests/smoke/project-setup.md
 Preconditions: none
 
 ---
