@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 28
+Last task number: 29
 
 ---
 
@@ -108,6 +108,15 @@ Preconditions: 23, 24, 25, 26
 Status: [MISSING]
 Target: claude
 Files: scripts/cmd-ls.sh, tests/smoke/cmd-ls.md
+Preconditions: none
+
+---
+
+## 29. Add a "Workflows" section to README before "Development"
+
+Status: [MISSING]
+Target: claude
+Files: README.md
 Preconditions: none
 
 ---
