@@ -25,6 +25,10 @@
 - Phase 2 updates only the in-scope context files and bumps the INDEX "Last updated" date.
 - Files with no changes are skipped and reported as such.
 - No domain knowledge files outside `.claude/context/` are modified.
+- Phase 3 commits the run: a single new commit appears whose subject names the
+  context update. `git show --stat HEAD` lists ONLY the context files Phase 2
+  wrote plus `INDEX.md` — no skipped context files, no unrelated dirty files.
+  The reported commit hash matches `git rev-parse --short HEAD`.
 
 ## Notes
 
@@ -32,4 +36,11 @@
 - Test Mode C with files: `/context-update files=<name>` — only that file updated.
 - Test Mode C with git ref: `/context-update git=uncommitted` — detects staged changes.
 - Test `-y` flag: `/context-update -y` — no confirmation prompts, runs to completion.
-- Run when context is already up to date to verify the "Context is up to date" exit path.
+- Run when context is already up to date to verify the "Context is up to date"
+  exit path — and confirm NO commit is made (no empty commit) in that case.
+- Dirty-tree safety: pre-stage/modify an unrelated file, run `/context-update`,
+  and confirm the auto-commit captures ONLY the context files it wrote — the
+  unrelated change is left untouched in the working tree.
+- Pre-commit-hook failure: install a failing `pre-commit` hook, run
+  `/context-update`, and confirm the command surfaces the hook output, does NOT
+  retry / `--amend` / `--no-verify`, and leaves the files staged-but-uncommitted.

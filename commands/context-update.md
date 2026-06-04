@@ -1,8 +1,8 @@
 ---
 name: context-update
-version: 0.1.0
+version: 1.0.0
 type: command
-description: Update an existing navigation context layer after code changes.
+description: Update an existing navigation context layer after code changes, then auto-commit the context files it updated.
 ---
 
 # /context-update
@@ -201,5 +201,52 @@ Report:
 - Any domain knowledge files that may need manual review.
 - Any new context files suggested (but not created).
 - Confirm the new "Last updated" date written to INDEX.md.
+
+---
+
+PHASE 3 — Commit the updated context files
+
+`/context-update` auto-commits its work, matching `/task-add` and
+`/task-clean`. This phase runs after Phase 2's report, with no
+confirmation prompt of its own (it is unaffected by AUTO_CONFIRM —
+committing is the default behavior).
+
+3.1 If Phase 2 modified NO files (e.g. Mode A found nothing to update, or
+    every in-scope file was skipped), make no commit. Do not create an
+    empty commit. Report "Context already up to date — nothing committed."
+    and stop.
+
+3.2 Otherwise, stage EXACTLY the context-layer files this run wrote —
+    the updated context files plus INDEX.md (whose "Last updated" line
+    Phase 2 bumped). Build the path list explicitly from the Phase 2
+    "files updated" report; never use a catch-all (`git add -A`,
+    `git add .`, `git add -u`). Files Phase 2 skipped are NOT staged.
+
+3.3 Commit the staged paths with a single descriptive message:
+
+    ```
+    git add -- <path1> <path2> ... <.../INDEX.md>
+    git commit -m "Update context layer"
+    ```
+
+    Use a headline that names the subject (e.g.
+    "Update context layer: cli, sheet" when a small, nameable set
+    changed). Keep to the repo's existing commit style.
+
+3.4 On success, report the commit hash (`git rev-parse --short HEAD`).
+
+3.5 On failure (e.g. a pre-commit hook rejects the commit): surface the
+    exact output. Do NOT retry, amend, or use `--no-verify` /
+    `--no-gpg-sign` or any hook-skipping flag. The files remain staged
+    but uncommitted; tell the user.
+
+NON-GIT VCS: if the project's CLAUDE.md carries a `## VCS` mapping
+section (e.g. git→`cm` for Plastic SCM), substitute the mapped commands
+for the git commands above — stage and check in only the explicit paths
+this run wrote, never a catch-all.
+
+This phase stages ONLY the context-layer files this run modified. It
+must not pull in unrelated dirty files, and it must not run
+`git add -A` / `git add .` / `git add -u`.
 
 END

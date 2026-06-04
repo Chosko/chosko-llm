@@ -31,7 +31,10 @@ Currently shipped:
   detection exists only to decide whether to inject the VCS-mapping section;
   project-setup never runs a VCS command itself, so it is VCS-agnostic.
 - `commands/context-build.md` — introduces a navigation context layer.
-- `commands/context-update.md` — refreshes an existing context layer.
+- `commands/context-update.md` — refreshes an existing context layer, then
+  auto-commits the context files it updated (explicit paths only; no commit
+  when nothing changed). Joins the auto-committing group with `/task-add`
+  and `/task-clean`.
 - `commands/task-setup.md` — initialize the backlog: `.claude/TASKS.md`
   stub, `.claude/tasks/` directory, and `.claude/external/implement-prompt.md`
   (the static system prompt fed to an external LLM via aider). Required

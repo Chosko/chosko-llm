@@ -69,7 +69,7 @@ Preconditions: none
 
 ## 24. Make `/context-update` auto-commit its changes
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/context-update.md, tests/smoke/context-update.md, .claude/context/features.md, .claude/domain/context-workflow.md
 Preconditions: none
