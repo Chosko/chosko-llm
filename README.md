@@ -176,12 +176,14 @@ cd chosko-llm
 
 Every feature requires YAML frontmatter (`name`, `version`, `type`, `description`). `add` and `update` refuse to install a file missing a `version` field.
 
+**Versioning.** There are two version axes. The per-feature `version:` frontmatter versions a single command or skill (and gates `add` / `update`). The root `VERSION` file is the repo-level stamp that `install.sh` reports — bump it on every shipped change: patch for fixes and docs, minor for a new feature, major for a breaking CLI change. A feature change bumps both.
+
 ### Repo layout
 
 | Path                         | Purpose                                                                  |
 | ---------------------------- | ------------------------------------------------------------------------ |
 | `install.sh` / `uninstall.sh` | Bootstrap the managed clone and `~/bin` proxy / tear them down.          |
-| `VERSION`                    | Repo-level version stamp.                                                 |
+| `VERSION`                    | Repo-level version stamp, bumped on every shipped change (see below).     |
 | `bin/chosko-llm`             | Proxy script copied to `~/bin/chosko-llm` by `install.sh`.               |
 | `bin/chosko-llm.cmd`         | Windows batch shim copied alongside the proxy on Windows.                |
 | `scripts/lib.sh`             | Shared shell helpers (logging, frontmatter, path resolution).            |

@@ -61,6 +61,19 @@ The CLI is a proxy: `~/bin/chosko-llm` parses the subcommand and execs
 - Every script under `scripts/` starts with `set -euo pipefail` and sources
   `lib.sh`.
 
+## Versioning
+
+- Bump the root `VERSION` file on **every change that ships** — features,
+  CLI behavior, scripts, or docs. It is the repo-level version `install.sh`
+  reports; if it never moves, the reported version drifts from reality.
+- Use semver for the bump: **patch** for fixes and doc-only changes,
+  **minor** for a new feature / command / skill, **major** for a breaking
+  change to the CLI surface.
+- The root `VERSION` is distinct from the per-feature `version:` frontmatter
+  on a command or skill (which versions that one feature for `cmd-add` /
+  `cmd-update`). Bumping a feature's frontmatter does **not** replace bumping
+  `VERSION`; a feature change bumps both.
+
 ## When asked to add a new feature
 
 1. Decide command vs. skill. Commands are single `.md` files; skills are

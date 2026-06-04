@@ -141,7 +141,7 @@ Preconditions: none
 
 ## 32. Document a versioning policy for the root VERSION file in CLAUDE.md
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: CLAUDE.md, README.md
 Preconditions: none
