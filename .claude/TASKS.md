@@ -105,7 +105,7 @@ Preconditions: 23, 24, 25, 26
 
 ## 28. Add a `show` suggestion to `chosko-llm ls` output
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/cmd-ls.sh, tests/smoke/cmd-ls.md
 Preconditions: none

@@ -281,6 +281,7 @@ list_all() {
       printf "Run 'chosko-llm update --all' to update all %d updatable features.\n" "$n_upd"; suggested=1
     fi
     [ "$suggested" -eq 1 ] || printf 'Everything is up to date.\n'
+    printf "Run 'chosko-llm show <feature>' to inspect a feature.\n"
   fi
 }
 

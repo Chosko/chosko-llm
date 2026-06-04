@@ -43,11 +43,17 @@
    one, or `... add --all to install all N.` for two or more) and an update
    hint (`Run 'chosko-llm update <name>' to update it.` for one, or
    `Run 'chosko-llm update --all' to update all N updatable features.` for two
-   or more). Counts reflect the filtered, displayed rows.
+   or more). Counts reflect the filtered, displayed rows. The block also ends
+   with the inspect hint `Run 'chosko-llm show <feature>' to inspect a
+   feature.` — printed last, regardless of whether any add/update hint fired.
 9. No suggestion lines appear — the piped output is only the table, byte-for-byte
-   the same as before this feature. (Suggestions are gated on `[ -t 1 ]`.)
-10. A single `Everything is up to date.` line appears below the table. Under
-    `--installed` the install hint never appears; under `--available` it may.
+   the same as before this feature. (Suggestions are gated on `[ -t 1 ]`.) The
+   `show` inspect hint is suppressed too — it is part of the gated block.
+10. The `Everything is up to date.` line appears below the table, followed by
+    the `Run 'chosko-llm show <feature>' to inspect a feature.` inspect hint
+    (the inspect hint is always present when the suggestions block renders).
+    Under `--installed` the install hint never appears; under `--available`
+    it may.
 
 ## Notes
 
