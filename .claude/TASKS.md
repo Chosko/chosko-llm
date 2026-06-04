@@ -33,7 +33,7 @@ Preconditions: none
 
 ## 20. Add Windows cmd/PowerShell entry point (`chosko-llm.cmd` shim)
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: bin/chosko-llm.cmd, install.sh, .gitattributes, README.md, .claude/context/cli-entry.md, tests/smoke/windows-shim.md
 Preconditions: none

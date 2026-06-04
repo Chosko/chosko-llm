@@ -6,6 +6,9 @@ BIN_DIR="${BIN_DIR:-$HOME/bin}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Detect platform once; used in steps 3 and 5.
+_uname="$(uname -s 2>/dev/null || true)"
+
 # Default repo used when not running from a git checkout (i.e. curl | bash).
 REPO_URL="${REPO_URL:-https://github.com/Chosko/chosko-llm.git}"
 
@@ -50,6 +53,19 @@ fi
 cp "$CHOSKO_LLM_HOME/bin/chosko-llm" "$BIN_DIR/chosko-llm"
 chmod +x "$BIN_DIR/chosko-llm"
 
+# 3a. On Windows (MINGW/MSYS/Cygwin), also install the .cmd shim.
+case "$_uname" in
+  MINGW*|MSYS*|CYGWIN*)
+    if [ -e "$BIN_DIR/chosko-llm.cmd" ]; then
+      TS="$(date +%Y%m%d-%H%M%S)"
+      log "Existing $BIN_DIR/chosko-llm.cmd found — backing up to chosko-llm.cmd.bak.$TS"
+      mv "$BIN_DIR/chosko-llm.cmd" "$BIN_DIR/chosko-llm.cmd.bak.$TS"
+    fi
+    cp "$CHOSKO_LLM_HOME/bin/chosko-llm.cmd" "$BIN_DIR/chosko-llm.cmd"
+    log "Installed chosko-llm.cmd (Windows cmd/PowerShell shim)"
+    ;;
+esac
+
 # 4. Determine version.
 VERSION="unknown"
 if [ -f "$CHOSKO_LLM_HOME/VERSION" ]; then
@@ -73,6 +89,25 @@ case ":$PATH:" in
     warn "$BIN_DIR is not in your PATH."
     warn "Add it by appending this to your shell rc (e.g. ~/.bashrc, ~/.zshrc):"
     warn "    export PATH=\"$BIN_DIR:\$PATH\""
+    ;;
+esac
+
+# 5a. Windows users: the shim must be on the *Windows* PATH, not just the MSYS PATH.
+case "$_uname" in
+  MINGW*|MSYS*|CYGWIN*)
+    _win_bin=""
+    if command -v cygpath >/dev/null 2>&1; then
+      _win_bin="$(cygpath -w "$BIN_DIR" 2>/dev/null || true)"
+    fi
+    warn "Windows users: to use 'chosko-llm' from cmd.exe or PowerShell, add"
+    warn "the following directory to your *Windows* PATH (not just the MSYS PATH):"
+    if [ -n "$_win_bin" ]; then
+      warn "    $_win_bin"
+    else
+      warn "    $BIN_DIR"
+    fi
+    warn "System Properties -> Advanced -> Environment Variables -> Path -> Edit -> New"
+    warn "WSL users: run from inside WSL (where ~/.chosko-llm is your WSL home)."
     ;;
 esac
 

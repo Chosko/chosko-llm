@@ -4,6 +4,9 @@ bin/chosko-llm text eol=lf
 install.sh   text eol=lf
 uninstall.sh text eol=lf
 
+# Windows batch shim — must be CRLF so cmd.exe parses it correctly.
+*.cmd        text eol=crlf
+
 # Markdown and plain text — let git normalize on commit, native on checkout.
 *.md         text
 *.txt        text

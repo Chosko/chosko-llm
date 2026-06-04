@@ -2,13 +2,19 @@
 
 ## Overview
 
-The CLI is split into three pieces:
+The CLI is split into four pieces:
 
 - `install.sh` — first-time bootstrap. Clones the working repo into the
   **managed clone** at `$CHOSKO_LLM_HOME` (default `~/.chosko-llm`) and copies
-  `bin/chosko-llm` to `$BIN_DIR/chosko-llm` (default `~/bin`).
+  `bin/chosko-llm` to `$BIN_DIR/chosko-llm` (default `~/bin`). On Windows
+  (MINGW/MSYS/Cygwin) it also copies `bin/chosko-llm.cmd` into `$BIN_DIR`.
 - `bin/chosko-llm` — a thin proxy. Reads the subcommand and execs the matching
   `scripts/cmd-<sub>.sh` from inside the managed clone.
+- `bin/chosko-llm.cmd` — Windows-only batch shim. Detected via `PATHEXT` by
+  cmd.exe and PowerShell. Auto-detects git-bash (`%ProgramFiles%\Git\bin\bash.exe`
+  and two other standard locations, then `where bash`), then forwards all
+  arguments to `%~dp0chosko-llm` (the sibling bash proxy). Propagates exit
+  code with `exit /b %ERRORLEVEL%`. Contains no dispatch logic.
 - `uninstall.sh` — removes the proxy, optionally deletes installed features
   from `$CLAUDE_HOME` (matched against the managed clone), and optionally
   deletes the managed clone itself.
@@ -25,6 +31,10 @@ The proxy at `bin/chosko-llm` accepts these subcommands and forwards `$@`:
   `docs/cli-help.txt` if the script is missing).
 - Anything else → exits with code 2.
 
+The Windows shim `bin/chosko-llm.cmd` is transparent to the subcommand routing
+above — it locates git-bash and delegates to the bash proxy, which then routes
+subcommands. All CLI behavior is single-sourced in the bash proxy and scripts.
+
 `install.sh` accepts no arguments. It uses these env vars:
 - `CHOSKO_LLM_HOME` — managed clone path. Default `~/.chosko-llm`.
 - `BIN_DIR` — proxy install dir. Default `~/bin`.
@@ -38,7 +48,14 @@ removing the managed clone.
   `cmd-update` copy feature files. This is a deliberate design rule (see
   `../../CLAUDE.md` hard rules).
 - **Existing proxy is backed up,** not overwritten. `install.sh` renames any
-  existing `$BIN_DIR/chosko-llm` to `chosko-llm.bak.<timestamp>`.
+  existing `$BIN_DIR/chosko-llm` to `chosko-llm.bak.<timestamp>`. The same
+  backup policy applies to `chosko-llm.cmd` on Windows.
+- **`.cmd` shim ships via `install.sh`, not `upgrade`.** Because `upgrade`
+  only does `git pull` + proxy refresh, first-time Windows setup requires
+  re-running `install.sh` to drop the `.cmd` into `$BIN_DIR`.
+- **Windows PATH vs MSYS PATH.** The installer reminds Windows users to add
+  `$BIN_DIR` to their *Windows* PATH (via System Properties), not just the
+  MSYS PATH. Uses `cygpath -w` when available to print the native path.
 - **Origin URL is inferred** from the working repo's `origin` remote when
   cloning the managed clone. If absent, install fails with a clear message.
 - **Re-running install.sh** on a populated `$CHOSKO_LLM_HOME` does
@@ -72,3 +89,5 @@ removing the managed clone.
 - Anything touching the proxy's invariant that it must work *before* the
   managed clone has any scripts → `bin/chosko-llm` (it cannot rely on
   `lib.sh`).
+- Changing the Windows shim (bash detection paths, argument forwarding,
+  error message) → `bin/chosko-llm.cmd`.

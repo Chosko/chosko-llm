@@ -30,6 +30,26 @@ cd chosko-llm
 ./install.sh
 ```
 
+### Windows (cmd.exe / PowerShell)
+
+`install.sh` must be run from **Git Bash** (not cmd.exe or PowerShell).
+On Windows it installs both the bash proxy (`chosko-llm`) and a thin batch
+shim (`chosko-llm.cmd`). Once both are on your **Windows** PATH, you can run
+`chosko-llm` from any shell — cmd.exe, PowerShell, and Git Bash all resolve
+it via `PATHEXT`.
+
+The installer prints the native Windows path you need to add. Add it via:
+**System Properties → Advanced → Environment Variables → Path → Edit → New**.
+
+**Known caveats:**
+
+- **git-bash only.** The shim auto-detects Git for Windows' `bash.exe`. WSL
+  users should run `chosko-llm` from inside WSL, where `~/.chosko-llm`
+  resolves to the WSL home — the two filesystems are separate.
+- **Muted interactive output.** Actionable suggestions after `ls` and colored
+  output are gated on a TTY. cmd.exe and PowerShell do not allocate a PTY, so
+  those features are suppressed when invoked through the shim.
+
 ## CLI
 
 | Command                                | What it does                                                                |
