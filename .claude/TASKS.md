@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 29
+Last task number: 30
 
 ---
 
@@ -117,6 +117,15 @@ Preconditions: none
 Status: [MISSING]
 Target: claude
 Files: README.md
+Preconditions: none
+
+---
+
+## 30. Daily auto-upgrade for the `chosko-llm` CLI
+
+Status: [MISSING]
+Target: claude
+Files: bin/chosko-llm, scripts/auto-upgrade.sh, scripts/lib.sh, scripts/cmd-upgrade.sh, install.sh, .gitignore, docs/cli-help.txt, README.md, .claude/context/cli-entry.md, tests/smoke/auto-upgrade.md
 Preconditions: none
 
 ---
