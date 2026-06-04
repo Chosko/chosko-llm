@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 27
+Last task number: 28
 
 ---
 
@@ -100,5 +100,14 @@ Status: [DONE]
 Target: claude
 Files: README.md, docs/cli-help.txt, docs/authoring-guide.md, tests/smoke/README.md
 Preconditions: 23, 24, 25, 26
+
+---
+
+## 28. Add a `show` suggestion to `chosko-llm ls` output
+
+Status: [MISSING]
+Target: claude
+Files: scripts/cmd-ls.sh, tests/smoke/cmd-ls.md
+Preconditions: none
 
 ---
