@@ -9,7 +9,7 @@ machine `chosko-llm upgrade` pulls the latest source and `chosko-llm add` /
 ## Install
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Chosko/chosko-llm/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Chosko/chosko-llm/master/install.sh | bash
 ```
 
 The installer clones a managed copy of the repo to `~/.chosko-llm/` and drops
