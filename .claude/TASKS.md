@@ -60,7 +60,7 @@ Preconditions: none
 
 ## 23. Remove the commit-scaffolding prompt from `/task-setup`; leave changes uncommitted
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-setup.md, commands/project-setup.md, tests/smoke/task-setup.md, tests/smoke/project-setup.md, .claude/context/features.md
 Preconditions: none

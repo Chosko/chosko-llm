@@ -1,6 +1,6 @@
 ---
 name: project-setup
-version: 0.1.0
+version: 0.1.1
 type: command
 description: Interactive first-time project initialization wizard. Gathers all choices upfront (VCS, CLAUDE.md content, AGENTS.md, task backlog, context layer), confirms once, then executes them in a fixed order. Orchestrates /task-setup and /context-build; injects a VCS-mapping section into CLAUDE.md for non-git projects (e.g. Plastic SCM). Pure authoring command — makes no commits; leaves all output uncommitted for one review pass.
 ---
@@ -45,9 +45,9 @@ THEN runs the heavy sub-commands last:
 
 - The wizard's own artifacts (CLAUDE.md seeding, VCS section, AGENTS.md) rely
   only on what the user provides and are written before any sub-command runs.
-- `/task-setup` runs next — it is mechanical and low-context. Its built-in
-  "commit scaffolding? [y/N]" offer is DECLINED by this wizard so the run
-  stays uniformly uncommitted (see Step 6).
+- `/task-setup` runs next — it is mechanical and low-context. It is a pure
+  authoring command that leaves its scaffolding uncommitted by default, so
+  the run stays uniformly uncommitted (see Step 5).
 - `/context-build` runs LAST. It is the most context-hungry command and has
   its own interactive STOP-and-approve gates, so it could otherwise capture
   the run and strand the wizard's later steps. Running it last guarantees the
@@ -88,8 +88,8 @@ State this once, upfront, before asking anything:
 > Heads up: this wizard leaves everything it writes UNCOMMITTED. I'll set up
 > the files (and run any sub-commands you choose), then hand the working tree
 > back to you to review and commit in one pass. I won't make any commits
-> myself — including suppressing the task-setup commit prompt if you enable
-> the backlog.
+> myself — the sub-commands I run (task-setup, context-build) leave their
+> output uncommitted too.
 
 Then ask the questions below in order. Suggest the answer you'd pick so the
 user can confirm with a single word. Carry every answer forward into the
@@ -139,8 +139,8 @@ This is independent of every other choice.
 
 > Initialize the task backlog now (runs /task-setup)? [Y/n]
 
-If yes, note that task-setup's own "commit scaffolding?" prompt will be
-declined automatically — its files are left uncommitted with everything else.
+If yes, note that task-setup leaves its scaffolding uncommitted by default —
+its files sit in the working tree with everything else for one review pass.
 
 ### 1e. Context layer
 
@@ -177,7 +177,7 @@ Execution order:
   3. Inject VCS section    (if non-git VCS)
   4. AGENTS.md             (if requested)
   -- heavy sub-commands, last --
-  5. /task-setup           (if requested; its commit prompt is declined)
+  5. /task-setup           (if requested; leaves scaffolding uncommitted)
   6. /context-build        (if requested; interactive)
 
 All changes are left UNCOMMITTED for you to review and commit in one pass.
@@ -262,11 +262,10 @@ as-is.
 ### Step 5 — Task backlog
 
 If requested, run the `/task-setup` workflow. It creates the backlog
-scaffolding. When it reaches its built-in "commit scaffolding? [y/N]" offer,
-DECLINE it (answer no) — its files stay uncommitted with everything else, so
-the whole run ends in one uniform reviewable state. Because CLAUDE.md is
-already written (Steps 1-4), task-setup's convention reading sees the
-completed file.
+scaffolding and leaves it uncommitted by default — its files stay with
+everything else, so the whole run ends in one uniform reviewable state.
+Because CLAUDE.md is already written (Steps 1-4), task-setup's convention
+reading sees the completed file.
 
 ### Step 6 — Context build (LAST)
 
@@ -292,8 +291,6 @@ DO NOT:
 - Write to any file before PHASE 3 (after explicit approval).
 - Commit, stage, or otherwise mutate VCS state — project-setup makes NO
   commits. Everything it and its sub-commands write is left uncommitted.
-- Accept `/task-setup`'s commit offer — decline it so the run stays
-  uniformly uncommitted.
 - Reimplement `/context-build` or `/task-setup` — invoke their workflows.
 - Run `/context-build` before Step 6 — it runs LAST.
 - Read the codebase to seed CLAUDE.md — seeding uses ONLY user-pasted

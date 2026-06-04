@@ -40,8 +40,8 @@
 ## Expected
 
 1. **git-project:**
-   - An upfront notice states the wizard leaves everything uncommitted and
-     will decline task-setup's commit prompt.
+   - An upfront notice states the wizard leaves everything uncommitted, and
+     that the sub-commands it runs leave their output uncommitted too.
    - GATHER asks exactly, in order: VCS, seed-CLAUDE.md (+paste), AGENTS.md,
      task-backlog, context-layer. No extra prompts.
    - CONFIRM prints the full plan with execution order 1-6, no "commit via"
@@ -53,8 +53,8 @@
        codebase to fill it.
      - **No** `## VCS` section is injected (git needs none).
      - AGENTS.md is created pointing at CLAUDE.md.
-     - `/task-setup` runs; its "commit scaffolding? [y/N]" prompt is
-       DECLINED automatically — its files are left uncommitted.
+     - `/task-setup` runs; it leaves its scaffolding uncommitted by
+       default — its files are left uncommitted with everything else.
      - `/context-build` runs LAST, honors its own STOP gates, and leaves its
        output uncommitted.
    - **End state: zero commits.** `git status` shows the wizard's files,
@@ -67,7 +67,8 @@
      created because the VCS section needs somewhere to live (Step 1 path).
    - CLAUDE.md carries the `## VCS` section with the git→`cm` substitution
      table exactly as in the command body.
-   - AGENTS.md is created; task-setup runs with its commit prompt declined.
+   - AGENTS.md is created; task-setup runs and leaves its scaffolding
+     uncommitted by default.
    - **No `cm` command is ever run by project-setup itself** — everything is
      left uncommitted for the user's review.
 3. The wizard re-asks the questions; declining everything at CONFIRM writes

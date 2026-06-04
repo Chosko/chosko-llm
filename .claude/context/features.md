@@ -22,8 +22,8 @@ Currently shipped:
   **Pure authoring command — makes NO commits.** It writes its own artifacts
   (CLAUDE.md project-info section synthesized from user-pasted material only,
   a `## VCS` section mapping git→`cm` for non-git VCS like Plastic SCM, and
-  AGENTS.md), then runs the heavy sub-commands last — `/task-setup` (with its
-  commit prompt declined) then `/context-build` (the most context-hungry,
+  AGENTS.md), then runs the heavy sub-commands last — `/task-setup` (which
+  leaves its scaffolding uncommitted by default) then `/context-build` (the most context-hungry,
   gated command, run last so it can't strand the earlier steps). Everything,
   including the sub-commands' output, is left uncommitted for the user to
   review and commit in one pass — matching the other authoring commands
@@ -36,7 +36,9 @@ Currently shipped:
   stub, `.claude/tasks/` directory, and `.claude/external/implement-prompt.md`
   (the static system prompt fed to an external LLM via aider). Required
   before `/task-add`. Idempotent — re-runs only fill in missing artifacts
-  and never overwrite an edited implement-prompt.
+  and never overwrite an edited implement-prompt. **Pure authoring command —
+  runs no git command; leaves its scaffolding uncommitted for the user to
+  review.**
 - `commands/task-add.md` — plan and append a new task conversationally:
   writes a summary block to `.claude/TASKS.md` and a thin body file at
   `.claude/tasks/<N>.md`. The default body schema (target: claude) contains
