@@ -114,7 +114,7 @@ Preconditions: none
 
 ## 29. Add a "Workflows" section to README before "Development"
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md
 Preconditions: none

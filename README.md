@@ -78,6 +78,47 @@ Prompts before each destructive step:
 
 ---
 
+## Workflows
+
+The features this CLI installs aren't isolated tricks — they add up to a few
+connected ways of working inside a project. You install them with
+`chosko-llm add <feature>` (they're opt-in), then invoke them as slash
+commands (`/<name>`) inside Claude Code. Most commands that write files leave
+their output uncommitted for you to review; the few that commit do so on their
+own. You can override either default with `--commit` / `--no-commit`.
+
+**Start a project — `/project-setup`.** When you first bring a repo under this
+tooling, `/project-setup` walks you through it in one pass: it seeds a
+`CLAUDE.md` from material you paste, optionally adds an `AGENTS.md` pointer,
+injects a VCS-mapping section for non-git projects, and can kick off the task
+backlog and the context layer for you. It asks everything up front, confirms
+once, then executes — so you're set up without running each piece by hand.
+
+**Keep Claude oriented — `/context-build` and `/context-update`.** These build
+a *navigation layer*: small, structured summaries of your codebase that let
+future sessions decide which source files to actually open instead of reading
+everything up front, which saves tokens and time. Run `/context-build` once to
+create the layer; run `/context-update` after changes to refresh only the
+parts the diffs touched.
+
+**Clean up safely — `/refactor-codebase` and `/refactor-tests`.** This is
+behaviour-preserving cleanup under a safety net: it plans the work and asks for
+approval first, then proceeds phase by phase with the test suite run between
+each step, stopping the moment anything goes red. `/refactor-codebase` handles
+constants, duplication, oversized files, imports, and naming;
+`/refactor-tests` focuses on splitting bloated test files.
+
+**Work through a backlog — the `task-*` commands.** This is a lightweight,
+LLM-friendly issue tracker that lives in the repo. `/task-setup` initializes
+it; `/task-add` plans a task conversationally and writes it down; `/task-list`
+shows what's pending; `/task-implement` builds tasks end-to-end with a
+test-first sequence, committing each separately; and `/task-clean` prunes
+finished ones. `/task-enrich` expands a task into a self-contained brief you
+can hand to a local LLM. The idea is to capture work as small, reviewable
+units and let the tooling drive each one to completion.
+
+---
+
 ## Development
 
 This section is for contributors and authors working on the repo itself.
