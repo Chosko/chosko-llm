@@ -74,15 +74,11 @@ if [ ! -f "$STATE_FILE" ]; then
   log "Enabled daily auto-upgrade (disable with 'chosko-llm upgrade --disable-auto')."
 fi
 
-# 4. Determine version.
-VERSION="unknown"
-if [ -f "$CHOSKO_LLM_HOME/VERSION" ]; then
-  VERSION="$(tr -d '[:space:]' < "$CHOSKO_LLM_HOME/VERSION")"
-fi
-if command -v git >/dev/null 2>&1; then
-  GITDESC="$(git -C "$CHOSKO_LLM_HOME" describe --tags --always 2>/dev/null || true)"
-  [ -n "$GITDESC" ] && VERSION="$VERSION ($GITDESC)"
-fi
+# 4. Determine version. Reuse resolve_version from the (now-present) managed
+#    clone's lib.sh so the format stays in sync with `chosko-llm --version`.
+#    Sourced in a subshell so lib.sh's own log_*/die definitions don't clobber
+#    this script's [install]-prefixed logging.
+VERSION="$(source "$CHOSKO_LLM_HOME/scripts/lib.sh" 2>/dev/null && resolve_version || echo unknown)"
 
 # 5. Summary + PATH check.
 log "Installed chosko-llm $VERSION"

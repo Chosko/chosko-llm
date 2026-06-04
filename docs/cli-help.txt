@@ -39,6 +39,9 @@ Usage:
                                       features and the managed clone. Prompts before every
                                       destructive step; pass -y/--yes to answer all prompts yes.
 
+  chosko-llm --version                Print the installed version (also: -v, 'version'). Matches the
+                                      version banner shown by install.sh.
+
   chosko-llm help                     Show this help.
 
 Feature names:

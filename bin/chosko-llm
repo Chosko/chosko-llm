@@ -26,6 +26,13 @@ case "$subcommand" in
   task-impl)
     exec "$CHOSKO_LLM_HOME/scripts/cmd-task-impl.sh" "$@"
     ;;
+  -v|--version|version)
+    if [ -x "$CHOSKO_LLM_HOME/scripts/cmd-version.sh" ]; then
+      exec "$CHOSKO_LLM_HOME/scripts/cmd-version.sh" "$@"
+    else
+      printf 'chosko-llm %s\n' "$(tr -d '[:space:]' < "$CHOSKO_LLM_HOME/VERSION" 2>/dev/null || echo unknown)"
+    fi
+    ;;
   ""|-h|--help|help)
     if [ -x "$CHOSKO_LLM_HOME/scripts/cmd-help.sh" ]; then
       exec "$CHOSKO_LLM_HOME/scripts/cmd-help.sh" "$@"

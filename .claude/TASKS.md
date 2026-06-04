@@ -159,7 +159,7 @@ Preconditions: none
 
 ## 34. Add a `--version` flag to the base `chosko-llm` command
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: bin/chosko-llm, scripts/lib.sh, install.sh, docs/cli-help.txt, README.md, .claude/context/cli-entry.md, tests/smoke/version.md
 Preconditions: none

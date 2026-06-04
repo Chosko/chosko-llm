@@ -32,6 +32,7 @@ chosko-llm ls --installed      # only what's installed
 chosko-llm ls --available      # only what's in the managed clone
 chosko-llm show <feature>      # inspect one feature in detail
 chosko-llm show <feature> --diff --content   # preview changes before updating
+chosko-llm --version           # print the installed version (also: -v, version)
 ```
 
 ### Installing and removing

@@ -23,6 +23,26 @@ log_success() { if _use_color; then printf '\033[1;32m[ok]\033[0m %s\n'    "$*" 
 
 die() { log_error "$*"; exit 1; }
 
+# ---------- version ----------
+
+# resolve_version
+# Prints the repo-level version string for the managed clone: the trimmed
+# contents of $CHOSKO_LLM_HOME/VERSION, plus " (<git describe>)" when git and a
+# describe value are available. Prints "unknown" if VERSION is missing. This is
+# the single source of the version format — install.sh and cmd-version.sh both
+# use it so they never drift.
+resolve_version() {
+  local version="unknown" gitdesc
+  if [ -f "$CHOSKO_LLM_HOME/VERSION" ]; then
+    version="$(tr -d '[:space:]' < "$CHOSKO_LLM_HOME/VERSION")"
+  fi
+  if command -v git >/dev/null 2>&1; then
+    gitdesc="$(git -C "$CHOSKO_LLM_HOME" describe --tags --always 2>/dev/null || true)"
+    [ -n "$gitdesc" ] && version="$version ($gitdesc)"
+  fi
+  printf '%s\n' "$version"
+}
+
 # ---------- stdout colors ----------
 # C_* variables are set at source time based on whether stdout is a TTY.
 # Scripts that write to stdout should use these variables, never raw \033[ escapes.

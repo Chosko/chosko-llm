@@ -39,6 +39,9 @@ The proxy at `bin/chosko-llm` accepts these subcommands and forwards `$@`:
   repo-root `uninstall.sh` (the single teardown implementation).
 - `task-impl` → `scripts/cmd-task-impl.sh` (the external-LLM orchestrator;
   see [cmd-task-impl.md](./cmd-task-impl.md)).
+- `-v`, `--version`, `version` → `scripts/cmd-version.sh` (falls back to
+  `cat`-ing the `VERSION` file if the script is missing). Prints the string
+  from `resolve_version` in `lib.sh` — the same format install.sh reports.
 - `""`, `-h`, `--help`, `help` → `scripts/cmd-help.sh` (falls back to
   `docs/cli-help.txt` if the script is missing).
 - Anything else → exits with code 2.
@@ -79,8 +82,9 @@ removing the managed clone.
   files in `~/.claude/` are left alone.
 - **Daily auto-upgrade (opt-in).** The proxy runs `scripts/auto-upgrade.sh`
   before each dispatch. It fires `chosko-llm upgrade` at most once per
-  calendar day, skipping the `upgrade`/`help`/empty/`uninstall` subcommands and
-  never recursing (no point pulling a clone that `uninstall` may delete). Preference + last-run date live in a **gitignored** state file
+  calendar day, skipping the `upgrade`/`help`/empty/`uninstall`/`version`
+  subcommands and never recursing (no point pulling a clone that `uninstall`
+  may delete, or for a read-only version check). Preference + last-run date live in a **gitignored** state file
   `$CHOSKO_LLM_HOME/.auto-upgrade-state` (`enabled`, `last_run`); a missing
   file means enabled (opt-in default). `install.sh` writes it with
   `enabled=true`. `cmd-upgrade.sh` exposes toggle-only `--enable-auto` /
@@ -96,11 +100,15 @@ removing the managed clone.
 
 ## Cross-references
 
-- [shared-lib.md](./shared-lib.md) — `lib.sh` is **not** sourced by
-  `install.sh` / `uninstall.sh` / `bin/chosko-llm`. Those three reimplement
-  their own minimal logging and path defaults so they can run before the
-  managed clone exists. (`scripts/auto-upgrade.sh`, invoked by the proxy,
-  *does* source `lib.sh` — it holds the `auto_upgrade_*` state helpers.)
+- [shared-lib.md](./shared-lib.md) — `lib.sh` is **not** sourced into the main
+  shell of `install.sh` / `uninstall.sh` / `bin/chosko-llm`. Those three
+  reimplement their own minimal logging and path defaults so they can run
+  before the managed clone exists. (`scripts/auto-upgrade.sh`, invoked by the
+  proxy, *does* source `lib.sh` — it holds the `auto_upgrade_*` state helpers.)
+  One narrow exception: `install.sh` step 4 sources `lib.sh` in an isolated
+  command-substitution **subshell** purely to call `resolve_version`, so its
+  own `[install]` logging is untouched and the version format stays single-
+  sourced with `chosko-llm --version`.
 - [cmd-upgrade.md](./cmd-upgrade.md) — owns the post-install update path
   (`git pull` + proxy refresh).
 
