@@ -62,7 +62,7 @@ chosko-llm upgrade --enable-auto    # opt back in
 
 These flags only change the preference — they don't perform an upgrade. The opt-in/opt-out state and the last-run date live in a gitignored file in the managed clone (`~/.chosko-llm/.auto-upgrade-state`). Set `CHOSKO_LLM_NO_AUTO_UPGRADE` to skip the automatic run entirely (handy in CI or scripts).
 
-### Implementing tasks with a local LLM
+### [Experimental] Implementing tasks with a local LLM
 
 `chosko-llm task-impl` drives a **local** LLM (aider + Ollama, `qwen2.5-coder:14b` by default) through a project's task backlog — the offline counterpart to the `/task-implement` slash command. Run it from the project root once the backlog is initialized (`/task-setup`) and tasks exist:
 
@@ -103,50 +103,55 @@ Prompts before each destructive step:
 
 ---
 
-## Workflows
+## Claude Code Workflows
 
-The features this CLI installs aren't isolated tricks — they add up to a few
-connected ways of working inside a project. You install them with
-`chosko-llm add <feature>` (they're opt-in), then invoke them as slash
-commands (`/<name>`) inside Claude Code. Most commands that write files leave
-their output uncommitted for you to review; the few that commit do so on their
-own. You can override either default with `--commit` / `--no-commit`.
+These features add up to a few connected ways of working in a project. Install
+them with `chosko-llm add <feature>` (opt-in), then run them as slash commands
+(`/<name>`) inside Claude Code. File-writing commands leave output uncommitted
+for review by default; override with `--commit` / `--no-commit`.
 
-**Start a project — `/project-setup`.** When you first bring a repo under this
-tooling, `/project-setup` walks you through it in one pass: it seeds a
-`CLAUDE.md` from material you paste, optionally adds an `AGENTS.md` pointer,
-injects a VCS-mapping section for non-git projects, and can kick off the task
-backlog and the context layer for you. It asks everything up front, confirms
-once, then executes — so you're set up without running each piece by hand.
+### Start a project — `/project-setup`
 
-**Keep Claude oriented — `/context-build` and `/context-update`.** These build
-a *navigation layer*: small, structured summaries of your codebase that let
-future sessions decide which source files to actually open instead of reading
-everything up front, which saves tokens and time. Run `/context-build` once to
-create the layer; run `/context-update` after changes to refresh only the
-parts the diffs touched.
+One-pass setup for a new repo. Seeds `CLAUDE.md` from pasted material, adds an
+optional `AGENTS.md` pointer, injects a VCS-mapping section for non-git
+projects, and can kick off the task backlog and context layer. Gathers every
+choice up front, confirms once, then executes.
 
-**Clean up safely — `/refactor-codebase` and `/refactor-tests`.** This is
-behaviour-preserving cleanup under a safety net: it plans the work and asks for
-approval first, then proceeds phase by phase with the test suite run between
-each step, stopping the moment anything goes red. `/refactor-codebase` handles
-constants, duplication, oversized files, imports, and naming;
-`/refactor-tests` focuses on splitting bloated test files.
+### Keep Claude oriented — `/context-build` and `/context-update`
 
-**Work through a backlog — the `task-*` commands.** This is a lightweight,
-LLM-friendly issue tracker that lives in the repo. `/task-setup` initializes
-it; `/task-add` plans a task conversationally and writes it down; `/task-list`
-shows what's pending; `/task-implement` builds tasks end-to-end with a
-test-first sequence, committing each separately; and `/task-clean` prunes
-finished ones. The idea is to capture work as small, reviewable units and let
-the tooling drive each one to completion.
+Build a *navigation layer*: small structured summaries that let future Claude Code sessions
+open only the source files they need, saving tokens.
 
-You don't have to use Claude to implement, either. `/task-enrich` expands a
-task into a self-contained brief, and the `chosko-llm task-impl` CLI command
-then drives a **local** LLM (aider + Ollama, e.g. `qwen2.5-coder`) through the
-same 8-step, test-first loop against your project — the offline counterpart to
-`/task-implement`, committing each task as it goes. So the backlog can be
-worked by Claude interactively or by a local model in batch, whichever fits.
+- `/context-build` — create the layer once. (it can be invoked automatically by `/project-setup` if chosen when asked)
+- `/context-update` — refresh only the parts the latest diffs touched.
+
+### Clean up safely — `/refactor-codebase` and `/refactor-tests`
+
+Behaviour-preserving cleanup under a safety net: plan first, get approval, then
+proceed phase by phase, running the test suite between steps and halting on the
+first failure.
+
+- `/refactor-codebase` — constants, duplication, oversized files, imports, naming.
+- `/refactor-tests` — split bloated test files.
+
+### Work through a backlog — the `task-*` commands
+
+A lightweight, in-repo issue tracker. Work is captured as small, reviewable
+tasks. The core idea is to spend more focus in planning and writing down tasks, then let the agent consume them automatically whenever it is convenient.
+
+- `/task-setup` — initialize the backlog.
+- `/task-add` — plan a task and write it down. This is the real strength of this workflow: invoke the command with a very short description, let Claude Code investigate and expand it, in a conversational way. Claude will ask every question needed to fill the gaps, then it will write everything down for further implementation.
+- `/task-list` — show what's pending.
+- `/task-implement` — build a task end-to-end, test-first, one commit each.
+- `/task-clean` — prune finished tasks.
+
+#### [Experimental] Implement with a local model instead of Claude
+
+`/task-enrich` expands a task into a self-contained brief; the `chosko-llm
+task-impl` CLI then drives a **local** LLM (aider + Ollama, e.g.
+`qwen2.5-coder`) through the same 8-step, test-first loop, committing each task
+as it goes. The offline counterpart to `/task-implement` — the backlog runs
+under Claude interactively or a local model in batch.
 
 ---
 
