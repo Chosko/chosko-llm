@@ -35,4 +35,5 @@ if [ -t 2 ]; then
   log_info "Auto-upgrade ran. Disable it with: chosko-llm upgrade --disable-auto"
 fi
 
+echo
 exit 0
