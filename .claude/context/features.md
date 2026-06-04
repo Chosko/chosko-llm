@@ -19,15 +19,17 @@ Currently shipped:
   wizard. Two phases: a GATHER phase that collects every choice upfront (VCS
   detection, CLAUDE.md seeding from pasted source, AGENTS.md, task backlog,
   context layer), and an EXECUTE phase that applies them in a fixed order.
-  Ordering principle: the wizard writes and commits its OWN artifacts first
+  **Pure authoring command — makes NO commits.** It writes its own artifacts
   (CLAUDE.md project-info section synthesized from user-pasted material only,
   a `## VCS` section mapping git→`cm` for non-git VCS like Plastic SCM, and
-  AGENTS.md), THEN runs the heavy sub-commands — `/task-setup` (commits its
-  own scaffolding), then `/context-build` LAST. context-build runs last
-  because it is the most context-hungry and has its own STOP gates that could
-  otherwise strand the wizard; it has no commit phase, so its output is left
-  uncommitted for the user to review. Orchestrates the sub-commands rather
-  than reimplementing them.
+  AGENTS.md), then runs the heavy sub-commands last — `/task-setup` (with its
+  commit prompt declined) then `/context-build` (the most context-hungry,
+  gated command, run last so it can't strand the earlier steps). Everything,
+  including the sub-commands' output, is left uncommitted for the user to
+  review and commit in one pass — matching the other authoring commands
+  (`/context-build`, `/context-update`, `/task-enrich`, `/refactor-*`). VCS
+  detection exists only to decide whether to inject the VCS-mapping section;
+  project-setup never runs a VCS command itself, so it is VCS-agnostic.
 - `commands/context-build.md` — introduces a navigation context layer.
 - `commands/context-update.md` — refreshes an existing context layer.
 - `commands/task-setup.md` — initialize the backlog: `.claude/TASKS.md`

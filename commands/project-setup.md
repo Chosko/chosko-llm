@@ -2,7 +2,7 @@
 name: project-setup
 version: 0.1.0
 type: command
-description: Interactive first-time project initialization wizard. Gathers all choices upfront (VCS, context layer, CLAUDE.md content, AGENTS.md, task backlog), confirms once, then executes them in a fixed order. Orchestrates /context-build and /task-setup; injects a VCS-mapping section into CLAUDE.md for non-git projects (e.g. Plastic SCM).
+description: Interactive first-time project initialization wizard. Gathers all choices upfront (VCS, CLAUDE.md content, AGENTS.md, task backlog, context layer), confirms once, then executes them in a fixed order. Orchestrates /task-setup and /context-build; injects a VCS-mapping section into CLAUDE.md for non-git projects (e.g. Plastic SCM). Pure authoring command — makes no commits; leaves all output uncommitted for one review pass.
 ---
 
 # /project-setup
@@ -25,20 +25,34 @@ them. `/context-build` and `/task-setup` remain independently usable; this
 wizard runs their logic on the user's behalf and adds two artifacts of its
 own (the CLAUDE.md project-info + VCS sections and AGENTS.md).
 
-ORDERING PRINCIPLE — the wizard does its OWN deterministic work first and
-commits it atomically, THEN runs the heavy sub-commands last:
+COMMIT POLICY — project-setup is a pure AUTHORING command. It NEVER commits
+anything. Every file it writes — and everything the sub-commands it invokes
+write — is left UNCOMMITTED in the working tree for the user to review and
+commit in one pass at the end. This matches the other authoring commands
+(`/context-build`, `/context-update`, `/task-enrich`, the `/refactor-*`
+commands), all of which leave their output for review. The generated
+CLAUDE.md prose in particular is synthesized from the user's pasted material
+and deserves a human read before it lands in history.
 
-- The wizard's own artifacts (CLAUDE.md seeding, VCS section, AGENTS.md) are
-  fast, deterministic, and rely only on what the user provides. They are
-  written and committed BEFORE any sub-command runs.
-- `/task-setup` runs next — it is mechanical and low-context.
+Because project-setup makes no commits, it never runs a VCS commit command,
+so it works identically under git, Plastic SCM, or any VCS. VCS detection
+exists for ONE purpose only: deciding whether to inject the VCS-mapping
+section into CLAUDE.md (that section exists for the OTHER commands — the
+task-* lifecycle commands that DO commit).
+
+ORDERING PRINCIPLE — the wizard does its OWN fast, deterministic work first,
+THEN runs the heavy sub-commands last:
+
+- The wizard's own artifacts (CLAUDE.md seeding, VCS section, AGENTS.md) rely
+  only on what the user provides and are written before any sub-command runs.
+- `/task-setup` runs next — it is mechanical and low-context. Its built-in
+  "commit scaffolding? [y/N]" offer is DECLINED by this wizard so the run
+  stays uniformly uncommitted (see Step 6).
 - `/context-build` runs LAST. It is the most context-hungry command and has
   its own interactive STOP-and-approve gates, so it could otherwise capture
   the run and strand the wizard's later steps. Running it last guarantees the
-  wizard's irreplaceable work is already on disk and committed before
-  context-build starts. context-build has NO commit phase of its own; it
-  leaves its output for the user to review and commit, exactly as it does
-  standalone.
+  wizard's other steps have already executed before context-build starts.
+  context-build has no commit phase of its own anyway.
 
 CLAUDE.md seeding relies ONLY on material the user supplies — pasted docs,
 README excerpts, notes. The wizard does NOT read the codebase to synthesize
@@ -46,7 +60,7 @@ project info; codebase-derived structure is context-build's job, and it runs
 later. If the user supplies nothing, the seeding step is a no-op.
 
 The flow is strictly: GATHER (ask everything) → CONFIRM (one approval) →
-EXECUTE (apply in order) → COMMIT (own artifacts only) → run sub-commands.
+EXECUTE (apply in order, no commits) → final review reminder.
 
 Never write to any file before the user confirms the gathered plan.
 
@@ -61,18 +75,25 @@ TOOL DISCIPLINE
 - File writes: use the Edit tool for targeted changes to an existing file;
   use the Write tool only when creating a new file from scratch. Never use
   shell redirection, `tee`, `Set-Content`, or `Out-File`.
-- Bash / PowerShell are used for two narrow purposes:
-  - VCS detection in the GATHER phase (read-only probes — see below).
-  - The final COMMIT phase: `cm`/`git` staging and check-in of this
-    command's own artifacts. No other phases shell out.
+- Bash / PowerShell are used for ONE narrow purpose: read-only VCS detection
+  in the GATHER phase (see below). This command never stages, commits, or
+  otherwise mutates VCS state — it makes no commits at all.
 
 ---
 
 PHASE 1 — GATHER (conversational; no files written)
 
-Ask the questions below in order. Suggest the answer you'd pick so the user
-can confirm with a single word. Carry every answer forward into the CONFIRM
-summary — do NOT act on any answer yet.
+State this once, upfront, before asking anything:
+
+> Heads up: this wizard leaves everything it writes UNCOMMITTED. I'll set up
+> the files (and run any sub-commands you choose), then hand the working tree
+> back to you to review and commit in one pass. I won't make any commits
+> myself — including suppressing the task-setup commit prompt if you enable
+> the backlog.
+
+Then ask the questions below in order. Suggest the answer you'd pick so the
+user can confirm with a single word. Carry every answer forward into the
+CONFIRM summary — do NOT act on any answer yet.
 
 ### 1a. Detect the VCS
 
@@ -88,12 +109,10 @@ auto-detected one as the default:
 > Detected VCS: <git | Plastic SCM | none>. Configure for this VCS?
 > [Y / specify another]
 
-The chosen VCS drives two things later: which commit command the EXECUTE
-phase uses, and whether a VCS-mapping section is injected into CLAUDE.md
-(injected for any non-git VCS; omitted for git, whose commands need no
-override). If the user picks "none", skip VCS-section injection and do the
-final commit with whatever VCS is actually present (or skip the commit and
-report the files as left uncommitted).
+The chosen VCS drives ONE thing: whether a VCS-mapping section is injected
+into CLAUDE.md (injected for any non-git VCS; omitted for git, whose commands
+need no override). It does NOT affect committing — project-setup never
+commits. If the user picks "none", skip VCS-section injection.
 
 ### 1b. Seed CLAUDE.md (from user-provided material only)
 
@@ -120,13 +139,16 @@ This is independent of every other choice.
 
 > Initialize the task backlog now (runs /task-setup)? [Y/n]
 
+If yes, note that task-setup's own "commit scaffolding?" prompt will be
+declined automatically — its files are left uncommitted with everything else.
+
 ### 1e. Context layer
 
 > Build the navigation context layer now (runs /context-build)? [Y/n]
 
 Note for the user: context-build runs LAST and has its own approval gates —
-it will pause for input during its phases, and it leaves its output for you
-to review and commit afterward.
+it will pause for input during its phases, and it leaves its output
+uncommitted for you to review afterward.
 
 That's the full set of questions. Keep it to these — do not improvise extra
 prompts. If $ARGUMENTS carried hints (e.g. "we use Plastic", "source under
@@ -139,9 +161,9 @@ PHASE 2 — CONFIRM (present the full plan, one approval)
 Render every gathered choice and the exact EXECUTE order in one message:
 
 ```
-PLAN — project setup
+PLAN — project setup     (nothing is committed; all output left for review)
 
-VCS:            <git | Plastic SCM | none>   (commit via <git|cm|—>)
+VCS:            <git | Plastic SCM | none>
 Seed CLAUDE.md: <yes, synthesizing N pasted source(s) | skip>
 VCS section:    <inject Plastic mapping into CLAUDE.md | none needed (git) | skip (none)>
 AGENTS.md:      <create | skip>
@@ -149,16 +171,16 @@ Task backlog:   <initialize via /task-setup | skip>
 Context layer:  <build via /context-build (runs last) | skip>
 
 Execution order:
-  -- wizard's own artifacts, committed atomically --
+  -- wizard's own artifacts --
   1. CLAUDE.md skeleton    (only if CLAUDE.md missing AND step 2 or 3 needs it)
   2. Seed CLAUDE.md prose  (if requested; from pasted material only)
   3. Inject VCS section    (if non-git VCS)
   4. AGENTS.md             (if requested)
-  5. Commit own artifacts  (CLAUDE.md edits from 2-3 + AGENTS.md)
   -- heavy sub-commands, last --
-  6. /task-setup           (if requested; commits its own scaffolding)
-  7. /context-build        (if requested; interactive; left uncommitted for
-                            your review)
+  5. /task-setup           (if requested; its commit prompt is declined)
+  6. /context-build        (if requested; interactive)
+
+All changes are left UNCOMMITTED for you to review and commit in one pass.
 ```
 
 End with: **"Approve and run?"**
@@ -171,9 +193,9 @@ the full plan after any change.
 PHASE 3 — EXECUTE (only after explicit approval)
 
 Run the steps in this exact order. Skip any step the user opted out of.
-Report each step's result as you go. Steps 1-5 are the wizard's own work and
-are committed together at Step 5. Steps 6-7 are the heavy sub-commands and
-run afterward.
+Report each step's result as you go. Steps 1-4 are the wizard's own work;
+Steps 5-6 are the heavy sub-commands. Nothing is committed at any step —
+everything is left in the working tree for the final review.
 
 ### Step 1 — CLAUDE.md skeleton
 
@@ -182,7 +204,7 @@ to it (seeding requested, or a VCS section will be injected). Use the Write
 tool to create a minimal CLAUDE.md containing just a title and a one-line
 "see AGENTS.md / the context layer" pointer. If CLAUDE.md already exists, do
 nothing here. If nothing in Steps 2-3 will write to CLAUDE.md and it is
-missing, also do nothing — context-build (Step 7) will create it if the user
+missing, also do nothing — context-build (Step 6) will create it if the user
 asked for the context layer.
 
 ### Step 2 — Seed CLAUDE.md with project info (user material only)
@@ -191,7 +213,7 @@ If requested, synthesize ONLY the material the user pasted in GATHER 1b into
 a concise project-information section in CLAUDE.md — what the project is, its
 layout, its key conventions. Synthesize into prose; do NOT paste the source
 material verbatim, and do NOT read the codebase to invent content here
-(codebase structure is context-build's job in Step 7). If the user pasted
+(codebase structure is context-build's job in Step 6). If the user pasted
 nothing, skip this step.
 
 ### Step 3 — Inject the VCS-mapping section
@@ -237,80 +259,46 @@ VCS rules.
 If AGENTS.md already exists, do not clobber it — report that it was left
 as-is.
 
-### Step 5 — Commit the wizard's own artifacts
-
-Commit ONLY the artifacts this command wrote directly in Steps 1-4: the
-CLAUDE.md skeleton/seeding/VCS edits and AGENTS.md. This commit happens
-BEFORE the heavy sub-commands run, so the wizard's irreplaceable work is
-captured atomically regardless of what happens in Steps 6-7.
-
-Use the chosen VCS:
-- **git:**
-  ```
-  git add -- CLAUDE.md AGENTS.md        # only the paths actually written
-  git commit -m "Configure project via /project-setup"
-  ```
-- **Plastic SCM:**
-  ```
-  cm add CLAUDE.md AGENTS.md            # only paths not already controlled
-  cm checkin -m "Configure project via /project-setup" CLAUDE.md AGENTS.md
-  ```
-- **none:** skip the commit; report the written files as left uncommitted.
-
-Stage only the explicit paths this command wrote. Never use `git add -A`,
-`git add .`, `git add -u`, or a Plastic catch-all. If nothing was written in
-Steps 1-4 (e.g. git VCS, no seeding, no AGENTS.md), skip the commit. If the
-commit fails (e.g. a pre-commit hook), surface the exact output, do not
-retry, do not use `--no-verify` or `--amend`, and tell the user the files
-are left in place. Report the resulting commit hash / changeset number.
-
-### Step 6 — Task backlog
+### Step 5 — Task backlog
 
 If requested, run the `/task-setup` workflow. It creates the backlog
-scaffolding and offers to commit its own artifacts — let it manage its own
-commit. Because CLAUDE.md is already final and committed (Steps 1-5),
-task-setup's convention reading sees the completed file.
+scaffolding. When it reaches its built-in "commit scaffolding? [y/N]" offer,
+DECLINE it (answer no) — its files stay uncommitted with everything else, so
+the whole run ends in one uniform reviewable state. Because CLAUDE.md is
+already written (Steps 1-4), task-setup's convention reading sees the
+completed file.
 
-### Step 7 — Context build (LAST)
+### Step 6 — Context build (LAST)
 
 If requested, run the `/context-build` workflow. Run it LAST and treat its
 phases as authoritative — it has its own STOP-and-approve gates that pause
 for user input; honor them, do not flatten them. It creates CLAUDE.md if
 missing and adds its navigation instruction at the top (additive to anything
-Steps 1-2 wrote).
-
-context-build has NO commit phase. When it finishes, its output (the
-`.claude/context/` files and the CLAUDE.md navigation edit) is left
-UNCOMMITTED — exactly as context-build behaves standalone. Do NOT fold it
-into the Step 5 commit (which already happened) and do NOT auto-commit it
-here; tell the user to review context-build's report and commit its output
-themselves.
+Steps 1-2 wrote). context-build has no commit phase; its output stays
+uncommitted, exactly as it behaves standalone.
 
 ### Final report
 
-Summarize every step's outcome: the Step 5 commit hash/changeset (if any),
-task-setup's result and commit (if run), and context-build's result with a
-reminder that its output is uncommitted and awaiting review. Suggest next
-steps (e.g. `/task-add` once the backlog is initialized; commit the context
-layer once reviewed).
+Summarize every step's outcome and the files written by each (the wizard's
+own artifacts, task-setup's scaffolding if run, context-build's output if
+run). Remind the user that NOTHING was committed: the entire working tree is
+theirs to review and commit in one pass. Suggest next steps (e.g. review the
+synthesized CLAUDE.md prose, then commit; `/task-add` once the backlog is
+committed).
 
 ---
 
 DO NOT:
 - Write to any file before PHASE 3 (after explicit approval).
+- Commit, stage, or otherwise mutate VCS state — project-setup makes NO
+  commits. Everything it and its sub-commands write is left uncommitted.
+- Accept `/task-setup`'s commit offer — decline it so the run stays
+  uniformly uncommitted.
 - Reimplement `/context-build` or `/task-setup` — invoke their workflows.
-- Run `/context-build` before Step 5 — it runs LAST, after the wizard's own
-  artifacts are committed.
-- Auto-commit `/context-build`'s output — it has no commit phase; leave it
-  for the user to review and commit.
-- Re-commit artifacts `/task-setup` already committed.
+- Run `/context-build` before Step 6 — it runs LAST.
 - Read the codebase to seed CLAUDE.md — seeding uses ONLY user-pasted
   material; codebase structure is context-build's job.
 - Paste user-provided documentation verbatim into CLAUDE.md — synthesize it.
 - Inject a VCS section for a git project.
 - Clobber an existing AGENTS.md or an existing CLAUDE.md project-info /
   VCS section — update in place, never duplicate.
-- Use `git add -A`, `git add .`, `git add -u`, or a Plastic catch-all in
-  Step 5 — only the explicit paths this command wrote.
-- Use `--amend`, `--no-verify`, `--no-gpg-sign`, or any hook-skipping flag.
-- Push, branch, tag, or otherwise touch shared/visible VCS state.
