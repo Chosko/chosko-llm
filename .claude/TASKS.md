@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 26
+Last task number: 27
 
 ---
 
@@ -91,5 +91,14 @@ Status: [MISSING]
 Target: claude
 Files: commands/task-add.md, commands/task-clean.md, commands/task-implement.md, commands/context-update.md, tests/smoke/task-add.md, tests/smoke/task-clean.md, tests/smoke/task-implement.md, tests/smoke/context-update.md, .claude/context/features.md
 Preconditions: 23, 24
+
+---
+
+## 27. Audit and update user- and developer-facing docs to reflect recent changes
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/cli-help.txt, docs/authoring-guide.md, tests/smoke/README.md
+Preconditions: 23, 24, 25, 26
 
 ---
