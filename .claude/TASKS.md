@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 31
+Last task number: 33
 
 ---
 
@@ -135,6 +135,24 @@ Preconditions: none
 Status: [DONE]
 Target: claude
 Files: commands/project-setup.md, tests/smoke/project-setup.md
+Preconditions: none
+
+---
+
+## 32. Document a versioning policy for the root VERSION file in CLAUDE.md
+
+Status: [MISSING]
+Target: claude
+Files: CLAUDE.md, README.md
+Preconditions: none
+
+---
+
+## 33. Make `uninstall` invokable via the chosko-llm proxy
+
+Status: [MISSING]
+Target: claude
+Files: scripts/cmd-uninstall.sh, bin/chosko-llm, uninstall.sh, docs/cli-help.txt, README.md, .claude/context/cli-entry.md, tests/smoke/cmd-uninstall.md
 Preconditions: none
 
 ---
