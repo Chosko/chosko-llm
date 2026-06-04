@@ -8,18 +8,27 @@ machine `chosko-llm upgrade` pulls the latest source and `chosko-llm add` /
 
 ## Install
 
-Clone the repo somewhere and run the bootstrap. It clones a managed copy to
-`~/.chosko-llm/` and drops a CLI proxy at `~/bin/chosko-llm`.
-
 ```sh
-git clone <this-repo-url> chosko-llm
-cd chosko-llm
-./install.sh
+curl -fsSL https://raw.githubusercontent.com/Chosko/chosko-llm/main/install.sh | bash
 ```
+
+The installer clones a managed copy of the repo to `~/.chosko-llm/` and drops
+a CLI proxy at `~/bin/chosko-llm`.
 
 If `~/bin` isn't on your `$PATH`, the installer will tell you how to add it.
 
 `install.sh` does **not** install any features — features are opt-in.
+
+### Developer install
+
+If you have a working checkout, you can run the installer directly — it will
+derive the origin URL from the local git remote:
+
+```sh
+git clone https://github.com/Chosko/chosko-llm.git chosko-llm
+cd chosko-llm
+./install.sh
+```
 
 ## CLI
 
