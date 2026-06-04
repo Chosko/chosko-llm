@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 33
+Last task number: 34
 
 ---
 
@@ -153,6 +153,15 @@ Preconditions: none
 Status: [MISSING]
 Target: claude
 Files: scripts/cmd-uninstall.sh, bin/chosko-llm, uninstall.sh, docs/cli-help.txt, README.md, .claude/context/cli-entry.md, tests/smoke/cmd-uninstall.md
+Preconditions: none
+
+---
+
+## 34. Add a `--version` flag to the base `chosko-llm` command
+
+Status: [MISSING]
+Target: claude
+Files: bin/chosko-llm, scripts/lib.sh, install.sh, docs/cli-help.txt, README.md, .claude/context/cli-entry.md, tests/smoke/version.md
 Preconditions: none
 
 ---
