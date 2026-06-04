@@ -178,13 +178,21 @@ Every feature requires YAML frontmatter (`name`, `version`, `type`, `description
 
 ### Repo layout
 
-| Path                      | Purpose                                                             |
-| ------------------------- | ------------------------------------------------------------------- |
-| `bin/chosko-llm`          | Proxy script copied to `~/bin/chosko-llm` by `install.sh`.         |
-| `bin/chosko-llm.cmd`      | Windows batch shim copied alongside the proxy on Windows.           |
-| `scripts/lib.sh`          | Shared shell helpers (logging, frontmatter, path resolution).       |
-| `scripts/cmd-*.sh`        | One file per CLI subcommand. The proxy delegates here.              |
-| `commands/<name>.md`      | A Claude Code command. Frontmatter required.                        |
-| `skills/<name>/SKILL.md`  | A Claude Code skill. Frontmatter required.                          |
-| `docs/authoring-guide.md` | How to write a new command or skill.                                |
-| `tests/smoke/`            | Manual smoke-test checklists, one file per feature.                 |
+| Path                         | Purpose                                                                  |
+| ---------------------------- | ------------------------------------------------------------------------ |
+| `install.sh` / `uninstall.sh` | Bootstrap the managed clone and `~/bin` proxy / tear them down.          |
+| `VERSION`                    | Repo-level version stamp.                                                 |
+| `bin/chosko-llm`             | Proxy script copied to `~/bin/chosko-llm` by `install.sh`.               |
+| `bin/chosko-llm.cmd`         | Windows batch shim copied alongside the proxy on Windows.                |
+| `scripts/lib.sh`             | Shared shell helpers (logging, frontmatter, path resolution).            |
+| `scripts/lib-task-external.sh` | Helpers for the external-LLM task workflow.                            |
+| `scripts/cmd-*.sh`           | One file per CLI subcommand. The proxy delegates here.                   |
+| `commands/<name>.md`         | A Claude Code command. Frontmatter required.                             |
+| `skills/<name>/SKILL.md`     | A Claude Code skill. Frontmatter required.                               |
+| `claude-md/<name>.md`        | A CLAUDE.md snippet feature, merged into the user's CLAUDE.md.           |
+| `.claude/context/`           | Navigation context layer (`INDEX.md` + per-source files) for this repo.  |
+| `.claude/domain/`            | Domain workflow docs (task, context, refactor) referenced by `CLAUDE.md`. |
+| `.claude/TASKS.md` / `.claude/tasks/` | This repo's own task backlog and per-task body files.           |
+| `docs/authoring-guide.md`    | How to write a new command or skill.                                     |
+| `docs/cli-help.txt`          | Help text rendered by `chosko-llm help`.                                 |
+| `tests/smoke/`               | Manual smoke-test checklists, one file per feature.                      |
