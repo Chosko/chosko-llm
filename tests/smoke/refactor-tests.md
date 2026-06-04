@@ -38,6 +38,27 @@
 - The test suite is run after each individual split.
 - The final report lists files split and confirms suite status: green.
 - No non-test files are touched.
+- Default run (no `--commit`): the splits are left UNCOMMITTED — `git status`
+  shows the new/trimmed/deleted test files, `git log` has no new commit.
+
+---
+
+## Scenario A2 — same as A but with `--commit`
+
+### Steps
+
+1. Invoke `/refactor-tests --commit` and confirm at STEP 3.
+
+### Expected
+
+- After a green final suite, a single new commit appears (subject names the
+  split). `git show --stat HEAD` lists ONLY the test files the run touched —
+  new files, trimmed originals, and deletions — and no non-test files.
+- `/refactor-tests --commit --no-commit` stops with
+  "`--commit and --no-commit cannot be combined. Pick one.`" and changes
+  nothing.
+- If the run stops early on a mid-run red suite, NO commit is made even with
+  `--commit` — the half-split state is left for review.
 
 ---
 
@@ -82,10 +103,10 @@
 
 ## Frontmatter check
 
-- `commands/refactor-tests.md` has `name: refactor-tests`, `version: 0.1.0`,
+- `commands/refactor-tests.md` has `name: refactor-tests`, `version: 0.2.0`,
   `type: command`, and a one-line `description`.
 - After running `chosko-llm update` in a managed clone,
-  `chosko-llm ls --available` lists `refactor-tests  command  —  0.1.0`.
+  `chosko-llm ls --available` lists `refactor-tests  command  —  0.2.0`.
 
 ## Notes
 

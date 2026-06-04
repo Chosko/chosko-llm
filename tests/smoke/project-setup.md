@@ -36,6 +36,10 @@
    decline everything at the CONFIRM step.
 4. Run `/project-setup` and at CONFIRM answer with silence / an unrelated
    reply (abort path).
+5. In a fresh **git-project**, run `/project-setup --commit` — accept git,
+   seed CLAUDE.md (paste a short excerpt), create AGENTS.md, initialize the
+   backlog, build the context layer, and approve.
+6. Run `/project-setup --commit --no-commit` (mutual-exclusivity check).
 
 ## Expected
 
@@ -76,16 +80,32 @@
    duplicate sections).
 4. Abort path: silence / unrelated reply at CONFIRM stops the run with no
    files written.
+5. `--commit` run: the upfront notice states the wizard commits as it goes.
+   CONFIRM shows "Commit mode: on (--commit)" and includes step 4c plus
+   `--commit` passed through to steps 5-6. End state has a SERIES of focused
+   commits, not an uncommitted tree:
+   - one "Initialize project with chosko-llm scaffolding" commit holding ONLY
+     the wizard's own artifacts (CLAUDE.md, AGENTS.md);
+   - one commit from `/task-setup --commit` holding ONLY its scaffolding;
+   - one commit from `/context-build --commit` holding ONLY the context layer
+     + CLAUDE.md navigation edit.
+   No commit stages a catch-all; no unrelated files are swept in.
+6. Mutual exclusivity: `/project-setup --commit --no-commit` stops with
+   "`--commit and --no-commit cannot be combined. Pick one.`" and writes
+   nothing.
 
 ## Notes
 
-- project-setup is a pure authoring command: it NEVER commits. The only VCS
-  interaction is read-only detection in GATHER, used solely to decide whether
-  to inject the Plastic mapping section.
+- By default project-setup is a pure authoring command: it makes NO commits,
+  and the only VCS interaction is read-only detection in GATHER (used solely
+  to decide whether to inject the Plastic mapping section). With `--commit` it
+  commits its own artifacts and passes `--commit` to the nested commands.
 - The VCS section is injected for any non-git VCS and omitted for git.
 - CLAUDE.md seeding uses ONLY user-pasted material — never a codebase read,
   never verbatim insertion. Eyeball the project-info section to confirm.
 - context-build runs LAST so its interactive, context-hungry flow can't
   strand the wizard's earlier steps.
-- Verify the end state has no new commits in either project — the whole point
-  of the authoring model is one final user-driven review-and-commit.
+- Verify the default (no-flag) end state has no new commits in either project
+  — the whole point of the authoring model is one final user-driven
+  review-and-commit. Under `--commit`, verify instead a series of focused
+  commits (own artifacts, then each sub-command's output).

@@ -78,7 +78,7 @@ Preconditions: none
 
 ## 25. Add a `--commit` flag to commands that leave changes uncommitted
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/context-build.md, commands/task-enrich.md, commands/refactor-codebase.md, commands/refactor-tests.md, commands/task-setup.md, commands/project-setup.md, tests/smoke/context-build.md, tests/smoke/task-enrich.md, tests/smoke/refactor-codebase.md, tests/smoke/refactor-tests.md, tests/smoke/task-setup.md, tests/smoke/project-setup.md, .claude/context/features.md
 Preconditions: 23, 24

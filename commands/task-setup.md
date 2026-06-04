@@ -1,8 +1,8 @@
 ---
 name: task-setup
-version: 1.0.0
+version: 1.1.0
 type: command
-description: Initialize the project's task backlog — creates .claude/TASKS.md, the .claude/tasks/ directory, and the external-LLM wiring under .claude/external/ (implement-prompt, tests-prompt, run-affected-tests.sh, run-full-tests.sh). Pure authoring command — leaves everything uncommitted for the user to review.
+description: Initialize the project's task backlog — creates .claude/TASKS.md, the .claude/tasks/ directory, and the external-LLM wiring under .claude/external/ (implement-prompt, tests-prompt, run-affected-tests.sh, run-full-tests.sh). Authoring command — leaves everything uncommitted for review by default; pass --commit to commit the scaffolding.
 ---
 
 # /task-setup
@@ -13,7 +13,8 @@ description: Initialize the project's task backlog — creates .claude/TASKS.md,
 # test-runner wrapper scripts that the `chosko-llm task-impl`
 # orchestrator invokes. Idempotent: a re-run leaves existing artifacts
 # untouched and only creates the missing ones.
-# Usage: /task-setup
+# Usage: /task-setup            (leaves the scaffolding uncommitted)
+# Usage: /task-setup --commit   (commit the scaffolding this run wrote)
 
 GOAL
 Create the artifacts that the rest of the task-* workflow assumes:
@@ -43,10 +44,11 @@ This command is the gate for `/task-add` (artifacts 1 + 2) and for
 `chosko-llm task-impl` (artifacts 3 + 4 + 5 + 6). Either gate refuses to
 run until its required artifacts exist.
 
-This is a pure authoring command: it writes the scaffolding and leaves
-everything uncommitted in the working tree, matching `/context-build`
-and the other authoring commands. The user reviews and commits when
-ready.
+By default this is a pure authoring command: it writes the scaffolding and
+leaves everything uncommitted in the working tree, matching `/context-build`
+and the other authoring commands. The user reviews and commits when ready.
+Passing `--commit` opts in to committing exactly what this run wrote (see
+PHASE — COMMIT below).
 
 ---
 
@@ -56,15 +58,21 @@ TOOL DISCIPLINE
   `Get-Content`, or any shell command to read file content.
 - File writes: use the Write tool to create new files. Never use shell
   redirection, `tee`, `Set-Content`, or `Out-File`.
-- Bash / PowerShell are used for one narrow purpose: filesystem prep —
-  creating directories (`mkdir -p .claude/tasks`,
-  `mkdir -p .claude/external`) and setting the executable bit on the
-  wrapper scripts (`chmod +x …`). This command runs NO git/VCS command;
-  it never commits.
+- Bash / PowerShell are used for filesystem prep — creating directories
+  (`mkdir -p .claude/tasks`, `mkdir -p .claude/external`) and setting the
+  executable bit on the wrapper scripts (`chmod +x …`) — and, ONLY when
+  `--commit` is passed, the commit step (`git add -- <paths>` and
+  `git commit`). Without `--commit`, this command runs NO git/VCS command.
 
 ---
 
 WORKFLOW
+
+Before anything else, parse $ARGUMENTS for the optional `--commit` flag.
+If present, set COMMIT = true. `--commit` and `--no-commit` are mutually
+exclusive — if both appear, stop with:
+`--commit and --no-commit cannot be combined. Pick one.` When COMMIT is
+false (the default), the run leaves its scaffolding uncommitted.
 
 Each artifact is checked individually and created only if missing.
 Never overwrite an existing artifact without explicit user confirmation
@@ -74,7 +82,8 @@ must be idempotent.
 Throughout the run, maintain a `WRITTEN` list of paths actually written
 or overwritten this invocation. Each successful Write / `mkdir -p` (when
 the directory did not previously exist) appends to it; idempotent
-no-ops do not. `WRITTEN` drives the final report in step 3.
+no-ops do not. `WRITTEN` drives the final report in step 3 and the
+optional commit in PHASE — COMMIT.
 
 1. **Probe every artifact:**
    - `.claude/TASKS.md` — use the Read tool; "file not found" means it
@@ -128,9 +137,40 @@ no-ops do not. `WRITTEN` drives the final report in step 3.
        deliberately chosen skip-tests mode).
    - If the wrapper scripts were written as no-op stubs, say so
      explicitly so the user knows skip-tests mode is in effect.
-   - If `WRITTEN` is non-empty, close with an explicit reminder that
-     nothing was committed — the scaffolding is left in the working tree
-     for the user to review and commit when ready.
+   - If `WRITTEN` is non-empty and `--commit` was NOT passed, close with an
+     explicit reminder that nothing was committed — the scaffolding is left
+     in the working tree for the user to review and commit when ready.
+
+4. **Continue to PHASE — COMMIT.**
+
+---
+
+PHASE — COMMIT (only when `--commit` was passed)
+
+If COMMIT is false (the default), do nothing here — the scaffolding is
+left uncommitted. This is the default behavior and is unchanged.
+
+If COMMIT is true:
+
+1. If `WRITTEN` is empty (a fully idempotent re-run that wrote nothing),
+   make no commit. Say so and stop — no empty commit.
+2. Otherwise, stage EXACTLY the paths in `WRITTEN` and commit them:
+
+   ```
+   git add -- <path1> <path2> ...      # exactly the entries of WRITTEN
+   git commit -m "Initialize task backlog scaffolding"
+   ```
+
+   Stage ONLY the entries of `WRITTEN`. Never use `git add -A`,
+   `git add .`, or `git add -u`.
+3. On success, report the commit hash (`git rev-parse --short HEAD`).
+4. On failure (e.g. a pre-commit hook rejects the commit): surface the
+   exact output. Do NOT retry, amend, or use `--no-verify` /
+   `--no-gpg-sign`. Files remain staged but uncommitted; tell the user.
+
+NON-GIT VCS: if the project's CLAUDE.md carries a `## VCS` mapping section
+(e.g. git→`cm` for Plastic SCM), substitute the mapped commands, staging
+and checking in only the paths in `WRITTEN`.
 
 ---
 
@@ -485,6 +525,8 @@ DO NOT:
 - Auto-scaffold a test framework. If the project has no test suite,
   ask the user (option A vs B) — never install pytest/jest/etc. on
   your own.
-- Run any git/VCS command. `/task-setup` is a pure authoring command:
-  it writes scaffolding and leaves everything uncommitted. Committing
-  is the user's job (or `/task-setup --commit`, added separately).
+- Run any git/VCS command UNLESS `--commit` was passed. By default
+  `/task-setup` writes scaffolding and leaves everything uncommitted —
+  committing is the user's job. With `--commit`, make exactly one commit
+  of the `WRITTEN` paths; never push, branch, tag, or use hook-skipping
+  flags, and never stage with a catch-all (`git add -A`/`.`/`-u`).

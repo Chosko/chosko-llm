@@ -40,11 +40,24 @@
 - `scope=` matches basenames without path/extension (e.g. `main` →
   `src/main.py`).
 - `focus=` restricts which phases execute; omitted concerns are skipped.
+- Default run (no `--commit`): the refactor is left UNCOMMITTED — `git status`
+  shows the changed/created/deleted files, `git log` has no new commit.
+
+## --commit flag
+
+- Run `/refactor-codebase --commit` and approve the plan. After the final
+  green suite, a single new commit appears (subject names the refactor).
+  `git show --stat HEAD` lists ONLY the paths the run created/modified/deleted
+  (source, new constants/enums/utils modules, updated context layer) and no
+  unrelated dirty files.
+- `/refactor-codebase --commit --no-commit` stops with
+  "`--commit and --no-commit cannot be combined. Pick one.`" and writes
+  nothing.
 
 ## Frontmatter check
 
 - `commands/refactor-codebase.md` has `name: refactor-codebase`,
-  `version` set, `type: command`, and a `description`.
+  `version: 0.2.0`, `type: command`, and a `description`.
 - After running `chosko-llm update` in a managed clone,
   `chosko-llm ls --available` lists `refactor-codebase` with the correct
   version.

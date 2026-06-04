@@ -19,18 +19,22 @@ Currently shipped:
   wizard. Two phases: a GATHER phase that collects every choice upfront (VCS
   detection, CLAUDE.md seeding from pasted source, AGENTS.md, task backlog,
   context layer), and an EXECUTE phase that applies them in a fixed order.
-  **Pure authoring command — makes NO commits.** It writes its own artifacts
-  (CLAUDE.md project-info section synthesized from user-pasted material only,
-  a `## VCS` section mapping git→`cm` for non-git VCS like Plastic SCM, and
-  AGENTS.md), then runs the heavy sub-commands last — `/task-setup` (which
-  leaves its scaffolding uncommitted by default) then `/context-build` (the most context-hungry,
-  gated command, run last so it can't strand the earlier steps). Everything,
-  including the sub-commands' output, is left uncommitted for the user to
-  review and commit in one pass — matching the other authoring commands
-  (`/context-build`, `/context-update`, `/task-enrich`, `/refactor-*`). VCS
-  detection exists only to decide whether to inject the VCS-mapping section;
-  project-setup never runs a VCS command itself, so it is VCS-agnostic.
-- `commands/context-build.md` — introduces a navigation context layer.
+  **Authoring command — makes NO commits by default.** It writes its own
+  artifacts (CLAUDE.md project-info section synthesized from user-pasted
+  material only, a `## VCS` section mapping git→`cm` for non-git VCS like
+  Plastic SCM, and AGENTS.md), then runs the heavy sub-commands last —
+  `/task-setup` (which leaves its scaffolding uncommitted by default) then
+  `/context-build` (the most context-hungry, gated command, run last so it
+  can't strand the earlier steps). By default everything, including the
+  sub-commands' output, is left uncommitted for the user to review and commit
+  in one pass — matching the other authoring commands (`/context-build`,
+  `/context-update`, `/task-enrich`, `/refactor-*`). With `--commit` it
+  commits its own artifacts first, then runs the sub-commands with `--commit`
+  so each commits its own output. VCS detection decides whether to inject the
+  VCS-mapping section (and, under `--commit`, which VCS the commits target).
+- `commands/context-build.md` — introduces a navigation context layer. Leaves
+  it uncommitted by default; `--commit` commits the layer (INDEX, context
+  files, CLAUDE.md edit) with explicit paths only.
 - `commands/context-update.md` — refreshes an existing context layer, then
   auto-commits the context files it updated (explicit paths only; no commit
   when nothing changed). Joins the auto-committing group with `/task-add`
@@ -39,9 +43,9 @@ Currently shipped:
   stub, `.claude/tasks/` directory, and `.claude/external/implement-prompt.md`
   (the static system prompt fed to an external LLM via aider). Required
   before `/task-add`. Idempotent — re-runs only fill in missing artifacts
-  and never overwrite an edited implement-prompt. **Pure authoring command —
-  runs no git command; leaves its scaffolding uncommitted for the user to
-  review.**
+  and never overwrite an edited implement-prompt. **Authoring command —
+  leaves its scaffolding uncommitted for the user to review by default;
+  `--commit` opts in to committing exactly the paths the run wrote.**
 - `commands/task-add.md` — plan and append a new task conversationally:
   writes a summary block to `.claude/TASKS.md` and a thin body file at
   `.claude/tasks/<N>.md`. The default body schema (target: claude) contains
@@ -67,7 +71,8 @@ Currently shipped:
 - `commands/task-enrich.md` — expand a thin (`target: claude`) task body
   into an enriched self-contained body (`target: local`) for a local LLM
   implementer. Appends `## Context bundle` and `## Implementation steps`
-  sections; updates `Target:` to `local`. Does not commit.
+  sections; updates `Target:` to `local`. Does not commit by default;
+  `--commit` opts in to committing the enriched body.
 
 ## Public API (per-feature contract)
 

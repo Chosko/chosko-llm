@@ -26,7 +26,7 @@
    are concrete enough to follow without additional reads.
 6. Approve with "yes".
 7. Observe the write report: task number/title confirmed, `Target:`
-   updated to `local`, no commit made.
+   updated to `local`, and (no `--commit`) a reminder that no commit was made.
 
 ### Verify the written file
 
@@ -50,6 +50,16 @@
 12. Verify the skill exits with a "body file not found" message and does
     not create or modify any file.
 
+### --commit flag
+
+13. On a fresh `Target: claude` task `<M>`, invoke `/task-enrich <M> --commit`
+    and approve the draft.
+14. Verify a single new commit exists (subject `Enrich task <M>: …`) and
+    `git show --stat HEAD` lists ONLY `.claude/tasks/<M>.md`.
+15. Invoke `/task-enrich <M> --commit --no-commit`: the command stops with
+    "`--commit and --no-commit cannot be combined. Pick one.`" and changes
+    nothing.
+
 ## Expected
 
 - The body file transitions from `Target: claude` to `Target: local`.
@@ -60,7 +70,9 @@
 - `## Implementation steps` are actionable and self-contained: a local
   LLM fed only the enriched body should be able to implement without
   additional reads.
-- No commit is made; the user is explicitly reminded of this.
+- Without `--commit`, no commit is made and the user is explicitly reminded.
+  With `--commit`, exactly one commit of `.claude/tasks/<N>.md` is made (no
+  catch-all staging, no hook-skipping flags).
 - `.claude/TASKS.md` is not modified.
 - Re-enriching an already-enriched task is a no-op with a clear message.
 

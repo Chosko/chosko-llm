@@ -1,8 +1,8 @@
 ---
 name: refactor-codebase
-version: 0.1.0
+version: 0.2.0
 type: command
-description: Refactor a codebase by applying clean-code principles — extract constants/enums, eliminate duplication, split oversized files, clean imports, and rename ambiguous identifiers — without changing observable behaviour. Plan-first, phase-gated, test-suite-protected. Supports scope= and focus= arguments to limit the work.
+description: Refactor a codebase by applying clean-code principles — extract constants/enums, eliminate duplication, split oversized files, clean imports, and rename ambiguous identifiers — without changing observable behaviour. Plan-first, phase-gated, test-suite-protected. Supports scope= and focus= arguments to limit the work, and --commit to commit the result (default leaves it uncommitted).
 ---
 
 # /refactor-codebase
@@ -23,6 +23,9 @@ description: Refactor a codebase by applying clean-code principles — extract c
 #
 # Parameters can be combined:
 #   /refactor-codebase scope=main focus=splitting,constants
+#
+# Usage — commit the refactor when done (default leaves it uncommitted):
+#   /refactor-codebase --commit
 
 $ARGUMENTS
 
@@ -60,6 +63,12 @@ P.2 Parse $ARGUMENTS:
       naming       — rename identifiers that are ambiguous, misleading, or inconsistent
                      with the rest of the codebase conventions.
     If focus= is not provided, apply all five concerns.
+
+    --commit (optional flag) — if present, set COMMIT = true; the refactor
+    is committed at the end (see PHASE 6). `--commit` and `--no-commit` are
+    mutually exclusive — if both appear, stop with:
+    `--commit and --no-commit cannot be combined. Pick one.` When COMMIT is
+    false (the default), the run leaves all changes uncommitted, as before.
 
 P.3 Locate the context layer (e.g. .claude/context/INDEX.md) if it exists.
     Read INDEX.md to understand the current module map — do not read context files
@@ -255,5 +264,37 @@ Produce a summary covering:
 - Any HIGH-risk changes that were deferred (not applied) and why.
 - Any technical debt spotted but not addressed (flag only — do not fix unless
   it was in the approved plan).
+
+---
+
+PHASE 6 — Commit (only when `--commit` was passed)
+
+If COMMIT is false (the default), do nothing here — the refactor is left
+uncommitted for the user to review. This is the default behavior and is
+unchanged.
+
+If COMMIT is true, after the final green test suite (PHASE 5 / FINAL
+REPORT):
+
+1. If the run modified nothing (e.g. the plan was empty or every change
+   was deferred), make no commit. Say so and stop.
+2. Stage EXACTLY the paths this run created, modified, or deleted —
+   the source files refactored, any new constants/enums/utils modules,
+   the updated context-layer files and INDEX.md, and any CLAUDE.md path
+   fixes from PHASE 5. Build the path list explicitly from the FINAL
+   REPORT; use `git add -- <path>` (which records deletions too). Never
+   use a catch-all (`git add -A` / `git add .` / `git add -u`).
+3. Commit once with a message naming the refactor, e.g.
+   `git commit -m "Refactor: extract constants, split oversized modules"`
+   — tailor the subject to the concerns actually applied. Keep to the
+   repo's existing commit style.
+4. On success, report the commit hash (`git rev-parse --short HEAD`).
+5. On failure (e.g. a pre-commit hook rejects the commit): surface the
+   exact output. Do NOT retry, amend, or use `--no-verify` /
+   `--no-gpg-sign`. Files remain staged but uncommitted; tell the user.
+
+NON-GIT VCS: if the project's CLAUDE.md carries a `## VCS` mapping section
+(e.g. git→`cm` for Plastic SCM), substitute the mapped commands, staging
+and checking in only the explicit paths this run touched.
 
 END

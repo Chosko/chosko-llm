@@ -1,8 +1,8 @@
 ---
 name: context-build
-version: 0.1.0
+version: 0.2.0
 type: command
-description: Build a navigation context layer to reduce token cost in future Claude Code sessions.
+description: Build a navigation context layer to reduce token cost in future Claude Code sessions. Pass --commit to commit the context layer; default leaves it uncommitted.
 ---
 
 # /context-build
@@ -10,6 +10,7 @@ description: Build a navigation context layer to reduce token cost in future Cla
 # in future Claude Code sessions on any project.
 # Usage: /context-build
 # Usage with hint: /context-build "source code lives under lib/ not src/"
+# Usage with commit: /context-build --commit   (commit the context layer when done)
 
 GOAL
 Reduce token cost in future Claude Code sessions on this repo by introducing a
@@ -19,6 +20,14 @@ layer should let future Claude Code sessions decide which source files to read o
 demand, based on cheap summaries.
 
 $ARGUMENTS
+
+ARGUMENT NOTE — before Phase 1, scan $ARGUMENTS for the optional `--commit`
+flag. If present, set COMMIT = true and strip it (the remaining text, if
+any, is a structure hint). `--commit` and `--no-commit` are mutually
+exclusive — if both appear, stop with:
+`--commit and --no-commit cannot be combined. Pick one.`
+When COMMIT is false (the default), the run leaves all output uncommitted,
+exactly as before.
 
 CONSTRAINTS
 - Do not refactor any source code.
@@ -156,5 +165,32 @@ Report:
       the relevant context file, and open source only if the task requires it."
     * "Ask Claude Code to modify [function Y] — confirm it reads the correct context
       file before opening src/."
+
+---
+
+PHASE 4 — Commit (only when `--commit` was passed)
+
+If COMMIT is false (the default), do nothing here — the context layer is
+left uncommitted for the user to review. This is the default behavior and
+is unchanged.
+
+If COMMIT is true, after Phase 3 completes:
+
+1. If the run wrote nothing (e.g. it was aborted before Phase 2), make no
+   commit. Say so and stop.
+2. Stage EXACTLY the files this run wrote — `.claude/context/INDEX.md`,
+   every context file created in Phase 2, and CLAUDE.md (the Phase 3
+   entry-point edit, or a newly created CLAUDE.md). Build the path list
+   explicitly; never use a catch-all (`git add -A` / `git add .` /
+   `git add -u`).
+3. Commit once: `git commit -m "Add navigation context layer"`.
+4. On success, report the commit hash (`git rev-parse --short HEAD`).
+5. On failure (e.g. a pre-commit hook rejects the commit): surface the
+   exact output. Do NOT retry, amend, or use `--no-verify` /
+   `--no-gpg-sign`. Files remain staged but uncommitted; tell the user.
+
+NON-GIT VCS: if the project's CLAUDE.md carries a `## VCS` mapping section
+(e.g. git→`cm` for Plastic SCM), substitute the mapped commands, staging
+and checking in only the explicit paths this run wrote.
 
 END

@@ -116,15 +116,33 @@ user has since added a test runner (e.g. installed pytest and added a
 2. Observe "Backlog already initialized" (or equivalent). No file is
    modified.
 
-### 9. No commit is ever made
+### 9. Default run makes no commit
 
-1. Run `/task-setup` on a fresh project (per scenario 1).
+1. Run `/task-setup` on a fresh project (per scenario 1), with NO `--commit`.
 2. Verify all scaffolding files are written to disk but left
    UNCOMMITTED — `git status` shows them as untracked, and `git log`
    has no new commit from the run.
 3. Verify the command runs NO git command at all (no prompt to commit,
    no staging). The final report explicitly reminds the user that
    nothing was committed and to commit when ready.
+
+### 10. `--commit` commits exactly what the run wrote
+
+1. Run `/task-setup --commit` on a fresh project.
+2. Verify a single new commit appears with headline
+   `Initialize task backlog scaffolding`. `git show --stat HEAD` lists
+   exactly the files this run wrote (the `WRITTEN` set) — no others.
+3. Dirty-tree safety: pre-modify an unrelated file (do NOT stage it),
+   run `/task-setup --commit`, and confirm the commit captures ONLY the
+   scaffolding the run wrote — the unrelated change is left untouched.
+4. Idempotent re-run: `/task-setup --commit` on the fully initialized
+   project writes nothing and makes NO commit (no empty commit).
+5. Mutual exclusivity: `/task-setup --commit --no-commit` stops with
+   "`--commit and --no-commit cannot be combined. Pick one.`" and writes
+   nothing.
+6. Pre-commit-hook failure: with `--commit` and a failing hook, the
+   command surfaces the hook output, does NOT retry / `--amend` /
+   `--no-verify`, and leaves the files staged-but-uncommitted.
 
 ## Expected (cross-cutting)
 
@@ -134,6 +152,7 @@ user has since added a test runner (e.g. installed pytest and added a
 - Re-invocation on a fully initialized project writes nothing.
 - A user-edited prompt or non-stub wrapper is never overwritten.
 - Wrapper scripts always have the executable bit set.
-- `/task-setup` is a pure authoring command — it never runs a git/VCS
-  command and never commits; all scaffolding is left uncommitted for
-  the user to review.
+- By default `/task-setup` runs no git/VCS command and leaves all
+  scaffolding uncommitted. With `--commit` it makes exactly one commit of
+  the `WRITTEN` paths — explicit paths only (never `git add -A`/`.`/`-u`),
+  no hook-skipping flags, no push/branch/tag.
