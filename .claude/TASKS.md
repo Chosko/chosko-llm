@@ -15,7 +15,7 @@ Preconditions: none
 
 ## 18. Print actionable suggestions at the end of `ls` output
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/cmd-ls.sh, tests/smoke/cmd-ls.md
 Preconditions: none

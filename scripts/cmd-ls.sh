@@ -70,6 +70,7 @@ list_all() {
   local filter="$1"
   print_header
   local found=0
+  local installable=() updatable=()
 
   while IFS= read -r name; do
     [ -n "$name" ] || continue
@@ -106,6 +107,11 @@ list_all() {
     else
       status_col="updatable"
     fi
+
+    case "$status_col" in
+      "not installed") installable+=("$name") ;;
+      "updatable")     updatable+=("$name") ;;
+    esac
 
     printf '%-30s %-8s %-14s %-16s %s\n' "$name" "command" "$inst_col" "$latest_col" "$status_col"
     found=1
@@ -147,6 +153,11 @@ list_all() {
       status_col="updatable"
     fi
 
+    case "$status_col" in
+      "not installed") installable+=("$name") ;;
+      "updatable")     updatable+=("$name") ;;
+    esac
+
     printf '%-30s %-8s %-14s %-16s %s\n' "$name" "skill" "$inst_col" "$latest_col" "$status_col"
     found=1
   done < <(collect_names skill)
@@ -186,11 +197,35 @@ list_all() {
       status_col="updatable"
     fi
 
+    case "$status_col" in
+      "not installed") installable+=("$name") ;;
+      "updatable")     updatable+=("$name") ;;
+    esac
+
     printf '%-30s %-8s %-14s %-16s %s\n' "$name" "claude-md" "$inst_col" "$latest_col" "$status_col"
     found=1
   done < <(collect_names claude-md)
 
   [ $found -eq 1 ] || log_info "No features found."
+
+  # Actionable suggestions, gated to an interactive stdout so piped/redirected
+  # output stays a clean table. Counts reflect the filtered, displayed rows.
+  if [ "$found" -eq 1 ] && [ -t 1 ]; then
+    local n_inst="${#installable[@]}" n_upd="${#updatable[@]}"
+    printf '\n'
+    local suggested=0
+    if [ "$n_inst" -eq 1 ]; then
+      printf "Run 'chosko-llm add %s' to install it.\n" "${installable[0]}"; suggested=1
+    elif [ "$n_inst" -ge 2 ]; then
+      printf "Run 'chosko-llm add <feature>' to install one, or 'chosko-llm add --all' to install all %d.\n" "$n_inst"; suggested=1
+    fi
+    if [ "$n_upd" -eq 1 ]; then
+      printf "Run 'chosko-llm update %s' to update it.\n" "${updatable[0]}"; suggested=1
+    elif [ "$n_upd" -ge 2 ]; then
+      printf "Run 'chosko-llm update --all' to update all %d updatable features.\n" "$n_upd"; suggested=1
+    fi
+    [ "$suggested" -eq 1 ] || printf 'Everything is up to date.\n'
+  fi
 }
 
 list_all "$filter"

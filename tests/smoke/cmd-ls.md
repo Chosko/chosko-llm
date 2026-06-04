@@ -21,6 +21,11 @@
    (manually remove from `~/.chosko-llm` to create this state).
 6. Run `chosko-llm ls --installed`.
 7. Run `chosko-llm ls --available`.
+8. In an interactive terminal, run `chosko-llm ls` with at least one
+   `not installed` and one `updatable` feature present.
+9. Pipe the same command: `chosko-llm ls | cat`.
+10. Run `chosko-llm ls` when every installed feature is up-to-date and nothing
+    is installable.
 
 ## Expected
 
@@ -33,6 +38,16 @@
    `—` INSTALLED are omitted but STATUS column is still present on shown rows.
 7. `chosko-llm ls --available` output includes the STATUS column; rows with
    `—` LATEST are omitted but STATUS column is still present on shown rows.
+8. Below the table, separated by one blank line, a suggestions block appears:
+   an install hint (`Run 'chosko-llm add <name>' to install it.` for exactly
+   one, or `... add --all to install all N.` for two or more) and an update
+   hint (`Run 'chosko-llm update <name>' to update it.` for one, or
+   `Run 'chosko-llm update --all' to update all N updatable features.` for two
+   or more). Counts reflect the filtered, displayed rows.
+9. No suggestion lines appear — the piped output is only the table, byte-for-byte
+   the same as before this feature. (Suggestions are gated on `[ -t 1 ]`.)
+10. A single `Everything is up to date.` line appears below the table. Under
+    `--installed` the install hint never appears; under `--available` it may.
 
 ## Notes
 
