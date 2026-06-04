@@ -62,9 +62,22 @@ chosko-llm upgrade --enable-auto    # opt back in
 
 These flags only change the preference — they don't perform an upgrade. The opt-in/opt-out state and the last-run date live in a gitignored file in the managed clone (`~/.chosko-llm/.auto-upgrade-state`). Set `CHOSKO_LLM_NO_AUTO_UPGRADE` to skip the automatic run entirely (handy in CI or scripts).
 
-### Disambiguation
+### Implementing tasks with a local LLM
 
-A bare name like `refactor-codebase` resolves to whichever kind exists (command or skill). If a name is ambiguous, prefix it: `command:<name>` or `skill:<name>`.
+`chosko-llm task-impl` drives a **local** LLM (aider + Ollama, `qwen2.5-coder:14b` by default) through a project's task backlog — the offline counterpart to the `/task-implement` slash command. Run it from the project root once the backlog is initialized (`/task-setup`) and tasks exist:
+
+```sh
+chosko-llm task-impl <N> [<N> ...]   # implement specific tasks, one commit each
+chosko-llm task-impl all             # implement every pending task, in order
+```
+
+It follows the same test-first sequence — write failing tests, implement, watch them pass — and commits each task separately. Pass `--model` / `--retries` / `--map-tokens`, or see `chosko-llm task-impl --help`, to tune the run. See [Workflows](#workflows) for how this fits the rest of the task tooling.
+
+### Feature names
+
+A bare name like `refactor-codebase` matches commands, skills, and claude-md artifacts. If a name is ambiguous, disambiguate with `command:<name>`, `skill:<name>`, or `claude-md:<name>`.
+
+claude-md artifacts are a third feature kind: rather than copying a standalone file, they inject a managed section into `~/.claude/CLAUDE.md`. The section is delimited by HTML comment markers, so your own CLAUDE.md content around it is preserved.
 
 ## Uninstall
 
@@ -125,9 +138,15 @@ LLM-friendly issue tracker that lives in the repo. `/task-setup` initializes
 it; `/task-add` plans a task conversationally and writes it down; `/task-list`
 shows what's pending; `/task-implement` builds tasks end-to-end with a
 test-first sequence, committing each separately; and `/task-clean` prunes
-finished ones. `/task-enrich` expands a task into a self-contained brief you
-can hand to a local LLM. The idea is to capture work as small, reviewable
-units and let the tooling drive each one to completion.
+finished ones. The idea is to capture work as small, reviewable units and let
+the tooling drive each one to completion.
+
+You don't have to use Claude to implement, either. `/task-enrich` expands a
+task into a self-contained brief, and the `chosko-llm task-impl` CLI command
+then drives a **local** LLM (aider + Ollama, e.g. `qwen2.5-coder`) through the
+same 8-step, test-first loop against your project — the offline counterpart to
+`/task-implement`, committing each task as it goes. So the backlog can be
+worked by Claude interactively or by a local model in batch, whichever fits.
 
 ---
 
