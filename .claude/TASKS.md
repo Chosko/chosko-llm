@@ -24,7 +24,7 @@ Preconditions: none
 
 ## 19. Add semantic color to chosko-llm command output
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/lib.sh, scripts/cmd-ls.sh, scripts/cmd-add.sh, scripts/cmd-rm.sh, scripts/cmd-update.sh, scripts/cmd-upgrade.sh, scripts/cmd-help.sh, .claude/context/shared-lib.md, tests/smoke/colors.md
 Preconditions: none

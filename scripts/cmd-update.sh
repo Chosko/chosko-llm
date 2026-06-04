@@ -30,7 +30,7 @@ update_one() {
       mkdir -p "$(dirname "$dst")"
       [ -f "$dst" ] && rm -f "$dst"
       cp "$src" "$dst"
-      log_info "Updated command '$name' -> v$(read_frontmatter_field "$src" version)"
+      log_success "Updated command '$name' -> v$(read_frontmatter_field "$src" version)"
       ;;
     skill)
       local src_dir src_skill dst_dir
@@ -42,7 +42,7 @@ update_one() {
       mkdir -p "$(dirname "$dst_dir")"
       [ -d "$dst_dir" ] && rm -rf "$dst_dir"
       cp -R "$src_dir" "$dst_dir"
-      log_info "Updated skill '$name' -> v$(read_frontmatter_field "$src_skill" version)"
+      log_success "Updated skill '$name' -> v$(read_frontmatter_field "$src_skill" version)"
       ;;
     claude-md)
       local src
@@ -52,7 +52,7 @@ update_one() {
       local version
       version="$(read_frontmatter_field "$src" version)"
       inject_section "$name" "$version" "$src"
-      log_info "Updated claude-md '$name' -> v$version"
+      log_success "Updated claude-md '$name' -> v$version"
       ;;
     *) die "Unknown kind: $kind" ;;
   esac
@@ -88,7 +88,7 @@ if [ "$1" = "--all" ]; then
         cmp="$(version_cmp "$inst_ver" "$src_ver" 2>/dev/null || echo "?")"
         case "$cmp" in
           0)  log_info "Already up-to-date: command '$base' (v$inst_ver)"; continue ;;
-          1)  log_info "Local version ahead: command '$base' (local v$inst_ver, latest v$src_ver) — skipping"; continue ;;
+          1)  log_warn "Local version ahead: command '$base' (local v$inst_ver, latest v$src_ver) — skipping"; continue ;;
           -1) ;; # fall through to update_one
           *)  log_warn "Skipping command '$base': version unreadable — update manually"; continue ;;
         esac
@@ -111,7 +111,7 @@ if [ "$1" = "--all" ]; then
         cmp="$(version_cmp "$inst_ver" "$src_ver" 2>/dev/null || echo "?")"
         case "$cmp" in
           0)  log_info "Already up-to-date: skill '$base' (v$inst_ver)"; continue ;;
-          1)  log_info "Local version ahead: skill '$base' (local v$inst_ver, latest v$src_ver) — skipping"; continue ;;
+          1)  log_warn "Local version ahead: skill '$base' (local v$inst_ver, latest v$src_ver) — skipping"; continue ;;
           -1) ;; # fall through to update_one
           *)  log_warn "Skipping skill '$base': version unreadable — update manually"; continue ;;
         esac
@@ -133,7 +133,7 @@ if [ "$1" = "--all" ]; then
         cmp="$(version_cmp "$inst_ver" "$src_ver" 2>/dev/null || echo "?")"
         case "$cmp" in
           0)  log_info "Already up-to-date: claude-md '$name' (v$inst_ver)"; continue ;;
-          1)  log_info "Local version ahead: claude-md '$name' (local v$inst_ver, latest v$src_ver) — skipping"; continue ;;
+          1)  log_warn "Local version ahead: claude-md '$name' (local v$inst_ver, latest v$src_ver) — skipping"; continue ;;
           -1) ;; # fall through to update_one
           *)  log_warn "Skipping claude-md '$name': version unreadable — update manually"; continue ;;
         esac

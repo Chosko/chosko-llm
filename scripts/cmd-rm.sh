@@ -41,16 +41,16 @@ case "$kind" in
     target="$(inst_command_path "$name")"
     [ -f "$target" ] || die "Command '$name' is not installed."
     rm -f "$target"
-    log_info "Removed command '$name' ($target)"
+    log_success "Removed command '$name' ($target)"
     ;;
   skill)
     target="$(inst_skill_dir "$name")"
     [ -d "$target" ] || die "Skill '$name' is not installed."
     rm -rf "$target"
-    log_info "Removed skill '$name' ($target)"
+    log_success "Removed skill '$name' ($target)"
     ;;
   claude-md)
     remove_section "$name"
-    log_info "Removed claude-md '$name' from $CLAUDE_HOME/CLAUDE.md"
+    log_success "Removed claude-md '$name' from $CLAUDE_HOME/CLAUDE.md"
     ;;
 esac

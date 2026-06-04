@@ -26,7 +26,7 @@ if [ "$1" = "--all" ]; then
       fi
       mkdir -p "$(dirname "$dst")"
       cp "$f" "$dst"
-      log_info "Installed command '$base' v$version -> $dst"
+      log_success "Installed command '$base' v$version -> $dst"
       any=1
     done
   fi
@@ -51,7 +51,7 @@ if [ "$1" = "--all" ]; then
       fi
       mkdir -p "$(dirname "$dst_dir")"
       cp -R "$d" "$dst_dir"
-      log_info "Installed skill '$base' v$version -> $dst_dir"
+      log_success "Installed skill '$base' v$version -> $dst_dir"
       any=1
     done
   fi
@@ -69,7 +69,7 @@ if [ "$1" = "--all" ]; then
         continue
       fi
       inject_section "$base" "$version" "$f"
-      log_info "Installed claude-md '$base' v$version -> $CLAUDE_HOME/CLAUDE.md"
+      log_success "Installed claude-md '$base' v$version -> $CLAUDE_HOME/CLAUDE.md"
       any=1
     done
   fi
@@ -93,7 +93,7 @@ case "$kind" in
     mkdir -p "$(dirname "$dst")"
     cp "$src" "$dst"
     version="$(read_frontmatter_field "$src" version)"
-    log_info "Installed command '$name' v$version -> $dst"
+    log_success "Installed command '$name' v$version -> $dst"
     ;;
   skill)
     src_dir="$(src_skill_dir "$name")"
@@ -106,7 +106,7 @@ case "$kind" in
     mkdir -p "$(dirname "$dst_dir")"
     cp -R "$src_dir" "$dst_dir"
     version="$(read_frontmatter_field "$src_skill" version)"
-    log_info "Installed skill '$name' v$version -> $dst_dir"
+    log_success "Installed skill '$name' v$version -> $dst_dir"
     ;;
   claude-md)
     src="$(src_claudemd_path "$name")"
@@ -116,6 +116,6 @@ case "$kind" in
     fi
     version="$(read_frontmatter_field "$src" version)"
     inject_section "$name" "$version" "$src"
-    log_info "Installed claude-md '$name' v$version -> $CLAUDE_HOME/CLAUDE.md"
+    log_success "Installed claude-md '$name' v$version -> $CLAUDE_HOME/CLAUDE.md"
     ;;
 esac

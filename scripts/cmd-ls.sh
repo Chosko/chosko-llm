@@ -23,7 +23,18 @@ EOF
 esac
 
 print_header() {
-  printf '%-30s %-8s %-14s %-16s %s\n' "NAME" "KIND" "INSTALLED" "LATEST" "STATUS"
+  printf '%s%-30s %-8s %-14s %-16s %s%s\n' \
+    "$C_BOLD" "NAME" "KIND" "INSTALLED" "LATEST" "STATUS" "$C_RESET"
+}
+
+# Print a colored, right-padded cell. ANSI codes don't count toward field width,
+# so we pad manually using the visible (plain-text) length of the value.
+# Usage: _colored_cell COLOR TEXT RESET WIDTH SEPARATOR
+_colored_cell() {
+  local color="$1" text="$2" reset="$3" width="$4" sep="${5:- }"
+  local pad=$(( width - ${#text} ))
+  [ $pad -lt 0 ] && pad=0
+  printf '%s%s%s%*s%s' "$color" "$text" "$reset" "$pad" "" "$sep"
 }
 
 # collect_names <kind>
@@ -113,7 +124,22 @@ list_all() {
       "updatable")     updatable+=("$name") ;;
     esac
 
-    printf '%-30s %-8s %-14s %-16s %s\n' "$name" "command" "$inst_col" "$latest_col" "$status_col"
+    local status_color
+    case "$status_col" in
+      "up-to-date")    status_color="$C_GREEN"  ;;
+      "updatable")     status_color="$C_YELLOW" ;;
+      "not installed") status_color="$C_DIM"    ;;
+      "local only")    status_color="$C_CYAN"   ;;
+      *)               status_color=""          ;;
+    esac
+    local inst_color latest_color
+    [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
+    [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
+    _colored_cell ""              "$name"       ""        30
+    _colored_cell "$C_DIM"        "command"     "$C_RESET" 8
+    _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
+    _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
+    printf '%s%s%s\n' "$status_color" "$status_col" "$C_RESET"
     found=1
   done < <(collect_names command)
 
@@ -158,7 +184,22 @@ list_all() {
       "updatable")     updatable+=("$name") ;;
     esac
 
-    printf '%-30s %-8s %-14s %-16s %s\n' "$name" "skill" "$inst_col" "$latest_col" "$status_col"
+    local status_color
+    case "$status_col" in
+      "up-to-date")    status_color="$C_GREEN"  ;;
+      "updatable")     status_color="$C_YELLOW" ;;
+      "not installed") status_color="$C_DIM"    ;;
+      "local only")    status_color="$C_CYAN"   ;;
+      *)               status_color=""          ;;
+    esac
+    local inst_color latest_color
+    [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
+    [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
+    _colored_cell ""              "$name"       ""        30
+    _colored_cell "$C_DIM"        "skill"       "$C_RESET" 8
+    _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
+    _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
+    printf '%s%s%s\n' "$status_color" "$status_col" "$C_RESET"
     found=1
   done < <(collect_names skill)
 
@@ -202,7 +243,22 @@ list_all() {
       "updatable")     updatable+=("$name") ;;
     esac
 
-    printf '%-30s %-8s %-14s %-16s %s\n' "$name" "claude-md" "$inst_col" "$latest_col" "$status_col"
+    local status_color
+    case "$status_col" in
+      "up-to-date")    status_color="$C_GREEN"  ;;
+      "updatable")     status_color="$C_YELLOW" ;;
+      "not installed") status_color="$C_DIM"    ;;
+      "local only")    status_color="$C_CYAN"   ;;
+      *)               status_color=""          ;;
+    esac
+    local inst_color latest_color
+    [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
+    [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
+    _colored_cell ""              "$name"       ""        30
+    _colored_cell "$C_DIM"        "claude-md"   "$C_RESET" 8
+    _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
+    _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
+    printf '%s%s%s\n' "$status_color" "$status_col" "$C_RESET"
     found=1
   done < <(collect_names claude-md)
 

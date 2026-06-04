@@ -18,9 +18,28 @@ It also sets default env vars on first source:
 All functions live in `scripts/lib.sh`.
 
 ### Logging
-- `log_info <msg>` / `log_warn <msg>` / `log_error <msg>` — write to stderr.
-  Color is on if `NO_COLOR` is unset and stderr is a TTY.
+- `log_info <msg>` / `log_warn <msg>` / `log_error <msg>` / `log_success <msg>` —
+  write to stderr. Color is on if `NO_COLOR` is unset and stderr is a TTY (`[ -t 2 ]`).
+  - `log_info` — blue `[info]` prefix.
+  - `log_warn` — yellow `[warn]` prefix.
+  - `log_error` — red `[error]` prefix.
+  - `log_success` — green `[ok]` prefix. Use for successful installs, removals, and updates.
 - `die <msg>` — `log_error` then `exit 1`.
+
+### Stdout color variables
+Set at lib.sh source time based on `NO_COLOR` and `[ -t 1 ]`. Empty when color
+is disabled; scripts use them directly — never inline `\033[` escapes in `cmd-*.sh`.
+
+- `C_GREEN` / `C_YELLOW` / `C_CYAN` / `C_DIM` / `C_BOLD` / `C_RESET`
+
+Palette guidance:
+- `C_GREEN` — success status or values (e.g. `up-to-date` in `ls`).
+- `C_YELLOW` — warning / attention (e.g. `updatable`).
+- `C_CYAN` — local-only or informational highlight (e.g. `local only`).
+- `C_DIM` — de-emphasised content (e.g. `not installed`, KIND column, `—` placeholders).
+- `C_BOLD` — structural emphasis (e.g. header rows, `Usage:` headings).
+
+Helper: `_use_color_stdout` — returns 0 when color should be applied to stdout.
 
 ### Frontmatter
 - `parse_frontmatter <file>` — emits `key=value` lines for the four keys it

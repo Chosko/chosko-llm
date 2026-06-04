@@ -4,10 +4,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib.sh
 source "$SCRIPT_DIR/lib.sh"
 
+_bold_usage_headings() {
+  sed "s/^Usage:/${C_BOLD}Usage:${C_RESET}/"
+}
+
 if [ -f "$CHOSKO_LLM_HOME/docs/cli-help.txt" ]; then
-  cat "$CHOSKO_LLM_HOME/docs/cli-help.txt"
+  _bold_usage_headings < "$CHOSKO_LLM_HOME/docs/cli-help.txt"
 else
-  cat <<'EOF'
+  cat <<EOF | _bold_usage_headings
 chosko-llm — manage global Claude Code commands and skills.
 
 Usage:

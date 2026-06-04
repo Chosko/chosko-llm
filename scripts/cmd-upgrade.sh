@@ -16,7 +16,7 @@ git -C "$CHOSKO_LLM_HOME" pull --ff-only
 after="$(git -C "$CHOSKO_LLM_HOME" rev-parse HEAD)"
 
 if [ "$before" = "$after" ]; then
-  log_info "Already up to date."
+  log_success "Already up to date."
 else
   log_info "Pulled changes:"
   git -C "$CHOSKO_LLM_HOME" log --oneline "$before..$after" >&2 || true
