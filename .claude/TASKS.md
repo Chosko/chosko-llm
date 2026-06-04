@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 22
+Last task number: 26
 
 ---
 
@@ -55,5 +55,41 @@ Status: [DONE]
 Target: claude
 Files: commands/project-setup.md, tests/smoke/project-setup.md, .claude/context/features.md
 Preconditions: none
+
+---
+
+## 23. Remove the commit-scaffolding prompt from `/task-setup`; leave changes uncommitted
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-setup.md, commands/project-setup.md, tests/smoke/task-setup.md, tests/smoke/project-setup.md, .claude/context/features.md
+Preconditions: none
+
+---
+
+## 24. Make `/context-update` auto-commit its changes
+
+Status: [MISSING]
+Target: claude
+Files: commands/context-update.md, tests/smoke/context-update.md, .claude/context/features.md, .claude/domain/context-workflow.md
+Preconditions: none
+
+---
+
+## 25. Add a `--commit` flag to commands that leave changes uncommitted
+
+Status: [MISSING]
+Target: claude
+Files: commands/context-build.md, commands/task-enrich.md, commands/refactor-codebase.md, commands/refactor-tests.md, commands/task-setup.md, commands/project-setup.md, tests/smoke/context-build.md, tests/smoke/task-enrich.md, tests/smoke/refactor-codebase.md, tests/smoke/refactor-tests.md, tests/smoke/task-setup.md, tests/smoke/project-setup.md, .claude/context/features.md
+Preconditions: 23, 24
+
+---
+
+## 26. Add a `--no-commit` flag to commands that auto-commit changes
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-add.md, commands/task-clean.md, commands/task-implement.md, commands/context-update.md, tests/smoke/task-add.md, tests/smoke/task-clean.md, tests/smoke/task-implement.md, tests/smoke/context-update.md, .claude/context/features.md
+Preconditions: 23, 24
 
 ---
