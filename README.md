@@ -51,6 +51,17 @@ chosko-llm update <feature>    # re-copy one feature
 
 Run `upgrade` first, then `update --all` to pick up new versions. `upgrade` only refreshes the source; it does not touch installed features.
 
+#### Daily auto-upgrade
+
+The first `chosko-llm` command you run each day quietly runs `chosko-llm upgrade` for you before doing its job, so the source stays current without you thinking about it. You're opted in at install time; it runs at most once per calendar day and never blocks your command if the pull fails.
+
+```sh
+chosko-llm upgrade --disable-auto   # opt out of the daily auto-upgrade
+chosko-llm upgrade --enable-auto    # opt back in
+```
+
+These flags only change the preference — they don't perform an upgrade. The opt-in/opt-out state and the last-run date live in a gitignored file in the managed clone (`~/.chosko-llm/.auto-upgrade-state`). Set `CHOSKO_LLM_NO_AUTO_UPGRADE` to skip the automatic run entirely (handy in CI or scripts).
+
 ### Disambiguation
 
 A bare name like `refactor-codebase` resolves to whichever kind exists (command or skill). If a name is ambiguous, prefix it: `command:<name>` or `skill:<name>`.
@@ -75,6 +86,7 @@ Prompts before each destructive step:
 | `CLAUDE_HOME`     | `~/.claude`     | Where features get installed.                        |
 | `BIN_DIR`         | `~/bin`         | Where the CLI proxy lives. Used by `install.sh`.     |
 | `NO_COLOR`        | unset           | Set to any value to disable colored output.          |
+| `CHOSKO_LLM_NO_AUTO_UPGRADE` | unset | Set to any value to skip the daily auto-upgrade.     |
 
 ---
 

@@ -242,6 +242,48 @@ resolve_feature() {
   fi
 }
 
+# ---------- auto-upgrade state ----------
+# A tiny key=value state file in the managed clone tracks the daily
+# auto-upgrade preference and when it last ran. It is gitignored so the
+# `git pull --ff-only` in `upgrade` is never blocked by it.
+# Keys: enabled (true|false), last_run (YYYY-MM-DD).
+
+auto_upgrade_state_file() { printf '%s/.auto-upgrade-state' "$CHOSKO_LLM_HOME"; }
+
+# auto_upgrade_get <key> — print the value for <key>, or nothing if absent.
+auto_upgrade_get() {
+  local key="$1" file
+  file="$(auto_upgrade_state_file)"
+  [ -f "$file" ] || return 0
+  awk -F= -v k="$key" '$1 == k { sub(/^[^=]*=/, ""); print; exit }' "$file"
+}
+
+# auto_upgrade_set <key> <value> — create or update <key> in the state file.
+auto_upgrade_set() {
+  local key="$1" value="$2" file tmp
+  file="$(auto_upgrade_state_file)"
+  if [ -f "$file" ] && grep -q "^${key}=" "$file"; then
+    tmp="$(mktemp)"
+    awk -F= -v k="$key" -v v="$value" '
+      $1 == k { print k "=" v; next }
+      { print }
+    ' "$file" > "$tmp" && mv "$tmp" "$file"
+  else
+    printf '%s=%s\n' "$key" "$value" >> "$file"
+  fi
+}
+
+# auto_upgrade_enabled — succeeds unless the preference is explicitly "false".
+# A missing file or missing key is treated as enabled (opt-in by default).
+auto_upgrade_enabled() {
+  [ "$(auto_upgrade_get enabled)" != "false" ]
+}
+
+# auto_upgrade_due — succeeds when the last run was not today (calendar day).
+auto_upgrade_due() {
+  [ "$(auto_upgrade_get last_run)" != "$(date +%Y-%m-%d)" ]
+}
+
 # ---------- validation ----------
 
 # require_versioned_source <file>

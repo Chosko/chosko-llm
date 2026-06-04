@@ -123,7 +123,7 @@ Preconditions: none
 
 ## 30. Daily auto-upgrade for the `chosko-llm` CLI
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: bin/chosko-llm, scripts/auto-upgrade.sh, scripts/lib.sh, scripts/cmd-upgrade.sh, install.sh, .gitignore, docs/cli-help.txt, README.md, .claude/context/cli-entry.md, tests/smoke/auto-upgrade.md
 Preconditions: none

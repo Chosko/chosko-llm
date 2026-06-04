@@ -24,6 +24,10 @@ Usage:
 
   chosko-llm upgrade                  git pull the managed clone and refresh the CLI proxy.
                                       Does NOT re-install features — use 'update --all' for that.
+                                      Runs automatically once a day on the first command (opt-in;
+                                      enabled at install). Toggle with the flags below.
+  chosko-llm upgrade --enable-auto    Enable daily auto-upgrade (sets the preference; no upgrade).
+  chosko-llm upgrade --disable-auto   Disable daily auto-upgrade (sets the preference; no upgrade).
 
   chosko-llm task-impl <N> [<N>…]     Drive aider+Ollama through the 8-step /task-implement
   chosko-llm task-impl all            sequence for one or more backlog tasks in the current
@@ -44,3 +48,4 @@ Environment:
   CLAUDE_HOME       Path to Claude Code's user directory. Default: ~/.claude
   BIN_DIR           Where the CLI proxy is installed. Default: ~/bin
   NO_COLOR          Set to disable all colored output (table, metadata, log prefixes).
+  CHOSKO_LLM_NO_AUTO_UPGRADE  Set to skip the daily auto-upgrade (CI / non-interactive use).

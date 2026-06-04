@@ -66,6 +66,14 @@ case "$_uname" in
     ;;
 esac
 
+# 3b. Initialize auto-upgrade state (opt-in by default). Don't clobber an
+#     existing preference on re-install.
+STATE_FILE="$CHOSKO_LLM_HOME/.auto-upgrade-state"
+if [ ! -f "$STATE_FILE" ]; then
+  printf 'enabled=true\nlast_run=%s\n' "$(date +%Y-%m-%d)" > "$STATE_FILE"
+  log "Enabled daily auto-upgrade (disable with 'chosko-llm upgrade --disable-auto')."
+fi
+
 # 4. Determine version.
 VERSION="unknown"
 if [ -f "$CHOSKO_LLM_HOME/VERSION" ]; then

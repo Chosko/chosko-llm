@@ -10,5 +10,8 @@ Thumbs.db
 *.bak
 *.bak.*
 
+# Auto-upgrade local state (lives in the managed clone)
+.auto-upgrade-state
+
 # Local-only Claude Code state, if anyone drops one in the working repo
 .claude/settings.local.json

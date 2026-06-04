@@ -12,6 +12,13 @@ fi
 subcommand="${1:-}"
 [ $# -gt 0 ] && shift || true
 
+# Daily auto-upgrade (opt-in; first command of the day). Guarded so an older
+# install without the hook script still works, and `|| true` so it can never
+# block the user's actual command.
+if [ -x "$CHOSKO_LLM_HOME/scripts/auto-upgrade.sh" ]; then
+  "$CHOSKO_LLM_HOME/scripts/auto-upgrade.sh" "$subcommand" || true
+fi
+
 case "$subcommand" in
   ls|add|rm|update|upgrade|show)
     exec "$CHOSKO_LLM_HOME/scripts/cmd-${subcommand}.sh" "$@"
