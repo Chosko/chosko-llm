@@ -4,7 +4,15 @@ set -euo pipefail
 CHOSKO_LLM_HOME="${CHOSKO_LLM_HOME:-$HOME/.chosko-llm}"
 BIN_DIR="${BIN_DIR:-$HOME/bin}"
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# When run via `curl | bash`, there is no script file, so BASH_SOURCE is unset.
+# Guard against that (with set -u active) and leave SCRIPT_DIR empty so the
+# curl-pipe branch below clones REPO_URL instead of a local working copy.
+_src="${BASH_SOURCE[0]:-}"
+if [ -n "$_src" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "$_src")" && pwd)"
+else
+  SCRIPT_DIR=""
+fi
 
 # Detect platform once; used in steps 3 and 5.
 _uname="$(uname -s 2>/dev/null || true)"
