@@ -58,8 +58,12 @@ Currently shipped:
   Goal, Acceptance criteria, Decisions (when applicable), and Hints. With
   `--enrich`, produces an enriched body (target: local) in one shot by
   reading `/task-enrich` for format guidance. Refuses if `/task-setup` has
-  not run. Auto-commits the two written files; `--no-commit` leaves them
-  uncommitted.
+  not run. May propose splitting the description into multiple tasks
+  (independent deliverables, or one task that's too large); on acceptance
+  writes every part with sequential IDs and auto-wired `Preconditions:` in
+  one run. `--no-split` always writes exactly one task. Auto-commits the
+  written files (all parts in one commit for a split); `--no-commit` leaves
+  them uncommitted.
 - `commands/task-clean.md` — prune terminal-status tasks. Removes summary
   blocks AND deletes the matching body files. Never renumbers — task IDs
   are stable across the project's lifetime; the `Last task number`

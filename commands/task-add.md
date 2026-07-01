@@ -1,22 +1,25 @@
 ---
 name: task-add
-version: 0.7.0
+version: 0.8.0
 type: command
-description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit. Pass --enrich to produce a self-contained body for a local LLM in one shot, or --no-commit to write the files but skip the commit.
+description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit. Pass --enrich to produce a self-contained body for a local LLM in one shot, --no-split to always write exactly one task, or --no-commit to write the files but skip the commit.
 ---
 
 # /task-add
 # Global command: plan a new task entry conversationally, confirm with the
 # user, then write a summary block to `.claude/TASKS.md` and a body file at
 # `.claude/tasks/<N>.md`. Refuses to run if the backlog has not been
-# initialized — the user must run `/task-setup` first.
-# Usage: /task-add [--enrich] [--no-commit] <free-form description of the task>
+# initialized — the user must run `/task-setup` first. May propose
+# splitting the description into multiple tasks when that produces better
+# units; pass `--no-split` to always get exactly one task.
+# Usage: /task-add [--enrich] [--no-split] [--no-commit] <free-form description of the task>
 # Example: /task-add fix the URL normalization so two LinkedIn URLs dedupe
 # Example: /task-add --enrich add CSV export command
+# Example: /task-add --no-split add CSV export and PDF export commands
 
 GOAL
-Add a single new task to the project's task backlog. The flow is:
-SETUP-CHECK → READ → ASK → DRAFT → CONFIRM → WRITE → COMMIT.
+Add one or more new tasks to the project's task backlog. The flow is:
+SETUP-CHECK → READ → SPLIT-CHECK → ASK → DRAFT → CONFIRM → WRITE → COMMIT.
 
 By default, the body contains: Goal, Acceptance criteria, Decisions (when
 applicable), and Hints. Claude navigates the project at implementation time
@@ -37,6 +40,12 @@ NO_COMMIT = true and strip it; the rest is the task description.
 `--commit` and `--no-commit` are mutually exclusive — if both appear, stop
 with: `--commit and --no-commit cannot be combined. Pick one.` When
 NO_COMMIT is false (the default), PHASE 5 auto-commits as before.
+
+Also scan for the optional `--no-split` flag (independent of `--enrich` and
+`--no-commit`, coexists with both). If present, set NO_SPLIT = true and
+strip it; PHASE 1.5 is skipped entirely and exactly one task is always
+written. When NO_SPLIT is false (the default), PHASE 1.5 considers whether
+a split would produce better units.
 
 ---
 
@@ -196,24 +205,64 @@ saying what you're reading.
 
 ---
 
+PHASE 1.5 — SPLIT CHECK (skipped entirely when NO_SPLIT is true)
+
+Using the grounded picture from PHASE 1, judge whether the description
+would produce better units as multiple tasks — either because it bundles
+independent deliverables (e.g. "add CSV export and PDF export"), or
+because a single task covering it would simply be too large/sprawling to
+implement, test, and commit as one coherent unit. This is a judgment call,
+not a rule: most descriptions are fine as one task, and this step should
+stay silent for them.
+
+If a split is NOT warranted: say nothing about splitting and continue
+straight to PHASE 2 with the single, original description (SPLIT = none).
+
+If a split IS warranted, propose it:
+
+```
+This looks like it would work better as N tasks:
+
+1. <Title> — <one-line scope>
+2. <Title> — <one-line scope>
+...
+
+Split into N tasks, keep as one, or adjust the breakdown?
+```
+
+- On acceptance (as proposed or after adjustment): set SPLIT = the
+  confirmed ordered list of parts (title + one-line scope each). Note
+  which parts depend on earlier parts (used later to auto-wire
+  Preconditions). Continue to PHASE 2, which now operates once per part.
+- On decline: set SPLIT = none and continue to PHASE 2 with the original,
+  single description — the rest of the flow is unaffected.
+
+---
+
 PHASE 2 — ASK (conversational)
 
 Ask only about things you cannot resolve from the code or the user's
 description. 1–4 focused questions max. Suggest the answer you'd pick and
 why so the user can confirm with a single word.
 
-If there are zero open questions after PHASE 1, say so in one line and
-skip to PHASE 3.
+If there are zero open questions after PHASE 1 (and PHASE 1.5), say so in
+one line and skip to PHASE 3.
 
 Position questions are unnecessary — new tasks are appended at the end
 by default. Only ask about position if the user has signalled they want
 grouping.
 
+When SPLIT is set (multiple parts), ask questions across the whole
+breakdown in one pass — per-part if a part has its own open question, but
+still capped at 1–4 focused questions total. Don't run a full separate
+Q&A round per part.
+
 ---
 
 PHASE 3 — DRAFT (present for confirmation)
 
-Render the full plan in one message:
+When SPLIT is none (the common case), render the single-task plan exactly
+as before:
 
 ```
 PLAN — new task
@@ -257,14 +306,58 @@ Draft body:
   …
 ```
 
+When SPLIT is set (multiple parts), render every part's full draft in one
+message, using sequential IDs starting at `previous Last + 1`:
+
+```
+PLAN — N new tasks (split)
+
+Index file: .claude/TASKS.md
+Body files: .claude/tasks/<N>.md .. .claude/tasks/<N+k-1>.md
+
+Counter update: Last task number  K → K+k
+
+Part 1/k — Draft summary block:
+  ---
+
+  ## <N>. <Title>
+
+  Status: [MISSING]
+  Target: <claude|local>
+  Files: <comma-separated list>
+  Preconditions: <earlier part's ID(s), or "none">
+
+Part 1/k — Draft body:
+  # Task <N> — <Title>
+
+  Target: <claude|local>
+
+  ## Goal
+  …
+
+  ## Acceptance criteria
+  - …
+
+  ## Decisions              ← omit section if no non-obvious choices
+  - …
+
+  ## Hints
+  - …
+
+... (repeat for each remaining part) ...
+```
+
 End with: **"Approve and write?"**
 
 Wait for explicit approval. Iterate on changes and re-present the full
-plan after any non-trivial revision. Silence is not approval.
+plan (all parts, when split) after any non-trivial revision. Silence is
+not approval.
 
 ---
 
 PHASE 4 — WRITE (only after explicit approval)
+
+Single-task case (SPLIT is none):
 
 1. Edit `.claude/TASKS.md`:
    a. Update `Last task number: K` → `Last task number: N`.
@@ -275,23 +368,46 @@ PHASE 4 — WRITE (only after explicit approval)
 
 3. Report: task ID, both paths written, counter advanced.
 
+Split case (SPLIT is set, k parts):
+
+1. Edit `.claude/TASKS.md` once:
+   a. Update `Last task number: K` → `Last task number: K+k`.
+   b. Append all k summary blocks in order, each with its own `---`
+      separator, using sequential IDs `K+1 .. K+k`.
+
+2. Write each `.claude/tasks/<N>.md` body file, one per part, `N` ranging
+   over `K+1 .. K+k`. A part that depends on an earlier part gets that
+   earlier part's ID in its `Preconditions:` line; a part with no
+   dependency gets `none`. Task IDs never repeat — a collision is an
+   error; stop and report.
+
+3. Report: all task IDs written, all paths, counter advanced by k.
+
 Continue to PHASE 5.
 
 ---
 
 PHASE 5 — COMMIT
 
-If NO_COMMIT is true, skip committing entirely: the two files PHASE 4 wrote
-are left uncommitted in the working tree. Report the task ID, both paths,
-and a reminder that nothing was committed — the user should commit when
-ready. Do not run any git command. Then stop.
+If NO_COMMIT is true, skip committing entirely: the files PHASE 4 wrote
+(one task's two files, or all of a split's files) are left uncommitted in
+the working tree. Report the task ID(s), all paths, and a reminder that
+nothing was committed — the user should commit when ready. Do not run any
+git command. Then stop.
 
 Otherwise (the default):
 
-1. Run:
+1. Single-task case — run:
    ```
    git add -- .claude/TASKS.md .claude/tasks/<N>.md
    git commit -m "Add task <N>: <title>"
+   ```
+
+   Split case — stage every file PHASE 4 wrote and make ONE commit
+   covering every task ID created:
+   ```
+   git add -- .claude/TASKS.md .claude/tasks/<N>.md .claude/tasks/<N+1>.md ...
+   git commit -m "Add tasks <N>-<N+k-1>: <short summary of the split>"
    ```
 
 2. On success, report the commit hash (`git rev-parse --short HEAD`).
@@ -299,8 +415,9 @@ Otherwise (the default):
 3. On failure: surface the exact output. Do NOT retry, amend, or use
    `--no-verify`. Files remain staged but uncommitted; tell the user.
 
-PHASE 5 stages ONLY the two files PHASE 4 wrote. Never use `git add -A`,
-`git add .`, or `git add -u`.
+PHASE 5 stages ONLY the files PHASE 4 wrote (the single task's two files,
+or every file from the split). Never use `git add -A`, `git add .`, or
+`git add -u`.
 
 ---
 
@@ -315,3 +432,8 @@ DO NOT:
 - Use `--amend`, `--no-verify`, `--no-gpg-sign`, or any hook-skipping flag.
 - Push, branch, tag, or otherwise touch shared/visible git state.
 - In `--enrich` mode, write a plain body first and then enrich it separately.
+- Propose a split for work that's fine as one task — PHASE 1.5 stays quiet
+  unless a split genuinely produces better units.
+- Bundle multiple commits for a split — PHASE 5 makes exactly one commit
+  covering all parts.
+- Run PHASE 1.5 at all when `--no-split` is passed.

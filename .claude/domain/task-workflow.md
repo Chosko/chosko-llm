@@ -102,6 +102,23 @@ body files.
 `Status:` and `Preconditions:` are deliberately absent from the body: they
 describe how the task fits into the backlog, not what needs to be built.
 
+## Split suggestion (`/task-add`)
+
+Between PHASE 1 READ and PHASE 2 ASK, `/task-add` considers whether the
+description would produce better units as multiple tasks — because it
+bundles independent deliverables, or because a single task would be too
+large. This is a suggestion, not a gate: it stays silent for work that's
+fine as one task. `--no-split` skips the check entirely.
+
+When the user accepts a proposed split, every part is written in the same
+run: sequential IDs, one `TASKS.md` summary block and one
+`.claude/tasks/<N>.md` body file per part, `Last task number` advanced by
+the number of parts, and all files committed together in a single commit
+covering every task ID created. A part that depends on an earlier part has
+that earlier part's ID auto-wired into its `Preconditions:` line; a part
+with no dependency gets `none`. Declining the proposal — or `--no-split` —
+falls back to the normal single-task flow.
+
 ## Body file header
 
 The `Target:` field lives on the second line of the body file, immediately

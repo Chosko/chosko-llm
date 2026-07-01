@@ -49,6 +49,35 @@
 15. Verify the agent stops at PHASE 0 with a clear message directing
     the user to install the skill. No file is written.
 
+### Split suggestion
+
+16. Invoke `/task-add add a CSV export command and a PDF export command`
+    (two independent deliverables). Observe PHASE 1.5 proposes a 2-task
+    split with a title + one-line scope for each, then asks "Split into N
+    tasks, keep as one, or adjust the breakdown?".
+17. Accept the split. Observe PHASE 2 asks at most 1–4 questions across
+    the whole breakdown (not a full round per part), PHASE 3 renders both
+    parts' full drafts (summary block + body) in one message, and a single
+    "Approve and write?" gate.
+18. Approve. Observe PHASE 4 writes both body files with sequential IDs in
+    one `.claude/TASKS.md` edit, `Last task number` advances by 2, and
+    PHASE 5 makes exactly ONE commit whose message covers both task IDs.
+    Verify `git show --stat HEAD` lists `.claude/TASKS.md` and both new
+    `.claude/tasks/<N>.md` files.
+19. Invoke `/task-add fix a typo in the login error message` (a small,
+    single-deliverable description). Verify PHASE 1.5 stays silent — no
+    split proposal — and the normal single-task flow runs.
+20. Invoke `/task-add add CSV export and PDF export commands` again and
+    decline the proposed split ("keep as one"). Verify it falls back to
+    the normal single-task flow with the original description.
+21. Invoke `/task-add --no-split add a CSV export command and a PDF export
+    command`. Verify PHASE 1.5 is skipped entirely — no split proposal —
+    and exactly one task is written.
+22. Repeat steps 16-18 with a description where part 2 depends on part 1
+    (e.g. "add a data model, then add an API endpoint that uses it").
+    Verify the accepted split auto-wires part 2's `Preconditions:` to
+    part 1's task ID, and part 1's `Preconditions:` is `none`.
+
 ## Expected
 
 - Without `/task-setup` having run, `/task-add` writes nothing and
@@ -66,6 +95,13 @@
   It covers exactly the two files PHASE 4 wrote and nothing else.
 - With `--no-commit`, the two files are written but NO commit is made; the
   report reminds the user that nothing was committed.
+- PHASE 1.5 proposes a split only when the description bundles independent
+  deliverables or would be too large as one task; it stays silent otherwise.
+- On an accepted split, all parts are written with sequential IDs in one
+  `.claude/TASKS.md` edit, dependent parts' `Preconditions:` point at the
+  earlier part's ID, and exactly ONE commit covers every part.
+- `--no-split` suppresses PHASE 1.5 entirely; exactly one task is always
+  written.
 
 ## Commit scenarios
 
@@ -109,3 +145,4 @@
 - Test that Decisions is omitted when no ambiguous choices were made.
 - Verify silence at PHASE 3 is not treated as approval.
 - Verify adding two tasks in a row produces sequential IDs.
+- Verify a split proposal's parts are also assigned sequential IDs.

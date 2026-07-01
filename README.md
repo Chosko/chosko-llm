@@ -145,7 +145,7 @@ A lightweight, in-repo issue tracker. Work is captured as small, reviewable
 tasks. The core idea is to spend more focus in planning and writing down tasks, then let the agent consume them automatically whenever it is convenient.
 
 - `/task-setup` — initialize the backlog.
-- `/task-add` — plan a task and write it down. This is the real strength of this workflow: invoke the command with a very short description, let Claude Code investigate and expand it, in a conversational way. Claude will ask every question needed to fill the gaps, then it will write everything down for further implementation.
+- `/task-add` — plan a task and write it down. This is the real strength of this workflow: invoke the command with a very short description, let Claude Code investigate and expand it, in a conversational way. Claude will ask every question needed to fill the gaps, then it will write everything down for further implementation. It may propose splitting the description into several tasks when that gives better units (independent deliverables, or one task that's too large) — pass `--no-split` to always get exactly one task.
 - `/task-list` — show what's pending.
 - `/task-implement` — build a task end-to-end, test-first, one commit each.
 - `/task-clean` — prune finished tasks.
