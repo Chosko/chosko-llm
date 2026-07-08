@@ -76,7 +76,10 @@
    - Seeding is skipped (nothing pasted); a minimal CLAUDE.md skeleton is
      created because the VCS section needs somewhere to live (Step 1 path).
    - CLAUDE.md carries the `## VCS` section with the git→`cm` substitution
-     table exactly as in the command body.
+     table exactly as in the command body, including the
+     `git log --after=... --name-only` -> `cm find revision` mapping that
+     lets `/context-update` MODE A (incremental) run without the "date
+     detection needs a cm-based equivalent" caveat.
    - AGENTS.md is created; task-setup runs and leaves its scaffolding
      uncommitted by default.
    - **No `cm` command is ever run by project-setup itself** — everything is

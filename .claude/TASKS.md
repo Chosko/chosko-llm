@@ -15,7 +15,7 @@ Preconditions: none
 
 ## 36. Add a git-log substitute to the Plastic `## VCS` snippet so context-update incremental mode works
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/project-setup.md, tests/smoke/project-setup.md, VERSION
 Preconditions: none

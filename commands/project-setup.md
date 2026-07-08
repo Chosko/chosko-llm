@@ -1,6 +1,6 @@
 ---
 name: project-setup
-version: 0.3.0
+version: 0.3.1
 type: command
 description: Interactive first-time project initialization wizard. Gathers all choices upfront (VCS, CLAUDE.md content, AGENTS.md, task backlog, context layer), confirms once, then executes them in a fixed order. Orchestrates /task-setup and /context-build; injects a VCS-mapping section into CLAUDE.md for non-git projects (e.g. Plastic SCM). Authoring command — leaves all output uncommitted for one review pass by default; pass --commit to commit its own artifacts and delegate --commit to the nested commands.
 ---
@@ -285,6 +285,7 @@ run a git command, substitute the Plastic equivalent:
 - `git status --porcelain`    -> `cm status --machinereadable`
 - `git rev-parse --short HEAD`-> report the changeset from `cm log --limit=1`
 - `git diff --name-only HEAD` -> `cm diff --format={path}`
+- `git log --after="<date>" --name-only --pretty=format:` -> `cm find revision "where date >= '<date>'" --format="{item}" | sort -u`
 
 Stage and check in only the explicit paths a command names — never a
 catch-all. Plastic has no staging area, so the git "add then commit"
