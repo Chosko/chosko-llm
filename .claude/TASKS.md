@@ -42,7 +42,7 @@ Preconditions: none
 
 ## 39. Persist a project's "no automated test suite" testing policy so /task-implement stops asking every run
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-implement.md, CLAUDE.md, tests/smoke/task-implement.md, VERSION
 Preconditions: none

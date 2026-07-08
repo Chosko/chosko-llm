@@ -61,6 +61,13 @@ The CLI is a proxy: `~/bin/chosko-llm` parses the subcommand and execs
 - Every script under `scripts/` starts with `set -euo pipefail` and sources
   `lib.sh`.
 
+## Testing
+
+Testing policy for /task-implement: skip-tests
+
+No automated test suite. `tests/smoke/*.md` are manual checklists a human
+runs after a change — see [tests/smoke/README.md](tests/smoke/README.md).
+
 ## Versioning
 
 - Bump the root `VERSION` file on **every change that ships** — features,

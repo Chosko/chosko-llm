@@ -1,8 +1,8 @@
 ---
 name: task-implement
-version: 0.8.0
+version: 0.9.0
 type: command
-description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. Commits each task separately; pass --no-commit to skip the per-task commits. Supports `next` to implement the first eligible task.
+description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. Commits each task separately; pass --no-commit to skip the per-task commits. Supports `next` to implement the first eligible task. Honors a `Testing policy for /task-implement: skip-tests|full-tdd` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time.
 ---
 
 # /task-implement
@@ -198,6 +198,21 @@ LOCATING THE TEST RUNNER
 The command must work on any project. Detect the test runner before doing
 anything else:
 
+0. **Testing policy marker (checked first).** Read `CLAUDE.md` if it
+   exists and look for a line of the form:
+   `Testing policy for /task-implement: skip-tests` or
+   `Testing policy for /task-implement: full-tdd`. This is a project's
+   own durable declaration and overrides heuristic detection:
+   - `skip-tests` → the project has stated it has no automated test
+     suite. Skip straight to skip-tests mode (see NO-TEST-SUITE MODE
+     below) without asking the A/B question — go directly to its step 3.
+   - `full-tdd` → the project has stated it does have a test suite, even
+     if the heuristics in step 2 below can't detect one on their own.
+     Skip NO-TEST-SUITE MODE entirely and continue at step 1 of this
+     section to resolve the actual test command (step 3 there still
+     applies if the command itself is ambiguous).
+   - No marker found → continue to step 1 below; behavior is unchanged
+     from before this marker existed.
 1. If a CLAUDE.md, README.md, or `.claude/` context file specifies a test
    command, use it. Project conventions beat heuristics.
 2. Otherwise, infer from project files:
@@ -226,7 +241,13 @@ If the project has no test suite at all (no test runner detectable AND no
 test directory like `tests/`, `test/`, `__tests__/`, `spec/`), the strict
 TDD flow cannot run. Switch to interactive mode:
 
-1. Tell the user once, up front:
+0. **If `CLAUDE.md` carries `Testing policy for /task-implement:
+   skip-tests`** (see LOCATING THE TEST RUNNER step 0), skip step 1's A/B
+   question entirely. Tell the user once, briefly: "This project's
+   CLAUDE.md declares a skip-tests testing policy — implementing without
+   tests." Go straight to step 3 (skip-tests mode).
+
+1. Otherwise, tell the user once, up front:
 
    > This project has no detectable test suite. Without tests, I can't
    > follow the TDD sequence (write failing test → implement → watch it

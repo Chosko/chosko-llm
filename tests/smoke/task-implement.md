@@ -152,6 +152,38 @@
    implements only task 3 — not task 4.
 4. Verify exactly one commit for task 3. Task 4 status is unchanged.
 
+## Testing policy marker
+
+### `skip-tests` marker
+
+1. Use a project with no automated test runner and add
+   `Testing policy for /task-implement: skip-tests` to its `CLAUDE.md`.
+2. Run `/task-implement <N>` for an eligible task.
+3. Observe the agent does NOT ask the A/B (scaffold vs. skip) question —
+   it prints a brief note that CLAUDE.md declares a skip-tests policy and
+   goes straight into skip-tests mode.
+4. Observe the per-task "Proceed?" confirmation still fires before the
+   task starts, exactly as regular skip-tests mode does.
+
+### `full-tdd` marker
+
+1. Use a project with an actual test runner (e.g. pytest) but no `tests/`
+   directory name the heuristic recognizes, and add
+   `Testing policy for /task-implement: full-tdd` to its `CLAUDE.md`.
+2. Run `/task-implement <N>`.
+3. Observe NO-TEST-SUITE MODE is skipped entirely — no A/B question — and
+   the run proceeds to LOCATING THE TEST RUNNER to resolve the actual
+   test command (asking the user only if that command itself is
+   ambiguous).
+
+### No marker (regression)
+
+1. On a project whose `CLAUDE.md` has no `Testing policy for
+   /task-implement:` line, run `/task-implement <N>` with no detectable
+   test suite.
+2. Verify the original A/B prompt still fires, unchanged from before this
+   marker existed.
+
 ### `next` — nothing eligible
 
 1. Set up a backlog where all tasks are `[DONE]`, `[SKIP]`, or
