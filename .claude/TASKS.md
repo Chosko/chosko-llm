@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 37
+Last task number: 38
 
 ---
 
@@ -27,6 +27,15 @@ Preconditions: none
 Status: [DONE]
 Target: claude
 Files: commands/task-add.md, commands/task-implement.md, commands/task-enrich.md, commands/task-list.md, .claude/domain/task-workflow.md, .claude/context/features.md, tests/smoke/task-add.md, tests/smoke/task-implement.md, tests/smoke/task-enrich.md, tests/smoke/task-list.md, README.md, VERSION
+Preconditions: none
+
+---
+
+## 38. Split the dirty-tree "proceed" option in /task-implement into commit vs. leave-uncommitted
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-implement.md, tests/smoke/task-implement.md, VERSION
 Preconditions: none
 
 ---
