@@ -37,38 +37,61 @@
   `[DONE]`, but NO per-task commit is made — every task's changes accumulate
   uncommitted in the working tree, and the run ends reminding the user.
 
-## Dirty-tree (3-way prompt) scenarios
+## Dirty-tree (4-way prompt) scenarios
 
 ### Clean tree (regression)
 
 1. Working tree is clean. Run `/task-implement <N>`.
 2. No dirty-tree prompt fires; the normal flow runs end to end.
 
-### Dirty tree → proceed
+### Dirty tree → proceed, leave uncommitted
 
 1. Modify a tracked file unrelated to task `<N>` (do not stage).
-2. Run `/task-implement <N>`. Observe the 3-way prompt listing the
+2. Run `/task-implement <N>`. Observe the 4-way prompt listing the
    dirty file. Answer `1` (proceed).
-3. Observe a one-line warning that Step 8 will include the unrelated
-   change.
-4. After Step 8, `git show --stat HEAD` includes BOTH the task's
-   files AND the unrelated dirty file in the same commit.
+3. No warning is printed (nothing will be folded).
+4. After Step 8, `git show --stat HEAD` includes ONLY the task's own
+   files. `git status --porcelain` still shows the unrelated file dirty,
+   untouched, exactly as before the run.
 
-### Dirty tree → commit (tracked only)
+### Dirty tree → proceed, commit together
 
 1. Modify a tracked file unrelated to task `<N>`. Do not stage.
-2. Run `/task-implement <N>`. Answer `2` (commit).
+2. Run `/task-implement <N>`. Answer `2` (include).
+3. If the porcelain output included untracked files, expect
+   `Also fold untracked files into the task's commit? [y/N]` — answer
+   `n` for this scenario (no untracked files needed).
+4. Observe a one-line warning that Step 8 will stage these pre-existing
+   changes together with the task's own changes.
+5. After Step 8, `git show --stat HEAD` includes BOTH the task's files
+   AND the unrelated dirty file in the same commit. `git status` is
+   clean afterward.
+
+### Dirty tree → proceed, commit together (with untracked)
+
+1. Modify a tracked file AND create a new untracked file (both
+   unrelated to task `<N>`).
+2. Run `/task-implement <N>`. Answer `2` (include). When asked
+   `Also fold untracked files into the task's commit? [y/N]`, answer `y`.
+3. After Step 8, `git show --stat HEAD` includes the task's files, the
+   tracked dirty file, AND the untracked file (now tracked) — all in
+   the one task commit.
+
+### Dirty tree → commit first (tracked only)
+
+1. Modify a tracked file unrelated to task `<N>`. Do not stage.
+2. Run `/task-implement <N>`. Answer `3` (commit).
 3. Supply a commit message at the prompt. If asked about untracked,
    answer `n`.
 4. Verify ONE pre-task commit appears with that message and only the
    tracked dirty file. Then the task runs and produces its OWN
    separate commit (`Task <N>: …`).
 
-### Dirty tree → commit (with untracked)
+### Dirty tree → commit first (with untracked)
 
 1. Modify a tracked file AND create a new untracked file (both
    unrelated to task `<N>`).
-2. Run `/task-implement <N>`. Answer `2` (commit). Supply a message.
+2. Run `/task-implement <N>`. Answer `3` (commit). Supply a message.
    When asked about untracked, answer `y`.
 3. Verify the pre-task commit contains both the tracked-modified
    file and the untracked file (now tracked). The task's own commit
@@ -76,17 +99,17 @@
 
 ### Dirty tree → abort
 
-1. Modify a tracked file. Run `/task-implement <N>` and answer `3`
+1. Modify a tracked file. Run `/task-implement <N>` and answer `4`
    (abort).
 2. Verify no `Status:` flip happened in `.claude/TASKS.md`, no
    commit was made, and the dirty file is left exactly as-is.
-3. Repeat with silence / EOF instead of `3` — same outcome.
+3. Repeat with silence / EOF instead of `4` — same outcome.
 
-### Pre-commit hook failure on option 2
+### Pre-commit hook failure on commit-first
 
 1. Install a pre-commit hook that exits non-zero.
 2. With a tracked file dirty, run `/task-implement <N>` and answer
-   `2`. Supply a message.
+   `3` (commit). Supply a message.
 3. Verify the commit fails. The agent surfaces the hook output, does
    NOT retry, does NOT use `--no-verify`, does NOT amend.
 4. Verify the run halts before any task work begins —
@@ -98,7 +121,9 @@
    a scenario where the working tree is dirty between tasks (e.g. a
    file written by Step 4 of `<N>` was deliberately not staged at
    Step 8 — adjust the spec or simulate by hand).
-2. Observe the same 3-way prompt fires before task `<M>` starts.
+2. Observe the same 4-way prompt fires before task `<M>` starts, and
+   that choosing "include" here only folds into task `<M>`'s commit
+   (task `<N>`'s commit is already made and unaffected).
 
 ## `--no-commit` mode
 
@@ -113,6 +138,10 @@
 5. Run `/task-implement <N> --commit --no-commit`: the command stops with
    "`--commit and --no-commit cannot be combined. Pick one.`" and does
    nothing.
+6. Modify a tracked file, then run `/task-implement <N> --no-commit`.
+   Observe the dirty-tree prompt is 3-way (no "include" option — there's
+   no task commit to fold into): `[1] proceed`, `[2] commit`,
+   `[3] abort`.
 
 ## `next` — first eligible task
 

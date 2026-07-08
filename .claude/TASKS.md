@@ -33,7 +33,7 @@ Preconditions: none
 
 ## 38. Split the dirty-tree "proceed" option in /task-implement into commit vs. leave-uncommitted
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-implement.md, tests/smoke/task-implement.md, VERSION
 Preconditions: none

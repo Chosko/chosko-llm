@@ -1,8 +1,8 @@
 ---
 name: task-implement
-version: 0.7.0
+version: 0.8.0
 type: command
-description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. Commits each task separately; pass --no-commit to skip the per-task commits. Supports `next` to implement the first eligible task.
+description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. Commits each task separately; pass --no-commit to skip the per-task commits. Supports `next` to implement the first eligible task.
 ---
 
 # /task-implement
@@ -271,29 +271,52 @@ per-task confirmations.
 
 PRE-FLIGHT CHECKS (before any task)
 
-1. **Working-tree check (3-way prompt on dirty tree).** Run
+1. **Working-tree check (prompt on dirty tree).** Run
    `git status --porcelain` once.
-   - If output is empty (clean tree), continue silently.
+   - If output is empty (clean tree), continue silently. Set
+     DIRTY_FOLD = false.
    - If non-empty, list the dirty files to the user (truncated to the
      first 20 entries with a `(+N more)` tail when there are more) and
-     prompt:
+     prompt. The default (NO_COMMIT false) shows all four options; under
+     `--no-commit` there is no task commit for option 2 to fold into, so
+     it is dropped and the remaining three are renumbered 1/2/3:
 
+     Default (committing) mode:
      ```
      Working tree has uncommitted changes. Choose:
-       [1] proceed   — run the task anyway (changes will be mixed into the task's commit)
+       [1] proceed   — run the task anyway; these changes stay uncommitted, exactly as they are now
+       [2] include   — run the task anyway; these changes will be staged and folded into the task's commit
+       [3] commit    — commit the current changes first, then run the task
+       [4] abort     — stop now, leave everything as-is
+     ```
+
+     `--no-commit` mode:
+     ```
+     Working tree has uncommitted changes. Choose:
+       [1] proceed   — run the task anyway; these changes stay uncommitted, exactly as they are now
        [2] commit    — commit the current changes first, then run the task
        [3] abort     — stop now, leave everything as-is
      ```
 
-   Wait for an explicit typed answer. Accept `1`/`proceed`,
-   `2`/`commit`, or `3`/`abort` (case-insensitive). EOF, an empty
-   line, an unrelated reply, or silence is treated as **abort**.
+   Wait for an explicit typed answer. In default mode accept
+   `1`/`proceed`, `2`/`include`, `3`/`commit`, or `4`/`abort`
+   (case-insensitive). Under `--no-commit` accept `1`/`proceed`,
+   `2`/`commit`, or `3`/`abort`. EOF, an empty line, an unrelated
+   reply, or silence is treated as **abort**.
 
-   - **On 1 (proceed):** print a one-line warning that "Step 8
-     (Commit) will include these unrelated changes in this task's
-     commit", then continue. The current branch's risk profile becomes
-     the user's choice.
-   - **On 2 (commit):** ask `Commit message?` and read the answer.
+   - **On proceed:** continue silently — no warning needed. Set
+     DIRTY_FOLD = false. Step 8 will stage only the task's own files,
+     exactly as on a clean tree; these pre-existing changes stay in the
+     working tree untouched by the task's commit.
+   - **On include** (default mode only): if the porcelain output
+     included untracked files, list them and ask
+     `Also fold untracked files into the task's commit? [y/N]`. On
+     explicit yes, set DIRTY_FOLD_UNTRACKED = true and remember the
+     untracked paths; on anything else, set DIRTY_FOLD_UNTRACKED = false.
+     Set DIRTY_FOLD = true. Print a one-line warning: "Step 8 (Commit)
+     will stage these pre-existing changes together with this task's own
+     changes." Then continue — the fold happens in Step 8, not here.
+   - **On commit:** ask `Commit message?` and read the answer.
      Accept either a single line or a multi-line answer terminated by
      an empty line. Then:
        1. Stage tracked dirty files: `git add -u`.
@@ -307,17 +330,22 @@ PRE-FLIGHT CHECKS (before any task)
        4. If the commit fails (e.g. pre-commit hook), surface the
           failure to the user, do NOT retry, do NOT use `--no-verify`,
           do NOT amend, and halt the run before any task work begins.
-       5. On success, continue to step 2 of the pre-flight checks.
-   - **On 3 (abort) / silence / EOF:** stop. Do not flip any
-     `Status:` line, do not stage, do not commit. The user is left
-     exactly where they started.
+       5. On success, continue to step 2 of the pre-flight checks. Set
+          DIRTY_FOLD = false.
+   - **On abort / silence / EOF:** stop. Do not flip any `Status:`
+     line, do not stage, do not commit. The user is left exactly where
+     they started.
+
+   DIRTY_FOLD (and DIRTY_FOLD_UNTRACKED) apply only to the first task's
+   Step 8 — this check runs once, before any task, so later tasks in the
+   same invocation are unaffected and always fold nothing.
 
    Notes:
    - `.gitignore`-excluded files are ignored as today
      (`git status --porcelain` already respects gitignore).
-   - The commit path (option 2) NEVER stages untracked files without
-     explicit user opt-in, and NEVER uses `git add -A`/`-u .`/`.` in
-     a way that would catch the user's untracked files implicitly.
+   - The commit option NEVER stages untracked files without explicit
+     user opt-in, and NEVER uses `git add -A`/`-u .`/`.` in a way that
+     would catch the user's untracked files implicitly.
 
 2. Use the Read tool to open `.claude/TASKS.md`. Resolve the task list
    per ARGUMENT PARSING above. For each task to be implemented:
@@ -452,11 +480,25 @@ step.
 
 Otherwise (the default):
 
-Stage all files modified by this task, including the `.claude/TASKS.md`
-status flip. The per-task body file at `.claude/tasks/<N>.md` is
-typically NOT modified during implementation — do not include it in
-the commit unless you genuinely changed it (e.g. corrected a stale
-description after discovering the spec was wrong).
+If DIRTY_FOLD is false (the common case — clean tree, or the user chose
+"proceed" on a dirty tree), stage only the files modified by this task,
+including the `.claude/TASKS.md` status flip, by explicit path
+(`git add -- <path> <path>`). The per-task body file at
+`.claude/tasks/<N>.md` is typically NOT modified during implementation —
+do not include it in the commit unless you genuinely changed it (e.g.
+corrected a stale description after discovering the spec was wrong).
+
+If DIRTY_FOLD is true (the user chose "include" on the pre-flight dirty-tree
+prompt — this can only be true for the first task of the run), fold the
+pre-existing dirty changes into this commit alongside the task's own
+changes:
+1. Stage tracked files with `git add -u` — this covers both the task's
+   own tracked edits and the pre-existing tracked dirty files in one step.
+2. If DIRTY_FOLD_UNTRACKED is true, also stage the pre-existing untracked
+   files identified during pre-flight, explicitly by path
+   (`git add -- <path1> <path2> …`).
+3. Stage any new untracked files this task itself created, explicitly by
+   path.
 
 Create a single commit. Commit message format follows the repo's
 existing style — read the last few `git log` entries first. If there's
@@ -489,9 +531,10 @@ After committing a task, before starting the next:
    accumulate, so a non-empty `git status` is expected, not a surprise.
    Otherwise (the default): run `git status --porcelain`. If non-empty
    (unusual — the previous task's Step 8 should have committed everything
-   it changed), apply the same 3-way prompt as PRE-FLIGHT CHECKS step 1:
-   proceed, commit, or abort. Same rules: silence/EOF/abort halts the run
-   with no `Status:` flips.
+   it changed), apply the same 4-way prompt as PRE-FLIGHT CHECKS step 1:
+   proceed, include, commit, or abort — DIRTY_FOLD set here applies to
+   the upcoming task's Step 8. Same rules: silence/EOF/abort halts the
+   run with no `Status:` flips.
 2. Use the Read tool to re-open `.claude/TASKS.md` fresh. Task IDs are
    stable so numbers will not have moved, but statuses or
    `Preconditions:` lines may have been edited by a parallel
