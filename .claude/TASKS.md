@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 38
+Last task number: 39
 
 ---
 
@@ -36,6 +36,15 @@ Preconditions: none
 Status: [DONE]
 Target: claude
 Files: commands/task-implement.md, tests/smoke/task-implement.md, VERSION
+Preconditions: none
+
+---
+
+## 39. Persist a project's "no automated test suite" testing policy so /task-implement stops asking every run
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-implement.md, CLAUDE.md, tests/smoke/task-implement.md, VERSION
 Preconditions: none
 
 ---
