@@ -85,9 +85,12 @@ Currently shipped:
   checkpoint, walks the user through the manual step, and independently
   verifies the outcome before continuing; on `target: human` the task runs
   as a guided walkthrough (no production edits by Claude, bookkeeping
-  still Claude's). Commits each task separately; `--no-commit` runs the
-  full TDD sequence but skips the per-task commits, leaving every task's
-  changes uncommitted.
+  still Claude's). Honors a `Testing policy for /task-implement:
+  skip-tests|full-tdd` marker in a project's CLAUDE.md (checked before
+  heuristic test-suite detection) so a no-test-suite decision persists
+  across runs instead of being re-asked each time. Commits each task
+  separately; `--no-commit` runs the full TDD sequence but skips the
+  per-task commits, leaving every task's changes uncommitted.
 - `commands/task-list.md` — print the backlog as a compact read-only
   summary. Marks `claude+human` / `human` tasks with `⚠ <target>`. Reads
   only `.claude/TASKS.md`; never opens the body files.

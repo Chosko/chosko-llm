@@ -1,6 +1,6 @@
 # Context index
 
-Last updated: 2026-06-05
+Last updated: 2026-07-08
 
 Navigation layer for `chosko-llm`. Read this first, then the files relevant to
 your task. Open source files only when a context file's **When to read the

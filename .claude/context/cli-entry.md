@@ -4,8 +4,10 @@
 
 The CLI is split into four pieces:
 
-- `install.sh` — first-time bootstrap. Clones the working repo into the
-  **managed clone** at `$CHOSKO_LLM_HOME` (default `~/.chosko-llm`) and copies
+- `install.sh` — first-time bootstrap. Clones the repo into the **managed
+  clone** at `$CHOSKO_LLM_HOME` (default `~/.chosko-llm`) — from the local
+  working copy's `origin` when run from a checkout, or from `REPO_URL`
+  (default GitHub) when run via `curl | bash` — and copies
   `bin/chosko-llm` to `$BIN_DIR/chosko-llm` (default `~/bin`). On Windows
   (MINGW/MSYS/Cygwin) it also copies `bin/chosko-llm.cmd` into `$BIN_DIR`.
 - `bin/chosko-llm` — a thin proxy. Reads the subcommand and execs the matching
@@ -75,6 +77,12 @@ removing the managed clone.
   MSYS PATH. Uses `cygpath -w` when available to print the native path.
 - **Origin URL is inferred** from the working repo's `origin` remote when
   cloning the managed clone. If absent, install fails with a clear message.
+- **`curl | bash` install path.** With no script file, `BASH_SOURCE[0]` is
+  unset; `install.sh` guards the reference (needed under `set -u`) and leaves
+  `SCRIPT_DIR` empty. An empty `SCRIPT_DIR` (no `$SCRIPT_DIR/.git`) selects the
+  third clone branch: `git clone "$REPO_URL"` (default
+  `https://github.com/Chosko/chosko-llm.git`, overridable via `REPO_URL`)
+  instead of cloning the local working copy's `origin`.
 - **Re-running install.sh** on a populated `$CHOSKO_LLM_HOME` does
   `git pull --ff-only` instead of cloning. Idempotent.
 - **uninstall.sh removes features by intersecting** the managed clone's
