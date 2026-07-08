@@ -217,8 +217,12 @@
 2. Run `/task-implement <N>`. Observe Step 1 announces all checkpoints
    up front (one line each).
 3. When implementation reaches the first checkpoint's trigger point,
-   observe the run pauses and walks the user through the manual step
-   with concrete, current paths/names — it does not continue on its own.
+   observe the run pauses and FIRST writes a short explanatory paragraph
+   ("Now I need your manual intervention — please do the following…")
+   walking the user through the manual step with concrete, current
+   paths/names — enough to act on without asking back — and only AFTER
+   that explanation asks for confirmation. It never leads with a bare
+   "did you do it?" question, and it does not continue on its own.
 4. Confirm having done the step WITHOUT actually doing it. Observe
    Claude verifies independently, reports exactly what is missing
    (e.g. the promised file does not exist), and re-guides — it does NOT

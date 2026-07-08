@@ -158,10 +158,17 @@ conventions in mind.
 
 1. **Pause** when implementation reaches a checkpoint's trigger point. Do
    not continue past it.
-2. **Walk the user through** the manual step: restate it concretely,
-   adapted to what actually happened so far (real paths, real names — not
-   the body's placeholders if they drifted).
-3. **Wait** for the user's explicit confirmation that they performed it.
+2. **Explain first, then ask.** Before any confirmation question, write a
+   short lead-in paragraph — e.g. "Now I need your manual intervention —
+   please do the following…" — that walks the user through the manual step
+   concretely: the exact action(s) to perform, adapted to what actually
+   happened so far (real paths, real names — not the body's placeholders if
+   they drifted). The user must be able to act from this explanation alone,
+   without asking back. Never lead with the confirmation question; the
+   explanation always comes first.
+3. **Ask, then wait** for the user's explicit confirmation that they
+   performed it. Only after the Step 2 explanation — never a bare "did you
+   do it?" on its own.
 4. **Verify independently.** The user saying "done" is not proof. Check
    the claimed outcome yourself: Read/Glob for files that must exist,
    run a compile or test command, inspect the artifact's content —

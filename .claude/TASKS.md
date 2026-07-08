@@ -51,7 +51,7 @@ Preconditions: none
 
 ## 40. Make /task-implement explain the manual step before asking the human to confirm it
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-implement.md, tests/smoke/task-implement.md, VERSION
 Preconditions: none
