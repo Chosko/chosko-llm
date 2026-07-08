@@ -78,6 +78,29 @@
     Verify the accepted split auto-wires part 2's `Preconditions:` to
     part 1's task ID, and part 1's `Preconditions:` is `none`.
 
+### Human-in-the-loop authoring
+
+23. Invoke `/task-add` with a description whose work clearly includes
+    editor-only steps (e.g. "add an input system to this Unity project —
+    the .inputactions importer and prefab wiring happen in the editor").
+    Observe the draft carries `Target: claude+human` in both the summary
+    block and the body, plus a `## Manual interventions` section between
+    `## Decisions` (if present) and `## Hints`.
+24. Verify the section format: it opens with a
+    `⚠ REQUIRES MANUAL INTERVENTION` warning line, followed by numbered
+    checkpoints, each anchored to a trigger point ("After X: …") and
+    ending with a verifiable outcome.
+25. Invoke `/task-add` with a description that is entirely manual (nothing
+    agent-executable, e.g. "configure the store listing in the Google Play
+    console"). Observe the draft carries `Target: human` and the
+    `## Manual interventions` section covers the whole task.
+26. Verify consistency both ways: no draft ever pairs
+    `Target: claude+human`/`human` with a missing section, or a
+    `## Manual interventions` section with `Target: claude`/`local`.
+27. Invoke `/task-add` with an ordinary, fully agent-executable
+    description. Verify the body has NO `## Manual interventions` section
+    and `Target: claude`.
+
 ## Expected
 
 - Without `/task-setup` having run, `/task-add` writes nothing and
@@ -102,6 +125,10 @@
   earlier part's ID, and exactly ONE commit covers every part.
 - `--no-split` suppresses PHASE 1.5 entirely; exactly one task is always
   written.
+- Work with editor-only / manual steps yields `Target: claude+human` (or
+  `human` when nothing is agent-executable) plus a `## Manual
+  interventions` section; the target and the section always appear
+  together, and ordinary tasks get neither.
 
 ## Commit scenarios
 

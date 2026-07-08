@@ -1,8 +1,8 @@
 ---
 name: task-add
-version: 0.8.0
+version: 0.9.0
 type: command
-description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit. Pass --enrich to produce a self-contained body for a local LLM in one shot, --no-split to always write exactly one task, or --no-commit to write the files but skip the commit.
+description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass --enrich to produce a self-contained body for a local LLM in one shot, --no-split to always write exactly one task, or --no-commit to write the files but skip the commit.
 ---
 
 # /task-add
@@ -131,12 +131,63 @@ Target: claude
 the user or by Claude. Each bullet: the choice and a brief why. Omit the
 section entirely when no contested calls exist; its absence is meaningful.>
 
+## Manual interventions
+<Only present when Target is claude+human or human — see TARGET VALUES &
+MANUAL INTERVENTIONS below.>
+
 ## Hints
 <Required. Always present. File paths the implementer should touch:
 edit targets, test files, documentation, collateral files. Write
 "none" explicitly only when nothing collateral genuinely exists.>
 - <path/to/file>
 - <…>
+```
+
+---
+
+TARGET VALUES & MANUAL INTERVENTIONS
+
+`Target:` (line 2 of the body, mirrored in the summary block) takes one of:
+
+- `claude` — Claude implements end-to-end. **Default.**
+- `local` — enriched body for a local LLM (`--enrich` mode only).
+- `claude+human` — Claude implements, but the work includes steps only a
+  human can perform in an external tool (a game-engine editor such as
+  Unity, a cloud console, physical hardware). `/task-implement` pauses at
+  each declared checkpoint, walks the user through it, and verifies the
+  outcome before continuing.
+- `human` — the task is executed entirely by the user; `/task-implement`
+  runs it as a guided walkthrough.
+
+During PHASE 1/2, when the description or the codebase reveals that part
+of the work cannot be executed by an agent (editor-only operations, GUI
+wizards, hardware), set `Target: claude+human` (or `human` when nothing
+is agent-executable) and author a `## Manual interventions` section,
+placed between `## Decisions` and `## Hints`. Consistency is enforced
+both ways: targets `claude+human`/`human` REQUIRE the section, and the
+section requires one of those targets — never write one without the other.
+
+The section opens with a ⚠ warning line, then numbered checkpoints. Each
+checkpoint is anchored to a trigger point ("After X: …"), describes the
+manual step, and ends with an outcome the implementer can verify itself.
+Worked example (Unity):
+
+```
+## Manual interventions
+
+⚠ REQUIRES MANUAL INTERVENTION — pause implementation at these points and
+walk the user through them in the Unity editor; wait for their
+confirmation and verify the outcome before continuing:
+
+1. After the `.inputactions` file is written: select it in the Project
+   window, tick **Generate C# Class** in the importer, Apply. Verify the
+   generated `.cs` file appears and the project compiles.
+2. After `InputManager.cs` compiles: open
+   `Assets/_Project/Prefabs/Controllers.prefab`, add the `InputManager`
+   component to an appropriate GameObject, and assign any serialized
+   references (e.g. the actions asset if referenced via inspector).
+   Do NOT hand-edit the prefab YAML for this. Verify the prefab contains
+   the component with its references assigned.
 ```
 
 ---
@@ -194,6 +245,13 @@ PHASE 1 — READ (silent)
 
 4. Note any non-obvious choices you are making (scope, approach,
    interpretation of ambiguous requirements). These become Decisions.
+
+4b. Judge whether any part of the work requires manual human steps in an
+   external tool (see TARGET VALUES & MANUAL INTERVENTIONS). If so, plan
+   the checkpoints — trigger point, manual step, verifiable outcome — and
+   the target (`claude+human`, or `human` when nothing is
+   agent-executable). If the user's description suggests manual steps but
+   you cannot tell which, make it a PHASE 2 question.
 
 5. **`--enrich` mode only:** also read `commands/task-enrich.md`
    for the enriched body format. Gather additional material for
@@ -278,14 +336,14 @@ Draft summary block:
   ## <N>. <Title>
 
   Status: [MISSING]
-  Target: <claude|local>
+  Target: <claude|local|claude+human|human>
   Files: <comma-separated list>
   Preconditions: <preconds or "none">
 
 Draft body:
   # Task <N> — <Title>
 
-  Target: <claude|local>
+  Target: <claude|local|claude+human|human>
 
   ## Goal
   …
@@ -295,6 +353,9 @@ Draft body:
 
   ## Decisions              ← omit section if no non-obvious choices
   - …
+
+  ## Manual interventions   ← only when Target is claude+human or human
+  …
 
   ## Hints
   - …
@@ -323,14 +384,14 @@ Part 1/k — Draft summary block:
   ## <N>. <Title>
 
   Status: [MISSING]
-  Target: <claude|local>
+  Target: <claude|local|claude+human|human>
   Files: <comma-separated list>
   Preconditions: <earlier part's ID(s), or "none">
 
 Part 1/k — Draft body:
   # Task <N> — <Title>
 
-  Target: <claude|local>
+  Target: <claude|local|claude+human|human>
 
   ## Goal
   …
@@ -434,6 +495,9 @@ DO NOT:
 - In `--enrich` mode, write a plain body first and then enrich it separately.
 - Propose a split for work that's fine as one task — PHASE 1.5 stays quiet
   unless a split genuinely produces better units.
+- Set `Target: claude+human` or `human` without a `## Manual interventions`
+  section, or write that section under any other target — the two always
+  go together.
 - Bundle multiple commits for a split — PHASE 5 makes exactly one commit
   covering all parts.
 - Run PHASE 1.5 at all when `--no-split` is passed.

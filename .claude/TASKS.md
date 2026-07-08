@@ -24,7 +24,7 @@ Preconditions: none
 
 ## 37. Support human-in-the-loop tasks: claude+human / human targets and a Manual interventions body section
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-add.md, commands/task-implement.md, commands/task-enrich.md, commands/task-list.md, .claude/domain/task-workflow.md, .claude/context/features.md, tests/smoke/task-add.md, tests/smoke/task-implement.md, tests/smoke/task-enrich.md, tests/smoke/task-list.md, README.md, VERSION
 Preconditions: none

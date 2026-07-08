@@ -50,13 +50,22 @@
 12. Verify the skill exits with a "body file not found" message and does
     not create or modify any file.
 
+### Human-in-the-loop guard
+
+13. Create a task body whose second line reads `Target: claude+human`
+    (with a `## Manual interventions` section). Invoke `/task-enrich <N>`.
+14. Verify the command stops immediately with the "requires human
+    intervention" message pointing the user at `/task-implement`, and the
+    file is unchanged.
+15. Repeat with `Target: human` — same refusal, file unchanged.
+
 ### --commit flag
 
-13. On a fresh `Target: claude` task `<M>`, invoke `/task-enrich <M> --commit`
+16. On a fresh `Target: claude` task `<M>`, invoke `/task-enrich <M> --commit`
     and approve the draft.
-14. Verify a single new commit exists (subject `Enrich task <M>: …`) and
+17. Verify a single new commit exists (subject `Enrich task <M>: …`) and
     `git show --stat HEAD` lists ONLY `.claude/tasks/<M>.md`.
-15. Invoke `/task-enrich <M> --commit --no-commit`: the command stops with
+18. Invoke `/task-enrich <M> --commit --no-commit`: the command stops with
     "`--commit and --no-commit cannot be combined. Pick one.`" and changes
     nothing.
 
@@ -75,6 +84,9 @@
   catch-all staging, no hook-skipping flags).
 - `.claude/TASKS.md` is not modified.
 - Re-enriching an already-enriched task is a no-op with a clear message.
+- Enriching a `Target: claude+human` or `Target: human` task is refused
+  with a message directing the user to `/task-implement`; the body file
+  is untouched.
 
 ## Notes
 

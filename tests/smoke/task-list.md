@@ -8,6 +8,9 @@
 - A `.claude/TASKS.md` with tasks in several different statuses, plus
   per-task body files under `.claude/tasks/`. Note the
   `Last task number:` value before running.
+- Include at least one task with `Target: claude+human` and one with
+  `Target: human` in their summary blocks (alongside ordinary
+  `Target: claude` tasks).
 
 ## Steps
 
@@ -25,6 +28,9 @@
 - Status column is padded to align titles (longest tag:
   `[IN PROGRESS]`).
 - Tasks with non-`none` preconditions show `(deps: N, M)`.
+- Tasks with `Target: claude+human` or `Target: human` show `⚠ <target>`
+  after the title (before any deps annotation); `claude` / `local` tasks
+  show no marker.
 - Summary line lists only non-zero status counts and includes the
   `(last task number: N)` annotation.
 

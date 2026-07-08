@@ -150,6 +150,15 @@ tasks. The core idea is to spend more focus in planning and writing down tasks, 
 - `/task-implement` — build a task end-to-end, test-first, one commit each.
 - `/task-clean` — prune finished tasks.
 
+Tasks can be **human-in-the-loop**: when part of the work only a human can
+perform in an external tool (a Unity editor step, a cloud console, hardware),
+`/task-add` marks the task `Target: claude+human` (or `human` for fully
+manual work) and records the checkpoints in a `## Manual interventions`
+section. `/task-implement` then pauses at each checkpoint, walks you through
+the manual step, and verifies the outcome itself (the promised file exists,
+the project compiles) before moving on — saying "done" isn't enough.
+`/task-list` marks these tasks with a ⚠ so you know they need you present.
+
 #### [Experimental] Implement with a local model instead of Claude
 
 `/task-enrich` expands a task into a self-contained brief; the `chosko-llm

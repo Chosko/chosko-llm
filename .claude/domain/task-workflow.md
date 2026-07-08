@@ -16,6 +16,10 @@ implementer.
   qwen2.5-coder:14b via Ollama + aider). Optional path. Needs a richer,
   self-contained body to work without external reads. Use `/task-enrich` to
   prepare a thin task for this path.
+- **Human implementer** — the user, acting in an external tool an agent
+  cannot drive (a game-engine editor such as Unity, a cloud console,
+  physical hardware). Claude guides and verifies; the user performs the
+  manual steps.
 
 ## Target field
 
@@ -25,9 +29,46 @@ Every task body and every TASKS.md summary block carries a `Target:` field:
 | --- | --- |
 | `claude` | Thin body. Claude implements, fetching context at implementation time. **Default.** |
 | `local` | Enriched body. Self-contained; intended for a local LLM via aider. |
+| `claude+human` | Claude implements, but the body declares manual-intervention checkpoints where Claude pauses, walks the user through a step in an external tool, and verifies the outcome before continuing. |
+| `human` | The task is executed entirely by the user. `/task-implement` becomes a guided walkthrough: Claude guides and verifies each step but makes no production edits; it still owns the bookkeeping (status flips, the commit). |
 
 `target: claude` bodies are authored lean. `target: local` bodies are
-produced by `/task-enrich` from an existing thin body.
+produced by `/task-enrich` from an existing thin body. `claude+human` and
+`human` are set by `/task-add` at authoring time when the work involves
+steps an agent cannot execute; both REQUIRE a `## Manual interventions`
+section in the body (and vice versa — a body with that section must carry
+one of these two targets). `/task-enrich` refuses human-involving targets:
+a headless local LLM cannot pause for a human.
+
+## Manual interventions section
+
+Optional body section, present exactly when `Target:` is `claude+human` or
+`human`. Placed between `## Decisions` and `## Hints`. It opens with a
+`⚠ REQUIRES MANUAL INTERVENTION` warning line, followed by numbered
+checkpoints. Each checkpoint is anchored to a trigger point ("After X: …"),
+describes the manual step in the external tool, and ends with a verifiable
+outcome Claude can check itself (a file that must exist, a compile/test
+result). The mechanism is generic — Unity is the motivating example, but
+any human-in-the-loop environment fits.
+
+```
+## Manual interventions
+
+⚠ REQUIRES MANUAL INTERVENTION — pause implementation at these points and
+walk the user through them; wait for their confirmation and verify the
+outcome before continuing:
+
+1. After <trigger>: <manual step in the external tool>. Verify <checkable
+   outcome — e.g. the generated file exists and the project compiles>.
+2. After <trigger>: <…>. Verify <…>.
+```
+
+At implementation time, verification is independent: Claude checks the
+claimed outcome itself (file existence, compile/test result — whatever is
+checkable from the filesystem or CLI) rather than trusting the user's
+confirmation. On failure it reports exactly what is missing and re-guides;
+it never proceeds past an unverified checkpoint unless the user explicitly
+overrides.
 
 ## Thin body schema (`target: claude`)
 
@@ -49,6 +90,10 @@ user or by Claude. Each bullet: the choice + a brief why. Omit the section
 entirely when no contested calls were made; its absence is meaningful.>
 - <Choice — why.>
 
+## Manual interventions
+<Only present when Target is claude+human or human. ⚠ warning line +
+numbered checkpoints; see "Manual interventions section" above.>
+
 ## Hints
 <Required. Always present. List the file paths the implementer should
 touch, including test files, documentation, and any collateral files
@@ -59,7 +104,9 @@ Write "none" explicitly only if genuinely nothing collateral exists.>
 ```
 
 **Required sections:** Goal, Acceptance criteria, Hints.
-**Conditional section:** Decisions (present only when non-obvious choices exist).
+**Conditional sections:** Decisions (present only when non-obvious choices
+exist); Manual interventions (present exactly when the target is
+`claude+human` or `human`).
 No snippets, no required-reading lists, no conventions blocks, no definition
 of done — Claude fetches what it needs from the project's context layer at
 implementation time.
@@ -179,6 +226,17 @@ warning before proceeding:
 > with Claude anyway.
 
 No confirmation prompt is shown; implementation proceeds normally.
+
+When the body carries `Target: claude+human`, `/task-implement` announces
+the checkpoints up front, then implements normally, pausing at each
+checkpoint to walk the user through the manual step and independently
+verify the outcome before continuing (see "Manual interventions section").
+
+When the body carries `Target: human`, the per-task flow becomes a guided
+walkthrough: Claude makes no production edits, guides the user step by step
+with the same verify loop, and still handles the bookkeeping (status flips,
+the commit of the user's changes). `all`/`next` runs warn when the resolved
+list contains human-involving tasks — they cannot run unattended.
 
 ## Cross-references
 

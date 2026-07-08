@@ -1,8 +1,8 @@
 ---
 name: task-enrich
-version: 0.2.0
+version: 0.3.0
 type: command
-description: Expand a thin (target: claude) task body into a self-contained enriched body for a local LLM implementer. Pass --commit to commit the enriched body; default leaves it uncommitted.
+description: Expand a thin (target: claude) task body into a self-contained enriched body for a local LLM implementer. Refuses human-in-the-loop tasks (target claude+human or human) — a headless local LLM cannot pause for manual steps. Pass --commit to commit the enriched body; default leaves it uncommitted.
 ---
 
 # /task-enrich
@@ -47,6 +47,10 @@ PHASE 0 — VALIDATE
 3. Check the `Target:` field on line 2:
    - If `Target: local`, stop:
      > Task <N> is already enriched (Target: local). Nothing to do.
+   - If `Target: claude+human` or `Target: human`, stop:
+     > Task <N> requires human intervention (Target: <value>) — a headless
+     > local LLM cannot pause for manual steps. Human-in-the-loop tasks
+     > stay on the Claude path: implement with `/task-implement <N>`.
    - If `Target: claude` (or the field is absent), continue.
 4. Read `.claude/TASKS.md` and locate the summary block for task <N>
    to confirm the task exists in the index and note its `Files:` list.
@@ -166,6 +170,7 @@ DO NOT:
   Even with `--commit`, never push, branch, tag, or use hook-skipping
   flags — make exactly one commit of the task body.
 - Enrich a task that is already `Target: local`.
+- Enrich a `Target: claude+human` or `Target: human` task.
 - Embed more context than the implementation strictly requires. Select;
   do not dump.
 - Include step-by-step instructions for things that are self-evident

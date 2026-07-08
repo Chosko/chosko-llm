@@ -1,8 +1,8 @@
 ---
 name: task-implement
-version: 0.6.0
+version: 0.7.0
 type: command
-description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Commits each task separately; pass --no-commit to skip the per-task commits. Supports `next` to implement the first eligible task.
+description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. Commits each task separately; pass --no-commit to skip the per-task commits. Supports `next` to implement the first eligible task.
 ---
 
 # /task-implement
@@ -86,6 +86,12 @@ After stripping the flag, `$ARGUMENTS` is one of:
 
 If `$ARGUMENTS` is empty, tell the user the usage and stop.
 
+For `all` and `next`, after resolving the list, check each resolved task's
+`Target:` field in its TASKS.md summary block. If any resolved task is
+`claude+human` or `human`, append a warning to the resolution report:
+"Task(s) <IDs> require human intervention — the run will pause and need
+you present." These tasks cannot run unattended.
+
 ---
 
 LOCATING THE BACKLOG
@@ -135,6 +141,55 @@ Treat the body as a high-quality starting point per the old conventions.
 Fall back to the context layer when the body is insufficient.
 
 In all cases: use judgment, not a checklist.
+
+---
+
+HUMAN-IN-THE-LOOP TASKS (Target: claude+human / human)
+
+A body whose `Target:` is `claude+human` or `human` carries a
+`## Manual interventions` section: a ⚠ warning line followed by numbered
+checkpoints, each anchored to a trigger point ("After X: …") with a manual
+step the user must perform in an external tool (e.g. the Unity editor) and
+a verifiable outcome. If the section is missing on such a target, stop and
+report — the task is inconsistent; the user should fix it with /task-add
+conventions in mind.
+
+**Checkpoint protocol** (used by both targets):
+
+1. **Pause** when implementation reaches a checkpoint's trigger point. Do
+   not continue past it.
+2. **Walk the user through** the manual step: restate it concretely,
+   adapted to what actually happened so far (real paths, real names — not
+   the body's placeholders if they drifted).
+3. **Wait** for the user's explicit confirmation that they performed it.
+4. **Verify independently.** The user saying "done" is not proof. Check
+   the claimed outcome yourself: Read/Glob for files that must exist,
+   run a compile or test command, inspect the artifact's content —
+   whatever the checkpoint's outcome makes checkable. Only what is
+   genuinely unverifiable from the filesystem/CLI (e.g. a purely visual
+   editor state) may rest on the user's word — say so explicitly when it
+   does.
+5. **On verification failure:** report exactly what is missing or wrong
+   (e.g. "you confirmed the prefab was created, but
+   `Assets/_Project/Prefabs/Foo.prefab` does not exist"), re-guide the
+   user through the step, and repeat from 3. Never proceed past an
+   unverified checkpoint unless the user explicitly overrides ("skip the
+   check, move on") — record the override in the final report.
+
+**Target: claude+human** — implement normally (all steps of the per-task
+workflow apply); the checkpoints interleave with Step 4 at their trigger
+points. Announce all checkpoints up front in Step 1 so the user knows the
+run will need them.
+
+**Target: human — guided walkthrough mode** — Claude makes NO production
+edits for this task: every change is performed by the user, guided
+checkpoint by checkpoint with the same protocol. Claude still runs
+read-only checks, compile/test commands for verification, and still owns
+the bookkeeping: the `Status:` flips in TASKS.md and the Step 8 commit of
+the user's changes. Steps 2–6 of the per-task workflow apply only insofar
+as the user performs them under guidance; where the project's test flow is
+agent-runnable, Claude may still run the test commands itself (running
+tests is verification, not production editing).
 
 ---
 
@@ -304,6 +359,12 @@ proceeding (no confirmation prompt — just continue):
 > Note: this task was written for a local LLM (Target: local) —
 > implementing with Claude anyway.
 
+If the target is `claude+human`, announce the manual-intervention
+checkpoints up front — a one-line summary per checkpoint — so the user
+knows where the run will pause and what they'll be asked to do. If the
+target is `human`, state that this task runs as a guided walkthrough
+(see HUMAN-IN-THE-LOOP TASKS) and confirm the user is ready to start.
+
 Apply the body schema guidance from USING THE TASK BODY above.
 
 Use the Edit tool to change this task's `Status:` line in
@@ -346,6 +407,12 @@ expanding scope silently.
 
 Follow the project's existing code style. Don't add comments, error
 handling, or abstractions beyond what the task requires.
+
+On a `claude+human` task, apply the checkpoint protocol (see
+HUMAN-IN-THE-LOOP TASKS) whenever this step reaches a checkpoint's
+trigger point: pause, walk the user through the manual step, and verify
+the outcome before continuing. On a `human` task, this entire step is
+performed by the user under guidance — Claude edits nothing.
 
 ### Step 5 — Run the affected tests, watch them pass   [skipped in skip-tests mode]
 
@@ -457,3 +524,6 @@ DO NOT:
 - Skip the full-suite run at the end of a task in full TDD mode.
 - Auto-scaffold a test suite without the user explicitly choosing
   option A.
+- Proceed past a manual-intervention checkpoint on the user's word alone
+  when the outcome is checkable — verify it yourself first.
+- Make production edits on a `Target: human` task.

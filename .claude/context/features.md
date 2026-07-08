@@ -57,13 +57,16 @@ Currently shipped:
   `.claude/tasks/<N>.md`. The default body schema (target: claude) contains
   Goal, Acceptance criteria, Decisions (when applicable), and Hints. With
   `--enrich`, produces an enriched body (target: local) in one shot by
-  reading `/task-enrich` for format guidance. Refuses if `/task-setup` has
-  not run. May propose splitting the description into multiple tasks
-  (independent deliverables, or one task that's too large); on acceptance
-  writes every part with sequential IDs and auto-wired `Preconditions:` in
-  one run. `--no-split` always writes exactly one task. Auto-commits the
-  written files (all parts in one commit for a split); `--no-commit` leaves
-  them uncommitted.
+  reading `/task-enrich` for format guidance. When the work includes steps
+  only a human can perform in an external tool (e.g. the Unity editor),
+  sets `Target: claude+human` (or `human`) and authors a
+  `## Manual interventions` checkpoint section — the two always go
+  together. Refuses if `/task-setup` has not run. May propose splitting
+  the description into multiple tasks (independent deliverables, or one
+  task that's too large); on acceptance writes every part with sequential
+  IDs and auto-wired `Preconditions:` in one run. `--no-split` always
+  writes exactly one task. Auto-commits the written files (all parts in
+  one commit for a split); `--no-commit` leaves them uncommitted.
 - `commands/task-clean.md` — prune terminal-status tasks. Removes summary
   blocks AND deletes the matching body files. Never renumbers — task IDs
   are stable across the project's lifetime; the `Last task number`
@@ -77,15 +80,22 @@ Currently shipped:
   to follow / Out of scope) — only fans out to CLAUDE.md and the
   context layer when the body doesn't cover what's needed. Older
   bodies trigger the previous "consult context layer" fallback. Status
-  flips happen in `.claude/TASKS.md`. Commits each task separately;
-  `--no-commit` runs the full TDD sequence but skips the per-task commits,
-  leaving every task's changes uncommitted.
+  flips happen in `.claude/TASKS.md`. Human-in-the-loop tasks: on
+  `target: claude+human` it pauses at each `## Manual interventions`
+  checkpoint, walks the user through the manual step, and independently
+  verifies the outcome before continuing; on `target: human` the task runs
+  as a guided walkthrough (no production edits by Claude, bookkeeping
+  still Claude's). Commits each task separately; `--no-commit` runs the
+  full TDD sequence but skips the per-task commits, leaving every task's
+  changes uncommitted.
 - `commands/task-list.md` — print the backlog as a compact read-only
-  summary. Reads only `.claude/TASKS.md`; never opens the body files.
+  summary. Marks `claude+human` / `human` tasks with `⚠ <target>`. Reads
+  only `.claude/TASKS.md`; never opens the body files.
 - `commands/task-enrich.md` — expand a thin (`target: claude`) task body
   into an enriched self-contained body (`target: local`) for a local LLM
   implementer. Appends `## Context bundle` and `## Implementation steps`
-  sections; updates `Target:` to `local`. Does not commit by default;
+  sections; updates `Target:` to `local`. Refuses human-in-the-loop tasks
+  (`target: claude+human` / `human`). Does not commit by default;
   `--commit` opts in to committing the enriched body.
 - `commands/refactor-codebase.md` — behaviour-preserving, plan-first,
   test-gated refactor: extract constants/enums, dedupe, split oversized

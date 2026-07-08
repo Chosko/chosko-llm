@@ -147,6 +147,52 @@
 
 ---
 
+## Human-in-the-loop: `target: claude+human` checkpoints
+
+1. Author a task with `Target: claude+human` and a `## Manual
+   interventions` section containing at least two checkpoints with
+   filesystem-verifiable outcomes (e.g. "create a prefab named Foo" →
+   `Assets/.../Foo.prefab` must exist).
+2. Run `/task-implement <N>`. Observe Step 1 announces all checkpoints
+   up front (one line each).
+3. When implementation reaches the first checkpoint's trigger point,
+   observe the run pauses and walks the user through the manual step
+   with concrete, current paths/names — it does not continue on its own.
+4. Confirm having done the step WITHOUT actually doing it. Observe
+   Claude verifies independently, reports exactly what is missing
+   (e.g. the promised file does not exist), and re-guides — it does NOT
+   proceed on the user's word alone.
+5. Actually perform the step and confirm. Observe verification passes
+   and implementation continues to the next checkpoint / the rest of
+   the flow.
+6. Verify an explicit user override ("skip the check, move on") lets the
+   run continue past a failed verification, and the final report records
+   the override.
+7. Run `/task-implement all` (or `next`) with a `claude+human` task in
+   the resolved list. Observe the resolution report warns that those
+   tasks need the user present.
+
+### Inconsistent body guard
+
+8. Author a body with `Target: claude+human` but NO `## Manual
+   interventions` section. Run `/task-implement <N>` and verify the run
+   stops with a clear inconsistency report instead of implementing.
+
+## Human-in-the-loop: `target: human` guided walkthrough
+
+1. Author a task with `Target: human` and a `## Manual interventions`
+   section covering the whole job.
+2. Run `/task-implement <N>`. Observe the walkthrough announcement and a
+   readiness check, then step-by-step guidance with the same
+   pause → confirm → verify loop.
+3. Verify Claude makes NO production edits during the task (inspect the
+   diff: only `.claude/TASKS.md` bookkeeping is Claude's), while it may
+   still run read-only checks and test commands.
+4. After the final step verifies, observe the status flip to `[DONE]`
+   and the Step 8 commit of the user's changes (unless `--no-commit`).
+
+---
+
 ## Notes
 
 - Test `/task-implement all` to verify batch mode and progress reporting.

@@ -1,8 +1,8 @@
 ---
 name: task-list
-version: 0.2.0
+version: 0.3.0
 type: command
-description: Print the project's task backlog as a compact summary, optionally filtered by status. Read-only — reads only TASKS.md, never the per-task body files.
+description: Print the project's task backlog as a compact summary, optionally filtered by status. Marks human-in-the-loop tasks (target claude+human or human) with a ⚠ so the user can see which tasks need them present. Read-only — reads only TASKS.md, never the per-task body files.
 ---
 
 # /task-list
@@ -68,6 +68,8 @@ WORKFLOW
      - Number (from the `## N. Title` line)
      - Title (the text after `N.`)
      - Status (the value on the `Status:` line, including its brackets)
+     - Target (the value on the `Target:` line; treat a missing line
+       as `claude`)
      - Preconditions (the value on the `Preconditions:` line)
 
 2. Apply the filter if `$ARGUMENTS` is non-empty. Match on the status
@@ -83,6 +85,10 @@ WORKFLOW
      `[IN PROGRESS]` (13 chars).
    - Preserve the original task IDs — they are stable, do NOT
      renumber for display.
+   - If the task's target is `claude+human` or `human`, append
+     `⚠ <target>` after the title (before any deps annotation) so
+     human-in-the-loop tasks are visible at a glance. Targets `claude`
+     and `local` get no marker.
    - If a task has non-`none` preconditions, append `(deps: 3, 7)` at
      the end of the line.
 
