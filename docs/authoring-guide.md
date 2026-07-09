@@ -49,6 +49,26 @@ a mismatch will break `update --all`.
    recursively when the skill is installed.
 4. The folder name **must** match the `name` frontmatter field.
 
+## Keeping `/task-implement` and `task-impl` in step
+
+The 8-step task workflow is encoded twice: as the `/task-implement` prompt
+under `skills/task-implement/`, and as bash in `scripts/cmd-task-impl.sh` +
+`scripts/lib-task-external.sh`. Nothing forces them to agree, so run the
+parity guard whenever you touch **either** artifact:
+
+```sh
+./scripts/check-task-parity.sh
+```
+
+It exits non-zero if a status tag (`[MISSING]`, `[STUBBED]`, `[INCORRECT]`,
+`[PARTIAL]`, `[IN PROGRESS]`, `[DONE]`, `[SKIP]`) is unknown to or missing
+from one side, or if the two sides disagree on the eight per-task steps.
+`[SKIP]` is deliberately prompt-only — the bash side excludes non-eligible
+tasks by omission. Introducing a genuinely new status tag means updating the
+`CANONICAL_TAGS` list in the guard as well as both artifacts.
+
+The guard checks the cheap invariants, not full behavioural parity.
+
 ## Versioning
 
 Use semver. Bump rules:

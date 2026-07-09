@@ -96,7 +96,7 @@ Preconditions: 43
 
 ## 45. Add a parity guard between the /task-implement prompt and cmd-task-impl.sh
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/check-task-parity.sh, docs/authoring-guide.md, VERSION
 Preconditions: 44
