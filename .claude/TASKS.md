@@ -78,7 +78,7 @@ Preconditions: none
 
 ## 43. Add "mirrored copy" sync markers to the duplicated test-runner tables
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-implement.md, commands/task-setup.md, VERSION
 Preconditions: none

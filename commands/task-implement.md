@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 0.9.0
+version: 0.9.1
 type: command
 description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. Commits each task separately; pass --no-commit to skip the per-task commits. Supports `next` to implement the first eligible task. Honors a `Testing policy for /task-implement: skip-tests|full-tdd` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time.
 ---
@@ -201,6 +201,10 @@ tests is verification, not production editing).
 ---
 
 LOCATING THE TEST RUNNER
+
+> **MIRRORED COPY** — the runner-inference heuristics below are duplicated in
+> `commands/task-setup.md` (TEST RUNNER INFERENCE). Any edit here must be
+> mirrored there.
 
 The command must work on any project. Detect the test runner before doing
 anything else:
