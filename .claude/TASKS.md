@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 40
+Last task number: 41
 
 ---
 
@@ -54,6 +54,15 @@ Preconditions: none
 Status: [DONE]
 Target: claude
 Files: commands/task-implement.md, tests/smoke/task-implement.md, VERSION
+Preconditions: none
+
+---
+
+## 41. Remove the smoke-test suite and update docs that reference it
+
+Status: [MISSING]
+Target: claude
+Files: tests/smoke/, CLAUDE.md, README.md, docs/authoring-guide.md, .claude/context/features.md, .claude/context/INDEX.md, .claude/domain/context-workflow.md, VERSION
 Preconditions: none
 
 ---
