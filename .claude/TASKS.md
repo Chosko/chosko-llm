@@ -87,7 +87,7 @@ Preconditions: none
 
 ## 44. Convert /task-implement from a command into a skill with on-demand supporting files
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-implement.md, skills/task-implement/, docs/authoring-guide.md, README.md, .claude/context/features.md, VERSION
 Preconditions: 43

@@ -52,6 +52,18 @@ chosko-llm update <feature>    # re-copy one feature
 
 Run `upgrade` first, then `update --all` to pick up new versions. `upgrade` only refreshes the source; it does not touch installed features.
 
+#### Migrating `task-implement` from a command to a skill
+
+As of v0.7.0 `task-implement` ships as a **skill** (`skills/task-implement/`) rather than a command. `update --all` cannot perform this migration: it walks what is currently *installed*, so it will report `Skipping command 'task-implement': no source in managed clone` and leave the stale command in place without installing the skill. Migrate once, by hand:
+
+```sh
+chosko-llm upgrade
+chosko-llm rm command:task-implement
+chosko-llm add skill:task-implement
+```
+
+The invocation is unchanged — you still run `/task-implement`. Only the packaging changed, so the skill can ship supporting files that Claude reads only when the relevant branch applies.
+
 #### Daily auto-upgrade
 
 The first `chosko-llm` command you run each day quietly runs `chosko-llm upgrade` for you before doing its job, so the source stays current without you thinking about it. You're opted in at install time; it runs at most once per calendar day and never blocks your command if the pull fails.

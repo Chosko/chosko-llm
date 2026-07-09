@@ -1,6 +1,6 @@
 ---
 name: task-setup
-version: 1.1.1
+version: 1.1.2
 type: command
 description: Initialize the project's task backlog — creates .claude/TASKS.md, the .claude/tasks/ directory, and the external-LLM wiring under .claude/external/ (implement-prompt, tests-prompt, run-affected-tests.sh, run-full-tests.sh). Authoring command — leaves everything uncommitted for review by default; pass --commit to commit the scaffolding.
 ---
@@ -177,8 +177,8 @@ and checking in only the paths in `WRITTEN`.
 TEST RUNNER INFERENCE
 
 > **MIRRORED COPY** — the runner-inference heuristics below are duplicated in
-> `commands/task-implement.md` (LOCATING THE TEST RUNNER). Any edit here must
-> be mirrored there.
+> `skills/task-implement/test-runner.md`. Any edit here must be mirrored
+> there.
 
 Determine how this project runs its tests, then write the two wrapper
 scripts. Inference uses the same heuristics as `/task-implement`'s

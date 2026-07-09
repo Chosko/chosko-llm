@@ -245,6 +245,6 @@ list contains human-involving tasks — they cannot run unattended.
 - [`../context/features.md`](../context/features.md) — shipped artifacts
   including every `task-*` command and the `task-enrich` skill.
 - `commands/task-setup.md`, `commands/task-add.md`,
-  `commands/task-implement.md`, `commands/task-clean.md`,
-  `commands/task-list.md`, `commands/task-enrich.md` — the command and
-  skill implementations.
+  `commands/task-clean.md`, `commands/task-list.md`,
+  `commands/task-enrich.md`, `skills/task-implement/SKILL.md` — the
+  command and skill implementations.

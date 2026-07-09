@@ -69,14 +69,18 @@ Currently shipped:
   counter never decreases. After applying, commits the changes
   automatically (`.claude/TASKS.md` + deleted body files); `--no-commit`
   leaves them uncommitted.
-- `commands/task-implement.md` — implement backlog tasks end-to-end with
-  TDD. Reads each task's body file from `.claude/tasks/<N>.md` only when
-  needed and treats it as the primary context source when the v0.3+
-  schema is present (Files to modify / Required reading / Conventions
-  to follow / Out of scope) — only fans out to CLAUDE.md and the
-  context layer when the body doesn't cover what's needed. Older
-  bodies trigger the previous "consult context layer" fallback. Status
-  flips happen in `.claude/TASKS.md`. Human-in-the-loop tasks: on
+- `skills/task-implement/` — implement backlog tasks end-to-end with
+  TDD. The repo's only skill: `SKILL.md` carries the common path (clean
+  tree, known test runner, numbered `target: claude` task) and five
+  supporting files are read only when their branch fires —
+  `dirty-tree.md` (non-empty `git status`), `test-runner.md` (runner must
+  be inferred; mirrors task-setup's table), `no-test-suite.md`,
+  `human-in-loop.md`, and `body-schemas.md` (non-current body schema).
+  Reads each task's body file from `.claude/tasks/<N>.md` only when
+  needed and treats it as the primary context source — only fans out to
+  CLAUDE.md and the context layer when the body doesn't cover what's
+  needed. Status flips happen in `.claude/TASKS.md`. Human-in-the-loop
+  tasks: on
   `target: claude+human` it pauses at each `## Manual interventions`
   checkpoint, walks the user through the manual step, and independently
   verifies the outcome before continuing; on `target: human` the task runs

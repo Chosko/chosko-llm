@@ -56,8 +56,8 @@ tasks complete.
 - `../domain/task-workflow.md` — the dual-LLM split this orchestrator
   implements (Claude authors, the external LLM implements); body schema and
   the external-artifact contract.
-- `../../commands/task-implement.md` — the Claude-driven sibling; the two keep
-  the same 8-step shape and one-commit-per-task rule.
+- `../../skills/task-implement/SKILL.md` — the Claude-driven sibling; the two
+  keep the same 8-step shape and one-commit-per-task rule.
 
 ## Cross-references
 

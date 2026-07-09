@@ -1,12 +1,12 @@
 ---
 name: task-implement
-version: 0.9.1
-type: command
+version: 0.10.0
+type: skill
 description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. Commits each task separately; pass --no-commit to skip the per-task commits. Supports `next` to implement the first eligible task. Honors a `Testing policy for /task-implement: skip-tests|full-tdd` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time.
 ---
 
 # /task-implement
-# Global command: implement one or more tasks from the project's task backlog
+# Global skill: implement one or more tasks from the project's task backlog
 # end-to-end, following a strict TDD-style sequence. Commits each task
 # separately. No mid-flow confirmation prompts when tests exist; if the
 # project has no test suite the flow becomes interactive.
@@ -39,6 +39,25 @@ nothing was committed — every task's changes sit in the working tree for the
 user to review and commit.
 
 $ARGUMENTS
+
+---
+
+SUPPORTING FILES (read on demand — not up front)
+
+This skill's common path is the whole of SKILL.md: a clean working tree, a
+project whose test command is already known, and numbered `Target: claude`
+tasks. Everything below is loaded only when its branch actually applies.
+
+| Read this file | Exactly when |
+| -------------- | ------------ |
+| `./dirty-tree.md`    | `git status --porcelain` is non-empty in PRE-FLIGHT step 1. |
+| `./test-runner.md`   | Neither CLAUDE.md/README/`.claude/` nor a testing-policy marker names the test command, so you must infer it. |
+| `./no-test-suite.md` | The project has no test suite at all, OR CLAUDE.md declares `Testing policy for /task-implement: skip-tests`. |
+| `./human-in-loop.md` | The current task's `Target:` is `claude+human` or `human`. |
+| `./body-schemas.md`  | The task body does NOT match the current schema (Goal / Acceptance criteria / Decisions / Hints). |
+
+Do not read a supporting file speculatively. If none of the conditions
+above fire, the run never touches one.
 
 ---
 
@@ -106,12 +125,10 @@ tasks." and stop. Do NOT create anything.
 Read TASKS.md first to find the summary block for each requested task
 (number, title, Status, Files, Preconditions). For each task you are
 about to implement, read its `.claude/tasks/<N>.md` body file when you
-need the Description, Behavior change, Doc updates, Tests, or
-Definition of done sections — not before. Do NOT bulk-read every body
-file up front: open each one only at the moment its task becomes the
-current one. If the body file for a task you intend to implement is
-missing, stop and report — the task is corrupt and the user should
-investigate.
+need its spec — not before. Do NOT bulk-read every body file up front:
+open each one only at the moment its task becomes the current one. If the
+body file for a task you intend to implement is missing, stop and report
+— the task is corrupt and the user should investigate.
 
 Status flips happen in `.claude/TASKS.md` only — the per-task body
 file does not store Status, Files, or Preconditions, so do not edit
@@ -121,92 +138,25 @@ the body file when changing status.
 
 USING THE TASK BODY
 
-Body files use one of two schemas:
-
-**Current schema (Goal / Acceptance criteria / Decisions / Hints):**
-Read the body, then navigate CLAUDE.md, `.claude/context/`,
+The current body schema is **Goal / Acceptance criteria / Decisions /
+Hints**. Read the body, then navigate CLAUDE.md, `.claude/context/`,
 `.claude/domain/`, and source files as needed. The body provides the
 spec; the project's context layer provides conventions and patterns.
 Use judgment about how much to read — the body's Hints point to the
 right files.
 
-**Enriched schema (same as above + Context bundle / Implementation steps):**
-The body is self-contained. Use the embedded context and steps as the
-primary working material. Reach for the context layer only when something
-contradicts or significantly extends what the body provides.
-
-**Older schema (Description / Required reading / Conventions to follow /
-Out of scope / Tests / Definition of done):**
-Treat the body as a high-quality starting point per the old conventions.
-Fall back to the context layer when the body is insufficient.
+If the body carries sections that do not match that schema — a `Context
+bundle` / `Implementation steps` pair, or the older `Description` /
+`Required reading` / `Out of scope` set — read `./body-schemas.md` for how
+to treat it.
 
 In all cases: use judgment, not a checklist.
 
 ---
 
-HUMAN-IN-THE-LOOP TASKS (Target: claude+human / human)
+RESOLVING THE TEST RUNNER
 
-A body whose `Target:` is `claude+human` or `human` carries a
-`## Manual interventions` section: a ⚠ warning line followed by numbered
-checkpoints, each anchored to a trigger point ("After X: …") with a manual
-step the user must perform in an external tool (e.g. the Unity editor) and
-a verifiable outcome. If the section is missing on such a target, stop and
-report — the task is inconsistent; the user should fix it with /task-add
-conventions in mind.
-
-**Checkpoint protocol** (used by both targets):
-
-1. **Pause** when implementation reaches a checkpoint's trigger point. Do
-   not continue past it.
-2. **Explain first, then ask.** Before any confirmation question, write a
-   short lead-in paragraph — e.g. "Now I need your manual intervention —
-   please do the following…" — that walks the user through the manual step
-   concretely: the exact action(s) to perform, adapted to what actually
-   happened so far (real paths, real names — not the body's placeholders if
-   they drifted). The user must be able to act from this explanation alone,
-   without asking back. Never lead with the confirmation question; the
-   explanation always comes first.
-3. **Ask, then wait** for the user's explicit confirmation that they
-   performed it. Only after the Step 2 explanation — never a bare "did you
-   do it?" on its own.
-4. **Verify independently.** The user saying "done" is not proof. Check
-   the claimed outcome yourself: Read/Glob for files that must exist,
-   run a compile or test command, inspect the artifact's content —
-   whatever the checkpoint's outcome makes checkable. Only what is
-   genuinely unverifiable from the filesystem/CLI (e.g. a purely visual
-   editor state) may rest on the user's word — say so explicitly when it
-   does.
-5. **On verification failure:** report exactly what is missing or wrong
-   (e.g. "you confirmed the prefab was created, but
-   `Assets/_Project/Prefabs/Foo.prefab` does not exist"), re-guide the
-   user through the step, and repeat from 3. Never proceed past an
-   unverified checkpoint unless the user explicitly overrides ("skip the
-   check, move on") — record the override in the final report.
-
-**Target: claude+human** — implement normally (all steps of the per-task
-workflow apply); the checkpoints interleave with Step 4 at their trigger
-points. Announce all checkpoints up front in Step 1 so the user knows the
-run will need them.
-
-**Target: human — guided walkthrough mode** — Claude makes NO production
-edits for this task: every change is performed by the user, guided
-checkpoint by checkpoint with the same protocol. Claude still runs
-read-only checks, compile/test commands for verification, and still owns
-the bookkeeping: the `Status:` flips in TASKS.md and the Step 8 commit of
-the user's changes. Steps 2–6 of the per-task workflow apply only insofar
-as the user performs them under guidance; where the project's test flow is
-agent-runnable, Claude may still run the test commands itself (running
-tests is verification, not production editing).
-
----
-
-LOCATING THE TEST RUNNER
-
-> **MIRRORED COPY** — the runner-inference heuristics below are duplicated in
-> `commands/task-setup.md` (TEST RUNNER INFERENCE). Any edit here must be
-> mirrored there.
-
-The command must work on any project. Detect the test runner before doing
+The skill must work on any project. Establish how tests run before doing
 anything else:
 
 0. **Testing policy marker (checked first).** Read `CLAUDE.md` if it
@@ -215,169 +165,41 @@ anything else:
    `Testing policy for /task-implement: full-tdd`. This is a project's
    own durable declaration and overrides heuristic detection:
    - `skip-tests` → the project has stated it has no automated test
-     suite. Skip straight to skip-tests mode (see NO-TEST-SUITE MODE
-     below) without asking the A/B question — go directly to its step 3.
+     suite. Read `./no-test-suite.md` and go straight to its skip-tests
+     mode, without asking the A/B question.
    - `full-tdd` → the project has stated it does have a test suite, even
-     if the heuristics in step 2 below can't detect one on their own.
-     Skip NO-TEST-SUITE MODE entirely and continue at step 1 of this
-     section to resolve the actual test command (step 3 there still
-     applies if the command itself is ambiguous).
-   - No marker found → continue to step 1 below; behavior is unchanged
-     from before this marker existed.
+     if no runner is auto-detectable. Never enter no-test-suite mode;
+     continue at step 1 to resolve the actual test command.
+   - No marker found → continue to step 1.
 1. If a CLAUDE.md, README.md, or `.claude/` context file specifies a test
-   command, use it. Project conventions beat heuristics.
-2. Otherwise, infer from project files:
-   - `pytest.ini` / `pyproject.toml` with `[tool.pytest.ini_options]` /
-     `setup.cfg` with `[tool:pytest]` → `pytest`. Prefer
-     `.venv/Scripts/python.exe -m pytest` on Windows or
-     `.venv/bin/python -m pytest` on POSIX if a venv exists.
-   - `package.json` with a `test` script → `npm test` (or `pnpm test` /
-     `yarn test` if a lockfile indicates it).
-   - `Cargo.toml` → `cargo test`.
-   - `go.mod` → `go test ./...`.
-   - `Gemfile` with rspec → `bundle exec rspec`.
-   - Other: scan for a `Makefile` target named `test` → `make test`.
-3. If still ambiguous, ask the user before starting any task.
+   command, use it. Project conventions beat heuristics. **On the common
+   path this resolves the runner and you are done here.**
+2. Otherwise, read `./test-runner.md` and infer the runner from the
+   project's files. If it is still ambiguous after that, ask the user
+   before starting any task.
+3. If the project has no test suite at all (no runner inferable AND no
+   test directory like `tests/`, `test/`, `__tests__/`, `spec/`), read
+   `./no-test-suite.md` and follow it.
 
 For "affected tests", prefer running just the test file(s) listed in the
 task's `Files:` field. If that's not feasible, fall back to running tests
 by keyword/marker matching the task's subject. The full suite is always
 run at the end of each task regardless.
 
----
-
-NO-TEST-SUITE MODE
-
-If the project has no test suite at all (no test runner detectable AND no
-test directory like `tests/`, `test/`, `__tests__/`, `spec/`), the strict
-TDD flow cannot run. Switch to interactive mode:
-
-0. **If `CLAUDE.md` carries `Testing policy for /task-implement:
-   skip-tests`** (see LOCATING THE TEST RUNNER step 0), skip step 1's A/B
-   question entirely. Tell the user once, briefly: "This project's
-   CLAUDE.md declares a skip-tests testing policy — implementing without
-   tests." Go straight to step 3 (skip-tests mode).
-
-1. Otherwise, tell the user once, up front:
-
-   > This project has no detectable test suite. Without tests, I can't
-   > follow the TDD sequence (write failing test → implement → watch it
-   > pass). Two options:
-   >
-   > A. **Set up a test suite now.** I can scaffold one for the project's
-   >    language (e.g. pytest for Python, Jest for JS) — installing the
-   >    dev dependency, adding a config, and creating a `tests/` directory.
-   >    From then on, /task-implement runs in full TDD mode.
-   >
-   > B. **Skip test phases.** I'll implement each task without writing or
-   >    running tests. Each task still gets its own commit, but I'll ask
-   >    you to confirm before starting each one — without tests, I can't
-   >    self-verify the implementation, so a human review point is
-   >    important.
-   >
-   > Which would you like?
-
-   Suggest option A only when scaffolding is genuinely straightforward for
-   the language at hand. If the project's language has no obvious default
-   test framework, mention that and let the user direct.
-
-2. Do as the user tells. If they pick A, scaffold the suite first (in its
-   own commit, separate from any task), then proceed in full TDD mode.
-   If they pick B, proceed in skip-tests mode.
-
-3. **Skip-tests mode** for the rest of the run:
-   - Before each task, briefly summarize what you're about to change and
-     ask "Proceed?" Wait for explicit approval before editing any file.
-   - Skip Steps 2, 3, 5, and 6 of the per-task workflow (anything
-     test-related). Steps 1, 4, 7, 8 still run.
-   - The commit message should note "(no tests — manual verification
-     pending)" in the body so it's visible later.
-   - The `all` argument still works in skip-tests mode but the per-task
-     confirmation prompts still apply (one per task).
-
-If the project HAS a test suite (test runner found OR test directory
-present), do not enter skip-tests mode. Run in full TDD mode without
-per-task confirmations.
+If the project HAS a test suite (runner found OR test directory present)
+and no `skip-tests` marker, do not enter skip-tests mode. Run in full TDD
+mode without per-task confirmations.
 
 ---
 
 PRE-FLIGHT CHECKS (before any task)
 
-1. **Working-tree check (prompt on dirty tree).** Run
-   `git status --porcelain` once.
-   - If output is empty (clean tree), continue silently. Set
-     DIRTY_FOLD = false.
-   - If non-empty, list the dirty files to the user (truncated to the
-     first 20 entries with a `(+N more)` tail when there are more) and
-     prompt. The default (NO_COMMIT false) shows all four options; under
-     `--no-commit` there is no task commit for option 2 to fold into, so
-     it is dropped and the remaining three are renumbered 1/2/3:
-
-     Default (committing) mode:
-     ```
-     Working tree has uncommitted changes. Choose:
-       [1] proceed   — run the task anyway; these changes stay uncommitted, exactly as they are now
-       [2] include   — run the task anyway; these changes will be staged and folded into the task's commit
-       [3] commit    — commit the current changes first, then run the task
-       [4] abort     — stop now, leave everything as-is
-     ```
-
-     `--no-commit` mode:
-     ```
-     Working tree has uncommitted changes. Choose:
-       [1] proceed   — run the task anyway; these changes stay uncommitted, exactly as they are now
-       [2] commit    — commit the current changes first, then run the task
-       [3] abort     — stop now, leave everything as-is
-     ```
-
-   Wait for an explicit typed answer. In default mode accept
-   `1`/`proceed`, `2`/`include`, `3`/`commit`, or `4`/`abort`
-   (case-insensitive). Under `--no-commit` accept `1`/`proceed`,
-   `2`/`commit`, or `3`/`abort`. EOF, an empty line, an unrelated
-   reply, or silence is treated as **abort**.
-
-   - **On proceed:** continue silently — no warning needed. Set
-     DIRTY_FOLD = false. Step 8 will stage only the task's own files,
-     exactly as on a clean tree; these pre-existing changes stay in the
-     working tree untouched by the task's commit.
-   - **On include** (default mode only): if the porcelain output
-     included untracked files, list them and ask
-     `Also fold untracked files into the task's commit? [y/N]`. On
-     explicit yes, set DIRTY_FOLD_UNTRACKED = true and remember the
-     untracked paths; on anything else, set DIRTY_FOLD_UNTRACKED = false.
-     Set DIRTY_FOLD = true. Print a one-line warning: "Step 8 (Commit)
-     will stage these pre-existing changes together with this task's own
-     changes." Then continue — the fold happens in Step 8, not here.
-   - **On commit:** ask `Commit message?` and read the answer.
-     Accept either a single line or a multi-line answer terminated by
-     an empty line. Then:
-       1. Stage tracked dirty files: `git add -u`.
-       2. If the porcelain output included untracked files, list them
-          and ask `Also include untracked? [y/N]`. On explicit yes,
-          stage them by listing each path explicitly
-          (`git add -- <path1> <path2> …`); on anything else, leave
-          them unstaged.
-       3. Create one commit using the user's message via HEREDOC
-          (`git commit -m "$(cat <<'EOF'\n…\nEOF\n)"`).
-       4. If the commit fails (e.g. pre-commit hook), surface the
-          failure to the user, do NOT retry, do NOT use `--no-verify`,
-          do NOT amend, and halt the run before any task work begins.
-       5. On success, continue to step 2 of the pre-flight checks. Set
-          DIRTY_FOLD = false.
-   - **On abort / silence / EOF:** stop. Do not flip any `Status:`
-     line, do not stage, do not commit. The user is left exactly where
-     they started.
-
-   DIRTY_FOLD (and DIRTY_FOLD_UNTRACKED) apply only to the first task's
-   Step 8 — this check runs once, before any task, so later tasks in the
-   same invocation are unaffected and always fold nothing.
-
-   Notes:
-   - `.gitignore`-excluded files are ignored as today
-     (`git status --porcelain` already respects gitignore).
-   - The commit option NEVER stages untracked files without explicit
-     user opt-in, and NEVER uses `git add -A`/`-u .`/`.` in a way that
-     would catch the user's untracked files implicitly.
+1. **Working-tree check.** Run `git status --porcelain` once.
+   - If output is empty (clean tree — the common path), continue silently.
+     Set DIRTY_FOLD = false.
+   - If non-empty, read `./dirty-tree.md` and follow its prompt protocol
+     before going further. It sets DIRTY_FOLD and DIRTY_FOLD_UNTRACKED,
+     which Step 8 consumes, and may halt the run.
 
 2. Use the Read tool to open `.claude/TASKS.md`. Resolve the task list
    per ARGUMENT PARSING above. For each task to be implemented:
@@ -391,7 +213,7 @@ PRE-FLIGHT CHECKS (before any task)
 
    Do NOT read the per-task body files in this preflight step. Each
    `.claude/tasks/<N>.md` is read only when its task becomes the
-   current one (Step 2 of the per-task workflow).
+   current one (Step 1 of the per-task workflow).
 
 3. If the project has a CLAUDE.md, read it — it's small and global.
    Defer reading the broader `.claude/context/` and `.claude/domain/`
@@ -419,11 +241,12 @@ proceeding (no confirmation prompt — just continue):
 > Note: this task was written for a local LLM (Target: local) —
 > implementing with Claude anyway.
 
-If the target is `claude+human`, announce the manual-intervention
-checkpoints up front — a one-line summary per checkpoint — so the user
-knows where the run will pause and what they'll be asked to do. If the
-target is `human`, state that this task runs as a guided walkthrough
-(see HUMAN-IN-THE-LOOP TASKS) and confirm the user is ready to start.
+If the target is `claude+human` or `human`, read `./human-in-loop.md`
+now and follow it for the rest of this task. For `claude+human`,
+announce the manual-intervention checkpoints up front — a one-line
+summary per checkpoint — so the user knows where the run will pause and
+what they'll be asked to do. For `human`, state that this task runs as a
+guided walkthrough and confirm the user is ready to start.
 
 Apply the body schema guidance from USING THE TASK BODY above.
 
@@ -435,11 +258,10 @@ commit this change yet — it will be bundled into the task's commit.
 ### Step 2 — Update tests   [skipped in skip-tests mode]
 
 Use the Read tool to open the test files listed in the task's `Files:`
-field on its TASKS.md summary block (or implied by the `### Tests`
-section of `.claude/tasks/<N>.md`). Use the Edit tool to add or
-modify tests to encode the behavior the task specifies — every
-assertion in `### Tests`, plus regression guards in `Definition of
-done`.
+field on its TASKS.md summary block (or implied by the task's tests
+section). Use the Edit tool to add or modify tests to encode the
+behavior the task specifies — every assertion the body calls for, plus
+regression guards for its acceptance criteria.
 
 If a test file doesn't exist yet but the task expects one, use the Write tool
 to create it.
@@ -468,11 +290,8 @@ expanding scope silently.
 Follow the project's existing code style. Don't add comments, error
 handling, or abstractions beyond what the task requires.
 
-On a `claude+human` task, apply the checkpoint protocol (see
-HUMAN-IN-THE-LOOP TASKS) whenever this step reaches a checkpoint's
-trigger point: pause, walk the user through the manual step, and verify
-the outcome before continuing. On a `human` task, this entire step is
-performed by the user under guidance — Claude edits nothing.
+On a `claude+human` or `human` task, apply the checkpoint protocol from
+`./human-in-loop.md` at each checkpoint's trigger point.
 
 ### Step 5 — Run the affected tests, watch them pass   [skipped in skip-tests mode]
 
@@ -520,17 +339,9 @@ including the `.claude/TASKS.md` status flip, by explicit path
 do not include it in the commit unless you genuinely changed it (e.g.
 corrected a stale description after discovering the spec was wrong).
 
-If DIRTY_FOLD is true (the user chose "include" on the pre-flight dirty-tree
-prompt — this can only be true for the first task of the run), fold the
-pre-existing dirty changes into this commit alongside the task's own
-changes:
-1. Stage tracked files with `git add -u` — this covers both the task's
-   own tracked edits and the pre-existing tracked dirty files in one step.
-2. If DIRTY_FOLD_UNTRACKED is true, also stage the pre-existing untracked
-   files identified during pre-flight, explicitly by path
-   (`git add -- <path1> <path2> …`).
-3. Stage any new untracked files this task itself created, explicitly by
-   path.
+If DIRTY_FOLD is true, fold the pre-existing dirty changes into this
+commit as described in `./dirty-tree.md` (which you will already have
+read — DIRTY_FOLD can only be true if the tree was dirty).
 
 Create a single commit. Commit message format follows the repo's
 existing style — read the last few `git log` entries first. If there's
@@ -563,10 +374,10 @@ After committing a task, before starting the next:
    accumulate, so a non-empty `git status` is expected, not a surprise.
    Otherwise (the default): run `git status --porcelain`. If non-empty
    (unusual — the previous task's Step 8 should have committed everything
-   it changed), apply the same 4-way prompt as PRE-FLIGHT CHECKS step 1:
-   proceed, include, commit, or abort — DIRTY_FOLD set here applies to
-   the upcoming task's Step 8. Same rules: silence/EOF/abort halts the
-   run with no `Status:` flips.
+   it changed), apply the same prompt protocol as PRE-FLIGHT CHECKS step 1
+   via `./dirty-tree.md` — DIRTY_FOLD set there applies to the upcoming
+   task's Step 8. Same rules: silence/EOF/abort halts the run with no
+   `Status:` flips.
 2. Use the Read tool to re-open `.claude/TASKS.md` fresh. Task IDs are
    stable so numbers will not have moved, but statuses or
    `Preconditions:` lines may have been edited by a parallel
@@ -598,7 +409,7 @@ DO NOT:
 - Continue past a failing test with a "todo: fix later" comment.
 - Skip the full-suite run at the end of a task in full TDD mode.
 - Auto-scaffold a test suite without the user explicitly choosing
-  option A.
+  option A of `./no-test-suite.md`.
 - Proceed past a manual-intervention checkpoint on the user's word alone
   when the outcome is checkable — verify it yourself first.
 - Make production edits on a `Target: human` task.
