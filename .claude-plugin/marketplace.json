@@ -1,0 +1,13 @@
+{
+  "name": "chosko",
+  "owner": {
+    "name": "Chosko"
+  },
+  "plugins": [
+    {
+      "name": "chosko-llm",
+      "source": "./",
+      "description": "Global Claude Code commands and skills: task backlog workflow, navigation context layer, and codebase refactoring."
+    }
+  ]
+}
