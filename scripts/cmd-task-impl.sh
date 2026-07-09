@@ -290,8 +290,7 @@ implement_one() {
     fi
 
     log_info "Step 5: running affected tests"
-    last_log="$( { "$(external_artifact run-affected-tests.sh)" "${test_files[@]}"; } 2>&1 || true)"
-    if "$(external_artifact run-affected-tests.sh)" "${test_files[@]}" >/dev/null 2>&1; then
+    if last_log="$( "$(external_artifact run-affected-tests.sh)" "${test_files[@]}" 2>&1 )"; then
       impl_ok=1
       break
     fi
@@ -309,8 +308,7 @@ implement_one() {
     attempt=1
     local full_ok=0
     while [ "$attempt" -le "$RETRIES" ]; do
-      last_log="$( { "$(external_artifact run-full-tests.sh)"; } 2>&1 || true)"
-      if "$(external_artifact run-full-tests.sh)" >/dev/null 2>&1; then
+      if last_log="$( "$(external_artifact run-full-tests.sh)" 2>&1 )"; then
         full_ok=1; break
       fi
       log_warn "Full suite failing on attempt $attempt/$RETRIES — re-invoking aider"

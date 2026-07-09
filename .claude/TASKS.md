@@ -69,7 +69,7 @@ Preconditions: none
 
 ## 42. Fix the double test run in cmd-task-impl.sh — capture once, branch on exit status
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/cmd-task-impl.sh, .claude/context/cmd-task-impl.md, VERSION
 Preconditions: none
