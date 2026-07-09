@@ -145,5 +145,3 @@ are never used; a hook failure is surfaced and the files left staged.
   for this repo, with the `Last updated` anchor.
 - `commands/context-build.md`, `commands/context-update.md` — the
   command implementations.
-- `tests/smoke/context-build.md`, `tests/smoke/context-update.md` —
-  smoke-test checklists.

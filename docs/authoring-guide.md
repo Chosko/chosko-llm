@@ -32,8 +32,7 @@ description: One-line summary used in `chosko-llm ls`.
 2. Add the frontmatter block above with `type: command`.
 3. Write the command body in markdown — instructions to Claude Code when the
    user invokes `/<name>`.
-4. Add a smoke-test entry at `tests/smoke/<name>.md`.
-5. Verify the file is discoverable: from a clone where `install.sh` has been
+4. Verify the file is discoverable: from a clone where `install.sh` has been
    run, `./bin/chosko-llm ls --available` should show
    `<name>  command  <installed-or-—>  <version>`.
 
@@ -49,7 +48,6 @@ a mismatch will break `update --all`.
 3. Add any supporting files alongside `SKILL.md` — they will be copied
    recursively when the skill is installed.
 4. The folder name **must** match the `name` frontmatter field.
-5. Add a smoke-test entry at `tests/smoke/<name>.md`.
 
 ## Versioning
 

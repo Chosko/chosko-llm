@@ -60,7 +60,7 @@ Preconditions: none
 
 ## 41. Remove the smoke-test suite and update docs that reference it
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: tests/smoke/, CLAUDE.md, README.md, docs/authoring-guide.md, .claude/context/features.md, .claude/context/INDEX.md, .claude/domain/context-workflow.md, VERSION
 Preconditions: none

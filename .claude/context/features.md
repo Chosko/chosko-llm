@@ -16,10 +16,6 @@ Feature kinds, all keyed by feature name (kebab-case):
   guidance ships and updates like any other feature. `chosko-llm add/rm/update`
   treat it as the `claude-md:` kind; surrounding user content is preserved.
 
-And the per-feature verification checklist:
-- `tests/smoke/<name>.md` — a manual checklist for verifying the feature
-  still works after edits. Format documented in `tests/smoke/README.md`.
-
 Currently shipped:
 - `commands/project-setup.md` — interactive first-time project initialization
   wizard. Two phases: a GATHER phase that collects every choice upfront (VCS
@@ -135,9 +131,6 @@ semver bump rules.
 - **Skills are folders, not single files.** A bare `skills/foo.md` is
   ignored by every script. See `feature_kind` in
   [shared-lib.md](./shared-lib.md).
-- **Smoke tests bump alongside `version`.** The test file is named for the
-  feature's `name` frontmatter, not its filename, although the two should
-  always match (see above).
 - **No state file.** Versions live in frontmatter; what's installed is
   whatever exists under `$CLAUDE_HOME`. See `../../CLAUDE.md` hard rules.
 
@@ -148,7 +141,6 @@ semver bump rules.
 - `../../CLAUDE.md` — hard rules: every feature has frontmatter; filesystem
   is the source of truth; copy-not-symlink; `cmd-add` / `cmd-update` reject
   files missing `version`.
-- `tests/smoke/README.md` — smoke test file format.
 
 ## Cross-references
 
@@ -167,4 +159,3 @@ semver bump rules.
 - Adding/removing a frontmatter field → `../../docs/authoring-guide.md` plus
   `parse_frontmatter` in `scripts/lib.sh` (see
   [shared-lib.md](./shared-lib.md)).
-- Changing the smoke-test format → `tests/smoke/README.md`.

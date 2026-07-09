@@ -65,8 +65,9 @@ The CLI is a proxy: `~/bin/chosko-llm` parses the subcommand and execs
 
 Testing policy for /task-implement: skip-tests
 
-No automated test suite. `tests/smoke/*.md` are manual checklists a human
-runs after a change — see [tests/smoke/README.md](tests/smoke/README.md).
+This project has no test suite by design. It ships markdown prompts and thin
+shell wrappers; changes are verified by reading the diff and by running the
+CLI against a real clone.
 
 ## Versioning
 
@@ -90,8 +91,7 @@ runs after a change — see [tests/smoke/README.md](tests/smoke/README.md).
    (kebab-case).
 3. Start at `version: 0.1.0` for new features. See the authoring guide for
    bump rules.
-4. Add a smoke-test checklist at `tests/smoke/<name>.md`.
-5. Tell the user the working-repo verification path:
+4. Tell the user the working-repo verification path:
    `cd` into a clone where `install.sh` has already run, then
    `./bin/chosko-llm ls --available` should list the new feature with the
    correct version.

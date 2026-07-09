@@ -211,4 +211,3 @@ Every feature requires YAML frontmatter (`name`, `version`, `type`, `description
 | `.claude/TASKS.md` / `.claude/tasks/` | This repo's own task backlog and per-task body files.           |
 | `docs/authoring-guide.md`    | How to write a new command or skill.                                     |
 | `docs/cli-help.txt`          | Help text rendered by `chosko-llm help`.                                 |
-| `tests/smoke/`               | Manual smoke-test checklists, one file per feature.                      |
