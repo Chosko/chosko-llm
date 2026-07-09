@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 41
+Last task number: 47
 
 ---
 
@@ -63,6 +63,60 @@ Preconditions: none
 Status: [MISSING]
 Target: claude
 Files: tests/smoke/, CLAUDE.md, README.md, docs/authoring-guide.md, .claude/context/features.md, .claude/context/INDEX.md, .claude/domain/context-workflow.md, VERSION
+Preconditions: none
+
+---
+
+## 42. Fix the double test run in cmd-task-impl.sh — capture once, branch on exit status
+
+Status: [MISSING]
+Target: claude
+Files: scripts/cmd-task-impl.sh, .claude/context/cmd-task-impl.md, VERSION
+Preconditions: none
+
+---
+
+## 43. Add "mirrored copy" sync markers to the duplicated test-runner tables
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-implement.md, commands/task-setup.md, VERSION
+Preconditions: none
+
+---
+
+## 44. Convert /task-implement from a command into a skill with on-demand supporting files
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-implement.md, skills/task-implement/, docs/authoring-guide.md, README.md, .claude/context/features.md, VERSION
+Preconditions: 43
+
+---
+
+## 45. Add a parity guard between the /task-implement prompt and cmd-task-impl.sh
+
+Status: [MISSING]
+Target: claude
+Files: scripts/check-task-parity.sh, docs/authoring-guide.md, VERSION
+Preconditions: 44
+
+---
+
+## 46. Remove the redundant TOOL DISCIPLINE blocks — the global tool-usage-policy already covers them
+
+Status: [MISSING]
+Target: claude
+Files: commands/, docs/authoring-guide.md, README.md, VERSION
+Preconditions: none
+
+---
+
+## 47. Single-source the non-git VCS rule — strengthen the injected ## VCS section, remove the per-command pointers
+
+Status: [MISSING]
+Target: claude
+Files: commands/project-setup.md, commands/task-setup.md, commands/task-enrich.md, commands/context-build.md, commands/context-update.md, commands/refactor-codebase.md, commands/refactor-tests.md, VERSION
 Preconditions: none
 
 ---
