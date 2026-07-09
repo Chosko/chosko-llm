@@ -1,6 +1,6 @@
 ---
 name: task-enrich
-version: 0.3.0
+version: 0.3.1
 type: command
 description: Expand a thin (target: claude) task body into a self-contained enriched body for a local LLM implementer. Refuses human-in-the-loop tasks (target claude+human or human) — a headless local LLM cannot pause for manual steps. Pass --commit to commit the enriched body; default leaves it uncommitted.
 ---
@@ -20,18 +20,6 @@ and Hints sections are preserved unchanged. The `Target:` line is updated to
 `--commit`, the enriched body is committed at the end.
 
 $ARGUMENTS
-
----
-
-TOOL DISCIPLINE
-
-- File reads: always use the Read tool. Never use `cat`, `type`,
-  `Get-Content`, or any shell command to read file content.
-- File writes: use the Edit tool for targeted changes to existing files.
-  Never use the Write tool on an existing body file — it would overwrite it.
-- Bash / PowerShell: used ONLY by the optional COMMIT phase (when
-  `--commit` is passed): `git add -- <path>` and `git commit`. Not used
-  otherwise.
 
 ---
 
@@ -113,6 +101,9 @@ Silence is not approval. Iterate if the user requests changes.
 
 PHASE 3 — WRITE (only after explicit approval)
 
+Edit the body file in place. Never use the Write tool on an existing body
+file — it would overwrite it.
+
 1. Use the Edit tool on `.claude/tasks/<N>.md`:
    a. Change `Target: claude` → `Target: local` on line 2.
       If `Target:` is absent, insert `Target: local` on line 2
@@ -138,6 +129,10 @@ Continue to PHASE 4.
 ---
 
 PHASE 4 — COMMIT (only when `--commit` was passed)
+
+This is the only phase that shells out (`git add -- <path>` and
+`git commit`), and only when `--commit` was passed. No other phase runs a
+shell command.
 
 If COMMIT is false (the default), do nothing here — the enriched body is
 left uncommitted for the user to review. This is the default behavior and

@@ -1,6 +1,6 @@
 ---
 name: task-list
-version: 0.3.0
+version: 0.3.1
 type: command
 description: Print the project's task backlog as a compact summary, optionally filtered by status. Marks human-in-the-loop tasks (target claude+human or human) with a ⚠ so the user can see which tasks need them present. Read-only — reads only TASKS.md, never the per-task body files.
 ---
@@ -27,17 +27,11 @@ $ARGUMENTS
 
 ---
 
-TOOL DISCIPLINE
-
-Use the Read tool to open `.claude/TASKS.md` — never `cat`, `type`,
-`Get-Content`, or any shell command. This command performs no writes;
-Bash and PowerShell are not needed at all. Do NOT open any file under
-`.claude/tasks/` — TASKS.md already contains everything `/task-list`
-needs.
-
----
-
 LOCATING THE BACKLOG
+
+This command performs no writes and needs no shell at all. Do NOT open any
+file under `.claude/tasks/` — TASKS.md already contains everything
+`/task-list` needs.
 
 The backlog index lives at `.claude/TASKS.md`. If it does not exist,
 tell the user "No backlog file found. Run /task-setup to initialize it,

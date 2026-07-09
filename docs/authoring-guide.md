@@ -49,6 +49,24 @@ a mismatch will break `update --all`.
    recursively when the skill is installed.
 4. The folder name **must** match the `name` frontmatter field.
 
+## Tool discipline is global — do not restate it
+
+Do **not** add a `TOOL DISCIPLINE` block to a command or skill. The
+`claude-md:tool-usage-policy` feature is merged into the user's global
+`CLAUDE.md`, so it is already in force in every session: Read over `cat`,
+Edit/Write over shell redirection, and matching the command syntax to the
+shell tool you call. Seven near-identical copies of that policy cost tokens
+on every invocation and drift apart; one artifact that ships into context
+does not.
+
+Soft dependency: installing `claude-md:tool-usage-policy` is the recommended
+baseline for all commands and skills in this repo.
+
+What *does* belong in a command is a constraint specific to **that** command
+— e.g. "this is the only phase that shells out", or "never use the Write tool
+on an existing body file". Put such a line in the section it governs, not in
+a standalone block at the top.
+
 ## Keeping `/task-implement` and `task-impl` in step
 
 The 8-step task workflow is encoded twice: as the `/task-implement` prompt

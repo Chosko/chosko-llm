@@ -1,6 +1,6 @@
 ---
 name: task-clean
-version: 0.4.0
+version: 0.4.1
 type: command
 description: Prune tasks in a terminal status — remove summary blocks from TASKS.md and delete their per-task body files. Task IDs are stable; survivors are NEVER renumbered. Automatically commits the removals; pass --no-commit to leave them uncommitted.
 ---
@@ -37,21 +37,6 @@ is the status set (or empty for the default). `--commit` and `--no-commit`
 are mutually exclusive — if both appear, stop with:
 `--commit and --no-commit cannot be combined. Pick one.` When NO_COMMIT is
 false (the default), PHASE 3 auto-commits as before.
-
----
-
-TOOL DISCIPLINE
-
-- File reads: always use the Read tool. Never use `cat`, `type`,
-  `Get-Content`, or any shell command to read file content.
-- File writes: use the Edit tool for targeted changes to an existing file;
-  use the Write tool only when creating a new file from scratch. Never use
-  shell redirection, `tee`, `Set-Content`, `Out-File`, or any shell
-  mechanism to write files.
-- Bash / PowerShell are used to delete the per-task body files
-  (`rm .claude/tasks/<N>.md`) and, unless `--no-commit` was passed, to run
-  the git operations in PHASE 3 (`git add --` and `git commit`). Under
-  `--no-commit`, the only shell use is the body-file deletion.
 
 ---
 
@@ -179,6 +164,11 @@ After the report, continue to PHASE 3.
 ---
 
 PHASE 3 — COMMIT
+
+Apart from deleting the per-task body files in PHASE 2 (`rm
+.claude/tasks/<N>.md`), this is the only phase that shells out: `git add --`
+and `git commit`. Under `--no-commit` the body-file deletion is the command's
+only shell use.
 
 If NO_COMMIT is true, skip committing entirely: the `.claude/TASKS.md` edits
 and the body-file deletions from PHASE 2 are left uncommitted in the working

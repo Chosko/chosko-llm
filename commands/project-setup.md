@@ -1,6 +1,6 @@
 ---
 name: project-setup
-version: 0.3.1
+version: 0.3.2
 type: command
 description: Interactive first-time project initialization wizard. Gathers all choices upfront (VCS, CLAUDE.md content, AGENTS.md, task backlog, context layer), confirms once, then executes them in a fixed order. Orchestrates /task-setup and /context-build; injects a VCS-mapping section into CLAUDE.md for non-git projects (e.g. Plastic SCM). Authoring command — leaves all output uncommitted for one review pass by default; pass --commit to commit its own artifacts and delegate --commit to the nested commands.
 ---
@@ -86,22 +86,13 @@ the commit behavior described in COMMIT POLICY above and PHASE 3 below.
 
 ---
 
-TOOL DISCIPLINE
-
-- File reads: always use the Read tool. Never use `cat`, `type`,
-  `Get-Content`, or any shell command to read file content.
-- File writes: use the Edit tool for targeted changes to an existing file;
-  use the Write tool only when creating a new file from scratch. Never use
-  shell redirection, `tee`, `Set-Content`, or `Out-File`.
-- Bash / PowerShell are used for read-only VCS detection in the GATHER phase
-  (see below) and, ONLY when `--commit` was passed, the commit step in
-  PHASE 3 (`git add -- <paths>` / `git commit`, or the `## VCS`-mapped
-  equivalents). Without `--commit`, this command never stages, commits, or
-  otherwise mutates VCS state.
-
----
-
 PHASE 1 — GATHER (conversational; no files written)
+
+This command shells out for exactly two things: read-only VCS detection in
+this phase, and — ONLY when `--commit` was passed — the commit step in
+PHASE 3 (`git add -- <paths>` / `git commit`, or the `## VCS`-mapped
+equivalents). Without `--commit`, it never stages, commits, or otherwise
+mutates VCS state.
 
 State this once, upfront, before asking anything. Pick the variant that
 matches the flag:

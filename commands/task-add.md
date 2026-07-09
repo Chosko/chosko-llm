@@ -1,6 +1,6 @@
 ---
 name: task-add
-version: 0.9.0
+version: 0.9.1
 type: command
 description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass --enrich to produce a self-contained body for a local LLM in one shot, --no-split to always write exactly one task, or --no-commit to write the files but skip the commit.
 ---
@@ -46,20 +46,6 @@ Also scan for the optional `--no-split` flag (independent of `--enrich` and
 strip it; PHASE 1.5 is skipped entirely and exactly one task is always
 written. When NO_SPLIT is false (the default), PHASE 1.5 considers whether
 a split would produce better units.
-
----
-
-TOOL DISCIPLINE
-
-- File reads: always use the Read tool. Never use `cat`, `type`,
-  `Get-Content`, or any shell command to read file content.
-- File writes: use the Edit tool for targeted changes to an existing file;
-  use the Write tool only when creating a new file from scratch. Never use
-  shell redirection, `tee`, `Set-Content`, `Out-File`, or any shell
-  mechanism to write files.
-- Bash / PowerShell are used ONLY by PHASE 5 (the commit step):
-  `git add -- <path> <path>` and `git commit`. No other phases shell out.
-  Under `--no-commit`, PHASE 5 shells out for nothing — no git command runs.
 
 ---
 
@@ -449,6 +435,10 @@ Continue to PHASE 5.
 ---
 
 PHASE 5 — COMMIT
+
+This is the only phase that shells out: `git add -- <path> <path>` and
+`git commit`. No other phase runs a shell command, and under `--no-commit`
+this phase runs none either.
 
 If NO_COMMIT is true, skip committing entirely: the files PHASE 4 wrote
 (one task's two files, or all of a split's files) are left uncommitted in

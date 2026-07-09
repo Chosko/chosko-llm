@@ -1,6 +1,6 @@
 ---
 name: task-setup
-version: 1.1.2
+version: 1.1.3
 type: command
 description: Initialize the project's task backlog — creates .claude/TASKS.md, the .claude/tasks/ directory, and the external-LLM wiring under .claude/external/ (implement-prompt, tests-prompt, run-affected-tests.sh, run-full-tests.sh). Authoring command — leaves everything uncommitted for review by default; pass --commit to commit the scaffolding.
 ---
@@ -50,19 +50,10 @@ and the other authoring commands. The user reviews and commits when ready.
 Passing `--commit` opts in to committing exactly what this run wrote (see
 PHASE — COMMIT below).
 
----
-
-TOOL DISCIPLINE
-
-- File reads: always use the Read tool. Never use `cat`, `type`,
-  `Get-Content`, or any shell command to read file content.
-- File writes: use the Write tool to create new files. Never use shell
-  redirection, `tee`, `Set-Content`, or `Out-File`.
-- Bash / PowerShell are used for filesystem prep — creating directories
-  (`mkdir -p .claude/tasks`, `mkdir -p .claude/external`) and setting the
-  executable bit on the wrapper scripts (`chmod +x …`) — and, ONLY when
-  `--commit` is passed, the commit step (`git add -- <paths>` and
-  `git commit`). Without `--commit`, this command runs NO git/VCS command.
+This command shells out for exactly two things: filesystem prep (`mkdir -p`
+for `.claude/tasks` and `.claude/external`, `chmod +x` on the wrapper
+scripts) and, ONLY when `--commit` is passed, the commit step. Without
+`--commit`, it runs NO git/VCS command.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 0.10.0
+version: 0.10.1
 type: skill
 description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. Commits each task separately; pass --no-commit to skip the per-task commits. Supports `next` to implement the first eligible task. Honors a `Testing policy for /task-implement: skip-tests|full-tdd` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time.
 ---
@@ -59,17 +59,8 @@ tasks. Everything below is loaded only when its branch actually applies.
 Do not read a supporting file speculatively. If none of the conditions
 above fire, the run never touches one.
 
----
-
-TOOL DISCIPLINE
-
-- File reads: always use the Read tool. Never use `cat`, `type`,
-  `Get-Content`, or any shell command to read file content.
-- File writes: use the Edit tool for targeted changes to an existing file;
-  use the Write tool only when creating a new file from scratch. Never use
-  shell redirection, `tee`, `Set-Content`, `Out-File`, or any shell
-  mechanism to write files.
-- Bash / PowerShell are only for running tests and git commands.
+Throughout this skill, Bash / PowerShell are only for running tests and git
+commands.
 
 ---
 

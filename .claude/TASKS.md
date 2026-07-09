@@ -105,7 +105,7 @@ Preconditions: 44
 
 ## 46. Remove the redundant TOOL DISCIPLINE blocks — the global tool-usage-policy already covers them
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/, docs/authoring-guide.md, README.md, VERSION
 Preconditions: none
