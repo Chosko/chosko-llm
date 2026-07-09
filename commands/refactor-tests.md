@@ -1,6 +1,6 @@
 ---
 name: refactor-tests
-version: 0.2.0
+version: 0.2.1
 type: command
 description: Split oversized test files into smaller, focused files — runs the test suite before and after each split to keep the baseline green. Pass --commit to commit the splits; default leaves them uncommitted.
 ---
@@ -171,10 +171,6 @@ If COMMIT is true:
 6. On failure (e.g. a pre-commit hook rejects the commit): surface the
    exact output. Do NOT retry, amend, or use `--no-verify` /
    `--no-gpg-sign`. Files remain staged but uncommitted; tell the user.
-
-NON-GIT VCS: if the project's CLAUDE.md carries a `## VCS` mapping section
-(e.g. git→`cm` for Plastic SCM), substitute the mapped commands, staging
-and checking in only the explicit test-file paths this run touched.
 
 ---
 

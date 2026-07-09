@@ -114,7 +114,7 @@ Preconditions: none
 
 ## 47. Single-source the non-git VCS rule — strengthen the injected ## VCS section, remove the per-command pointers
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/project-setup.md, commands/task-setup.md, commands/task-enrich.md, commands/context-build.md, commands/context-update.md, commands/refactor-codebase.md, commands/refactor-tests.md, VERSION
 Preconditions: none

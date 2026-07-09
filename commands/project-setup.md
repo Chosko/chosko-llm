@@ -1,6 +1,6 @@
 ---
 name: project-setup
-version: 0.3.2
+version: 0.3.3
 type: command
 description: Interactive first-time project initialization wizard. Gathers all choices upfront (VCS, CLAUDE.md content, AGENTS.md, task backlog, context layer), confirms once, then executes them in a fixed order. Orchestrates /task-setup and /context-build; injects a VCS-mapping section into CLAUDE.md for non-git projects (e.g. Plastic SCM). Authoring command — leaves all output uncommitted for one review pass by default; pass --commit to commit its own artifacts and delegate --commit to the nested commands.
 ---
@@ -268,8 +268,13 @@ place rather than duplicating):
 ```
 ## VCS
 
-This project uses Plastic SCM, not git. When any command instructs you to
-run a git command, substitute the Plastic equivalent:
+This project uses Plastic SCM, not git.
+
+**This section OVERRIDES literal git commands.** Any command, skill, or
+instruction you follow in this project that names a git command is to be
+read as naming its Plastic equivalent below — even when it spells the git
+command out verbatim, and even when it does not mention this section. Never
+run `git` here.
 
 - `git add -- <paths>`        -> `cm add <paths>`
 - `git commit -m "<msg>"`     -> `cm checkin -m "<msg>" <paths>`
@@ -280,7 +285,9 @@ run a git command, substitute the Plastic equivalent:
 
 Stage and check in only the explicit paths a command names — never a
 catch-all. Plastic has no staging area, so the git "add then commit"
-two-step maps to a single `cm checkin` of the listed paths.
+two-step maps to a single `cm checkin` of the listed paths: an instruction
+to stage is not a separate command here, it selects which paths the later
+check-in names.
 ```
 
 For git, inject nothing — the commands already work as authored. For an

@@ -1,6 +1,6 @@
 ---
 name: context-update
-version: 1.1.0
+version: 1.1.1
 type: command
 description: Update an existing navigation context layer after code changes, then auto-commit the context files it updated. Pass --no-commit to leave them uncommitted.
 ---
@@ -256,11 +256,6 @@ committing is the default behavior).
     exact output. Do NOT retry, amend, or use `--no-verify` /
     `--no-gpg-sign` or any hook-skipping flag. The files remain staged
     but uncommitted; tell the user.
-
-NON-GIT VCS: if the project's CLAUDE.md carries a `## VCS` mapping
-section (e.g. git→`cm` for Plastic SCM), substitute the mapped commands
-for the git commands above — stage and check in only the explicit paths
-this run wrote, never a catch-all.
 
 This phase stages ONLY the context-layer files this run modified. It
 must not pull in unrelated dirty files, and it must not run

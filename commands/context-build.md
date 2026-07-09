@@ -1,6 +1,6 @@
 ---
 name: context-build
-version: 0.2.0
+version: 0.2.1
 type: command
 description: Build a navigation context layer to reduce token cost in future Claude Code sessions. Pass --commit to commit the context layer; default leaves it uncommitted.
 ---
@@ -188,9 +188,5 @@ If COMMIT is true, after Phase 3 completes:
 5. On failure (e.g. a pre-commit hook rejects the commit): surface the
    exact output. Do NOT retry, amend, or use `--no-verify` /
    `--no-gpg-sign`. Files remain staged but uncommitted; tell the user.
-
-NON-GIT VCS: if the project's CLAUDE.md carries a `## VCS` mapping section
-(e.g. git→`cm` for Plastic SCM), substitute the mapped commands, staging
-and checking in only the explicit paths this run wrote.
 
 END

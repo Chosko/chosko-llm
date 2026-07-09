@@ -1,6 +1,6 @@
 ---
 name: task-setup
-version: 1.1.3
+version: 1.1.4
 type: command
 description: Initialize the project's task backlog — creates .claude/TASKS.md, the .claude/tasks/ directory, and the external-LLM wiring under .claude/external/ (implement-prompt, tests-prompt, run-affected-tests.sh, run-full-tests.sh). Authoring command — leaves everything uncommitted for review by default; pass --commit to commit the scaffolding.
 ---
@@ -158,10 +158,6 @@ If COMMIT is true:
 4. On failure (e.g. a pre-commit hook rejects the commit): surface the
    exact output. Do NOT retry, amend, or use `--no-verify` /
    `--no-gpg-sign`. Files remain staged but uncommitted; tell the user.
-
-NON-GIT VCS: if the project's CLAUDE.md carries a `## VCS` mapping section
-(e.g. git→`cm` for Plastic SCM), substitute the mapped commands, staging
-and checking in only the paths in `WRITTEN`.
 
 ---
 

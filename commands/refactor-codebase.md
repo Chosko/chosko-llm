@@ -1,6 +1,6 @@
 ---
 name: refactor-codebase
-version: 0.2.0
+version: 0.2.1
 type: command
 description: Refactor a codebase by applying clean-code principles — extract constants/enums, eliminate duplication, split oversized files, clean imports, and rename ambiguous identifiers — without changing observable behaviour. Plan-first, phase-gated, test-suite-protected. Supports scope= and focus= arguments to limit the work, and --commit to commit the result (default leaves it uncommitted).
 ---
@@ -292,9 +292,5 @@ REPORT):
 5. On failure (e.g. a pre-commit hook rejects the commit): surface the
    exact output. Do NOT retry, amend, or use `--no-verify` /
    `--no-gpg-sign`. Files remain staged but uncommitted; tell the user.
-
-NON-GIT VCS: if the project's CLAUDE.md carries a `## VCS` mapping section
-(e.g. git→`cm` for Plastic SCM), substitute the mapped commands, staging
-and checking in only the explicit paths this run touched.
 
 END
