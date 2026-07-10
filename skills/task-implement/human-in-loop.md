@@ -22,6 +22,19 @@ conventions in mind.
    they drifted). The user must be able to act from this explanation alone,
    without asking back. Never lead with the confirmation question; the
    explanation always comes first.
+   Be aware that when a turn contains markdown text followed by an
+   AskUserQuestion tool call, the user's CLI shows only the question
+   dialog — the preceding prose (e.g. step-by-step Unity checkpoint
+   instructions) is never displayed. For human-in-the-loop checkpoints,
+   end the turn with the full instructions as plain text and no tool
+   call, asking the user to reply "done" in chat. You can (and should)
+   use AskUserQuestion when the question itself can carry all needed
+   context, or can embed the essential steps inside the question/option
+   text.
+   Pitch the detail level for a Unity intermediate/expert developer: skip
+   base instructions such as "If there's no Prefabs folder there:
+   right-click _Common → Create → Folder → name it Prefabs" — just ask
+   to create the folder.
 3. **Ask, then wait** for the user's explicit confirmation that they
    performed it. Only after the Step 2 explanation — never a bare "did you
    do it?" on its own.
