@@ -1,8 +1,8 @@
 ---
 name: project-setup
-version: 0.3.3
+version: 0.4.0
 type: command
-description: Interactive first-time project initialization wizard. Gathers all choices upfront (VCS, CLAUDE.md content, AGENTS.md, task backlog, context layer), confirms once, then executes them in a fixed order. Orchestrates /task-setup and /context-build; injects a VCS-mapping section into CLAUDE.md for non-git projects (e.g. Plastic SCM). Authoring command — leaves all output uncommitted for one review pass by default; pass --commit to commit its own artifacts and delegate --commit to the nested commands.
+description: Interactive first-time project initialization wizard. Gathers all choices upfront (VCS, CLAUDE.md content, AGENTS.md, task backlog, context layer), confirms once, then executes them in a fixed order. Orchestrates /task-setup and /context-build; injects a VCS-mapping section into CLAUDE.md for non-git projects (e.g. Plastic SCM). On Unity projects, also injects a "Tasks implementation" section into CLAUDE.md covering editor dirty-tree noise handling (with a self-updating known-noise-files list maintained by future sessions) and, when the project has no test suite, the permanent skip-tests testing-policy marker for /task-implement. Authoring command — leaves all output uncommitted for one review pass by default; pass --commit to commit its own artifacts and delegate --commit to the nested commands.
 ---
 
 # /project-setup
@@ -181,6 +181,23 @@ it will pause for input during its phases, and it leaves its output
 uncommitted for you to review afterward. Under `--commit`, the wizard runs
 `/context-build --commit` so it commits its own output.
 
+### 1f. Unity projects — tasks-implementation section
+
+Probe read-only for Unity: `ProjectSettings/ProjectVersion.txt` exists →
+Unity project. If it is NOT a Unity project, skip this subsection entirely
+and ask nothing.
+
+If it IS a Unity project, tell the user a `## Tasks implementation` section
+will be added to CLAUDE.md — it teaches /task-implement how to handle
+Unity's editor dirty-tree noise; the noise guidance is generic and the
+project-specific list grows on its own as later sessions notice recurring
+noise files. Ask ONE thing:
+
+> Does this project have a test suite /task-implement should run? [y/N]
+
+If **no**, the section will carry the permanent skip-tests
+testing-policy marker (see Step 3b).
+
 That's the full set of questions. Keep it to these — do not improvise extra
 prompts. If $ARGUMENTS carried hints (e.g. "we use Plastic", "source under
 lib/"), apply them to pre-fill the relevant defaults and say so.
@@ -203,15 +220,17 @@ Commit mode:    <off — leave everything for review | on (--commit) — commit 
 VCS:            <git | Plastic SCM | none>
 Seed CLAUDE.md: <yes, synthesizing N pasted source(s) | skip>
 VCS section:    <inject Plastic mapping into CLAUDE.md | none needed (git) | skip (none)>
+Unity section:  <inject Tasks-implementation section (skip-tests policy: yes/no) | n/a (not a Unity project)>
 AGENTS.md:      <create | skip>
 Task backlog:   <initialize via /task-setup | skip>
 Context layer:  <build via /context-build (runs last) | skip>
 
 Execution order:
   -- wizard's own artifacts --
-  1. CLAUDE.md skeleton    (only if CLAUDE.md missing AND step 2 or 3 needs it)
+  1. CLAUDE.md skeleton    (only if CLAUDE.md missing AND step 2, 3, or 3b needs it)
   2. Seed CLAUDE.md prose  (if requested; from pasted material only)
   3. Inject VCS section    (if non-git VCS)
+  3b. Tasks-implementation section (Unity projects only)
   4. AGENTS.md             (if requested)
   4c. Commit own artifacts (only with --commit; commits steps 1-4)
   -- heavy sub-commands, last --
@@ -241,7 +260,8 @@ sub-commands are invoked WITH `--commit` so they commit their own output.
 ### Step 1 — CLAUDE.md skeleton
 
 Only when CLAUDE.md does not exist yet AND a later wizard step needs to write
-to it (seeding requested, or a VCS section will be injected). Use the Write
+to it (seeding requested, a VCS section will be injected, or a Unity
+tasks-implementation section will be injected). Use the Write
 tool to create a minimal CLAUDE.md containing just a title and a one-line
 "see AGENTS.md / the context layer" pointer. If CLAUDE.md already exists, do
 nothing here. If nothing in Steps 2-3 will write to CLAUDE.md and it is
@@ -293,6 +313,65 @@ check-in names.
 For git, inject nothing — the commands already work as authored. For an
 unknown/"none" VCS, skip this step.
 
+### Step 3b — Inject the Tasks-implementation section (Unity projects only)
+
+Skip this step entirely when the project is not Unity (GATHER 1f). For a
+Unity project, append a `## Tasks implementation` section to CLAUDE.md (if
+one already exists, update it in place rather than duplicating). This
+section is the PERMANENT home for /task-implement guidance in this project
+— later notes such as the testing-policy marker belong here, not in a new
+section.
+
+Write the section from this template. The text is fixed — the only part
+to adapt is `<commit|checkin>`:
+
+```
+## Tasks implementation
+
+When implementing tasks using the `/task-implement` command, consider the
+following:
+
+- Unity tends to change files even when no explicit operation is made by
+  the user, so a dirty working tree is normal. The noise forms a
+  recognizable family that sits permanently modified in the workspace —
+  typical members are editor-regenerated caches such as
+  `Assets/Plugins/FMOD/Cache/Editor/FMODStudioCache.asset` (touched
+  almost every editor session) and regenerated TextMesh Pro font SDF
+  atlases (the exact variants drift between sessions as atlases
+  regenerate). During the pre-flight `Working-tree check`, don't stop
+  for these: if no unfinished task is detected among the changed files,
+  choose `proceed` automatically and just write a warning to the user.
+  Leave the noise files exactly as they are — never bundle them into a
+  task's <commit|checkin>, and don't re-ask about them on dirty-tree
+  prompts. Exception: assets newly integrated *for* a task (e.g. a new
+  font family added while building a UI) are real task content and DO
+  go into that task's <commit|checkin>.
+- Known noise files in this project — keep this list updated: whenever
+  a session notices a file that repeatedly shows up modified without any
+  task touching it, add it here so future sessions don't have to
+  re-discover it:
+  - (none recorded yet)
+```
+
+Use the VCS vocabulary chosen in 1a for `<commit|checkin>` — "commit" for
+git, "checkin" for Plastic SCM. Do not ask the user for noise files and do
+not pre-fill the list — it starts empty by design and is maintained by
+future sessions per the instruction embedded in the section itself.
+
+If the user answered **no test suite** in GATHER 1f, end the section with
+the testing-policy marker — the phrase must match EXACTLY what
+/task-implement scans for — followed by the human-readable sentence:
+
+```
+Testing policy for /task-implement: skip-tests
+
+This project has no test suite. Skip the test phases by default without
+asking for confirmation.
+```
+
+If the user answered yes (a test suite exists), write no testing-policy
+line — /task-implement will detect the runner as usual.
+
 ### Step 4 — AGENTS.md
 
 If requested, use the Write tool to create AGENTS.md with a minimal pointer:
@@ -311,8 +390,9 @@ as-is.
 ### Step 4c — Commit the wizard's own artifacts (only with `--commit`)
 
 Run this step ONLY when `--commit` was passed. Stage EXACTLY the files
-Steps 1-4 wrote — CLAUDE.md (the skeleton, seeded prose, and/or injected
-`## VCS` section) and AGENTS.md, as applicable — and make one commit:
+Steps 1-4 wrote — CLAUDE.md (the skeleton, seeded prose, injected `## VCS`
+section, and/or Unity `## Tasks implementation` section) and AGENTS.md, as
+applicable — and make one commit:
 
 ```
 git add -- <CLAUDE.md and/or AGENTS.md, only the files actually written>
@@ -374,4 +454,5 @@ DO NOT:
 - Paste user-provided documentation verbatim into CLAUDE.md — synthesize it.
 - Inject a VCS section for a git project.
 - Clobber an existing AGENTS.md or an existing CLAUDE.md project-info /
-  VCS section — update in place, never duplicate.
+  VCS / Tasks-implementation section — update in place, never duplicate.
+- Inject the Tasks-implementation section into a non-Unity project.

@@ -24,7 +24,9 @@ Currently shipped:
   **Authoring command — makes NO commits by default.** It writes its own
   artifacts (CLAUDE.md project-info section synthesized from user-pasted
   material only, a `## VCS` section mapping git→`cm` for non-git VCS like
-  Plastic SCM, and AGENTS.md), then runs the heavy sub-commands last —
+  Plastic SCM, a `## Tasks implementation` section on Unity projects
+  covering editor dirty-tree noise and the optional skip-tests
+  testing-policy marker, and AGENTS.md), then runs the heavy sub-commands last —
   `/task-setup` (which leaves its scaffolding uncommitted by default) then
   `/context-build` (the most context-hungry, gated command, run last so it
   can't strand the earlier steps). By default everything, including the
