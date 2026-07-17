@@ -134,6 +134,19 @@ optional `AGENTS.md` pointer, injects a VCS-mapping section for non-git
 projects, and can kick off the task backlog and context layer. Gathers every
 choice up front, confirms once, then executes.
 
+### Set up Unity MCP — `/unity-mcp-setup`
+
+For Unity projects, wire up MCP so `/task-implement` can drive the editor
+itself instead of pausing for you at every manual step. Idempotent and
+re-runnable: it adds the `com.coplaydev.unity-mcp` package to
+`Packages/manifest.json` if missing, records a marker in `CLAUDE.md` (and a
+`.claude/context/mcp-tools.md` doc when the project has a context layer), and
+registers + verifies the `UnityMCP` server on your machine
+(`claude mcp add` / `claude mcp list`). The project-side artifacts are
+versioned and shared; the Claude-side registration is machine-local (in
+`~/.claude.json`) and stays per-machine. `/project-setup` offers to run it on
+Unity projects.
+
 ### Keep Claude oriented — `/context-build` and `/context-update`
 
 Build a *navigation layer*: small structured summaries that let future Claude Code sessions

@@ -123,7 +123,7 @@ Preconditions: none
 
 ## 48. Add /unity-mcp-setup — detect, install, and register the Unity MCP plugin, and record it per-project
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/unity-mcp-setup.md, .claude/context/features.md, README.md, docs/cli-help.txt, VERSION
 Preconditions: none

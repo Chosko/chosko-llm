@@ -36,6 +36,20 @@ Currently shipped:
   commits its own artifacts first, then runs the sub-commands with `--commit`
   so each commits its own output. VCS detection decides whether to inject the
   VCS-mapping section (and, under `--commit`, which VCS the commits target).
+- `commands/unity-mcp-setup.md` — make a Unity project ready for
+  MCP-assisted `/task-implement`. Idempotent, re-runnable. Refuses on
+  non-Unity projects (probes `ProjectSettings/ProjectVersion.txt`). Two
+  sides: a VERSIONED project side — adds `com.coplaydev.unity-mcp` to
+  `Packages/manifest.json` if missing, writes the CLAUDE.md marker
+  `Unity MCP for /task-implement: com.coplaydev.unity-mcp (UnityMCP, http)`
+  (the phrase `/task-implement` scans for), and, when the project has a
+  context layer, creates `.claude/context/mcp-tools.md` + an `INDEX.md`
+  row — and a MACHINE-LOCAL Claude side that registers/verifies the
+  `UnityMCP` server via `claude mcp add` / `claude mcp list` (written to
+  `~/.claude.json` local scope, never committed). **Authoring command —
+  leaves its versioned artifacts uncommitted by default; `--commit` commits
+  exactly those paths.** Handles the "running session's tool index doesn't
+  refresh after `claude mcp add`" gotcha by telling the user to restart.
 - `commands/context-build.md` — introduces a navigation context layer. Leaves
   it uncommitted by default; `--commit` commits the layer (INDEX, context
   files, CLAUDE.md edit) with explicit paths only.
