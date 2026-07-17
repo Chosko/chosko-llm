@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 50
+Last task number: 51
 
 ---
 
@@ -141,9 +141,18 @@ Preconditions: 48
 
 ## 50. Offer to run /unity-mcp-setup from /project-setup on Unity projects
 
-Status: [MISSING]
+Status: [IN PROGRESS]
 Target: claude
 Files: commands/project-setup.md, .claude/context/features.md, VERSION
 Preconditions: 48
+
+---
+
+## 51. Add `chosko-llm channel` — point the managed clone at a branch to test unmerged work
+
+Status: [MISSING]
+Target: claude
+Files: scripts/cmd-channel.sh, bin/chosko-llm, scripts/auto-upgrade.sh, docs/cli-help.txt, README.md, .claude/context/cmd-channel.md, .claude/context/cli-entry.md, .claude/context/INDEX.md, VERSION
+Preconditions: none
 
 ---
