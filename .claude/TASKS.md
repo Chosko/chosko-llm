@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 47
+Last task number: 50
 
 ---
 
@@ -118,5 +118,32 @@ Status: [DONE]
 Target: claude
 Files: commands/project-setup.md, commands/task-setup.md, commands/task-enrich.md, commands/context-build.md, commands/context-update.md, commands/refactor-codebase.md, commands/refactor-tests.md, VERSION
 Preconditions: none
+
+---
+
+## 48. Add /unity-mcp-setup — detect, install, and register the Unity MCP plugin, and record it per-project
+
+Status: [MISSING]
+Target: claude
+Files: commands/unity-mcp-setup.md, .claude/context/features.md, README.md, docs/cli-help.txt, VERSION
+Preconditions: none
+
+---
+
+## 49. Teach /task-implement to drive Unity via MCP at manual checkpoints, gated and opt-outable
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-implement/SKILL.md, skills/task-implement/unity-mcp-checkpoints.md, skills/task-implement/human-in-loop.md, scripts/check-task-parity.sh, .claude/context/features.md, README.md, VERSION
+Preconditions: 48
+
+---
+
+## 50. Offer to run /unity-mcp-setup from /project-setup on Unity projects
+
+Status: [MISSING]
+Target: claude
+Files: commands/project-setup.md, .claude/context/features.md, VERSION
+Preconditions: 48
 
 ---
