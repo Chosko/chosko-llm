@@ -10,6 +10,27 @@ a verifiable outcome. If the section is missing on such a target, stop and
 report — the task is inconsistent; the user should fix it with /task-add
 conventions in mind.
 
+## Unity MCP gate (check before applying the protocol)
+
+Before using the checkpoint protocol below, decide whether the manual
+checkpoints can be driven through Unity MCP instead of handed to the user:
+
+- If the project's CLAUDE.md contains the marker
+  `Unity MCP for /task-implement:` AND the `mcp__UnityMCP__*` tools are
+  present in this session (the Claude-side server is registered AND
+  connected right now), read `./unity-mcp-checkpoints.md` and follow its
+  enhanced protocol (it includes a one-time per-run opt-out).
+- If the marker is present but the `mcp__UnityMCP__*` tools are absent this
+  session, do NOT read `./unity-mcp-checkpoints.md`. Use the standard
+  protocol below, and tell the user once that Unity MCP is declared but not
+  connected — `/unity-mcp-setup` (then a session restart) would enable
+  editor automation.
+- If CLAUDE.md has no such marker, use the standard protocol below.
+
+This gate is the ONLY place the MCP check happens; SKILL.md Step 1 defers to
+it. Do the marker read and the tool-presence check here — nothing extra is
+read when the project has no Unity MCP.
+
 ## Checkpoint protocol (used by both targets)
 
 1. **Pause** when implementation reaches a checkpoint's trigger point. Do

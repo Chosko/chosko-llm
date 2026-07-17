@@ -132,7 +132,7 @@ Preconditions: none
 
 ## 49. Teach /task-implement to drive Unity via MCP at manual checkpoints, gated and opt-outable
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-implement/SKILL.md, skills/task-implement/unity-mcp-checkpoints.md, skills/task-implement/human-in-loop.md, scripts/check-task-parity.sh, .claude/context/features.md, README.md, VERSION
 Preconditions: 48

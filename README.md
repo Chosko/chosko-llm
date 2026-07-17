@@ -184,6 +184,16 @@ the manual step, and verifies the outcome itself (the promised file exists,
 the project compiles) before moving on — saying "done" isn't enough.
 `/task-list` marks these tasks with a ⚠ so you know they need you present.
 
+On a Unity project set up with [`/unity-mcp-setup`](#set-up-unity-mcp--unity-mcp-setup),
+those checkpoints can flip around: when the `UnityMCP` server is connected,
+`/task-implement` makes the editor changes itself — checking the Console
+after compilation and creating GameObjects, components, and references via
+MCP — then hands you a *verification* step ("I created Foo under Bar —
+confirm you see it") instead of an instruction. It asks once per task
+whether you want it to drive Unity or pause for you to do the steps
+manually, and steps MCP genuinely can't perform stay manual. When the
+server isn't connected, the standard manual protocol above runs unchanged.
+
 #### [Experimental] Implement with a local model instead of Claude
 
 `/task-enrich` expands a task into a self-contained brief; the `chosko-llm

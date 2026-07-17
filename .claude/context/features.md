@@ -91,7 +91,11 @@ Currently shipped:
   supporting files are read only when their branch fires —
   `dirty-tree.md` (non-empty `git status`), `test-runner.md` (runner must
   be inferred; mirrors task-setup's table), `no-test-suite.md`,
-  `human-in-loop.md`, and `body-schemas.md` (non-current body schema).
+  `human-in-loop.md`, `unity-mcp-checkpoints.md` (Unity-MCP-driven
+  checkpoints — read only when the current human-in-loop task's project
+  declares the `Unity MCP for /task-implement:` marker AND the
+  `mcp__UnityMCP__*` tools are connected this session), and `body-schemas.md`
+  (non-current body schema).
   Reads each task's body file from `.claude/tasks/<N>.md` only when
   needed and treats it as the primary context source — only fans out to
   CLAUDE.md and the context layer when the body doesn't cover what's
@@ -101,7 +105,13 @@ Currently shipped:
   checkpoint, walks the user through the manual step, and independently
   verifies the outcome before continuing; on `target: human` the task runs
   as a guided walkthrough (no production edits by Claude, bookkeeping
-  still Claude's). Honors a `Testing policy for /task-implement:
+  still Claude's). When the project declares a Unity MCP plugin
+  (`Unity MCP for /task-implement:` marker in CLAUDE.md) and the
+  `mcp__UnityMCP__*` tools are connected this session, `human-in-loop.md`'s
+  gate reads `unity-mcp-checkpoints.md` instead: Claude checks the Unity
+  Console after compilation, performs editor actions itself, and rewrites
+  each checkpoint into a verification step — opt-outable per run, and a
+  no-op (standard manual protocol) when MCP isn't connected. Honors a `Testing policy for /task-implement:
   skip-tests|full-tdd` marker in a project's CLAUDE.md (checked before
   heuristic test-suite detection) so a no-test-suite decision persists
   across runs instead of being re-asked each time. Commits each task
