@@ -28,8 +28,11 @@ Currently shipped:
   covering editor dirty-tree noise and the optional skip-tests
   testing-policy marker, and AGENTS.md), then runs the heavy sub-commands last —
   `/task-setup` (which leaves its scaffolding uncommitted by default) then
-  `/context-build` (the most context-hungry, gated command, run last so it
-  can't strand the earlier steps). By default everything, including the
+  `/context-build` (the most context-hungry, gated command). On Unity
+  projects it also offers `/unity-mcp-setup`, invoked LAST (after
+  `/context-build`, so a freshly-built context layer exists for its
+  `mcp-tools.md` doc) — the wizard only offers and delegates, holding no MCP
+  logic of its own. By default everything, including the
   sub-commands' output, is left uncommitted for the user to review and commit
   in one pass — matching the other authoring commands (`/context-build`,
   `/context-update`, `/task-enrich`, `/refactor-*`). With `--commit` it

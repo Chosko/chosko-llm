@@ -1,8 +1,8 @@
 ---
 name: project-setup
-version: 0.4.0
+version: 0.5.0
 type: command
-description: Interactive first-time project initialization wizard. Gathers all choices upfront (VCS, CLAUDE.md content, AGENTS.md, task backlog, context layer), confirms once, then executes them in a fixed order. Orchestrates /task-setup and /context-build; injects a VCS-mapping section into CLAUDE.md for non-git projects (e.g. Plastic SCM). On Unity projects, also injects a "Tasks implementation" section into CLAUDE.md covering editor dirty-tree noise handling (with a self-updating known-noise-files list maintained by future sessions) and, when the project has no test suite, the permanent skip-tests testing-policy marker for /task-implement. Authoring command — leaves all output uncommitted for one review pass by default; pass --commit to commit its own artifacts and delegate --commit to the nested commands.
+description: Interactive first-time project initialization wizard. Gathers all choices upfront (VCS, CLAUDE.md content, AGENTS.md, task backlog, context layer), confirms once, then executes them in a fixed order. Orchestrates /task-setup and /context-build; injects a VCS-mapping section into CLAUDE.md for non-git projects (e.g. Plastic SCM). On Unity projects, also injects a "Tasks implementation" section into CLAUDE.md covering editor dirty-tree noise handling (with a self-updating known-noise-files list maintained by future sessions) and, when the project has no test suite, the permanent skip-tests testing-policy marker for /task-implement, and offers to run /unity-mcp-setup (as the last step, after the context layer) to wire up MCP-assisted task implementation. Authoring command — leaves all output uncommitted for one review pass by default; pass --commit to commit its own artifacts and delegate --commit to the nested commands.
 ---
 
 # /project-setup
@@ -198,6 +198,17 @@ noise files. Ask ONE thing:
 If **no**, the section will carry the permanent skip-tests
 testing-policy marker (see Step 3b).
 
+Then, still only on Unity projects, offer to set up Unity MCP:
+
+> Set up Unity MCP now so /task-implement can drive the Unity editor at
+> manual checkpoints instead of pausing for you (runs /unity-mcp-setup)?
+> [Y/n]
+
+Note for the user: /unity-mcp-setup runs as the LAST step (after the context
+layer, if you build one, so it can add a context doc), it's idempotent, and
+it will need the Unity Editor open to verify the connection. This wizard
+only offers and delegates — all the MCP logic lives in /unity-mcp-setup.
+
 That's the full set of questions. Keep it to these — do not improvise extra
 prompts. If $ARGUMENTS carried hints (e.g. "we use Plastic", "source under
 lib/"), apply them to pre-fill the relevant defaults and say so.
@@ -221,6 +232,7 @@ VCS:            <git | Plastic SCM | none>
 Seed CLAUDE.md: <yes, synthesizing N pasted source(s) | skip>
 VCS section:    <inject Plastic mapping into CLAUDE.md | none needed (git) | skip (none)>
 Unity section:  <inject Tasks-implementation section (skip-tests policy: yes/no) | n/a (not a Unity project)>
+Unity MCP:      <set up via /unity-mcp-setup (runs last) | skip | n/a (not a Unity project)>
 AGENTS.md:      <create | skip>
 Task backlog:   <initialize via /task-setup | skip>
 Context layer:  <build via /context-build (runs last) | skip>
@@ -236,6 +248,7 @@ Execution order:
   -- heavy sub-commands, last --
   5. /task-setup           (if requested; --commit passed through when set)
   6. /context-build        (if requested; interactive; --commit passed through when set)
+  7. /unity-mcp-setup      (Unity + if requested; runs after context-build; --commit passed through when set)
 
 All changes are left UNCOMMITTED for you to review and commit in one pass.
 (With --commit: each step commits its own output as a focused commit.)
@@ -424,6 +437,20 @@ Steps 1-2 wrote). Without `--commit` its output stays uncommitted; with
 `--commit`, invoke it as `/context-build --commit` so it commits its own
 output.
 
+### Step 7 — Unity MCP setup (Unity projects only; runs after context-build)
+
+Run this step ONLY on a Unity project AND only if the user opted in at
+GATHER 1f. Invoke the `/unity-mcp-setup` workflow. It runs AFTER
+`/context-build` on purpose: if the user built a context layer in this run,
+it now exists, so `/unity-mcp-setup` can add its `.claude/context/mcp-tools.md`
+doc and INDEX row. This wizard does NOT reimplement any of that logic — it
+delegates entirely to `/unity-mcp-setup`, which is idempotent and interactive
+(it may pause for the user to open the Unity Editor so the connection can be
+verified). Without `--commit`, `/unity-mcp-setup` leaves its versioned
+artifacts uncommitted with everything else; with `--commit`, invoke it as
+`/unity-mcp-setup --commit` so it commits its own versioned artifacts (its
+machine-local `claude mcp add` registration is never committed either way).
+
 ### Final report
 
 Summarize every step's outcome and the files written by each (the wizard's
@@ -447,8 +474,11 @@ DO NOT:
   sub-commands write is left uncommitted. With `--commit`, commit only the
   explicit paths each step wrote — never a catch-all — and never push,
   branch, tag, or use hook-skipping flags.
-- Reimplement `/context-build` or `/task-setup` — invoke their workflows.
-- Run `/context-build` before Step 6 — it runs LAST.
+- Reimplement `/context-build`, `/task-setup`, or `/unity-mcp-setup` —
+  invoke their workflows.
+- Run `/context-build` before Step 6 — the heavy sub-commands run last.
+- Offer or run `/unity-mcp-setup` on a non-Unity project, or run it before
+  `/context-build` — it is Unity-only and runs after the context layer (Step 7).
 - Read the codebase to seed CLAUDE.md — seeding uses ONLY user-pasted
   material; codebase structure is context-build's job.
 - Paste user-provided documentation verbatim into CLAUDE.md — synthesize it.

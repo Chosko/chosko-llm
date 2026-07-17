@@ -141,7 +141,7 @@ Preconditions: 48
 
 ## 50. Offer to run /unity-mcp-setup from /project-setup on Unity projects
 
-Status: [IN PROGRESS]
+Status: [DONE]
 Target: claude
 Files: commands/project-setup.md, .claude/context/features.md, VERSION
 Preconditions: 48
