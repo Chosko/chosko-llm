@@ -52,6 +52,20 @@ chosko-llm update <feature>    # re-copy one feature
 
 Run `upgrade` first, then `update --all` to pick up new versions. `upgrade` only refreshes the source; it does not touch installed features.
 
+#### Channels: trying unmerged work
+
+A **channel** is just the branch the managed clone is checked out on. Switch onto a feature branch to try it before it lands on `master`, then switch back:
+
+```sh
+chosko-llm channel                # print the channel the clone is on
+chosko-llm channel --list         # fetch origin and list channels you can switch to
+chosko-llm channel my-feature     # switch to a branch: fetch, checkout, fast-forward, refresh proxy
+chosko-llm update --all           # deploy that channel's features into ~/.claude/
+chosko-llm channel master         # back to stable
+```
+
+Switching does a full fetch + checkout + `pull --ff-only` + proxy refresh, but only *suggests* `update --all` — deploying features into `~/.claude/` stays an explicit step, same as `upgrade`. There's no state file: the checked-out branch is the whole persistence mechanism, and the daily auto-upgrade's `pull --ff-only` already follows it. Once a feature branch is merged and deleted upstream its `pull --ff-only` will fail — recover with `chosko-llm channel master`.
+
 #### Migrating `task-implement` from a command to a skill
 
 As of v0.7.0 `task-implement` ships as a **skill** (`skills/task-implement/`) rather than a command. `update --all` cannot perform this migration: it walks what is currently *installed*, so it will report `Skipping command 'task-implement': no source in managed clone` and leave the stale command in place without installing the skill. Migrate once, by hand:

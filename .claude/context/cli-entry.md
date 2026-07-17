@@ -36,9 +36,11 @@ runs `git pull` in the managed clone). See [cmd-upgrade.md](./cmd-upgrade.md).
 ## Public API (CLI surface)
 
 The proxy at `bin/chosko-llm` accepts these subcommands and forwards `$@`:
-- `ls`, `add`, `rm`, `update`, `upgrade`, `show`, `uninstall` →
+- `ls`, `add`, `rm`, `update`, `upgrade`, `channel`, `show`, `uninstall` →
   `scripts/cmd-<sub>.sh`. `cmd-uninstall.sh` is a thin wrapper that execs the
-  repo-root `uninstall.sh` (the single teardown implementation).
+  repo-root `uninstall.sh` (the single teardown implementation). `channel`
+  points the managed clone at a branch to try unmerged work (see
+  [cmd-channel.md](./cmd-channel.md)).
 - `task-impl` → `scripts/cmd-task-impl.sh` (the external-LLM orchestrator;
   see [cmd-task-impl.md](./cmd-task-impl.md)).
 - `-v`, `--version`, `version` → `scripts/cmd-version.sh` (falls back to

@@ -29,6 +29,14 @@ Usage:
   chosko-llm upgrade --enable-auto    Enable daily auto-upgrade (sets the preference; no upgrade).
   chosko-llm upgrade --disable-auto   Disable daily auto-upgrade (sets the preference; no upgrade).
 
+  chosko-llm channel                  Print the branch ('channel') the managed clone is on.
+  chosko-llm channel --list           Fetch origin and list the channels you can switch to,
+                                      marking the current one (also: -l).
+  chosko-llm channel <branch>         Switch the managed clone to <branch> to try unmerged work:
+                                      fetch, checkout, fast-forward, and refresh the proxy. Then
+                                      run 'update --all' to deploy its features. Back to stable
+                                      with 'chosko-llm channel master'.
+
   chosko-llm task-impl <N> [<N>…]     Drive aider+Ollama through the 8-step /task-implement
   chosko-llm task-impl all            sequence for one or more backlog tasks in the current
                                       project. Requires /task-setup to have been run first.

@@ -1,6 +1,6 @@
 # Context index
 
-Last updated: 2026-07-08
+Last updated: 2026-07-17
 
 Navigation layer for `chosko-llm`. Read this first, then the files relevant to
 your task. Open source files only when a context file's **When to read the
@@ -24,6 +24,7 @@ Canonical project docs live outside this folder and remain authoritative:
 | [cmd-rm.md](./cmd-rm.md) | `scripts/cmd-rm.sh` — uninstall a feature (command/skill/claude-md) from `$CLAUDE_HOME`. |
 | [cmd-update.md](./cmd-update.md) | `scripts/cmd-update.sh` — re-copy a feature (or version-aware `--all`); installs if missing. |
 | [cmd-upgrade.md](./cmd-upgrade.md) | `scripts/cmd-upgrade.sh` — `git pull` the managed clone, refresh the proxy; `--enable-auto`/`--disable-auto` toggles. |
+| [cmd-channel.md](./cmd-channel.md) | `scripts/cmd-channel.sh` — point the managed clone at a branch ('channel') to test unmerged work; no-arg shows current, `--list` shows available, `<branch>` switches + refreshes the proxy. |
 | [cmd-help.md](./cmd-help.md) | `scripts/cmd-help.sh` — print `docs/cli-help.txt` or fallback help. |
 | [cmd-task-impl.md](./cmd-task-impl.md) | `scripts/cmd-task-impl.sh` — external-LLM (aider+Ollama) orchestrator of the 8-step task-implement flow for the current project. |
 | [lib-task-external.md](./lib-task-external.md) | `scripts/lib-task-external.sh` — project-scoped backlog parse/mutate/guard helpers beneath `cmd-task-impl.sh`. |

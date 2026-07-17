@@ -150,7 +150,7 @@ Preconditions: 48
 
 ## 51. Add `chosko-llm channel` — point the managed clone at a branch to test unmerged work
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/cmd-channel.sh, bin/chosko-llm, scripts/auto-upgrade.sh, docs/cli-help.txt, README.md, .claude/context/cmd-channel.md, .claude/context/cli-entry.md, .claude/context/INDEX.md, VERSION
 Preconditions: none
