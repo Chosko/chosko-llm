@@ -44,8 +44,7 @@ case "$arg" in
     log_info "Fetching origin…"
     git -C "$CHOSKO_LLM_HOME" fetch --prune origin
     cur="$(current_branch)"
-    git -C "$CHOSKO_LLM_HOME" for-each-ref --format='%(refname:short)' refs/remotes/origin \
-      | sed 's#^origin/##' \
+    git -C "$CHOSKO_LLM_HOME" for-each-ref --format='%(refname:lstrip=3)' refs/remotes/origin \
       | grep -vx 'HEAD' \
       | sort -u \
       | while IFS= read -r b; do
