@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 51
+Last task number: 52
 
 ---
 
@@ -153,6 +153,15 @@ Preconditions: 48
 Status: [DONE]
 Target: claude
 Files: scripts/cmd-channel.sh, bin/chosko-llm, scripts/auto-upgrade.sh, docs/cli-help.txt, README.md, .claude/context/cmd-channel.md, .claude/context/cli-entry.md, .claude/context/INDEX.md, VERSION
+Preconditions: none
+
+---
+
+## 52. Add the unity-mcp-skill skill as a shipped feature
+
+Status: [MISSING]
+Target: claude
+Files: skills/unity-mcp-skill/SKILL.md, skills/unity-mcp-skill/references/tools-reference.md, skills/unity-mcp-skill/references/workflows.md, .claude/context/features.md, README.md, VERSION
 Preconditions: none
 
 ---
