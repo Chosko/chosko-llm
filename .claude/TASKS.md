@@ -159,7 +159,7 @@ Preconditions: none
 
 ## 52. Add the unity-mcp-skill skill as a shipped feature
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/unity-mcp-skill/SKILL.md, skills/unity-mcp-skill/references/tools-reference.md, skills/unity-mcp-skill/references/workflows.md, .claude/context/features.md, README.md, VERSION
 Preconditions: none

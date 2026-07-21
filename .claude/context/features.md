@@ -120,6 +120,20 @@ Currently shipped:
   across runs instead of being re-asked each time. Commits each task
   separately; `--no-commit` runs the full TDD sequence but skips the
   per-task commits, leaving every task's changes uncommitted.
+- `skills/unity-mcp-skill/` — a Unity-MCP operator guide vendored from
+  the upstream skill. `SKILL.md` carries the resource-first workflow,
+  core tool categories, and best-practice patterns for driving the Unity
+  editor over MCP; two supporting files under `references/` hold the
+  detailed material —  `tools-reference.md` (per-tool parameters and
+  examples) and `workflows.md` (extended scene/script/UI/camera/test
+  workflows). Frontmatter was reconciled to repo rules on vendoring:
+  `name: unity-mcp-skill` (the upstream `name` was
+  `unity-mcp-orchestrator`), plus the required `version` and `type: skill`;
+  body and description are otherwise verbatim. Complements the Unity story
+  already in the repo (`commands/unity-mcp-setup.md` and the
+  `skills/task-implement/unity-mcp-checkpoints.md` checkpoint flow) by
+  giving Claude a reusable reference when operating the editor via
+  `mcp__UnityMCP__*` tools.
 - `commands/task-list.md` — print the backlog as a compact read-only
   summary. Marks `claude+human` / `human` tasks with `⚠ <target>`. Reads
   only `.claude/TASKS.md`; never opens the body files.

@@ -161,6 +161,12 @@ versioned and shared; the Claude-side registration is machine-local (in
 `~/.claude.json`) and stays per-machine. `/project-setup` offers to run it on
 Unity projects.
 
+The repo also ships a `unity-mcp-skill` skill — a Unity-MCP operator guide
+(resource-first workflow, tool categories, and reference files for tool
+schemas and extended workflows) that Claude can lean on when driving the
+editor over the `UnityMCP` server. Install it like any other feature with
+`chosko-llm add skill:unity-mcp-skill`.
+
 ### Keep Claude oriented — `/context-build` and `/context-update`
 
 Build a *navigation layer*: small structured summaries that let future Claude Code sessions
