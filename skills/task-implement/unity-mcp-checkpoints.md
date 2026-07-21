@@ -32,7 +32,7 @@ let one answer settle the whole task:
 > this task can go two ways:
 >
 > **Automatic** — I make the changes in Unity Editor myself, then pause.
-> You verify.
+> You verify. It consumes more tokens.
 >
 > **Manual** — I pause at each checkpoint. You make the Unity changes
 > yourself. I verify.
