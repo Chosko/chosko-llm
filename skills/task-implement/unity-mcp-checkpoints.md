@@ -28,15 +28,21 @@ Eligibility does not force the enhanced mode. When you announce the
 checkpoints up front in Step 1, ask the user ONE plain-language question and
 let one answer settle the whole task:
 
-> This project has Unity MCP connected, so I can make the Unity Editor
-> changes myself and then have you verify them. Want me to do that, or
-> should I pause at each checkpoint and have you do the Unity steps
-> manually?
+> Unity MCP is connected for this project, so the manual checkpoints in
+> this task can go two ways:
+>
+> **Automatic** — I make the changes in Unity Editor myself, then pause.
+> You verify.
+>
+> **Manual** — I pause at each checkpoint. You make the Unity changes
+> yourself. I verify.
+>
+> Which would you like — **automatic** or **manual**?
 
-- If the user chooses manual (opt-out): ignore this file for the rest of
+- If the user chooses **manual** (opt-out): ignore this file for the rest of
   the task and follow the standard `./human-in-loop.md` protocol exactly —
   behave as if Unity MCP were not available.
-- If the user chooses to let Claude drive: apply the two behaviours below.
+- If the user chooses **automatic**: apply the two behaviours below.
 
 Deliver this question as its own turn (per the explain-first rule in
 `./human-in-loop.md` — do not bury it behind a tool call), and wait for the

@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 0.11.0
+version: 0.11.1
 type: skill
 description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits each task separately; pass --no-commit to skip the per-task commits. Supports `next` to implement the first eligible task. Honors a `Testing policy for /task-implement: skip-tests|full-tdd` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time.
 ---
