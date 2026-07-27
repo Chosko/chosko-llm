@@ -5,6 +5,12 @@ greenfield repo, or a new subsystem with no precedent to follow. On a project
 that already has a stack, skip it entirely and adopt what is there; the stack
 is not a decision that gets re-opened per feature.
 
+**If `.claude/domain/technical-direction.md` exists, this file does not
+apply.** That document is `/product-design`'s recorded technical direction
+for the whole product — it is a stack that exists, exactly like an
+established codebase, and `/architect` adopts it instead of running this
+file's candidate-and-recommend flow.
+
 ## The rule that comes first
 
 **An existing stack wins.** If the project has a language, framework,
@@ -85,7 +91,9 @@ The stack decision is **not** a feature. Record it where it belongs:
 If `product-design.md` does not exist (the bare-prompt path), record the
 decision at the top of the first feature document's Architecture section, and
 say in the closing report that the stack decision is currently recorded
-there and would be better placed in a product design document later.
+there and would be better placed in a product design document later —
+`technical-direction.md` is the better home once one exists, via a future
+`/product-design` run.
 
 ## What not to do
 

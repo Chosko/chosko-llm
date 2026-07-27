@@ -208,24 +208,36 @@ Currently shipped:
   Input is a `product-design.md` section, named features, or a bare
   free-form prompt (so it is usable on a codebase that never ran
   `/product-design`); with no argument it lists the design's features and
-  asks. PHASE 0 gates on `/domain-setup`, reads the design/feature/context
-  layers, and detects whether a stack exists; PHASE 0b is the iterate guard;
-  PHASE 1 clarifies (skipped when nothing is ambiguous, writing answers back
-  into `product-design.md`); PHASE 2 architects conversationally, top-down,
-  stopping at mid-to-high technical level — no code, no file-by-file plans,
-  those being `/task-add`'s output; PHASE 3 writes the documents, the
-  `FEATURES.md` entries, the INDEX rows, and any upstream design change.
-  Three supporting files load only on their branch: `iterating.md` (the
-  feature already has an entry), `tech-stack-selection.md` (no existing
-  stack — an existing stack always wins), `feature-doc-template.md` (PHASE
-  3, always). Writes `Status:` / `Doc:` / `Source:` in `FEATURES.md` and
-  never `Tasks:` — the by-line split that lets it share the file with
-  `/task-add`. The only writer of `[STALE]`: the iterate guard refuses
-  outright while any generated task is `[IN PROGRESS]` (no override), else
-  asks, then flips surviving non-`[DONE]` tasks to `[STALE]` and the feature
-  `[PLANNED]` → `[ITERATED]`. That guard is also the only reason it touches
+  asks. PHASE 0 gates on `/domain-setup`, reads the design/technical-
+  direction/feature/context layers, and detects whether a stack exists — a
+  present `technical-direction.md` counts as a stack that exists, exactly
+  like an established codebase, so PHASE 2a is skipped and
+  `tech-stack-selection.md` is never read on that path; PHASE 0b is the
+  iterate guard; PHASE 1 clarifies (skipped when nothing is ambiguous,
+  writing answers back into `product-design.md`); PHASE 2 architects
+  conversationally, top-down — when `technical-direction.md` exists it
+  designs within it and names the document in one line, and a genuine
+  mismatch is flagged once and designed around rather than silently
+  overridden (the remedy is re-running `/product-design`, never editing
+  the document) — stopping at mid-to-high technical level, no code, no
+  file-by-file plans, those being `/task-add`'s output; PHASE 3 writes the
+  documents, the `FEATURES.md` entries, the INDEX rows, and any upstream
+  design change. Three supporting files load only on their branch:
+  `iterating.md` (the feature already has an entry), `tech-stack-
+  selection.md` (no existing stack in either form — an existing stack
+  always wins), `feature-doc-template.md` (PHASE 3, always; its
+  Architecture section opens with a stack reference — "Built on <stack> per
+  the product design", naming `technical-direction.md` when that's the
+  source — rather than restating the choice). Writes `Status:` / `Doc:` /
+  `Source:` in `FEATURES.md` and never `Tasks:` — the by-line split that
+  lets it share the file with `/task-add`. The only writer of `[STALE]`:
+  the iterate guard refuses outright while any generated task is
+  `[IN PROGRESS]` (no override), else asks, then flips surviving
+  non-`[DONE]` tasks to `[STALE]` and the feature `[PLANNED]` →
+  `[ITERATED]`. That guard is also the only reason it touches
   `.claude/TASKS.md`, and it writes nothing there but `Status:` lines. Slugs
-  are stable and never renamed. **Authoring skill — nothing committed by
+  are stable and never renamed. Never writes `technical-direction.md` — that
+  is `/product-design`'s document. **Authoring skill — nothing committed by
   default; `--commit` stages exactly the written paths (including TASKS.md
   when the guard fired) in one commit.**
 - `skills/unity-mcp-skill/` — a Unity-MCP operator guide vendored from

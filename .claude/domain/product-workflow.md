@@ -25,7 +25,7 @@ that must agree on schema; this document is what they agree on.
 | --- | --- | --- | --- |
 | 0 — scaffold | `/domain-setup` | nothing | the domain layer + an empty `FEATURES.md` |
 | 1 — design | `/product-design` | the user, and the repo when brownfield | `product-design.md`, `technical-direction.md`, optional `business-model.md`, `design-process.md` |
-| 2 — architect | `/architect` | a high-level feature, or a bare prompt | `features/<slug>.md` + a `FEATURES.md` entry |
+| 2 — architect | `/architect` | a high-level feature, or a bare prompt, plus `technical-direction.md` when it exists | `features/<slug>.md` + a `FEATURES.md` entry |
 | 3 — plan | `/task-add feature=<slug>` | a feature doc | task bodies + `TASKS.md` entries |
 | 4 — build | `/task-implement` | a task body | code |
 
@@ -259,7 +259,7 @@ Exactly one writer per artifact, with `FEATURES.md` the deliberate exception.
 | `domain/INDEX.md` | `/domain-setup` creates it; `/product-design` and `/architect` register the docs they add |
 | `design-process.md` | `/product-design` |
 | `product-design.md` | `/product-design`; `/architect` writes back clarifications and architecture-driven changes |
-| `technical-direction.md` | `/product-design` |
+| `technical-direction.md` | `/product-design` owns it. `/architect` reads it and adopts it as the established stack when present, treating it exactly as an existing codebase stack — skipping tech-stack selection, referencing it from feature documents rather than restating it, and never writing to it. |
 | `business-model.md` | `/product-design` |
 | `features/<slug>.md` | `/architect` |
 | `FEATURES.md` | `/architect` owns entries, `Status:`, `Doc:`, `Source:`. `/task-add` owns `Tasks:` and the flip to `[PLANNED]`. `/task-clean` prunes dropped IDs from `Tasks:`. |

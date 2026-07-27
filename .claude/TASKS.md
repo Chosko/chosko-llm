@@ -384,7 +384,7 @@ Preconditions: none
 
 ## 77. Make /architect adopt technical-direction.md as the established stack
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/architect/SKILL.md, skills/architect/tech-stack-selection.md, .claude/domain/product-workflow.md, .claude/context/features.md, README.md, VERSION
 Preconditions: 76

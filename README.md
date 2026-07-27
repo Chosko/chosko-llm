@@ -306,10 +306,14 @@ writes that down as a low-level feature document under
 `.claude/domain/features/`, indexed in `.claude/FEATURES.md`. One product
 feature often becomes several architectural ones.
 
-It grounds the design in the code you already have (reading the context layer
-first), and proposes a tech stack only when there isn't one. It stops at
-components, data, and contracts — no code, no file-by-file plans. Those come
-from `/task-add`, which reads the code as it stands at planning time.
+It grounds the design in `technical-direction.md` when `/product-design` has
+recorded one, adopting it exactly like an existing codebase stack — no
+re-arguing it, no tech-stack proposal step, just a one-line note that it's
+designing within the recorded direction. Otherwise it grounds the design in
+the code you already have (reading the context layer first), and proposes a
+tech stack only when there isn't one either way. It stops at components,
+data, and contracts — no code, no file-by-file plans. Those come from
+`/task-add`, which reads the code as it stands at planning time.
 
 You can run it from a `/product-design` feature, from a feature name, or from
 a bare description with no design documents at all.

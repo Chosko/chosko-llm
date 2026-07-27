@@ -30,6 +30,11 @@ re-litigates whether this feature should also do X.>
 
 ## Architecture
 
+<Open with the stack reference, not a restated stack: "Built on <stack> per
+the product design" — naming `technical-direction.md` when the direction
+came from there, or the codebase itself when it didn't. Never re-argue the
+stack choice here; reference it.>
+
 <The components this feature needs and what each is responsible for. One
 subsection or bullet per component: its responsibility in a sentence, and
 how it relates to the others. Mid-to-high level — a component is a

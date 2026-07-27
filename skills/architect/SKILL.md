@@ -1,8 +1,8 @@
 ---
 name: architect
-version: 0.1.0
+version: 0.2.0
 type: skill
-description: Turn one or more high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md — the bridge between /product-design and /task-add. Grounds the architecture in the project's existing code, or proposes a tech stack when there isn't one. Runs from a product-design section, named features, or a bare prompt with no design documents at all. Re-architecting a feature that already has tasks triggers an iterate guard: refuses outright while any task is [IN PROGRESS], otherwise asks, then flips surviving tasks to [STALE] and the feature to [ITERATED]. Requires /domain-setup. Nothing committed by default; pass --commit to commit exactly the written paths.
+description: Turn one or more high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md — the bridge between /product-design and /task-add. Grounds the architecture in the project's recorded technical-direction.md or existing code, or proposes a tech stack when there is neither. Runs from a product-design section, named features, or a bare prompt with no design documents at all. Re-architecting a feature that already has tasks triggers an iterate guard: refuses outright while any task is [IN PROGRESS], otherwise asks, then flips surviving tasks to [STALE] and the feature to [ITERATED]. Requires /domain-setup. Nothing committed by default; pass --commit to commit exactly the written paths.
 ---
 
 # /architect
@@ -44,7 +44,7 @@ SUPPORTING FILES (read on demand — not up front)
 | Read this file | Exactly when |
 | -------------- | ------------ |
 | `./iterating.md` | PHASE 0 finds the target feature already has a `FEATURES.md` entry. Read before PHASE 0b. |
-| `./tech-stack-selection.md` | The project has NO existing tech stack (greenfield). Read at the start of PHASE 2. |
+| `./tech-stack-selection.md` | The project has NO existing tech stack AND no `technical-direction.md` (greenfield). Read at the start of PHASE 2. |
 | `./feature-doc-template.md` | PHASE 3, always — the feature-document schema and the `FEATURES.md` entry format. |
 
 Do not read a supporting file speculatively. The common path — a brownfield
@@ -91,12 +91,16 @@ Do not proceed and do not create the layer yourself. No exceptions.
 1. `.claude/domain/INDEX.md` — what domain knowledge exists.
 2. `.claude/domain/product-design.md`, if present — the high-level features
    and the decisions above them. Absent is fine: architect from the prompt.
-3. `.claude/FEATURES.md` — existing features, their statuses, their `Tasks:`
+3. `.claude/domain/technical-direction.md`, if present — the product's
+   recorded technical foundations: stack, topology, data, hosting,
+   protocols. Absent is fine: fall back to reading the stack off the code,
+   or to `./tech-stack-selection.md` on a genuinely greenfield project.
+4. `.claude/FEATURES.md` — existing features, their statuses, their `Tasks:`
    lines.
-4. `.claude/context/INDEX.md` and the context files relevant to the area
+5. `.claude/context/INDEX.md` and the context files relevant to the area
    under design, if a context layer exists. This is the cheapest route to
    the existing architecture — prefer it to reading source.
-5. Source files, only where the context layer is thin or absent and the
+6. Source files, only where the context layer is thin or absent and the
    design genuinely depends on how something currently works.
 
 **Resolve the target feature(s).** With no argument, list
@@ -105,10 +109,12 @@ names, match them; when a name matches nothing, say so and ask rather than
 guessing. Confirm the resolved list back to the user in one line before
 continuing.
 
-**Detect whether a stack exists.** Note, from what you read, whether this
-project already has a technology stack (language, framework, storage,
-delivery). This decides whether PHASE 2 reads
-`./tech-stack-selection.md`.
+**Detect whether a stack exists.** A present `technical-direction.md` counts
+as a stack that exists, exactly like an established codebase stack — note
+this and move on. Otherwise, note from what you read whether this project
+already has a technology stack (language, framework, storage, delivery).
+Either way, this decides whether PHASE 2 reads `./tech-stack-selection.md`:
+it does not, whenever a stack already exists in either form.
 
 **Check for existing entries.** For each target feature, look for a
 `FEATURES.md` entry. If any target already has one, read `./iterating.md`
@@ -166,10 +172,21 @@ PHASE 2 — ARCHITECT (conversational)
 **2a. Tech stack — only when the project has no existing stack.** Read
 `./tech-stack-selection.md` and follow it: propose candidate stacks with
 their trade-offs, tie each back to the product design, recommend one, and
-let the user choose. Skip this step entirely on a project that already has a
-stack — adopt what is there. Say in one line that you are doing so.
+let the user choose. Skip this step entirely whenever a stack already
+exists — a recorded `technical-direction.md`, or an established codebase
+stack — and adopt what is there. Say in one line that you are doing so.
 
-**2b. Architecture.** Work top-down, conversationally:
+**2b. Architecture.** Work top-down, conversationally. When
+`technical-direction.md` exists, design within it and say so in one line,
+naming the document ("Designing within the recorded technical direction —
+see technical-direction.md"). Treat it exactly as an existing codebase
+stack: adopted, not re-argued. If the feature genuinely doesn't fit what it
+records, flag the mismatch once as a concern, then design around it anyway
+— never silently override the direction and never edit
+`technical-direction.md` to resolve the mismatch; the remedy is telling the
+user to re-run `/product-design`.
+
+Then:
 
 1. Propose the shape — the components this feature needs, what each is
    responsible for, and how they talk. Where there is a real choice, present
@@ -286,6 +303,10 @@ DO NOT:
   `Source:` only.
 - Write `[PLANNED]`, or move a `[PLANNED]` feature back to `[NEW]`.
 - Edit source code. This skill designs and documents; it implements nothing.
+- Write or edit `technical-direction.md`. It is `/product-design`'s
+  document; this skill reads and adopts it, and a genuine mismatch is a
+  flagged concern designed around, never a reason to change it. The remedy
+  is re-running `/product-design`.
 - Rename a slug, or reuse one for a different feature. Slugs are stable
   identifiers, like task IDs.
 - Override the `[IN PROGRESS]` refusal in PHASE 0b — not on the user's
