@@ -101,6 +101,18 @@ Currently shipped:
   IDs and auto-wired `Preconditions:` in one run. `--no-split` always
   writes exactly one task. Auto-commits the written files (all parts in
   one commit for a split); `--no-commit` leaves them uncommitted.
+  With `feature=<slug>` it plans from an `/architect` feature document
+  instead of a prose description (stage 3 of the pipeline): resolves the slug
+  through `.claude/FEATURES.md`, reads the `Doc:` path as the primary context
+  source, inverts the split check (a design unit is usually several
+  implementation units), tags every new summary block `Feature: <slug>`, and
+  sets the entry's `Tasks:` and `Status: [PLANNED]` — never `Doc:` or
+  `Source:`. On a feature that already has tasks it RECONCILES under the same
+  single approval gate: leave-untouched / update-body-in-place (preferred; a
+  `[STALE]` task flips back to `[MISSING]`) / `[SKIP]`-and-replace, with
+  `[DONE]` never touched. Free-form text alongside the slug narrows scope;
+  the feature document is read-only. The free-form path is unchanged when
+  `feature=` is absent.
   Documents the two product-pipeline additions to the backlog schema: the
   optional `Feature: <slug>` summary-block line (feature-derived tasks
   only; absent, not `none`, on free-form ones) and the `[STALE]` status

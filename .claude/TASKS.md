@@ -222,7 +222,7 @@ Preconditions: 54, 57
 
 ## 59. Teach /task-add to author and reconcile tasks from a feature doc via feature=<slug>
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-add.md, .claude/domain/task-workflow.md, .claude/context/features.md, README.md, VERSION
 Preconditions: 54, 58

@@ -1,8 +1,8 @@
 ---
 name: task-add
-version: 0.10.0
+version: 0.11.0
 type: command
-description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass --enrich to produce a self-contained body for a local LLM in one shot, --no-split to always write exactly one task, or --no-commit to write the files but skip the commit.
+description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, and setting the feature [PLANNED]. Pass --enrich to produce a self-contained body for a local LLM in one shot, --no-split to always write exactly one task, or --no-commit to write the files but skip the commit.
 ---
 
 # /task-add
@@ -11,15 +11,28 @@ description: Plan a new task entry conversationally, confirm with the user, writ
 # `.claude/tasks/<N>.md`. Refuses to run if the backlog has not been
 # initialized — the user must run `/task-setup` first. May propose
 # splitting the description into multiple tasks when that produces better
-# units; pass `--no-split` to always get exactly one task.
+# units; pass `--no-split` to always get exactly one task. With
+# `feature=<slug>`, plans from a `/architect` feature document instead of a
+# prose description, and reconciles tasks that feature already generated.
 # Usage: /task-add [--enrich] [--no-split] [--no-commit] <free-form description of the task>
+#        /task-add feature=<slug> [--enrich] [--no-split] [--no-commit] [scope-narrowing text]
 # Example: /task-add fix the URL normalization so two LinkedIn URLs dedupe
 # Example: /task-add --enrich add CSV export command
 # Example: /task-add --no-split add CSV export and PDF export commands
+# Example: /task-add feature=session-handling
+# Example: /task-add feature=user-profile just the avatar upload
 
 GOAL
 Add one or more new tasks to the project's task backlog. The flow is:
 SETUP-CHECK → READ → SPLIT-CHECK → ASK → DRAFT → CONFIRM → WRITE → COMMIT.
+
+Two input modes share that flow:
+
+- **Free-form** (the default) — a prose description of the work. Unchanged
+  in every respect by the feature mode below.
+- **Feature** (`feature=<slug>`) — plan from the low-level feature document
+  `/architect` wrote, and reconcile any tasks that feature already
+  generated. This is stage 3 of the product pipeline.
 
 By default, the body contains: Goal, Acceptance criteria, Decisions (when
 applicable), and Hints. Claude navigates the project at implementation time
@@ -46,6 +59,42 @@ Also scan for the optional `--no-split` flag (independent of `--enrich` and
 strip it; PHASE 1.5 is skipped entirely and exactly one task is always
 written. When NO_SPLIT is false (the default), PHASE 1.5 considers whether
 a split would produce better units.
+
+Finally, scan for an optional `feature=<slug>` argument. If present, set
+FEATURE = the slug and strip it; it composes with all three flags above.
+Whatever free-form text remains is NOT the task description in this mode —
+it narrows or annotates the scope (`feature=user-profile just the avatar
+upload`), and the feature document stays the primary source. When FEATURE
+is unset, every phase behaves exactly as it always has: no feature
+resolution, no reconciliation, no `Feature:` line, no new prompts.
+
+---
+
+FEATURE RESOLUTION (only when FEATURE is set)
+
+Do this immediately after PHASE 0's setup check, before PHASE 1.
+
+1. Read `.claude/FEATURES.md`. If it does not exist, stop:
+
+   > This project has no feature index (`.claude/FEATURES.md`). Run
+   > `/domain-setup` to create the domain layer, then `/architect` to
+   > design a feature — `feature=<slug>` plans from what `/architect`
+   > writes. (Plain `/task-add <description>` works without any of that.)
+
+2. Find the entry whose slug is `<slug>`. If there is none, stop, listing
+   the slugs that do exist so the user can correct a typo without going
+   to look:
+
+   > No feature `<slug>` in `.claude/FEATURES.md`. Available: `<slug-a>`,
+   > `<slug-b>`, `<slug-c>`.
+
+3. Read the path on the entry's `Doc:` line — that document is PHASE 1's
+   primary input. If the path does not resolve, stop and say so; the index
+   and the domain layer disagree and the user should look.
+
+4. Note the entry's `Status:` and its `Tasks:` line. A non-`none` `Tasks:`
+   line means this feature has been planned before, so this run
+   RECONCILES rather than appends — see PHASE 3.
 
 ---
 
@@ -234,6 +283,24 @@ PHASE 1 — READ (silent)
    - The current `Last task number: N` value — new task ID = N + 1.
    - Title style in existing tasks — match it.
 
+1b. **When FEATURE is set**, read the feature document resolved above and
+   treat it as the PRIMARY context source — the way `/task-implement`
+   treats a task body. It already contains the purpose, scope and
+   non-goals, architecture, data and state, interfaces, dependencies, and
+   open questions. Fan out to CLAUDE.md, `.claude/context/`, and other
+   `.claude/domain/` files only where the document does not cover what you
+   need; do not re-derive from source what the document already states.
+
+   Then, if the entry's `Tasks:` line is non-`none`, read each listed
+   task's TASKS.md summary block AND its `.claude/tasks/<N>.md` body. You
+   cannot classify a task you have not read, and PHASE 3 must classify
+   every one of them. IDs that resolve to no task are ignored, not an
+   error — `/task-clean` normally prunes them.
+
+   Any free-form text alongside `feature=<slug>` narrows the scope: it
+   selects which parts of the document this run plans, or adds a
+   constraint. It does not replace the document.
+
 2. Read enough of the codebase to ground the task:
    - Use Grep / Glob / Read to confirm which files the task will touch.
    - Read CLAUDE.md and relevant `.claude/context/` files for the area
@@ -274,6 +341,15 @@ because a single task covering it would simply be too large/sprawling to
 implement, test, and commit as one coherent unit. This is a judgment call,
 not a rule: most descriptions are fine as one task, and this step should
 stay silent for them.
+
+**When FEATURE is set, the calculus inverts.** A feature document describes
+a unit of *design*, which is usually several units of *implementation* — so
+weigh the document's own structure: distinct components, separable
+interfaces, and independently deliverable slices of its architecture
+normally each become a task. Proposing a single task for a whole feature is
+the exception, appropriate for a small feature. Use the document's
+structure as the seam, not an arbitrary count. `--no-split` still forces
+exactly one task, in this mode as in any other.
 
 If a split is NOT warranted: say nothing about splitting and continue
 straight to PHASE 2 with the single, original description (SPLIT = none).
@@ -320,6 +396,20 @@ Q&A round per part.
 ---
 
 PHASE 3 — DRAFT (present for confirmation)
+
+**When FEATURE is set**, open the plan by naming the source above the
+drafts, so it is obvious what the tasks were derived from:
+
+```
+Source feature: <slug> — <title from the FEATURES.md entry>
+Doc:            .claude/domain/features/<slug>.md
+Feature status: [NEW] → [PLANNED]        (or [ITERATED] → [PLANNED])
+Scope note:     <the free-form narrowing text, if any>
+```
+
+Then, when that feature already has tasks, render a RECONCILIATION section
+BEFORE the new drafts (see RECONCILIATION below). One approval covers the
+reconciliation and the new tasks together — there is no second gate.
 
 When SPLIT is none (the common case), render the single-task plan exactly
 as before:
@@ -418,6 +508,56 @@ not approval.
 
 ---
 
+RECONCILIATION (only when FEATURE is set and its `Tasks:` line is non-`none`)
+
+A re-planning run must not append blindly — that reliably produces
+overlapping work. Classify EVERY existing task read in PHASE 1b, and
+present the classification in PHASE 3 with a one-line reason each:
+
+| Situation | Action |
+| --- | --- |
+| Still valid under the new design | Left untouched. No edit at all. |
+| Needs minor change, and is `[STALE]` or `[MISSING]` | Body updated in place. A `[STALE]` task flips back to `[MISSING]`. |
+| Substantially invalidated | Marked `[SKIP]` with a reason, and a replacement task drafted. |
+| `[DONE]` | Never modified, skipped, or reopened. |
+
+**Prefer update-in-place.** Whenever the task's goal survives the design
+change, rewriting the body is cheaper than skip-and-replace: nothing has
+been implemented yet, and the backlog stays free of dead `[SKIP]` entries
+that future readers have to interpret. Reserve skip-and-replace for tasks
+whose goal no longer survives at all.
+
+Which of the two applies is a judgment call about how much of the task
+remains — the criteria above are the criteria; there is no mechanical rule
+and no line count. State the reason for each call so the user can overrule
+it in the same approval.
+
+**`[DONE]` is untouchable.** Completed work stands regardless of what the
+design did afterwards. If the new design needs more from an area a `[DONE]`
+task covered, that is a NEW task, not a reopened one. Never flip a `[DONE]`
+task to `[SKIP]`, `[STALE]`, `[MISSING]`, or anything else.
+
+Render it like this:
+
+```
+RECONCILIATION — feature <slug> has 4 existing tasks
+
+  12. [DONE]     <title>
+      → untouched. Completed work; the new design doesn't change it.
+  13. [MISSING]  <title>
+      → untouched. Still valid — the interface it builds is unchanged.
+  14. [STALE]    <title>
+      → body updated in place, back to [MISSING]. The goal survives; the
+        component it targets was renamed and its contract narrowed.
+  15. [MISSING]  <title>
+      → [SKIP] ("superseded: the design no longer has a separate cache
+        layer"), replaced by new task <N+2> below.
+```
+
+Then the new drafts, then the single **"Approve and write?"**.
+
+---
+
 PHASE 4 — WRITE (only after explicit approval)
 
 Single-task case (SPLIT is none):
@@ -445,6 +585,39 @@ Split case (SPLIT is set, k parts):
    error; stop and report.
 
 3. Report: all task IDs written, all paths, counter advanced by k.
+
+Feature case (FEATURE is set) — in addition to the above:
+
+1. Every new summary block carries `Feature: <slug>` as its last field.
+   Existing tasks being updated in place already have it; do not add it to
+   a task that lacks it unless that task belongs to this feature.
+
+2. Every new body's `## Goal` names the originating feature, and its
+   document path appears under `## Hints` — the implementer should be able
+   to reach the design from the task without being told the slug
+   separately.
+
+3. Apply the approved reconciliation, and nothing beyond it:
+   - Rewrite the body of each task classified "update in place", and flip a
+     `[STALE]` one back to `[MISSING]` in TASKS.md.
+   - Set each "substantially invalidated" task's `Status:` to `[SKIP]`, and
+     record the one-line reason from the plan in its body so a later reader
+     knows why. The replacement task is written as a new task.
+   - Touch nothing on a task classified "untouched", and nothing at all on
+     a `[DONE]` task.
+
+4. Update the feature's entry in `.claude/FEATURES.md`, writing exactly two
+   fields:
+   - `Tasks:` — the surviving IDs plus the newly created ones, ascending.
+     Drop the IDs of tasks this run marked `[SKIP]`; keep `[DONE]` IDs.
+   - `Status:` — `[PLANNED]`, from either `[NEW]` or `[ITERATED]`.
+
+   Never write `Doc:` or `Source:` — those are `/architect`'s fields, and
+   the by-line split is what lets the two commands share this file.
+
+5. Do NOT edit `.claude/domain/features/<slug>.md`. The feature document is
+   read-only to this command; if planning revealed a genuine design
+   problem, say so in the report and let the user re-run `/architect`.
 
 Continue to PHASE 5.
 
@@ -477,6 +650,15 @@ Otherwise (the default):
    git commit -m "Add tasks <N>-<N+k-1>: <short summary of the split>"
    ```
 
+   Feature case — additionally stage `.claude/FEATURES.md`, plus the body
+   file of every existing task the reconciliation rewrote:
+   ```
+   git add -- .claude/TASKS.md .claude/FEATURES.md .claude/tasks/<N>.md ...
+   git commit -m "Plan feature <slug>: tasks <N>-<M>"
+   ```
+   The backlog change and the feature entry only make sense together, so
+   they belong in one commit. Explicit paths only, as always.
+
 2. On success, report the commit hash (`git rev-parse --short HEAD`).
 
 3. On failure: surface the exact output. Do NOT retry, amend, or use
@@ -507,3 +689,14 @@ DO NOT:
 - Bundle multiple commits for a split — PHASE 5 makes exactly one commit
   covering all parts.
 - Run PHASE 1.5 at all when `--no-split` is passed.
+- Edit `.claude/domain/features/<slug>.md`, or any other domain document.
+  They are read-only here; `/architect` owns them.
+- Write `Doc:` or `Source:` in a `.claude/FEATURES.md` entry. This command
+  writes `Tasks:` and `Status:` only.
+- Modify, skip, reopen, or re-status a `[DONE]` task during reconciliation.
+  Follow-up work is a new task.
+- Add a `Feature:` line to a task that did not come from that feature, or
+  write `Feature: none` on a free-form task — its absence is the signal.
+- Change any behavior of the free-form path when `feature=` is absent. The
+  feature mode is additive; a plain `/task-add <description>` run must be
+  indistinguishable from before.

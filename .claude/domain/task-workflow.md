@@ -200,6 +200,49 @@ this contract: the `FEATURES.md` schema, the feature status machine, the
 iterate guard that writes `[STALE]`, and the reconciliation protocol that
 resolves it.
 
+## Feature-derived tasks (`/task-add feature=<slug>`)
+
+`/task-add` has two input modes. The free-form mode takes a prose
+description and is unchanged by any of this. The feature mode takes
+`feature=<slug>`, resolves it through `.claude/FEATURES.md`, and plans from
+the low-level feature document `/architect` wrote — treating that document as
+the primary context source, the way `/task-implement` treats a task body.
+Free-form text alongside the slug narrows scope; it does not replace the
+document. Both modes compose with `--enrich`, `--no-split`, and
+`--no-commit`.
+
+Because a feature document describes a unit of *design*, the split check
+inverts: distinct components and independently deliverable slices of its
+architecture normally each become a task, and one task for a whole feature is
+the exception.
+
+Feature-derived tasks differ from free-form ones in three ways: their summary
+block carries `Feature: <slug>`, their body's `## Goal` names the originating
+feature with its document path under `## Hints`, and the run updates the
+feature's `FEATURES.md` entry — `Tasks:` and `Status: [PLANNED]`, never
+`Doc:` or `Source:`.
+
+### Reconciliation
+
+A feature whose `Tasks:` line is non-`none` has been planned before, so a
+re-planning run reconciles instead of appending. Every existing task is
+classified, and the classification is presented under PHASE 3's existing
+single approval gate:
+
+| Situation | Action |
+| --- | --- |
+| Still valid under the new design | Left untouched. |
+| Needs minor change, and is `[STALE]` or `[MISSING]` | Body updated in place; a `[STALE]` task flips back to `[MISSING]`. |
+| Substantially invalidated | Marked `[SKIP]` with a reason; a replacement is drafted. |
+| `[DONE]` | Never modified, skipped, or reopened. |
+
+Update-in-place is preferred whenever the task's goal survives the design
+change: nothing has been implemented, so rewriting the body is cheaper and
+keeps the backlog free of dead `[SKIP]` entries. Which applies is a judgment
+call about how much of the task remains — there is no mechanical rule.
+
+The feature document itself is read-only to `/task-add`.
+
 ## Split suggestion (`/task-add`)
 
 Between PHASE 1 READ and PHASE 2 ASK, `/task-add` considers whether the

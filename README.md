@@ -244,6 +244,7 @@ tasks. The core idea is to spend more focus in planning and writing down tasks, 
 
 - `/task-setup` — initialize the backlog.
 - `/task-add` — plan a task and write it down. This is the real strength of this workflow: invoke the command with a very short description, let Claude Code investigate and expand it, in a conversational way. Claude will ask every question needed to fill the gaps, then it will write everything down for further implementation. It may propose splitting the description into several tasks when that gives better units (independent deliverables, or one task that's too large) — pass `--no-split` to always get exactly one task.
+- `/task-add feature=<slug>` — plan from an `/architect` feature document instead of a description. The document is the input, so you don't re-explain the work in prose; a feature usually becomes several tasks. Run it again after re-architecting and it *reconciles* rather than duplicating: each existing task is either left alone, updated in place, or skipped with a reason and replaced — and `[DONE]` tasks are never touched. You approve the whole plan, reconciliation included, in one pass.
 - `/task-list` — show what's pending.
 - `/task-implement` — build a task end-to-end, test-first, one commit each.
 - `/task-clean` — prune finished tasks.
