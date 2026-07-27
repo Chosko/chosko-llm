@@ -60,6 +60,20 @@ Currently shipped:
   auto-commits the context files it updated (explicit paths only; no commit
   when nothing changed). Joins the auto-committing group with `/task-add`
   and `/task-clean`. `--no-commit` leaves the updates uncommitted.
+- `commands/domain-setup.md` — initialize the domain knowledge layer, the
+  way `/task-setup` initializes the backlog: `.claude/domain/`,
+  `.claude/domain/features/`, a `.claude/domain/INDEX.md` whose
+  `| File | Covers |` table matches the context INDEX's shape, the
+  `.claude/FEATURES.md` stub (a `.claude/` root sibling of `TASKS.md`,
+  because it indexes work items — the feature *documents* live in the
+  domain layer), and a CLAUDE.md pointer at the domain index that composes
+  with `/context-build`'s context-layer pointer instead of replacing it.
+  Idempotent, probe-per-artifact; on a project with hand-written domain
+  docs it indexes them (heading + opening paragraph → the "Covers" cell)
+  rather than writing an empty index. Creates the layer and nothing in it —
+  design documents and feature entries belong to `/product-design` and
+  `/architect`. **Authoring command — leaves its scaffolding uncommitted
+  by default; `--commit` stages exactly the `WRITTEN` paths in one commit.**
 - `commands/task-setup.md` — initialize the backlog: `.claude/TASKS.md`
   stub, `.claude/tasks/` directory, and `.claude/external/implement-prompt.md`
   (the static system prompt fed to an external LLM via aider). Required

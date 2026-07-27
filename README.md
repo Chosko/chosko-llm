@@ -184,6 +184,20 @@ first failure.
 - `/refactor-codebase` — constants, duplication, oversized files, imports, naming.
 - `/refactor-tests` — split bloated test files.
 
+### Set up the domain layer — `/domain-setup`
+
+Scaffolds `.claude/domain/`, the counterpart to the context layer: where the
+context layer records *codebase structure*, the domain layer records what the
+product is, how its features are designed, and why. `/domain-setup` creates
+the directory, a `features/` folder, a domain `INDEX.md`, the
+`.claude/FEATURES.md` feature index, and a `CLAUDE.md` pointer — then stops.
+It never writes design documents; those come from `/product-design` and
+`/architect`.
+
+Idempotent and safe to run on an existing project: if you already have
+hand-written docs under `.claude/domain/`, it indexes them instead of
+replacing them.
+
 ### Work through a backlog — the `task-*` commands
 
 A lightweight, in-repo issue tracker. Work is captured as small, reviewable

@@ -186,7 +186,7 @@ Preconditions: 53
 
 ## 55. Add /domain-setup — scaffold the domain knowledge layer and the FEATURES.md index
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/domain-setup.md, .claude/context/features.md, README.md, VERSION
 Preconditions: 53
