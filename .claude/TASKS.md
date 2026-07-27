@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 77
+Last task number: 78
 
 ---
 
@@ -388,5 +388,14 @@ Status: [MISSING]
 Target: claude
 Files: skills/architect/SKILL.md, skills/architect/tech-stack-selection.md, .claude/domain/product-workflow.md, .claude/context/features.md, README.md, VERSION
 Preconditions: 76
+
+---
+
+## 78. Sweep the conversation for uncaptured design detail at the end of /product-design PHASE 3
+
+Status: [MISSING]
+Target: claude
+Files: skills/product-design/SKILL.md, .claude/context/features.md, .claude/domain/product-workflow.md, README.md, VERSION
+Preconditions: none
 
 ---
