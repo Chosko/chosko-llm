@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 75
+Last task number: 77
 
 ---
 
@@ -370,5 +370,23 @@ Status: [MISSING]
 Target: claude
 Files: skills/task-implement/SKILL.md, scripts/cmd-task-impl.sh, scripts/check-task-parity.sh, .claude/domain/task-workflow.md, README.md, VERSION
 Preconditions: 68
+
+---
+
+## 76. Add a technical-direction phase and write-back to /product-design
+
+Status: [MISSING]
+Target: claude
+Files: skills/product-design/SKILL.md, skills/product-design/technical-direction.md, skills/product-design/document-templates.md, skills/product-design/resuming.md, commands/domain-setup.md, .claude/domain/product-workflow.md, .claude/context/features.md, README.md, VERSION
+Preconditions: none
+
+---
+
+## 77. Make /architect adopt technical-direction.md as the established stack
+
+Status: [MISSING]
+Target: claude
+Files: skills/architect/SKILL.md, skills/architect/tech-stack-selection.md, .claude/domain/product-workflow.md, .claude/context/features.md, README.md, VERSION
+Preconditions: 76
 
 ---
