@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 52
+Last task number: 61
 
 ---
 
@@ -163,5 +163,86 @@ Status: [DONE]
 Target: claude
 Files: skills/unity-mcp-skill/SKILL.md, skills/unity-mcp-skill/references/tools-reference.md, skills/unity-mcp-skill/references/workflows.md, .claude/context/features.md, README.md, VERSION
 Preconditions: none
+
+---
+
+## 53. Author the product-workflow domain doc — the design→architecture→task pipeline contract
+
+Status: [MISSING]
+Target: claude
+Files: .claude/domain/product-workflow.md, .claude/context/INDEX.md, CLAUDE.md, VERSION
+Preconditions: none
+
+---
+
+## 54. Extend the backlog schema — the [STALE] status and the Feature: slug line
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-add.md, commands/task-list.md, commands/task-clean.md, commands/task-setup.md, skills/task-implement/SKILL.md, scripts/check-task-parity.sh, scripts/cmd-task-impl.sh, .claude/domain/task-workflow.md, .claude/context/cmd-task-impl.md, .claude/context/features.md, README.md, VERSION
+Preconditions: 53
+
+---
+
+## 55. Add /domain-setup — scaffold the domain knowledge layer and the FEATURES.md index
+
+Status: [MISSING]
+Target: claude
+Files: commands/domain-setup.md, .claude/context/features.md, README.md, VERSION
+Preconditions: 53
+
+---
+
+## 56. Wire /domain-setup into the /project-setup wizard
+
+Status: [MISSING]
+Target: claude
+Files: commands/project-setup.md, .claude/context/features.md, VERSION
+Preconditions: 55
+
+---
+
+## 57. Add the /product-design skill — resumable high-level product and business-model design
+
+Status: [MISSING]
+Target: claude
+Files: skills/product-design/SKILL.md, skills/product-design/document-templates.md, skills/product-design/business-model.md, skills/product-design/resuming.md, .claude/context/features.md, README.md, VERSION
+Preconditions: 53, 55
+
+---
+
+## 58. Add the /architect skill — turn high-level features into low-level feature docs
+
+Status: [MISSING]
+Target: claude
+Files: skills/architect/SKILL.md, skills/architect/tech-stack-selection.md, skills/architect/feature-doc-template.md, skills/architect/iterating.md, .claude/context/features.md, README.md, VERSION
+Preconditions: 54, 57
+
+---
+
+## 59. Teach /task-add to author and reconcile tasks from a feature doc via feature=<slug>
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-add.md, .claude/domain/task-workflow.md, .claude/context/features.md, README.md, VERSION
+Preconditions: 54, 58
+
+---
+
+## 60. Teach /task-clean to prune pruned task IDs from FEATURES.md
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-clean.md, .claude/context/features.md, VERSION
+Preconditions: 59
+
+---
+
+## 61. Document the product pipeline end-to-end in README and the authoring guide
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/authoring-guide.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION
+Preconditions: 60
 
 ---
