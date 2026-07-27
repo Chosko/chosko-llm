@@ -19,7 +19,8 @@ Helper logic lives in `scripts/lib-task-external.sh` (sourced alongside
 CLI:
 - `chosko-llm task-impl <N> [<N>…]` — implement those task numbers in order.
 - `chosko-llm task-impl all` — every task whose status is `[MISSING]` /
-  `[STUBBED]` / `[INCORRECT]` / `[PARTIAL]`, in document order.
+  `[STUBBED]` / `[INCORRECT]` / `[PARTIAL]`, in document order. `[STALE]` is
+  outside the allowlist, so `all` never selects one.
 - `--model <name>` / `--retries <N>` / `--map-tokens <N>` — aider knobs
   (also via `CHOSKO_TASK_IMPL_MODEL` / `_RETRIES` / `_AIDER_MAP_TOKENS`).
 - `--help` (anywhere in argv) — usage, exit 0.
@@ -27,9 +28,9 @@ CLI:
 Env: `CHOSKO_TASK_IMPL_AIDER` (aider executable), plus the three above.
 
 Exit codes: 2 on usage error (no tasks / unknown flag); 1 (via `die`) on a
-missing backlog, missing external artifacts, missing aider, a corrupt task,
-or a task that won't go green within the retry budget; 0 when all requested
-tasks complete.
+missing backlog, missing external artifacts, missing aider, a corrupt task, an
+explicitly requested `[STALE]` task, or a task that won't go green within the
+retry budget; 0 when all requested tasks complete.
 
 ## Internal patterns
 
@@ -50,6 +51,13 @@ tasks complete.
   staging explicit paths only.
 - **Clean-tree gate per task** (`require_clean_tree`) mirrors the
   `/task-implement` pre-flight.
+- **`[STALE]` is refused, not skipped.** The implementable-status allowlist
+  (the `resolve_all` awk selection plus the per-task `case` in
+  `implement_one`) excludes `[STALE]`; an explicitly requested stale ID
+  `die`s with the feature slug from its `Feature:` line and a pointer to
+  `/task-add feature=<slug>`. Interactive `/task-implement` may implement one
+  on the user's say-so — the asymmetry is deliberate, since an external LLM
+  cannot judge a superseded design.
 
 ## Domain dependencies
 

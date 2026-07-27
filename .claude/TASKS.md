@@ -177,7 +177,7 @@ Preconditions: none
 
 ## 54. Extend the backlog schema — the [STALE] status and the Feature: slug line
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-add.md, commands/task-list.md, commands/task-clean.md, commands/task-setup.md, skills/task-implement/SKILL.md, scripts/check-task-parity.sh, scripts/cmd-task-impl.sh, .claude/domain/task-workflow.md, .claude/context/cmd-task-impl.md, .claude/context/features.md, README.md, VERSION
 Preconditions: 53

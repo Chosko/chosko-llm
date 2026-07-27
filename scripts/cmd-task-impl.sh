@@ -129,7 +129,9 @@ fi
 
 resolve_all() {
   # Print task numbers in document order whose status is one of
-  # MISSING / STUBBED / INCORRECT / PARTIAL.
+  # MISSING / STUBBED / INCORRECT / PARTIAL. [STALE] is deliberately not
+  # implementable here: the design the task was generated from has changed,
+  # and an external LLM cannot judge whether the task still applies.
   awk '
     /^## [0-9]+\. / {
       num = $2; sub(/\./, "", num)
@@ -160,7 +162,7 @@ resolve_all() {
 
 if [ "${TASKS[0],,}" = "all" ]; then
   mapfile -t TASKS < <(resolve_all)
-  [ "${#TASKS[@]}" -gt 0 ] || die "No implementable tasks (MISSING/STUBBED/INCORRECT/PARTIAL) in backlog."
+  [ "${#TASKS[@]}" -gt 0 ] || die "No implementable tasks (MISSING/STUBBED/INCORRECT/PARTIAL) in backlog. [STALE] tasks are excluded — reconcile them with /task-add feature=<slug> first."
   log_info "Will implement (in order): ${TASKS[*]}"
 fi
 
@@ -217,6 +219,15 @@ implement_one() {
 
   case "$status" in
     "[MISSING]"|"[STUBBED]"|"[INCORRECT]"|"[PARTIAL]") ;;
+    "[STALE]")
+      # Refuse rather than skip: the feature this task came from was
+      # re-architected, so the spec may no longer be correct. Interactive
+      # /task-implement lets a human decide; this orchestrator cannot.
+      local feature
+      feature="$(task_field "$n" Feature || true)"
+      [ -n "$feature" ] || feature="<unknown>"
+      die "Task $n is [STALE] — the design of feature '$feature' changed since the task was written. Reconcile it with /task-add feature=$feature (or implement it interactively via /task-implement) before running task-impl."
+      ;;
     *)
       log_warn "Task $n status is $status; skipping."
       return 0

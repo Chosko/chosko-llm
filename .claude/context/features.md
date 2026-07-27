@@ -82,7 +82,15 @@ Currently shipped:
   IDs and auto-wired `Preconditions:` in one run. `--no-split` always
   writes exactly one task. Auto-commits the written files (all parts in
   one commit for a split); `--no-commit` leaves them uncommitted.
-- `commands/task-clean.md` — prune terminal-status tasks. Removes summary
+  Documents the two product-pipeline additions to the backlog schema: the
+  optional `Feature: <slug>` summary-block line (feature-derived tasks
+  only; absent, not `none`, on free-form ones) and the `[STALE]` status
+  (set by `/architect`, never by `/task-add`; resolved by
+  `/task-add feature=<slug>` reconciliation).
+- `commands/task-clean.md` — prune terminal-status tasks. Terminal means
+  `[DONE]` and `[SKIP]` and nothing else — `[STALE]` is live work awaiting
+  reconciliation and is never pruned by default (naming it explicitly
+  warns and confirms). Removes summary
   blocks AND deletes the matching body files. Never renumbers — task IDs
   are stable across the project's lifetime; the `Last task number`
   counter never decreases. After applying, commits the changes
@@ -117,7 +125,11 @@ Currently shipped:
   no-op (standard manual protocol) when MCP isn't connected. Honors a `Testing policy for /task-implement:
   skip-tests|full-tdd` marker in a project's CLAUDE.md (checked before
   heuristic test-suite detection) so a no-test-suite decision persists
-  across runs instead of being re-asked each time. Commits each task
+  across runs instead of being re-asked each time. On a `[STALE]` task it
+  warns naming the originating feature and offers implement-anyway or stop
+  (`all` / `next` skip stale tasks and report them, rather than deciding
+  for the user) — the interactive counterpart to `chosko-llm task-impl`
+  refusing a stale task outright. Commits each task
   separately; `--no-commit` runs the full TDD sequence but skips the
   per-task commits, leaving every task's changes uncommitted.
 - `skills/unity-mcp-skill/` — a Unity-MCP operator guide vendored from
@@ -135,8 +147,10 @@ Currently shipped:
   giving Claude a reusable reference when operating the editor via
   `mcp__UnityMCP__*` tools.
 - `commands/task-list.md` — print the backlog as a compact read-only
-  summary. Marks `claude+human` / `human` tasks with `⚠ <target>`. Reads
-  only `.claude/TASKS.md`; never opens the body files.
+  summary. Marks `claude+human` / `human` tasks with `⚠ <target>`, shows
+  `[<slug>]` for tasks with a `Feature:` line, and appends `⚠ stale` to
+  `[STALE]` tasks. Reads only `.claude/TASKS.md`; never opens the body
+  files.
 - `commands/task-enrich.md` — expand a thin (`target: claude`) task body
   into an enriched self-contained body (`target: local`) for a local LLM
   implementer. Appends `## Context bundle` and `## Implementation steps`

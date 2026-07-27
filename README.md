@@ -204,6 +204,16 @@ the manual step, and verifies the outcome itself (the promised file exists,
 the project compiles) before moving on — saying "done" isn't enough.
 `/task-list` marks these tasks with a ⚠ so you know they need you present.
 
+Tasks generated from a feature document carry a `Feature: <slug>` line and
+can go **stale**: if the feature is re-architected afterwards, its unfinished
+tasks are flipped to `[STALE]`, meaning the spec may no longer match the
+design. Stale tasks are never pruned by `/task-clean` — they're live work
+awaiting reconciliation, normally by re-running `/task-add feature=<slug>`.
+`/task-implement` warns before starting one and lets you implement it anyway
+or stop; `all` and `next` skip them so a batch run never guesses. The
+`chosko-llm task-impl` CLI refuses them outright, since a local model can't
+judge whether a superseded design still applies.
+
 On a Unity project set up with [`/unity-mcp-setup`](#set-up-unity-mcp--unity-mcp-setup),
 those checkpoints can flip around: when the `UnityMCP` server is connected,
 `/task-implement` makes the editor changes itself — checking the Console

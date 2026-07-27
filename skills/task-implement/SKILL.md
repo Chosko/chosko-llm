@@ -1,8 +1,8 @@
 ---
 name: task-implement
-version: 0.11.1
+version: 0.12.0
 type: skill
-description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits each task separately; pass --no-commit to skip the per-task commits. Supports `next` to implement the first eligible task. Honors a `Testing policy for /task-implement: skip-tests|full-tdd` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time.
+description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits each task separately; pass --no-commit to skip the per-task commits. Supports `next` to implement the first eligible task. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time.
 ---
 
 # /task-implement
@@ -82,18 +82,26 @@ After stripping the flag, `$ARGUMENTS` is one of:
 - The literal token `all` (case-insensitive) — implement every task in the
   backlog whose current status is `[MISSING]`, `[STUBBED]`, `[INCORRECT]`,
   or `[PARTIAL]`, in the order they appear in the file. Skip tasks whose
-  status is `[DONE]`, `[SKIP]`, or `[IN PROGRESS]`. After resolving the
-  list, report it to the user as a one-line summary ("Will implement: 3,
-  7, 12 (5 tasks skipped: 1 DONE, 1 IN PROGRESS, 3 SKIP)") and proceed
-  without asking for confirmation — the user already chose `all`.
+  status is `[DONE]`, `[SKIP]`, `[IN PROGRESS]`, or `[STALE]`. After
+  resolving the list, report it to the user as a one-line summary ("Will
+  implement: 3, 7, 12 (5 tasks skipped: 1 DONE, 1 IN PROGRESS, 3 SKIP)")
+  and proceed without asking for confirmation — the user already chose
+  `all`.
 - The literal token `next` (case-insensitive) — find the first task in the
   backlog (by appearance order in TASKS.md) whose status is `[MISSING]`,
   `[STUBBED]`, `[INCORRECT]`, or `[PARTIAL]`, and implement that single
-  task. Skip tasks whose status is `[DONE]`, `[SKIP]`, or `[IN PROGRESS]`.
-  If no eligible task is found, tell the user "No eligible tasks found —
-  all tasks are DONE, SKIP, or IN PROGRESS." and stop. Otherwise, report
-  "Next eligible task: <N> — <title>" and proceed without asking for
-  confirmation.
+  task. Skip tasks whose status is `[DONE]`, `[SKIP]`, `[IN PROGRESS]`, or
+  `[STALE]`. If no eligible task is found, tell the user "No eligible
+  tasks found — all tasks are DONE, SKIP, IN PROGRESS, or STALE." and
+  stop. Otherwise, report "Next eligible task: <N> — <title>" and proceed
+  without asking for confirmation.
+
+`[STALE]` tasks are skipped by `all` and `next` because each one needs a
+per-task judgment call (see STALE TASKS below) and a batch run should not
+stop to ask. When the resolved list skips any, name them: "Skipped N
+stale task(s): 12, 14 — implement them explicitly by number to decide
+each one." A stale task requested explicitly by number is not skipped;
+it goes through the STALE TASKS protocol.
 
 If `$ARGUMENTS` is empty, tell the user the usage and stop.
 
@@ -143,6 +151,39 @@ bundle` / `Implementation steps` pair, or the older `Description` /
 to treat it.
 
 In all cases: use judgment, not a checklist.
+
+---
+
+STALE TASKS
+
+`[STALE]` means the feature document this task was generated from has since
+been re-architected: the task is live work, but its spec may no longer match
+the design. `/architect` sets it; `/task-add feature=<slug>` reconciliation
+clears it.
+
+A stale task is implementable here, but only on the user's explicit say-so.
+Before doing anything else on such a task, warn:
+
+> Task <N> is `[STALE]`. Feature `<slug>` was re-architected after this task
+> was written, so its spec may no longer match the current design — see
+> `.claude/domain/features/<slug>.md`. Options:
+>
+> A. **Implement anyway** — the task still looks right to you.
+> B. **Stop** — reconcile the backlog first with
+>    `/task-add feature=<slug>`, then re-run.
+>
+> Which?
+
+Take the feature slug from the task's `Feature:` line in its TASKS.md
+summary block; if there is no such line, say the originating feature is
+unrecorded and offer the same choice. Wait for an explicit answer —
+silence is not approval. On A, proceed through the normal per-task
+workflow unchanged. On B, stop the run without flipping any `Status:`; if
+other tasks were queued behind this one, say which were not started.
+
+This is a deliberate asymmetry with the unattended orchestrator
+(`chosko-llm task-impl`), which refuses a `[STALE]` task outright. A human
+can judge whether a superseded design still applies; a headless LLM cannot.
 
 ---
 
@@ -199,9 +240,13 @@ PRE-FLIGHT CHECKS (before any task)
    - Confirm its status is one of `[MISSING]`, `[STUBBED]`,
      `[INCORRECT]`, `[PARTIAL]`. If it's `[DONE]`, `[SKIP]`, or
      `[IN PROGRESS]` and the user requested it explicitly by number,
-     ask whether to skip or override. (For `all`, these statuses are
-     silently skipped — see ARGUMENT PARSING.)
-   - Note its Files and Preconditions fields from the summary block.
+     ask whether to skip or override. If it's `[STALE]` and was
+     requested explicitly by number, apply the STALE TASKS protocol
+     above. (For `all` and `next`, all of these statuses are skipped —
+     see ARGUMENT PARSING.)
+   - Note its Files, Preconditions, and — when present — `Feature:`
+     fields from the summary block. `Feature:` appears only on
+     feature-derived tasks; its absence is normal.
 
    Do NOT read the per-task body files in this preflight step. Each
    `.claude/tasks/<N>.md` is read only when its task becomes the
@@ -223,6 +268,10 @@ PER-TASK WORKFLOW
 For each task, in order:
 
 ### Step 1 — Mark IN PROGRESS
+
+If this task's status is `[STALE]`, run the STALE TASKS protocol before
+reading anything else, and do not continue unless the user chose to
+implement anyway.
 
 Use the Read tool to open `.claude/tasks/<N>.md` for the current task.
 Hold its contents in mind for the rest of the per-task workflow.
@@ -409,3 +458,7 @@ DO NOT:
 - Proceed past a manual-intervention checkpoint on the user's word alone
   when the outcome is checkable — verify it yourself first.
 - Make production edits on a `Target: human` task.
+- Start a `[STALE]` task without the user explicitly choosing to implement
+  it anyway, or pick one up in an `all` / `next` run.
+- Write a `Feature:` line into any task. It is `/task-add`'s field; this
+  skill only reads it.

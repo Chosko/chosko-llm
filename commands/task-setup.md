@@ -1,6 +1,6 @@
 ---
 name: task-setup
-version: 1.1.4
+version: 1.1.5
 type: command
 description: Initialize the project's task backlog — creates .claude/TASKS.md, the .claude/tasks/ directory, and the external-LLM wiring under .claude/external/ (implement-prompt, tests-prompt, run-affected-tests.sh, run-full-tests.sh). Authoring command — leaves everything uncommitted for review by default; pass --commit to commit the scaffolding.
 ---
@@ -266,6 +266,7 @@ Last task number: <N>
 Status: [MISSING]
 Files: <comma-separated files>
 Preconditions: <comma-separated task numbers, or "none">
+Feature: <slug>          ← optional; only on feature-derived tasks
 
 ---
 
@@ -276,6 +277,10 @@ Preconditions: <comma-separated task numbers, or "none">
 The `Last task number` line tracks the highest ID ever assigned. It only
 ever increases — `/task-clean` removes survivors but never decrements it.
 That guarantees task numbers are stable IDs across the project's lifetime.
+
+The `Feature:` line is optional and appears ONLY on tasks generated from a
+feature document by `/task-add feature=<slug>`. Free-form tasks carry no
+`Feature:` line at all — its absence is how the two are told apart.
 
 PER-TASK BODY FILE FORMAT (for reference — `/task-add` writes these,
 `/task-implement` reads them, and an external LLM consumes them

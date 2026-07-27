@@ -1,8 +1,8 @@
 ---
 name: task-clean
-version: 0.4.1
+version: 0.5.0
 type: command
-description: Prune tasks in a terminal status — remove summary blocks from TASKS.md and delete their per-task body files. Task IDs are stable; survivors are NEVER renumbered. Automatically commits the removals; pass --no-commit to leave them uncommitted.
+description: Prune tasks in a terminal status — remove summary blocks from TASKS.md and delete their per-task body files. Terminal means [DONE] and [SKIP] only; [STALE] is live work awaiting reconciliation and is never pruned by default. Task IDs are stable; survivors are NEVER renumbered. Automatically commits the removals; pass --no-commit to leave them uncommitted.
 ---
 
 # /task-clean
@@ -52,13 +52,15 @@ stop. Do NOT create anything.
 WHICH STATUSES COUNT AS "TERMINAL"
 
 Default (when `$ARGUMENTS` is empty): `[DONE]` and `[SKIP]`. These are
-the two statuses that indicate the task no longer needs work.
+the two statuses that indicate the task no longer needs work. That set is
+exhaustive — no other status is terminal, and in particular `[STALE]` is
+NOT. Do not add to it.
 
 If `$ARGUMENTS` lists one or more status tags (case-insensitive,
 brackets optional), use that explicit set instead. Accept any of the
 canonical statuses (`[MISSING]`, `[STUBBED]`, `[INCORRECT]`,
-`[PARTIAL]`, `[IN PROGRESS]`, `[DONE]`, `[SKIP]`) but warn if the user
-is asking to prune a non-terminal status:
+`[PARTIAL]`, `[IN PROGRESS]`, `[DONE]`, `[SKIP]`, `[STALE]`) but warn if
+the user is asking to prune a non-terminal status:
 
 - `[IN PROGRESS]` — currently being worked on. Pruning is almost
   certainly a mistake. Confirm twice, the second time with the specific
@@ -67,6 +69,12 @@ is asking to prune a non-terminal status:
   still remains. Pruning them throws away the spec. If the user really
   wants to discard a task, this is the right command for it, but flag
   the unusual choice in the plan.
+- `[STALE]` — the task's originating feature was re-architected, so its
+  spec may no longer match the design. This is live work awaiting
+  reconciliation, not abandoned work: the normal resolution is
+  `/task-add feature=<slug>`, which updates or replaces the task. Never
+  prune it by default. If the user names `[STALE]` explicitly, say all
+  of that in the plan and confirm before applying.
 
 If the user passes a tag that isn't one of the canonical statuses, list
 the valid options and stop.
@@ -216,6 +224,8 @@ DO NOT:
 - Decrement the `Last task number:` counter, even if you just removed
   the task with the highest ID.
 - Touch tasks whose status is not in the prune set.
+- Add `[STALE]` to the default prune set, or treat it as terminal
+  anywhere. Terminal is `[DONE]` and `[SKIP]`, and only those two.
 - Change task content other than `Preconditions:` lines on survivors.
 - Use `git add -A`, `git add .`, or `git add -u` in PHASE 3 — only the
   files touched by PHASE 2 may be staged.

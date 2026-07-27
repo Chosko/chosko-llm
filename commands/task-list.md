@@ -1,8 +1,8 @@
 ---
 name: task-list
-version: 0.3.1
+version: 0.4.0
 type: command
-description: Print the project's task backlog as a compact summary, optionally filtered by status. Marks human-in-the-loop tasks (target claude+human or human) with a ⚠ so the user can see which tasks need them present. Read-only — reads only TASKS.md, never the per-task body files.
+description: Print the project's task backlog as a compact summary, optionally filtered by status. Marks human-in-the-loop tasks (target claude+human or human) with a ⚠ so the user can see which tasks need them present, marks [STALE] tasks whose originating feature was re-architected, and shows the Feature: slug on feature-derived tasks. Read-only — reads only TASKS.md, never the per-task body files.
 ---
 
 # /task-list
@@ -43,7 +43,11 @@ file.
 STATUS TAGS (the only allowed values)
 
 `[MISSING]`, `[STUBBED]`, `[INCORRECT]`, `[PARTIAL]`, `[IN PROGRESS]`,
-`[DONE]`, `[SKIP]`.
+`[DONE]`, `[SKIP]`, `[STALE]`.
+
+`[STALE]` means the feature the task was generated from has been
+re-architected since — the task is still live work, but its spec may no
+longer match the design. It is filterable like any other status.
 
 If the user passes a filter, accept it case-insensitively and with or
 without brackets — `MISSING`, `missing`, `[MISSING]`, `in progress`, and
@@ -65,6 +69,9 @@ WORKFLOW
      - Target (the value on the `Target:` line; treat a missing line
        as `claude`)
      - Preconditions (the value on the `Preconditions:` line)
+     - Feature (the value on the `Feature:` line, when the block has
+       one; feature-derived tasks only, so a missing line is normal
+       and means "free-form task")
 
 2. Apply the filter if `$ARGUMENTS` is non-empty. Match on the status
    tag.
@@ -83,8 +90,17 @@ WORKFLOW
      `⚠ <target>` after the title (before any deps annotation) so
      human-in-the-loop tasks are visible at a glance. Targets `claude`
      and `local` get no marker.
-   - If a task has non-`none` preconditions, append `(deps: 3, 7)` at
-     the end of the line.
+   - If the task has a `Feature:` line, append `[<slug>]` after the
+     title (after any `⚠ <target>` marker, before the staleness marker
+     and the deps annotation) so the task's origin is visible. Tasks
+     with no `Feature:` line get nothing.
+   - If the status is `[STALE]`, append `⚠ stale` at the end of the
+     line, after the deps annotation. The status column already shows
+     `[STALE]`, but the marker keeps it visible in the same scan as the
+     human-in-the-loop `⚠` — a stale task is the one status that needs
+     the user to act (reconcile it, or decide it still applies).
+   - If a task has non-`none` preconditions, append `(deps: 3, 7)`
+     before any staleness marker.
 
 4. After the per-task lines, print a one-line summary:
 

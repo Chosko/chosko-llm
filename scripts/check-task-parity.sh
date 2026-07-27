@@ -26,13 +26,17 @@ done
 
 # The full status vocabulary. The prompt must know every tag; the bash side
 # drives only the statuses it can act on, so [SKIP] is legitimately absent
-# there (it excludes non-eligible tasks by omission).
+# there (it excludes non-eligible tasks by omission). [STALE] follows the
+# same precedent for the opposite reason: the prompt may implement a stale
+# task on the user's say-so, but the unattended orchestrator refuses one, so
+# it is never a status the bash side acts *on*.
 CANONICAL_TAGS='[DONE]
 [IN PROGRESS]
 [INCORRECT]
 [MISSING]
 [PARTIAL]
 [SKIP]
+[STALE]
 [STUBBED]'
 BASH_REQUIRED_TAGS='[DONE]
 [IN PROGRESS]

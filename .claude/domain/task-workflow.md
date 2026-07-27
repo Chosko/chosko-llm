@@ -139,6 +139,7 @@ Status: [MISSING]
 Target: claude
 Files: <comma-separated list>
 Preconditions: <comma-separated task numbers, or "none">
+Feature: <slug>          # optional — feature-derived tasks only
 ```
 
 `Target:` in the summary block mirrors the body file's `Target:` field. It is
@@ -146,8 +147,58 @@ the only field (besides `Files:`) intentionally duplicated between the index
 and the body, so the backlog view shows implementer intent without opening
 body files.
 
-`Status:` and `Preconditions:` are deliberately absent from the body: they
-describe how the task fits into the backlog, not what needs to be built.
+`Status:`, `Preconditions:`, and `Feature:` are deliberately absent from the
+body: they describe how the task fits into the backlog, not what needs to be
+built.
+
+## Status vocabulary
+
+`[MISSING]`, `[STUBBED]`, `[INCORRECT]`, `[PARTIAL]`, `[IN PROGRESS]`,
+`[DONE]`, `[SKIP]`, `[STALE]`.
+
+`[DONE]` and `[SKIP]` are the only terminal statuses — the only two
+`/task-clean` prunes by default. The vocabulary is mirrored in shell:
+`scripts/check-task-parity.sh` holds the canonical list and
+`scripts/cmd-task-impl.sh` holds the orchestrator's implementable-status
+allowlist. A change here that does not land in both fails the parity guard.
+
+## `Feature:` — the origin link
+
+An optional summary-block line carrying the slug of the feature document a
+task was generated from. Written only by `/task-add feature=<slug>`; absent
+entirely on free-form tasks (never `Feature: none`), so its presence is what
+distinguishes the two. It lives in the index rather than the body for the
+same reason `Status:` and `Preconditions:` do: it is backlog metadata, not
+part of the implementation contract.
+
+Reconciliation depends on it — without the line, a re-planning run cannot
+tell which existing tasks belong to the feature being re-planned. Readers of
+the backlog (`/task-list`, `/task-implement`) treat it as informational.
+
+## `[STALE]` — the drift marker
+
+`[STALE]` means the feature document this task was generated from has been
+re-architected since the task was written, so the spec may no longer match
+the design. `/architect` sets it; `/task-add feature=<slug>` reconciliation
+clears it (updating the body in place and flipping back to `[MISSING]`, or
+marking the task `[SKIP]` and drafting a replacement).
+
+- **Not terminal.** Live work awaiting reconciliation, not abandoned work.
+  `/task-clean` never prunes it.
+- **Never set by `/task-add` at authoring time.** A new task has no design
+  drift to record.
+- **Refused unattended, allowed interactively.** `chosko-llm task-impl`
+  refuses a `[STALE]` task outright, naming the feature and pointing at
+  `/task-add feature=<slug>`. `/task-implement` warns — naming the feature
+  and saying the design changed — and lets the user implement anyway or
+  stop; `all` and `next` skip stale tasks rather than deciding for the
+  user. A human can judge whether a superseded design still applies; a
+  headless local LLM cannot. The asymmetry is deliberate.
+
+See [`./product-workflow.md`](./product-workflow.md) for the feature side of
+this contract: the `FEATURES.md` schema, the feature status machine, the
+iterate guard that writes `[STALE]`, and the reconciliation protocol that
+resolves it.
 
 ## Split suggestion (`/task-add`)
 
@@ -210,8 +261,11 @@ Step 7.   flip TASKS.md Status: → [DONE]
 Step 8.   stage Files: ∪ TASKS.md, one commit
 ```
 
-The orchestrator refuses on a dirty working tree and refuses if any of the
-four artifacts under `.claude/external/` is missing.
+The orchestrator refuses on a dirty working tree, refuses if any of the four
+artifacts under `.claude/external/` is missing, and refuses a `[STALE]` task
+(`all` never selects one; an explicit ID halts the run). Statuses outside the
+`[MISSING]` / `[STUBBED]` / `[INCORRECT]` / `[PARTIAL]` allowlist are skipped
+with a warning.
 
 ## `/task-implement` discipline
 
@@ -242,6 +296,9 @@ list contains human-involving tasks — they cannot run unattended.
 
 - [`../../CLAUDE.md`](../../CLAUDE.md) — hard rules (authoring, versioning,
   copy-not-symlink, no new deps).
+- [`./product-workflow.md`](./product-workflow.md) — the product pipeline
+  upstream of this backlog: `FEATURES.md`, the feature status machine, and
+  the writers of `Feature:` and `[STALE]`.
 - [`../context/features.md`](../context/features.md) — shipped artifacts
   including every `task-*` command and the `task-enrich` skill.
 - `commands/task-setup.md`, `commands/task-add.md`,

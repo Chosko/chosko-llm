@@ -1,6 +1,6 @@
 ---
 name: task-add
-version: 0.9.1
+version: 0.10.0
 type: command
 description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass --enrich to produce a self-contained body for a local LLM in one shot, --no-split to always write exactly one task, or --no-commit to write the files but skip the commit.
 ---
@@ -89,12 +89,21 @@ Status: [MISSING]
 Target: claude
 Files: <comma-separated list>
 Preconditions: <comma-separated task numbers, or "none">
+Feature: <slug>          ← optional; only on feature-derived tasks
 
 ---
 ```
 
-The summary block holds: number, title, Status, Target, Files, Preconditions.
-Nothing else. Description and decisions live in the body.
+The summary block holds: number, title, Status, Target, Files,
+Preconditions, and — only when the task was generated from a feature
+document — `Feature:`. Nothing else. Description and decisions live in the
+body.
+
+`Feature:` carries the slug of the feature the task came from. It is
+present ONLY on feature-derived tasks and is absent entirely on free-form
+ones — do not write `Feature: none`. Like `Status:` and `Preconditions:`,
+it is backlog metadata, so it lives in the summary block and never in the
+body file.
 
 ---
 
@@ -206,6 +215,13 @@ STATUS TAGS (the only allowed values, recorded in TASKS.md)
 - `[IN PROGRESS]` — agent is currently working on it. (Not set by this command.)
 - `[DONE]` — implementation has landed. (Not set by this command.)
 - `[SKIP]` — explicitly deferred or abandoned.
+- `[STALE]` — the feature document this task was generated from has since
+  been re-architected, so the task may no longer match the design. Set by
+  `/architect` when it re-architects the originating feature; resolved by
+  `/task-add feature=<slug>` reconciliation, which either updates the body
+  in place (flipping the task back to `[MISSING]`) or marks it `[SKIP]` and
+  drafts a replacement. **Never set by this command when creating a task.**
+  Not terminal — a stale task is live work awaiting reconciliation.
 
 A new task is `[MISSING]` unless the user's description clearly indicates
 a different pre-implementation state.
