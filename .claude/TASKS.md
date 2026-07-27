@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 65
+Last task number: 66
 
 ---
 
@@ -279,6 +279,15 @@ Preconditions: none
 Status: [MISSING]
 Target: claude
 Files: scripts/cmd-export.sh, .claude/context/cmd-export.md, VERSION
+Preconditions: none
+
+---
+
+## 66. Run /context-update full to refresh the navigation context layer
+
+Status: [MISSING]
+Target: claude
+Files: .claude/context/*.md
 Preconditions: none
 
 ---
