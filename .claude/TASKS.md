@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 61
+Last task number: 62
 
 ---
 
@@ -244,5 +244,14 @@ Status: [DONE]
 Target: claude
 Files: README.md, docs/authoring-guide.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION
 Preconditions: 60
+
+---
+
+## 62. Add `chosko-llm export` — package a repo's Claude config as Markdown or a zip
+
+Status: [MISSING]
+Target: claude
+Files: scripts/cmd-export.sh, scripts/lib.sh, bin/chosko-llm, docs/cli-help.txt, README.md, .claude/context/cmd-export.md, .claude/context/cli-entry.md, .claude/context/shared-lib.md, .claude/context/INDEX.md, VERSION
+Preconditions: none
 
 ---
