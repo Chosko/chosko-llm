@@ -45,6 +45,12 @@ The CLI is a proxy: `~/bin/chosko-llm` parses the subcommand and execs
   behaviour preservation, plan-first approval gate, the five focus
   concerns, `scope=` semantics, and phase ordering. Read when touching
   `/refactor-codebase` or extending its phase model.
+- **Product workflow** — [.claude/domain/product-workflow.md](.claude/domain/product-workflow.md)
+  explains the product pipeline (`/domain-setup` → `/product-design` →
+  `/architect` → `/task-add`): the document set, the `FEATURES.md` schema
+  and feature state machine, the `[STALE]` task status and `Feature:` line,
+  the iterate guard, and the reconciliation protocol. Read when touching
+  any of those commands or the feature/task schemas.
 
 ## Hard rules
 

@@ -168,7 +168,7 @@ Preconditions: none
 
 ## 53. Author the product-workflow domain doc — the design→architecture→task pipeline contract
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: .claude/domain/product-workflow.md, .claude/context/INDEX.md, CLAUDE.md, VERSION
 Preconditions: none
