@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 62
+Last task number: 63
 
 ---
 
@@ -252,6 +252,15 @@ Preconditions: 60
 Status: [DONE]
 Target: claude
 Files: scripts/cmd-export.sh, scripts/lib.sh, bin/chosko-llm, docs/cli-help.txt, README.md, .claude/context/cmd-export.md, .claude/context/cli-entry.md, .claude/context/shared-lib.md, .claude/context/INDEX.md, VERSION
+Preconditions: none
+
+---
+
+## 63. Exclude .claude/TASKS.md and .claude/tasks/ from export; add clear file separators to the Markdown output
+
+Status: [MISSING]
+Target: claude
+Files: scripts/cmd-export.sh, .claude/context/cmd-export.md, VERSION
 Preconditions: none
 
 ---
