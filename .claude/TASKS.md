@@ -204,7 +204,7 @@ Preconditions: 55
 
 ## 57. Add the /product-design skill — resumable high-level product and business-model design
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/product-design/SKILL.md, skills/product-design/document-templates.md, skills/product-design/business-model.md, skills/product-design/resuming.md, .claude/context/features.md, README.md, VERSION
 Preconditions: 53, 55

@@ -198,6 +198,25 @@ Idempotent and safe to run on an existing project: if you already have
 hand-written docs under `.claude/domain/`, it indexes them instead of
 replacing them.
 
+### Design a product — `/product-design`
+
+Brainstorm a product from the ground up with Claude and write the result into
+the domain layer: what it is, who it's for, the key flows, the big decisions,
+and the high-level feature set described from the user's side. A business
+model is optional and opt-in. Requires `/domain-setup` to have run.
+
+It works on an existing codebase as well as a blank one — it reads what's
+there and opens with "here's what I see you've built; is this still the
+intent?".
+
+Designing a product takes more than one sitting, so the process is
+**resumable**: its state lives in `.claude/domain/design-process.md`, not in
+the conversation. Run `/product-design` again weeks later and it tells you
+where the last session stopped and offers to pick up there. There's no flag
+to remember.
+
+The output is `/architect`'s input.
+
 ### Work through a backlog — the `task-*` commands
 
 A lightweight, in-repo issue tracker. Work is captured as small, reviewable

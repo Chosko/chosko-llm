@@ -151,6 +151,25 @@ Currently shipped:
   refusing a stale task outright. Commits each task
   separately; `--no-commit` runs the full TDD sequence but skips the
   per-task commits, leaving every task's changes uncommitted.
+- `skills/product-design/` — design a product top-down with the user and
+  write the result into the domain layer: `design-process.md` (the state
+  file), `product-design.md`, and — only when the user opts in —
+  `business-model.md`. Six phases: PHASE 0 gates on `/domain-setup` having
+  run and auto-detects a resume, PHASE 1 orients (greenfield vs. brownfield,
+  read from CLAUDE.md/README/the context layer/the source tree) and stubs the
+  documents plus their `.claude/domain/INDEX.md` rows, PHASE 2 interviews,
+  PHASE 3 writes back, PHASE 4 identifies the high-level feature set from the
+  user-experience angle, PHASE 5 records it. Three supporting files load only
+  when their branch fires: `document-templates.md` (per-section stubs),
+  `business-model.md` (the strategy question bank — opt-in only), and
+  `resuming.md` (read only when `design-process.md` already exists). The
+  stage marker in `design-process.md` is rewritten before every phase ends,
+  so an interrupted session resumes from a truthful stage — there is no
+  `resume` argument, since the document is the state. Stays high-level by
+  construction: technical detail is `/architect`'s output, and it never
+  writes `.claude/FEATURES.md`, feature docs, or tasks. **Authoring skill —
+  nothing committed by default; `--commit` stages exactly the documents
+  written in one commit.**
 - `skills/unity-mcp-skill/` — a Unity-MCP operator guide vendored from
   the upstream skill. `SKILL.md` carries the resource-first workflow,
   core tool categories, and best-practice patterns for driving the Unity

@@ -1,0 +1,100 @@
+# Resume protocol
+
+Read this only when PHASE 0 found an existing
+`.claude/domain/design-process.md`. That file is the state of a previous
+run; this is how to pick it up.
+
+There is no `resume` argument to check. The document's presence is the
+signal, and its **Current stage** block is the state.
+
+---
+
+## 1. Read the state
+
+Read `.claude/domain/design-process.md` in full — it is short by design.
+Extract:
+
+- The **Current stage** marker: which phase, and whether it is in progress
+  or done.
+- Whether business modelling is in scope.
+- Greenfield or brownfield, as the earlier session judged it.
+- Anything under **Decisions worth keeping**.
+
+Then read the documents that exist beside it — `product-design.md`, and
+`business-model.md` when in scope — so you know what is actually written,
+not just what the marker claims.
+
+**When the marker and the documents disagree**, trust the marker for *where
+to resume* and say what you saw: "the marker says PHASE 3 is done, but
+`product-design.md` has no design-decisions section — I'll fill that gap
+first." A phase that ended without rewriting the marker is the one failure
+mode this protocol has to absorb, and it is absorbed by telling the user,
+not by silently re-deriving the stage.
+
+## 2. Summarize, in the user's terms
+
+Report, in a few lines:
+
+- Where the last session stopped — the phase, and what it had covered.
+- What is written so far, per document.
+- What the next phase would do.
+
+Write it for someone who has forgotten the whole thing. Weeks may have
+passed; that is the case this protocol exists for.
+
+## 3. Offer the choice
+
+> Resume from PHASE <N> — <name>, or start fresh?
+>
+> A. **Resume** — pick up where the last session stopped. Existing
+>    documents are extended, not replaced.
+> B. **Start fresh** — begin a new design process from PHASE 1. I'd rewrite
+>    `design-process.md`; existing `product-design.md` /
+>    `business-model.md` content would need to be either kept as brownfield
+>    input or explicitly discarded — I'll ask which before touching
+>    anything.
+
+Wait for an explicit answer. Silence is not an answer.
+
+## 4. On resume (A)
+
+- If the marker's phase is **done**, start the next phase.
+- If it is **in progress**, re-enter that phase where the marker says it
+  stopped. Do not restart the phase from the top: replay what has already
+  been covered as a one-line recap ("we'd covered users and the checkout
+  flow"), confirm it still holds, and continue from there.
+- Then proceed through the remaining phases exactly as SKILL.md describes,
+  rewriting the marker at every transition.
+
+## 5. On start fresh (B)
+
+Before writing anything, resolve the existing content:
+
+> `product-design.md` already has content from the previous process. Keep it
+> as brownfield input to the new one, or discard it and start from an empty
+> document?
+
+- **Keep** — treat the existing documents as brownfield input: read them in
+  PHASE 1, build on them, extend in place.
+- **Discard** — confirm once more, naming the files, then overwrite them
+  with fresh stubs. This is the only path in this skill that destroys
+  written design content, and it requires the user to have said so twice.
+
+Either way, `design-process.md` is rewritten from PHASE 1 with a new phase
+table and a marker at PHASE 1. Carry forward anything under **Decisions
+worth keeping** — that rationale is expensive to reconstruct and is not
+invalidated by restarting the process.
+
+---
+
+## Never
+
+- Infer the stage from the documents' contents instead of the marker. The
+  marker is the state; a mismatch is reported, not resolved by guesswork.
+- Resume silently. The user always sees the summary and makes the call.
+- Overwrite `product-design.md` or `business-model.md` on the resume path
+  (A) — that path only extends.
+- Re-ask PHASE 1's business-modelling question when the marker already
+  records the answer. If the user now wants to add a business model to a
+  process that skipped it, that is a fine thing to offer once, on resume,
+  and it creates `business-model.md` at that point.
