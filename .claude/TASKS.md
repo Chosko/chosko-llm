@@ -231,7 +231,7 @@ Preconditions: 54, 58
 
 ## 60. Teach /task-clean to prune pruned task IDs from FEATURES.md
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-clean.md, .claude/context/features.md, VERSION
 Preconditions: 59

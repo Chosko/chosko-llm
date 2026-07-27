@@ -124,8 +124,15 @@ Currently shipped:
   warns and confirms). Removes summary
   blocks AND deletes the matching body files. Never renumbers — task IDs
   are stable across the project's lifetime; the `Last task number`
-  counter never decreases. After applying, commits the changes
-  automatically (`.claude/TASKS.md` + deleted body files); `--no-commit`
+  counter never decreases. Also drops every pruned ID from any
+  `.claude/FEATURES.md` `Tasks:` line (a line left empty becomes
+  `Tasks: none`), silently skipped when the project has no feature index —
+  the writer that invalidates those IDs fixes them in the same run, so
+  `/architect`'s iterate guard stays a pure reader and never under-reports.
+  Feature `Status:` is deliberately untouched: a feature whose tasks were all
+  cleaned stays `[PLANNED]`, since `[PLANNED]` → `[NEW]` is illegal. After
+  applying, commits the changes automatically (`.claude/TASKS.md` + deleted
+  body files + `.claude/FEATURES.md` when it changed); `--no-commit`
   leaves them uncommitted.
 - `skills/task-implement/` — implement backlog tasks end-to-end with
   TDD. The repo's only skill: `SKILL.md` carries the common path (clean

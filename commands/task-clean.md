@@ -1,8 +1,8 @@
 ---
 name: task-clean
-version: 0.5.0
+version: 0.6.0
 type: command
-description: Prune tasks in a terminal status — remove summary blocks from TASKS.md and delete their per-task body files. Terminal means [DONE] and [SKIP] only; [STALE] is live work awaiting reconciliation and is never pruned by default. Task IDs are stable; survivors are NEVER renumbered. Automatically commits the removals; pass --no-commit to leave them uncommitted.
+description: Prune tasks in a terminal status — remove summary blocks from TASKS.md and delete their per-task body files. Terminal means [DONE] and [SKIP] only; [STALE] is live work awaiting reconciliation and is never pruned by default. Also drops the pruned IDs from any .claude/FEATURES.md Tasks: line (leaving feature statuses alone), so /architect's iterate guard never reads a dead ID. Task IDs are stable; survivors are NEVER renumbered. Automatically commits the removals; pass --no-commit to leave them uncommitted.
 ---
 
 # /task-clean
@@ -102,6 +102,13 @@ PHASE 1 — REPORT (no file writes, no deletions)
    Read tool first; if a body file is unexpectedly missing, note that
    in the plan but do not error out.
 
+4b. Probe `.claude/FEATURES.md` with the Read tool. If it does not exist,
+   skip this step and every later reference to it silently — most projects
+   have no feature index, and its absence is not an error. If it does
+   exist, find every `Tasks:` line that references a pruned ID and plan to
+   drop those IDs. A line left with no IDs becomes `Tasks: none`. Plan NO
+   change to any feature's `Status:` line — see the note in PHASE 2.
+
 5. Render the plan:
 
    ```
@@ -123,6 +130,11 @@ PHASE 1 — REPORT (no file writes, no deletions)
      Task 8:  Preconditions "3, 7" → "none"
      Task 10: Preconditions "12"   → "none"
      …
+
+   Feature Tasks: lines to update (K):        (omit when no FEATURES.md)
+     Feature session-handling: Tasks "3, 7, 9" → "9"   (dropping 3, 7)
+     Feature user-profile:     Tasks "12"      → "none" (dropping 12)
+     Feature statuses are unchanged.
 
    Anything in [IN PROGRESS]? <yes/no — if yes, list them as a heads-up
    so the user notices unfinished work before pruning around it>
@@ -156,14 +168,32 @@ PHASE 2 — APPLY (only after explicit approval)
    ever assigned, not the highest currently present, and only ever
    increases.
 
+4b. If `.claude/FEATURES.md` exists, use the Edit tool to drop each pruned
+   ID from every `Tasks:` line that references it, per the plan. A line left
+   with no IDs becomes `Tasks: none`.
+
+   **Do not change any feature's `Status:`.** A feature whose tasks were all
+   cleaned stays `[PLANNED]`: the tasks existed and were resolved, and
+   `[PLANNED]` → `[NEW]` is an illegal transition — it would claim the
+   feature was never planned. Pruning is bookkeeping about which tasks still
+   exist, not a statement about the design/backlog relationship.
+
+   This command is the writer that invalidates those IDs, so it is the one
+   that fixes them — immediately, in the same run. `/architect`'s iterate
+   guard is a pure reader of `Tasks:`; a dead ID there makes it under-report
+   which tasks a re-architecture would invalidate.
+
 5. After editing, use Grep to re-check `.claude/TASKS.md` for any
-   `Preconditions:` reference to a now-removed task ID and confirm no
-   stale references remain.
+   `Preconditions:` reference to a now-removed task ID, and
+   `.claude/FEATURES.md` (when it exists) for any `Tasks:` reference to
+   one. Confirm no stale references remain in either.
 
 6. Report to the user:
    - Number of summary blocks removed from `TASKS.md`.
    - Number of body files deleted (and any that were already missing).
    - Number of `Preconditions:` lines rewritten.
+   - Each feature whose `Tasks:` line changed, and which IDs were dropped
+     from it. Say explicitly that feature statuses were left as they were.
    - Final task count.
    - The unchanged `Last task number:` value.
 
@@ -178,12 +208,12 @@ Apart from deleting the per-task body files in PHASE 2 (`rm
 and `git commit`. Under `--no-commit` the body-file deletion is the command's
 only shell use.
 
-If NO_COMMIT is true, skip committing entirely: the `.claude/TASKS.md` edits
-and the body-file deletions from PHASE 2 are left uncommitted in the working
-tree. Report what was changed (blocks removed, body files deleted,
-`Preconditions:` lines rewritten) and remind the user that nothing was
-committed — they should commit when ready. Do not run any git command. Then
-stop.
+If NO_COMMIT is true, skip committing entirely: the `.claude/TASKS.md` edits,
+the `.claude/FEATURES.md` edits, and the body-file deletions from PHASE 2 are
+left uncommitted in the working tree. Report what was changed (blocks
+removed, body files deleted, `Preconditions:` lines rewritten, feature
+`Tasks:` lines rewritten) and remind the user that nothing was committed —
+they should commit when ready. Do not run any git command. Then stop.
 
 Otherwise (the default), after PHASE 2 completes successfully, commit the
 changes automatically — no further prompt is needed.
@@ -198,7 +228,10 @@ changes automatically — no further prompt is needed.
    Stage `.claude/TASKS.md` (modified) plus each deleted body file path
    (body files pruned in PHASE 2). Staging a deleted file via
    `git add -- path` works identically to staging a modified one — git
-   records the deletion when the file no longer exists on disk.
+   records the deletion when the file no longer exists on disk. When PHASE
+   2 step 4b rewrote any feature `Tasks:` line, add `.claude/FEATURES.md` to
+   the same `git add --` path list; the two changes only make sense together.
+   When it changed nothing (or the file does not exist), leave it out.
 
    PHASE 3 stages ONLY the files PHASE 2 touched. It must not run
    `git add -A`, `git add .`, `git add -u`, or anything that could pull
@@ -227,6 +260,11 @@ DO NOT:
 - Add `[STALE]` to the default prune set, or treat it as terminal
   anywhere. Terminal is `[DONE]` and `[SKIP]`, and only those two.
 - Change task content other than `Preconditions:` lines on survivors.
+- Change a feature's `Status:` in `.claude/FEATURES.md`, or any field other
+  than `Tasks:`. A feature whose tasks were all pruned stays `[PLANNED]`;
+  `[PLANNED]` → `[NEW]` is illegal. `Doc:` and `Source:` belong to
+  `/architect`.
+- Error out when `.claude/FEATURES.md` is absent — skip that step silently.
 - Use `git add -A`, `git add .`, or `git add -u` in PHASE 3 — only the
   files touched by PHASE 2 may be staged.
 - Use `--amend`, `--no-verify`, `--no-gpg-sign`, or any other
