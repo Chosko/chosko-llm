@@ -125,7 +125,8 @@ export_dir_path() { printf '%s' "${CHOSKO_LLM_EXPORT_DIR:-$HOME/claude-exports}"
 # incl. Git Bash/WSL), open (macOS), xdg-open (Linux). Silently does nothing
 # if none are available.
 open_in_file_manager() {
-  local dir="$1" win_dir="$dir"
+  local dir="$1"
+  local win_dir="$dir"
   if command -v explorer.exe >/dev/null 2>&1; then
     command -v cygpath >/dev/null 2>&1 && win_dir="$(cygpath -w "$dir")"
     explorer.exe "$win_dir" >/dev/null 2>&1 || true
