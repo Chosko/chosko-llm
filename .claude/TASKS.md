@@ -294,7 +294,7 @@ Preconditions: none
 
 ## 67. Add exported repo Version and Created date to the export manifest
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/cmd-export.sh, .claude/context/cmd-export.md, VERSION
 Preconditions: none

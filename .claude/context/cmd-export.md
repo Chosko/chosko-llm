@@ -20,7 +20,7 @@ CLI:
 - `chosko-llm export [<repo>] --archive` — writes
   `$CHOSKO_LLM_EXPORT_DIR/<repo-name>-claude-config.zip` instead: the selected
   files under a top-level `<repo-name>/` directory plus a root `MANIFEST.md`
-  (repo name, commit SHA, generation date).
+  (repo name, version, commit/changeset, created date, generation date).
 - Both forms print the resulting absolute path on **stdout** on success — the
   only stdout output; every progress/log line goes through `log_*` (stderr).
 - After the artifact is written (either shape) and before the open-folder
@@ -54,11 +54,27 @@ Exit codes:
 - **One selection function, two consumers.** Both the Markdown writer and the
   zip stager iterate the same `select_export_files` output — adding an
   include/exclude rule means editing exactly one place.
-- **Commit SHA via `git -C <repo> rev-parse --short HEAD`**, with `-dirty`
-  appended when `git status --porcelain` is non-empty. Non-git repos (or a
-  missing `git`) warn and prompt to continue with
-  `sha=not a git repository`; a "no" answer exits 0 without writing anything;
-  a non-TTY stdin can't be prompted, so it's a hard `die`.
+- **Three-way VCS detection: git / Plastic SCM / neither** (same probe
+  `/project-setup` PHASE 1a uses: `.plastic/` present, or a `cm` binary
+  resolves and `cm status` succeeds from `<repo>`). Drives both `Commit:`
+  and `Created:`:
+  - git: `Commit:` via `git -C <repo> rev-parse --short HEAD`, `-dirty`
+    appended when `git status --porcelain` is non-empty. `Created:` is the
+    earliest commit reachable from `HEAD` (`git log --reverse --format=%ct`,
+    first line, converted to `YYYY-MM-DD` via `date -u -d "@<ts>"`).
+  - Plastic: `Commit:` via `cm log --limit=1 --format='{changesetid}'`
+    (falls back to `unknown changeset` if `cm` errors). `Created:` via
+    `cm find revision "where date <= 'now'" --order-ascending
+    --format="{date}" --limit=1`, truncated to the first 10 characters.
+  - Neither: unchanged legacy behavior — warn and prompt to continue with
+    `sha=not a git repository`, `Created:` omitted; a "no" answer exits 0
+    without writing anything; a non-TTY stdin can't be prompted, so it's a
+    hard `die`.
+- **`Version:` is read from `<repo>/VERSION`** (trimmed contents) when that
+  file exists; omitted entirely (not blank/"none") when it doesn't, matching
+  how missing optional root files are already handled. Placed right after
+  `Repo:`; `Created:` is placed right after `Commit:` — same relative order
+  in both manifest shapes.
 - **Zip via `zip -r`, falling back to `powershell.exe -Command
   Compress-Archive`** when `zip` isn't on `PATH` (Git Bash on Windows ships
   `zipinfo`/`zipgrep` but no `zip`). Paths handed to `powershell.exe` are

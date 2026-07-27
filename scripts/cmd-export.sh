@@ -43,9 +43,19 @@ select_export_files() {
 files="$(select_export_files "$repo")"
 [ -n "$files" ] || die "Nothing to export — no CLAUDE.md, AGENTS.md, README.md, or .claude/*.{md,json,toml} found in $repo."
 
+# VCS detection: git / Plastic SCM / neither — same three-way check
+# /project-setup PHASE 1a uses. Drives both Commit: and Created:.
+created=""
 if command -v git >/dev/null 2>&1 && git -C "$repo" rev-parse --git-dir >/dev/null 2>&1; then
   sha="$(git -C "$repo" rev-parse --short HEAD)"
   [ -n "$(git -C "$repo" status --porcelain)" ] && sha="${sha}-dirty"
+  earliest_ts="$(git -C "$repo" log --reverse --format=%ct | head -1)"
+  [ -n "$earliest_ts" ] && created="$(date -u -d "@$earliest_ts" '+%Y-%m-%d')"
+elif [ -d "$repo/.plastic" ] || { command -v cm >/dev/null 2>&1 && (cd "$repo" && cm status >/dev/null 2>&1); }; then
+  sha="$(cd "$repo" && cm log --limit=1 --format='{changesetid}' 2>/dev/null || true)"
+  [ -n "$sha" ] || sha="unknown changeset"
+  earliest_date="$(cd "$repo" && cm find revision "where date <= 'now'" --order-ascending --format="{date}" --limit=1 2>/dev/null || true)"
+  [ -n "$earliest_date" ] && created="${earliest_date:0:10}"
 else
   log_warn "$repo is not a git repository (or git is unavailable) — no commit SHA to record."
   if [ ! -t 0 ]; then
@@ -58,6 +68,9 @@ else
     *) exit 0 ;;
   esac
 fi
+
+version=""
+[ -f "$repo/VERSION" ] && version="$(tr -d '[:space:]' < "$repo/VERSION")"
 
 generated="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
 
@@ -79,7 +92,9 @@ if [ "$archive" = true ]; then
   {
     printf '# MANIFEST\n\n'
     printf 'Repo: %s\n' "$repo_name"
+    [ -n "$version" ] && printf 'Version: %s\n' "$version"
     printf 'Commit: %s\n' "$sha"
+    [ -n "$created" ] && printf 'Created: %s\n' "$created"
     printf 'Generated: %s\n' "$generated"
   } > "$stage/MANIFEST.md"
 
@@ -103,7 +118,9 @@ else
   {
     printf '# Claude config export: %s\n\n' "$repo_name"
     printf 'Repo: %s\n' "$repo_name"
+    [ -n "$version" ] && printf 'Version: %s\n' "$version"
     printf 'Commit: %s\n' "$sha"
+    [ -n "$created" ] && printf 'Created: %s\n' "$created"
     printf 'Generated: %s\n\n' "$generated"
     printf '## Manifest\n\n'
     while IFS= read -r f; do
