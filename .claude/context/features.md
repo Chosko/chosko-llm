@@ -264,7 +264,9 @@ description: <one line>
 ```
 
 See `../../docs/authoring-guide.md` for the canonical spec, including the
-semver bump rules.
+semver bump rules, the commit-control convention, the three places the task
+status vocabulary must agree, and the rule that a multi-session skill keeps
+its state in a versioned project document.
 
 ## Internal patterns
 

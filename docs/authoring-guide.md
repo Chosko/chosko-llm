@@ -79,13 +79,54 @@ parity guard whenever you touch **either** artifact:
 ```
 
 It exits non-zero if a status tag (`[MISSING]`, `[STUBBED]`, `[INCORRECT]`,
-`[PARTIAL]`, `[IN PROGRESS]`, `[DONE]`, `[SKIP]`) is unknown to or missing
-from one side, or if the two sides disagree on the eight per-task steps.
-`[SKIP]` is deliberately prompt-only — the bash side excludes non-eligible
-tasks by omission. Introducing a genuinely new status tag means updating the
-`CANONICAL_TAGS` list in the guard as well as both artifacts.
+`[PARTIAL]`, `[IN PROGRESS]`, `[DONE]`, `[SKIP]`, `[STALE]`) is unknown to or
+missing from one side, or if the two sides disagree on the eight per-task
+steps. `[SKIP]` and `[STALE]` are deliberately prompt-only in
+`BASH_REQUIRED_TAGS` — the bash side excludes non-eligible tasks by omission.
 
 The guard checks the cheap invariants, not full behavioural parity.
+
+### The status vocabulary lives in three places
+
+Any change to the task status vocabulary must land in all three, in the same
+commit, or the guard fails:
+
+1. The prompt side — `skills/task-implement/` (every canonical tag must
+   appear somewhere in it).
+2. `scripts/check-task-parity.sh` — the `CANONICAL_TAGS` list, and
+   `BASH_REQUIRED_TAGS` only if the orchestrator actually acts on the tag.
+3. `scripts/cmd-task-impl.sh` — the implementable-status allowlist: both the
+   `resolve_all` awk selection and the per-task `case` in `implement_one`.
+
+`[STALE]` (added in v0.15.0) is the worked example. It is canonical, it is
+prompt-only in `BASH_REQUIRED_TAGS`, and the orchestrator refuses it
+explicitly rather than skipping it — so it touches all three places for three
+different reasons. A partial rollout of a status tag fails the guard, which is
+the point: the two encodings of the workflow cannot be allowed to drift
+silently.
+
+## State that outlives a session belongs in a project document
+
+A skill whose phases span multiple sessions must keep its state in a
+versioned document inside the project, not in conversation history and not
+behind a `--resume` flag. Conversation is gone next session; a flag is not
+remembered weeks later.
+
+`skills/product-design/` is the pattern: `.claude/domain/design-process.md`
+records the method, the phase list, and a current-stage marker, and every
+phase transition rewrites that marker **before** the phase ends. A later run
+detects the document, reads the stage, summarizes where the last session
+stopped, and offers to resume or start fresh — with no argument to pass.
+
+Two rules make it work:
+
+- **The marker is load-bearing.** A phase that ends without rewriting it
+  degrades every later resume, and does so silently: the documents look
+  finished while the marker points at the wrong place. Say so explicitly in
+  the skill.
+- **The marker is the state, not the documents.** A resume reads the marker
+  to decide where to pick up, and reports a mismatch with the documents
+  rather than re-deriving the stage from their contents.
 
 ## Versioning
 
@@ -108,7 +149,8 @@ flag so the user can override the default commit behaviour:
 
 - **Authoring commands (uncommitted by default).** `/context-build`,
   `/task-enrich`, `/refactor-codebase`, `/refactor-tests`, `/task-setup`,
-  and `/project-setup` write their output and leave it in the working tree
+  `/domain-setup`, `/unity-mcp-setup`, `/product-design`, `/architect`, and
+  `/project-setup` write their output and leave it in the working tree
   for review. They accept **`--commit`** to commit what they wrote at the
   end.
 - **Auto-committing commands.** `/task-add`, `/task-clean`,
@@ -130,7 +172,8 @@ When adding a new command that writes files, follow the same rules:
 
 `/project-setup --commit` is the one orchestrator: it commits its own
 artifacts first, then invokes its nested commands with `--commit` so each
-commits its own output.
+commits its own output (`/task-setup`, `/domain-setup`, `/context-build`, and
+`/unity-mcp-setup`, in that order).
 
 ## Common mistakes
 

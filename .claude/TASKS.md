@@ -240,7 +240,7 @@ Preconditions: 59
 
 ## 61. Document the product pipeline end-to-end in README and the authoring guide
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/authoring-guide.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION
 Preconditions: 60

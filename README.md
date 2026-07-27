@@ -141,6 +141,71 @@ them with `chosko-llm add <feature>` (opt-in), then run them as slash commands
 (`/<name>`) inside Claude Code. File-writing commands leave output uncommitted
 for review by default; override with `--commit` / `--no-commit`.
 
+### The product pipeline — from idea to merged code
+
+Five of these commands form one continuous pipeline. Each stage hands its
+output to the next as a **document in the repo**, not as conversation, so the
+work survives across sessions, machines, and people.
+
+| Stage | Command | Consumes | Produces |
+| --- | --- | --- | --- |
+| 0 — scaffold | [`/domain-setup`](#set-up-the-domain-layer--domain-setup) | nothing | the domain layer + an empty `.claude/FEATURES.md` |
+| 1 — design | [`/product-design`](#design-a-product--product-design) | you, and the repo when it already has code | `product-design.md`, optional `business-model.md`, `design-process.md` |
+| 2 — architect | [`/architect`](#design-how-to-build-it--architect) | a high-level feature, or a bare prompt | `.claude/domain/features/<slug>.md` + a `FEATURES.md` entry |
+| 3 — plan | `/task-add feature=<slug>` | a feature document | task bodies + `TASKS.md` entries |
+| 4 — build | `/task-implement` | a task body | code, one commit per task |
+
+Stages are **entered, not marched through**. Nothing downstream requires that
+an upstream stage was ever run.
+
+**Where to start.** Two realistic starting conditions:
+
+- **A brand new product.** Run `/domain-setup`, then `/product-design` to work
+  out what you're building, then `/architect` per feature.
+- **An existing codebase.** Run `/domain-setup`, then go straight to
+  `/architect` — it reads your code (via the context layer, if you have one)
+  and accepts a bare description, so you never need design documents you
+  don't have. Or skip the pipeline entirely and use plain
+  `/task-add <description>`, exactly as before: the free-form path is
+  unchanged by any of this.
+
+**Worked example.** `/product-design` lands "user accounts" among the
+high-level features in `product-design.md`. `/architect user accounts` decides
+it's really two architectural features and writes
+`.claude/domain/features/password-auth.md` and
+`.claude/domain/features/session-handling.md`, each with a `FEATURES.md` entry
+at `Status: [NEW]`. `/task-add feature=password-auth` reads that document,
+proposes four tasks, and on your approval writes tasks 31–34 — each carrying
+`Feature: password-auth` — sets the entry to `Tasks: 31, 32, 33, 34` and
+`Status: [PLANNED]`. `/task-implement 31` builds the first one and commits it.
+
+**The iterate loop.** Designs change after tasks exist, and this is the part
+worth understanding before you hit it:
+
+1. You re-run `/architect password-auth`. It sees the feature is `[PLANNED]`
+   and checks the tasks it generated.
+2. If any of them is `[IN PROGRESS]`, it **refuses** — an implementation is
+   underway against the design you're about to change. There's no override.
+   Finish or reset that task first.
+3. Otherwise it lists the unfinished tasks and asks. On your go-ahead it
+   rewrites the feature document, marks those tasks **`[STALE]`**, and sets
+   the feature **`[ITERATED]`**.
+4. `[STALE]` means "the design moved; this task needs reconciling". Nothing is
+   deleted. `/task-clean` won't prune it, `chosko-llm task-impl` refuses it,
+   and `/task-implement` warns and lets you decide — `all` and `next` skip it.
+5. `/task-add feature=password-auth` **reconciles**: each stale task is left
+   alone, updated in place (back to `[MISSING]`), or skipped with a reason and
+   replaced. `[DONE]` tasks are never touched. The feature returns to
+   `[PLANNED]`.
+
+Two vocabularies are at work and they mean different things. A **feature**
+status (`[NEW]` / `[ITERATED]` / `[PLANNED]`) describes whether the backlog
+matches the design — never whether the feature is built. A **task** status
+(`[MISSING]` … `[DONE]`) describes the work itself. `[ITERATED]` is the one
+state that demands action.
+
+The sections below are the per-command reference.
+
 ### Start a project — `/project-setup`
 
 One-pass setup for a new repo. Seeds `CLAUDE.md` from pasted material, adds an
