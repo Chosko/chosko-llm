@@ -69,7 +69,7 @@ The CLI is a proxy: `~/bin/chosko-llm` parses the subcommand and execs
 
 ## Testing
 
-Testing policy for /task-implement: skip-tests
+Testing policy for /task-implement: skip-tests-unattended
 
 This project has no test suite by design. It ships markdown prompts and thin
 shell wrappers; changes are verified by reading the diff and by running the
