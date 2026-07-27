@@ -118,6 +118,14 @@ else
   log_success "Wrote $out"
 fi
 
+file_count=0
+line_count=0
+while IFS= read -r f; do
+  file_count=$((file_count + 1))
+  line_count=$((line_count + $(wc -l < "$repo/$f")))
+done <<< "$files"
+log_success "Exported $file_count file(s), $line_count line(s) total."
+
 if [ -t 0 ]; then
   printf 'Open the export folder? [y/N] ' >&2
   read -r reply

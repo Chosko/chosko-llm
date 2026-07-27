@@ -23,6 +23,11 @@ CLI:
   (repo name, commit SHA, generation date).
 - Both forms print the resulting absolute path on **stdout** on success — the
   only stdout output; every progress/log line goes through `log_*` (stderr).
+- After the artifact is written (either shape) and before the open-folder
+  prompt, a `log_success` line reports the file count and total line count
+  of the selection (`Exported N file(s), M line(s) total.`), computed from
+  `$files`/`wc -l` on the original repo-relative sources — not by parsing
+  the generated `.md`/`.zip`.
 
 Selection (`select_export_files <repo_dir>`, repo-relative paths on stdout):
 - Includes: `CLAUDE.md`, `AGENTS.md`, `README.md` at the repo root, plus files

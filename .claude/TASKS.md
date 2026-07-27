@@ -276,7 +276,7 @@ Preconditions: none
 
 ## 65. Print a file-count/line-count report at the end of export, before the open-folder prompt
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/cmd-export.sh, .claude/context/cmd-export.md, VERSION
 Preconditions: none
