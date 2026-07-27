@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 64
+Last task number: 65
 
 ---
 
@@ -270,6 +270,15 @@ Preconditions: none
 Status: [MISSING]
 Target: claude
 Files: scripts/lib.sh, scripts/cmd-add.sh, scripts/cmd-rm.sh, scripts/cmd-update.sh, scripts/cmd-ls.sh, scripts/cmd-show.sh, statusline/session-statusline.sh, docs/authoring-guide.md, docs/cli-help.txt, README.md, .claude/context/features.md, .claude/context/shared-lib.md, .claude/context/cmd-add.md, .claude/context/cmd-ls.md, .claude/context/cmd-rm.md, .claude/context/cmd-update.md, .claude/context/cmd-show.md, .claude/context/INDEX.md, VERSION
+Preconditions: none
+
+---
+
+## 65. Print a file-count/line-count report at the end of export, before the open-folder prompt
+
+Status: [MISSING]
+Target: claude
+Files: scripts/cmd-export.sh, .claude/context/cmd-export.md, VERSION
 Preconditions: none
 
 ---
