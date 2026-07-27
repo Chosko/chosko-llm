@@ -303,7 +303,7 @@ Preconditions: none
 
 ## 68. Author the shared commit-then-push protocol and update the authoring guide's commit-control convention
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: docs/authoring-guide.md, VERSION
 Preconditions: none

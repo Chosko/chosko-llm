@@ -179,7 +179,7 @@ Always bump after a meaningful edit. `ls` displays the installed and latest
 versions side by side, so a forgotten bump leaves both columns showing the
 same value and users have no signal that there is anything to refresh.
 
-## Commit-control convention
+## Commit-and-push convention
 
 Commands that write files split into two groups, each exposing one opt-in
 flag so the user can override the default commit behaviour:
@@ -203,7 +203,7 @@ When adding a new command that writes files, follow the same rules:
 - Make no empty commit: if the run wrote nothing, commit nothing.
 - Never use hook-skipping or history-rewriting flags (`--no-verify`,
   `--amend`, `--no-gpg-sign`); surface a hook failure and let the user fix
-  it. Never push, branch, or tag.
+  it. Never branch or tag. Push only via the commit-and-push protocol below.
 - On a non-git VCS, honour the project CLAUDE.md `## VCS` mapping
   (e.g. git→`cm` for Plastic SCM).
 
@@ -211,6 +211,50 @@ When adding a new command that writes files, follow the same rules:
 artifacts first, then invokes its nested commands with `--commit` so each
 commits its own output (`/task-setup`, `/domain-setup`, `/context-build`, and
 `/unity-mcp-setup`, in that order).
+
+### The push protocol
+
+Every command that commits (whether by default or under `--commit`) also
+pushes, once it has actually committed something, using this single
+algorithm — author it here once; a dependent command references this
+section by name rather than re-deriving it.
+
+**Git projects only** (see the non-git exemption below):
+
+1. **Pull at start.** Right after the command's own precondition/setup
+   checks, and before any of its normal work begins, run `git pull` on the
+   current branch. A conflict stops the run immediately, before any of the
+   command's work happens — report the conflict output and tell the user to
+   resolve manually and re-run. "Already up to date" or a clean fast-forward:
+   proceed normally.
+2. Do the command's own work and commit exactly as already specified above
+   (unchanged: explicit paths only, no empty commits, no
+   `--no-verify`/`--amend`, report-and-stop on commit failure).
+3. **Pre-push re-sync.** Immediately before pushing, run `git pull` again —
+   other commits may have landed upstream while the command was running. A
+   clean fast-forward/merge: continue to push. A conflict: abort the merge,
+   leave the local commit intact, do **not** push, and report that the
+   commit exists locally but could not be synced — the user must resolve and
+   push manually.
+4. **Push.** `git push`. On failure (rejected, no upstream, no remote):
+   report the exact output and stop. Never retry, never force-push.
+
+**`--no-push` flag.** Every pushing command accepts `--no-push` to skip
+steps 1, 3, and 4 above while still committing as it does today.
+- For auto-committing commands (`/task-add`, `/task-clean`,
+  `/task-implement`, `/context-update`), `--no-commit` implies `--no-push`
+  — there is nothing to push.
+- For authoring commands (`/context-build`, `/task-enrich`,
+  `/refactor-codebase`, `/refactor-tests`, `/task-setup`, `/domain-setup`,
+  `/unity-mcp-setup`, `/product-design`, `/architect`, `/project-setup`),
+  which only commit under `--commit`, `--commit --no-push` is a valid
+  combination: commit locally, skip the sync/push cycle.
+
+**Non-git VCS exemption.** When the project's CLAUDE.md defines a `## VCS`
+section overriding git (e.g. Plastic SCM), skip the entire pull → re-sync →
+push sequence unconditionally — only the commit (checkin) step runs. This is
+a project-level fact recorded once in that project's CLAUDE.md by
+`/project-setup`, not something each command re-decides per run.
 
 ## Common mistakes
 
