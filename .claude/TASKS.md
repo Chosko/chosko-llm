@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 66
+Last task number: 67
 
 ---
 
@@ -288,6 +288,15 @@ Preconditions: none
 Status: [MISSING]
 Target: claude
 Files: .claude/context/*.md
+Preconditions: none
+
+---
+
+## 67. Add exported repo Version and Created date to the export manifest
+
+Status: [MISSING]
+Target: claude
+Files: scripts/cmd-export.sh, .claude/context/cmd-export.md, VERSION
 Preconditions: none
 
 ---
