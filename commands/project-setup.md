@@ -1,8 +1,8 @@
 ---
 name: project-setup
-version: 0.5.0
+version: 0.6.0
 type: command
-description: Interactive first-time project initialization wizard. Gathers all choices upfront (VCS, CLAUDE.md content, AGENTS.md, task backlog, context layer), confirms once, then executes them in a fixed order. Orchestrates /task-setup and /context-build; injects a VCS-mapping section into CLAUDE.md for non-git projects (e.g. Plastic SCM). On Unity projects, also injects a "Tasks implementation" section into CLAUDE.md covering editor dirty-tree noise handling (with a self-updating known-noise-files list maintained by future sessions) and, when the project has no test suite, the permanent skip-tests testing-policy marker for /task-implement, and offers to run /unity-mcp-setup (as the last step, after the context layer) to wire up MCP-assisted task implementation. Authoring command — leaves all output uncommitted for one review pass by default; pass --commit to commit its own artifacts and delegate --commit to the nested commands.
+description: Interactive first-time project initialization wizard. Gathers all choices upfront (VCS, CLAUDE.md content, AGENTS.md, task backlog, domain layer, context layer), confirms once, then executes them in a fixed order. Orchestrates /task-setup, /domain-setup (before the context layer, since context files cross-reference domain docs), and /context-build; injects a VCS-mapping section into CLAUDE.md for non-git projects (e.g. Plastic SCM). On Unity projects, also injects a "Tasks implementation" section into CLAUDE.md covering editor dirty-tree noise handling (with a self-updating known-noise-files list maintained by future sessions) and, when the project has no test suite, the permanent skip-tests testing-policy marker for /task-implement, and offers to run /unity-mcp-setup (as the last step, after the context layer) to wire up MCP-assisted task implementation. Authoring command — leaves all output uncommitted for one review pass by default; pass --commit to commit its own artifacts and delegate --commit to the nested commands.
 ---
 
 # /project-setup
@@ -19,11 +19,13 @@ GOAL
 Walk a first-time user through configuring this project: detect the VCS,
 optionally seed CLAUDE.md with project information (and an AGENTS.md
 pointer), inject a VCS-mapping section so the other chosko-llm commands work
-under non-git VCS, optionally initialize the task backlog, and optionally
-build the navigation context layer.
+under non-git VCS, optionally initialize the task backlog, optionally
+initialize the domain knowledge layer, and optionally build the navigation
+context layer.
 
 This command ORCHESTRATES the existing commands — it does not reimplement
-them. `/context-build` and `/task-setup` remain independently usable; this
+them. `/context-build`, `/task-setup`, and `/domain-setup` remain
+independently usable; this
 wizard runs their logic on the user's behalf and adds two artifacts of its
 own (the CLAUDE.md project-info + VCS sections and AGENTS.md).
 
@@ -40,7 +42,7 @@ history.
 With `--commit`, project-setup commits its OWN artifacts (the CLAUDE.md
 seeding + VCS section, AGENTS.md) first, then runs the nested commands WITH
 `--commit` so each commits its own output (`/task-setup --commit`,
-`/context-build --commit`). The result is a small series of focused commits
+`/domain-setup --commit`, `/context-build --commit`). The result is a small series of focused commits
 rather than one uncommitted working tree. `--commit` and `--no-commit` are
 mutually exclusive — if both appear, stop with:
 `--commit and --no-commit cannot be combined. Pick one.`
@@ -59,6 +61,12 @@ THEN runs the heavy sub-commands last:
 - `/task-setup` runs next — it is mechanical and low-context. It leaves its
   scaffolding uncommitted by default; under `--commit` the wizard passes
   `--commit` through so it commits its own scaffolding (see Step 5).
+- `/domain-setup` runs after it and BEFORE `/context-build` (see Step 5b) —
+  also mechanical and low-context. The ordering is deliberate:
+  `/context-build` emits DOMAIN DEPENDENCIES sections that link to domain
+  files, so the domain index should already exist when it runs. (This is the
+  mirror image of `/unity-mcp-setup`, which runs last precisely because it
+  needs a freshly built context layer.)
 - `/context-build` runs LAST. It is the most context-hungry command and has
   its own interactive STOP-and-approve gates, so it could otherwise capture
   the run and strand the wizard's later steps. Running it last guarantees the
@@ -102,14 +110,15 @@ matches the flag:
   > Heads up: this wizard leaves everything it writes UNCOMMITTED. I'll set
   > up the files (and run any sub-commands you choose), then hand the working
   > tree back to you to review and commit in one pass. I won't make any
-  > commits myself — the sub-commands I run (task-setup, context-build) leave
-  > their output uncommitted too.
+  > commits myself — the sub-commands I run (task-setup, domain-setup,
+  > context-build) leave their output uncommitted too.
 
 - WITH `--commit`:
 
   > Heads up: you passed --commit, so I'll commit as I go — first my own
   > artifacts (CLAUDE.md seeding, AGENTS.md), then each sub-command commits
-  > its own output (task-setup, context-build). You'll get a small series of
+  > its own output (task-setup, domain-setup, context-build). You'll get a
+  > small series of
   > focused commits rather than one working tree to review.
 
 Then ask the questions below ONE AT A TIME — ask one, wait for the reply,
@@ -172,7 +181,33 @@ its files sit in the working tree with everything else for one review pass.
 Under `--commit`, the wizard runs `/task-setup --commit` so it commits its
 own scaffolding.
 
-### 1e. Context layer
+### 1e. Domain knowledge layer
+
+Probe read-only for an existing `.claude/domain/` (Glob
+`.claude/domain/**/*.md`). Ask the variant that matches:
+
+- Nothing there yet:
+
+  > Initialize the domain knowledge layer now (runs /domain-setup)? [Y/n]
+
+- Documents already there:
+
+  > You already have docs under `.claude/domain/`. Index the docs you
+  > already have, and add the missing scaffolding around them (runs
+  > /domain-setup)? [Y/n]
+
+Either way, explain it in one line: the domain layer holds what the product
+is and why it's built that way — the counterpart to the context layer's
+codebase structure — and `/product-design` and `/architect` both write into
+it, so they need it to exist. `/domain-setup` never touches existing
+documents; it indexes them.
+
+Default is yes. Note that it runs after the task backlog and BEFORE
+`/context-build`, and leaves its scaffolding uncommitted by default; under
+`--commit` the wizard runs `/domain-setup --commit` so it commits its own
+scaffolding.
+
+### 1f. Context layer
 
 > Build the navigation context layer now (runs /context-build)? [Y/n]
 
@@ -181,7 +216,7 @@ it will pause for input during its phases, and it leaves its output
 uncommitted for you to review afterward. Under `--commit`, the wizard runs
 `/context-build --commit` so it commits its own output.
 
-### 1f. Unity projects — tasks-implementation section
+### 1g. Unity projects — tasks-implementation section
 
 Probe read-only for Unity: `ProjectSettings/ProjectVersion.txt` exists →
 Unity project. If it is NOT a Unity project, skip this subsection entirely
@@ -235,6 +270,7 @@ Unity section:  <inject Tasks-implementation section (skip-tests policy: yes/no)
 Unity MCP:      <set up via /unity-mcp-setup (runs last) | skip | n/a (not a Unity project)>
 AGENTS.md:      <create | skip>
 Task backlog:   <initialize via /task-setup | skip>
+Domain layer:   <initialize via /domain-setup | index existing docs via /domain-setup | skip>
 Context layer:  <build via /context-build (runs last) | skip>
 
 Execution order:
@@ -247,6 +283,7 @@ Execution order:
   4c. Commit own artifacts (only with --commit; commits steps 1-4)
   -- heavy sub-commands, last --
   5. /task-setup           (if requested; --commit passed through when set)
+  5b. /domain-setup        (if requested; before context-build; --commit passed through when set)
   6. /context-build        (if requested; interactive; --commit passed through when set)
   7. /unity-mcp-setup      (Unity + if requested; runs after context-build; --commit passed through when set)
 
@@ -328,7 +365,7 @@ unknown/"none" VCS, skip this step.
 
 ### Step 3b — Inject the Tasks-implementation section (Unity projects only)
 
-Skip this step entirely when the project is not Unity (GATHER 1f). For a
+Skip this step entirely when the project is not Unity (GATHER 1g). For a
 Unity project, append a `## Tasks implementation` section to CLAUDE.md (if
 one already exists, update it in place rather than duplicating). This
 section is the PERMANENT home for /task-implement guidance in this project
@@ -371,7 +408,7 @@ git, "checkin" for Plastic SCM. Do not ask the user for noise files and do
 not pre-fill the list — it starts empty by design and is maintained by
 future sessions per the instruction embedded in the section itself.
 
-If the user answered **no test suite** in GATHER 1f, end the section with
+If the user answered **no test suite** in GATHER 1g, end the section with
 the testing-policy marker — the phrase must match EXACTLY what
 /task-implement scans for — followed by the human-readable sentence:
 
@@ -427,6 +464,19 @@ everything else; with `--commit`, invoke it as `/task-setup --commit` so it
 commits its own scaffolding. Because CLAUDE.md is already written (Steps
 1-4), task-setup's convention reading sees the completed file.
 
+### Step 5b — Domain layer (before context-build)
+
+If requested at GATHER 1e, run the `/domain-setup` workflow. It creates the
+domain-layer scaffolding — `.claude/domain/`, `.claude/domain/features/`, the
+domain `INDEX.md`, `.claude/FEATURES.md`, and a CLAUDE.md pointer — and, on a
+project that already has hand-written domain docs, indexes them instead of
+writing an empty index. It runs BEFORE Step 6 so that `/context-build` can
+cross-reference an existing domain index. Without `--commit` it leaves its
+scaffolding uncommitted with everything else; with `--commit`, invoke it as
+`/domain-setup --commit` so it commits its own scaffolding. This wizard holds
+no domain-layer logic of its own — it delegates entirely, the same contract
+it has with `/unity-mcp-setup`.
+
 ### Step 6 — Context build (LAST)
 
 If requested, run the `/context-build` workflow. Run it LAST and treat its
@@ -440,7 +490,7 @@ output.
 ### Step 7 — Unity MCP setup (Unity projects only; runs after context-build)
 
 Run this step ONLY on a Unity project AND only if the user opted in at
-GATHER 1f. Invoke the `/unity-mcp-setup` workflow. It runs AFTER
+GATHER 1g. Invoke the `/unity-mcp-setup` workflow. It runs AFTER
 `/context-build` on purpose: if the user built a context layer in this run,
 it now exists, so `/unity-mcp-setup` can add its `.claude/context/mcp-tools.md`
 doc and INDEX row. This wizard does NOT reimplement any of that logic — it
@@ -454,8 +504,9 @@ machine-local `claude mcp add` registration is never committed either way).
 ### Final report
 
 Summarize every step's outcome and the files written by each (the wizard's
-own artifacts, task-setup's scaffolding if run, context-build's output if
-run). Then, depending on COMMIT:
+own artifacts, task-setup's scaffolding if run, domain-setup's scaffolding if
+run — naming any pre-existing domain docs it indexed — and context-build's
+output if run). Then, depending on COMMIT:
 - Without `--commit`: remind the user that NOTHING was committed — the entire
   working tree is theirs to review and commit in one pass. Suggest next steps
   (e.g. review the synthesized CLAUDE.md prose, then commit; `/task-add` once
@@ -474,9 +525,11 @@ DO NOT:
   sub-commands write is left uncommitted. With `--commit`, commit only the
   explicit paths each step wrote — never a catch-all — and never push,
   branch, tag, or use hook-skipping flags.
-- Reimplement `/context-build`, `/task-setup`, or `/unity-mcp-setup` —
-  invoke their workflows.
+- Reimplement `/context-build`, `/task-setup`, `/domain-setup`, or
+  `/unity-mcp-setup` — invoke their workflows.
 - Run `/context-build` before Step 6 — the heavy sub-commands run last.
+- Run `/domain-setup` after `/context-build`, or write any domain-layer
+  artifact yourself. It runs at Step 5b and owns all of that logic.
 - Offer or run `/unity-mcp-setup` on a non-Unity project, or run it before
   `/context-build` — it is Unity-only and runs after the context layer (Step 7).
 - Read the codebase to seed CLAUDE.md — seeding uses ONLY user-pasted

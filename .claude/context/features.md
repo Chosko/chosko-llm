@@ -20,14 +20,19 @@ Currently shipped:
 - `commands/project-setup.md` — interactive first-time project initialization
   wizard. Two phases: a GATHER phase that collects every choice upfront (VCS
   detection, CLAUDE.md seeding from pasted source, AGENTS.md, task backlog,
-  context layer), and an EXECUTE phase that applies them in a fixed order.
+  domain layer, context layer), and an EXECUTE phase that applies them in a
+  fixed order.
   **Authoring command — makes NO commits by default.** It writes its own
   artifacts (CLAUDE.md project-info section synthesized from user-pasted
   material only, a `## VCS` section mapping git→`cm` for non-git VCS like
   Plastic SCM, a `## Tasks implementation` section on Unity projects
   covering editor dirty-tree noise and the optional skip-tests
   testing-policy marker, and AGENTS.md), then runs the heavy sub-commands last —
-  `/task-setup` (which leaves its scaffolding uncommitted by default) then
+  `/task-setup` (which leaves its scaffolding uncommitted by default), then
+  `/domain-setup` (Step 5b — deliberately BEFORE the context layer, since
+  `/context-build`'s DOMAIN DEPENDENCIES sections link to domain files; its
+  GATHER step detects an existing `.claude/domain/` and offers to index the
+  docs already there), then
   `/context-build` (the most context-hungry, gated command). On Unity
   projects it also offers `/unity-mcp-setup`, invoked LAST (after
   `/context-build`, so a freshly-built context layer exists for its

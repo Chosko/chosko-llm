@@ -195,7 +195,7 @@ Preconditions: 53
 
 ## 56. Wire /domain-setup into the /project-setup wizard
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/project-setup.md, .claude/context/features.md, VERSION
 Preconditions: 55
