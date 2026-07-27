@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 67
+Last task number: 75
 
 ---
 
@@ -298,5 +298,77 @@ Status: [MISSING]
 Target: claude
 Files: scripts/cmd-export.sh, .claude/context/cmd-export.md, VERSION
 Preconditions: none
+
+---
+
+## 68. Author the shared commit-then-push protocol and update the authoring guide's commit-control convention
+
+Status: [MISSING]
+Target: claude
+Files: docs/authoring-guide.md, VERSION
+Preconditions: none
+
+---
+
+## 69. Add push (with --no-push) to the task-backlog commands: task-add, task-setup, task-clean, task-enrich
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-add.md, commands/task-setup.md, commands/task-clean.md, commands/task-enrich.md, .claude/domain/task-workflow.md, README.md, VERSION
+Preconditions: 68
+
+---
+
+## 70. Add push (with --no-push) to context-build and context-update
+
+Status: [MISSING]
+Target: claude
+Files: commands/context-build.md, commands/context-update.md, .claude/domain/context-workflow.md, README.md, VERSION
+Preconditions: 68
+
+---
+
+## 71. Add push (with --no-push) to refactor-codebase and refactor-tests
+
+Status: [MISSING]
+Target: claude
+Files: commands/refactor-codebase.md, commands/refactor-tests.md, .claude/domain/refactor-workflow.md, README.md, VERSION
+Preconditions: 68
+
+---
+
+## 72. Add push (with --no-push) to domain-setup, product-design, and architect
+
+Status: [MISSING]
+Target: claude
+Files: commands/domain-setup.md, skills/product-design/SKILL.md, skills/architect/SKILL.md, .claude/domain/product-workflow.md, README.md, VERSION
+Preconditions: 68
+
+---
+
+## 73. Add push (with --no-push) to project-setup, and document the Plastic push exemption in the injected VCS section
+
+Status: [MISSING]
+Target: claude
+Files: commands/project-setup.md, README.md, VERSION
+Preconditions: 68
+
+---
+
+## 74. Add push (with --no-push) to unity-mcp-setup
+
+Status: [MISSING]
+Target: claude
+Files: commands/unity-mcp-setup.md, README.md, VERSION
+Preconditions: 68
+
+---
+
+## 75. Add per-task push to /task-implement (skill + script), with --no-push
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-implement/SKILL.md, scripts/cmd-task-impl.sh, scripts/check-task-parity.sh, .claude/domain/task-workflow.md, README.md, VERSION
+Preconditions: 68
 
 ---
