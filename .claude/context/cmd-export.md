@@ -27,10 +27,12 @@ CLI:
 Selection (`select_export_files <repo_dir>`, repo-relative paths on stdout):
 - Includes: `CLAUDE.md`, `AGENTS.md`, `README.md` at the repo root, plus files
   under `.claude/` matching `*.md`, `*.json`, `*.toml` (recursively).
-- Excludes: `.claude/projects/`, `.claude/history/`, `.claude/todos/`
-  (pruned, not just filtered — kept off the `find` traversal entirely so a
-  large `projects/` history doesn't slow the scan), and any
-  `settings.local.json` anywhere under `.claude/`.
+- Excludes: `.claude/projects/`, `.claude/history/`, `.claude/todos/`,
+  `.claude/tasks/` (all pruned, not just filtered — kept off the `find`
+  traversal entirely so a large `projects/` history or task backlog doesn't
+  slow the scan), `.claude/TASKS.md`, and any `settings.local.json` anywhere
+  under `.claude/`. The task backlog is working-repo planning metadata, not
+  part of a repo's Claude config, so it never ships in an export.
 - Missing optional root files are skipped silently. An empty selection is a
   hard error via `die` — nothing to export.
 
@@ -87,7 +89,8 @@ Exit codes:
 
 - Changing what's included or excluded from an export → `select_export_files`
   in `scripts/cmd-export.sh` (the only place selection rules live).
-- Changing either output shape's layout (Markdown header/manifest format, or
+- Changing either output shape's layout (Markdown header/manifest format, the
+  fixed-width `===`/`FILE: <path>`/`===` banner between concatenated files, or
   the zip's staging/`MANIFEST.md` content) → the two branches at the bottom
   of `scripts/cmd-export.sh`.
 - Changing the non-git-repo prompt or SHA resolution → the `git -C "$repo"`

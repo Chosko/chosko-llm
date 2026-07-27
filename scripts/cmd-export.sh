@@ -33,8 +33,8 @@ select_export_files() {
   done
   if [ -d "$repo_dir/.claude" ]; then
     ( cd "$repo_dir" && find .claude \
-        \( -path '.claude/projects' -o -path '.claude/history' -o -path '.claude/todos' \) -prune -o \
-        -type f \( -name '*.md' -o -name '*.json' -o -name '*.toml' \) ! -name 'settings.local.json' -print \
+        \( -path '.claude/projects' -o -path '.claude/history' -o -path '.claude/todos' -o -path '.claude/tasks' \) -prune -o \
+        -type f \( -name '*.md' -o -name '*.json' -o -name '*.toml' \) ! -name 'settings.local.json' ! -path '.claude/TASKS.md' -print \
       | sort )
   fi
   return 0
@@ -109,8 +109,9 @@ else
     while IFS= read -r f; do
       printf -- '- %s\n' "$f"
     done <<< "$files"
+    banner="$(printf '=%.0s' $(seq 1 41))"
     while IFS= read -r f; do
-      printf '\nFILE: %s\n\n' "$f"
+      printf '\n%s\nFILE: %s\n%s\n\n' "$banner" "$f" "$banner"
       cat "$repo/$f"
     done <<< "$files"
   } > "$out"

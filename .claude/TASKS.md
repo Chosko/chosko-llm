@@ -258,7 +258,7 @@ Preconditions: none
 
 ## 63. Exclude .claude/TASKS.md and .claude/tasks/ from export; add clear file separators to the Markdown output
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/cmd-export.sh, .claude/context/cmd-export.md, VERSION
 Preconditions: none
