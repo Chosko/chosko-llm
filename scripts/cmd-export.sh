@@ -117,4 +117,12 @@ else
   log_success "Wrote $out"
 fi
 
+if [ -t 0 ]; then
+  printf 'Open the export folder? [y/N] ' >&2
+  read -r reply
+  case "$reply" in
+    y|Y|yes|Yes) open_in_file_manager "$export_dir" ;;
+  esac
+fi
+
 printf '%s\n' "$out"

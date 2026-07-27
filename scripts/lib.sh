@@ -120,6 +120,24 @@ inst_skill_dir()    { printf '%s/skills/%s' "$CLAUDE_HOME" "$1"; }
 # if set, else $HOME/claude-exports. The only place that path is assembled.
 export_dir_path() { printf '%s' "${CHOSKO_LLM_EXPORT_DIR:-$HOME/claude-exports}"; }
 
+# open_in_file_manager <dir>
+# Opens <dir> in the OS file manager. Tries, in order: explorer.exe (Windows,
+# incl. Git Bash/WSL), open (macOS), xdg-open (Linux). Silently does nothing
+# if none are available.
+open_in_file_manager() {
+  local dir="$1" win_dir="$dir"
+  if command -v explorer.exe >/dev/null 2>&1; then
+    command -v cygpath >/dev/null 2>&1 && win_dir="$(cygpath -w "$dir")"
+    explorer.exe "$win_dir" >/dev/null 2>&1 || true
+  elif command -v open >/dev/null 2>&1; then
+    open "$dir"
+  elif command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "$dir" >/dev/null 2>&1 &
+  else
+    log_warn "No file manager launcher found (explorer.exe / open / xdg-open) — open $dir manually."
+  fi
+}
+
 # claudemd_is_installed <name>
 # Returns 0 if a managed section for <name> exists in $CLAUDE_HOME/CLAUDE.md.
 claudemd_is_installed() {
