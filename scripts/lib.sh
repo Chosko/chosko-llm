@@ -109,11 +109,13 @@ src_command_path()  { printf '%s/commands/%s.md' "$CHOSKO_LLM_HOME" "$1"; }
 src_skill_path()    { printf '%s/skills/%s/SKILL.md' "$CHOSKO_LLM_HOME" "$1"; }
 src_skill_dir()     { printf '%s/skills/%s' "$CHOSKO_LLM_HOME" "$1"; }
 src_claudemd_path() { printf '%s/claude-md/%s.md' "$CHOSKO_LLM_HOME" "$1"; }
+src_statusline_path() { printf '%s/statusline/%s.sh' "$CHOSKO_LLM_HOME" "$1"; }
 
 # Installed paths under CLAUDE_HOME.
 inst_command_path() { printf '%s/commands/%s.md' "$CLAUDE_HOME" "$1"; }
 inst_skill_path()   { printf '%s/skills/%s/SKILL.md' "$CLAUDE_HOME" "$1"; }
 inst_skill_dir()    { printf '%s/skills/%s' "$CLAUDE_HOME" "$1"; }
+inst_statusline_path() { printf '%s/statusline/%s.sh' "$CLAUDE_HOME" "$1"; }
 
 # export_dir_path
 # Prints the directory `chosko-llm export` writes into: $CHOSKO_LLM_EXPORT_DIR
@@ -223,6 +225,22 @@ remove_section() {
   ' "$target" > "$tmp_file" && mv "$tmp_file" "$target"
 }
 
+# print_statusline_prompt <name> <installed_path>
+# Prints a copy-pasteable prompt for a Claude Code session to safely merge
+# the statusLine key into $CLAUDE_HOME/settings.json. No jq/automated JSON
+# editing here — settings.json's shape isn't ours to own.
+print_statusline_prompt() {
+  local name="$1" installed_path="$2"
+  cat <<EOF
+
+To activate '$name', open a Claude Code session and paste this prompt:
+
+  Update $CLAUDE_HOME/settings.json: set (or add) the top-level "statusLine"
+  key to {"type":"command","command":"$installed_path","padding":1},
+  preserving every other key in the file.
+EOF
+}
+
 # feature_kind <name> -> command | skill | both | none
 # Looks at the managed clone (the source of truth for what's authorable).
 feature_kind() {
@@ -258,31 +276,35 @@ resolve_feature() {
   local spec="$1"
   local prefix="" name="$spec"
   case "$spec" in
-    command:*)   prefix=command;   name="${spec#command:}"   ;;
-    skill:*)     prefix=skill;     name="${spec#skill:}"     ;;
-    claude-md:*) prefix=claude-md; name="${spec#claude-md:}" ;;
+    command:*)    prefix=command;    name="${spec#command:}"    ;;
+    skill:*)      prefix=skill;      name="${spec#skill:}"      ;;
+    claude-md:*)  prefix=claude-md;  name="${spec#claude-md:}"  ;;
+    statusline:*) prefix=statusline; name="${spec#statusline:}" ;;
   esac
 
   if [ -n "$prefix" ]; then
     case "$prefix" in
-      command)   [ -f "$(src_command_path  "$name")" ] || die "No such command in managed clone: $name" ;;
-      skill)     [ -f "$(src_skill_path    "$name")" ] || die "No such skill in managed clone: $name"   ;;
-      claude-md) [ -f "$(src_claudemd_path "$name")" ] || die "No such claude-md in managed clone: $name" ;;
+      command)    [ -f "$(src_command_path    "$name")" ] || die "No such command in managed clone: $name" ;;
+      skill)      [ -f "$(src_skill_path      "$name")" ] || die "No such skill in managed clone: $name"   ;;
+      claude-md)  [ -f "$(src_claudemd_path   "$name")" ] || die "No such claude-md in managed clone: $name" ;;
+      statusline) [ -f "$(src_statusline_path "$name")" ] || die "No such statusline in managed clone: $name" ;;
     esac
     printf '%s\n%s\n' "$prefix" "$name"
     return 0
   fi
 
-  local has_cmd=0 has_skill=0 has_cm=0
-  [ -f "$(src_command_path  "$name")" ] && has_cmd=1
-  [ -f "$(src_skill_path    "$name")" ] && has_skill=1
-  [ -f "$(src_claudemd_path "$name")" ] && has_cm=1
-  local total=$(( has_cmd + has_skill + has_cm ))
-  if   [ $total -gt 1 ];    then die "Feature name '$name' is ambiguous. Disambiguate with 'command:$name', 'skill:$name', or 'claude-md:$name'."
+  local has_cmd=0 has_skill=0 has_cm=0 has_sl=0
+  [ -f "$(src_command_path    "$name")" ] && has_cmd=1
+  [ -f "$(src_skill_path      "$name")" ] && has_skill=1
+  [ -f "$(src_claudemd_path   "$name")" ] && has_cm=1
+  [ -f "$(src_statusline_path "$name")" ] && has_sl=1
+  local total=$(( has_cmd + has_skill + has_cm + has_sl ))
+  if   [ $total -gt 1 ];    then die "Feature name '$name' is ambiguous. Disambiguate with 'command:$name', 'skill:$name', 'claude-md:$name', or 'statusline:$name'."
   elif [ $has_cmd -eq 1 ];  then printf 'command\n%s\n'   "$name"
   elif [ $has_skill -eq 1 ]; then printf 'skill\n%s\n'    "$name"
   elif [ $has_cm -eq 1 ];   then printf 'claude-md\n%s\n' "$name"
-  else die "No feature named '$name' found in $CHOSKO_LLM_HOME (commands/, skills/, or claude-md/)."
+  elif [ $has_sl -eq 1 ];   then printf 'statusline\n%s\n' "$name"
+  else die "No feature named '$name' found in $CHOSKO_LLM_HOME (commands/, skills/, claude-md/, or statusline/)."
   fi
 }
 

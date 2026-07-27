@@ -267,7 +267,7 @@ Preconditions: none
 
 ## 64. Add a `statusline` feature kind — ship the status bar config, installable via chosko-llm
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/lib.sh, scripts/cmd-add.sh, scripts/cmd-rm.sh, scripts/cmd-update.sh, scripts/cmd-ls.sh, scripts/cmd-show.sh, statusline/session-statusline.sh, docs/authoring-guide.md, docs/cli-help.txt, README.md, .claude/context/features.md, .claude/context/shared-lib.md, .claude/context/cmd-add.md, .claude/context/cmd-ls.md, .claude/context/cmd-rm.md, .claude/context/cmd-update.md, .claude/context/cmd-show.md, .claude/context/INDEX.md, VERSION
 Preconditions: none

@@ -11,9 +11,10 @@ fi
 spec="$1"
 prefix="" name="$spec"
 case "$spec" in
-  command:*)   prefix=command;   name="${spec#command:}"   ;;
-  skill:*)     prefix=skill;     name="${spec#skill:}"     ;;
-  claude-md:*) prefix=claude-md; name="${spec#claude-md:}" ;;
+  command:*)    prefix=command;    name="${spec#command:}"    ;;
+  skill:*)      prefix=skill;      name="${spec#skill:}"      ;;
+  claude-md:*)  prefix=claude-md;  name="${spec#claude-md:}"  ;;
+  statusline:*) prefix=statusline; name="${spec#statusline:}" ;;
 esac
 
 # For rm we look at what's actually installed, not the source.
@@ -21,15 +22,17 @@ resolve_installed() {
   if [ -n "$prefix" ]; then
     echo "$prefix"; return
   fi
-  local has_cmd=0 has_skill=0 has_cm=0
+  local has_cmd=0 has_skill=0 has_cm=0 has_sl=0
   [ -f "$(inst_command_path "$name")" ] && has_cmd=1
   [ -f "$(inst_skill_path   "$name")" ] && has_skill=1
   claudemd_is_installed "$name" && has_cm=1 || true
-  local total=$(( has_cmd + has_skill + has_cm ))
-  if   [ $total -gt 1 ];    then die "Multiple installed features named '$name'. Disambiguate with 'command:$name', 'skill:$name', or 'claude-md:$name'."
+  [ -f "$(inst_statusline_path "$name")" ] && has_sl=1
+  local total=$(( has_cmd + has_skill + has_cm + has_sl ))
+  if   [ $total -gt 1 ];    then die "Multiple installed features named '$name'. Disambiguate with 'command:$name', 'skill:$name', 'claude-md:$name', or 'statusline:$name'."
   elif [ $has_cmd -eq 1 ];  then echo command
   elif [ $has_skill -eq 1 ]; then echo skill
   elif [ $has_cm -eq 1 ];   then echo claude-md
+  elif [ $has_sl -eq 1 ];   then echo statusline
   else die "No feature named '$name' is installed under $CLAUDE_HOME."
   fi
 }
@@ -52,5 +55,12 @@ case "$kind" in
   claude-md)
     remove_section "$name"
     log_success "Removed claude-md '$name' from $CLAUDE_HOME/CLAUDE.md"
+    ;;
+  statusline)
+    target="$(inst_statusline_path "$name")"
+    [ -f "$target" ] || die "statusline '$name' is not installed."
+    rm -f "$target"
+    log_success "Removed statusline '$name' ($target)"
+    log_warn "If $CLAUDE_HOME/settings.json's \"statusLine\" key still points at $target, update or remove it."
     ;;
 esac

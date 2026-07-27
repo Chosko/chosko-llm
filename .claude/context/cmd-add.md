@@ -10,10 +10,10 @@ that, the user must call `update`.
 
 CLI:
 - `chosko-llm add <feature>` — `<feature>` is `<name>`, `command:<name>`,
-  `skill:<name>`, or `claude-md:<name>`.
+  `skill:<name>`, `claude-md:<name>`, or `statusline:<name>`.
 - `chosko-llm add --all` — install every feature present in the managed clone
-  (commands, skills, AND claude-md artifacts) that is not yet installed;
-  already-installed features are skipped with an info log.
+  (commands, skills, claude-md artifacts, AND statusline scripts) that is not
+  yet installed; already-installed features are skipped with an info log.
 
 Exit codes:
 - 0 on successful copy (or `--all` with nothing new to install).
@@ -27,6 +27,10 @@ Side effects:
 - For skills: recursive copy (`cp -R`) of the entire skill directory.
 - For claude-md: injects a managed section into `$CLAUDE_HOME/CLAUDE.md` via
   `inject_section` (no file copy); refuses if the section already exists.
+- For statusline: copies the `.sh` file to `$CLAUDE_HOME/statusline/<name>.sh`,
+  `chmod +x`'s it, then calls `print_statusline_prompt` to print a
+  copy-pasteable prompt for wiring the `"statusLine"` key in
+  `$CLAUDE_HOME/settings.json` — no settings.json edit happens here.
 - Logs a single `Installed <kind> '<name>' v<version> -> <path>` line.
 
 ## Internal patterns

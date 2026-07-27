@@ -17,11 +17,11 @@ Canonical project docs live outside this folder and remain authoritative:
 | File | Covers |
 | --- | --- |
 | [cli-entry.md](./cli-entry.md) | Bootstrap (`install.sh`/`uninstall.sh`), the `bin/chosko-llm` proxy that dispatches subcommands, and the daily auto-upgrade hook. |
-| [shared-lib.md](./shared-lib.md) | `scripts/lib.sh` — logging, colors, frontmatter, path resolution, claude-md sections, auto-upgrade state, validation. Sourced by every subcommand. |
+| [shared-lib.md](./shared-lib.md) | `scripts/lib.sh` — logging, colors, frontmatter, path resolution, claude-md sections, statusline prompt, auto-upgrade state, validation. Sourced by every subcommand. |
 | [cmd-ls.md](./cmd-ls.md) | `scripts/cmd-ls.sh` — list features with installed/latest versions; `--installed` / `--available` filters; TTY footer hints. |
 | [cmd-show.md](./cmd-show.md) | `scripts/cmd-show.sh` — inspect one feature (versions, status, description, body/diff); handles local-only. |
-| [cmd-add.md](./cmd-add.md) | `scripts/cmd-add.sh` — install a feature (command/skill/claude-md, or `--all`) into `$CLAUDE_HOME`; refuses if already installed. |
-| [cmd-rm.md](./cmd-rm.md) | `scripts/cmd-rm.sh` — uninstall a feature (command/skill/claude-md) from `$CLAUDE_HOME`. |
+| [cmd-add.md](./cmd-add.md) | `scripts/cmd-add.sh` — install a feature (command/skill/claude-md/statusline, or `--all`) into `$CLAUDE_HOME`; refuses if already installed. |
+| [cmd-rm.md](./cmd-rm.md) | `scripts/cmd-rm.sh` — uninstall a feature (command/skill/claude-md/statusline) from `$CLAUDE_HOME`. |
 | [cmd-update.md](./cmd-update.md) | `scripts/cmd-update.sh` — re-copy a feature (or version-aware `--all`); installs if missing. |
 | [cmd-upgrade.md](./cmd-upgrade.md) | `scripts/cmd-upgrade.sh` — `git pull` the managed clone, refresh the proxy; `--enable-auto`/`--disable-auto` toggles. |
 | [cmd-channel.md](./cmd-channel.md) | `scripts/cmd-channel.sh` — point the managed clone at a branch ('channel') to test unmerged work; no-arg shows current, `--list` shows available, `<branch>` switches + refreshes the proxy. |
@@ -29,7 +29,7 @@ Canonical project docs live outside this folder and remain authoritative:
 | [cmd-help.md](./cmd-help.md) | `scripts/cmd-help.sh` — print `docs/cli-help.txt` or fallback help. |
 | [cmd-task-impl.md](./cmd-task-impl.md) | `scripts/cmd-task-impl.sh` — external-LLM (aider+Ollama) orchestrator of the 8-step task-implement flow for the current project. |
 | [lib-task-external.md](./lib-task-external.md) | `scripts/lib-task-external.sh` — project-scoped backlog parse/mutate/guard helpers beneath `cmd-task-impl.sh`. |
-| [features.md](./features.md) | Shipped artifacts under `commands/`, `skills/`, and `claude-md/`; cross-refs to the authoring guide. |
+| [features.md](./features.md) | Shipped artifacts under `commands/`, `skills/`, `claude-md/`, and `statusline/`; cross-refs to the authoring guide. |
 
 ## Domain
 

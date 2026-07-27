@@ -62,10 +62,14 @@ Usage:
   chosko-llm help                     Show this help.
 
 Feature names:
-  Bare names (e.g. 'refactor-reviewer') match commands, skills, and claude-md artifacts. If a
-  name is ambiguous, disambiguate with 'command:<name>', 'skill:<name>', or 'claude-md:<name>'.
+  Bare names (e.g. 'refactor-reviewer') match commands, skills, claude-md artifacts, and
+  statusline scripts. If a name is ambiguous, disambiguate with 'command:<name>',
+  'skill:<name>', 'claude-md:<name>', or 'statusline:<name>'.
   claude-md artifacts inject managed sections into $CLAUDE_HOME/CLAUDE.md rather than copying
   a standalone file. Sections are delimited by HTML comments so user content is preserved.
+  statusline scripts install to $CLAUDE_HOME/statusline/<name>.sh; 'add' then prints a prompt
+  for a Claude Code session to wire the installed path into settings.json's "statusLine" key
+  (this CLI does not edit settings.json itself).
 
 Environment:
   CHOSKO_LLM_HOME   Path to the managed clone. Default: ~/.chosko-llm

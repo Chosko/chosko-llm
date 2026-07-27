@@ -23,7 +23,7 @@ description: One-line summary used in `chosko-llm ls`.
 | ------------- | ------------------------------------------------------------------------ |
 | `name`        | kebab-case. MUST match the filename (without `.md`) or the skill folder. |
 | `version`     | Semantic version, e.g. `0.1.0`, `1.2.0`. Required — install will refuse without it. |
-| `type`        | `command` for `commands/*.md`, `skill` for `skills/*/SKILL.md`.          |
+| `type`        | `command` for `commands/*.md`, `skill` for `skills/*/SKILL.md`, `claude-md` for `claude-md/*.md`, `statusline` for `statusline/*.sh`. |
 | `description` | One short line. Shown in `chosko-llm ls` and in skill discovery output.  |
 
 ## <a id="commands"></a>Authoring a command
@@ -48,6 +48,43 @@ a mismatch will break `update --all`.
 3. Add any supporting files alongside `SKILL.md` — they will be copied
    recursively when the skill is installed.
 4. The folder name **must** match the `name` frontmatter field.
+
+## <a id="statusline"></a>Authoring a statusline
+
+1. Create `statusline/<name>.sh`, a directly executable/sourceable bash
+   script — it must remain valid as the actual `statusLine` command Claude
+   Code shells out to.
+2. Because a `.sh` file can't start with a YAML block the way a `.md` file
+   can, the frontmatter lives inside a bash no-op heredoc placed right
+   after the shebang:
+
+   ```sh
+   #!/usr/bin/env bash
+   : <<'CHOSKO_FRONTMATTER'
+   ---
+   name: session-statusline
+   version: 0.1.0
+   type: statusline
+   description: One-line summary used in `chosko-llm ls`.
+   ---
+   CHOSKO_FRONTMATTER
+   # ... the actual status line script ...
+   ```
+
+   `parse_frontmatter` in `lib.sh` just scans for the first `---`/`---`
+   pair regardless of where it sits in the file, so this reads identically
+   to a `.md` frontmatter block while the shipped script stays a no-op to
+   execute — `: <<'...'` is a bash null command reading (and discarding) a
+   heredoc.
+3. The folder name (minus `.sh`) **must** match the `name` frontmatter
+   field, same rule as commands and skills.
+4. `chosko-llm add <name>` installs the script to
+   `$CLAUDE_HOME/statusline/<name>.sh` and then prints a copy-pasteable
+   prompt for a Claude Code session to merge the top-level `"statusLine"`
+   key into `$CLAUDE_HOME/settings.json` — this repo intentionally does not
+   edit `settings.json` itself (arbitrary JSON shape this repo doesn't own,
+   and the project avoids adding a `jq`/`python` dependency for shell-side
+   brace-matching).
 
 ## Tool discipline is global — do not restate it
 

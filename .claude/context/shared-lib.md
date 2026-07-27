@@ -44,6 +44,7 @@ Palette guidance:
 - `C_BLUE` — `command` kind.
 - `C_MAGENTA` — `skill` kind.
 - `C_CYAN` — `claude-md` kind. (Dual-use with `local only` status — acceptable since they appear in separate columns.)
+- `C_GREEN` — `statusline` kind. (Dual-use with `up-to-date` status — acceptable since they appear in separate columns.)
 
 *Structural*:
 - `C_BOLD` — structural emphasis (e.g. header rows, `Usage:` headings, `show` header line).
@@ -64,9 +65,11 @@ Source paths in the managed clone:
 - `src_skill_path <name>`    → `$CHOSKO_LLM_HOME/skills/<name>/SKILL.md`
 - `src_skill_dir <name>`     → `$CHOSKO_LLM_HOME/skills/<name>`
 - `src_claudemd_path <name>` → `$CHOSKO_LLM_HOME/claude-md/<name>.md`
+- `src_statusline_path <name>` → `$CHOSKO_LLM_HOME/statusline/<name>.sh`
 
 Installed paths under `$CLAUDE_HOME` mirror the same shape:
-- `inst_command_path <name>`, `inst_skill_path <name>`, `inst_skill_dir <name>`.
+- `inst_command_path <name>`, `inst_skill_path <name>`, `inst_skill_dir <name>`,
+  `inst_statusline_path <name>`.
 
 Export output:
 - `export_dir_path` → `$CHOSKO_LLM_EXPORT_DIR` if set, else `$HOME/claude-exports`.
@@ -83,15 +86,26 @@ content is preserved.
   section (body = `src_file` minus its frontmatter).
 - `remove_section <name>` → delete the named section.
 
+### statusline scripts
+A fourth feature kind: a status-bar shell script copied verbatim (not
+wrapped) to `$CLAUDE_HOME/statusline/<name>.sh`. Its frontmatter lives in a
+bash no-op heredoc (`: <<'CHOSKO_FRONTMATTER' ... CHOSKO_FRONTMATTER`) right
+after the shebang, so `parse_frontmatter`'s first-`---`-pair scan still
+finds it while the file stays directly executable.
+- `print_statusline_prompt <name> <installed_path>` → prints a
+  copy-pasteable prompt telling the user to have a Claude Code session merge
+  the top-level `"statusLine"` key into `$CLAUDE_HOME/settings.json`. No
+  jq/automated JSON editing — `cmd-add.sh` calls this after install instead.
+
 ### Feature kind
 - `feature_kind <name>` → `command | skill | both | none` (looks at managed
   clone).
 - `installed_kind <name>` → same, but looks at `$CLAUDE_HOME`.
 - `resolve_feature <spec>` — accepts `<name>`, `command:<name>`,
-  `skill:<name>`, or `claude-md:<name>`. Prints two lines on stdout:
-  `<kind>\n<name>`. Errors if the feature is not in the managed clone or if a
-  bare name is ambiguous (matches more than one of command/skill/claude-md).
-  Used by `cmd-add` / `cmd-update`.
+  `skill:<name>`, `claude-md:<name>`, or `statusline:<name>`. Prints two
+  lines on stdout: `<kind>\n<name>`. Errors if the feature is not in the
+  managed clone or if a bare name is ambiguous (matches more than one of
+  command/skill/claude-md/statusline). Used by `cmd-add` / `cmd-update`.
 
 ### Validation
 - `require_versioned_source <file>` — `die`s if the file is missing or its
@@ -117,9 +131,10 @@ Helpers over a gitignored key=value file `$CHOSKO_LLM_HOME/.auto-upgrade-state`
   `$CLAUDE_HOME` should be concatenated with subpaths. New code must use the
   helpers; do not hardcode `~/.chosko-llm` / `~/.claude`.
 - **`resolve_feature` is the source of truth** for `command:` / `skill:` /
-  `claude-md:` prefix parsing. `cmd-rm.sh` and `cmd-show.sh` parse the prefix
-  themselves (they resolve against installed/either kind, not source kind) —
-  keep all three prefix parsers in sync if the syntax changes.
+  `claude-md:` / `statusline:` prefix parsing. `cmd-rm.sh` and `cmd-show.sh`
+  parse the prefix themselves (they resolve against installed/either kind,
+  not source kind) — keep all three prefix parsers in sync if the syntax
+  changes.
 - **`die` exits 1, no other code.** Subcommand exit-code conventions live in
   the subcommand scripts, not here.
 

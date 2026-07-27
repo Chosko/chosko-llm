@@ -17,18 +17,20 @@ CLI:
 - Any other flag → `die`.
 
 Output: a text table with header `NAME KIND INSTALLED LATEST STATUS`.
-`KIND` is `command`, `skill`, or `claude-md`. Missing values are rendered as
-`—`. An installed file with no `version` frontmatter shows as `unversioned`.
-On an interactive terminal a suggestions block follows the table (install /
-update hints, plus an always-present `show` inspect hint); it is suppressed
-when stdout is piped or redirected.
+`KIND` is `command`, `skill`, `claude-md`, or `statusline`. Missing values
+are rendered as `—`. An installed file with no `version` frontmatter shows
+as `unversioned`. On an interactive terminal a suggestions block follows the
+table (install / update hints, plus an always-present `show` inspect hint);
+it is suppressed when stdout is piped or redirected.
 
 ## Internal patterns
 
-- **Three-pass listing**: commands, then skills, then claude-md artifacts.
-  Names within each pass are sorted and deduplicated across the two homes
-  (managed clone + `$CLAUDE_HOME`). claude-md "installed" state is detected by
-  the managed section markers in `$CLAUDE_HOME/CLAUDE.md`, not a file.
+- **Four-pass listing**: commands, then skills, then claude-md artifacts,
+  then statusline scripts. Names within each pass are sorted and
+  deduplicated across the two homes (managed clone + `$CLAUDE_HOME`).
+  claude-md "installed" state is detected by the managed section markers in
+  `$CLAUDE_HOME/CLAUDE.md`, not a file; statusline is a plain file check like
+  commands/skills.
 - **No version comparison.** `cmd-ls` only prints the two version strings
   side by side; there are no `[new]` / `[upgradable]` markers.
 - **Filenames are the truth.** A file named `foo.md` whose frontmatter

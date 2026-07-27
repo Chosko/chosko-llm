@@ -11,7 +11,7 @@ the body or a line-by-line diff. Unlike `ls`, it can also inspect a
 
 CLI:
 - `chosko-llm show <feature>` — `<feature>` is a bare name or
-  `command:<name>`, `skill:<name>`, `claude-md:<name>`.
+  `command:<name>`, `skill:<name>`, `claude-md:<name>`, `statusline:<name>`.
 - `--installed` — show the installed copy (notes if not installed).
 - `--latest` — show the latest copy from the managed clone.
 - `--diff` — compare latest vs installed (summary; add `--content` for a line
@@ -34,8 +34,8 @@ than one view flag, or an unresolvable/ambiguous name.
 - **Own resolver, not `lib.sh::resolve_feature`.** `resolve_show_feature`
   matches a feature that exists in EITHER the managed clone OR `$CLAUDE_HOME`,
   so local-only installs are inspectable. Keep its `command:`/`skill:`/
-  `claude-md:` prefix parsing and 3-way ambiguity in sync with the resolvers
-  in `lib.sh` and `cmd-rm.sh`.
+  `claude-md:`/`statusline:` prefix parsing and 4-way ambiguity in sync with
+  the resolvers in `lib.sh` and `cmd-rm.sh`.
 - **Status vocabulary mirrors `cmd-ls`** exactly: `up-to-date` / `updatable`
   / `not installed` / `local only`, with the same color mapping. Changing the
   vocabulary means changing both scripts.
@@ -44,6 +44,9 @@ than one view flag, or an unresolvable/ambiguous name.
   YAML); the body is extracted from the begin/end markers in
   `$CLAUDE_HOME/CLAUDE.md`, while the latest body is the managed file minus
   its frontmatter.
+- **statusline bodies behave like commands/skills.** Unlike claude-md, the
+  installed `.sh` file carries its own frontmatter (in the no-op heredoc), so
+  `print_installed_body`/`print_latest_body` just `cat` the file.
 - **Colors come from `lib.sh`** (`C_*`, set on a TTY); never inline escapes.
 
 ## Domain dependencies

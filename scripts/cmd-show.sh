@@ -17,8 +17,8 @@ Usage: chosko-llm show <feature> [--installed | --latest | --diff] [--content]
   --diff        Compare latest vs installed (summary; add --content for a line diff).
   --content     Also print the body of the selected copy (or the diff).
 
-  <feature> may be a bare name or 'command:<name>', 'skill:<name>', or
-  'claude-md:<name>' to disambiguate.
+  <feature> may be a bare name or 'command:<name>', 'skill:<name>',
+  'claude-md:<name>', or 'statusline:<name>' to disambiguate.
 EOF
 }
 
@@ -53,31 +53,35 @@ resolve_show_feature() {
   local spec="$1"
   local prefix="" name="$spec"
   case "$spec" in
-    command:*)   prefix=command;   name="${spec#command:}" ;;
-    skill:*)     prefix=skill;     name="${spec#skill:}" ;;
-    claude-md:*) prefix=claude-md; name="${spec#claude-md:}" ;;
+    command:*)    prefix=command;    name="${spec#command:}" ;;
+    skill:*)      prefix=skill;      name="${spec#skill:}" ;;
+    claude-md:*)  prefix=claude-md;  name="${spec#claude-md:}" ;;
+    statusline:*) prefix=statusline; name="${spec#statusline:}" ;;
   esac
 
-  local has_cmd=0 has_skill=0 has_cm=0
+  local has_cmd=0 has_skill=0 has_cm=0 has_sl=0
   if [ -f "$(src_command_path "$name")" ] || [ -f "$(inst_command_path "$name")" ]; then has_cmd=1; fi
   if [ -f "$(src_skill_path "$name")" ]   || [ -f "$(inst_skill_path "$name")" ];   then has_skill=1; fi
   if [ -f "$(src_claudemd_path "$name")" ] || claudemd_is_installed "$name";         then has_cm=1; fi
+  if [ -f "$(src_statusline_path "$name")" ] || [ -f "$(inst_statusline_path "$name")" ]; then has_sl=1; fi
 
   if [ -n "$prefix" ]; then
     case "$prefix" in
-      command)   [ "$has_cmd" -eq 1 ]   || die "No command named '$name' (installed or available)." ;;
-      skill)     [ "$has_skill" -eq 1 ] || die "No skill named '$name' (installed or available)." ;;
-      claude-md) [ "$has_cm" -eq 1 ]    || die "No claude-md named '$name' (installed or available)." ;;
+      command)    [ "$has_cmd" -eq 1 ]   || die "No command named '$name' (installed or available)." ;;
+      skill)      [ "$has_skill" -eq 1 ] || die "No skill named '$name' (installed or available)." ;;
+      claude-md)  [ "$has_cm" -eq 1 ]    || die "No claude-md named '$name' (installed or available)." ;;
+      statusline) [ "$has_sl" -eq 1 ]    || die "No statusline named '$name' (installed or available)." ;;
     esac
     printf '%s\n%s\n' "$prefix" "$name"
     return 0
   fi
 
-  local total=$((has_cmd + has_skill + has_cm))
-  if   [ "$total" -gt 1 ];    then die "Feature name '$name' is ambiguous. Disambiguate with 'command:$name', 'skill:$name', or 'claude-md:$name'."
+  local total=$((has_cmd + has_skill + has_cm + has_sl))
+  if   [ "$total" -gt 1 ];    then die "Feature name '$name' is ambiguous. Disambiguate with 'command:$name', 'skill:$name', 'claude-md:$name', or 'statusline:$name'."
   elif [ "$has_cmd" -eq 1 ];  then printf 'command\n%s\n'   "$name"
   elif [ "$has_skill" -eq 1 ]; then printf 'skill\n%s\n'    "$name"
   elif [ "$has_cm" -eq 1 ];   then printf 'claude-md\n%s\n' "$name"
+  elif [ "$has_sl" -eq 1 ];   then printf 'statusline\n%s\n' "$name"
   else die "No feature named '$name' found (installed or in the managed clone)."
   fi
 }
@@ -110,6 +114,12 @@ case "$kind" in
     inst_file="$CLAUDE_HOME/CLAUDE.md"
     [ -f "$src_file" ] && src_exists=1 || true
     claudemd_is_installed "$name" && inst_exists=1 || true
+    ;;
+  statusline)
+    src_file="$(src_statusline_path "$name")"
+    inst_file="$(inst_statusline_path "$name")"
+    [ -f "$src_file" ]  && src_exists=1  || true
+    [ -f "$inst_file" ] && inst_exists=1 || true
     ;;
 esac
 
@@ -157,16 +167,17 @@ esac
 
 # Path display.
 case "$kind" in
-  command)   loc="$inst_file" ;;
-  skill)     loc="$(inst_skill_dir "$name")" ;;
-  claude-md) loc="$CLAUDE_HOME/CLAUDE.md (section: chosko-llm:$name)" ;;
+  command)    loc="$inst_file" ;;
+  skill)      loc="$(inst_skill_dir "$name")" ;;
+  claude-md)  loc="$CLAUDE_HOME/CLAUDE.md (section: chosko-llm:$name)" ;;
+  statusline) loc="$inst_file" ;;
 esac
 if [ "$inst_exists" -eq 1 ]; then path_display="$loc"; else path_display="$loc (not yet installed)"; fi
 
 # Body extractors.
 print_installed_body() {
   case "$kind" in
-    command|skill) cat "$inst_file" ;;
+    command|skill|statusline) cat "$inst_file" ;;
     claude-md)
       awk -v b="<!-- chosko-llm:${name}:begin" -v e="<!-- chosko-llm:${name}:end -->" '
         index($0, b) { grab = 1; next }
@@ -178,7 +189,7 @@ print_installed_body() {
 }
 print_latest_body() {
   case "$kind" in
-    command|skill) cat "$src_file" ;;
+    command|skill|statusline) cat "$src_file" ;;
     claude-md)
       awk 'BEGIN { seen = 0; past = 0 }
         /^---[[:space:]]*$/ { if (!seen) { seen = 1; next } else if (!past) { past = 1; next } }
@@ -191,9 +202,10 @@ print_latest_body() {
 # ---------- colors for metadata ----------
 kind_c=""
 case "$kind" in
-  command)   kind_c="$C_BLUE" ;;
-  skill)     kind_c="$C_MAGENTA" ;;
-  claude-md) kind_c="$C_CYAN" ;;
+  command)    kind_c="$C_BLUE" ;;
+  skill)      kind_c="$C_MAGENTA" ;;
+  claude-md)  kind_c="$C_CYAN" ;;
+  statusline) kind_c="$C_GREEN" ;;
 esac
 
 status_c=""

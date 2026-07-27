@@ -74,6 +74,15 @@ collect_names() {
         fi
       } | sort -u
       ;;
+    statusline)
+      for dir in "$CHOSKO_LLM_HOME/statusline" "$CLAUDE_HOME/statusline"; do
+        [ -d "$dir" ] || continue
+        for f in "$dir"/*.sh; do
+          [ -e "$f" ] || continue
+          basename "$f" .sh
+        done
+      done | sort -u
+      ;;
   esac
 }
 
@@ -261,6 +270,66 @@ list_all() {
     printf '%s%s%s\n' "$status_color" "$status_col" "$C_RESET"
     found=1
   done < <(collect_names claude-md)
+
+  while IFS= read -r name; do
+    [ -n "$name" ] || continue
+    local inst_file src_file inst_ver src_ver inst_col latest_col
+    inst_file="$(inst_statusline_path "$name")"
+    src_file="$(src_statusline_path "$name")"
+
+    if [ -f "$inst_file" ]; then
+      inst_ver="$(read_frontmatter_field "$inst_file" version || true)"
+      inst_col="${inst_ver:-unversioned}"
+    else
+      inst_col="—"
+    fi
+
+    if [ -f "$src_file" ]; then
+      src_ver="$(read_frontmatter_field "$src_file" version || true)"
+      [ -n "$src_ver" ] && latest_col="$src_ver" || latest_col="—"
+    else
+      latest_col="—"
+    fi
+
+    case "$filter" in
+      installed) [ "$inst_col" = "—" ] && continue ;;
+      available) [ "$latest_col" = "—" ] && continue ;;
+    esac
+
+    local status_col
+    if [ "$inst_col" = "—" ]; then
+      status_col="not installed"
+    elif [ "$latest_col" = "—" ]; then
+      status_col="local only"
+    elif [ "$inst_col" = "$latest_col" ]; then
+      status_col="up-to-date"
+    else
+      status_col="updatable"
+    fi
+
+    case "$status_col" in
+      "not installed") installable+=("$name") ;;
+      "updatable")     updatable+=("$name") ;;
+    esac
+
+    local status_color
+    case "$status_col" in
+      "up-to-date")    status_color="$C_GREEN"  ;;
+      "updatable")     status_color="$C_YELLOW" ;;
+      "not installed") status_color="$C_DIM"    ;;
+      "local only")    status_color="$C_CYAN"   ;;
+      *)               status_color=""          ;;
+    esac
+    local inst_color latest_color
+    [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
+    [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
+    _colored_cell ""              "$name"       ""        30
+    _colored_cell "$C_GREEN"      "statusline"  "$C_RESET" 8
+    _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
+    _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
+    printf '%s%s%s\n' "$status_color" "$status_col" "$C_RESET"
+    found=1
+  done < <(collect_names statusline)
 
   [ $found -eq 1 ] || log_info "No features found."
 

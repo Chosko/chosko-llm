@@ -73,6 +73,28 @@ if [ "$1" = "--all" ]; then
       any=1
     done
   fi
+  if [ -d "$CHOSKO_LLM_HOME/statusline" ]; then
+    for f in "$CHOSKO_LLM_HOME"/statusline/*.sh; do
+      [ -e "$f" ] || continue
+      base="$(basename "$f" .sh)"
+      dst="$(inst_statusline_path "$base")"
+      if [ -e "$dst" ]; then
+        log_info "Already installed: statusline '$base' — skipping"
+        continue
+      fi
+      version="$(read_frontmatter_field "$f" version || true)"
+      if [ -z "$version" ]; then
+        log_warn "Skipping statusline '$base': missing version in frontmatter"
+        continue
+      fi
+      mkdir -p "$(dirname "$dst")"
+      cp "$f" "$dst"
+      chmod +x "$dst"
+      log_success "Installed statusline '$base' v$version -> $dst"
+      print_statusline_prompt "$base" "$dst"
+      any=1
+    done
+  fi
   [ $any -eq 1 ] || log_info "Nothing to install — all features already installed."
   exit 0
 fi
@@ -117,5 +139,19 @@ case "$kind" in
     version="$(read_frontmatter_field "$src" version)"
     inject_section "$name" "$version" "$src"
     log_success "Installed claude-md '$name' v$version -> $CLAUDE_HOME/CLAUDE.md"
+    ;;
+  statusline)
+    src="$(src_statusline_path "$name")"
+    dst="$(inst_statusline_path "$name")"
+    require_versioned_source "$src"
+    if [ -e "$dst" ]; then
+      die "statusline '$name' is already installed at $dst. Use 'chosko-llm update $name' to refresh."
+    fi
+    mkdir -p "$(dirname "$dst")"
+    cp "$src" "$dst"
+    chmod +x "$dst"
+    version="$(read_frontmatter_field "$src" version)"
+    log_success "Installed statusline '$name' v$version -> $dst"
+    print_statusline_prompt "$name" "$dst"
     ;;
 esac

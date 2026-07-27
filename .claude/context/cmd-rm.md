@@ -10,31 +10,34 @@ resolves names against what is **installed**, not against the managed clone
 
 CLI:
 - `chosko-llm rm <feature>` — `<feature>` is `<name>`, `command:<name>`,
-  `skill:<name>`, or `claude-md:<name>`.
+  `skill:<name>`, `claude-md:<name>`, or `statusline:<name>`.
 
 Exit codes:
 - 0 on successful removal.
 - 1 (via `die`) if no argument, if `<name>` is ambiguous (more than one of
-  command/skill/claude-md installed) without a prefix, or if nothing matching
-  is installed.
+  command/skill/claude-md/statusline installed) without a prefix, or if
+  nothing matching is installed.
 
 Side effects:
 - For commands: `rm -f` on the `.md` file.
 - For skills: `rm -rf` on the entire skill directory.
 - For claude-md: `remove_section` strips the managed section from
   `$CLAUDE_HOME/CLAUDE.md` (user content around it is preserved).
+- For statusline: `rm -f` on the `.sh` file, then a warning reminding the
+  user to update/remove the `"statusLine"` key in `$CLAUDE_HOME/settings.json`
+  if it still points at the deleted path.
 - Logs a single `Removed <kind> '<name>' (<path>)` line.
 
 ## Internal patterns
 
 - **Resolution is local, not via `resolve_feature`.** `cmd-rm.sh` parses
-  the `command:` / `skill:` / `claude-md:` prefix itself (in
+  the `command:` / `skill:` / `claude-md:` / `statusline:` prefix itself (in
   `resolve_installed`) and checks installed state directly
-  (`inst_command_path`, `inst_skill_path`, `claudemd_is_installed`). This is
-  intentional — `resolve_feature` checks the managed clone, which is the
-  wrong source of truth here. Keep the prefix-parsing case statement in sync
-  with the ones in `lib.sh::resolve_feature` and `cmd-show.sh` if the syntax
-  changes.
+  (`inst_command_path`, `inst_skill_path`, `claudemd_is_installed`,
+  `inst_statusline_path`). This is intentional — `resolve_feature` checks the
+  managed clone, which is the wrong source of truth here. Keep the
+  prefix-parsing case statement in sync with the ones in
+  `lib.sh::resolve_feature` and `cmd-show.sh` if the syntax changes.
 - **No source-existence check.** A feature whose source has been removed
   from the managed clone is still removable from `$CLAUDE_HOME`.
 

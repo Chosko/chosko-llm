@@ -10,11 +10,13 @@ unlike `add`, it does not refuse on absence.
 
 CLI:
 - `chosko-llm update <feature>` — single feature; same spec syntax as `add`
-  (`<name>`, `command:`/`skill:`/`claude-md:` prefixed). Installs if missing.
+  (`<name>`, `command:`/`skill:`/`claude-md:`/`statusline:` prefixed).
+  Installs if missing.
 - `chosko-llm update --all` — iterate installed commands
-  (`$CLAUDE_HOME/commands/*.md`), skills (`$CLAUDE_HOME/skills/*/`), and
-  claude-md sections (markers in `$CLAUDE_HOME/CLAUDE.md`), updating only
-  those whose managed-clone source version is **newer** than installed.
+  (`$CLAUDE_HOME/commands/*.md`), skills (`$CLAUDE_HOME/skills/*/`),
+  claude-md sections (markers in `$CLAUDE_HOME/CLAUDE.md`), and statusline
+  scripts (`$CLAUDE_HOME/statusline/*.sh`), updating only those whose
+  managed-clone source version is **newer** than installed.
 
 Exit codes:
 - 0 on success (including `--all` with nothing to update).
@@ -22,9 +24,9 @@ Exit codes:
   frontmatter on the source.
 
 Side effects:
-- Single feature: deletes the existing target (`rm -f` for command,
-  `rm -rf` for skill) then copies fresh; claude-md re-injects via
-  `inject_section`.
+- Single feature: deletes the existing target (`rm -f` for command/statusline,
+  `rm -rf` for skill) then copies fresh (`chmod +x` for statusline);
+  claude-md re-injects via `inject_section`.
 - `--all`: per installed feature, compares versions with `version_cmp` and
   logs `Already up-to-date` (equal), `Local version ahead … — skipping`
   (installed newer), or updates (source newer). Emits

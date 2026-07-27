@@ -1,4 +1,4 @@
-# Features (commands, skills & claude-md)
+# Features (commands, skills, claude-md & statusline)
 
 The artifacts this repo *ships*. The CLI exists to install and update them.
 
@@ -15,6 +15,14 @@ Feature kinds, all keyed by feature name (kebab-case):
   `:end` markers) rather than copied as a standalone file, so global CLAUDE.md
   guidance ships and updates like any other feature. `chosko-llm add/rm/update`
   treat it as the `claude-md:` kind; surrounding user content is preserved.
+- `statusline/<name>.sh` — a directly executable status-bar shell script,
+  installed verbatim to `$CLAUDE_HOME/statusline/<name>.sh`. Its frontmatter
+  lives in a bash no-op heredoc (`: <<'CHOSKO_FRONTMATTER' ... CHOSKO_FRONTMATTER`)
+  right after the shebang, so `parse_frontmatter`'s first-`---`-pair scan still
+  finds it. Because `settings.json`'s `"statusLine"` key isn't this repo's
+  shape to own, `chosko-llm add` doesn't edit it — it prints a copy-pasteable
+  prompt for a Claude Code session to merge the key in safely. `chosko-llm
+  add/rm/update/ls/show` treat it as the `statusline:` kind.
 
 Currently shipped:
 - `commands/project-setup.md` — interactive first-time project initialization
@@ -278,6 +286,10 @@ Currently shipped:
 - `claude-md/tool-usage-policy.md` — a claude-md artifact: global tool-usage
   guidance injected into `$CLAUDE_HOME/CLAUDE.md`. Installed/updated/removed
   via the `claude-md:` kind, not as a copied file.
+- `statusline/session-statusline.sh` — a statusline artifact: model · cwd ·
+  git branch · context% · cost · 5h/7d rate limits. Installed/updated/removed
+  via the `statusline:` kind; `chosko-llm add` prints the settings.json
+  wiring prompt after copying the script.
 
 ## Public API (per-feature contract)
 

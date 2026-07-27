@@ -54,6 +54,18 @@ update_one() {
       inject_section "$name" "$version" "$src"
       log_success "Updated claude-md '$name' -> v$version"
       ;;
+    statusline)
+      local src dst
+      src="$(src_statusline_path "$name")"
+      dst="$(inst_statusline_path "$name")"
+      [ -f "$src" ] || die "No source for statusline '$name' at $src"
+      require_versioned_source "$src"
+      mkdir -p "$(dirname "$dst")"
+      [ -f "$dst" ] && rm -f "$dst"
+      cp "$src" "$dst"
+      chmod +x "$dst"
+      log_success "Updated statusline '$name' -> v$(read_frontmatter_field "$src" version)"
+      ;;
     *) die "Unknown kind: $kind" ;;
   esac
 }
@@ -143,6 +155,27 @@ if [ "$1" = "--all" ]; then
         log_warn "Skipping claude-md '$name': no source in managed clone."
       fi
     done < <(grep '<!-- chosko-llm:.*:begin' "$CLAUDE_HOME/CLAUDE.md" 2>/dev/null || true)
+  fi
+  if [ -d "$CLAUDE_HOME/statusline" ]; then
+    for f in "$CLAUDE_HOME"/statusline/*.sh; do
+      [ -e "$f" ] || continue
+      base="$(basename "$f" .sh)"
+      if [ -f "$(src_statusline_path "$base")" ]; then
+        inst_ver="$(read_frontmatter_field "$f" version || true)"
+        src_ver="$(read_frontmatter_field "$(src_statusline_path "$base")" version || true)"
+        cmp="$(version_cmp "$inst_ver" "$src_ver" 2>/dev/null || echo "?")"
+        case "$cmp" in
+          0)  log_info "Already up-to-date: statusline '$base' (v$inst_ver)"; continue ;;
+          1)  log_warn "Local version ahead: statusline '$base' (local v$inst_ver, latest v$src_ver) — skipping"; continue ;;
+          -1) ;; # fall through to update_one
+          *)  log_warn "Skipping statusline '$base': version unreadable — update manually"; continue ;;
+        esac
+        update_one statusline "$base"
+        any=1
+      else
+        log_warn "Skipping statusline '$base': no source in managed clone."
+      fi
+    done
   fi
   [ $any -eq 1 ] || log_info "Nothing to update."
   exit 0

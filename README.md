@@ -114,9 +114,11 @@ The default Markdown shape concatenates every selected file into one document â€
 
 ### Feature names
 
-A bare name like `refactor-codebase` matches commands, skills, and claude-md artifacts. If a name is ambiguous, disambiguate with `command:<name>`, `skill:<name>`, or `claude-md:<name>`.
+A bare name like `refactor-codebase` matches commands, skills, claude-md artifacts, and statusline scripts. If a name is ambiguous, disambiguate with `command:<name>`, `skill:<name>`, `claude-md:<name>`, or `statusline:<name>`.
 
 claude-md artifacts are a third feature kind: rather than copying a standalone file, they inject a managed section into `~/.claude/CLAUDE.md`. The section is delimited by HTML comment markers, so your own CLAUDE.md content around it is preserved.
+
+statusline scripts are a fourth feature kind: a status-bar shell script installed to `~/.claude/statusline/<name>.sh`. Since `settings.json`'s shape isn't this repo's to own, `chosko-llm add` doesn't edit it â€” it prints a copy-pasteable prompt for a Claude Code session to safely merge the installed path into the top-level `"statusLine"` key.
 
 ## Uninstall
 
@@ -411,6 +413,7 @@ Every feature requires YAML frontmatter (`name`, `version`, `type`, `description
 | `commands/<name>.md`         | A Claude Code command. Frontmatter required.                             |
 | `skills/<name>/SKILL.md`     | A Claude Code skill. Frontmatter required.                               |
 | `claude-md/<name>.md`        | A CLAUDE.md snippet feature, merged into the user's CLAUDE.md.           |
+| `statusline/<name>.sh`       | A status-line script feature, installed to `~/.claude/statusline/`.      |
 | `.claude/context/`           | Navigation context layer (`INDEX.md` + per-source files) for this repo.  |
 | `.claude/domain/`            | Domain workflow docs (task, context, refactor) referenced by `CLAUDE.md`. |
 | `.claude/TASKS.md` / `.claude/tasks/` | This repo's own task backlog and per-task body files.           |
