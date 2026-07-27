@@ -1,8 +1,8 @@
 ---
 name: task-implement
-version: 0.12.0
+version: 0.13.0
 type: skill
-description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits each task separately; pass --no-commit to skip the per-task commits. Supports `next` to implement the first eligible task. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time.
+description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits each task separately; pass --no-commit to skip the per-task commits. Supports `next` to implement the first eligible task. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd|skip-tests-unattended` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time. In skip-tests mode, pass `-y` to suppress the per-task "Proceed?" confirmation for that run; the `skip-tests-unattended` marker value makes that the default for every run without needing `-y`.
 ---
 
 # /task-implement
@@ -14,11 +14,13 @@ description: Implement one or more tasks from the project's task backlog end-to-
 #        /task-implement all
 #        /task-implement next
 #        /task-implement <args> --no-commit   (run the TDD flow, skip commits)
+#        /task-implement <args> -y            (skip-tests mode: no per-task Proceed? prompt)
 # Examples: /task-implement 12
 #           /task-implement 12 13 14
 #           /task-implement all
 #           /task-implement next
 #           /task-implement all --no-commit
+#           /task-implement all -y
 
 GOAL
 For each requested task, in the order given:
@@ -75,6 +77,16 @@ exclusive — if both appear, stop with:
 true, the run performs the full TDD sequence and the `Status:` flips but
 skips the per-task commit in Step 8 (see that step and BETWEEN TASKS). When
 false (the default), each task is committed separately as before.
+
+Also scan for the optional `-y` flag. If present, set AUTO_CONFIRM = true
+and strip it. AUTO_CONFIRM only changes behavior in skip-tests mode (see
+RESOLVING THE TEST RUNNER and `./no-test-suite.md`): it suppresses the
+per-task "Proceed?" confirmation that mode would otherwise ask before each
+task. It has no effect in full TDD mode, which never asks that prompt. A
+project whose CLAUDE.md declares `Testing policy for /task-implement:
+skip-tests-unattended` sets AUTO_CONFIRM = true for every run without
+needing `-y` on the command line; passing `-y` explicitly is redundant but
+harmless in that case.
 
 After stripping the flag, `$ARGUMENTS` is one of:
 - A whitespace-separated list of task numbers — implement those tasks in
@@ -194,12 +206,16 @@ anything else:
 
 0. **Testing policy marker (checked first).** Read `CLAUDE.md` if it
    exists and look for a line of the form:
-   `Testing policy for /task-implement: skip-tests` or
-   `Testing policy for /task-implement: full-tdd`. This is a project's
-   own durable declaration and overrides heuristic detection:
+   `Testing policy for /task-implement: skip-tests`,
+   `Testing policy for /task-implement: full-tdd`, or
+   `Testing policy for /task-implement: skip-tests-unattended`. This is a
+   project's own durable declaration and overrides heuristic detection:
    - `skip-tests` → the project has stated it has no automated test
      suite. Read `./no-test-suite.md` and go straight to its skip-tests
      mode, without asking the A/B question.
+   - `skip-tests-unattended` → same as `skip-tests`, plus set
+     AUTO_CONFIRM = true (as if `-y` had been passed) for the whole run,
+     so skip-tests mode's per-task "Proceed?" prompt is also suppressed.
    - `full-tdd` → the project has stated it does have a test suite, even
      if no runner is auto-detectable. Never enter no-test-suite mode;
      continue at step 1 to resolve the actual test command.
@@ -259,7 +275,7 @@ PRE-FLIGHT CHECKS (before any task)
 
 4. Briefly tell the user what you're about to do — one line per task —
    then start. In full TDD mode, no per-task confirmation prompt; in
-   skip-tests mode, prompt before each task.
+   skip-tests mode, prompt before each task unless AUTO_CONFIRM is true.
 
 ---
 
@@ -428,7 +444,8 @@ After committing a task, before starting the next:
    `Preconditions:` lines may have been edited by a parallel
    `/task-add` or `/task-clean` invocation.
 3. Briefly report progress: "Task N committed. Starting task M."
-4. In skip-tests mode, ask "Proceed?" before starting the next task.
+4. In skip-tests mode, ask "Proceed?" before starting the next task,
+   unless AUTO_CONFIRM is true.
 
 ---
 

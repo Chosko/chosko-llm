@@ -6,10 +6,13 @@ detectable AND no test directory like `tests/`, `test/`, `__tests__/`,
 strict TDD flow cannot run; switch to interactive mode.
 
 0. **If `CLAUDE.md` carries `Testing policy for /task-implement:
-   skip-tests`** (see RESOLVING THE TEST RUNNER step 0), skip step 1's A/B
-   question entirely. Tell the user once, briefly: "This project's
-   CLAUDE.md declares a skip-tests testing policy — implementing without
-   tests." Go straight to step 3 (skip-tests mode).
+   skip-tests` or `skip-tests-unattended`** (see RESOLVING THE TEST RUNNER
+   step 0), skip step 1's A/B question entirely. Tell the user once,
+   briefly: "This project's CLAUDE.md declares a skip-tests testing
+   policy — implementing without tests." (For `skip-tests-unattended`,
+   AUTO_CONFIRM is already true per step 0 — add ", unattended (no
+   per-task confirmation)" to that same sentence.) Go straight to step 3
+   (skip-tests mode).
 
 1. Otherwise, tell the user once, up front:
 
@@ -39,14 +42,19 @@ strict TDD flow cannot run; switch to interactive mode.
    If they pick B, proceed in skip-tests mode.
 
 3. **Skip-tests mode** for the rest of the run:
-   - Before each task, briefly summarize what you're about to change and
-     ask "Proceed?" Wait for explicit approval before editing any file.
+   - Unless AUTO_CONFIRM is true (via the `-y` flag or a
+     `skip-tests-unattended` policy marker), before each task briefly
+     summarize what you're about to change and ask "Proceed?" Wait for
+     explicit approval before editing any file. When AUTO_CONFIRM is true,
+     skip this prompt — state the one-line summary anyway so the user can
+     see what's about to happen, then proceed without waiting.
    - Skip Steps 2, 3, 5, and 6 of the per-task workflow (anything
      test-related). Steps 1, 4, 7, 8 still run.
    - The commit message should note "(no tests — manual verification
      pending)" in the body so it's visible later.
    - The `all` argument still works in skip-tests mode but the per-task
-     confirmation prompts still apply (one per task).
+     confirmation prompts still apply (one per task) unless AUTO_CONFIRM
+     is true.
 
 Never auto-scaffold a test suite without the user explicitly choosing
 option A.

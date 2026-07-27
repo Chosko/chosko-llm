@@ -161,9 +161,12 @@ Currently shipped:
   Console after compilation, performs editor actions itself, and rewrites
   each checkpoint into a verification step — opt-outable per run, and a
   no-op (standard manual protocol) when MCP isn't connected. Honors a `Testing policy for /task-implement:
-  skip-tests|full-tdd` marker in a project's CLAUDE.md (checked before
-  heuristic test-suite detection) so a no-test-suite decision persists
-  across runs instead of being re-asked each time. On a `[STALE]` task it
+  skip-tests|full-tdd|skip-tests-unattended` marker in a project's
+  CLAUDE.md (checked before heuristic test-suite detection) so a
+  no-test-suite decision persists across runs instead of being re-asked
+  each time. In skip-tests mode, the per-task "Proceed?" confirmation can
+  be suppressed with the `-y` flag for a single run, or permanently via
+  the `skip-tests-unattended` marker value. On a `[STALE]` task it
   warns naming the originating feature and offers implement-anyway or stop
   (`all` / `next` skip stale tasks and report them, rather than deciding
   for the user) — the interactive counterpart to `chosko-llm task-impl`
