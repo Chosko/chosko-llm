@@ -24,7 +24,7 @@ that must agree on schema; this document is what they agree on.
 | Stage | Command | Consumes | Produces |
 | --- | --- | --- | --- |
 | 0 — scaffold | `/domain-setup` | nothing | the domain layer + an empty `FEATURES.md` |
-| 1 — design | `/product-design` | the user, and the repo when brownfield | `product-design.md`, optional `business-model.md`, `design-process.md` |
+| 1 — design | `/product-design` | the user, and the repo when brownfield | `product-design.md`, `technical-direction.md`, optional `business-model.md`, `design-process.md` |
 | 2 — architect | `/architect` | a high-level feature, or a bare prompt | `features/<slug>.md` + a `FEATURES.md` entry |
 | 3 — plan | `/task-add feature=<slug>` | a feature doc | task bodies + `TASKS.md` entries |
 | 4 — build | `/task-implement` | a task body | code |
@@ -45,6 +45,7 @@ Nothing downstream requires that an upstream stage was ever run.
     INDEX.md                      the domain-layer index
     design-process.md             resumable state of a /product-design run
     product-design.md             high-level product design
+    technical-direction.md        the product's technical foundations
     business-model.md             business model (only when requested)
     features/<slug>.md            one doc per low-level feature
 ```
@@ -59,6 +60,16 @@ Sections: product summary, target users, user experience and key flows, the
 big design decisions, and the high-level feature set. Written in a
 documentational register — the WHAT and, to a degree, the HOW. Rationale
 belongs in conversation and in `design-process.md`, not here.
+
+### `technical-direction.md`
+
+Sections: stack, topology/architecture, data and storage, async/queueing,
+hosting and deployment, inter-component protocols, cross-cutting concerns,
+explicitly-open decisions. Unconditional — stubbed alongside
+`product-design.md` in PHASE 1 and always filled in PHASE 7, since every
+product has technical foundations. This is the standing constraint
+`/architect` designs within: when present, it is treated as an existing
+stack and `/architect`'s PHASE 2a tech-stack selection is skipped.
 
 ### `business-model.md`
 
@@ -248,6 +259,7 @@ Exactly one writer per artifact, with `FEATURES.md` the deliberate exception.
 | `domain/INDEX.md` | `/domain-setup` creates it; `/product-design` and `/architect` register the docs they add |
 | `design-process.md` | `/product-design` |
 | `product-design.md` | `/product-design`; `/architect` writes back clarifications and architecture-driven changes |
+| `technical-direction.md` | `/product-design` |
 | `business-model.md` | `/product-design` |
 | `features/<slug>.md` | `/architect` |
 | `FEATURES.md` | `/architect` owns entries, `Status:`, `Doc:`, `Source:`. `/task-add` owns `Tasks:` and the flip to `[PLANNED]`. `/task-clean` prunes dropped IDs from `Tasks:`. |

@@ -1,7 +1,7 @@
 # Document templates
 
-Read this in PHASE 1, when stubbing the documents, and again in PHASE 3 and
-PHASE 5, when filling them.
+Read this in PHASE 1, when stubbing the documents, and again in PHASE 3,
+PHASE 5, and PHASE 7, when filling them.
 
 Two rules apply to every template here:
 
@@ -44,6 +44,8 @@ Business modelling: <in scope | out of scope>
 | 3 — write-back | Fill product-design.md and business-model.md | <…> |
 | 4 — high-level features | Identify the feature set, user-experience angle | <…> |
 | 5 — feature write-back | Record the feature set in product-design.md | <…> |
+| 6 — technical direction | Decide the product's technical foundations | <…> |
+| 7 — technical write-back | Record the direction in technical-direction.md | <…> |
 
 ## Current stage
 
@@ -76,6 +78,9 @@ four; PHASE 5 fills the last.
 
 <One paragraph a user of the product would recognize as describing it.
 What it is and what it is for — not how it is built.>
+
+Technical foundations (stack, architecture, hosting) are recorded in
+[technical-direction.md](./technical-direction.md), not here.
 
 ## Target users
 
@@ -120,6 +125,64 @@ If a `product-design.md` already exists hand-written, keep its structure and
 extend it — map its sections onto these where they correspond, and add the
 missing ones. Do not restructure a document the user wrote to match this
 template.
+
+---
+
+## `technical-direction.md`
+
+The product's technical foundations. Stubbed unconditionally in PHASE 1
+alongside `product-design.md` — PHASE 6 always runs, so this document is
+never optional. Filled in PHASE 7; see `./technical-direction.md` (the
+question bank) for what to ask before filling it.
+
+```markdown
+# Technical direction — <Product name>
+
+<One paragraph: the overall shape of the technical approach, and whether
+this is a greenfield choice or a confirmed existing stack.>
+
+## Stack
+
+<Primary language(s) and framework(s), per component if they differ. Which
+high-level feature(s) drove each choice.>
+
+## Topology / architecture
+
+<Monolith, modular monolith, or services — and why. Component boundaries,
+if more than one.>
+
+## Data and storage
+
+<Primary data store(s), one per distinct data shape the product needs. Which
+feature's data model decided each.>
+
+## Async / queueing
+
+<Whether anything runs outside the request/response cycle, and what handles
+it. State explicitly if nothing does.>
+
+## Hosting and deployment
+
+<Where this runs, and the rough shape of getting a change live.>
+
+## Inter-component protocols
+
+<How the pieces talk to each other and to clients.>
+
+## Cross-cutting concerns
+
+<Auth/identity, observability, testing approach, and any regulatory or
+data-residency constraints — whatever applies.>
+
+## Explicitly open decisions
+
+<Axes discussed but not yet decided, and why. A section that says "not
+decided — needs X" is the honest version of this list; do not fill it with
+guesses.>
+```
+
+Precision discipline, same as `business-model.md`: state the decision, not
+the debate. Rationale that must survive belongs in `design-process.md`.
 
 ---
 

@@ -163,7 +163,7 @@ work survives across sessions, machines, and people.
 | Stage | Command | Consumes | Produces |
 | --- | --- | --- | --- |
 | 0 — scaffold | [`/domain-setup`](#set-up-the-domain-layer--domain-setup) | nothing | the domain layer + an empty `.claude/FEATURES.md` |
-| 1 — design | [`/product-design`](#design-a-product--product-design) | you, and the repo when it already has code | `product-design.md`, optional `business-model.md`, `design-process.md` |
+| 1 — design | [`/product-design`](#design-a-product--product-design) | you, and the repo when it already has code | `product-design.md`, `technical-direction.md`, optional `business-model.md`, `design-process.md` |
 | 2 — architect | [`/architect`](#design-how-to-build-it--architect) | a high-level feature, or a bare prompt | `.claude/domain/features/<slug>.md` + a `FEATURES.md` entry |
 | 3 — plan | `/task-add feature=<slug>` | a feature document | task bodies + `TASKS.md` entries |
 | 4 — build | `/task-implement` | a task body | code, one commit per task |
@@ -280,12 +280,16 @@ replacing them.
 
 Brainstorm a product from the ground up with Claude and write the result into
 the domain layer: what it is, who it's for, the key flows, the big decisions,
-and the high-level feature set described from the user's side. A business
-model is optional and opt-in. Requires `/domain-setup` to have run.
+and the high-level feature set described from the user's side — plus a
+technical direction (stack, topology, data, hosting) covering the product as
+a whole, not feature-by-feature. A business model is optional and opt-in.
+Requires `/domain-setup` to have run.
 
 It works on an existing codebase as well as a blank one — it reads what's
 there and opens with "here's what I see you've built; is this still the
-intent?".
+intent?". The technical-direction round follows the same rule: on an
+existing codebase it confirms and records what's already there rather than
+re-opening the stack.
 
 Designing a product takes more than one sitting, so the process is
 **resumable**: its state lives in `.claude/domain/design-process.md`, not in
@@ -293,7 +297,7 @@ the conversation. Run `/product-design` again weeks later and it tells you
 where the last session stopped and offers to pick up there. There's no flag
 to remember.
 
-The output is `/architect`'s input.
+The output — including `technical-direction.md` — is `/architect`'s input.
 
 ### Design how to build it — `/architect`
 

@@ -1,6 +1,6 @@
 ---
 name: domain-setup
-version: 0.1.0
+version: 0.1.1
 type: command
 description: Initialize the project's domain knowledge layer — creates .claude/domain/, .claude/domain/features/, a .claude/domain/INDEX.md that indexes any pre-existing domain docs, the .claude/FEATURES.md feature index, and a CLAUDE.md pointer to the domain index. Idempotent and re-runnable on projects that already have hand-written domain docs. Authoring command — leaves everything uncommitted for review by default; pass --commit to commit the scaffolding.
 ---
@@ -250,9 +250,9 @@ DO NOT:
 - Create any feature entries in `.claude/FEATURES.md`. This command creates
   the empty index; entries are `/architect`'s to write.
 - Create any design or feature documents — no `product-design.md`, no
-  `business-model.md`, no `features/<slug>.md`. Those belong to
-  `/product-design` and `/architect`. `/domain-setup` scaffolds the layer,
-  never its contents.
+  `technical-direction.md`, no `business-model.md`, no `features/<slug>.md`.
+  Those belong to `/product-design` and `/architect`. `/domain-setup`
+  scaffolds the layer, never its contents.
 - Overwrite or edit an existing domain document, an existing
   `.claude/domain/INDEX.md`, or an existing `.claude/FEATURES.md`. These
   are hand-written knowledge; treat them as canonical. Index them, never

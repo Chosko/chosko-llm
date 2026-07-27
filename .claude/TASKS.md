@@ -375,7 +375,7 @@ Preconditions: 68
 
 ## 76. Add a technical-direction phase and write-back to /product-design
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/product-design/SKILL.md, skills/product-design/technical-direction.md, skills/product-design/document-templates.md, skills/product-design/resuming.md, commands/domain-setup.md, .claude/domain/product-workflow.md, .claude/context/features.md, README.md, VERSION
 Preconditions: none

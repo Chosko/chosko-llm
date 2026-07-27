@@ -1,8 +1,8 @@
 ---
 name: product-design
-version: 0.1.0
+version: 0.2.0
 type: skill
-description: Brainstorm and design a product from the ground up with the user, producing high-level design documentation under .claude/domain/ — a product design doc whose features are described from the user-experience angle, plus an optional business model. Resumable across sessions: the state lives in design-process.md, not in conversation history, and every phase transition rewrites the stage marker before the phase ends. Works greenfield or brownfield (detected by reading the repo). Its output is /architect's input. Requires /domain-setup to have run. Nothing is committed by default; pass --commit to commit exactly the documents written.
+description: Brainstorm and design a product from the ground up with the user, producing high-level design documentation under .claude/domain/ — a product design doc whose features are described from the user-experience angle, a technical direction (stack, topology, data, hosting) that /architect adopts, plus an optional business model. Resumable across sessions: the state lives in design-process.md, not in conversation history, and every phase transition rewrites the stage marker before the phase ends. Works greenfield or brownfield (detected by reading the repo). Its output is /architect's input. Requires /domain-setup to have run. Nothing is committed by default; pass --commit to commit exactly the documents written.
 ---
 
 # /product-design
@@ -24,9 +24,10 @@ The output is documentation, in the project's domain layer:
 
 ```
 .claude/domain/
-  design-process.md      the state of this process — method, phases, stage marker
-  product-design.md      the product design itself
-  business-model.md      the business model (only when requested)
+  design-process.md          the state of this process — method, phases, stage marker
+  product-design.md          the product design itself
+  technical-direction.md     the product's technical foundations
+  business-model.md          the business model (only when requested)
 ```
 
 This is stage 1 of the product pipeline. `/architect` consumes
@@ -48,8 +49,9 @@ SUPPORTING FILES (read on demand — not up front)
 
 | Read this file | Exactly when |
 | -------------- | ------------ |
-| `./document-templates.md` | PHASE 1, when stubbing the documents, and again in PHASE 3 / PHASE 5 when filling them. |
+| `./document-templates.md` | PHASE 1, 3, 5, and 7, when stubbing or filling the documents. |
 | `./business-model.md` | The user opted into business modelling — read before the business-model questions in PHASE 2 and before writing `business-model.md` in PHASE 3. |
+| `./technical-direction.md` | Start of PHASE 6, and again before PHASE 7 writes `technical-direction.md`. |
 | `./resuming.md` | PHASE 0 found an existing `.claude/domain/design-process.md`. |
 
 Do not read a supporting file speculatively. A greenfield first run with no
@@ -129,6 +131,8 @@ PHASE 1 — ORIENT + STUB
      the stage marker, set to PHASE 1.
    - `.claude/domain/product-design.md` — stubbed sections, no invented
      content.
+   - `.claude/domain/technical-direction.md` — stubbed sections, no invented
+     content. Unconditional: PHASE 6 always runs, unlike business modelling.
    - `.claude/domain/business-model.md` — ONLY if business modelling was
      requested in step 2.
 
@@ -237,11 +241,65 @@ This phase writes **nothing else**. In particular it does not write
 a feature is actually architected. Writing them here would create feature
 entries with no feature documents behind them.
 
+Rewrite the stage marker before the phase ends, then report the sections
+written and move on to PHASE 6 — the process is not complete yet; the
+product's technical foundations have not been decided.
+
+---
+
+PHASE 6 — TECHNICAL DIRECTION
+
+A third conversational round, in the same register as PHASE 4: contribute,
+don't just extract answers. This phase always runs — every product has
+technical foundations, and this is the one place the pipeline decides them
+as a whole rather than feature-by-feature.
+
+Start by reading back the feature set PHASE 4/5 produced. Name, in one or
+two sentences, which features force which technical choices — a realtime
+flow forces a transport decision, a document-heavy flow forces a storage
+decision, and so on. This is what keeps the conversation grounded instead
+of a generic stack pitch.
+
+Read `./technical-direction.md` for the question bank / decision axes to
+work through: stack, topology (monolith vs. services), data and storage,
+async/queueing, hosting and deployment, inter-component protocols, and
+cross-cutting concerns.
+
+**Branch on greenfield vs. brownfield**, using PHASE 1's judgement:
+
+- **Brownfield** — start from what exists. "Here's what I see you're built
+  on — is this still the intent?" Only decide what is genuinely open;
+  confirm-and-record rather than re-litigate what is already settled.
+- **Greenfield** — propose candidates with trade-offs and a recommendation,
+  the same discipline `skills/architect/tech-stack-selection.md` uses for a
+  feature-level stack choice, but scoped to the whole product.
+
+The **user decides when this phase is done** — ask, and keep going until
+they say so. Never advance on your own.
+
+Rewrite the stage marker before the phase ends.
+
+---
+
+PHASE 7 — TECHNICAL WRITE-BACK
+
+Fill `technical-direction.md` from PHASE 6. Read `./document-templates.md`
+for the section-by-section shape, and `./technical-direction.md` again
+before writing if the conversation ranged widely. This phase creates
+nothing new — the document was already stubbed in PHASE 1 — and it does
+not write `FEATURES.md` entries, anything under `.claude/domain/features/`,
+or tasks.
+
+**Register: documentational**, same discipline as PHASE 3: state the
+decided direction, not the debate that produced it.
+
 Rewrite the stage marker to record that the process is complete, then give
 the final report:
 
-- Every document written or updated, with its path.
+- Every document written or updated across the whole run, with its path.
 - The confirmed high-level feature set, one line each.
+- The technical direction, in summary — stack, topology, and any explicitly
+  open decisions.
 - The next step: `/architect <feature>` to turn one of them into a
   low-level feature document, and `/task-add feature=<slug>` after that.
 - If `WRITTEN` is non-empty and `--commit` was NOT passed, an explicit
@@ -291,16 +349,19 @@ If COMMIT is true, after the run's last phase completes:
 ---
 
 DO NOT:
-- Write technical or implementation-level detail into any document —
-  components, data models, interfaces, libraries, file paths, code. That is
-  `/architect`'s output (feature documents) and `/task-add`'s (tasks).
-  Capture a hard technical constraint in one line if the user states one;
-  do not design against it here.
+- Write technical or implementation-level detail into `product-design.md`
+  or `business-model.md` — components, data models, interfaces, libraries,
+  file paths, code. That is `/architect`'s output (feature documents) and
+  `/task-add`'s (tasks). Capture a hard technical constraint in one line if
+  the user states one there; do not design against it in those two
+  documents. `technical-direction.md` is the one document where stack,
+  topology, and infrastructure detail belongs — that is PHASE 6/7's whole
+  purpose.
 - Create tasks or touch `.claude/TASKS.md` in any way.
 - Write entries in `.claude/FEATURES.md` or documents under
   `.claude/domain/features/`. Both belong to `/architect`.
-- Advance a phase without the user's explicit go-ahead. PHASE 2 and PHASE 4
-  end when the user says they end.
+- Advance a phase without the user's explicit go-ahead. PHASE 2, PHASE 4,
+  and PHASE 6 end when the user says they end.
 - Overwrite an existing domain document without explicit confirmation.
   Hand-written docs are canonical brownfield input — read them, build on
   them, never clobber them.

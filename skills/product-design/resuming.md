@@ -20,9 +20,13 @@ Extract:
 - Greenfield or brownfield, as the earlier session judged it.
 - Anything under **Decisions worth keeping**.
 
-Then read the documents that exist beside it — `product-design.md`, and
-`business-model.md` when in scope — so you know what is actually written,
-not just what the marker claims.
+Then read the documents that exist beside it — `product-design.md`,
+`technical-direction.md`, and `business-model.md` when in scope — so you
+know what is actually written, not just what the marker claims. A
+`technical-direction.md` that is still the PHASE 1 stub (headings and
+one-line notes, no filled content) counts as not-yet-written when reporting
+what the marker claims, exactly like an unfilled `product-design.md`
+section would.
 
 **When the marker and the documents disagree**, trust the marker for *where
 to resume* and say what you saw: "the marker says PHASE 3 is done, but
@@ -30,6 +34,14 @@ to resume* and say what you saw: "the marker says PHASE 3 is done, but
 first." A phase that ended without rewriting the marker is the one failure
 mode this protocol has to absorb, and it is absorbed by telling the user,
 not by silently re-deriving the stage.
+
+**A marker written before PHASE 6/7 existed** — its phase table has only
+five rows and its Current stage says `PHASE 5 — feature write-back: done`
+with no PHASE 6/7 rows to point at. That does not mean the process is
+complete: it means this run predates the technical-direction phases. Treat
+it as PHASE 5 done, PHASE 6 not started — offer to continue into PHASE 6
+rather than reporting the process as finished. When rewriting the marker
+from here, extend the phase table to the current seven-row shape.
 
 ## 2. Summarize, in the user's terms
 
@@ -92,8 +104,8 @@ invalidated by restarting the process.
 - Infer the stage from the documents' contents instead of the marker. The
   marker is the state; a mismatch is reported, not resolved by guesswork.
 - Resume silently. The user always sees the summary and makes the call.
-- Overwrite `product-design.md` or `business-model.md` on the resume path
-  (A) — that path only extends.
+- Overwrite `product-design.md`, `technical-direction.md`, or
+  `business-model.md` on the resume path (A) — that path only extends.
 - Re-ask PHASE 1's business-modelling question when the marker already
   records the answer. If the user now wants to add a business model to a
   process that skipped it, that is a fine thing to offer once, on resume,

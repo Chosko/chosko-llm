@@ -172,23 +172,36 @@ Currently shipped:
   per-task commits, leaving every task's changes uncommitted.
 - `skills/product-design/` — design a product top-down with the user and
   write the result into the domain layer: `design-process.md` (the state
-  file), `product-design.md`, and — only when the user opts in —
-  `business-model.md`. Six phases: PHASE 0 gates on `/domain-setup` having
-  run and auto-detects a resume, PHASE 1 orients (greenfield vs. brownfield,
-  read from CLAUDE.md/README/the context layer/the source tree) and stubs the
-  documents plus their `.claude/domain/INDEX.md` rows, PHASE 2 interviews,
-  PHASE 3 writes back, PHASE 4 identifies the high-level feature set from the
-  user-experience angle, PHASE 5 records it. Three supporting files load only
-  when their branch fires: `document-templates.md` (per-section stubs),
-  `business-model.md` (the strategy question bank — opt-in only), and
-  `resuming.md` (read only when `design-process.md` already exists). The
-  stage marker in `design-process.md` is rewritten before every phase ends,
-  so an interrupted session resumes from a truthful stage — there is no
-  `resume` argument, since the document is the state. Stays high-level by
-  construction: technical detail is `/architect`'s output, and it never
-  writes `.claude/FEATURES.md`, feature docs, or tasks. **Authoring skill —
-  nothing committed by default; `--commit` stages exactly the documents
-  written in one commit.**
+  file), `product-design.md`, `technical-direction.md`, and — only when the
+  user opts in — `business-model.md`. Eight phases: PHASE 0 gates on
+  `/domain-setup` having run and auto-detects a resume, PHASE 1 orients
+  (greenfield vs. brownfield, read from CLAUDE.md/README/the context
+  layer/the source tree) and stubs the documents plus their
+  `.claude/domain/INDEX.md` rows (`technical-direction.md` stubbed
+  unconditionally, since PHASE 6 always runs), PHASE 2 interviews, PHASE 3
+  writes back, PHASE 4 identifies the high-level feature set from the
+  user-experience angle, PHASE 5 records it, PHASE 6 is a conversational
+  round establishing the product's technical foundations (stack, topology,
+  data, async, hosting, protocols, cross-cutting concerns) — always runs,
+  reads back which PHASE 4/5 features drive which choices, and branches on
+  greenfield/brownfield (confirm-and-record vs. propose-with-recommendation)
+  — PHASE 7 writes it into `technical-direction.md`, the standing constraint
+  `/architect` designs within. Four supporting files load only when their
+  branch fires: `document-templates.md` (per-section stubs, read in PHASE 1,
+  3, 5, and 7), `business-model.md` (the strategy question bank — opt-in
+  only), `technical-direction.md` (the technical question bank, read at the
+  start of PHASE 6 and again before PHASE 7 writes), and `resuming.md` (read
+  only when `design-process.md` already exists — also handles a marker
+  written before PHASE 6/7 existed, offering to continue rather than
+  reporting the process complete). The stage marker in `design-process.md`
+  is rewritten before every phase ends, so an interrupted session resumes
+  from a truthful stage — there is no `resume` argument, since the document
+  is the state. `product-design.md` and `business-model.md` stay high-level
+  by construction: implementation detail is `/architect`'s output;
+  `technical-direction.md` is the one document where stack and
+  infrastructure detail belongs. It never writes `.claude/FEATURES.md`,
+  feature docs, or tasks. **Authoring skill — nothing committed by default;
+  `--commit` stages exactly the documents written in one commit.**
 - `skills/architect/` — stage 2 of the product pipeline: turn one or more
   high-level features into low-level feature documents under
   `.claude/domain/features/`, each indexed by a `.claude/FEATURES.md` entry.
