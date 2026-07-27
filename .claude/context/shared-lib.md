@@ -68,6 +68,10 @@ Source paths in the managed clone:
 Installed paths under `$CLAUDE_HOME` mirror the same shape:
 - `inst_command_path <name>`, `inst_skill_path <name>`, `inst_skill_dir <name>`.
 
+Export output:
+- `export_dir_path` → `$CHOSKO_LLM_EXPORT_DIR` if set, else `$HOME/claude-exports`.
+  The only place that path is assembled; used by `cmd-export.sh`.
+
 ### claude-md artifacts
 A third feature kind. Instead of copying a file, a claude-md artifact injects
 a managed section into `$CLAUDE_HOME/CLAUDE.md`, delimited by

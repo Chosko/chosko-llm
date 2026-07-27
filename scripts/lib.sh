@@ -115,6 +115,11 @@ inst_command_path() { printf '%s/commands/%s.md' "$CLAUDE_HOME" "$1"; }
 inst_skill_path()   { printf '%s/skills/%s/SKILL.md' "$CLAUDE_HOME" "$1"; }
 inst_skill_dir()    { printf '%s/skills/%s' "$CLAUDE_HOME" "$1"; }
 
+# export_dir_path
+# Prints the directory `chosko-llm export` writes into: $CHOSKO_LLM_EXPORT_DIR
+# if set, else $HOME/claude-exports. The only place that path is assembled.
+export_dir_path() { printf '%s' "${CHOSKO_LLM_EXPORT_DIR:-$HOME/claude-exports}"; }
+
 # claudemd_is_installed <name>
 # Returns 0 if a managed section for <name> exists in $CLAUDE_HOME/CLAUDE.md.
 claudemd_is_installed() {

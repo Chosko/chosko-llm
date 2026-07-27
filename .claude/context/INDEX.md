@@ -25,6 +25,7 @@ Canonical project docs live outside this folder and remain authoritative:
 | [cmd-update.md](./cmd-update.md) | `scripts/cmd-update.sh` — re-copy a feature (or version-aware `--all`); installs if missing. |
 | [cmd-upgrade.md](./cmd-upgrade.md) | `scripts/cmd-upgrade.sh` — `git pull` the managed clone, refresh the proxy; `--enable-auto`/`--disable-auto` toggles. |
 | [cmd-channel.md](./cmd-channel.md) | `scripts/cmd-channel.sh` — point the managed clone at a branch ('channel') to test unmerged work; no-arg shows current, `--list` shows available, `<branch>` switches + refreshes the proxy. |
+| [cmd-export.md](./cmd-export.md) | `scripts/cmd-export.sh` — package a repo's Claude config into a Markdown file or a zip via `select_export_files`; output dir from `export_dir_path`. |
 | [cmd-help.md](./cmd-help.md) | `scripts/cmd-help.sh` — print `docs/cli-help.txt` or fallback help. |
 | [cmd-task-impl.md](./cmd-task-impl.md) | `scripts/cmd-task-impl.sh` — external-LLM (aider+Ollama) orchestrator of the 8-step task-implement flow for the current project. |
 | [lib-task-external.md](./lib-task-external.md) | `scripts/lib-task-external.sh` — project-scoped backlog parse/mutate/guard helpers beneath `cmd-task-impl.sh`. |

@@ -37,6 +37,15 @@ Usage:
                                       run 'update --all' to deploy its features. Back to stable
                                       with 'chosko-llm channel master'.
 
+  chosko-llm export [<repo>]          Package <repo>'s Claude config (CLAUDE.md, AGENTS.md,
+                                      README.md, curated .claude/*.md|json|toml) into one
+                                      Markdown file for a Claude Project's knowledge base.
+                                      <repo> defaults to the current directory. Prints the
+                                      written path on success.
+  chosko-llm export [<repo>] --archive  Same selection, written as a zip (top-level
+                                      <repo>/ dir plus a root MANIFEST.md) for uploading
+                                      to a Claude chat.
+
   chosko-llm task-impl <N> [<N>…]     Drive aider+Ollama through the 8-step /task-implement
   chosko-llm task-impl all            sequence for one or more backlog tasks in the current
                                       project. Requires /task-setup to have been run first.
@@ -64,3 +73,4 @@ Environment:
   BIN_DIR           Where the CLI proxy is installed. Default: ~/bin
   NO_COLOR          Set to disable all colored output (table, metadata, log prefixes).
   CHOSKO_LLM_NO_AUTO_UPGRADE  Set to skip the daily auto-upgrade (CI / non-interactive use).
+  CHOSKO_LLM_EXPORT_DIR  Where 'export' writes its output. Default: ~/claude-exports

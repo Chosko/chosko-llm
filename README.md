@@ -100,6 +100,18 @@ chosko-llm task-impl all             # implement every pending task, in order
 
 It follows the same test-first sequence — write failing tests, implement, watch them pass — and commits each task separately. Pass `--model` / `--retries` / `--map-tokens`, or see `chosko-llm task-impl --help`, to tune the run. See [Workflows](#workflows) for how this fits the rest of the task tooling.
 
+### Exporting a repo's Claude config
+
+`chosko-llm export` packages a repo's Claude config — `CLAUDE.md`, `AGENTS.md`, `README.md`, and the curated Markdown/JSON/TOML subset of `.claude/` — into a single hand-off artifact, useful for sharing a repo's setup outside the working directory:
+
+```sh
+chosko-llm export                 # writes ~/claude-exports/<repo>-claude-config.md
+chosko-llm export /path/to/repo   # export a different repo; defaults to $PWD
+chosko-llm export --archive       # writes a .zip instead, for uploading to a Claude chat
+```
+
+The default Markdown shape concatenates every selected file into one document — suited to a Claude Project's knowledge base, where the whole thing gets ingested at once. `--archive` writes a zip with the files under a top-level `<repo>/` directory plus a root `MANIFEST.md`, suited to a Claude chat, where the assistant reads members selectively. Both shapes draw from the same file-selection rules, so they never disagree about what a repo's config is. Output goes to `$CHOSKO_LLM_EXPORT_DIR` (default `~/claude-exports`), created if missing; the written path is printed on success.
+
 ### Feature names
 
 A bare name like `refactor-codebase` matches commands, skills, and claude-md artifacts. If a name is ambiguous, disambiguate with `command:<name>`, `skill:<name>`, or `claude-md:<name>`.
@@ -131,6 +143,7 @@ Pass `-y` (or `--yes`) to answer every prompt yes for non-interactive use.
 | `BIN_DIR`         | `~/bin`         | Where the CLI proxy lives. Used by `install.sh`.     |
 | `NO_COLOR`        | unset           | Set to any value to disable colored output.          |
 | `CHOSKO_LLM_NO_AUTO_UPGRADE` | unset | Set to any value to skip the daily auto-upgrade.     |
+| `CHOSKO_LLM_EXPORT_DIR` | `~/claude-exports` | Where `chosko-llm export` writes its output. |
 
 ---
 
