@@ -213,7 +213,7 @@ Preconditions: 53, 55
 
 ## 58. Add the /architect skill — turn high-level features into low-level feature docs
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/architect/SKILL.md, skills/architect/tech-stack-selection.md, skills/architect/feature-doc-template.md, skills/architect/iterating.md, .claude/context/features.md, README.md, VERSION
 Preconditions: 54, 57

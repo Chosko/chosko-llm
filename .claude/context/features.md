@@ -170,6 +170,32 @@ Currently shipped:
   writes `.claude/FEATURES.md`, feature docs, or tasks. **Authoring skill —
   nothing committed by default; `--commit` stages exactly the documents
   written in one commit.**
+- `skills/architect/` — stage 2 of the product pipeline: turn one or more
+  high-level features into low-level feature documents under
+  `.claude/domain/features/`, each indexed by a `.claude/FEATURES.md` entry.
+  Input is a `product-design.md` section, named features, or a bare
+  free-form prompt (so it is usable on a codebase that never ran
+  `/product-design`); with no argument it lists the design's features and
+  asks. PHASE 0 gates on `/domain-setup`, reads the design/feature/context
+  layers, and detects whether a stack exists; PHASE 0b is the iterate guard;
+  PHASE 1 clarifies (skipped when nothing is ambiguous, writing answers back
+  into `product-design.md`); PHASE 2 architects conversationally, top-down,
+  stopping at mid-to-high technical level — no code, no file-by-file plans,
+  those being `/task-add`'s output; PHASE 3 writes the documents, the
+  `FEATURES.md` entries, the INDEX rows, and any upstream design change.
+  Three supporting files load only on their branch: `iterating.md` (the
+  feature already has an entry), `tech-stack-selection.md` (no existing
+  stack — an existing stack always wins), `feature-doc-template.md` (PHASE
+  3, always). Writes `Status:` / `Doc:` / `Source:` in `FEATURES.md` and
+  never `Tasks:` — the by-line split that lets it share the file with
+  `/task-add`. The only writer of `[STALE]`: the iterate guard refuses
+  outright while any generated task is `[IN PROGRESS]` (no override), else
+  asks, then flips surviving non-`[DONE]` tasks to `[STALE]` and the feature
+  `[PLANNED]` → `[ITERATED]`. That guard is also the only reason it touches
+  `.claude/TASKS.md`, and it writes nothing there but `Status:` lines. Slugs
+  are stable and never renamed. **Authoring skill — nothing committed by
+  default; `--commit` stages exactly the written paths (including TASKS.md
+  when the guard fired) in one commit.**
 - `skills/unity-mcp-skill/` — a Unity-MCP operator guide vendored from
   the upstream skill. `SKILL.md` carries the resource-first workflow,
   core tool categories, and best-practice patterns for driving the Unity

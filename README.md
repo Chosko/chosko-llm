@@ -217,6 +217,26 @@ to remember.
 
 The output is `/architect`'s input.
 
+### Design how to build it — `/architect`
+
+Takes a high-level feature and decides how it will actually be built, then
+writes that down as a low-level feature document under
+`.claude/domain/features/`, indexed in `.claude/FEATURES.md`. One product
+feature often becomes several architectural ones.
+
+It grounds the design in the code you already have (reading the context layer
+first), and proposes a tech stack only when there isn't one. It stops at
+components, data, and contracts — no code, no file-by-file plans. Those come
+from `/task-add`, which reads the code as it stands at planning time.
+
+You can run it from a `/product-design` feature, from a feature name, or from
+a bare description with no design documents at all.
+
+Re-architecting a feature that already produced tasks is guarded: if any of
+those tasks is `[IN PROGRESS]` it refuses outright, and otherwise it asks
+before marking the surviving tasks `[STALE]` and the feature `[ITERATED]` —
+then tells you to reconcile with `/task-add feature=<slug>`.
+
 ### Work through a backlog — the `task-*` commands
 
 A lightweight, in-repo issue tracker. Work is captured as small, reviewable
