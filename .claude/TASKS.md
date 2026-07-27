@@ -285,7 +285,7 @@ Preconditions: none
 
 ## 66. Run /context-update full to refresh the navigation context layer
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: .claude/context/*.md
 Preconditions: none
