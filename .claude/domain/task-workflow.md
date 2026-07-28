@@ -296,19 +296,18 @@ Always run `/task-enrich <N>` before handing a task to the local LLM.
 
 ## Orchestrated path: `chosko-llm task-impl`
 
-The orchestrator (`scripts/cmd-task-impl.sh`) runs an 8-step sequence driven
+The orchestrator (`scripts/cmd-task-impl.sh`) runs a 7-step sequence driven
 by aider against a single enriched task at a time:
 
 ```
 Step 1.   flip TASKS.md Status: → [IN PROGRESS]
 Step 2.   aider with tests-prompt.md          (skipped in skip-tests mode)
-Step 3.   run-affected-tests.sh — expect FAIL (skipped in skip-tests mode)
-Step 4.   aider with implement-prompt.md, retry up to N times on failure
+Step 3.   aider with implement-prompt.md, retry up to N times on failure
           (N = $CHOSKO_TASK_IMPL_RETRIES, default 3)
-Step 5.   run-affected-tests.sh — expect PASS (skipped in skip-tests mode)
-Step 6.   run-full-tests.sh   — expect PASS  (skipped in skip-tests mode)
-Step 7.   flip TASKS.md Status: → [DONE]
-Step 8.   stage Files: ∪ TASKS.md, one commit, then push (unless --no-push)
+Step 4.   run-affected-tests.sh — expect PASS (skipped in skip-tests mode)
+Step 5.   run-full-tests.sh   — expect PASS  (skipped in skip-tests mode)
+Step 6.   flip TASKS.md Status: → [DONE]
+Step 7.   stage Files: ∪ TASKS.md, one commit, then push (unless --no-push)
 ```
 
 The orchestrator refuses on a dirty working tree, refuses if any of the four

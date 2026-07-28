@@ -67,7 +67,7 @@ read when the project has no Unity MCP.
 ## Target: claude+human
 
 Implement normally (all steps of the per-task workflow apply); the
-checkpoints interleave with Step 4 at their trigger points. Announce all
+checkpoints interleave with Step 3 at their trigger points. Announce all
 checkpoints up front in Step 1 so the user knows the run will need them.
 
 ## Target: human — guided walkthrough mode
@@ -75,8 +75,8 @@ checkpoints up front in Step 1 so the user knows the run will need them.
 Claude makes NO production edits for this task: every change is performed
 by the user, guided checkpoint by checkpoint with the same protocol. Claude
 still runs read-only checks, compile/test commands for verification, and
-still owns the bookkeeping: the `Status:` flips in TASKS.md and the Step 8
-commit of the user's changes. Steps 2–6 of the per-task workflow apply only
+still owns the bookkeeping: the `Status:` flips in TASKS.md and the Step 7
+commit of the user's changes. Steps 2–5 of the per-task workflow apply only
 insofar as the user performs them under guidance; where the project's test
 flow is agent-runnable, Claude may still run the test commands itself
 (running tests is verification, not production editing).

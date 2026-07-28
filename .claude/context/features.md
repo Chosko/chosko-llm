@@ -142,8 +142,8 @@ Currently shipped:
   applying, commits the changes automatically (`.claude/TASKS.md` + deleted
   body files + `.claude/FEATURES.md` when it changed); `--no-commit`
   leaves them uncommitted.
-- `skills/task-implement/` — implement backlog tasks end-to-end with
-  TDD. The repo's only skill: `SKILL.md` carries the common path (clean
+- `skills/task-implement/` — implement backlog tasks end-to-end with a
+  tests-first sequence. The repo's only skill: `SKILL.md` carries the common path (clean
   tree, known test runner, numbered `target: claude` task) and five
   supporting files are read only when their branch fires —
   `dirty-tree.md` (non-empty `git status`), `test-runner.md` (runner must
@@ -179,7 +179,7 @@ Currently shipped:
   (`all` / `next` skip stale tasks and report them, rather than deciding
   for the user) — the interactive counterpart to `chosko-llm task-impl`
   refusing a stale task outright. Commits each task
-  separately; `--no-commit` runs the full TDD sequence but skips the
+  separately; `--no-commit` runs the full sequence but skips the
   per-task commits, leaving every task's changes uncommitted.
 - `skills/product-design/` — design a product top-down with the user and
   write the result into the domain layer: `design-process.md` (the state

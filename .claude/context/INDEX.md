@@ -27,7 +27,7 @@ Canonical project docs live outside this folder and remain authoritative:
 | [cmd-channel.md](./cmd-channel.md) | `scripts/cmd-channel.sh` — point the managed clone at a branch ('channel') to test unmerged work; no-arg shows current, `--list` shows available, `<branch>` switches + refreshes the proxy. |
 | [cmd-export.md](./cmd-export.md) | `scripts/cmd-export.sh` — package a repo's Claude config into a Markdown file or a zip via `select_export_files`; output dir from `export_dir_path`. |
 | [cmd-help.md](./cmd-help.md) | `scripts/cmd-help.sh` — print `docs/cli-help.txt` or fallback help. |
-| [cmd-task-impl.md](./cmd-task-impl.md) | `scripts/cmd-task-impl.sh` — external-LLM (aider+Ollama) orchestrator of the 8-step task-implement flow for the current project. |
+| [cmd-task-impl.md](./cmd-task-impl.md) | `scripts/cmd-task-impl.sh` — external-LLM (aider+Ollama) orchestrator of the 7-step task-implement flow for the current project. |
 | [lib-task-external.md](./lib-task-external.md) | `scripts/lib-task-external.sh` — project-scoped backlog parse/mutate/guard helpers beneath `cmd-task-impl.sh`. |
 | [features.md](./features.md) | Shipped artifacts under `commands/`, `skills/`, `claude-md/`, and `statusline/`; cross-refs to the authoring guide. |
 

@@ -32,7 +32,7 @@ Wait for an explicit typed answer. In default mode accept `1`/`proceed`,
 empty line, an unrelated reply, or silence is treated as **abort**.
 
 - **On proceed:** continue silently — no warning needed. Set
-  DIRTY_FOLD = false. Step 8 will stage only the task's own files,
+  DIRTY_FOLD = false. Step 7 will stage only the task's own files,
   exactly as on a clean tree; these pre-existing changes stay in the
   working tree untouched by the task's commit.
 - **On include** (default mode only): if the porcelain output
@@ -40,9 +40,9 @@ empty line, an unrelated reply, or silence is treated as **abort**.
   `Also fold untracked files into the task's commit? [y/N]`. On
   explicit yes, set DIRTY_FOLD_UNTRACKED = true and remember the
   untracked paths; on anything else, set DIRTY_FOLD_UNTRACKED = false.
-  Set DIRTY_FOLD = true. Print a one-line warning: "Step 8 (Commit)
+  Set DIRTY_FOLD = true. Print a one-line warning: "Step 7 (Commit)
   will stage these pre-existing changes together with this task's own
-  changes." Then continue — the fold happens in Step 8, not here.
+  changes." Then continue — the fold happens in Step 7, not here.
 - **On commit:** ask `Commit message?` and read the answer.
   Accept either a single line or a multi-line answer terminated by
   an empty line. Then:
@@ -63,7 +63,7 @@ empty line, an unrelated reply, or silence is treated as **abort**.
   line, do not stage, do not commit. The user is left exactly where
   they started.
 
-DIRTY_FOLD (and DIRTY_FOLD_UNTRACKED) apply only to the Step 8 of the task
+DIRTY_FOLD (and DIRTY_FOLD_UNTRACKED) apply only to the Step 7 of the task
 that immediately follows this check. When this runs in PRE-FLIGHT, that is
 the first task of the run; later tasks in the same invocation are
 unaffected and always fold nothing.
@@ -75,7 +75,7 @@ Notes:
   user opt-in, and NEVER uses `git add -A`/`-u .`/`.` in a way that
   would catch the user's untracked files implicitly.
 
-## Folding in Step 8 (when DIRTY_FOLD is true)
+## Folding in Step 7 (when DIRTY_FOLD is true)
 
 Fold the pre-existing dirty changes into the task's commit alongside the
 task's own changes:

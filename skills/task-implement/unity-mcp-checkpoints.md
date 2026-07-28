@@ -46,7 +46,7 @@ let one answer settle the whole task:
 
 Deliver this question as its own turn (per the explain-first rule in
 `./human-in-loop.md` — do not bury it behind a tool call), and wait for the
-user's answer before starting Step 4.
+user's answer before starting Step 3.
 
 ## Behaviour 1 — auto-check the Unity Console after compilation
 
@@ -61,7 +61,7 @@ Console for errors" needs no human. Do it yourself:
    step, the whole checkpoint becomes fully automatic.
 3. If the Console shows compile errors that stem from this task's changes,
    iterate: fix the code, recompile, re-read the Console, and repeat until
-   clean — before proceeding past the checkpoint. This is ordinary Step 4
+   clean — before proceeding past the checkpoint. This is ordinary Step 3
    implementation work, just verified through the editor instead of a local
    test run.
 4. If errors appear that you cannot resolve (e.g. they point at project

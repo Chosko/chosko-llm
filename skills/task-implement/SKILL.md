@@ -1,19 +1,19 @@
 ---
 name: task-implement
-version: 0.14.0
+version: 0.15.0
 type: skill
-description: Implement one or more tasks from the project's task backlog end-to-end using a TDD-style sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits and pushes each task separately; pass --no-commit to skip the per-task commits (and pushes), or --no-push to keep committing without pushing. Supports `next` to implement the first eligible task. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd|skip-tests-unattended` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time. In skip-tests mode, pass `-y` to suppress the per-task "Proceed?" confirmation for that run; the `skip-tests-unattended` marker value makes that the default for every run without needing `-y`.
+description: Implement one or more tasks from the project's task backlog end-to-end using a tests-first sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits and pushes each task separately; pass --no-commit to skip the per-task commits (and pushes), or --no-push to keep committing without pushing. Supports `next` to implement the first eligible task. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd|skip-tests-unattended` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time. In skip-tests mode, pass `-y` to suppress the per-task "Proceed?" confirmation for that run; the `skip-tests-unattended` marker value makes that the default for every run without needing `-y`.
 ---
 
 # /task-implement
 # Global skill: implement one or more tasks from the project's task backlog
-# end-to-end, following a strict TDD-style sequence. Commits each task
+# end-to-end, following a tests-first sequence. Commits each task
 # separately. No mid-flow confirmation prompts when tests exist; if the
 # project has no test suite the flow becomes interactive.
 # Usage: /task-implement <task-number> [<task-number> ...]
 #        /task-implement all
 #        /task-implement next
-#        /task-implement <args> --no-commit   (run the TDD flow, skip commits and pushes)
+#        /task-implement <args> --no-commit   (run the tests-first flow, skip commits and pushes)
 #        /task-implement <args> --no-push     (commit each task as usual, skip the pushes)
 #        /task-implement <args> -y            (skip-tests mode: no per-task Proceed? prompt)
 # Examples: /task-implement 12
@@ -28,12 +28,11 @@ GOAL
 For each requested task, in the order given:
 1. Flip status to `[IN PROGRESS]`.
 2. Update or write tests to encode the spec.
-3. Run the affected tests and watch them fail.
-4. Implement the production change.
-5. Re-run the affected tests and watch them pass.
-6. Run the full test suite and watch it pass.
-7. Flip status to `[DONE]` (or `[PARTIAL]` / `[INCORRECT]` if appropriate).
-8. Commit and push — one commit (and push) per task (skipped under
+3. Implement the production change.
+4. Run the affected tests and watch them pass.
+5. Run the full test suite and watch it pass.
+6. Flip status to `[DONE]` (or `[PARTIAL]` / `[INCORRECT]` if appropriate).
+7. Commit and push — one commit (and push) per task (skipped under
    `--no-commit`, which leaves each task's changes uncommitted in the
    working tree; the push alone is skipped under `--no-push`).
 
@@ -77,21 +76,21 @@ Before resolving the task list, scan `$ARGUMENTS` for the optional
 remainder is the task selector. `--commit` and `--no-commit` are mutually
 exclusive — if both appear, stop with:
 `--commit and --no-commit cannot be combined. Pick one.` When NO_COMMIT is
-true, the run performs the full TDD sequence and the `Status:` flips but
-skips the per-task commit in Step 8 (see that step and BETWEEN TASKS). When
+true, the run performs the full test sequence and the `Status:` flips but
+skips the per-task commit in Step 7 (see that step and BETWEEN TASKS). When
 false (the default), each task is committed separately as before.
 NO_COMMIT true implies NO_PUSH true — nothing is committed to push.
 
 Also scan for the optional `--no-push` flag. If present, set NO_PUSH = true
 and strip it. NO_PUSH only matters when NO_COMMIT is false: it skips the
-pull-at-start (PRE-FLIGHT step 5) and each task's re-sync/push in Step 8,
+pull-at-start (PRE-FLIGHT step 5) and each task's re-sync/push in Step 7,
 while every task still commits as always.
 
 Also scan for the optional `-y` flag. If present, set AUTO_CONFIRM = true
 and strip it. AUTO_CONFIRM only changes behavior in skip-tests mode (see
 RESOLVING THE TEST RUNNER and `./no-test-suite.md`): it suppresses the
 per-task "Proceed?" confirmation that mode would otherwise ask before each
-task. It has no effect in full TDD mode, which never asks that prompt. A
+task. It has no effect in full test mode, which never asks that prompt. A
 project whose CLAUDE.md declares `Testing policy for /task-implement:
 skip-tests-unattended` sets AUTO_CONFIRM = true for every run without
 needing `-y` on the command line; passing `-y` explicitly is redundant but
@@ -245,7 +244,7 @@ by keyword/marker matching the task's subject. The full suite is always
 run at the end of each task regardless.
 
 If the project HAS a test suite (runner found OR test directory present)
-and no `skip-tests` marker, do not enter skip-tests mode. Run in full TDD
+and no `skip-tests` marker, do not enter skip-tests mode. Run in full test
 mode without per-task confirmations.
 
 ---
@@ -257,7 +256,7 @@ PRE-FLIGHT CHECKS (before any task)
      Set DIRTY_FOLD = false.
    - If non-empty, read `./dirty-tree.md` and follow its prompt protocol
      before going further. It sets DIRTY_FOLD and DIRTY_FOLD_UNTRACKED,
-     which Step 8 consumes, and may halt the run.
+     which Step 7 consumes, and may halt the run.
 
 2. Use the Read tool to open `.claude/TASKS.md`. Resolve the task list
    per ARGUMENT PARSING above. For each task to be implemented:
@@ -283,7 +282,7 @@ PRE-FLIGHT CHECKS (before any task)
    BODY). Don't assume any of these exist.
 
 4. Briefly tell the user what you're about to do — one line per task —
-   then start. In full TDD mode, no per-task confirmation prompt; in
+   then start. In full test mode, no per-task confirmation prompt; in
    skip-tests mode, prompt before each task unless AUTO_CONFIRM is true.
 
 5. **Pull at start.** Unless NO_COMMIT is true (nothing will be committed
@@ -293,7 +292,7 @@ PRE-FLIGHT CHECKS (before any task)
    begins. A conflict stops the run here — report the conflict output and
    tell the user to resolve manually and re-run. This runs once per
    invocation, not once per task; each task's own re-sync happens right
-   before that task's push (Step 8).
+   before that task's push (Step 7).
 
 ---
 
@@ -347,17 +346,7 @@ to create it.
 
 Do NOT touch production code yet.
 
-### Step 3 — Run the affected tests, watch them fail   [skipped in skip-tests mode]
-
-Run the test runner against the affected test file(s). The new/updated
-tests MUST fail (or error). If they pass already, the test isn't asserting
-what the task intends — fix the test before moving on.
-
-If existing tests in the same file fail unexpectedly (i.e. unrelated to
-your new assertions), stop and report — something is wrong with the
-baseline.
-
-### Step 4 — Implement
+### Step 3 — Implement
 
 Use the Read tool to open each file before editing it. Use the Edit tool to
 make targeted changes; use the Write tool only when creating a new file from
@@ -372,20 +361,20 @@ handling, or abstractions beyond what the task requires.
 On a `claude+human` or `human` task, apply the checkpoint protocol from
 `./human-in-loop.md` at each checkpoint's trigger point.
 
-### Step 5 — Run the affected tests, watch them pass   [skipped in skip-tests mode]
+### Step 4 — Run the affected tests, watch them pass   [skipped in skip-tests mode]
 
-Re-run the affected tests. They MUST pass. If they don't, fix the
+Run the affected tests. They MUST pass. If they don't, fix the
 production code (not the test) and rerun. If after a reasonable attempt
 the code still doesn't pass and the spec itself looks wrong, stop and
 report — do not weaken the test.
 
-### Step 6 — Run the full test suite   [skipped in skip-tests mode]
+### Step 5 — Run the full test suite   [skipped in skip-tests mode]
 
 Run the full test suite. It MUST pass entirely. If unrelated tests fail,
 the change has caused a regression — fix it before continuing. Do not
 commit with red tests.
 
-### Step 7 — Mark DONE (or other terminal status)
+### Step 6 — Mark DONE (or other terminal status)
 
 Use the Edit tool to update this task's `Status:` line in
 `.claude/TASKS.md`:
@@ -399,7 +388,7 @@ Use the Edit tool to update this task's `Status:` line in
 
 The default is `[DONE]`.
 
-### Step 8 — Commit and push   [skipped in --no-commit mode]
+### Step 7 — Commit and push   [skipped in --no-commit mode]
 
 If NO_COMMIT is true, do not commit (or push) this task. Leave all files
 modified by this task — including the `.claude/TASKS.md` status flip —
@@ -451,7 +440,7 @@ protocol — once per task, immediately after that task's commit, mirroring
 push." A pre-push conflict aborts the merge, leaves the local commit
 intact, does NOT push, and reports that this task's commit exists locally
 but needs a manual sync + push — this halts the run before the next task
-starts (treat it like any other Step 8 failure). On push failure
+starts (treat it like any other Step 7 failure). On push failure
 (rejected, no upstream, no remote): report the exact output and stop.
 Never retry, never force-push.
 
@@ -464,10 +453,10 @@ After committing a task, before starting the next:
    previous task's changes are deliberately left uncommitted and will
    accumulate, so a non-empty `git status` is expected, not a surprise.
    Otherwise (the default): run `git status --porcelain`. If non-empty
-   (unusual — the previous task's Step 8 should have committed everything
+   (unusual — the previous task's Step 7 should have committed everything
    it changed), apply the same prompt protocol as PRE-FLIGHT CHECKS step 1
    via `./dirty-tree.md` — DIRTY_FOLD set there applies to the upcoming
-   task's Step 8. Same rules: silence/EOF/abort halts the run with no
+   task's Step 7. Same rules: silence/EOF/abort halts the run with no
    `Status:` flips.
 2. Use the Read tool to re-open `.claude/TASKS.md` fresh. Task IDs are
    stable so numbers will not have moved, but statuses or
@@ -491,7 +480,7 @@ If any step fails in a way you cannot resolve:
   want to do next (revert with `git restore`, fix manually, edit the
   task spec).
 
-A Step 8 push failure or pre-push conflict is a distinct case: the task's
+A Step 7 push failure or pre-push conflict is a distinct case: the task's
 commit already succeeded (status legitimately `[DONE]`, changes committed
 locally) — only the sync/push step failed. Do not revert the commit or
 flip the status back. Stop the entire run the same way, and report that
@@ -499,14 +488,12 @@ this task's commit exists locally and needs a manual sync + push before
 resuming with the remaining tasks.
 
 DO NOT:
-- Skip the "watch tests fail" step in full TDD mode. It's the proof that
-  the test exercises the gap.
 - Weaken a test to make it pass.
 - Bundle multiple tasks into one commit.
 - Run destructive git operations (`reset --hard`, `clean -f`,
   `checkout .`) without the user's explicit instruction.
 - Continue past a failing test with a "todo: fix later" comment.
-- Skip the full-suite run at the end of a task in full TDD mode.
+- Skip the full-suite run at the end of a task in full test mode.
 - Auto-scaffold a test suite without the user explicitly choosing
   option A of `./no-test-suite.md`.
 - Proceed past a manual-intervention checkpoint on the user's word alone
@@ -518,5 +505,5 @@ DO NOT:
   skill only reads it.
 - Force-push, retry a failed push, defer a task's push to end-of-run, or
   push unless `--no-push`/`--no-commit` was passed — each task pushes
-  immediately after its own commit (Step 8), per
+  immediately after its own commit (Step 7), per
   docs/authoring-guide.md's commit-and-push protocol.

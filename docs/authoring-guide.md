@@ -106,7 +106,7 @@ a standalone block at the top.
 
 ## Keeping `/task-implement` and `task-impl` in step
 
-The 8-step task workflow is encoded twice: as the `/task-implement` prompt
+The 7-step task workflow is encoded twice: as the `/task-implement` prompt
 under `skills/task-implement/`, and as bash in `scripts/cmd-task-impl.sh` +
 `scripts/lib-task-external.sh`. Nothing forces them to agree, so run the
 parity guard whenever you touch **either** artifact:

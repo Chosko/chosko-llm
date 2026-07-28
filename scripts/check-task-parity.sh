@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Guard the cheap-to-check invariants shared by the two encodings of the
-# 8-step task workflow: the /task-implement prompt (English, under
+# 7-step task workflow: the /task-implement prompt (English, under
 # skills/task-implement/) and cmd-task-impl.sh (bash). It does not prove
 # full parity — it turns silent drift in the status vocabulary or the step
 # count into a caught diff.
@@ -53,8 +53,7 @@ Step 3
 Step 4
 Step 5
 Step 6
-Step 7
-Step 8'
+Step 7'
 
 tags_in()  { grep -oh '\[[A-Z][A-Z ]*\]' "$@" 2>/dev/null | sort -u || true; }
 steps_in() { grep -oh 'Step [0-9]'       "$@" 2>/dev/null | sort -u || true; }
@@ -87,7 +86,7 @@ while IFS= read -r t; do
   [ -n "$t" ] && fail "Status tag $t is acted on by the prompt but absent from the bash side (scripts/cmd-task-impl.sh, scripts/lib-task-external.sh)"
 done < <(missing_from "$BASH_REQUIRED_TAGS" "$bash_tags")
 
-# 3. Both sides encode the same 8 per-task steps.
+# 3. Both sides encode the same 7 per-task steps.
 prompt_steps="$(steps_in "${PROMPT_FILES[@]}")"
 bash_steps="$(steps_in "${BASH_FILES[@]}")"
 
@@ -110,4 +109,4 @@ done < <(missing_from "$bash_steps" "$WORKFLOW_STEPS")
 if [ "$failures" -gt 0 ]; then
   die "task-implement parity check failed with $failures problem(s)."
 fi
-log_success "task-implement parity check passed: status vocabulary and 8-step workflow agree."
+log_success "task-implement parity check passed: status vocabulary and 7-step workflow agree."

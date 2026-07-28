@@ -3,7 +3,7 @@
 Read this when the project has no test suite at all (no test runner
 detectable AND no test directory like `tests/`, `test/`, `__tests__/`,
 `spec/`), or when CLAUDE.md declares a `skip-tests` testing policy. The
-strict TDD flow cannot run; switch to interactive mode.
+tests-first flow cannot run; switch to interactive mode.
 
 0. **If `CLAUDE.md` carries `Testing policy for /task-implement:
    skip-tests` or `skip-tests-unattended`** (see RESOLVING THE TEST RUNNER
@@ -17,13 +17,13 @@ strict TDD flow cannot run; switch to interactive mode.
 1. Otherwise, tell the user once, up front:
 
    > This project has no detectable test suite. Without tests, I can't
-   > follow the TDD sequence (write failing test → implement → watch it
+   > follow the tests-first sequence (write test → implement → watch it
    > pass). Two options:
    >
    > A. **Set up a test suite now.** I can scaffold one for the project's
    >    language (e.g. pytest for Python, Jest for JS) — installing the
    >    dev dependency, adding a config, and creating a `tests/` directory.
-   >    From then on, /task-implement runs in full TDD mode.
+   >    From then on, /task-implement runs in full test mode.
    >
    > B. **Skip test phases.** I'll implement each task without writing or
    >    running tests. Each task still gets its own commit, but I'll ask
@@ -38,7 +38,7 @@ strict TDD flow cannot run; switch to interactive mode.
    test framework, mention that and let the user direct.
 
 2. Do as the user tells. If they pick A, scaffold the suite first (in its
-   own commit, separate from any task), then proceed in full TDD mode.
+   own commit, separate from any task), then proceed in full test mode.
    If they pick B, proceed in skip-tests mode.
 
 3. **Skip-tests mode** for the rest of the run:
@@ -48,8 +48,8 @@ strict TDD flow cannot run; switch to interactive mode.
      explicit approval before editing any file. When AUTO_CONFIRM is true,
      skip this prompt — state the one-line summary anyway so the user can
      see what's about to happen, then proceed without waiting.
-   - Skip Steps 2, 3, 5, and 6 of the per-task workflow (anything
-     test-related). Steps 1, 4, 7, 8 still run.
+   - Skip Steps 2, 4, and 5 of the per-task workflow (anything
+     test-related). Steps 1, 3, 6, 7 still run.
    - The commit message should note "(no tests — manual verification
      pending)" in the body so it's visible later.
    - The `all` argument still works in skip-tests mode but the per-task

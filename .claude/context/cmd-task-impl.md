@@ -2,7 +2,7 @@
 
 ## Overview
 
-`scripts/cmd-task-impl.sh` is the CLI orchestrator that drives the 8-step
+`scripts/cmd-task-impl.sh` is the CLI orchestrator that drives the 7-step
 task-implement sequence for the **current project** (cwd) using an external
 LLM — aider + Ollama (`qwen2.5-coder:14b` by default) — instead of Claude
 Code. It is the executable counterpart to the `/task-implement` command:
@@ -39,12 +39,12 @@ retry budget; 0 when all requested tasks complete.
   `run-full-tests.sh`) — created by `/task-setup`. `require_external_artifacts`
   refuses to run without them.
 - **Skip-tests mode** is auto-detected via `wrappers_are_stubs` (the
-  `# CHOSKO_TASK_IMPL_STUB` sentinel). In that mode steps 2/3/5/6 are skipped
+  `# CHOSKO_TASK_IMPL_STUB` sentinel). In that mode steps 2/4/5 are skipped
   and each task asks for confirmation first.
-- **TDD enforced via retries.** Step 3 expects affected tests to FAIL first;
-  step 4 re-invokes aider up to `--retries` times until affected tests pass;
-  step 6 does the same against the full suite. A task that never goes green is
-  left `[IN PROGRESS]` and the run halts.
+- **Tests-first, enforced via retries.** Step 3 re-invokes aider up to
+  `--retries` times until affected tests pass; step 5 does the same against
+  the full suite. A task that never goes green is left `[IN PROGRESS]` and
+  the run halts.
 - **Status flips + commit are the orchestrator's job, not aider's.** aider
   runs with `--no-auto-commits`; the script does `flip_task_status` and one
   `git add -- <index + Files> && git commit -m "Task N: <title>"` per task,
@@ -65,7 +65,7 @@ retry budget; 0 when all requested tasks complete.
   implements (Claude authors, the external LLM implements); body schema and
   the external-artifact contract.
 - `../../skills/task-implement/SKILL.md` — the Claude-driven sibling; the two
-  keep the same 8-step shape and one-commit-per-task rule.
+  keep the same 7-step shape and one-commit-per-task rule.
 
 ## Cross-references
 

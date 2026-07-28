@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# cmd-task-impl.sh — orchestrate the 8-step /task-implement sequence for
+# cmd-task-impl.sh — orchestrate the 7-step /task-implement sequence for
 # external LLMs (qwen2.5-coder:14b via aider). Runs against the current
 # project (cwd). One commit (and push) per task; --no-push skips the
 # pull-at-start / re-sync / push steps.
@@ -24,7 +24,7 @@ usage() {
 Usage: chosko-llm task-impl [OPTIONS] <N> [<N>…]
        chosko-llm task-impl [OPTIONS] all
 
-Orchestrates the 8-step task-implement sequence for the current
+Orchestrates the 7-step task-implement sequence for the current
 project, driving aider + Ollama. Requires the project to have been
 initialized via /task-setup.
 
@@ -130,7 +130,7 @@ command -v "$AIDER" >/dev/null 2>&1 || die "aider not found on PATH (looked for:
 SKIP_TESTS=0
 if wrappers_are_stubs; then
   SKIP_TESTS=1
-  log_warn "Project is in skip-tests mode (wrapper scripts are stubs). Steps 2/3/5/6 will be skipped; per-task confirmation required."
+  log_warn "Project is in skip-tests mode (wrapper scripts are stubs). Steps 2/4/5 will be skipped; per-task confirmation required."
 fi
 
 # ---------- argument resolution ----------
@@ -277,21 +277,10 @@ implement_one() {
     log_info "Step 2: writing tests via aider"
     run_aider "$(external_artifact tests-prompt.md)" "$body" \
       "Write or extend the test files for this task only. Do not modify production code yet."$'\n\n'"Respond in English."
-
-    # Step 3 — affected tests must fail
-    log_info "Step 3: running affected tests, expecting failure"
-    if [ "${#test_files[@]}" -gt 0 ]; then
-      if "$(external_artifact run-affected-tests.sh)" "${test_files[@]}"; then
-        flip_task_status "$n" "[IN PROGRESS]"
-        die "Task $n: new tests passed unexpectedly — they don't assert what the task intends. Stopping."
-      fi
-    else
-      log_warn "Task $n has no test files in Files:; cannot watch fail. Continuing."
-    fi
   fi
 
-  # Step 4 — implement, with retry on test failure
-  log_info "Step 4: implementing via aider (retry budget: $RETRIES)"
+  # Step 3 — implement, with retry on test failure
+  log_info "Step 3: implementing via aider (retry budget: $RETRIES)"
   local attempt=1
   local impl_ok=0
   local last_log=""
@@ -308,7 +297,7 @@ implement_one() {
       break
     fi
 
-    log_info "Step 5: running affected tests"
+    log_info "Step 4: running affected tests"
     if last_log="$( "$(external_artifact run-affected-tests.sh)" "${test_files[@]}" 2>&1 )"; then
       impl_ok=1
       break
@@ -322,8 +311,8 @@ implement_one() {
   fi
 
   if [ "$SKIP_TESTS" -eq 0 ]; then
-    # Step 6 — full suite
-    log_info "Step 6: running full test suite"
+    # Step 5 — full suite
+    log_info "Step 5: running full test suite"
     attempt=1
     local full_ok=0
     while [ "$attempt" -le "$RETRIES" ]; do
@@ -340,10 +329,10 @@ implement_one() {
     fi
   fi
 
-  # Step 7 — DONE
+  # Step 6 — DONE
   flip_task_status "$n" "[DONE]"
 
-  # Step 8 — commit
+  # Step 7 — commit
   declare -a stage=("$(project_tasks_index)")
   for f in "${file_list[@]}"; do
     stage+=("$PROJECT_ROOT/$f")

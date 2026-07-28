@@ -402,7 +402,7 @@ Preconditions: none
 
 ## 79. Simplify /task-implement's strict-TDD sequence — drop the watch-it-fail step
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-implement/SKILL.md, skills/task-implement/no-test-suite.md, scripts/cmd-task-impl.sh, scripts/check-task-parity.sh, .claude/domain/task-workflow.md, .claude/context/cmd-task-impl.md, .claude/context/features.md, .claude/context/INDEX.md, docs/authoring-guide.md, README.md, VERSION
 Preconditions: none

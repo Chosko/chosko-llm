@@ -392,7 +392,7 @@ server isn't connected, the standard manual protocol above runs unchanged.
 
 `/task-enrich` expands a task into a self-contained brief; the `chosko-llm
 task-impl` CLI then drives a **local** LLM (aider + Ollama, e.g.
-`qwen2.5-coder`) through the same 8-step, test-first loop, committing each task
+`qwen2.5-coder`) through the same 7-step, test-first loop, committing each task
 as it goes. The offline counterpart to `/task-implement` — the backlog runs
 under Claude interactively or a local model in batch.
 
