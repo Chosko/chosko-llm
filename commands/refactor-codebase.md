@@ -1,8 +1,8 @@
 ---
 name: refactor-codebase
-version: 0.2.1
+version: 0.3.0
 type: command
-description: Refactor a codebase by applying clean-code principles — extract constants/enums, eliminate duplication, split oversized files, clean imports, and rename ambiguous identifiers — without changing observable behaviour. Plan-first, phase-gated, test-suite-protected. Supports scope= and focus= arguments to limit the work, and --commit to commit the result (default leaves it uncommitted).
+description: Refactor a codebase by applying clean-code principles — extract constants/enums, eliminate duplication, split oversized files, clean imports, and rename ambiguous identifiers — without changing observable behaviour. Plan-first, phase-gated, test-suite-protected. Supports scope= and focus= arguments to limit the work, and --commit to commit and push the result (--commit --no-push to skip the push; default leaves it uncommitted).
 ---
 
 # /refactor-codebase
@@ -24,8 +24,11 @@ description: Refactor a codebase by applying clean-code principles — extract c
 # Parameters can be combined:
 #   /refactor-codebase scope=main focus=splitting,constants
 #
-# Usage — commit the refactor when done (default leaves it uncommitted):
+# Usage — commit and push the refactor when done (default leaves it uncommitted):
 #   /refactor-codebase --commit
+#
+# Usage — commit locally, skip the push:
+#   /refactor-codebase --commit --no-push
 
 $ARGUMENTS
 
@@ -65,10 +68,18 @@ P.2 Parse $ARGUMENTS:
     If focus= is not provided, apply all five concerns.
 
     --commit (optional flag) — if present, set COMMIT = true; the refactor
-    is committed at the end (see PHASE 6). `--commit` and `--no-commit` are
-    mutually exclusive — if both appear, stop with:
+    is committed (and pushed) at the end (see PHASE 6). `--commit` and
+    `--no-commit` are mutually exclusive — if both appear, stop with:
     `--commit and --no-commit cannot be combined. Pick one.` When COMMIT is
     false (the default), the run leaves all changes uncommitted, as before.
+
+    --no-push (optional flag, only meaningful with --commit) — if present,
+    set NO_PUSH = true; PHASE 6 skips the pull-at-start / re-sync / push
+    steps of the commit-and-push protocol (docs/authoring-guide.md) while
+    still committing as always. When COMMIT is true and no non-git `## VCS`
+    override applies, pull at start here (before P.3) — run `git pull` on
+    the current branch. A conflict stops the run immediately; report the
+    conflict output and tell the user to resolve manually and re-run.
 
 P.3 Locate the context layer (e.g. .claude/context/INDEX.md) if it exists.
     Read INDEX.md to understand the current module map — do not read context files
@@ -267,17 +278,17 @@ Produce a summary covering:
 
 ---
 
-PHASE 6 — Commit (only when `--commit` was passed)
+PHASE 6 — Commit and push (only when `--commit` was passed)
 
 If COMMIT is false (the default), do nothing here — the refactor is left
 uncommitted for the user to review. This is the default behavior and is
 unchanged.
 
 If COMMIT is true, after the final green test suite (PHASE 5 / FINAL
-REPORT):
+REPORT) — the pull-at-start from P.2 already ran:
 
 1. If the run modified nothing (e.g. the plan was empty or every change
-   was deferred), make no commit. Say so and stop.
+   was deferred), make no commit (and no push). Say so and stop.
 2. Stage EXACTLY the paths this run created, modified, or deleted —
    the source files refactored, any new constants/enums/utils modules,
    the updated context-layer files and INDEX.md, and any CLAUDE.md path
@@ -288,9 +299,15 @@ REPORT):
    `git commit -m "Refactor: extract constants, split oversized modules"`
    — tailor the subject to the concerns actually applied. Keep to the
    repo's existing commit style.
-4. On success, report the commit hash (`git rev-parse --short HEAD`).
-5. On failure (e.g. a pre-commit hook rejects the commit): surface the
-   exact output. Do NOT retry, amend, or use `--no-verify` /
+4. On commit success, report the commit hash (`git rev-parse --short
+   HEAD`). Then, unless NO_PUSH is true or the non-git VCS exemption
+   applies, re-sync (`git pull`) and push per docs/authoring-guide.md's
+   commit-and-push protocol.
+5. On commit failure (e.g. a pre-commit hook rejects the commit): surface
+   the exact output. Do NOT retry, amend, or use `--no-verify` /
    `--no-gpg-sign`. Files remain staged but uncommitted; tell the user.
+6. On push failure (rejected, no upstream, no remote) or a pre-push
+   conflict: surface the exact output. Never retry, never force-push. The
+   commit exists locally; tell the user it needs a manual sync + push.
 
 END

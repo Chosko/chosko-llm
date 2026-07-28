@@ -1,8 +1,8 @@
 ---
 name: refactor-tests
-version: 0.2.1
+version: 0.3.0
 type: command
-description: Split oversized test files into smaller, focused files — runs the test suite before and after each split to keep the baseline green. Pass --commit to commit the splits; default leaves them uncommitted.
+description: Split oversized test files into smaller, focused files — runs the test suite before and after each split to keep the baseline green. Pass --commit to commit and push the splits (--commit --no-push to skip the push); default leaves them uncommitted.
 ---
 
 # /refactor-tests
@@ -16,8 +16,11 @@ description: Split oversized test files into smaller, focused files — runs the
 # Usage — use a custom line threshold:
 #   /refactor-tests threshold=200
 #
-# Usage — commit the splits when done (default leaves them uncommitted):
+# Usage — commit and push the splits when done (default leaves them uncommitted):
 #   /refactor-tests --commit
+#
+# Usage — commit locally, skip the push:
+#   /refactor-tests --commit --no-push
 
 $ARGUMENTS
 
@@ -40,7 +43,16 @@ Also parse the optional `--commit` flag: if present, set COMMIT = true.
 `--commit` and `--no-commit` are mutually exclusive — if both appear, stop
 with: `--commit and --no-commit cannot be combined. Pick one.` When COMMIT
 is false (the default), the run leaves its splits uncommitted, exactly as
-before. Any other arguments are ignored.
+before.
+
+Also parse the optional `--no-push` flag: if present, set NO_PUSH = true.
+NO_PUSH only matters when COMMIT is true — it skips the pull-at-start /
+re-sync / push steps of the commit-and-push protocol
+(docs/authoring-guide.md) while still committing as always. When COMMIT is
+true and no non-git `## VCS` override applies, pull at start here (before
+STEP 1) — run `git pull` on the current branch. A conflict stops the run
+immediately; report the conflict output and tell the user to resolve
+manually and re-run. Any other arguments are ignored.
 
 ---
 
@@ -148,18 +160,18 @@ with "Suite status: RED — stopped at <filename>".
 
 ---
 
-STEP 6 — COMMIT (only when `--commit` was passed)
+STEP 6 — COMMIT AND PUSH (only when `--commit` was passed)
 
 If COMMIT is false (the default), do nothing here — the splits are left
 uncommitted for the user to review. This is the default behavior and is
 unchanged.
 
-If COMMIT is true:
+If COMMIT is true (the pull-at-start from ARGUMENT PARSING already ran):
 
 1. If no files were split (STEP 2 found nothing, or the user declined at
-   STEP 3), make no commit. Say so and stop.
-2. If the run STOPPED EARLY on a red suite, make NO commit — the repo is
-   in a half-split state the user must review. Say so and stop.
+   STEP 3), make no commit (and no push). Say so and stop.
+2. If the run STOPPED EARLY on a red suite, make NO commit (and no push) —
+   the repo is in a half-split state the user must review. Say so and stop.
 3. Otherwise, after a green final suite, stage EXACTLY the test files this
    run touched — every new file created, every trimmed original, and
    (using `git add -- <path>`, which also records deletions) every
@@ -167,10 +179,16 @@ If COMMIT is true:
    per-split reports; never use a catch-all (`git add -A` / `git add .` /
    `git add -u`).
 4. Commit once: `git commit -m "Split oversized test files"`.
-5. On success, report the commit hash (`git rev-parse --short HEAD`).
-6. On failure (e.g. a pre-commit hook rejects the commit): surface the
-   exact output. Do NOT retry, amend, or use `--no-verify` /
+5. On commit success, report the commit hash (`git rev-parse --short
+   HEAD`). Then, unless NO_PUSH is true or the non-git VCS exemption
+   applies, re-sync (`git pull`) and push per docs/authoring-guide.md's
+   commit-and-push protocol.
+6. On commit failure (e.g. a pre-commit hook rejects the commit): surface
+   the exact output. Do NOT retry, amend, or use `--no-verify` /
    `--no-gpg-sign`. Files remain staged but uncommitted; tell the user.
+7. On push failure (rejected, no upstream, no remote) or a pre-push
+   conflict: surface the exact output. Never retry, never force-push. The
+   commit exists locally; tell the user it needs a manual sync + push.
 
 ---
 

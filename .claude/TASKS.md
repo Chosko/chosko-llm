@@ -330,7 +330,7 @@ Preconditions: 68
 
 ## 71. Add push (with --no-push) to refactor-codebase and refactor-tests
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/refactor-codebase.md, commands/refactor-tests.md, .claude/domain/refactor-workflow.md, README.md, VERSION
 Preconditions: 68

@@ -66,6 +66,16 @@ touch.
 `main` matches `src/main.py`. Files outside scope are read only when a
 shared dependency forces it. This keeps narrow refactors narrow.
 
+## Commit and push
+
+Both `/refactor-codebase` and `/refactor-tests` are authoring commands:
+uncommitted by default, `--commit` opts in. When `--commit` is passed, both
+follow the commit-and-push protocol in
+[docs/authoring-guide.md](../../docs/authoring-guide.md) — pull at start,
+commit, re-sync, push — rather than a plain `git commit`. `--no-push`
+(only meaningful alongside `--commit`) skips the sync/push cycle and
+commits locally only. The algorithm is not re-derived here; see that doc.
+
 ## Integration with the context layer
 
 If `.claude/context/INDEX.md` exists, the model reads only INDEX during

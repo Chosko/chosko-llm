@@ -264,6 +264,8 @@ first failure.
 - `/refactor-codebase` — constants, duplication, oversized files, imports, naming.
 - `/refactor-tests` — split bloated test files.
 
+Both leave the result uncommitted by default; `--commit` commits and pushes it (`--commit --no-push` to commit without pushing).
+
 ### Set up the domain layer — `/domain-setup`
 
 Scaffolds `.claude/domain/`, the counterpart to the context layer: where the
