@@ -366,7 +366,7 @@ Preconditions: 68
 
 ## 75. Add per-task push to /task-implement (skill + script), with --no-push
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-implement/SKILL.md, scripts/cmd-task-impl.sh, scripts/check-task-parity.sh, .claude/domain/task-workflow.md, README.md, VERSION
 Preconditions: 68

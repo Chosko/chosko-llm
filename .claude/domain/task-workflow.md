@@ -308,7 +308,7 @@ Step 4.   aider with implement-prompt.md, retry up to N times on failure
 Step 5.   run-affected-tests.sh — expect PASS (skipped in skip-tests mode)
 Step 6.   run-full-tests.sh   — expect PASS  (skipped in skip-tests mode)
 Step 7.   flip TASKS.md Status: → [DONE]
-Step 8.   stage Files: ∪ TASKS.md, one commit
+Step 8.   stage Files: ∪ TASKS.md, one commit, then push (unless --no-push)
 ```
 
 The orchestrator refuses on a dirty working tree, refuses if any of the four
@@ -316,6 +316,15 @@ artifacts under `.claude/external/` is missing, and refuses a `[STALE]` task
 (`all` never selects one; an explicit ID halts the run). Statuses outside the
 `[MISSING]` / `[STUBBED]` / `[INCORRECT]` / `[PARTIAL]` allowlist are skipped
 with a warning.
+
+Both `/task-implement` and `chosko-llm task-impl` follow the commit-and-push
+protocol in [docs/authoring-guide.md](../../docs/authoring-guide.md) once
+per task, immediately after that task's commit — not deferred to
+end-of-run — mirroring "one commit per task" with "one push per task."
+`--no-push` skips the pull-at-start and each task's re-sync/push while
+still committing every task as usual; `/task-implement`'s `--no-commit`
+implies no push. See that doc for the pull/commit/re-sync/push algorithm;
+it is not re-derived here.
 
 ## `/task-implement` discipline
 

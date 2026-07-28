@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # cmd-task-impl.sh — orchestrate the 8-step /task-implement sequence for
 # external LLMs (qwen2.5-coder:14b via aider). Runs against the current
-# project (cwd). One commit per task.
+# project (cwd). One commit (and push) per task; --no-push skips the
+# pull-at-start / re-sync / push steps.
 #
 # Usage:  chosko-llm task-impl <N> [<N>…]
 #         chosko-llm task-impl all
+#         chosko-llm task-impl --no-push <N> [<N>…]
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib.sh
@@ -31,6 +33,8 @@ Options:
   --retries <N>       Retry budget per task. Overrides CHOSKO_TASK_IMPL_RETRIES.
   --map-tokens <N>    Aider --map-tokens arg. Overrides CHOSKO_TASK_IMPL_AIDER_MAP_TOKENS.
                       When absent and env var is unset, --map-tokens is not passed to aider.
+  --no-push           Commit each task as usual but skip the pull-at-start /
+                      re-sync / push steps of the commit-and-push protocol.
 
 Environment:
   CHOSKO_TASK_IMPL_RETRIES          Retry budget per task (default: 3).
@@ -52,6 +56,7 @@ done
 # ---------- argument parsing ----------
 
 declare -a TASKS=()
+NO_PUSH=0
 declare -a _rawargs=("$@")
 _i=0
 while [ "$_i" -lt "${#_rawargs[@]}" ]; do
@@ -96,6 +101,9 @@ while [ "$_i" -lt "${#_rawargs[@]}" ]; do
       _val="${_rawargs[$_i]}"
       [[ "$_val" =~ ^[0-9]+$ ]] || die "--map-tokens value must be a non-negative integer: $_val"
       AIDER_MAP_TOKENS="$_val"
+      ;;
+    --no-push)
+      NO_PUSH=1
       ;;
     --*)
       die "Unknown flag: $_arg"
@@ -347,7 +355,21 @@ implement_one() {
   fi
   ( cd "$PROJECT_ROOT" && git commit -m "Task $n: $title$body_note" )
   log_info "Task $n committed."
+
+  if [ "$NO_PUSH" -eq 0 ]; then
+    ( cd "$PROJECT_ROOT" && git pull ) \
+      || die "Task $n committed locally, but re-sync (git pull) failed before push — resolve manually and push, then re-run for the remaining tasks."
+    ( cd "$PROJECT_ROOT" && git push ) \
+      || die "Task $n committed locally, but git push failed — resolve manually (never force-push) and push, then re-run for the remaining tasks."
+    log_info "Task $n pushed."
+  fi
 }
+
+if [ "$NO_PUSH" -eq 0 ]; then
+  log_info "Pulling latest before starting (commit-and-push protocol)"
+  ( cd "$PROJECT_ROOT" && git pull ) \
+    || die "git pull failed — resolve the conflict manually and re-run task-impl."
+fi
 
 for n in "${TASKS[@]}"; do
   implement_one "$n"

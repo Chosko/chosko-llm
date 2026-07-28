@@ -98,7 +98,7 @@ chosko-llm task-impl <N> [<N> ...]   # implement specific tasks, one commit each
 chosko-llm task-impl all             # implement every pending task, in order
 ```
 
-It follows the same test-first sequence — write failing tests, implement, watch them pass — and commits each task separately. Pass `--model` / `--retries` / `--map-tokens`, or see `chosko-llm task-impl --help`, to tune the run. See [Workflows](#workflows) for how this fits the rest of the task tooling.
+It follows the same test-first sequence — write failing tests, implement, watch them pass — and commits (and pushes) each task separately. Pass `--model` / `--retries` / `--map-tokens`, or `--no-push` to keep the per-task commits local, or see `chosko-llm task-impl --help`, to tune the run. See [Workflows](#workflows) for how this fits the rest of the task tooling.
 
 ### Exporting a repo's Claude config
 
@@ -347,13 +347,14 @@ tasks. The core idea is to spend more focus in planning and writing down tasks, 
 - `/task-add` — plan a task and write it down. This is the real strength of this workflow: invoke the command with a very short description, let Claude Code investigate and expand it, in a conversational way. Claude will ask every question needed to fill the gaps, then it will write everything down for further implementation. It may propose splitting the description into several tasks when that gives better units (independent deliverables, or one task that's too large) — pass `--no-split` to always get exactly one task.
 - `/task-add feature=<slug>` — plan from an `/architect` feature document instead of a description. The document is the input, so you don't re-explain the work in prose; a feature usually becomes several tasks. Run it again after re-architecting and it *reconciles* rather than duplicating: each existing task is either left alone, updated in place, or skipped with a reason and replaced — and `[DONE]` tasks are never touched. You approve the whole plan, reconciliation included, in one pass.
 - `/task-list` — show what's pending.
-- `/task-implement` — build a task end-to-end, test-first, one commit each.
+- `/task-implement` — build a task end-to-end, test-first, one commit (and push) each.
 - `/task-clean` — prune finished tasks.
 
-`/task-add` and `/task-clean` commit automatically and then push (pass
-`--no-commit` to skip both, or `--no-push` to commit without pushing).
-`/task-setup` and `/task-enrich` only commit under `--commit`, at which
-point they push too (`--commit --no-push` commits without pushing).
+`/task-add`, `/task-clean`, and `/task-implement` commit automatically and
+then push, once per task for `/task-implement` (pass `--no-commit` to skip
+both, or `--no-push` to commit without pushing). `/task-setup` and
+`/task-enrich` only commit under `--commit`, at which point they push too
+(`--commit --no-push` commits without pushing).
 
 Tasks can be **human-in-the-loop**: when part of the work only a human can
 perform in an external tool (a Unity editor step, a cloud console, hardware),
