@@ -118,7 +118,13 @@ Currently shipped:
   `Source:`. On a feature that already has tasks it RECONCILES under the same
   single approval gate: leave-untouched / update-body-in-place (preferred; a
   `[STALE]` task flips back to `[MISSING]`) / `[SKIP]`-and-replace, with
-  `[DONE]` never touched. Free-form text alongside the slug narrows scope;
+  `[DONE]` never touched. When the run drafts at least one new task, it
+  appends one final documentation-update task (`Target: claude`,
+  `Preconditions:` listing the run's other new task IDs) whose Hints point at
+  the affected README.md / authoring-guide.md / domain / context-layer docs;
+  skipped on a reconciliation-only run. `/architect`-owned and
+  `/product-design`-owned documents are never added to that task's Hints
+  without asking first. Free-form text alongside the slug narrows scope;
   the feature document is read-only. The free-form path is unchanged when
   `feature=` is absent.
   Documents the two product-pipeline additions to the backlog schema: the

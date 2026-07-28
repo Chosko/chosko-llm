@@ -1,8 +1,8 @@
 ---
 name: task-add
-version: 0.12.0
+version: 0.13.0
 type: command
-description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit and push. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, and setting the feature [PLANNED]. Pass --enrich to produce a self-contained body for a local LLM in one shot, --no-split to always write exactly one task, --no-commit to write the files but skip the commit (and push), or --no-push to commit without pushing.
+description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit and push. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, appending a final documentation-update task when new tasks were drafted, and setting the feature [PLANNED]. Pass --enrich to produce a self-contained body for a local LLM in one shot, --no-split to always write exactly one task, --no-commit to write the files but skip the commit (and push), or --no-push to commit without pushing.
 ---
 
 # /task-add
@@ -513,6 +513,12 @@ Part 1/k — Draft body:
 ... (repeat for each remaining part) ...
 ```
 
+**When FEATURE is set** and at least one new task was drafted above (single
+or split), also render the documentation task's draft here, last, using the
+next sequential ID after the others. See DOCUMENTATION TASK below for its
+content and the ownership-gate question that precedes it. Skip this
+entirely on a reconciliation-only run that drafts zero new tasks.
+
 End with: **"Approve and write?"**
 
 Wait for explicit approval. Iterate on changes and re-present the full
@@ -568,6 +574,49 @@ RECONCILIATION — feature <slug> has 4 existing tasks
 ```
 
 Then the new drafts, then the single **"Approve and write?"**.
+
+---
+
+DOCUMENTATION TASK (feature mode only)
+
+Applies only when FEATURE is set, and only when this run drafts at least
+one new task. A reconciliation-only run that leaves every existing task
+untouched creates nothing new to document, so this section does not fire.
+
+After the normal new-task draft(s) — single or split — draft exactly one
+more task, appended last, whose job is to bring the documentation layers
+up to date with this run's other new tasks once they're implemented:
+
+- Title: "Update documentation for feature `<slug>`"
+- Target: `claude`
+- `Feature: <slug>`
+- `Preconditions:` every other new task ID created in this run (not the
+  IDs of tasks left untouched or updated in place during reconciliation),
+  comma-separated — signals it should land last; not mechanically
+  enforced, same as any other `Preconditions:` line.
+- `## Goal` names the feature and states that the documentation describing
+  its area is now out of date and needs to reflect the shipped behavior.
+- `## Hints` are drawn from the same collateral PHASE 1 identified —
+  README.md, docs/authoring-guide.md, relevant `.claude/domain/*.md`,
+  `.claude/context/features.md`, `.claude/context/INDEX.md` — whichever of
+  these actually describe the behavior this run's tasks change. Not a
+  fixed list; judge per feature, same as any other task's Hints.
+
+**Ownership gate.** Some of the collateral PHASE 1 surfaces is NOT owned by
+this command: `.claude/domain/features/<slug>.md` (owned by `/architect`)
+and `product-design.md` / `technical-direction.md` / `business-model.md`
+(owned by `/product-design`). Never add one of these to the doc task's
+Hints silently. Instead, during PHASE 3, surface it explicitly and ask:
+
+> The doc-update task could also flag `.claude/domain/features/<slug>.md`
+> for review, since this feature changed its own design surface — but that
+> file is owned by `/architect`, not this command. Include it in the doc
+> task's Hints anyway? Default: leave it out — it stays read-only outside
+> its owning command elsewhere in this pipeline.
+
+Wait for an explicit answer; silence is not approval, same as any other
+PHASE 3 confirmation. Include the file in the drafted task only on
+explicit yes.
 
 ---
 
@@ -631,6 +680,14 @@ Feature case (FEATURE is set) — in addition to the above:
 5. Do NOT edit `.claude/domain/features/<slug>.md`. The feature document is
    read-only to this command; if planning revealed a genuine design
    problem, say so in the report and let the user re-run `/architect`.
+
+6. If a documentation task was drafted (see DOCUMENTATION TASK), write its
+   summary block and body exactly like any other new task, using the next
+   sequential ID after the others — the counter update from step 1a/2a
+   above must already include this ID (e.g. single-task case:
+   `Last task number K → N+1`, not `→ N`; split case:
+   `Last task number K → K+k+1`, not `→ K+k`). Include its path in the
+   report and the commit alongside the rest.
 
 Continue to PHASE 5.
 
@@ -725,3 +782,7 @@ DO NOT:
 - Change any behavior of the free-form path when `feature=` is absent. The
   feature mode is additive; a plain `/task-add <description>` run must be
   indistinguishable from before.
+- Silently add an `/architect`-owned or `/product-design`-owned document to
+  the documentation task's Hints — ask first (see DOCUMENTATION TASK).
+- Draft a documentation task on a reconciliation-only run that creates zero
+  new tasks.

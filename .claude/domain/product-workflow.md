@@ -250,6 +250,26 @@ criteria are above; there is no mechanical rule.
 The run ends with the feature at `[PLANNED]` and its `Tasks:` line listing
 the surviving and newly created IDs.
 
+## Documentation task
+
+When a `feature=<slug>` run drafts at least one new task (plain or as part
+of reconciliation), `/task-add` appends one more: a `Target: claude` task
+titled "Update documentation for feature `<slug>`", with `Preconditions:`
+naming every other new task from the run — signalling it should land once
+they have. Its Hints are drawn from whichever of README.md,
+`docs/authoring-guide.md`, the relevant `.claude/domain/*.md` files,
+`.claude/context/features.md`, and `.claude/context/INDEX.md` actually
+describe the behavior the run's tasks change. A reconciliation-only run
+that creates no new tasks gets no documentation task — there is nothing new
+to document.
+
+Documents owned by another command in the pipeline —
+`.claude/domain/features/<slug>.md` (`/architect`) and
+`product-design.md` / `technical-direction.md` / `business-model.md`
+(`/product-design`) — are never added to the doc task's Hints silently;
+`/task-add` asks for explicit confirmation first, defaulting to leaving
+them out, since they otherwise stay read-only outside their owning command.
+
 ## Who writes what
 
 Exactly one writer per artifact, with `FEATURES.md` the deliberate exception.

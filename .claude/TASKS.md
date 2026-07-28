@@ -411,7 +411,7 @@ Preconditions: none
 
 ## 80. Make /task-add append a final documentation-update task in feature mode
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-add.md, README.md, docs/authoring-guide.md, .claude/domain/product-workflow.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION
 Preconditions: none
