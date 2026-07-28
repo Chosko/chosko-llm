@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 79
+Last task number: 80
 
 ---
 
@@ -405,6 +405,15 @@ Preconditions: none
 Status: [DONE]
 Target: claude
 Files: skills/task-implement/SKILL.md, skills/task-implement/no-test-suite.md, scripts/cmd-task-impl.sh, scripts/check-task-parity.sh, .claude/domain/task-workflow.md, .claude/context/cmd-task-impl.md, .claude/context/features.md, .claude/context/INDEX.md, docs/authoring-guide.md, README.md, VERSION
+Preconditions: none
+
+---
+
+## 80. Make /task-add append a final documentation-update task in feature mode
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-add.md, README.md, docs/authoring-guide.md, .claude/domain/product-workflow.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION
 Preconditions: none
 
 ---
