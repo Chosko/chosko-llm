@@ -1,8 +1,8 @@
 ---
 name: context-update
-version: 1.1.1
+version: 1.2.0
 type: command
-description: Update an existing navigation context layer after code changes, then auto-commit the context files it updated. Pass --no-commit to leave them uncommitted.
+description: Update an existing navigation context layer after code changes, then auto-commit and push the context files it updated. Pass --no-commit to leave them uncommitted, or --no-push to commit without pushing.
 ---
 
 # /context-update
@@ -40,9 +40,13 @@ description: Update an existing navigation context layer after code changes, the
 #   /context-update full --yes
 #   /context-update git=uncommitted -y
 #
-# Usage — update the context files but skip the auto-commit:
+# Usage — update the context files but skip the auto-commit (and push):
 #   /context-update --no-commit
 #   Combinable with any mode: /context-update full --no-commit
+#
+# Usage — commit as usual but skip the push:
+#   /context-update --no-push
+#   Combinable with any mode: /context-update full --no-push
 
 $ARGUMENTS
 
@@ -78,9 +82,24 @@ P.3 Parse $ARGUMENTS. First, check for the confirmation flag:
     --no-commit flag (optional, combinable with any mode):
     If "--no-commit" is present in $ARGUMENTS, set NO_COMMIT = true and strip
     it before parsing the rest. When NO_COMMIT is true, PHASE 3 skips the
-    auto-commit and leaves the updated context files uncommitted. `--commit`
-    and `--no-commit` are mutually exclusive — if both appear, stop with:
+    auto-commit (and the push — nothing was committed) and leaves the
+    updated context files uncommitted. `--commit` and `--no-commit` are
+    mutually exclusive — if both appear, stop with:
     `--commit and --no-commit cannot be combined. Pick one.`
+
+    --no-push flag (optional, combinable with any mode):
+    If "--no-push" is present in $ARGUMENTS, set NO_PUSH = true and strip it
+    before parsing the rest. NO_PUSH only matters when NO_COMMIT is false:
+    it skips the pull-at-start / re-sync / push steps of PHASE 3's
+    commit-and-push protocol (docs/authoring-guide.md) while still
+    committing as always.
+
+    Unless NO_COMMIT is true or the project's CLAUDE.md carries a `## VCS`
+    override (non-git), pull at start here, before determining the update
+    scope: run `git pull` on the current branch. A conflict stops the run
+    immediately — report the conflict output and tell the user to resolve
+    manually and re-run. This also keeps Mode A's `git log` scan reading
+    from an up-to-date branch.
 
     Then determine the update scope. Four modes are possible:
 
@@ -215,23 +234,24 @@ Report:
 
 ---
 
-PHASE 3 — Commit the updated context files
+PHASE 3 — Commit and push the updated context files
 
-`/context-update` auto-commits its work, matching `/task-add` and
-`/task-clean`. This phase runs after Phase 2's report, with no
+`/context-update` auto-commits (and pushes) its work, matching `/task-add`
+and `/task-clean`. This phase runs after Phase 2's report, with no
 confirmation prompt of its own (it is unaffected by AUTO_CONFIRM —
-committing is the default behavior).
+committing is the default behavior). The pull-at-start already ran in
+PREPARATION, before the scope was even determined.
 
-3.0 If NO_COMMIT is true, skip committing entirely: the context files Phase 2
-    updated (plus the INDEX.md "Last updated" bump) are left uncommitted in
-    the working tree. Report what was updated and remind the user that
-    nothing was committed — they should commit when ready. Do not run any git
-    command. Then stop.
+3.0 If NO_COMMIT is true, skip committing (and pushing) entirely: the
+    context files Phase 2 updated (plus the INDEX.md "Last updated" bump)
+    are left uncommitted in the working tree. Report what was updated and
+    remind the user that nothing was committed — they should commit when
+    ready. Do not run any git command. Then stop.
 
 3.1 If Phase 2 modified NO files (e.g. Mode A found nothing to update, or
-    every in-scope file was skipped), make no commit. Do not create an
-    empty commit. Report "Context already up to date — nothing committed."
-    and stop.
+    every in-scope file was skipped), make no commit (and no push). Do not
+    create an empty commit. Report "Context already up to date — nothing
+    committed." and stop.
 
 3.2 Otherwise, stage EXACTLY the context-layer files this run wrote —
     the updated context files plus INDEX.md (whose "Last updated" line
@@ -250,12 +270,19 @@ committing is the default behavior).
     "Update context layer: cli, sheet" when a small, nameable set
     changed). Keep to the repo's existing commit style.
 
-3.4 On success, report the commit hash (`git rev-parse --short HEAD`).
+3.4 On commit success, report the commit hash (`git rev-parse --short
+    HEAD`). Then, unless NO_PUSH is true or this project's CLAUDE.md
+    carries a `## VCS` override, re-sync (`git pull`) and `git push` per
+    docs/authoring-guide.md's commit-and-push protocol.
 
-3.5 On failure (e.g. a pre-commit hook rejects the commit): surface the
-    exact output. Do NOT retry, amend, or use `--no-verify` /
+3.5 On commit failure (e.g. a pre-commit hook rejects the commit): surface
+    the exact output. Do NOT retry, amend, or use `--no-verify` /
     `--no-gpg-sign` or any hook-skipping flag. The files remain staged
     but uncommitted; tell the user.
+
+3.6 On push failure (rejected, no upstream, no remote) or a pre-push
+    conflict: surface the exact output. Never retry, never force-push. The
+    commit exists locally; tell the user it needs a manual sync + push.
 
 This phase stages ONLY the context-layer files this run modified. It
 must not pull in unrelated dirty files, and it must not run

@@ -1,8 +1,8 @@
 ---
 name: context-build
-version: 0.2.1
+version: 0.3.0
 type: command
-description: Build a navigation context layer to reduce token cost in future Claude Code sessions. Pass --commit to commit the context layer; default leaves it uncommitted.
+description: Build a navigation context layer to reduce token cost in future Claude Code sessions. Pass --commit to commit and push the context layer (--commit --no-push to skip the push); default leaves it uncommitted.
 ---
 
 # /context-build
@@ -10,7 +10,8 @@ description: Build a navigation context layer to reduce token cost in future Cla
 # in future Claude Code sessions on any project.
 # Usage: /context-build
 # Usage with hint: /context-build "source code lives under lib/ not src/"
-# Usage with commit: /context-build --commit   (commit the context layer when done)
+# Usage with commit: /context-build --commit            (commit and push the context layer when done)
+# Usage without push: /context-build --commit --no-push (commit locally, skip the push)
 
 GOAL
 Reduce token cost in future Claude Code sessions on this repo by introducing a
@@ -28,6 +29,16 @@ exclusive — if both appear, stop with:
 `--commit and --no-commit cannot be combined. Pick one.`
 When COMMIT is false (the default), the run leaves all output uncommitted,
 exactly as before.
+
+Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
+matters when COMMIT is true: it skips the pull-at-start / re-sync / push
+steps of the commit-and-push protocol (docs/authoring-guide.md) while
+still committing as always. When COMMIT is true and the project's
+CLAUDE.md does not carry a `## VCS` override (non-git), pull at start —
+run `git pull` on the current branch before Phase 1 begins. A conflict
+stops the run here — report the conflict output and tell the user to
+resolve manually and re-run. (No pull happens when COMMIT is false — there
+is nothing this run will commit or push.)
 
 CONSTRAINTS
 - Do not refactor any source code.
@@ -168,25 +179,32 @@ Report:
 
 ---
 
-PHASE 4 — Commit (only when `--commit` was passed)
+PHASE 4 — Commit and push (only when `--commit` was passed)
 
 If COMMIT is false (the default), do nothing here — the context layer is
 left uncommitted for the user to review. This is the default behavior and
 is unchanged.
 
-If COMMIT is true, after Phase 3 completes:
+If COMMIT is true, after Phase 3 completes (the pull-at-start from the
+ARGUMENT NOTE already ran):
 
 1. If the run wrote nothing (e.g. it was aborted before Phase 2), make no
-   commit. Say so and stop.
+   commit (and no push). Say so and stop.
 2. Stage EXACTLY the files this run wrote — `.claude/context/INDEX.md`,
    every context file created in Phase 2, and CLAUDE.md (the Phase 3
    entry-point edit, or a newly created CLAUDE.md). Build the path list
    explicitly; never use a catch-all (`git add -A` / `git add .` /
    `git add -u`).
 3. Commit once: `git commit -m "Add navigation context layer"`.
-4. On success, report the commit hash (`git rev-parse --short HEAD`).
-5. On failure (e.g. a pre-commit hook rejects the commit): surface the
-   exact output. Do NOT retry, amend, or use `--no-verify` /
+4. On commit success, report the commit hash (`git rev-parse --short HEAD`).
+   Then, unless NO_PUSH is true or this project's CLAUDE.md carries a
+   `## VCS` override, re-sync (`git pull`) and `git push` per
+   docs/authoring-guide.md's commit-and-push protocol.
+5. On commit failure (e.g. a pre-commit hook rejects the commit): surface
+   the exact output. Do NOT retry, amend, or use `--no-verify` /
    `--no-gpg-sign`. Files remain staged but uncommitted; tell the user.
+6. On push failure (rejected, no upstream, no remote) or a pre-push
+   conflict: surface the exact output. Never retry, never force-push. The
+   commit exists locally; tell the user it needs a manual sync + push.
 
 END

@@ -116,14 +116,19 @@ in place — preserving accurate sections verbatim, updating only what
 changed, and refreshing `Last updated` in INDEX last. Files that grow
 past 150 lines are flagged for splitting, not split automatically.
 
-Phase 3 then **auto-commits** the run, putting `/context-update` in the
-committing group alongside `/task-add` and `/task-clean` (`/context-build`
-stays uncommitted-by-default). It stages exactly the context files Phase 2
-wrote plus `INDEX.md` — explicit paths only, never a catch-all — and makes
-one commit. If Phase 2 changed nothing it makes no commit (no empty commit).
-On a non-git VCS the commit honours the `CLAUDE.md` `## VCS` mapping
-(git→`cm`). Hook-skipping flags (`--no-verify`, `--amend`, `--no-gpg-sign`)
-are never used; a hook failure is surfaced and the files left staged.
+Phase 3 then **auto-commits and pushes** the run, putting `/context-update`
+in the committing group alongside `/task-add` and `/task-clean`
+(`/context-build` stays uncommitted-by-default, pushing only under
+`--commit`). It stages exactly the context files Phase 2 wrote plus
+`INDEX.md` — explicit paths only, never a catch-all — and makes one commit.
+If Phase 2 changed nothing it makes no commit (no empty commit). On a
+non-git VCS the commit honours the `CLAUDE.md` `## VCS` mapping (git→`cm`)
+and the push step is skipped entirely. Hook-skipping flags (`--no-verify`,
+`--amend`, `--no-gpg-sign`) are never used; a hook failure is surfaced and
+the files left staged. Both commands follow the commit-and-push protocol in
+[docs/authoring-guide.md](../../docs/authoring-guide.md) — pull at start,
+commit, re-sync, push — skippable via `--no-push` (implied by
+`--no-commit` for `/context-update`); see that doc for the algorithm.
 
 ## Authoring discipline for these commands
 

@@ -321,7 +321,7 @@ Preconditions: 68
 
 ## 70. Add push (with --no-push) to context-build and context-update
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/context-build.md, commands/context-update.md, .claude/domain/context-workflow.md, README.md, VERSION
 Preconditions: 68

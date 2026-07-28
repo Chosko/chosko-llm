@@ -252,8 +252,8 @@ editor over the `UnityMCP` server. Install it like any other feature with
 Build a *navigation layer*: small structured summaries that let future Claude Code sessions
 open only the source files they need, saving tokens.
 
-- `/context-build` — create the layer once. (it can be invoked automatically by `/project-setup` if chosen when asked)
-- `/context-update` — refresh only the parts the latest diffs touched.
+- `/context-build` — create the layer once. (it can be invoked automatically by `/project-setup` if chosen when asked). Commits only under `--commit`, and pushes too unless `--no-push` is also passed.
+- `/context-update` — refresh only the parts the latest diffs touched. Commits and pushes automatically; `--no-commit` skips both, `--no-push` commits without pushing.
 
 ### Clean up safely — `/refactor-codebase` and `/refactor-tests`
 
