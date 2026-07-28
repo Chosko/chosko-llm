@@ -1,8 +1,8 @@
 ---
 name: domain-setup
-version: 0.1.1
+version: 0.2.0
 type: command
-description: Initialize the project's domain knowledge layer — creates .claude/domain/, .claude/domain/features/, a .claude/domain/INDEX.md that indexes any pre-existing domain docs, the .claude/FEATURES.md feature index, and a CLAUDE.md pointer to the domain index. Idempotent and re-runnable on projects that already have hand-written domain docs. Authoring command — leaves everything uncommitted for review by default; pass --commit to commit the scaffolding.
+description: Initialize the project's domain knowledge layer — creates .claude/domain/, .claude/domain/features/, a .claude/domain/INDEX.md that indexes any pre-existing domain docs, the .claude/FEATURES.md feature index, and a CLAUDE.md pointer to the domain index. Idempotent and re-runnable on projects that already have hand-written domain docs. Authoring command — leaves everything uncommitted for review by default; pass --commit to commit (and push) the scaffolding, or --commit --no-push to commit without pushing.
 ---
 
 # /domain-setup
@@ -13,8 +13,9 @@ description: Initialize the project's domain knowledge layer — creates .claude
 # re-run leaves existing artifacts untouched and only creates the missing
 # ones. Safe on a project that already has hand-written domain docs — those
 # get indexed rather than replaced.
-# Usage: /domain-setup            (leaves the scaffolding uncommitted)
-# Usage: /domain-setup --commit   (commit the scaffolding this run wrote)
+# Usage: /domain-setup                     (leaves the scaffolding uncommitted)
+# Usage: /domain-setup --commit            (commit and push the scaffolding this run wrote)
+# Usage: /domain-setup --commit --no-push  (commit locally, skip the push)
 
 GOAL
 Make the domain layer structural. `.claude/domain/` holds the project's
@@ -47,13 +48,14 @@ the layer and nothing in it: no feature entries, no design documents.
 By default this is a pure authoring command: it writes the scaffolding and
 leaves everything uncommitted in the working tree, matching `/task-setup`,
 `/context-build`, and `/project-setup`. The user reviews and commits when
-ready. Passing `--commit` opts in to committing exactly what this run wrote
-(see PHASE — COMMIT below).
+ready. Passing `--commit` opts in to committing exactly what this run wrote, then
+pushing per docs/authoring-guide.md's commit-and-push protocol (see
+PHASE — COMMIT below); `--commit --no-push` commits without pushing.
 
 This command shells out for exactly two things: filesystem prep (`mkdir -p`
 for `.claude/domain` and `.claude/domain/features`) and, ONLY when
-`--commit` is passed, the commit step. Without `--commit`, it runs NO
-git/VCS command.
+`--commit` is passed, the pull/commit/push sequence. Without `--commit`,
+it runs NO git/VCS command.
 
 $ARGUMENTS
 
@@ -66,6 +68,15 @@ If present, set COMMIT = true. `--commit` and `--no-commit` are mutually
 exclusive — if both appear, stop with:
 `--commit and --no-commit cannot be combined. Pick one.` When COMMIT is
 false (the default), the run leaves its scaffolding uncommitted.
+
+Also parse the optional `--no-push` flag; if present, set NO_PUSH = true.
+NO_PUSH only matters when COMMIT is true: it skips the pull-at-start /
+re-sync / push steps of the commit-and-push protocol
+(docs/authoring-guide.md) while still committing as always. If COMMIT is
+true and the project's CLAUDE.md does not carry a `## VCS` override
+(non-git), pull at start: run `git pull` on the current branch before any
+artifact is checked. A conflict stops the run here — report the conflict
+output and tell the user to resolve manually and re-run.
 
 Each artifact is checked individually and created only if missing. Never
 overwrite an existing artifact without explicit user confirmation —
@@ -220,15 +231,15 @@ Compose it with what is already there; do not duplicate or overwrite:
 
 ---
 
-PHASE — COMMIT (only when `--commit` was passed)
+PHASE — COMMIT AND PUSH (only when `--commit` was passed)
 
 If COMMIT is false (the default), do nothing here — the scaffolding is left
 uncommitted for the user to review.
 
-If COMMIT is true:
+If COMMIT is true (the pull-at-start already ran in WORKFLOW):
 
 1. If `WRITTEN` is empty (a fully idempotent re-run that wrote nothing),
-   make no commit. Say so and stop — no empty commit.
+   make no commit (and no push). Say so and stop — no empty commit.
 2. Otherwise, stage EXACTLY the paths in `WRITTEN` and commit them:
 
    ```
@@ -239,10 +250,16 @@ If COMMIT is true:
    Stage ONLY the entries of `WRITTEN`. Never use `git add -A`,
    `git add .`, or `git add -u`. On a non-git VCS, use the project's
    `## VCS` mapping in CLAUDE.md (git→`cm`).
-3. On success, report the commit hash (`git rev-parse --short HEAD`).
-4. On failure (e.g. a pre-commit hook rejects the commit): surface the
-   exact output. Do NOT retry, amend, or use `--no-verify` /
+3. On commit success, report the commit hash (`git rev-parse --short
+   HEAD`). Then, unless NO_PUSH is true or the non-git VCS exemption
+   applies, re-sync (`git pull`) and `git push` per
+   docs/authoring-guide.md's commit-and-push protocol.
+4. On commit failure (e.g. a pre-commit hook rejects the commit): surface
+   the exact output. Do NOT retry, amend, or use `--no-verify` /
    `--no-gpg-sign`. Files remain staged but uncommitted; tell the user.
+5. On push failure (rejected, no upstream, no remote) or a pre-push
+   conflict: surface the exact output. Never retry, never force-push. The
+   commit exists locally; tell the user it needs a manual sync + push.
 
 ---
 
@@ -266,6 +283,8 @@ DO NOT:
 - Run any git/VCS command UNLESS `--commit` was passed. By default
   `/domain-setup` writes scaffolding and leaves everything uncommitted —
   committing is the user's job. With `--commit`, make exactly one commit of
-  the `WRITTEN` paths; never push, branch, tag, or use hook-skipping flags
-  (`--no-verify`, `--no-gpg-sign`, `--amend`), and never stage with a
-  catch-all (`git add -A` / `git add .` / `git add -u`).
+  the `WRITTEN` paths, then push per the commit-and-push protocol unless
+  `--no-push` was passed; never force-push, retry a failed push, branch,
+  tag, or use hook-skipping flags (`--no-verify`, `--no-gpg-sign`,
+  `--amend`), and never stage with a catch-all (`git add -A` / `git add .` /
+  `git add -u`).

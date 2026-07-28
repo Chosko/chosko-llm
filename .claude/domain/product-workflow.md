@@ -269,6 +269,16 @@ Exactly one writer per artifact, with `FEATURES.md` the deliberate exception.
 never contend for the same field. `/architect` never writes `Tasks:`;
 `/task-add` never writes `Doc:` or `Source:`.
 
+## Commit and push
+
+`/domain-setup`, `/product-design`, and `/architect` are all authoring
+commands/skills: uncommitted by default, `--commit` opts in. When
+`--commit` is passed, all three follow the commit-and-push protocol in
+[docs/authoring-guide.md](../../docs/authoring-guide.md) — pull at start,
+commit, re-sync, push — rather than a plain `git commit`. `--no-push`
+(only meaningful alongside `--commit`) skips the sync/push cycle and
+commits locally only. The algorithm is not re-derived here; see that doc.
+
 ## Domain layer vs. context layer
 
 The two `.claude/` knowledge layers stay separate, and the product pipeline

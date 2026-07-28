@@ -278,7 +278,8 @@ It never writes design documents; those come from `/product-design` and
 
 Idempotent and safe to run on an existing project: if you already have
 hand-written docs under `.claude/domain/`, it indexes them instead of
-replacing them.
+replacing them. Leaves everything uncommitted by default; `--commit`
+commits and pushes it (`--commit --no-push` to skip the push).
 
 ### Design a product — `/product-design`
 
@@ -302,6 +303,8 @@ where the last session stopped and offers to pick up there. There's no flag
 to remember.
 
 The output — including `technical-direction.md` — is `/architect`'s input.
+Nothing is committed by default; `--commit` commits and pushes what the run
+wrote (`--commit --no-push` to skip the push).
 
 ### Design how to build it — `/architect`
 
@@ -326,6 +329,9 @@ Re-architecting a feature that already produced tasks is guarded: if any of
 those tasks is `[IN PROGRESS]` it refuses outright, and otherwise it asks
 before marking the surviving tasks `[STALE]` and the feature `[ITERATED]` —
 then tells you to reconcile with `/task-add feature=<slug>`.
+
+Nothing committed by default; `--commit` commits and pushes exactly the
+written paths (`--commit --no-push` to skip the push).
 
 ### Work through a backlog — the `task-*` commands
 

@@ -1,8 +1,8 @@
 ---
 name: architect
-version: 0.2.0
+version: 0.3.0
 type: skill
-description: Turn one or more high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md — the bridge between /product-design and /task-add. Grounds the architecture in the project's recorded technical-direction.md or existing code, or proposes a tech stack when there is neither. Runs from a product-design section, named features, or a bare prompt with no design documents at all. Re-architecting a feature that already has tasks triggers an iterate guard: refuses outright while any task is [IN PROGRESS], otherwise asks, then flips surviving tasks to [STALE] and the feature to [ITERATED]. Requires /domain-setup. Nothing committed by default; pass --commit to commit exactly the written paths.
+description: Turn one or more high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md — the bridge between /product-design and /task-add. Grounds the architecture in the project's recorded technical-direction.md or existing code, or proposes a tech stack when there is neither. Runs from a product-design section, named features, or a bare prompt with no design documents at all. Re-architecting a feature that already has tasks triggers an iterate guard: refuses outright while any task is [IN PROGRESS], otherwise asks, then flips surviving tasks to [STALE] and the feature to [ITERATED]. Requires /domain-setup. Nothing committed by default; pass --commit to commit and push exactly the written paths (--commit --no-push to skip the push).
 ---
 
 # /architect
@@ -14,7 +14,8 @@ description: Turn one or more high-level features into low-level feature documen
 # Usage: /architect                        (read product-design.md, ask which feature)
 #        /architect <feature name> [...]   (architect the named feature(s))
 #        /architect <free-form description of what to build>
-#        /architect <args> --commit        (commit exactly what this run wrote)
+#        /architect <args> --commit        (commit and push exactly what this run wrote)
+#        /architect <args> --commit --no-push  (commit locally, skip the push)
 
 GOAL
 Take what a feature must do and decide how it will be built, grounded in the
@@ -60,6 +61,11 @@ COMMIT = true and strip it. `--commit` and `--no-commit` are mutually
 exclusive — if both appear, stop with:
 `--commit and --no-commit cannot be combined. Pick one.`
 
+Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
+matters when COMMIT is true: it skips the pull-at-start / re-sync / push
+steps of the commit-and-push protocol (docs/authoring-guide.md) while
+still committing as always.
+
 What remains is the input, resolved in PHASE 0. It is one of:
 
 - **Empty** — read `product-design.md` and ask which feature(s) to
@@ -85,6 +91,11 @@ PHASE 0 — GATE + INPUT
 > `INDEX.md`, and `.claude/FEATURES.md`. Then re-run `/architect`.
 
 Do not proceed and do not create the layer yourself. No exceptions.
+
+If COMMIT is true and the project's CLAUDE.md does not carry a `## VCS`
+override (non-git), pull at start per the commit-and-push protocol: run
+`git pull` on the current branch. A conflict stops the run here — report
+the conflict output and tell the user to resolve manually and re-run.
 
 **Read the inputs**, in this order, stopping when you have what you need:
 
@@ -264,13 +275,13 @@ Read `./feature-doc-template.md` for both schemas below.
 
 ---
 
-COMMIT (only when `--commit` was passed)
+COMMIT AND PUSH (only when `--commit` was passed)
 
 If COMMIT is false (the default), run no git/VCS command at all.
 
-If COMMIT is true:
+If COMMIT is true (the pull-at-start from PHASE 0 already ran):
 
-1. If `WRITTEN` is empty, make no commit. Say so and stop.
+1. If `WRITTEN` is empty, make no commit (and no push). Say so and stop.
 2. Stage EXACTLY the paths in `WRITTEN` — the feature documents,
    `.claude/FEATURES.md`, `.claude/domain/INDEX.md`,
    `.claude/domain/product-design.md` if updated, and
@@ -283,10 +294,16 @@ If COMMIT is true:
 
    Never use `git add -A`, `git add .`, or `git add -u`. On a non-git VCS,
    use the project's `## VCS` mapping in CLAUDE.md (git→`cm`).
-3. On success, report the commit hash (`git rev-parse --short HEAD`).
-4. On failure (e.g. a pre-commit hook rejects the commit): surface the exact
-   output. Do NOT retry, amend, or use `--no-verify` / `--no-gpg-sign`.
-   Files remain staged but uncommitted; tell the user.
+3. On commit success, report the commit hash (`git rev-parse --short
+   HEAD`). Then, unless NO_PUSH is true or the non-git VCS exemption
+   applies, re-sync (`git pull`) and push per docs/authoring-guide.md's
+   commit-and-push protocol.
+4. On commit failure (e.g. a pre-commit hook rejects the commit): surface
+   the exact output. Do NOT retry, amend, or use `--no-verify` /
+   `--no-gpg-sign`. Files remain staged but uncommitted; tell the user.
+5. On push failure (rejected, no upstream, no remote) or a pre-push
+   conflict: surface the exact output. Never retry, never force-push. The
+   commit exists locally; tell the user it needs a manual sync + push.
 
 ---
 
@@ -314,8 +331,9 @@ DO NOT:
   first.
 - Advance past PHASE 2 without the user confirming the architecture.
 - Run any git/VCS command unless `--commit` was passed; and with it, stage
-  only the explicit `WRITTEN` paths, never a catch-all, and never push,
-  branch, tag, or use hook-skipping flags (`--no-verify`, `--no-gpg-sign`,
-  `--amend`).
+  only the explicit `WRITTEN` paths, never a catch-all, push per the
+  commit-and-push protocol unless `--no-push` was passed, and never
+  force-push, retry a failed push, branch, tag, or use hook-skipping flags
+  (`--no-verify`, `--no-gpg-sign`, `--amend`).
 - Create the domain layer yourself when PHASE 0's gate fails. Point at
   `/domain-setup` and stop.

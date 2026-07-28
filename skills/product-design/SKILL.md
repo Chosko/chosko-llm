@@ -1,8 +1,8 @@
 ---
 name: product-design
-version: 0.2.0
+version: 0.3.0
 type: skill
-description: Brainstorm and design a product from the ground up with the user, producing high-level design documentation under .claude/domain/ — a product design doc whose features are described from the user-experience angle, a technical direction (stack, topology, data, hosting) that /architect adopts, plus an optional business model. Resumable across sessions: the state lives in design-process.md, not in conversation history, and every phase transition rewrites the stage marker before the phase ends. Works greenfield or brownfield (detected by reading the repo). Its output is /architect's input. Requires /domain-setup to have run. Nothing is committed by default; pass --commit to commit exactly the documents written.
+description: Brainstorm and design a product from the ground up with the user, producing high-level design documentation under .claude/domain/ — a product design doc whose features are described from the user-experience angle, a technical direction (stack, topology, data, hosting) that /architect adopts, plus an optional business model. Resumable across sessions: the state lives in design-process.md, not in conversation history, and every phase transition rewrites the stage marker before the phase ends. Works greenfield or brownfield (detected by reading the repo). Its output is /architect's input. Requires /domain-setup to have run. Nothing is committed by default; pass --commit to commit and push exactly the documents written (--commit --no-push to skip the push).
 ---
 
 # /product-design
@@ -12,7 +12,8 @@ description: Brainstorm and design a product from the ground up with the user, p
 # `.claude/domain/design-process.md`, so a later run resumes from what the
 # document says, not from what anyone remembers.
 # Usage: /product-design                    (leaves the documents uncommitted)
-#        /product-design --commit           (commit the documents this run wrote)
+#        /product-design --commit           (commit and push the documents this run wrote)
+#        /product-design --commit --no-push (commit locally, skip the push)
 #        /product-design <free-form context about the product>
 
 GOAL
@@ -67,6 +68,11 @@ the product, to be folded into PHASE 1's orientation. `--commit` and
 `--no-commit` are mutually exclusive — if both appear, stop with:
 `--commit and --no-commit cannot be combined. Pick one.`
 
+Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
+matters when COMMIT is true: it skips the pull-at-start / re-sync / push
+steps of the commit-and-push protocol (docs/authoring-guide.md) while
+still committing as always.
+
 There is no `resume` argument. Weeks pass between sessions and a flag would
 not be remembered; `design-process.md` already exists and is the anchor.
 
@@ -90,6 +96,11 @@ If either is missing, stop:
 
 Do not proceed, and do not create the layer yourself. This rule has no
 exceptions.
+
+If COMMIT is true and the project's CLAUDE.md does not carry a `## VCS`
+override (non-git), pull at start per the commit-and-push protocol: run
+`git pull` on the current branch. A conflict stops the run here — report
+the conflict output and tell the user to resolve manually and re-run.
 
 **Resume.** Probe `.claude/domain/design-process.md` with the Read tool.
 
@@ -322,15 +333,16 @@ every resume reads it and nothing else to decide where to pick up.
 
 ---
 
-COMMIT (only when `--commit` was passed)
+COMMIT AND PUSH (only when `--commit` was passed)
 
 If COMMIT is false (the default), run no git/VCS command at all. The
 documents are left uncommitted for the user to review — matching
 `/domain-setup`, `/task-setup`, and `/context-build`.
 
-If COMMIT is true, after the run's last phase completes:
+If COMMIT is true, after the run's last phase completes (the pull-at-start
+from PHASE 0 already ran):
 
-1. If `WRITTEN` is empty, make no commit. Say so and stop.
+1. If `WRITTEN` is empty, make no commit (and no push). Say so and stop.
 2. Stage EXACTLY the paths in `WRITTEN` — the documents written plus the
    `.claude/domain/INDEX.md` rows — and commit once:
 
@@ -341,10 +353,16 @@ If COMMIT is true, after the run's last phase completes:
 
    Never use `git add -A`, `git add .`, or `git add -u`. On a non-git VCS,
    use the project's `## VCS` mapping in CLAUDE.md (git→`cm`).
-3. On success, report the commit hash (`git rev-parse --short HEAD`).
-4. On failure (e.g. a pre-commit hook rejects the commit): surface the
-   exact output. Do NOT retry, amend, or use `--no-verify` /
+3. On commit success, report the commit hash (`git rev-parse --short
+   HEAD`). Then, unless NO_PUSH is true or the non-git VCS exemption
+   applies, re-sync (`git pull`) and push per docs/authoring-guide.md's
+   commit-and-push protocol.
+4. On commit failure (e.g. a pre-commit hook rejects the commit): surface
+   the exact output. Do NOT retry, amend, or use `--no-verify` /
    `--no-gpg-sign`. Files remain staged but uncommitted; tell the user.
+5. On push failure (rejected, no upstream, no remote) or a pre-push
+   conflict: surface the exact output. Never retry, never force-push. The
+   commit exists locally; tell the user it needs a manual sync + push.
 
 ---
 
@@ -368,8 +386,9 @@ DO NOT:
 - End a phase without rewriting the stage marker.
 - Create `business-model.md` unless the user opted into business modelling.
 - Run any git/VCS command unless `--commit` was passed; and with it, stage
-  only the explicit `WRITTEN` paths, never a catch-all, and never push,
-  branch, tag, or use hook-skipping flags (`--no-verify`, `--no-gpg-sign`,
-  `--amend`).
+  only the explicit `WRITTEN` paths, never a catch-all, push per the
+  commit-and-push protocol unless `--no-push` was passed, and never
+  force-push, retry a failed push, branch, tag, or use hook-skipping flags
+  (`--no-verify`, `--no-gpg-sign`, `--amend`).
 - Create the domain layer yourself when PHASE 0's gate fails. Point at
   `/domain-setup` and stop.

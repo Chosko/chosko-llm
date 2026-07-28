@@ -339,7 +339,7 @@ Preconditions: 68
 
 ## 72. Add push (with --no-push) to domain-setup, product-design, and architect
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/domain-setup.md, skills/product-design/SKILL.md, skills/architect/SKILL.md, .claude/domain/product-workflow.md, README.md, VERSION
 Preconditions: 68
