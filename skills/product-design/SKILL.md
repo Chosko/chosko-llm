@@ -1,6 +1,6 @@
 ---
 name: product-design
-version: 0.3.0
+version: 0.4.0
 type: skill
 description: Brainstorm and design a product from the ground up with the user, producing high-level design documentation under .claude/domain/ — a product design doc whose features are described from the user-experience angle, a technical direction (stack, topology, data, hosting) that /architect adopts, plus an optional business model. Resumable across sessions: the state lives in design-process.md, not in conversation history, and every phase transition rewrites the stage marker before the phase ends. Works greenfield or brownfield (detected by reading the repo). Its output is /architect's input. Requires /domain-setup to have run. Nothing is committed by default; pass --commit to commit and push exactly the documents written (--commit --no-push to skip the push).
 ---
@@ -208,8 +208,35 @@ current truth, not the debate that produced it.
 
 Do not write the high-level feature set yet — that is PHASE 4 and 5.
 
+**Sweep for uncaptured detail.** After the write-back above, before
+rewriting the stage marker, re-read the documents you just wrote against
+the PHASE 2 conversation and look for anything the interview surfaced that
+no section covers: decisions, constraints, user or flow detail, rejected
+alternatives, and terminology the user used. This is automatic — no new
+question round, no new approval gate — you integrate directly into the
+relevant document:
+
+- WHAT/HOW detail (product behavior, user experience, flows, decisions
+  already in scope for `product-design.md`) → the matching section of
+  `product-design.md`.
+- Business material → `business-model.md`, only when it exists.
+- WHY, rationale, and rejected alternatives → `design-process.md`'s
+  "Decisions worth keeping" section — this is where that register already
+  lives (see `./document-templates.md`).
+
+The same guards from the write-back above apply here: no technical or
+implementation-level detail (a hard technical constraint the user stated
+gets one line, as elsewhere), no high-level feature set, and never touch
+`.claude/FEATURES.md`, `.claude/domain/features/`, or `.claude/TASKS.md`.
+Add every path this step writes to `WRITTEN` — `design-process.md`
+included, if the sweep adds rationale there.
+
+If nothing is missing, say so and write nothing — do not restate what the
+documents already say or manufacture content to fill the step.
+
 Rewrite the stage marker before the phase ends, then report the sections
-written and stop for the user.
+written by the write-back AND what the sweep integrated (or that nothing
+was missing), and stop for the user.
 
 ---
 

@@ -314,6 +314,17 @@ would not be remembered; the document already exists and is the natural
 anchor. The corollary is that the marker is load-bearing — a phase that ends
 without rewriting it degrades every later resume.
 
+**The PHASE 3 sweep.** PHASE 3 (write-back) is the other natural session
+boundary alongside PHASE 2's interview, so it is where uncaptured detail is
+most likely to die with the context window. After write-back, PHASE 3
+automatically re-reads `product-design.md`/`business-model.md` against the
+PHASE 2 conversation and integrates anything the documents don't cover —
+WHAT/HOW into `product-design.md`, business material into
+`business-model.md`, and WHY/rationale/rejected alternatives into
+`design-process.md`'s "Decisions worth keeping" section. No new approval
+gate; the existing PHASE 3 report is the review surface. A no-op when
+nothing is missing.
+
 ## Cross-references
 
 - [`../../CLAUDE.md`](../../CLAUDE.md) — hard rules (authoring, versioning,

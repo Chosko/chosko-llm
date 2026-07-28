@@ -190,7 +190,13 @@ Currently shipped:
   layer/the source tree) and stubs the documents plus their
   `.claude/domain/INDEX.md` rows (`technical-direction.md` stubbed
   unconditionally, since PHASE 6 always runs), PHASE 2 interviews, PHASE 3
-  writes back, PHASE 4 identifies the high-level feature set from the
+  writes back then automatically sweeps the conversation against what was
+  just written — integrating any decision, constraint, flow detail,
+  rejected alternative, or terminology the documents don't cover
+  (WHAT/HOW into `product-design.md`, business material into
+  `business-model.md`, WHY/rationale into `design-process.md`'s "Decisions
+  worth keeping" — no new approval gate, a no-op when nothing is missing)
+  — before its report and stop, PHASE 4 identifies the high-level feature set from the
   user-experience angle, PHASE 5 records it, PHASE 6 is a conversational
   round establishing the product's technical foundations (stack, topology,
   data, async, hosting, protocols, cross-cutting concerns) — always runs,

@@ -305,7 +305,10 @@ Designing a product takes more than one sitting, so the process is
 **resumable**: its state lives in `.claude/domain/design-process.md`, not in
 the conversation. Run `/product-design` again weeks later and it tells you
 where the last session stopped and offers to pick up there. There's no flag
-to remember.
+to remember. Before it stops after write-back, it also sweeps the
+conversation for anything the written documents don't yet cover and folds
+it in automatically, so detail raised in the interview doesn't quietly die
+with the session.
 
 The output — including `technical-direction.md` — is `/architect`'s input.
 Nothing is committed by default; `--commit` commits and pushes what the run

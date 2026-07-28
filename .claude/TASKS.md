@@ -393,7 +393,7 @@ Preconditions: 76
 
 ## 78. Sweep the conversation for uncaptured design detail at the end of /product-design PHASE 3
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/product-design/SKILL.md, .claude/context/features.md, .claude/domain/product-workflow.md, README.md, VERSION
 Preconditions: none
