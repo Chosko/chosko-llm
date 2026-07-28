@@ -1,8 +1,8 @@
 ---
 name: unity-mcp-setup
-version: 0.1.0
+version: 0.2.0
 type: command
-description: Make a Unity project ready for MCP-assisted task implementation. Idempotent and re-runnable — detects the project, installs the Unity-side com.coplaydev.unity-mcp package into Packages/manifest.json if missing, records the project-side fact in versioned artifacts (a terse CLAUDE.md marker plus, when a context layer exists, .claude/context/mcp-tools.md and an INDEX.md row), and registers + verifies the machine-local Claude-side UnityMCP server via claude mcp add / claude mcp list. Configures only what is missing. Authoring command — leaves its versioned artifacts uncommitted for review by default; pass --commit to commit them. The Claude-side registration is machine-local config (in ~/.claude.json), not a repo change, so it happens regardless of the flag.
+description: Make a Unity project ready for MCP-assisted task implementation. Idempotent and re-runnable — detects the project, installs the Unity-side com.coplaydev.unity-mcp package into Packages/manifest.json if missing, records the project-side fact in versioned artifacts (a terse CLAUDE.md marker plus, when a context layer exists, .claude/context/mcp-tools.md and an INDEX.md row), and registers + verifies the machine-local Claude-side UnityMCP server via claude mcp add / claude mcp list. Configures only what is missing. Authoring command — leaves its versioned artifacts uncommitted for review by default; pass --commit to commit and push them (--commit --no-push to skip the push). The Claude-side registration is machine-local config (in ~/.claude.json), not a repo change, so it happens regardless of the flag.
 ---
 
 # /unity-mcp-setup
@@ -14,7 +14,9 @@ description: Make a Unity project ready for MCP-assisted task implementation. Id
 # carries a from-nothing project all the way to a tested connection.
 # Usage: /unity-mcp-setup
 # Usage with commit: /unity-mcp-setup --commit
-#   (commit the versioned artifacts this command writes)
+#   (commit and push the versioned artifacts this command writes)
+# Usage without push: /unity-mcp-setup --commit --no-push
+#   (commit locally, skip the push)
 
 GOAL
 Make the current Unity project ready for `/task-implement` to drive the
@@ -39,8 +41,10 @@ leaves every VERSIONED file it writes — `Packages/manifest.json`,
 UNCOMMITTED in the working tree for you to review and commit in one pass,
 matching the other authoring commands (`/project-setup`, `/context-build`,
 `/task-enrich`, the `/refactor-*` commands). With `--commit` it commits
-exactly those written paths in one focused commit. `--commit` and
-`--no-commit` are mutually exclusive — if both appear, stop with:
+exactly those written paths in one focused commit, then pushes per
+docs/authoring-guide.md's commit-and-push protocol (`--commit --no-push`
+commits without pushing). `--commit` and `--no-commit` are mutually
+exclusive — if both appear, stop with:
 `--commit and --no-commit cannot be combined. Pick one.`
 
 The Claude-side `claude mcp add` registration is NOT a repo change — it
@@ -54,6 +58,15 @@ ARGUMENT NOTE — scan $ARGUMENTS for the optional `--commit` flag. If
 present, set COMMIT = true and strip it. `--commit` and `--no-commit` are
 mutually exclusive — if both appear, stop with the message above. COMMIT
 drives PHASE 3's Step F only.
+
+Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
+matters when COMMIT is true: it skips the pull-at-start / re-sync / push
+steps of Step F's commit-and-push protocol (docs/authoring-guide.md) while
+still committing as always. If COMMIT is true and the project's CLAUDE.md
+does not carry a `## VCS` override (non-git), pull at start — run
+`git pull` on the current branch before PHASE 0 begins. A conflict stops
+the run here — report the conflict output and tell the user to resolve
+manually and re-run.
 
 The flow is strictly: DETECT (probe read-only) → CONFIRM (one approval) →
 EXECUTE (apply only what's missing) → commit-or-review-reminder. Never
@@ -137,7 +150,7 @@ Otherwise present:
 ```
 PLAN — unity-mcp-setup     (versioned artifacts left for review unless --commit)
 
-Commit mode:      <off — leave versioned files for review | on (--commit)>
+Commit mode:      <off — leave versioned files for review | on (--commit) — commit and push | on --no-push — commit locally only>
 Unity package:    <add com.coplaydev.unity-mcp to manifest.json | already present (skip)>
 CLAUDE.md marker: <add | update in place | already present (skip)>
 Context doc:      <create .claude/context/mcp-tools.md + INDEX row | already present (skip) | n/a (no context layer)>
@@ -291,10 +304,11 @@ that the `mcp__UnityMCP__*` tools will not be visible to Claude until the
 session is restarted (per the gotcha) — `claude mcp list` confirms the
 registration now, but the live tool index only refreshes on a new session.
 
-### Step F — Commit the versioned artifacts (only with `--commit`)
+### Step F — Commit and push the versioned artifacts (only with `--commit`)
 
-Run this step ONLY when `--commit` was passed. Stage EXACTLY the versioned
-files Steps A–C wrote — any of `Packages/manifest.json`, `CLAUDE.md`,
+Run this step ONLY when `--commit` was passed (the pull-at-start from the
+ARGUMENT NOTE already ran). Stage EXACTLY the versioned files Steps A–C
+wrote — any of `Packages/manifest.json`, `CLAUDE.md`,
 `.claude/context/mcp-tools.md`, `.claude/context/INDEX.md` — by explicit
 path, and make one commit:
 
@@ -304,11 +318,17 @@ git commit -m "Set up Unity MCP for /task-implement"
 ```
 
 If Steps A–C wrote nothing (everything was already in place), make no
-commit. Never stage a catch-all (`git add -A`/`.`/`-u`). The Claude-side
-registration is NOT part of this commit — it lives outside the repo. On a
-non-git VCS, use the project's `## VCS` mapping (git→`cm`). On commit
-failure (e.g. a pre-commit hook), surface the output; do NOT retry, amend,
-or use hook-skipping flags. Without `--commit`, skip this step entirely.
+commit (and no push). Never stage a catch-all (`git add -A`/`.`/`-u`). The
+Claude-side registration is NOT part of this commit — it lives outside the
+repo. On a non-git VCS, use the project's `## VCS` mapping (git→`cm`) and
+skip the push step entirely (per that section's push exemption). On
+commit success, unless NO_PUSH is true, re-sync (`git pull`) and
+`git push` per docs/authoring-guide.md's commit-and-push protocol; on push
+failure or a pre-push conflict, surface the exact output, never retry or
+force-push — the commit exists locally and needs a manual sync + push. On
+commit failure (e.g. a pre-commit hook), surface the output; do NOT retry,
+amend, or use hook-skipping flags. Without `--commit`, skip this step
+entirely.
 
 ### Final report
 
@@ -317,8 +337,10 @@ COMMIT:
 - Without `--commit`: list the versioned files written and remind the user
   they are UNCOMMITTED for review; note that the Claude-side registration
   was applied to `~/.claude.json` (machine-local, nothing to commit).
-- With `--commit`: report the commit's short hash and the paths it covered;
-  note the Claude-side registration separately as machine-local config.
+- With `--commit`: report the commit's short hash and the paths it covered,
+  whether it was pushed (or stayed local-only under `--no-push` / the
+  non-git VCS exemption); note the Claude-side registration separately as
+  machine-local config.
 
 If a fresh registration happened, end by reminding the user to restart the
 session so the `mcp__UnityMCP__*` tools become available.
@@ -335,6 +357,7 @@ DO NOT:
 - Stage or commit the Claude-side `claude mcp add` registration — it is
   machine-local config in `~/.claude.json`, never a repo change.
 - Commit anything unless `--commit` was passed; then commit only the
-  explicit versioned paths written — never a catch-all, never push, branch,
-  tag, or use hook-skipping flags.
+  explicit versioned paths written — never a catch-all — and push per the
+  commit-and-push protocol unless `--no-push` was passed; never force-push,
+  retry a failed push, branch, tag, or use hook-skipping flags.
 - Reformat or reorder unrelated entries in `Packages/manifest.json`.

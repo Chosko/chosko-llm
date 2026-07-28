@@ -357,7 +357,7 @@ Preconditions: 68
 
 ## 74. Add push (with --no-push) to unity-mcp-setup
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/unity-mcp-setup.md, README.md, VERSION
 Preconditions: 68

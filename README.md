@@ -243,7 +243,8 @@ registers + verifies the `UnityMCP` server on your machine
 (`claude mcp add` / `claude mcp list`). The project-side artifacts are
 versioned and shared; the Claude-side registration is machine-local (in
 `~/.claude.json`) and stays per-machine. `/project-setup` offers to run it on
-Unity projects.
+Unity projects. Leaves its versioned artifacts uncommitted by default;
+`--commit` commits and pushes them (`--commit --no-push` to skip the push).
 
 The repo also ships a `unity-mcp-skill` skill — a Unity-MCP operator guide
 (resource-first workflow, tool categories, and reference files for tool
