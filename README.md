@@ -226,7 +226,11 @@ The sections below are the per-command reference.
 One-pass setup for a new repo. Seeds `CLAUDE.md` from pasted material, adds an
 optional `AGENTS.md` pointer, injects a VCS-mapping section for non-git
 projects, and can kick off the task backlog and context layer. Gathers every
-choice up front, confirms once, then executes.
+choice up front, confirms once, then executes. Leaves everything uncommitted
+by default; `--commit` commits (and pushes) its own artifacts and forwards
+`--commit` (plus `--no-push`, if set) to the sub-commands it runs. On a
+non-git VCS (e.g. Plastic SCM), the injected `## VCS` section notes that
+`cm checkin` already syncs to the server, so no push cycle ever runs there.
 
 ### Set up Unity MCP — `/unity-mcp-setup`
 

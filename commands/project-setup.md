@@ -1,8 +1,8 @@
 ---
 name: project-setup
-version: 0.6.0
+version: 0.7.0
 type: command
-description: Interactive first-time project initialization wizard. Gathers all choices upfront (VCS, CLAUDE.md content, AGENTS.md, task backlog, domain layer, context layer), confirms once, then executes them in a fixed order. Orchestrates /task-setup, /domain-setup (before the context layer, since context files cross-reference domain docs), and /context-build; injects a VCS-mapping section into CLAUDE.md for non-git projects (e.g. Plastic SCM). On Unity projects, also injects a "Tasks implementation" section into CLAUDE.md covering editor dirty-tree noise handling (with a self-updating known-noise-files list maintained by future sessions) and, when the project has no test suite, the permanent skip-tests testing-policy marker for /task-implement, and offers to run /unity-mcp-setup (as the last step, after the context layer) to wire up MCP-assisted task implementation. Authoring command — leaves all output uncommitted for one review pass by default; pass --commit to commit its own artifacts and delegate --commit to the nested commands.
+description: Interactive first-time project initialization wizard. Gathers all choices upfront (VCS, CLAUDE.md content, AGENTS.md, task backlog, domain layer, context layer), confirms once, then executes them in a fixed order. Orchestrates /task-setup, /domain-setup (before the context layer, since context files cross-reference domain docs), and /context-build; injects a VCS-mapping section into CLAUDE.md for non-git projects (e.g. Plastic SCM). On Unity projects, also injects a "Tasks implementation" section into CLAUDE.md covering editor dirty-tree noise handling (with a self-updating known-noise-files list maintained by future sessions) and, when the project has no test suite, the permanent skip-tests testing-policy marker for /task-implement, and offers to run /unity-mcp-setup (as the last step, after the context layer) to wire up MCP-assisted task implementation. Authoring command — leaves all output uncommitted for one review pass by default; pass --commit to commit and push its own artifacts and delegate --commit (and --no-push, if passed) to the nested commands.
 ---
 
 # /project-setup
@@ -13,7 +13,9 @@ description: Interactive first-time project initialization wizard. Gathers all c
 # Usage: /project-setup
 # Usage with hint: /project-setup "source lives under lib/, we use Plastic"
 # Usage with commit: /project-setup --commit
-#   (commit the wizard's own artifacts, and run the sub-commands with --commit)
+#   (commit and push the wizard's own artifacts, and run the sub-commands with --commit)
+# Usage without push: /project-setup --commit --no-push
+#   (commit locally only — forwarded to the sub-commands too)
 
 GOAL
 Walk a first-time user through configuring this project: detect the VCS,
@@ -39,19 +41,28 @@ for review. The generated CLAUDE.md prose in particular is synthesized from
 the user's pasted material and deserves a human read before it lands in
 history.
 
-With `--commit`, project-setup commits its OWN artifacts (the CLAUDE.md
-seeding + VCS section, AGENTS.md) first, then runs the nested commands WITH
-`--commit` so each commits its own output (`/task-setup --commit`,
-`/domain-setup --commit`, `/context-build --commit`). The result is a small series of focused commits
-rather than one uncommitted working tree. `--commit` and `--no-commit` are
-mutually exclusive — if both appear, stop with:
+With `--commit`, project-setup commits (and pushes) its OWN artifacts (the
+CLAUDE.md seeding + VCS section, AGENTS.md) first, then runs the nested
+commands WITH `--commit` so each commits (and pushes) its own output
+(`/task-setup --commit`, `/domain-setup --commit`, `/context-build
+--commit`). The result is a small series of focused commits rather than one
+uncommitted working tree. `--commit` and `--no-commit` are mutually
+exclusive — if both appear, stop with:
 `--commit and --no-commit cannot be combined. Pick one.`
+
+`--no-push` (only meaningful alongside `--commit`) makes every commit in
+the run local-only: the wizard's own Step 4c commit skips the pull/re-sync/
+push cycle, and `--no-push` is forwarded to each nested command alongside
+`--commit` (`/task-setup --commit --no-push`, etc.) so their commits stay
+local too.
 
 VCS detection exists for ONE purpose only: deciding whether to inject the
 VCS-mapping section into CLAUDE.md (that section maps git→`cm` for the
-committing commands under a non-git VCS). When `--commit` is used, the
-wizard's own commit — and the sub-commands' — honor that same `## VCS`
-mapping. Without `--commit`, project-setup runs no VCS command at all.
+committing commands under a non-git VCS, and states that `cm checkin`
+already syncs to the server so no push cycle ever runs there). When
+`--commit` is used, the wizard's own commit — and the sub-commands' —
+honor that same `## VCS` mapping (including its push exemption). Without
+`--commit`, project-setup runs no VCS command at all.
 
 ORDERING PRINCIPLE — the wizard does its OWN fast, deterministic work first,
 THEN runs the heavy sub-commands last:
@@ -60,7 +71,8 @@ THEN runs the heavy sub-commands last:
   only on what the user provides and are written before any sub-command runs.
 - `/task-setup` runs next — it is mechanical and low-context. It leaves its
   scaffolding uncommitted by default; under `--commit` the wizard passes
-  `--commit` through so it commits its own scaffolding (see Step 5).
+  `--commit` (and `--no-push`, if set) through so it commits (and pushes)
+  its own scaffolding (see Step 5).
 - `/domain-setup` runs after it and BEFORE `/context-build` (see Step 5b) —
   also mechanical and low-context. The ordering is deliberate:
   `/context-build` emits DOMAIN DEPENDENCIES sections that link to domain
@@ -72,7 +84,8 @@ THEN runs the heavy sub-commands last:
   the run and strand the wizard's later steps. Running it last guarantees the
   wizard's other steps have already executed before context-build starts. It
   leaves its output uncommitted by default; under `--commit` the wizard
-  passes `--commit` through so it commits its own output (see Step 6).
+  passes `--commit` (and `--no-push`, if set) through so it commits (and
+  pushes) its own output (see Step 6).
 
 CLAUDE.md seeding relies ONLY on material the user supplies — pasted docs,
 README excerpts, notes. The wizard does NOT read the codebase to synthesize
@@ -91,6 +104,16 @@ set COMMIT = true and strip it (any remaining text is a structure/VCS hint).
 `--commit` and `--no-commit` are mutually exclusive — if both appear, stop
 with: `--commit and --no-commit cannot be combined. Pick one.` COMMIT drives
 the commit behavior described in COMMIT POLICY above and PHASE 3 below.
+
+Also scan for the optional `--no-push` flag; if present, set NO_PUSH = true
+and strip it. NO_PUSH only matters when COMMIT is true: it skips the
+pull-at-start / re-sync / push steps of Step 4c's commit-and-push protocol
+(docs/authoring-guide.md), and is forwarded to every nested command invoked
+with `--commit` below. If COMMIT is true and the project's chosen VCS is
+git (not a non-git `## VCS` exemption), pull at start per the protocol —
+run `git pull` on the current branch before PHASE 2 (EXECUTE) begins. A
+conflict stops the run here — report the conflict output and tell the
+user to resolve manually and re-run.
 
 ---
 
@@ -178,8 +201,8 @@ This is independent of every other choice.
 
 If yes, note that task-setup leaves its scaffolding uncommitted by default —
 its files sit in the working tree with everything else for one review pass.
-Under `--commit`, the wizard runs `/task-setup --commit` so it commits its
-own scaffolding.
+Under `--commit`, the wizard runs `/task-setup --commit` (plus `--no-push`
+if set) so it commits (and pushes) its own scaffolding.
 
 ### 1e. Domain knowledge layer
 
@@ -204,8 +227,8 @@ documents; it indexes them.
 
 Default is yes. Note that it runs after the task backlog and BEFORE
 `/context-build`, and leaves its scaffolding uncommitted by default; under
-`--commit` the wizard runs `/domain-setup --commit` so it commits its own
-scaffolding.
+`--commit` the wizard runs `/domain-setup --commit` (plus `--no-push` if
+set) so it commits (and pushes) its own scaffolding.
 
 ### 1f. Context layer
 
@@ -214,7 +237,8 @@ scaffolding.
 Note for the user: context-build runs LAST and has its own approval gates —
 it will pause for input during its phases, and it leaves its output
 uncommitted for you to review afterward. Under `--commit`, the wizard runs
-`/context-build --commit` so it commits its own output.
+`/context-build --commit` (plus `--no-push` if set) so it commits (and
+pushes) its own output.
 
 ### 1g. Unity projects — tasks-implementation section
 
@@ -262,7 +286,7 @@ The header and closing line depend on COMMIT. Without `--commit` use the
 ```
 PLAN — project setup     (nothing is committed; all output left for review)
 
-Commit mode:    <off — leave everything for review | on (--commit) — commit each step>
+Commit mode:    <off — leave everything for review | on (--commit) — commit and push each step | on --no-push — commit each step locally only>
 VCS:            <git | Plastic SCM | none>
 Seed CLAUDE.md: <yes, synthesizing N pasted source(s) | skip>
 VCS section:    <inject Plastic mapping into CLAUDE.md | none needed (git) | skip (none)>
@@ -280,15 +304,15 @@ Execution order:
   3. Inject VCS section    (if non-git VCS)
   3b. Tasks-implementation section (Unity projects only)
   4. AGENTS.md             (if requested)
-  4c. Commit own artifacts (only with --commit; commits steps 1-4)
+  4c. Commit and push own artifacts (only with --commit; commits steps 1-4)
   -- heavy sub-commands, last --
-  5. /task-setup           (if requested; --commit passed through when set)
-  5b. /domain-setup        (if requested; before context-build; --commit passed through when set)
-  6. /context-build        (if requested; interactive; --commit passed through when set)
-  7. /unity-mcp-setup      (Unity + if requested; runs after context-build; --commit passed through when set)
+  5. /task-setup           (if requested; --commit [--no-push] passed through when set)
+  5b. /domain-setup        (if requested; before context-build; --commit [--no-push] passed through when set)
+  6. /context-build        (if requested; interactive; --commit [--no-push] passed through when set)
+  7. /unity-mcp-setup      (Unity + if requested; runs after context-build; --commit [--no-push] passed through when set)
 
 All changes are left UNCOMMITTED for you to review and commit in one pass.
-(With --commit: each step commits its own output as a focused commit.)
+(With --commit: each step commits its own output as a focused commit, then pushes unless --no-push.)
 ```
 
 End with: **"Approve and run?"**
@@ -304,8 +328,9 @@ Run the steps in this exact order. Skip any step the user opted out of.
 Report each step's result as you go. Steps 1-4 are the wizard's own work;
 Steps 5-6 are the heavy sub-commands. Without `--commit`, nothing is
 committed at any step — everything is left in the working tree for the final
-review. With `--commit`, Step 4c commits the wizard's own artifacts and the
-sub-commands are invoked WITH `--commit` so they commit their own output.
+review. With `--commit`, Step 4c commits (and pushes) the wizard's own
+artifacts and the sub-commands are invoked WITH `--commit` (and `--no-push`,
+if set) so they commit (and push) their own output.
 
 ### Step 1 — CLAUDE.md skeleton
 
@@ -358,6 +383,10 @@ catch-all. Plastic has no staging area, so the git "add then commit"
 two-step maps to a single `cm checkin` of the listed paths: an instruction
 to stage is not a separate command here, it selects which paths the later
 check-in names.
+
+`git push` has no Plastic equivalent, because `cm checkin` already syncs
+the changeset to the central server — commands never run a pull/re-sync/push
+cycle in this project. Perform the checkin above and stop there.
 ```
 
 For git, inject nothing — the commands already work as authored. For an
@@ -437,12 +466,13 @@ VCS rules.
 If AGENTS.md already exists, do not clobber it — report that it was left
 as-is.
 
-### Step 4c — Commit the wizard's own artifacts (only with `--commit`)
+### Step 4c — Commit and push the wizard's own artifacts (only with `--commit`)
 
-Run this step ONLY when `--commit` was passed. Stage EXACTLY the files
-Steps 1-4 wrote — CLAUDE.md (the skeleton, seeded prose, injected `## VCS`
-section, and/or Unity `## Tasks implementation` section) and AGENTS.md, as
-applicable — and make one commit:
+Run this step ONLY when `--commit` was passed (the pull-at-start from the
+ARGUMENT NOTE already ran). Stage EXACTLY the files Steps 1-4 wrote —
+CLAUDE.md (the skeleton, seeded prose, injected `## VCS` section, and/or
+Unity `## Tasks implementation` section) and AGENTS.md, as applicable — and
+make one commit:
 
 ```
 git add -- <CLAUDE.md and/or AGENTS.md, only the files actually written>
@@ -450,19 +480,25 @@ git commit -m "Initialize project with chosko-llm scaffolding"
 ```
 
 If Steps 1-4 wrote nothing (e.g. CLAUDE.md already complete, AGENTS.md
-already present), make no commit. Stage only the explicit paths written —
-never a catch-all (`git add -A`/`.`/`-u`). On a non-git VCS, use the
-`## VCS` mapping (git→`cm`). On commit failure (e.g. a pre-commit hook),
-surface the output; do NOT retry, amend, or use hook-skipping flags. Without
-`--commit`, skip this step entirely.
+already present), make no commit (and no push). Stage only the explicit
+paths written — never a catch-all (`git add -A`/`.`/`-u`). On a non-git
+VCS, use the `## VCS` mapping (git→`cm`) and skip the push step entirely
+(per that section's push exemption). On commit success, unless NO_PUSH is
+true, re-sync (`git pull`) and `git push` per docs/authoring-guide.md's
+commit-and-push protocol; on push failure or a pre-push conflict, surface
+the exact output, never retry or force-push — the commit exists locally
+and needs a manual sync + push. On commit failure (e.g. a pre-commit
+hook), surface the output; do NOT retry, amend, or use hook-skipping
+flags. Without `--commit`, skip this step entirely.
 
 ### Step 5 — Task backlog
 
 If requested, run the `/task-setup` workflow. It creates the backlog
 scaffolding. Without `--commit` it leaves the scaffolding uncommitted with
-everything else; with `--commit`, invoke it as `/task-setup --commit` so it
-commits its own scaffolding. Because CLAUDE.md is already written (Steps
-1-4), task-setup's convention reading sees the completed file.
+everything else; with `--commit`, invoke it as `/task-setup --commit`
+(plus `--no-push` if set) so it commits (and pushes) its own scaffolding.
+Because CLAUDE.md is already written (Steps 1-4), task-setup's convention
+reading sees the completed file.
 
 ### Step 5b — Domain layer (before context-build)
 
@@ -473,9 +509,10 @@ project that already has hand-written domain docs, indexes them instead of
 writing an empty index. It runs BEFORE Step 6 so that `/context-build` can
 cross-reference an existing domain index. Without `--commit` it leaves its
 scaffolding uncommitted with everything else; with `--commit`, invoke it as
-`/domain-setup --commit` so it commits its own scaffolding. This wizard holds
-no domain-layer logic of its own — it delegates entirely, the same contract
-it has with `/unity-mcp-setup`.
+`/domain-setup --commit` (plus `--no-push` if set) so it commits (and
+pushes) its own scaffolding. This wizard holds no domain-layer logic of its
+own — it delegates entirely, the same contract it has with
+`/unity-mcp-setup`.
 
 ### Step 6 — Context build (LAST)
 
@@ -484,8 +521,8 @@ phases as authoritative — it has its own STOP-and-approve gates that pause
 for user input; honor them, do not flatten them. It creates CLAUDE.md if
 missing and adds its navigation instruction at the top (additive to anything
 Steps 1-2 wrote). Without `--commit` its output stays uncommitted; with
-`--commit`, invoke it as `/context-build --commit` so it commits its own
-output.
+`--commit`, invoke it as `/context-build --commit` (plus `--no-push` if
+set) so it commits (and pushes) its own output.
 
 ### Step 7 — Unity MCP setup (Unity projects only; runs after context-build)
 
@@ -498,8 +535,9 @@ delegates entirely to `/unity-mcp-setup`, which is idempotent and interactive
 (it may pause for the user to open the Unity Editor so the connection can be
 verified). Without `--commit`, `/unity-mcp-setup` leaves its versioned
 artifacts uncommitted with everything else; with `--commit`, invoke it as
-`/unity-mcp-setup --commit` so it commits its own versioned artifacts (its
-machine-local `claude mcp add` registration is never committed either way).
+`/unity-mcp-setup --commit` (plus `--no-push` if set) so it commits (and
+pushes) its own versioned artifacts (its machine-local `claude mcp add`
+registration is never committed either way).
 
 ### Final report
 
@@ -512,9 +550,10 @@ output if run). Then, depending on COMMIT:
   (e.g. review the synthesized CLAUDE.md prose, then commit; `/task-add` once
   the backlog is committed).
 - With `--commit`: list the commits made (Step 4c's own-artifacts commit, plus
-  each sub-command's commit) with their short hashes, and note that the
-  synthesized CLAUDE.md prose is worth a post-hoc review even though it was
-  committed.
+  each sub-command's commit) with their short hashes, note whether each was
+  pushed (or stayed local-only under `--no-push` / the non-git VCS
+  exemption), and note that the synthesized CLAUDE.md prose is worth a
+  post-hoc review even though it was committed.
 
 ---
 
@@ -523,7 +562,9 @@ DO NOT:
 - Commit, stage, or otherwise mutate VCS state UNLESS `--commit` was passed.
   By default project-setup makes NO commits; everything it and its
   sub-commands write is left uncommitted. With `--commit`, commit only the
-  explicit paths each step wrote — never a catch-all — and never push,
+  explicit paths each step wrote — never a catch-all — then push per the
+  commit-and-push protocol unless `--no-push` was passed (forwarded to every
+  nested `--commit` call too); never force-push, retry a failed push,
   branch, tag, or use hook-skipping flags.
 - Reimplement `/context-build`, `/task-setup`, `/domain-setup`, or
   `/unity-mcp-setup` — invoke their workflows.

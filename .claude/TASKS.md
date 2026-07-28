@@ -348,7 +348,7 @@ Preconditions: 68
 
 ## 73. Add push (with --no-push) to project-setup, and document the Plastic push exemption in the injected VCS section
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/project-setup.md, README.md, VERSION
 Preconditions: 68
