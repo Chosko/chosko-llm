@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 78
+Last task number: 79
 
 ---
 
@@ -396,6 +396,15 @@ Preconditions: 76
 Status: [DONE]
 Target: claude
 Files: skills/product-design/SKILL.md, .claude/context/features.md, .claude/domain/product-workflow.md, README.md, VERSION
+Preconditions: none
+
+---
+
+## 79. Simplify /task-implement's strict-TDD sequence — drop the watch-it-fail step
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-implement/SKILL.md, skills/task-implement/no-test-suite.md, scripts/cmd-task-impl.sh, scripts/check-task-parity.sh, .claude/domain/task-workflow.md, .claude/context/cmd-task-impl.md, .claude/context/features.md, .claude/context/INDEX.md, docs/authoring-guide.md, README.md, VERSION
 Preconditions: none
 
 ---
