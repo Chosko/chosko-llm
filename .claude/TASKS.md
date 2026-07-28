@@ -312,7 +312,7 @@ Preconditions: none
 
 ## 69. Add push (with --no-push) to the task-backlog commands: task-add, task-setup, task-clean, task-enrich
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-add.md, commands/task-setup.md, commands/task-clean.md, commands/task-enrich.md, .claude/domain/task-workflow.md, README.md, VERSION
 Preconditions: 68

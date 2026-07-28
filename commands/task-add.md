@@ -1,8 +1,8 @@
 ---
 name: task-add
-version: 0.11.0
+version: 0.12.0
 type: command
-description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, and setting the feature [PLANNED]. Pass --enrich to produce a self-contained body for a local LLM in one shot, --no-split to always write exactly one task, or --no-commit to write the files but skip the commit.
+description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit and push. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, and setting the feature [PLANNED]. Pass --enrich to produce a self-contained body for a local LLM in one shot, --no-split to always write exactly one task, --no-commit to write the files but skip the commit (and push), or --no-push to commit without pushing.
 ---
 
 # /task-add
@@ -14,8 +14,8 @@ description: Plan a new task entry conversationally, confirm with the user, writ
 # units; pass `--no-split` to always get exactly one task. With
 # `feature=<slug>`, plans from a `/architect` feature document instead of a
 # prose description, and reconciles tasks that feature already generated.
-# Usage: /task-add [--enrich] [--no-split] [--no-commit] <free-form description of the task>
-#        /task-add feature=<slug> [--enrich] [--no-split] [--no-commit] [scope-narrowing text]
+# Usage: /task-add [--enrich] [--no-split] [--no-commit] [--no-push] <free-form description of the task>
+#        /task-add feature=<slug> [--enrich] [--no-split] [--no-commit] [--no-push] [scope-narrowing text]
 # Example: /task-add fix the URL normalization so two LinkedIn URLs dedupe
 # Example: /task-add --enrich add CSV export command
 # Example: /task-add --no-split add CSV export and PDF export commands
@@ -53,6 +53,12 @@ NO_COMMIT = true and strip it; the rest is the task description.
 `--commit` and `--no-commit` are mutually exclusive — if both appear, stop
 with: `--commit and --no-commit cannot be combined. Pick one.` When
 NO_COMMIT is false (the default), PHASE 5 auto-commits as before.
+`--no-commit` implies no push — nothing was committed to push.
+
+Also scan for the optional `--no-push` flag. If present, set NO_PUSH = true
+and strip it. NO_PUSH only matters when NO_COMMIT is false: it skips the
+pull-at-start / re-sync / push steps of PHASE 5's commit-and-push protocol
+(docs/authoring-guide.md), while still committing as always.
 
 Also scan for the optional `--no-split` flag (independent of `--enrich` and
 `--no-commit`, coexists with both). If present, set NO_SPLIT = true and
@@ -120,6 +126,13 @@ If `--enrich` is present in $ARGUMENTS, also verify that
 > Run `chosko-llm update` or install it manually, then retry.
 
 If all artifacts exist, continue.
+
+Unless NO_COMMIT is true (nothing will be committed this run) or the
+project's CLAUDE.md carries a `## VCS` override (non-git, no push step
+exists), pull at start per docs/authoring-guide.md's commit-and-push
+protocol: run `git pull` on the current branch. A conflict stops the run
+here — report the conflict output and tell the user to resolve manually and
+re-run. Otherwise continue to PHASE 1.
 
 ---
 
@@ -623,19 +636,24 @@ Continue to PHASE 5.
 
 ---
 
-PHASE 5 — COMMIT
+PHASE 5 — COMMIT AND PUSH
 
-This is the only phase that shells out: `git add -- <path> <path>` and
-`git commit`. No other phase runs a shell command, and under `--no-commit`
-this phase runs none either.
+This is the only phase that shells out: the pull-at-start / commit /
+re-sync / push sequence below. No other phase runs a shell command, and
+under `--no-commit` this phase runs none of it.
 
-If NO_COMMIT is true, skip committing entirely: the files PHASE 4 wrote
-(one task's two files, or all of a split's files) are left uncommitted in
-the working tree. Report the task ID(s), all paths, and a reminder that
-nothing was committed — the user should commit when ready. Do not run any
-git command. Then stop.
+If NO_COMMIT is true, skip committing (and pushing) entirely: the files
+PHASE 4 wrote (one task's two files, or all of a split's files) are left
+uncommitted in the working tree. Report the task ID(s), all paths, and a
+reminder that nothing was committed — the user should commit when ready.
+Do not run any git command. Then stop.
 
-Otherwise (the default):
+Otherwise (the default): PHASE 0 already pulled at start. Commit as below,
+then — unless NO_PUSH is true, or the project's CLAUDE.md carries a `## VCS`
+override (non-git) — re-sync (`git pull` again) and push per
+docs/authoring-guide.md's commit-and-push protocol. A pre-push conflict
+aborts the merge, leaves the local commit intact, and reports that the
+commit exists locally but needs a manual sync + push.
 
 1. Single-task case — run:
    ```
@@ -659,10 +677,16 @@ Otherwise (the default):
    The backlog change and the feature entry only make sense together, so
    they belong in one commit. Explicit paths only, as always.
 
-2. On success, report the commit hash (`git rev-parse --short HEAD`).
+2. On commit success, report the commit hash (`git rev-parse --short HEAD`).
+   Then, unless NO_PUSH is true or the non-git VCS exemption applies,
+   re-sync (`git pull`) and `git push` per the protocol.
 
-3. On failure: surface the exact output. Do NOT retry, amend, or use
+3. On commit failure: surface the exact output. Do NOT retry, amend, or use
    `--no-verify`. Files remain staged but uncommitted; tell the user.
+
+4. On push failure (rejected, no upstream, no remote) or a pre-push
+   conflict: surface the exact output. Never retry, never force-push. The
+   commit exists locally; tell the user it needs a manual sync + push.
 
 PHASE 5 stages ONLY the files PHASE 4 wrote (the single task's two files,
 or every file from the split). Never use `git add -A`, `git add .`, or
@@ -679,7 +703,8 @@ DO NOT:
 - Implement the task. This command only creates the entry.
 - Use `git add -A`, `git add .`, or `git add -u` in PHASE 5.
 - Use `--amend`, `--no-verify`, `--no-gpg-sign`, or any hook-skipping flag.
-- Push, branch, tag, or otherwise touch shared/visible git state.
+- Force-push, retry a failed push, branch, tag, or otherwise touch
+  shared/visible git state beyond the commit-and-push protocol.
 - In `--enrich` mode, write a plain body first and then enrich it separately.
 - Propose a split for work that's fine as one task — PHASE 1.5 stays quiet
   unless a split genuinely produces better units.

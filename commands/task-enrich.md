@@ -1,15 +1,16 @@
 ---
 name: task-enrich
-version: 0.3.2
+version: 0.4.0
 type: command
-description: Expand a thin (target: claude) task body into a self-contained enriched body for a local LLM implementer. Refuses human-in-the-loop tasks (target claude+human or human) — a headless local LLM cannot pause for manual steps. Pass --commit to commit the enriched body; default leaves it uncommitted.
+description: Expand a thin (target: claude) task body into a self-contained enriched body for a local LLM implementer. Refuses human-in-the-loop tasks (target claude+human or human) — a headless local LLM cannot pause for manual steps. Pass --commit to commit and push the enriched body (--commit --no-push to skip the push); default leaves it uncommitted.
 ---
 
 # /task-enrich
 # Expand a task body into an enriched, self-contained body suitable
 # for a local LLM implementer (e.g. qwen2.5-coder via aider).
-# Usage: /task-enrich <N>            (N = task number; leaves the body uncommitted)
-# Usage: /task-enrich <N> --commit   (commit the enriched body when done)
+# Usage: /task-enrich <N>                     (N = task number; leaves the body uncommitted)
+# Usage: /task-enrich <N> --commit            (commit and push the enriched body when done)
+# Usage: /task-enrich <N> --commit --no-push  (commit locally, skip the push)
 
 GOAL
 Transform the body file `.claude/tasks/<N>.md` from thin (`Target: claude`)
@@ -17,7 +18,8 @@ to enriched (`Target: local`) by appending a `## Context bundle` section and
 a `## Implementation steps` section. The Goal, Acceptance criteria, Decisions,
 and Hints sections are preserved unchanged. The `Target:` line is updated to
 `local`. No other files are modified. By default no commit is made; with
-`--commit`, the enriched body is committed at the end.
+`--commit`, the enriched body is committed and pushed at the end
+(`--commit --no-push` commits without pushing).
 
 $ARGUMENTS
 
@@ -29,6 +31,10 @@ PHASE 0 — VALIDATE
    if present, set COMMIT = true and strip it before reading `<N>`.
    `--commit` and `--no-commit` are mutually exclusive — if both appear,
    stop with: `--commit and --no-commit cannot be combined. Pick one.`
+   Also parse the optional `--no-push` flag and strip it; it only matters
+   when COMMIT is true, skipping the pull-at-start / re-sync / push steps
+   of the commit-and-push protocol (docs/authoring-guide.md) while still
+   committing as always.
 2. Read `.claude/tasks/<N>.md`. If the file does not exist, stop:
    > Task <N> body file not found at `.claude/tasks/<N>.md`. Check the
    > task number and try again.
@@ -42,6 +48,10 @@ PHASE 0 — VALIDATE
    - If `Target: claude` (or the field is absent), continue.
 4. Read `.claude/TASKS.md` and locate the summary block for task <N>
    to confirm the task exists in the index and note its `Files:` list.
+5. If COMMIT is true and the project's CLAUDE.md does not carry a `## VCS`
+   override (non-git), pull at start per the commit-and-push protocol: run
+   `git pull` on the current branch. A conflict stops the run here — report
+   the conflict output and tell the user to resolve manually and re-run.
 
 ---
 
@@ -128,11 +138,11 @@ Continue to PHASE 4.
 
 ---
 
-PHASE 4 — COMMIT (only when `--commit` was passed)
+PHASE 4 — COMMIT AND PUSH (only when `--commit` was passed)
 
-This is the only phase that shells out (`git add -- <path>` and
-`git commit`), and only when `--commit` was passed. No other phase runs a
-shell command.
+This is the only phase that shells out (the commit-and-push sequence
+below; PHASE 0 already pulled at start), and only when `--commit` was
+passed. No other phase runs a shell command.
 
 If COMMIT is false (the default), do nothing here — the enriched body is
 left uncommitted for the user to review. This is the default behavior and
@@ -146,10 +156,16 @@ If COMMIT is true, after the write in PHASE 3 succeeds:
    git commit -m "Enrich task <N>: <title>"
    ```
    Never use `git add -A`, `git add .`, or `git add -u`.
-2. On success, report the commit hash (`git rev-parse --short HEAD`).
-3. On failure (e.g. a pre-commit hook rejects the commit): surface the
-   exact output. Do NOT retry, amend, or use `--no-verify` /
+2. On commit success, report the commit hash (`git rev-parse --short HEAD`).
+   Then, unless NO_PUSH is true or the non-git VCS exemption applies,
+   re-sync (`git pull`) and push per docs/authoring-guide.md's
+   commit-and-push protocol.
+3. On commit failure (e.g. a pre-commit hook rejects the commit): surface
+   the exact output. Do NOT retry, amend, or use `--no-verify` /
    `--no-gpg-sign`. The file remains staged but uncommitted; tell the user.
+4. On push failure (rejected, no upstream, no remote) or a pre-push
+   conflict: surface the exact output. Never retry, never force-push. The
+   commit exists locally; tell the user it needs a manual sync + push.
 
 ---
 
@@ -158,8 +174,9 @@ DO NOT:
 - Modify `.claude/TASKS.md` or any file other than the task body.
 - Write a new body file from scratch — always edit the existing one.
 - Commit, stage, push, or touch git state unless `--commit` was passed.
-  Even with `--commit`, never push, branch, tag, or use hook-skipping
-  flags — make exactly one commit of the task body.
+  Even with `--commit`, never force-push, retry a failed push, branch,
+  tag, or use hook-skipping flags — make exactly one commit of the task
+  body, then push per the protocol unless `--no-push` was passed.
 - Enrich a task that is already `Target: local`.
 - Enrich a `Target: claude+human` or `Target: human` task.
 - Embed more context than the implementation strictly requires. Select;

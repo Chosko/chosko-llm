@@ -337,6 +337,11 @@ tasks. The core idea is to spend more focus in planning and writing down tasks, 
 - `/task-implement` — build a task end-to-end, test-first, one commit each.
 - `/task-clean` — prune finished tasks.
 
+`/task-add` and `/task-clean` commit automatically and then push (pass
+`--no-commit` to skip both, or `--no-push` to commit without pushing).
+`/task-setup` and `/task-enrich` only commit under `--commit`, at which
+point they push too (`--commit --no-push` commits without pushing).
+
 Tasks can be **human-in-the-loop**: when part of the work only a human can
 perform in an external tool (a Unity editor step, a cloud console, hardware),
 `/task-add` marks the task `Target: claude+human` (or `human` for fully

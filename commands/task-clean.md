@@ -1,8 +1,8 @@
 ---
 name: task-clean
-version: 0.6.0
+version: 0.7.0
 type: command
-description: Prune tasks in a terminal status — remove summary blocks from TASKS.md and delete their per-task body files. Terminal means [DONE] and [SKIP] only; [STALE] is live work awaiting reconciliation and is never pruned by default. Also drops the pruned IDs from any .claude/FEATURES.md Tasks: line (leaving feature statuses alone), so /architect's iterate guard never reads a dead ID. Task IDs are stable; survivors are NEVER renumbered. Automatically commits the removals; pass --no-commit to leave them uncommitted.
+description: Prune tasks in a terminal status — remove summary blocks from TASKS.md and delete their per-task body files. Terminal means [DONE] and [SKIP] only; [STALE] is live work awaiting reconciliation and is never pruned by default. Also drops the pruned IDs from any .claude/FEATURES.md Tasks: line (leaving feature statuses alone), so /architect's iterate guard never reads a dead ID. Task IDs are stable; survivors are NEVER renumbered. Automatically commits and pushes the removals; pass --no-commit to leave them uncommitted, or --no-push to commit without pushing.
 ---
 
 # /task-clean
@@ -15,7 +15,8 @@ description: Prune tasks in a terminal status — remove summary blocks from TAS
 # explicit confirmation before writing.
 # Usage: /task-clean
 #        /task-clean <STATUS> [<STATUS> ...]
-#        /task-clean [<STATUS> ...] --no-commit   (write changes, skip the commit)
+#        /task-clean [<STATUS> ...] --no-commit   (write changes, skip the commit and push)
+#        /task-clean [<STATUS> ...] --no-push     (commit as usual, skip the push)
 # Examples: /task-clean
 #           /task-clean DONE
 #           /task-clean DONE SKIP
@@ -36,7 +37,13 @@ ARGUMENT NOTE — before PHASE 1, scan $ARGUMENTS for the optional
 is the status set (or empty for the default). `--commit` and `--no-commit`
 are mutually exclusive — if both appear, stop with:
 `--commit and --no-commit cannot be combined. Pick one.` When NO_COMMIT is
-false (the default), PHASE 3 auto-commits as before.
+false (the default), PHASE 3 auto-commits and pushes as before. NO_COMMIT
+true implies no push — nothing was committed to push.
+
+Also scan for the optional `--no-push` flag; if present, set NO_PUSH = true
+and strip it. NO_PUSH only matters when NO_COMMIT is false: it skips the
+pull-at-start / re-sync / push steps of the commit-and-push protocol
+(docs/authoring-guide.md) while still committing as always.
 
 ---
 
@@ -46,6 +53,12 @@ The backlog lives at `.claude/TASKS.md` with per-task body files at
 `.claude/tasks/<N>.md`. If `.claude/TASKS.md` does not exist, tell the
 user "No backlog file found — run /task-setup to initialize it." and
 stop. Do NOT create anything.
+
+Unless NO_COMMIT is true or the project's CLAUDE.md carries a `## VCS`
+override (non-git), pull at start per the commit-and-push protocol: run
+`git pull` on the current branch before PHASE 1 begins. A conflict stops
+the run here — report the conflict output and tell the user to resolve
+manually and re-run.
 
 ---
 
@@ -201,22 +214,25 @@ After the report, continue to PHASE 3.
 
 ---
 
-PHASE 3 — COMMIT
+PHASE 3 — COMMIT AND PUSH
 
 Apart from deleting the per-task body files in PHASE 2 (`rm
-.claude/tasks/<N>.md`), this is the only phase that shells out: `git add --`
-and `git commit`. Under `--no-commit` the body-file deletion is the command's
-only shell use.
+.claude/tasks/<N>.md`), this is the only phase that shells out: the
+commit-and-push sequence below (pull-at-start already ran before PHASE 1).
+Under `--no-commit` the body-file deletion is the command's only shell use.
 
-If NO_COMMIT is true, skip committing entirely: the `.claude/TASKS.md` edits,
-the `.claude/FEATURES.md` edits, and the body-file deletions from PHASE 2 are
-left uncommitted in the working tree. Report what was changed (blocks
-removed, body files deleted, `Preconditions:` lines rewritten, feature
-`Tasks:` lines rewritten) and remind the user that nothing was committed —
-they should commit when ready. Do not run any git command. Then stop.
+If NO_COMMIT is true, skip committing (and pushing) entirely: the
+`.claude/TASKS.md` edits, the `.claude/FEATURES.md` edits, and the
+body-file deletions from PHASE 2 are left uncommitted in the working tree.
+Report what was changed (blocks removed, body files deleted,
+`Preconditions:` lines rewritten, feature `Tasks:` lines rewritten) and
+remind the user that nothing was committed — they should commit when
+ready. Do not run any git command. Then stop.
 
 Otherwise (the default), after PHASE 2 completes successfully, commit the
-changes automatically — no further prompt is needed.
+changes automatically — no further prompt is needed. Then, unless NO_PUSH
+is true or the non-git VCS exemption applies, re-sync (`git pull`) and push
+per docs/authoring-guide.md's commit-and-push protocol.
 
 1. Run exactly:
 
@@ -240,14 +256,19 @@ changes automatically — no further prompt is needed.
    Commit message format: `task-clean: remove tasks <N>[, <M>, …]`
    where `<N>`, `<M>`, … are the pruned task IDs in ascending order.
 
-2. On success, report the resulting commit hash to the user:
-   `git rev-parse --short HEAD`.
+2. On commit success, report the resulting commit hash to the user:
+   `git rev-parse --short HEAD`. Then, unless NO_PUSH is true or the
+   non-git VCS exemption applies, re-sync and push per the protocol.
 
-3. On failure (e.g. pre-commit hook rejects the commit): surface the
+3. On commit failure (e.g. pre-commit hook rejects the commit): surface the
    exact failure output to the user. Do NOT retry, do NOT amend, do
    NOT use `--no-verify` or any hook-skipping flag. The files remain
    in whatever state git left them (typically staged but uncommitted);
    tell the user that and let them decide.
+
+4. On push failure (rejected, no upstream, no remote) or a pre-push
+   conflict: surface the exact output. Never retry, never force-push. The
+   commit exists locally; tell the user it needs a manual sync + push.
 
 DO NOT:
 - Write to any file during PHASE 1.
@@ -270,4 +291,5 @@ DO NOT:
 - Use `--amend`, `--no-verify`, `--no-gpg-sign`, or any other
   hook-skipping or commit-rewriting flag. If a pre-commit hook fails,
   surface it and let the user fix it.
-- Push, branch, tag, or otherwise touch shared/visible git state.
+- Force-push, retry a failed push, branch, tag, or otherwise touch
+  shared/visible git state beyond the commit-and-push protocol.

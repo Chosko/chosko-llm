@@ -211,6 +211,13 @@ Free-form text alongside the slug narrows scope; it does not replace the
 document. Both modes compose with `--enrich`, `--no-split`, and
 `--no-commit`.
 
+`/task-add`, `/task-clean`, `/task-setup --commit`, and
+`/task-enrich --commit` all follow the commit-and-push protocol in
+[docs/authoring-guide.md](../../docs/authoring-guide.md) rather than a plain
+`git commit` — pull at start, commit, re-sync, push, all skippable via
+`--no-push` (or implied by `--no-commit`/no `--commit`). See that doc for
+the algorithm; it is not re-derived here.
+
 Because a feature document describes a unit of *design*, the split check
 inverts: distinct components and independently deliverable slices of its
 architecture normally each become a task, and one task for a whole feature is
