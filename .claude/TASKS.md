@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 82
+Last task number: 83
 
 ---
 
@@ -18,4 +18,13 @@ Preconditions: none
 Status: [MISSING]
 Target: claude
 Files: commands/task-add.md, .claude/domain/task-workflow.md
+Preconditions: none
+
+---
+
+## 83. Fix stale task-body schema in task-setup.md's external prompt templates
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-setup.md
 Preconditions: none
