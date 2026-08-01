@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 84
+Last task number: 85
 
 ---
 
@@ -36,4 +36,13 @@ Preconditions: none
 Status: [MISSING]
 Target: claude
 Files: skills/unity-mcp-skill/SKILL.md, skills/unity-mcp-skill/references/tools-reference.md, skills/unity-mcp-skill/references/workflows.md
+Preconditions: none
+
+---
+
+## 85. Hard-refuse non-claude Target tasks in the unattended task-impl orchestrator
+
+Status: [MISSING]
+Target: claude
+Files: scripts/cmd-task-impl.sh, scripts/lib-task-external.sh
 Preconditions: none
