@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 88
+Last task number: 89
 
 ---
 
@@ -63,4 +63,13 @@ Preconditions: 85
 Status: [MISSING]
 Target: claude
 Files: commands/context-build.md, commands/domain-setup.md, commands/task-setup.md, commands/refactor-codebase.md, commands/refactor-tests.md, commands/task-enrich.md, commands/unity-mcp-setup.md
+Preconditions: none
+
+---
+
+## 89. Trim oversized frontmatter descriptions to match the authoring guide's spec
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-add.md, commands/project-setup.md, commands/unity-mcp-setup.md, docs/authoring-guide.md
 Preconditions: none
