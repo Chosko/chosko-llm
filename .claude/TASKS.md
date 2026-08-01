@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 86
+Last task number: 87
 
 ---
 
@@ -55,3 +55,12 @@ Status: [MISSING]
 Target: claude
 Files: scripts/check-task-parity.sh
 Preconditions: 85
+
+---
+
+## 87. Compress duplicated push-protocol prose in commands to a reference
+
+Status: [MISSING]
+Target: claude
+Files: commands/context-build.md, commands/context-update.md, commands/domain-setup.md, commands/project-setup.md, commands/refactor-codebase.md, commands/refactor-tests.md, commands/task-add.md, commands/task-clean.md, commands/task-enrich.md, commands/task-setup.md, commands/unity-mcp-setup.md
+Preconditions: none
