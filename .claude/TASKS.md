@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 85
+Last task number: 86
 
 ---
 
@@ -46,3 +46,12 @@ Status: [MISSING]
 Target: claude
 Files: scripts/cmd-task-impl.sh, scripts/lib-task-external.sh
 Preconditions: none
+
+---
+
+## 86. Extend check-task-parity.sh to guard Target-field gating
+
+Status: [MISSING]
+Target: claude
+Files: scripts/check-task-parity.sh
+Preconditions: 85
