@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 90
+Last task number: 91
 
 ---
 
@@ -81,4 +81,13 @@ Preconditions: none
 Status: [MISSING]
 Target: claude
 Files: skills/architect/SKILL.md
+Preconditions: none
+
+---
+
+## 91. Document that docs/ is not deployed and must not be a runtime source for authored features
+
+Status: [MISSING]
+Target: claude
+Files: docs/authoring-guide.md, CLAUDE.md
 Preconditions: none
