@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 89
+Last task number: 90
 
 ---
 
@@ -72,4 +72,13 @@ Preconditions: none
 Status: [MISSING]
 Target: claude
 Files: commands/task-add.md, commands/project-setup.md, commands/unity-mcp-setup.md, docs/authoring-guide.md
+Preconditions: none
+
+---
+
+## 90. Add a lightweight resume marker to /architect for interrupted PHASE 2 sessions
+
+Status: [MISSING]
+Target: claude
+Files: skills/architect/SKILL.md
 Preconditions: none
