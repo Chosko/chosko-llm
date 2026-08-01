@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 83
+Last task number: 84
 
 ---
 
@@ -27,4 +27,13 @@ Preconditions: none
 Status: [MISSING]
 Target: claude
 Files: commands/task-setup.md
+Preconditions: none
+
+---
+
+## 84. Remove dead reference links in unity-mcp-skill
+
+Status: [MISSING]
+Target: claude
+Files: skills/unity-mcp-skill/SKILL.md, skills/unity-mcp-skill/references/tools-reference.md, skills/unity-mcp-skill/references/workflows.md
 Preconditions: none
