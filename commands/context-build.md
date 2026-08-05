@@ -1,6 +1,6 @@
 ---
 name: context-build
-version: 0.3.0
+version: 0.3.1
 type: command
 description: Build a navigation context layer to reduce token cost in future Claude Code sessions. Pass --commit to commit and push the context layer (--commit --no-push to skip the push); default leaves it uncommitted.
 ---
@@ -24,11 +24,8 @@ $ARGUMENTS
 
 ARGUMENT NOTE — before Phase 1, scan $ARGUMENTS for the optional `--commit`
 flag. If present, set COMMIT = true and strip it (the remaining text, if
-any, is a structure hint). `--commit` and `--no-commit` are mutually
-exclusive — if both appear, stop with:
-`--commit and --no-commit cannot be combined. Pick one.`
-When COMMIT is false (the default), the run leaves all output uncommitted,
-exactly as before.
+any, is a structure hint). When COMMIT is false (the default), the run
+leaves all output uncommitted, exactly as before.
 
 Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
 matters when COMMIT is true: it skips the pull-at-start / re-sync / push

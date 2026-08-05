@@ -1,6 +1,6 @@
 ---
 name: refactor-tests
-version: 0.3.0
+version: 0.3.1
 type: command
 description: Split oversized test files into smaller, focused files — runs the test suite before and after each split to keep the baseline green. Pass --commit to commit and push the splits (--commit --no-push to skip the push); default leaves them uncommitted.
 ---
@@ -40,10 +40,8 @@ Parse `$ARGUMENTS` for an optional `threshold=<N>` key-value pair
 (e.g. `threshold=200`). If absent, use 300.
 
 Also parse the optional `--commit` flag: if present, set COMMIT = true.
-`--commit` and `--no-commit` are mutually exclusive — if both appear, stop
-with: `--commit and --no-commit cannot be combined. Pick one.` When COMMIT
-is false (the default), the run leaves its splits uncommitted, exactly as
-before.
+When COMMIT is false (the default), the run leaves its splits uncommitted,
+exactly as before.
 
 Also parse the optional `--no-push` flag: if present, set NO_PUSH = true.
 NO_PUSH only matters when COMMIT is true — it skips the pull-at-start /

@@ -1,6 +1,6 @@
 ---
 name: unity-mcp-setup
-version: 0.2.0
+version: 0.2.1
 type: command
 description: Make a Unity project ready for MCP-assisted task implementation. Idempotent and re-runnable — detects the project, installs the Unity-side com.coplaydev.unity-mcp package into Packages/manifest.json if missing, records the project-side fact in versioned artifacts (a terse CLAUDE.md marker plus, when a context layer exists, .claude/context/mcp-tools.md and an INDEX.md row), and registers + verifies the machine-local Claude-side UnityMCP server via claude mcp add / claude mcp list. Configures only what is missing. Authoring command — leaves its versioned artifacts uncommitted for review by default; pass --commit to commit and push them (--commit --no-push to skip the push). The Claude-side registration is machine-local config (in ~/.claude.json), not a repo change, so it happens regardless of the flag.
 ---
@@ -43,9 +43,7 @@ matching the other authoring commands (`/project-setup`, `/context-build`,
 `/task-enrich`, the `/refactor-*` commands). With `--commit` it commits
 exactly those written paths in one focused commit, then pushes per
 docs/authoring-guide.md's commit-and-push protocol (`--commit --no-push`
-commits without pushing). `--commit` and `--no-commit` are mutually
-exclusive — if both appear, stop with:
-`--commit and --no-commit cannot be combined. Pick one.`
+commits without pushing).
 
 The Claude-side `claude mcp add` registration is NOT a repo change — it
 writes machine-local, per-project config into `~/.claude.json` (local
@@ -55,9 +53,8 @@ never staged or committed.
 $ARGUMENTS
 
 ARGUMENT NOTE — scan $ARGUMENTS for the optional `--commit` flag. If
-present, set COMMIT = true and strip it. `--commit` and `--no-commit` are
-mutually exclusive — if both appear, stop with the message above. COMMIT
-drives PHASE 3's Step F only.
+present, set COMMIT = true and strip it. COMMIT drives PHASE 3's Step F
+only.
 
 Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
 matters when COMMIT is true: it skips the pull-at-start / re-sync / push

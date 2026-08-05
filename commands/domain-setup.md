@@ -1,6 +1,6 @@
 ---
 name: domain-setup
-version: 0.2.0
+version: 0.2.1
 type: command
 description: Initialize the project's domain knowledge layer — creates .claude/domain/, .claude/domain/features/, a .claude/domain/INDEX.md that indexes any pre-existing domain docs, the .claude/FEATURES.md feature index, and a CLAUDE.md pointer to the domain index. Idempotent and re-runnable on projects that already have hand-written domain docs. Authoring command — leaves everything uncommitted for review by default; pass --commit to commit (and push) the scaffolding, or --commit --no-push to commit without pushing.
 ---
@@ -64,10 +64,8 @@ $ARGUMENTS
 WORKFLOW
 
 Before anything else, parse $ARGUMENTS for the optional `--commit` flag.
-If present, set COMMIT = true. `--commit` and `--no-commit` are mutually
-exclusive — if both appear, stop with:
-`--commit and --no-commit cannot be combined. Pick one.` When COMMIT is
-false (the default), the run leaves its scaffolding uncommitted.
+If present, set COMMIT = true. When COMMIT is false (the default), the run
+leaves its scaffolding uncommitted.
 
 Also parse the optional `--no-push` flag; if present, set NO_PUSH = true.
 NO_PUSH only matters when COMMIT is true: it skips the pull-at-start /

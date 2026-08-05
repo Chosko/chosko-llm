@@ -1,6 +1,6 @@
 ---
 name: task-enrich
-version: 0.4.0
+version: 0.4.1
 type: command
 description: Expand a thin (target: claude) task body into a self-contained enriched body for a local LLM implementer. Refuses human-in-the-loop tasks (target claude+human or human) — a headless local LLM cannot pause for manual steps. Pass --commit to commit and push the enriched body (--commit --no-push to skip the push); default leaves it uncommitted.
 ---
@@ -29,8 +29,6 @@ PHASE 0 — VALIDATE
 
 1. Parse `<N>` from $ARGUMENTS. Also parse the optional `--commit` flag:
    if present, set COMMIT = true and strip it before reading `<N>`.
-   `--commit` and `--no-commit` are mutually exclusive — if both appear,
-   stop with: `--commit and --no-commit cannot be combined. Pick one.`
    Also parse the optional `--no-push` flag and strip it; it only matters
    when COMMIT is true, skipping the pull-at-start / re-sync / push steps
    of the commit-and-push protocol (docs/authoring-guide.md) while still

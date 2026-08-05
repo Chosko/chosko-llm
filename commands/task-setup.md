@@ -1,6 +1,6 @@
 ---
 name: task-setup
-version: 1.2.1
+version: 1.2.2
 type: command
 description: Initialize the project's task backlog — creates .claude/TASKS.md, the .claude/tasks/ directory, and the external-LLM wiring under .claude/external/ (implement-prompt, tests-prompt, run-affected-tests.sh, run-full-tests.sh). Authoring command — leaves everything uncommitted for review by default; pass --commit to commit (and push) the scaffolding, or --commit --no-push to commit without pushing.
 ---
@@ -62,10 +62,8 @@ sequence. Without `--commit`, it runs NO git/VCS command.
 WORKFLOW
 
 Before anything else, parse $ARGUMENTS for the optional `--commit` flag.
-If present, set COMMIT = true. `--commit` and `--no-commit` are mutually
-exclusive — if both appear, stop with:
-`--commit and --no-commit cannot be combined. Pick one.` When COMMIT is
-false (the default), the run leaves its scaffolding uncommitted.
+If present, set COMMIT = true. When COMMIT is false (the default), the run
+leaves its scaffolding uncommitted.
 
 Also parse the optional `--no-push` flag; if present, set NO_PUSH = true.
 NO_PUSH only matters when COMMIT is true: it skips the pull-at-start /

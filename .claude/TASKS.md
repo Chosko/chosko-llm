@@ -60,7 +60,7 @@ Preconditions: 85
 
 ## 88. Remove vestigial --no-commit checks from authoring commands
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/context-build.md, commands/domain-setup.md, commands/task-setup.md, commands/refactor-codebase.md, commands/refactor-tests.md, commands/task-enrich.md, commands/unity-mcp-setup.md
 Preconditions: none
