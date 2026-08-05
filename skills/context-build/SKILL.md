@@ -1,8 +1,8 @@
 ---
 name: context-build
-version: 0.4.0
+version: 0.5.0
 type: skill
-description: Build a navigation context layer to reduce token cost in future Claude Code sessions. Pass --commit to commit and push the context layer (--commit --no-push to skip the push); default leaves it uncommitted.
+description: Build a navigation context layer to reduce token cost in future Claude Code sessions. Flat by default; pass nested (or nested=<unit1>,<unit2>) to build a router + per-unit leaf layout instead. Pass --commit to commit and push the context layer (--commit --no-push to skip the push); default leaves it uncommitted.
 replaces: command:context-build
 ---
 
@@ -11,6 +11,8 @@ replaces: command:context-build
 # in future Claude Code sessions on any project.
 # Usage: /context-build
 # Usage with hint: /context-build "source code lives under lib/ not src/"
+# Usage nested: /context-build nested                   (router + per-unit leaves; the skill proposes the units)
+# Usage nested, named: /context-build nested=api,worker (the user names the units)
 # Usage with commit: /context-build --commit            (commit and push the context layer when done)
 # Usage without push: /context-build --commit --no-push (commit locally, skip the push)
 
@@ -36,6 +38,31 @@ override (non-git), pull at start — run `git pull` on the current branch
 before Phase 1 begins. A conflict stops the run here — report the conflict
 output and tell the user to resolve manually and re-run. (No pull happens
 when COMMIT is false — there is nothing this run will commit or push.)
+
+Finally, scan for the optional nested-layout argument and strip it:
+
+- `nested` — set NESTED = true and NESTED_UNITS = unset. The skill proposes
+  the unit seams itself.
+- `nested=<unit1>,<unit2>,…` — set NESTED = true and NESTED_UNITS to that
+  comma-separated list. The user has named the units; the skill still
+  proposes which context file lands in which unit.
+
+Neither present → NESTED = false. Both forms compose freely with the
+structure hint, `--commit`, and `--no-push`; strip the argument before
+treating whatever text remains as the structure hint.
+
+SUPPORTING FILES (read on demand — not up front)
+
+This skill's common path is the whole of SKILL.md: a flat context layer,
+one `INDEX.md` with every context file beside it. The nested path lives in
+a sibling file, so a flat run never pays for it.
+
+| Read this file | Exactly when |
+| -------------- | ------------ |
+| `./nested.md`  | NESTED is true (the `nested` / `nested=` argument was passed), OR Phase 1 step 1.0 read `Layout: nested` from an existing index. |
+
+Do not read `./nested.md` speculatively. On a flat run the file is never
+opened.
 
 CONSTRAINTS
 - Do not refactor any source code.
@@ -63,10 +90,15 @@ PHASE 1 — Analysis (no files written yet)
     Never infer the layout from folder counts, subdirectories, or file
     contents — the marker line is the only source of truth.
 
-    If LAYOUT is nested, STOP immediately. Report that the layer declares
-    `Layout: nested`, that this skill does not yet support the nested layout,
-    and that nested support arrives in a later release. Write nothing. Do not
-    fall back to treating the layer as flat.
+    Then resolve the layout this run will produce:
+
+    - LAYOUT is nested (the existing index declares `Layout: nested`) →
+      read `./nested.md` now and follow it for the rest of the run,
+      whether or not the `nested` argument was passed.
+    - LAYOUT is flat and NESTED is true → read `./nested.md` now and follow
+      it. It states how to handle a pre-existing flat layer.
+    - LAYOUT is flat and NESTED is false → continue with this file. This is
+      the common path; do not open `./nested.md`.
 
 1.1 Discover the project layout:
     - Identify the language(s) and primary source directories.
@@ -107,6 +139,14 @@ Report:
 - List of context files you intend to create, each with a one-line description.
 - Cross-reference convention you will use.
 - Estimated total size of the context layer in lines.
+- OPTIONAL — a nesting suggestion, only when the codebase has obvious unit
+  seams (several self-contained subsystems, packages, or services) that
+  would each own a group of context files. Phrase it as a suggestion the
+  user can act on by re-running with `nested`, e.g. "this repo splits
+  cleanly into api / worker / shared — re-run with `nested` if you want a
+  router + per-unit layout." Never switch layout on your own, and never
+  turn this into a question that gates the flat run: the flat proposal
+  above stands as-is and the approval gate below is about the flat plan.
 
 STOP and wait for user approval before Phase 2.
 

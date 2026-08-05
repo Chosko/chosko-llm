@@ -42,7 +42,7 @@ Preconditions: 95, 96
 
 ## 98. Add nested-layout support to /context-build
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/context-build/SKILL.md, skills/context-build/nested.md, VERSION
 Preconditions: 97
