@@ -106,7 +106,31 @@ while IFS= read -r s; do
   [ -n "$s" ] && fail "Bash side has an extra workflow step not in the prompt: $s"
 done < <(missing_from "$bash_steps" "$WORKFLOW_STEPS")
 
+# 4. Target-field gating (added by task 85 / documented across the prompt
+# side). The unattended orchestrator hard-refuses any task whose Target is
+# not exactly `claude`; the prompt side documents all four Target values
+# and how each is handled. Neither side should be able to silently drop
+# that coverage, so check both — grep-based, not a behavioral test.
+bash_blob="$(cat "${BASH_FILES[@]}" 2>/dev/null || true)"
+prompt_blob="$(cat "${PROMPT_FILES[@]}" 2>/dev/null || true)"
+
+if ! printf '%s' "$bash_blob" | grep -q '!= "claude"'; then
+  fail "Bash side (scripts/cmd-task-impl.sh) no longer gates on Target != claude — task 85's hard-refuse check for non-claude targets may have regressed."
+fi
+
+for v in 'claude+human' 'human' 'local'; do
+  if ! printf '%s' "$bash_blob" | grep -qF -- "$v"; then
+    fail "Bash side (scripts/cmd-task-impl.sh, scripts/lib-task-external.sh) no longer mentions Target value '$v' — task 85's hard-refuse logic for non-claude targets may have regressed."
+  fi
+done
+
+for v in 'claude' 'local' 'claude+human' 'human'; do
+  if ! printf '%s' "$prompt_blob" | grep -qF -- "Target: $v"; then
+    fail "Prompt side (skills/task-implement/) no longer documents Target: $v — target-gating documentation may have regressed."
+  fi
+done
+
 if [ "$failures" -gt 0 ]; then
   die "task-implement parity check failed with $failures problem(s)."
 fi
-log_success "task-implement parity check passed: status vocabulary and 7-step workflow agree."
+log_success "task-implement parity check passed: status vocabulary, 7-step workflow, and Target-field gating agree."

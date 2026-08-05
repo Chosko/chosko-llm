@@ -51,7 +51,7 @@ Preconditions: none
 
 ## 86. Extend check-task-parity.sh to guard Target-field gating
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/check-task-parity.sh
 Preconditions: 85
