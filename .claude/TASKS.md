@@ -60,7 +60,7 @@ Preconditions: 97
 
 ## 100. Add the /context-convert skill (flat ↔ nested)
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/context-convert/SKILL.md, .claude/domain/context-workflow.md, VERSION
 Preconditions: 98, 99

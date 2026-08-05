@@ -1,6 +1,6 @@
 # Context workflow — navigation layer for future sessions
 
-Project ship two skills, `/context-build` (`skills/context-build/SKILL.md`) and `/context-update` (`skills/context-update/SKILL.md`), together maintain **navigation context layer** under `.claude/context/`. Read doc when touching either skill, changing per-context-file schema, or reasoning how context layer relate to domain docs and `CLAUDE.md`.
+Project ship three skills — `/context-build` (`skills/context-build/SKILL.md`), `/context-update` (`skills/context-update/SKILL.md`), `/context-convert` (`skills/context-convert/SKILL.md`) — together maintain **navigation context layer** under `.claude/context/`. Read doc when touching any of them, changing per-context-file schema, or reasoning how context layer relate to domain docs and `CLAUDE.md`.
 
 Both were `commands/*.md` until task 97. Converted to skills so nested-layout detail can live in read-on-demand sibling files (`nested.md`) — flat runs never pay tokens for nested path. Old command files deleted; each `SKILL.md` carry `replaces: command:<name>` so `chosko-llm update --all` migrate stale installs (see [docs/authoring-guide.md](../../docs/authoring-guide.md)).
 
@@ -67,7 +67,7 @@ Rules:
 - Marker missing → layout is **flat**. Every pre-existing layer therefore keeps working untouched, no migration needed.
 - `/context-build` **writes** `Layout: flat` into every `INDEX.md` it authors (Phase 2), directly under title.
 - `/context-update` **backfills** it: layer whose `INDEX.md` lack `Layout:` line get `Layout: flat` inserted as part of step 2.4 index update. Fires on **every mode**, including Mode A run finding nothing else to update — then `INDEX.md` alone written, staged, committed. Self-migrating; no separate migration command.
-- Marker reading happen in `/context-build` Phase 1 / `/context-update` PREPARATION, detected layout stated in scope report. `Layout: nested` currently **stops the run cleanly** (nested path not implemented yet) — never half-handled as flat.
+- Marker reading happen in `/context-build` Phase 1 / `/context-update` PREPARATION / `/context-convert` PREPARATION, detected layout stated in scope report. `Layout: nested` routes the run into that skill's `nested.md` — never half-handled as flat. `/context-convert` has no `nested.md` split: every run of it concerns the nested layout, so there is no flat path to keep cheap.
 - Marker lives in `.claude/context/INDEX.md`, not `CLAUDE.md`. Detection costs zero extra reads (commands already open `INDEX.md` first), marker travels with layer it describes, and conversion flips exactly one source of truth.
 
 ## Nested layout — router + leaves
@@ -146,6 +146,33 @@ Phase 3 then **auto-commits and pushes** run, putting `/context-update` in commi
 
 Marker-backfill-only run (Mode A found nothing, but `INDEX.md` lacked `Layout:`) is **not** a no-op: `INDEX.md` changed, so it stage and commit as usual.
 
+## `/context-convert` — restructure an existing layer
+
+`skills/context-convert/SKILL.md`. Converts a layer that already exists between the two layouts, in either direction, without rebuilding it from source. `/context-build` refuses to convert (a nested build over an existing flat layer stops and points here); this skill is that operation.
+
+Direction inferred from the `Layout:` marker, forceable with `to=nested` / `to=flat`. Target equal to current layout reports "already `<layout>`" and exits without writing. `nested=<unit1>,<unit2>,…` pre-seeds the unit list exactly as in `/context-build` — it never pre-seeds which file lands in which unit. Plan-first: Phase 1 reports every file's old and new path, the unit breakdown, every date decision and every cross-reference rewrite, then stops for approval; `-y` / `--yes` skips that gate. Authoring-command commit family: uncommitted by default, `--commit` to commit and push, `--commit --no-push` to skip the push.
+
+**Content is moved, never rewritten.** The only edit made inside a context file is to a relative link whose path would stop resolving at the new depth (`./other.md` ↔ `../<unit>/other.md`, and one `../` more or fewer on paths climbing out of the layer). Source-file references stay repo-root-relative in both layouts and are never touched. No context file is created, deleted, split or merged.
+
+### Date rules — both directions fail safe
+
+- **flat → nested:** every leaf inherits the flat index's single `Last updated` verbatim. No leaf gets today's date; none has actually been re-checked, and a fresher date would make that unit's next Mode A scan skip real changes. Router gets no date at all, per the router schema. Flat index had no date → leaves get none, and each degrades to a full update of itself.
+- **nested → flat:** the flat index's `Last updated` is the **minimum** across the leaf dates — a floor, so the next Mode A run re-checks rather than skips. Any leaf missing a date → the flat index omits the field entirely, falling back to Mode B. Never the maximum, never today.
+
+Worst case in both directions is re-checking a unit that had not changed; never skipping one that had.
+
+### Stop conditions
+
+Every stop happens **before any write**, and none is resolved by `-y`:
+
+- Filename collision on nested → flat (same basename owned by two units). Colliding paths are listed; the user renames and re-runs. Auto-renaming is refused deliberately — a generated name breaks every cross-reference pointing at the old one, and the user picks better.
+- Layout violation on a nested source layer (a context file loose beside the router, or listed by two leaves).
+- Contradictory arguments (`nested=` with `to=flat`, `--commit` with `--no-commit`).
+
+### Out of scope
+
+Domain files, source code and `CLAUDE.md` are untouched, matching the rest of the family. `CLAUDE.md`'s navigation instruction already points at `.claude/context/INDEX.md`, the entry point in **both** layouts, so a conversion needs no edit there — the skill says so in its report instead of touching the file. Staging covers deletions (`git mv` / `git rm`, or `git add --` on removed paths) so the whole move is one coherent commit; a conversion split across two commits is broken at the commit in between.
+
 ## Authoring discipline for these skills
 
 - Treat `.claude/context/` as only writable surface. Domain files, source code out of scope — flag, don't edit.
@@ -157,5 +184,5 @@ Marker-backfill-only run (Mode A found nothing, but `INDEX.md` lacked `Layout:`)
 
 - [`../../CLAUDE.md`](../../CLAUDE.md) — navigation instruction lives at top; hard rules below.
 - [`../context/INDEX.md`](../context/INDEX.md) — live navigation index for this repo, with `Last updated` anchor.
-- `skills/context-build/SKILL.md`, `skills/context-update/SKILL.md` — skill implementations.
+- `skills/context-build/SKILL.md`, `skills/context-update/SKILL.md`, `skills/context-convert/SKILL.md` — skill implementations.
 - [`../../docs/authoring-guide.md`](../../docs/authoring-guide.md) — frontmatter schema incl. `replaces:` kind-migration key.
