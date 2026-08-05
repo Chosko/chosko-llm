@@ -1,6 +1,6 @@
 ---
 name: architect
-version: 0.3.0
+version: 0.4.0
 type: skill
 description: Turn one or more high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md — the bridge between /product-design and /task-add. Grounds the architecture in the project's recorded technical-direction.md or existing code, or proposes a tech stack when there is neither. Runs from a product-design section, named features, or a bare prompt with no design documents at all. Re-architecting a feature that already has tasks triggers an iterate guard: refuses outright while any task is [IN PROGRESS], otherwise asks, then flips surviving tasks to [STALE] and the feature to [ITERATED]. Requires /domain-setup. Nothing committed by default; pass --commit to commit and push exactly the written paths (--commit --no-push to skip the push).
 ---
@@ -131,6 +131,25 @@ it does not, whenever a stack already exists in either form.
 `FEATURES.md` entry. If any target already has one, read `./iterating.md`
 and continue to PHASE 0b. If none do, skip PHASE 0b entirely.
 
+**Check for an interrupted session.** For each target, derive a
+`<target-slug>` — the kebab-case of the resolved feature name, or, for a
+free-form prompt with no named feature, a short kebab-case label drawn from
+the prompt's first few words. Glob for
+`.claude/domain/features/<target-slug>.architect-progress.md`. If it
+exists:
+
+- Read it and summarize, in a few lines, what the last session covered and
+  where it stopped — the same report-don't-guess spirit as
+  `skills/product-design/resuming.md`, at this skill's smaller scale.
+- Ask whether to resume (continue PHASE 2 treating the summarized ground as
+  already covered) or start fresh (delete the marker, begin PHASE 2 from the
+  top for this target). Wait for an explicit answer; do not guess.
+
+This check is independent of the `FEATURES.md`-entry check above: the
+marker tracks this skill's own conversational progress, not the feature's
+write state, so a target can have a marker whether or not it already has a
+`FEATURES.md` entry (e.g. an iteration interrupted mid-PHASE-2 has both).
+
 ---
 
 PHASE 0b — ITERATE GUARD (only when a target feature already has an entry)
@@ -223,7 +242,20 @@ file paths to edit, you have gone one level too far — that is `/task-add`'s
 work, and doing it here freezes decisions that should be made against the
 codebase at planning time.
 
-The user confirms the architecture before PHASE 3 writes anything.
+**Progress marker.** This phase is the one exception to "nothing is written
+before PHASE 3": at each checkpoint above where real ground has been
+covered (stack chosen, shape proposed, data/interfaces/seams discussed,
+dependencies and open questions named) and whenever the conversation might
+end, write or rewrite `.claude/domain/features/<target-slug>.architect-progress.md`
+with a short recap — which of the steps above are covered, the decisions
+made so far as a few bullets, and any open questions raised so far. Keep it
+short: this is a resume aid, not a second copy of the feature document, and
+it carries none of `FEATURES.md`'s or `TASKS.md`'s status vocabulary
+(no `[NEW]`/`[PLANNED]`/`[IN PROGRESS]`/etc.), so it can never be confused
+with either.
+
+The user confirms the architecture before PHASE 3 writes the feature
+document(s) themselves.
 
 ---
 
@@ -262,6 +294,16 @@ Read `./feature-doc-template.md` for both schemas below.
    belongs upstream. Keep it high-level: the technical detail stays in the
    feature document.
 
+5. **Clear the progress marker.** For each target just written, delete its
+   `.claude/domain/features/<target-slug>.architect-progress.md` if it
+   exists — a normally-completed PHASE 3 means there is nothing left to
+   resume, and a feature that finished writing must never still look
+   interrupted. If `--commit` was passed and the marker had previously been
+   committed (an earlier, separately-committed interrupted run), add its
+   path to `WRITTEN` so the deletion is staged and committed like any other
+   change; if it only ever existed uncommitted within this same run,
+   deleting the file is enough.
+
 **Closing report.** State:
 
 - Each feature written, its slug, its document path, and its status
@@ -270,6 +312,9 @@ Read `./feature-doc-template.md` for both schemas below.
 - The reconciliation command for each affected feature:
   `/task-add feature=<slug>`.
 - Every open question recorded in the documents.
+- Whether an interrupted-session marker was found at PHASE 0 and how it was
+  resolved (resumed or started fresh), and that each written feature's
+  marker was cleared in PHASE 3.
 - When `WRITTEN` is non-empty and `--commit` was not passed: an explicit
   reminder that nothing was committed.
 
@@ -284,8 +329,10 @@ If COMMIT is true (the pull-at-start from PHASE 0 already ran):
 1. If `WRITTEN` is empty, make no commit (and no push). Say so and stop.
 2. Stage EXACTLY the paths in `WRITTEN` — the feature documents,
    `.claude/FEATURES.md`, `.claude/domain/INDEX.md`,
-   `.claude/domain/product-design.md` if updated, and
-   `.claude/TASKS.md` when PHASE 0b flipped statuses — and commit once:
+   `.claude/domain/product-design.md` if updated,
+   `.claude/TASKS.md` when PHASE 0b flipped statuses, and a
+   `.architect-progress.md` marker if PHASE 3 deleted a previously-committed
+   one — and commit once:
 
    ```
    git add -- <path1> <path2> ...
@@ -308,6 +355,10 @@ If COMMIT is true (the pull-at-start from PHASE 0 already ran):
 ---
 
 DO NOT:
+- Write any file before PHASE 3, with exactly one exception: the PHASE 2
+  progress marker (`.claude/domain/features/<target-slug>.architect-progress.md`).
+  Everything else — feature documents, `FEATURES.md`, `INDEX.md`,
+  `product-design.md` — is PHASE 3's job, not PHASE 2's.
 - Write implementation-level detail: real code, class-by-class breakdowns,
   file-by-file plans, or lists of files to edit. `/task-add` produces those
   against the codebase as it then stands; freezing them here makes them
@@ -315,6 +366,8 @@ DO NOT:
 - Create tasks, or touch `.claude/TASKS.md` for any reason other than
   flipping a `Status:` line to `[STALE]` under PHASE 0b. Never create,
   delete, or reorder task entries.
+- Leave a target's progress marker in place once PHASE 3 has completed
+  normally for it. A written feature must never still look interrupted.
 - Write or overwrite the `Tasks:` line of an existing `FEATURES.md` entry.
   It is `/task-add`'s field; this skill owns `Status:`, `Doc:`, and
   `Source:` only.

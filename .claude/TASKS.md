@@ -78,7 +78,7 @@ Preconditions: none
 
 ## 90. Add a lightweight resume marker to /architect for interrupted PHASE 2 sessions
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/architect/SKILL.md
 Preconditions: none
