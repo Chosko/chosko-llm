@@ -43,6 +43,81 @@ Hard limits enforced by commands:
 
 `/context-update` rewrites `Last updated` date on every successful run. Field missing → smart-update falls back to full update.
 
+Description above is **flat layout**: one `INDEX.md`, all context files beside it. Flat stays default and unchanged. Larger repos may use **nested layout** instead — specified below.
+
+## `Layout:` policy marker
+
+Layer declare own shape. `.claude/context/INDEX.md` header carry single line directly under title:
+
+```
+Layout: flat
+```
+
+or
+
+```
+Layout: nested
+```
+
+Rules:
+
+- Detection = **read that line**. Never infer layout from file contents, folder count, or presence of subdirectories. Inference guesses; marker states.
+- Marker missing → layout is **flat**. Every pre-existing layer therefore keeps working untouched, no migration needed.
+- Marker lives in `.claude/context/INDEX.md`, not `CLAUDE.md`. Detection costs zero extra reads (commands already open `INDEX.md` first), marker travels with layer it describes, and conversion flips exactly one source of truth.
+
+## Nested layout — router + leaves
+
+Nested layer split context files into **units** (natural seams: subsystem, package, service). Each unit own folder under `.claude/context/` with own `INDEX.md`.
+
+- **Router** = `.claude/context/INDEX.md`. Points at units, owns no context files.
+- **Leaf** = `.claude/context/<unit>/INDEX.md`. Owns unit's context files.
+
+### Router INDEX schema
+
+1. Title.
+2. `Layout: nested` line directly under title.
+3. Canonical-docs block — same purpose as flat: links to `CLAUDE.md`, `README.md`, authoring docs living outside layer.
+4. **Units table** — one row per unit, mapping unit name to `./<unit>/INDEX.md` plus one-line description of what unit covers.
+5. Conventions block — path/link conventions, same as flat.
+
+Router carry **no `Last updated` field at all**. Stated explicitly because absence is the design, not omission: leaves are sole date authority, so router has no derived value to compute, stage, or mistake for scan anchor. Alternative (router date = minimum across leaves) is correct but needs re-derivation logic, non-obvious documented semantic, extra staging rules; having no date removes failure mode instead of managing it.
+
+### Leaf INDEX schema
+
+1. Title (unit name).
+2. Own **`Last updated: YYYY-MM-DD`** — same anchor semantics as flat `INDEX.md`: `/context-update` smart mode diffs commits `--after` that date, rewrites it on every successful run touching that unit, falls back to full update when missing.
+3. **Files table** — context files that unit owns, with one-line description each.
+
+Leaf dates **drift apart by design**. Updating one unit refresh only that leaf's date; other units keep older dates and stay correctly scannable from their own last run.
+
+### Ownership
+
+Every context file belong to **exactly one leaf**. No file shared between units, no file sitting loose beside router.
+
+- Adding or removing context file → edits that leaf's `INDEX.md` only.
+- Router changes **only** when whole unit added or retired.
+
+Keeps router stable and makes staging obvious: unit-scoped run touches one leaf plus its files.
+
+### Depth cap
+
+Nested layout capped at **two levels**: root router + one rank of leaves. Leaf never point at further router.
+
+Cap is deliberate current limit, not oversight. Deeper nesting wanted eventually but multiply work in every consumer (detection, addressing, staging, date resolution). Recorded here so later task can lift it knowingly rather than discover it accidentally.
+
+### `unit=<name>` addressing
+
+`unit=<name>` scope operation to single leaf — its `INDEX.md` and files it owns. Two uses:
+
+- **Scoping** — restrict build/update to one unit, leaving other leaves and their dates untouched.
+- **Disambiguation** — when same context filename exist in two units, `files=` alone ambiguous; `unit=` pins which leaf's copy meant.
+
+Flat layout has no units, so `unit=` not applicable there.
+
+### What nesting does not change
+
+Per-context-file six-section schema, 150-line cap per context file, 10-line snippet cap all apply **identically in both layouts**. Nesting change only where index files live and which index owns which file.
+
 ## `/context-build` — three-phase initial build
 
 1. **Phase 1 — Analysis (no writes).** Discover layout, identify existing docs/domain files (leave untouched), find natural seams, propose folder layout and file list. Stops for user approval.

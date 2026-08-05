@@ -24,7 +24,7 @@ Preconditions: none
 
 ## 96. Spec the nested context-layer layout in the domain layer
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: .claude/domain/context-workflow.md, VERSION
 Preconditions: none
