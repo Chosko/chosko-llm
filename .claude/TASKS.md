@@ -6,7 +6,7 @@ Last task number: 92
 
 ## 81. Make /task-implement auto-skip TDD phases for documentation-only tasks
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-implement/SKILL.md, .claude/domain/task-workflow.md
 Preconditions: none

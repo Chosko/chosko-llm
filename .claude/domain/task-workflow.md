@@ -350,6 +350,23 @@ with the same verify loop, and still handles the bookkeeping (status flips,
 the commit of the user's changes). `all`/`next` runs warn when the resolved
 list contains human-involving tasks — they cannot run unattended.
 
+In full test mode, Step 1 of the per-task workflow also determines,
+silently and with no confirmation prompt, whether the current task is
+documentation-only: every path in its `Files:` field is a documentation
+artifact (`README.md`, `CHANGELOG.md`, `docs/**`, or comparable prose) and
+none is a source file, script, test file, or command/skill specification
+(`commands/*.md`, `skills/**/*.md` — these are executable specifications,
+not prose, despite the `.md` extension). The determination reuses the
+`Files:` field from PRE-FLIGHT and the body just read at Step 1 — no extra
+re-read. When `Files:` is empty, ambiguous, or mixes documentation with any
+non-documentation path, the task is treated as a normal code task; the
+skill never guesses toward skipping tests. When a task is determined
+documentation-only, Steps 2 (write tests), 4 (run affected tests), and 5
+(run full suite) are skipped for that task exactly as they already are in
+skip-tests / skip-tests-unattended mode. This is orthogonal to that mode:
+when skip-tests mode is already active, Steps 2/4/5 are already skipped for
+every task, making the documentation-only determination moot.
+
 ### Delegated runs
 
 A run whose selector resolves to 2 or more tasks offers to implement each

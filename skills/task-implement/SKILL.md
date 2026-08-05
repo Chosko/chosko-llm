@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 0.16.0
+version: 0.17.0
 type: skill
 description: Implement one or more tasks from the project's task backlog end-to-end using a tests-first sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits and pushes each task separately; pass --no-commit to skip the per-task commits (and pushes), or --no-push to keep committing without pushing. Supports `next` to implement the first eligible task. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd|skip-tests-unattended` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time. In skip-tests mode, pass `-y` to suppress the per-task "Proceed?" confirmation for that run; the `skip-tests-unattended` marker value makes that the default for every run without needing `-y`. On a run resolving to 2+ tasks, offers to implement each task in a fresh subagent so later tasks don't inherit earlier ones' context — agents run one at a time, never in parallel, and `claude+human` / `human` / explicitly-requested `[STALE]` tasks stay in the parent conversation because they need the user present; pass `--agents` / `--no-agents` to pre-answer.
 ---
@@ -184,6 +184,37 @@ bundle` / `Implementation steps` pair, or the older `Description` /
 to treat it.
 
 In all cases: use judgment, not a checklist.
+
+---
+
+DOCUMENTATION-ONLY TASKS
+
+In full test mode (a project with a real test suite, no skip-tests marker),
+Steps 2, 4, and 5 normally run for every task. They are pointless for a task
+that touches nothing but documentation, so Step 1 determines — per task,
+silently, with no confirmation prompt — whether this task is
+documentation-only, using only data already in hand at that point: the
+`Files:` field noted in PRE-FLIGHT step 2 and the body just read in Step 1.
+This is not a separate re-read pass.
+
+A task is documentation-only when EVERY path in its `Files:` field is a
+documentation artifact — `README.md`, `CHANGELOG.md`, `docs/**`, or a
+comparable prose/reference file — and NONE is a source file, script, test
+file, or a command/skill specification (`commands/*.md`, `skills/**/*.md`,
+or the equivalent executable-prompt files in another project). Those look
+like markdown but define runtime behavior, so editing them is a code
+change, not a documentation change.
+
+If `Files:` is empty, ambiguous, or mixes documentation with any
+non-documentation path, the task is a normal code task — never guess in
+the direction of skipping tests.
+
+Set DOC_ONLY = true or false for the current task as part of Step 1. When
+DOC_ONLY is true, Steps 2, 4, and 5 are skipped for this task exactly as
+they are in skip-tests mode — silently, with no confirmation prompt. This
+is independent of, and does not change, skip-tests / skip-tests-unattended
+mode: when that mode is already active, Steps 2/4/5 are already skipped
+for every task, making the DOC_ONLY determination moot.
 
 ---
 
@@ -373,12 +404,16 @@ yourself here; let that file's gate handle it.
 
 Apply the body schema guidance from USING THE TASK BODY above.
 
+Apply the DOCUMENTATION-ONLY TASKS guidance above to set DOC_ONLY for this
+task, using the `Files:` field already noted in PRE-FLIGHT step 2 and the
+body just read.
+
 Use the Edit tool to change this task's `Status:` line in
 `.claude/TASKS.md` (the summary block) to `[IN PROGRESS]`. The body
 file does not contain a Status field, so do not edit it. Do not
 commit this change yet — it will be bundled into the task's commit.
 
-### Step 2 — Update tests   [skipped in skip-tests mode]
+### Step 2 — Update tests   [skipped in skip-tests mode, or when Step 1 determined DOC_ONLY]
 
 Use the Read tool to open the test files listed in the task's `Files:`
 field on its TASKS.md summary block (or implied by the task's tests
@@ -406,14 +441,14 @@ handling, or abstractions beyond what the task requires.
 On a `claude+human` or `human` task, apply the checkpoint protocol from
 `./human-in-loop.md` at each checkpoint's trigger point.
 
-### Step 4 — Run the affected tests, watch them pass   [skipped in skip-tests mode]
+### Step 4 — Run the affected tests, watch them pass   [skipped in skip-tests mode, or when Step 1 determined DOC_ONLY]
 
 Run the affected tests. They MUST pass. If they don't, fix the
 production code (not the test) and rerun. If after a reasonable attempt
 the code still doesn't pass and the spec itself looks wrong, stop and
 report — do not weaken the test.
 
-### Step 5 — Run the full test suite   [skipped in skip-tests mode]
+### Step 5 — Run the full test suite   [skipped in skip-tests mode, or when Step 1 determined DOC_ONLY]
 
 Run the full test suite. It MUST pass entirely. If unrelated tests fail,
 the change has caused a regression — fix it before continuing. Do not
