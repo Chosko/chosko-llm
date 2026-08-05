@@ -33,7 +33,7 @@ Preconditions: none
 
 ## 84. Remove dead reference links in unity-mcp-skill
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/unity-mcp-skill/SKILL.md, skills/unity-mcp-skill/references/tools-reference.md, skills/unity-mcp-skill/references/workflows.md
 Preconditions: none

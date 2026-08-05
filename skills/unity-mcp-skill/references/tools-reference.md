@@ -1420,7 +1420,7 @@ manage_probuilder(action="center_pivot", target="MyCube")
 manage_probuilder(action="validate_mesh", target="MyCube")
 ```
 
-See also: [ProBuilder Workflow Guide](probuilder-guide.md) for detailed patterns and complex object examples.
+See also: [ProBuilder Workflows](workflows.md#probuilder-workflows) for detailed patterns and complex object examples.
 
 ---
 
