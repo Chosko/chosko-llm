@@ -13,7 +13,7 @@ required.
 name: refactor-reviewer
 version: 1.2.0
 type: command            # or: skill
-description: One-line summary used in `chosko-llm ls`.
+description: One short sentence summarizing the feature.
 ---
 
 # Body of the command/skill in markdown follows...
@@ -24,7 +24,7 @@ description: One-line summary used in `chosko-llm ls`.
 | `name`        | kebab-case. MUST match the filename (without `.md`) or the skill folder. |
 | `version`     | Semantic version, e.g. `0.1.0`, `1.2.0`. Required — install will refuse without it. |
 | `type`        | `command` for `commands/*.md`, `skill` for `skills/*/SKILL.md`, `claude-md` for `claude-md/*.md`, `statusline` for `statusline/*.sh`. |
-| `description` | One short line. Shown in `chosko-llm ls` and in skill discovery output.  |
+| `description` | A single paragraph, no line breaks. For a simple feature, one short sentence is enough. A command or skill with several flags/modes may use a longer, multi-clause description that documents them — that detail is what `chosko-llm show <feature>` and (for skills) Claude Code's own skill-discovery listing surface to the user before they read the body. `chosko-llm ls` does not print `description` at all (see its `NAME KIND INSTALLED LATEST STATUS` columns), so description length never affects that table. |
 
 ## <a id="commands"></a>Authoring a command
 
@@ -65,7 +65,7 @@ a mismatch will break `update --all`.
    name: session-statusline
    version: 0.1.0
    type: statusline
-   description: One-line summary used in `chosko-llm ls`.
+   description: One short sentence summarizing the feature.
    ---
    CHOSKO_FRONTMATTER
    # ... the actual status line script ...

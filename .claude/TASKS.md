@@ -69,7 +69,7 @@ Preconditions: none
 
 ## 89. Trim oversized frontmatter descriptions to match the authoring guide's spec
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-add.md, commands/project-setup.md, commands/unity-mcp-setup.md, docs/authoring-guide.md
 Preconditions: none
