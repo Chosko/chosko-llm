@@ -1,55 +1,30 @@
 # Task workflow
 
-This document is the source of truth for the task backlog schema and the
-dual-path implementation model. Read it when touching any `task-*` command
-or skill, when changing the body schema, or when wiring an external
-implementer.
+Source of truth for task backlog schema, dual-path implementation model. Read when touching any `task-*` command/skill, changing body schema, or wiring external implementer.
 
 ## Roles
 
-- **Author** — Claude Code, via `/task-add`. Plans the task conversationally,
-  captures decisions, identifies files, writes the body. Has full repo access.
-- **Claude implementer** — Claude Code, via `/task-implement`. The default
-  path. Reads the thin body, navigates context/domain files as needed, and
-  implements end-to-end.
-- **Local LLM implementer** — a less-powerful local model (e.g.
-  qwen2.5-coder:14b via Ollama + aider). Optional path. Needs a richer,
-  self-contained body to work without external reads. Use `/task-enrich` to
-  prepare a thin task for this path.
-- **Human implementer** — the user, acting in an external tool an agent
-  cannot drive (a game-engine editor such as Unity, a cloud console,
-  physical hardware). Claude guides and verifies; the user performs the
-  manual steps.
+- **Author** — Claude Code, via `/task-add`. Plans task conversationally, captures decisions, identifies files, writes body. Full repo access.
+- **Claude implementer** — Claude Code, via `/task-implement`. Default path. Reads thin body, navigates context/domain files as needed, implements end-to-end.
+- **Local LLM implementer** — less-powerful local model (e.g. qwen2.5-coder:14b via Ollama + aider). Optional path. Needs richer, self-contained body to work without external reads. Use `/task-enrich` to prep thin task for this path.
+- **Human implementer** — user, acting in external tool agent can't drive (game-engine editor like Unity, cloud console, physical hardware). Claude guides + verifies; user does manual steps.
 
 ## Target field
 
-Every task body and every TASKS.md summary block carries a `Target:` field:
+Every task body + TASKS.md summary block carries `Target:` field:
 
 | Value | Meaning |
 | --- | --- |
-| `claude` | Thin body. Claude implements, fetching context at implementation time. **Default.** |
-| `local` | Enriched body. Self-contained; intended for a local LLM via aider. |
-| `claude+human` | Claude implements, but the body declares manual-intervention checkpoints where Claude pauses, walks the user through a step in an external tool, and verifies the outcome before continuing. |
-| `human` | The task is executed entirely by the user. `/task-implement` becomes a guided walkthrough: Claude guides and verifies each step but makes no production edits; it still owns the bookkeeping (status flips, the commit). |
+| `claude` | Thin body. Claude implements, fetches context at implementation time. **Default.** |
+| `local` | Enriched body. Self-contained; for local LLM via aider. |
+| `claude+human` | Claude implements, but body declares manual-intervention checkpoints — Claude pauses, walks user through step in external tool, verifies outcome before continuing. |
+| `human` | Task executed entirely by user. `/task-implement` becomes guided walkthrough: Claude guides + verifies each step, makes no production edits; still owns bookkeeping (status flips, commit). |
 
-`target: claude` bodies are authored lean. `target: local` bodies are
-produced by `/task-enrich` from an existing thin body. `claude+human` and
-`human` are set by `/task-add` at authoring time when the work involves
-steps an agent cannot execute; both REQUIRE a `## Manual interventions`
-section in the body (and vice versa — a body with that section must carry
-one of these two targets). `/task-enrich` refuses human-involving targets:
-a headless local LLM cannot pause for a human.
+`target: claude` bodies authored lean. `target: local` bodies produced by `/task-enrich` from existing thin body. `claude+human` and `human` set by `/task-add` at authoring time when work involves steps agent can't execute; both REQUIRE `## Manual interventions` section in body (and vice versa — body with that section must carry one of these two targets). `/task-enrich` refuses human-involving targets: headless local LLM can't pause for human.
 
 ## Manual interventions section
 
-Optional body section, present exactly when `Target:` is `claude+human` or
-`human`. Placed between `## Decisions` and `## Hints`. It opens with a
-`⚠ REQUIRES MANUAL INTERVENTION` warning line, followed by numbered
-checkpoints. Each checkpoint is anchored to a trigger point ("After X: …"),
-describes the manual step in the external tool, and ends with a verifiable
-outcome Claude can check itself (a file that must exist, a compile/test
-result). The mechanism is generic — Unity is the motivating example, but
-any human-in-the-loop environment fits.
+Optional body section, present exactly when `Target:` is `claude+human` or `human`. Placed between `## Decisions` and `## Hints`. Opens with `⚠ REQUIRES MANUAL INTERVENTION` warning line, followed by numbered checkpoints. Each checkpoint anchored to trigger point ("After X: …"), describes manual step in external tool, ends with verifiable outcome Claude can check itself (file that must exist, compile/test result). Mechanism generic — Unity motivating example, but any human-in-the-loop environment fits.
 
 ```
 ## Manual interventions
@@ -63,12 +38,7 @@ outcome before continuing:
 2. After <trigger>: <…>. Verify <…>.
 ```
 
-At implementation time, verification is independent: Claude checks the
-claimed outcome itself (file existence, compile/test result — whatever is
-checkable from the filesystem or CLI) rather than trusting the user's
-confirmation. On failure it reports exactly what is missing and re-guides;
-it never proceeds past an unverified checkpoint unless the user explicitly
-overrides.
+At implementation time, verification independent: Claude checks claimed outcome itself (file existence, compile/test result — whatever checkable from filesystem or CLI) rather than trusting user's confirmation. On failure reports exactly what's missing, re-guides; never proceeds past unverified checkpoint unless user explicitly overrides.
 
 ## Thin body schema (`target: claude`)
 
@@ -104,17 +74,12 @@ Write "none" explicitly only if genuinely nothing collateral exists.>
 ```
 
 **Required sections:** Goal, Acceptance criteria, Hints.
-**Conditional sections:** Decisions (present only when non-obvious choices
-exist); Manual interventions (present exactly when the target is
-`claude+human` or `human`).
-No snippets, no required-reading lists, no conventions blocks, no definition
-of done — Claude fetches what it needs from the project's context layer at
-implementation time.
+**Conditional sections:** Decisions (present only when non-obvious choices exist); Manual interventions (present exactly when target is `claude+human` or `human`).
+No snippets, no required-reading lists, no conventions blocks, no definition of done — Claude fetches what needed from project's context layer at implementation time.
 
 ## Enriched body schema (`target: local`)
 
-An enriched body is a thin body with two additional sections appended.
-Goal, Acceptance criteria, Decisions, and Hints are unchanged.
+Enriched body = thin body + two sections appended. Goal, Acceptance criteria, Decisions, Hints unchanged.
 
 ```
 ## Context bundle
@@ -128,16 +93,11 @@ Each step that relies on a pattern must have that pattern present in the
 Context bundle above.>
 ```
 
-`Target:` is updated to `local` when the body is enriched.
+`Target:` updated to `local` when body enriched.
 
 ## Short-form body schema (`--short`)
 
-`/task-add --short` is for trivial, low-ambiguity tasks where the normal
-deep PHASE 1 investigation (reading CLAUDE.md, `.claude/context/`, and
-`.claude/domain/` files for grounding) costs more tokens than the task
-itself. It trades pre-implementation grounding for insertion-time
-efficiency: `/task-implement` resolves the details at execution time
-instead.
+`/task-add --short` for trivial, low-ambiguity tasks where normal deep PHASE 1 investigation (reading CLAUDE.md, `.claude/context/`, `.claude/domain/` files for grounding) costs more tokens than task itself. Trades pre-implementation grounding for insertion-time efficiency: `/task-implement` resolves details at execution time instead.
 
 ```
 # Task <N> — <Title>
@@ -152,19 +112,9 @@ Target: claude
 minimal) authoring pass, exactly as in the thin schema. Usually absent.>
 ```
 
-`## Acceptance criteria` and `## Hints` are omitted entirely — not left as
-placeholders — since authoring them without the deep investigation would
-likely produce content that is wrong or vacuous. PHASE 1.5 (split check) is
-skipped entirely under `--short`, same as `--no-split`: a task specific
-enough to qualify for `--short` is by definition not a bundle of
-independent deliverables. PHASE 2 is not skipped wholesale, though — it
-still asks about ambiguity inherent to the user's own description; it just
-does not ask about ambiguity that would only have surfaced through the
-investigation `--short` skips.
+`## Acceptance criteria` and `## Hints` omitted entirely — not left as placeholders — since authoring without deep investigation would likely produce content wrong or vacuous. PHASE 1.5 (split check) skipped entirely under `--short`, same as `--no-split`: task specific enough for `--short` is by definition not bundle of independent deliverables. PHASE 2 not skipped wholesale though — still asks about ambiguity inherent to user's own description; just doesn't ask about ambiguity that would only have surfaced through investigation `--short` skips.
 
-`--short` is mutually exclusive with `--enrich` and with `feature=<slug>`
-— both imply exactly the deep investigation `--short` exists to skip. It
-composes normally with `--no-commit` and `--no-push`.
+`--short` mutually exclusive with `--enrich` and `feature=<slug>` — both imply exactly the deep investigation `--short` exists to skip. Composes normally with `--no-commit` and `--no-push`.
 
 ## TASKS.md summary block format
 
@@ -178,147 +128,75 @@ Preconditions: <comma-separated task numbers, or "none">
 Feature: <slug>          # optional — feature-derived tasks only
 ```
 
-`Target:` in the summary block mirrors the body file's `Target:` field. It is
-the only field (besides `Files:`) intentionally duplicated between the index
-and the body, so the backlog view shows implementer intent without opening
-body files.
+`Target:` in summary block mirrors body file's `Target:` field. Only field (besides `Files:`) intentionally duplicated between index and body, so backlog view shows implementer intent without opening body files.
 
-`Status:`, `Preconditions:`, and `Feature:` are deliberately absent from the
-body: they describe how the task fits into the backlog, not what needs to be
-built.
+`Status:`, `Preconditions:`, `Feature:` deliberately absent from body: describe how task fits into backlog, not what needs to be built.
 
 ## Status vocabulary
 
-`[MISSING]`, `[STUBBED]`, `[INCORRECT]`, `[PARTIAL]`, `[IN PROGRESS]`,
-`[DONE]`, `[SKIP]`, `[STALE]`.
+`[MISSING]`, `[STUBBED]`, `[INCORRECT]`, `[PARTIAL]`, `[IN PROGRESS]`, `[DONE]`, `[SKIP]`, `[STALE]`.
 
-`[DONE]` and `[SKIP]` are the only terminal statuses — the only two
-`/task-clean` prunes by default. The vocabulary is mirrored in shell:
-`scripts/check-task-parity.sh` holds the canonical list and
-`scripts/cmd-task-impl.sh` holds the orchestrator's implementable-status
-allowlist. A change here that does not land in both fails the parity guard.
+`[DONE]` and `[SKIP]` only terminal statuses — only two `/task-clean` prunes by default. Vocabulary mirrored in shell: `scripts/check-task-parity.sh` holds canonical list, `scripts/cmd-task-impl.sh` holds orchestrator's implementable-status allowlist. Change here that doesn't land in both fails parity guard.
 
-## `Feature:` — the origin link
+## `Feature:` — origin link
 
-An optional summary-block line carrying the slug of the feature document a
-task was generated from. Written only by `/task-add feature=<slug>`; absent
-entirely on free-form tasks (never `Feature: none`), so its presence is what
-distinguishes the two. It lives in the index rather than the body for the
-same reason `Status:` and `Preconditions:` do: it is backlog metadata, not
-part of the implementation contract.
+Optional summary-block line carrying slug of feature document task generated from. Written only by `/task-add feature=<slug>`; absent entirely on free-form tasks (never `Feature: none`), so presence distinguishes the two. Lives in index not body, same reason `Status:` and `Preconditions:` do: backlog metadata, not implementation contract.
 
-Reconciliation depends on it — without the line, a re-planning run cannot
-tell which existing tasks belong to the feature being re-planned. Readers of
-the backlog (`/task-list`, `/task-implement`) treat it as informational.
+Reconciliation depends on it — without line, re-planning run can't tell which existing tasks belong to feature being re-planned. Readers of backlog (`/task-list`, `/task-implement`) treat it as informational.
 
-## `[STALE]` — the drift marker
+## `[STALE]` — drift marker
 
-`[STALE]` means the feature document this task was generated from has been
-re-architected since the task was written, so the spec may no longer match
-the design. `/architect` sets it; `/task-add feature=<slug>` reconciliation
-clears it (updating the body in place and flipping back to `[MISSING]`, or
-marking the task `[SKIP]` and drafting a replacement).
+`[STALE]` means feature document task generated from has been re-architected since task written, so spec may no longer match design. `/architect` sets it; `/task-add feature=<slug>` reconciliation clears it (updating body in place, flipping back to `[MISSING]`, or marking task `[SKIP]` and drafting replacement).
 
-- **Not terminal.** Live work awaiting reconciliation, not abandoned work.
-  `/task-clean` never prunes it.
-- **Never set by `/task-add` at authoring time.** A new task has no design
-  drift to record.
-- **Refused unattended, allowed interactively.** `chosko-llm task-impl`
-  refuses a `[STALE]` task outright, naming the feature and pointing at
-  `/task-add feature=<slug>`. `/task-implement` warns — naming the feature
-  and saying the design changed — and lets the user implement anyway or
-  stop; `all` and `next` skip stale tasks rather than deciding for the
-  user. A human can judge whether a superseded design still applies; a
-  headless local LLM cannot. The asymmetry is deliberate.
+- **Not terminal.** Live work awaiting reconciliation, not abandoned work. `/task-clean` never prunes it.
+- **Never set by `/task-add` at authoring time.** New task has no design drift to record.
+- **Refused unattended, allowed interactively.** `chosko-llm task-impl` refuses `[STALE]` task outright, naming feature, pointing at `/task-add feature=<slug>`. `/task-implement` warns — naming feature, saying design changed — lets user implement anyway or stop; `all` and `next` skip stale tasks rather than deciding for user. Human can judge whether superseded design still applies; headless local LLM can't. Asymmetry deliberate.
 
-See [`./product-workflow.md`](./product-workflow.md) for the feature side of
-this contract: the `FEATURES.md` schema, the feature status machine, the
-iterate guard that writes `[STALE]`, and the reconciliation protocol that
-resolves it.
+See [`./product-workflow.md`](./product-workflow.md) for feature side of this contract: `FEATURES.md` schema, feature status machine, iterate guard that writes `[STALE]`, reconciliation protocol resolving it.
 
 ## Feature-derived tasks (`/task-add feature=<slug>`)
 
-`/task-add` has two input modes. The free-form mode takes a prose
-description and is unchanged by any of this. The feature mode takes
-`feature=<slug>`, resolves it through `.claude/FEATURES.md`, and plans from
-the low-level feature document `/architect` wrote — treating that document as
-the primary context source, the way `/task-implement` treats a task body.
-Free-form text alongside the slug narrows scope; it does not replace the
-document. Both modes compose with `--enrich`, `--no-split`, and
-`--no-commit`.
+`/task-add` has two input modes. Free-form mode takes prose description, unchanged by any of this. Feature mode takes `feature=<slug>`, resolves through `.claude/FEATURES.md`, plans from low-level feature document `/architect` wrote — treating that document as primary context source, way `/task-implement` treats task body. Free-form text alongside slug narrows scope; doesn't replace document. Both modes compose with `--enrich`, `--no-split`, `--no-commit`.
 
-`/task-add`, `/task-clean`, `/task-setup --commit`, and
-`/task-enrich --commit` all follow the commit-and-push protocol in
-[docs/authoring-guide.md](../../docs/authoring-guide.md) rather than a plain
-`git commit` — pull at start, commit, re-sync, push, all skippable via
-`--no-push` (or implied by `--no-commit`/no `--commit`). See that doc for
-the algorithm; it is not re-derived here.
+`/task-add`, `/task-clean`, `/task-setup --commit`, `/task-enrich --commit` all follow commit-and-push protocol in [docs/authoring-guide.md](../../docs/authoring-guide.md) rather than plain `git commit` — pull at start, commit, re-sync, push, all skippable via `--no-push` (or implied by `--no-commit`/no `--commit`). See that doc for algorithm; not re-derived here.
 
-Because a feature document describes a unit of *design*, the split check
-inverts: distinct components and independently deliverable slices of its
-architecture normally each become a task, and one task for a whole feature is
-the exception.
+Since feature document describes unit of *design*, split check inverts: distinct components and independently deliverable slices of its architecture normally each become task, one task for whole feature is exception.
 
-Feature-derived tasks differ from free-form ones in three ways: their summary
-block carries `Feature: <slug>`, their body's `## Goal` names the originating
-feature with its document path under `## Hints`, and the run updates the
-feature's `FEATURES.md` entry — `Tasks:` and `Status: [PLANNED]`, never
-`Doc:` or `Source:`.
+Feature-derived tasks differ from free-form ones three ways: summary block carries `Feature: <slug>`, body's `## Goal` names originating feature with its document path under `## Hints`, run updates feature's `FEATURES.md` entry — `Tasks:` and `Status: [PLANNED]`, never `Doc:` or `Source:`.
 
 ### Reconciliation
 
-A feature whose `Tasks:` line is non-`none` has been planned before, so a
-re-planning run reconciles instead of appending. Every existing task is
-classified, and the classification is presented under PHASE 3's existing
-single approval gate:
+Feature whose `Tasks:` line is non-`none` has been planned before, so re-planning run reconciles instead of appending. Every existing task classified, classification presented under PHASE 3's existing single approval gate:
 
 | Situation | Action |
 | --- | --- |
-| Still valid under the new design | Left untouched. |
-| Needs minor change, and is `[STALE]` or `[MISSING]` | Body updated in place; a `[STALE]` task flips back to `[MISSING]`. |
-| Substantially invalidated | Marked `[SKIP]` with a reason; a replacement is drafted. |
+| Still valid under new design | Left untouched. |
+| Needs minor change, and is `[STALE]` or `[MISSING]` | Body updated in place; `[STALE]` task flips back to `[MISSING]`. |
+| Substantially invalidated | Marked `[SKIP]` with reason; replacement drafted. |
 | `[DONE]` | Never modified, skipped, or reopened. |
 
-Update-in-place is preferred whenever the task's goal survives the design
-change: nothing has been implemented, so rewriting the body is cheaper and
-keeps the backlog free of dead `[SKIP]` entries. Which applies is a judgment
-call about how much of the task remains — there is no mechanical rule.
+Update-in-place preferred whenever task's goal survives design change: nothing implemented yet, so rewriting body cheaper, keeps backlog free of dead `[SKIP]` entries. Which applies is judgment call about how much task remains — no mechanical rule.
 
-The feature document itself is read-only to `/task-add`.
+Feature document itself read-only to `/task-add`.
 
 ## Split suggestion (`/task-add`)
 
-Between PHASE 1 READ and PHASE 2 ASK, `/task-add` considers whether the
-description would produce better units as multiple tasks — because it
-bundles independent deliverables, or because a single task would be too
-large. This is a suggestion, not a gate: it stays silent for work that's
-fine as one task. `--no-split` skips the check entirely.
+Between PHASE 1 READ and PHASE 2 ASK, `/task-add` considers whether description would produce better units as multiple tasks — bundles independent deliverables, or single task would be too large. Suggestion, not gate: stays silent for work fine as one task. `--no-split` skips check entirely.
 
-When the user accepts a proposed split, every part is written in the same
-run: sequential IDs, one `TASKS.md` summary block and one
-`.claude/tasks/<N>.md` body file per part, `Last task number` advanced by
-the number of parts, and all files committed together in a single commit
-covering every task ID created. A part that depends on an earlier part has
-that earlier part's ID auto-wired into its `Preconditions:` line; a part
-with no dependency gets `none`. Declining the proposal — or `--no-split` —
-falls back to the normal single-task flow.
+When user accepts proposed split, every part written in same run: sequential IDs, one `TASKS.md` summary block + one `.claude/tasks/<N>.md` body file per part, `Last task number` advanced by number of parts, all files committed together in single commit covering every task ID created. Part depending on earlier part gets that earlier part's ID auto-wired into `Preconditions:` line; part with no dependency gets `none`. Declining proposal — or `--no-split` — falls back to normal single-task flow.
 
 ## Body file header
 
-The `Target:` field lives on the second line of the body file, immediately
-after the `# Task N — Title` heading, as a plain `Key: value` line — no YAML
-frontmatter. This is consistent with how `Status:` and `Files:` are expressed
-in TASKS.md.
+`Target:` field lives on second line of body file, immediately after `# Task N — Title` heading, as plain `Key: value` line — no YAML frontmatter. Consistent with how `Status:` and `Files:` expressed in TASKS.md.
 
 ## Static implement-procedure artifact
 
-`/task-setup` writes the per-project external-LLM wiring under
-`.claude/external/`:
+`/task-setup` writes per-project external-LLM wiring under `.claude/external/`:
 
-- `implement-prompt.md` — the system-prompt fed to the local LLM via aider.
-- `tests-prompt.md` — the system-prompt for the test-writing pass.
-- `run-affected-tests.sh` — run the project's test runner against given files.
-- `run-full-tests.sh` — run the full suite.
+- `implement-prompt.md` — system-prompt fed to local LLM via aider.
+- `tests-prompt.md` — system-prompt for test-writing pass.
+- `run-affected-tests.sh` — run project's test runner against given files.
+- `run-full-tests.sh` — run full suite.
 
 Standard aider invocation (one-shot, by hand):
 
@@ -328,12 +206,11 @@ aider --model ollama/qwen2.5-coder:14b \
       --read .claude/tasks/<N>.md
 ```
 
-Always run `/task-enrich <N>` before handing a task to the local LLM.
+Always run `/task-enrich <N>` before handing task to local LLM.
 
 ## Orchestrated path: `chosko-llm task-impl`
 
-The orchestrator (`scripts/cmd-task-impl.sh`) runs a 7-step sequence driven
-by aider against a single enriched task at a time:
+Orchestrator (`scripts/cmd-task-impl.sh`) runs 7-step sequence driven by aider against single enriched task at a time:
 
 ```
 Step 1.   flip TASKS.md Status: → [IN PROGRESS]
@@ -346,101 +223,40 @@ Step 6.   flip TASKS.md Status: → [DONE]
 Step 7.   stage Files: ∪ TASKS.md, one commit, then push (unless --no-push)
 ```
 
-The orchestrator refuses on a dirty working tree, refuses if any of the four
-artifacts under `.claude/external/` is missing, and refuses a `[STALE]` task
-(`all` never selects one; an explicit ID halts the run). Statuses outside the
-`[MISSING]` / `[STUBBED]` / `[INCORRECT]` / `[PARTIAL]` allowlist are skipped
-with a warning.
+Orchestrator refuses on dirty working tree, refuses if any of four artifacts under `.claude/external/` missing, refuses `[STALE]` task (`all` never selects one; explicit ID halts run). Statuses outside `[MISSING]` / `[STUBBED]` / `[INCORRECT]` / `[PARTIAL]` allowlist skipped with warning.
 
-Both `/task-implement` and `chosko-llm task-impl` follow the commit-and-push
-protocol in [docs/authoring-guide.md](../../docs/authoring-guide.md) once
-per task, immediately after that task's commit — not deferred to
-end-of-run — mirroring "one commit per task" with "one push per task."
-`--no-push` skips the pull-at-start and each task's re-sync/push while
-still committing every task as usual; `/task-implement`'s `--no-commit`
-implies no push. See that doc for the pull/commit/re-sync/push algorithm;
-it is not re-derived here.
+Both `/task-implement` and `chosko-llm task-impl` follow commit-and-push protocol in [docs/authoring-guide.md](../../docs/authoring-guide.md) once per task, immediately after that task's commit — not deferred to end-of-run — mirroring "one commit per task" with "one push per task." `--no-push` skips pull-at-start and each task's re-sync/push while still committing every task as usual; `/task-implement`'s `--no-commit` implies no push. See that doc for pull/commit/re-sync/push algorithm; not re-derived here.
 
 ## `/task-implement` discipline
 
-`/task-implement` is the Claude Code implementation path. It reads the body
-file as the primary context source, then navigates CLAUDE.md, `.claude/context/`,
-and source files as needed — it does not need an exhaustive body to work well.
+`/task-implement` is Claude Code implementation path. Reads body file as primary context source, then navigates CLAUDE.md, `.claude/context/`, source files as needed — doesn't need exhaustive body to work well.
 
-When the body carries `Target: local`, `/task-implement` emits a one-line
-warning before proceeding:
+When body carries `Target: local`, `/task-implement` emits one-line warning before proceeding:
 
 > Note: this task was written for a local LLM (target: local) — implementing
 > with Claude anyway.
 
-No confirmation prompt is shown; implementation proceeds normally.
+No confirmation prompt shown; implementation proceeds normally.
 
-When the body carries `Target: claude+human`, `/task-implement` announces
-the checkpoints up front, then implements normally, pausing at each
-checkpoint to walk the user through the manual step and independently
-verify the outcome before continuing (see "Manual interventions section").
+When body carries `Target: claude+human`, `/task-implement` announces checkpoints up front, then implements normally, pausing at each checkpoint to walk user through manual step and independently verify outcome before continuing (see "Manual interventions section").
 
-When the body carries `Target: human`, the per-task flow becomes a guided
-walkthrough: Claude makes no production edits, guides the user step by step
-with the same verify loop, and still handles the bookkeeping (status flips,
-the commit of the user's changes). `all`/`next` runs warn when the resolved
-list contains human-involving tasks — they cannot run unattended.
+When body carries `Target: human`, per-task flow becomes guided walkthrough: Claude makes no production edits, guides user step by step with same verify loop, still handles bookkeeping (status flips, commit of user's changes). `all`/`next` runs warn when resolved list contains human-involving tasks — they can't run unattended.
 
-In full test mode, Step 1 of the per-task workflow also determines,
-silently and with no confirmation prompt, whether the current task is
-documentation-only: every path in its `Files:` field is a documentation
-artifact (`README.md`, `CHANGELOG.md`, `docs/**`, or comparable prose) and
-none is a source file, script, test file, or command/skill specification
-(`commands/*.md`, `skills/**/*.md` — these are executable specifications,
-not prose, despite the `.md` extension). The determination reuses the
-`Files:` field from PRE-FLIGHT and the body just read at Step 1 — no extra
-re-read. When `Files:` is empty, ambiguous, or mixes documentation with any
-non-documentation path, the task is treated as a normal code task; the
-skill never guesses toward skipping tests. When a task is determined
-documentation-only, Steps 2 (write tests), 4 (run affected tests), and 5
-(run full suite) are skipped for that task exactly as they already are in
-skip-tests / skip-tests-unattended mode. This is orthogonal to that mode:
-when skip-tests mode is already active, Steps 2/4/5 are already skipped for
-every task, making the documentation-only determination moot.
+In full test mode, Step 1 of per-task workflow also determines, silently and with no confirmation prompt, whether current task is documentation-only: every path in its `Files:` field is documentation artifact (`README.md`, `CHANGELOG.md`, `docs/**`, or comparable prose) and none is source file, script, test file, or command/skill specification (`commands/*.md`, `skills/**/*.md` — these are executable specifications, not prose, despite `.md` extension). Determination reuses `Files:` field from PRE-FLIGHT and body just read at Step 1 — no extra re-read. When `Files:` empty, ambiguous, or mixes documentation with any non-documentation path, task treated as normal code task; skill never guesses toward skipping tests. When task determined documentation-only, Steps 2 (write tests), 4 (run affected tests), 5 (run full suite) skipped for that task exactly as they already are in skip-tests / skip-tests-unattended mode. Orthogonal to that mode: when skip-tests mode already active, Steps 2/4/5 already skipped for every task, making documentation-only determination moot.
 
 ### Delegated runs
 
-A run whose selector resolves to 2 or more tasks offers to implement each
-task in a fresh subagent. The motivation is context, not throughput: in a
-single conversation, task 1's reading and diffs are still loaded when task 3
-starts, so later tasks get progressively less headroom. One agent per task
-gives each the full window while the parent keeps only run-level
-bookkeeping. `--agents` / `--no-agents` pre-answer the question; a run of
-fewer than 2 tasks never asks it and is unchanged.
+Run whose selector resolves to 2+ tasks offers to implement each task in fresh subagent. Motivation is context, not throughput: in single conversation, task 1's reading and diffs still loaded when task 3 starts, so later tasks get progressively less headroom. One agent per task gives each full window while parent keeps only run-level bookkeeping. `--agents` / `--no-agents` pre-answer the question; run of fewer than 2 tasks never asks it, unchanged.
 
-Agents are **sequential, never parallel** — every task in the run shares one
-working tree, one branch, and one `.claude/TASKS.md`, so concurrency would
-race on status flips, staging, and pushes. The parent blocks on each agent
-before spawning the next, re-reads `TASKS.md` in between (the agent wrote
-the status), and halts the whole run on a failure rather than continuing.
+Agents **sequential, never parallel** — every task in run shares one working tree, one branch, one `.claude/TASKS.md`, so concurrency would race on status flips, staging, pushes. Parent blocks on each agent before spawning next, re-reads `TASKS.md` in between (agent wrote status), halts whole run on failure rather than continuing.
 
-Delegation is partial by design. `claude+human` and `human` tasks, and
-`[STALE]` tasks requested explicitly by number, stay in the parent
-conversation: all three depend on a question put to the user — a manual
-checkpoint's confirmation, or the stale implement-anyway/stop choice — and a
-subagent cannot hold that conversation. A mixed run states which tasks go
-where before starting. Each delegated agent still owns its task's status
-flips, its single commit, and its single push, so the one-commit /
-one-push-per-task invariant holds regardless of where the task ran.
+Delegation partial by design. `claude+human` and `human` tasks, and `[STALE]` tasks requested explicitly by number, stay in parent conversation: all three depend on question put to user — manual checkpoint's confirmation, or stale implement-anyway/stop choice — subagent can't hold that conversation. Mixed run states which tasks go where before starting. Each delegated agent still owns its task's status flips, its single commit, its single push, so one-commit / one-push-per-task invariant holds regardless of where task ran.
 
-Protocol details live in `skills/task-implement/delegated-runs.md`, read
-only when delegation is active.
+Protocol details live in `skills/task-implement/delegated-runs.md`, read only when delegation active.
 
 ## Cross-references
 
-- [`../../CLAUDE.md`](../../CLAUDE.md) — hard rules (authoring, versioning,
-  copy-not-symlink, no new deps).
-- [`./product-workflow.md`](./product-workflow.md) — the product pipeline
-  upstream of this backlog: `FEATURES.md`, the feature status machine, and
-  the writers of `Feature:` and `[STALE]`.
-- [`../context/features.md`](../context/features.md) — shipped artifacts
-  including every `task-*` command and the `task-enrich` skill.
-- `commands/task-setup.md`, `commands/task-add.md`,
-  `commands/task-clean.md`, `commands/task-list.md`,
-  `commands/task-enrich.md`, `skills/task-implement/SKILL.md` — the
-  command and skill implementations.
+- [`../../CLAUDE.md`](../../CLAUDE.md) — hard rules (authoring, versioning, copy-not-symlink, no new deps).
+- [`./product-workflow.md`](./product-workflow.md) — product pipeline upstream of this backlog: `FEATURES.md`, feature status machine, writers of `Feature:` and `[STALE]`.
+- [`../context/features.md`](../context/features.md) — shipped artifacts including every `task-*` command and `task-enrich` skill.
+- `commands/task-setup.md`, `commands/task-add.md`, `commands/task-clean.md`, `commands/task-list.md`, `commands/task-enrich.md`, `skills/task-implement/SKILL.md` — command and skill implementations.

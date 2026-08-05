@@ -2,62 +2,59 @@
 
 ## Overview
 
-`scripts/cmd-rm.sh` deletes an installed feature from `$CLAUDE_HOME`. It
-resolves names against what is **installed**, not against the managed clone
-— so a user-authored feature with no source can still be removed.
+`scripts/cmd-rm.sh` delete installed feature from `$CLAUDE_HOME`. Resolve names against **installed** state, not managed clone — user-authored feature with no source still removable.
 
 ## Public API
 
 CLI:
-- `chosko-llm rm <feature>` — `<feature>` is `<name>`, `command:<name>`,
+- `chosko-llm rm <feature>` — `<feature>` = `<name>`, `command:<name>`,
   `skill:<name>`, `claude-md:<name>`, or `statusline:<name>`.
 
 Exit codes:
-- 0 on successful removal.
-- 1 (via `die`) if no argument, if `<name>` is ambiguous (more than one of
-  command/skill/claude-md/statusline installed) without a prefix, or if
-  nothing matching is installed.
+- 0 success.
+- 1 (via `die`) if: no arg, `<name>` ambiguous (more than one of
+  command/skill/claude-md/statusline installed) without prefix, or nothing
+  matching installed.
 
 Side effects:
-- For commands: `rm -f` on the `.md` file.
-- For skills: `rm -rf` on the entire skill directory.
-- For claude-md: `remove_section` strips the managed section from
-  `$CLAUDE_HOME/CLAUDE.md` (user content around it is preserved).
-- For statusline: `rm -f` on the `.sh` file, then a warning reminding the
-  user to update/remove the `"statusLine"` key in `$CLAUDE_HOME/settings.json`
-  if it still points at the deleted path.
-- Logs a single `Removed <kind> '<name>' (<path>)` line.
+- Commands: `rm -f` on `.md` file.
+- Skills: `rm -rf` on whole skill directory.
+- claude-md: `remove_section` strips managed section from
+  `$CLAUDE_HOME/CLAUDE.md` (user content around preserved).
+- statusline: `rm -f` on `.sh` file, then warning — remind user update/remove
+  `"statusLine"` key in `$CLAUDE_HOME/settings.json` if still pointing at
+  deleted path.
+- Logs one `Removed <kind> '<name>' (<path>)` line.
 
 ## Internal patterns
 
-- **Resolution is local, not via `resolve_feature`.** `cmd-rm.sh` parses
-  the `command:` / `skill:` / `claude-md:` / `statusline:` prefix itself (in
-  `resolve_installed`) and checks installed state directly
+- **Resolution local, not via `resolve_feature`.** `cmd-rm.sh` parses
+  `command:` / `skill:` / `claude-md:` / `statusline:` prefix itself (in
+  `resolve_installed`), checks installed state direct
   (`inst_command_path`, `inst_skill_path`, `claudemd_is_installed`,
-  `inst_statusline_path`). This is intentional — `resolve_feature` checks the
-  managed clone, which is the wrong source of truth here. Keep the
-  prefix-parsing case statement in sync with the ones in
-  `lib.sh::resolve_feature` and `cmd-show.sh` if the syntax changes.
-- **No source-existence check.** A feature whose source has been removed
-  from the managed clone is still removable from `$CLAUDE_HOME`.
+  `inst_statusline_path`). Intentional — `resolve_feature` checks managed
+  clone, wrong source of truth here. Keep prefix-parsing case statement in
+  sync with `lib.sh::resolve_feature` and `cmd-show.sh` if syntax change.
+- **No source-existence check.** Feature whose source removed from managed
+  clone still removable from `$CLAUDE_HOME`.
 
 ## Domain dependencies
 
-- `../../CLAUDE.md` — "filesystem is the source of truth"; this script's
-  reliance on `installed_kind` rather than a lockfile follows that.
+- `../../CLAUDE.md` — "filesystem is source of truth"; script's reliance on
+  `installed_kind` over lockfile follows that.
 
 ## Cross-references
 
 - [shared-lib.md](./shared-lib.md) — uses `inst_command_path`,
-  `inst_skill_path` / `inst_skill_dir`, and `claudemd_is_installed` /
+  `inst_skill_path` / `inst_skill_dir`, `claudemd_is_installed` /
   `remove_section`.
-- [cmd-add.md](./cmd-add.md) — inverse operation.
-- [cli-entry.md](./cli-entry.md) — `uninstall.sh` performs a bulk variant of
-  this against the managed-clone listing.
+- [cmd-add.md](./cmd-add.md) — inverse op.
+- [cli-entry.md](./cli-entry.md) — `uninstall.sh` does bulk variant of this
+  against managed-clone listing.
 
 ## When to read the source
 
-- Changing how disambiguation works (e.g. adding an interactive prompt
-  instead of `die` on ambiguity) → `scripts/cmd-rm.sh`.
-- Adding a `--all` flag (currently absent — only `update` and `uninstall.sh`
-  do bulk operations) → `cmd-rm.sh`.
+- Changing disambiguation (e.g. interactive prompt instead of `die` on
+  ambiguity) → `scripts/cmd-rm.sh`.
+- Adding `--all` flag (currently absent — only `update` and `uninstall.sh`
+  do bulk ops) → `cmd-rm.sh`.

@@ -105,7 +105,7 @@ Preconditions: none
 
 ## 93. Run /cavecompress lite on CLAUDE.md and .claude/context and .claude/domain files
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: CLAUDE.md, .claude/context/cmd-upgrade.md, .claude/context/cmd-help.md, .claude/context/lib-task-external.md, .claude/context/cmd-channel.md, .claude/context/cli-entry.md, .claude/context/INDEX.md, .claude/context/cmd-add.md, .claude/context/cmd-export.md, .claude/context/cmd-ls.md, .claude/context/cmd-rm.md, .claude/context/cmd-show.md, .claude/context/cmd-task-impl.md, .claude/context/cmd-update.md, .claude/context/shared-lib.md, .claude/context/features.md, .claude/domain/context-workflow.md, .claude/domain/product-workflow.md, .claude/domain/refactor-workflow.md, .claude/domain/task-workflow.md
 Preconditions: none

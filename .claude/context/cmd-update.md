@@ -1,76 +1,77 @@
+Compressed markdown ready.
+
 # cmd-update
 
 ## Overview
 
-`scripts/cmd-update.sh` re-copies a feature from the managed clone into
-`$CLAUDE_HOME`, replacing whatever was there. It installs if missing —
-unlike `add`, it does not refuse on absence.
+`scripts/cmd-update.sh` re-copy feature from managed clone into
+`$CLAUDE_HOME`, replace whatever there. Install if missing —
+unlike `add`, no refuse on absence.
 
 ## Public API
 
 CLI:
 - `chosko-llm update <feature>` — single feature; same spec syntax as `add`
   (`<name>`, `command:`/`skill:`/`claude-md:`/`statusline:` prefixed).
-  Installs if missing.
+  Install if missing.
 - `chosko-llm update --all` — iterate installed commands
   (`$CLAUDE_HOME/commands/*.md`), skills (`$CLAUDE_HOME/skills/*/`),
-  claude-md sections (markers in `$CLAUDE_HOME/CLAUDE.md`), and statusline
-  scripts (`$CLAUDE_HOME/statusline/*.sh`), updating only those whose
-  managed-clone source version is **newer** than installed.
+  claude-md sections (markers in `$CLAUDE_HOME/CLAUDE.md`), statusline
+  scripts (`$CLAUDE_HOME/statusline/*.sh`), update only those whose
+  managed-clone source version **newer** than installed.
 
 Exit codes:
-- 0 on success (including `--all` with nothing to update).
-- 1 (via `die`) on no argument, missing source, or missing/invalid
-  frontmatter on the source.
+- 0 success (including `--all` with nothing to update).
+- 1 (via `die`) on no argument, missing source, missing/invalid
+  frontmatter on source.
 
 Side effects:
-- Single feature: deletes the existing target (`rm -f` for command/statusline,
-  `rm -rf` for skill) then copies fresh (`chmod +x` for statusline);
-  claude-md re-injects via `inject_section`.
-- `--all`: per installed feature, compares versions with `version_cmp` and
-  logs `Already up-to-date` (equal), `Local version ahead … — skipping`
-  (installed newer), or updates (source newer). Emits
-  `Skipping <kind> '<base>': no source in managed clone.` when the source has
-  disappeared, and `Skipping … version unreadable` when a version can't be
-  parsed.
+- Single feature: delete existing target (`rm -f` for command/statusline,
+  `rm -rf` for skill), copy fresh (`chmod +x` for statusline);
+  claude-md re-inject via `inject_section`.
+- `--all`: per installed feature, compare versions with `version_cmp`,
+  log `Already up-to-date` (equal), `Local version ahead … — skipping`
+  (installed newer), or update (source newer). Emit
+  `Skipping <kind> '<base>': no source in managed clone.` when source
+  disappeared, `Skipping … version unreadable` when version unparseable.
 - One `Updated <kind> '<name>' -> v<version>` log line per actual update.
 
 ## Internal patterns
 
-- **Replace, don't merge.** Skills are deleted then re-copied wholesale; a
-  file removed from the source skill folder will disappear from the
-  installed skill folder. This is by design.
-- **Validation precedes mutation.** Same `require_versioned_source` guard as
+- **Replace, not merge.** Skills deleted then re-copied wholesale; file
+  removed from source skill folder disappears from installed skill folder.
+  By design.
+- **Validation before mutation.** Same `require_versioned_source` guard as
   `cmd-add`.
-- **`--all` is version-aware.** `version_cmp` (an awk semver comparator,
-  expects `x.y.z`) gates each update so only genuinely-newer sources are
-  copied; up-to-date and locally-ahead features are left alone. A skip
-  warning is *not* an error — the script exits 0 even if everything was
-  skipped, logging `Nothing to update.` only when no candidates were touched.
-- **Single-feature path uses `resolve_feature`** (managed clone), so it can
-  install-if-missing. The `--all` path iterates `$CLAUDE_HOME` directly,
-  including the CLAUDE.md section markers for claude-md artifacts.
+- **`--all` version-aware.** `version_cmp` (awk semver comparator,
+  expects `x.y.z`) gates each update — only genuinely-newer sources
+  copied; up-to-date and locally-ahead features left alone. Skip
+  warning *not* error — script exits 0 even if all skipped, logs
+  `Nothing to update.` only when no candidates touched.
+- **Single-feature path uses `resolve_feature`** (managed clone) — can
+  install-if-missing. `--all` path iterates `$CLAUDE_HOME` directly,
+  including CLAUDE.md section markers for claude-md artifacts.
 
 ## Domain dependencies
 
-- `../../docs/authoring-guide.md` — versioning rules. `update --all` is the
-  user's primary mechanism for picking up new versions; an unbumped
-  `version` defeats it visually but the copy still happens (file content is
+- `../../docs/authoring-guide.md` — versioning rules. `update --all` is
+  user's primary mechanism for picking up new versions; unbumped
+  `version` defeats it visually but copy still happens (file content
   refreshed regardless).
-- `../../CLAUDE.md` — "filesystem is the source of truth".
+- `../../CLAUDE.md` — "filesystem is source of truth".
 
 ## Cross-references
 
 - [shared-lib.md](./shared-lib.md) — `resolve_feature`,
   `require_versioned_source`, path helpers.
 - [cmd-add.md](./cmd-add.md) — installs-only-if-absent counterpart.
-- [cmd-upgrade.md](./cmd-upgrade.md) — the typical user flow is
+- [cmd-upgrade.md](./cmd-upgrade.md) — typical user flow:
   `upgrade` (refresh source) then `update --all` (refresh installs).
 
-## When to read the source
+## When to read source
 
-- Changing `--all` version-comparison semantics → `version_cmp` and the
+- Change `--all` version-comparison semantics → `version_cmp` and
   per-kind `--all` blocks in `scripts/cmd-update.sh`.
-- Changing skill-update merge vs. replace behavior → the `skill)` branch's
+- Change skill-update merge vs. replace behavior → `skill)` branch's
   `rm -rf && cp -R` in `cmd-update.sh`.
-- Adding `--dry-run` → `cmd-update.sh`.
+- Add `--dry-run` → `cmd-update.sh`.

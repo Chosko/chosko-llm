@@ -1,103 +1,100 @@
+Compressed version below.
+
 # Refactor workflow — behaviour-preserving, plan-first, phase-gated
 
-This doc explains the philosophy and invariants behind
-`/refactor-codebase`. Read it when touching that command, when extending
-its phase model, or when wiring a related quality-improvement command.
+Doc explain philosophy + invariants behind
+`/refactor-codebase`. Read when touch that command, extend
+phase model, or wire related quality-improvement command.
 
 ## Prime directive: behaviour preservation
 
-`/refactor-codebase` is a **pure refactoring** command. Observable
+`/refactor-codebase` = **pure refactoring** command. Observable
 behaviour — every public function signature, every CLI surface, every
-external integration — must be identical before and after the run. The
-test suite is the contract:
+external integration — identical before + after run. Test suite = contract:
 
-- The suite must be **green at the start**. If the baseline is red or
-  absent, the command stops and reports. It does not "fix tests then
-  refactor" — that conflates two kinds of change.
-- The suite must be **green between phases**. Each phase ends with a
-  full run; a red suite blocks the next phase.
-- A "split" is a pure relocation. Signatures, return types, and control
-  flow do not change inside Phase 3.
+- Suite must be **green at start**. Baseline red or absent → command stop, report. Not "fix tests then
+  refactor" — conflate two kinds change.
+- Suite must be **green between phases**. Each phase end with
+  full run; red suite block next phase.
+- "Split" = pure relocation. Signatures, return types, control
+  flow don't change inside Phase 3.
 
-This is what makes the command safe to run on a working codebase: the
-worst case is a no-op, not a regression.
+Makes command safe run on working codebase: worst case = no-op, not regression.
 
 ## Plan-first, then approval gate
 
-Phase 0 (PREPARATION) ends with a written plan and a hard stop. The
-model does not write code until the user approves. The plan format is
-deliberate:
+Phase 0 (PREPARATION) end with written plan + hard stop. Model
+not write code until user approve. Plan format deliberate:
 
 - **Grouped by concern**, ordered for execution.
-- Every item carries a **risk grade** (LOW/MEDIUM/HIGH). HIGH-risk items
-  — those that touch control flow, external API calls, or shared state
-  — are flagged separately for explicit approval. They can be deferred
-  without blocking the rest of the run.
-- **Preconditions** are explicit so dependent items can't run out of
+- Every item carry **risk grade** (LOW/MEDIUM/HIGH). HIGH-risk items
+  — touch control flow, external API calls, shared state
+  — flagged separately, need explicit approval. Can defer
+  without blocking rest of run.
+- **Preconditions** explicit so dependent items can't run out of
   order.
 
-This separates *deciding* what to refactor from *doing* it. The model
-proposes, the user disposes.
+Separates *deciding* what refactor from *doing* it. Model
+propose, user dispose.
 
-## The five focus concerns
+## Five focus concerns
 
-`focus=` scopes the run to one or more concerns. Default is all five:
+`focus=` scope run to one+ concerns. Default all five:
 
 1. `constants` — extract hardcoded vocabulary (status strings, magic
    numbers, lookup tables) into Enums / dataclasses / module constants.
-   Goal: make invalid states unrepresentable.
+   Goal: invalid states unrepresentable.
 2. `duplication` — extract repeated logic into shared functions, placed
-   in the module most aligned with the concern (not a generic dumping
+   in module most aligned w/ concern (not generic dumping
    ground).
 3. `splitting` — break files over ~300 lines along natural
    responsibility boundaries. One split, one test run.
 4. `imports` — remove unused imports, enforce stdlib → third-party →
    local ordering, replace star imports.
 5. `naming` — rename ambiguous/misleading identifiers. Renames must be
-   in the approved plan; no opportunistic renames mid-phase.
+   in approved plan; no opportunistic renames mid-phase.
 
-Phases run in order 1 → 2 → 3 → 4. Phase 5 updates the context layer
-and stale CLAUDE.md paths. A focus subset skips the phases it doesn't
-touch.
+Phases run order 1 → 2 → 3 → 4. Phase 5 update context layer
++ stale CLAUDE.md paths. Focus subset skip phases it don't touch.
 
 ## `scope=` semantics
 
-`scope=foo,bar` matches by basename without path or extension —
-`main` matches `src/main.py`. Files outside scope are read only when a
-shared dependency forces it. This keeps narrow refactors narrow.
+`scope=foo,bar` match by basename w/o path or extension —
+`main` match `src/main.py`. Files outside scope read only when shared
+dependency force it. Keep narrow refactors narrow.
 
 ## Commit and push
 
-Both `/refactor-codebase` and `/refactor-tests` are authoring commands:
-uncommitted by default, `--commit` opts in. When `--commit` is passed, both
-follow the commit-and-push protocol in
+`/refactor-codebase` + `/refactor-tests` = authoring commands:
+uncommitted by default, `--commit` opts in. When `--commit` passed, both
+follow commit-and-push protocol in
 [docs/authoring-guide.md](../../docs/authoring-guide.md) — pull at start,
-commit, re-sync, push — rather than a plain `git commit`. `--no-push`
-(only meaningful alongside `--commit`) skips the sync/push cycle and
-commits locally only. The algorithm is not re-derived here; see that doc.
+commit, re-sync, push — not plain `git commit`. `--no-push`
+(only meaningful w/ `--commit`) skip sync/push cycle,
+commit locally only. Algorithm not re-derived here; see that doc.
 
-## Integration with the context layer
+## Integration with context layer
 
-If `.claude/context/INDEX.md` exists, the model reads only INDEX during
-preparation to learn the module map — it does not pre-fetch every
-context file. Phase 5 then updates context files whose covered source
-moved, split, or got renamed, applying the same rules as
+If `.claude/context/INDEX.md` exists, model read only INDEX during
+preparation to learn module map — not pre-fetch every
+context file. Phase 5 then update context files whose covered source
+moved, split, or got renamed, apply same rules as
 `/context-update`. Domain knowledge files (this file, others under
-`.claude/domain/`) are not touched.
+`.claude/domain/`) not touched.
 
 ## What this command is NOT
 
-- **Not a feature command.** It does not add or change behaviour.
-- **Not a test-fixing command.** Red baseline → stop.
-- **Not a style-only pass.** Formatting/lint belongs to the project's
-  formatter; this command targets structural improvements.
-- **Not opportunistic.** Every change is in the approved plan. Spotted
-  technical debt outside the plan is reported in the FINAL REPORT, not
+- **Not feature command.** Not add or change behaviour.
+- **Not test-fixing command.** Red baseline → stop.
+- **Not style-only pass.** Formatting/lint belong to project's
+  formatter; this command target structural improvements.
+- **Not opportunistic.** Every change in approved plan. Spotted
+  technical debt outside plan reported in FINAL REPORT, not
   silently fixed.
 
 ## Minimal preconditions for safe use
 
-- A runnable test suite with non-trivial coverage of the affected code.
-- A clean working tree (so the diff is purely the refactor).
-- Optional but recommended: a navigation context layer under
-  `.claude/context/` so the planning step can map the codebase cheaply.
+- Runnable test suite w/ non-trivial coverage of affected code.
+- Clean working tree (diff purely refactor).
+- Optional, recommended: navigation context layer under
+  `.claude/context/` so planning step map codebase cheap.

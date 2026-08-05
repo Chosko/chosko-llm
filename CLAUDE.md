@@ -2,120 +2,59 @@
 
 ## Navigation
 
-For any task involving this codebase, start by reading
-[.claude/context/INDEX.md](.claude/context/INDEX.md). Then read only the
-context files relevant to your task. Open source files (under `scripts/`,
-`bin/`, `install.sh`, `uninstall.sh`, etc.) only when the relevant context
-file's **When to read the source** section indicates it is necessary.
+Any task on this codebase: read [.claude/context/INDEX.md](.claude/context/INDEX.md) first. Then read only context files relevant to task. Open source files (under `scripts/`, `bin/`, `install.sh`, `uninstall.sh`, etc.) only when relevant context file's **When to read the source** section says needed.
 
 ## About
 
-This repo ships global Claude Code **commands** and **skills**, plus a small
-shell CLI (`chosko-llm`) that installs them into `~/.claude/` on any machine.
-There are two roles for the same git repo:
+Repo ships global Claude Code **commands** and **skills**, plus small shell CLI (`chosko-llm`) installing them into `~/.claude/` on any machine. Two roles, same git repo:
 
-- **Working repo** — wherever the user develops. Features are authored and
-  committed here.
-- **Managed clone** at `~/.chosko-llm/` — created by `install.sh`. The
-  `chosko-llm` proxy at `~/bin/chosko-llm` reads from this clone. Never edit it
-  directly.
+- **Working repo** — wherever user develops. Features authored, committed here.
+- **Managed clone** at `~/.chosko-llm/` — created by `install.sh`. `chosko-llm` proxy at `~/bin/chosko-llm` reads from this clone. Never edit direct.
 
-The CLI is a proxy: `~/bin/chosko-llm` parses the subcommand and execs
-`~/.chosko-llm/scripts/cmd-<sub>.sh`. So CLI logic ships via `git pull`
-(`chosko-llm upgrade`), not by re-running `install.sh`.
+CLI is proxy: `~/bin/chosko-llm` parses subcommand, execs `~/.chosko-llm/scripts/cmd-<sub>.sh`. CLI logic ships via `git pull` (`chosko-llm upgrade`), not re-running `install.sh`.
 
 ## Authoritative references
 
-- **Design rules** — see [README.md](README.md) and the design rules embedded
-  in this repo's history (versioning, copy-not-symlink, env overrides
-  `CHOSKO_LLM_HOME` / `CLAUDE_HOME`, idempotency).
-- **Authoring** — [docs/authoring-guide.md](docs/authoring-guide.md) is the
-  source of truth for frontmatter schema, naming, and versioning. Its
-  "docs/ is authoring-time-only" note is load-bearing: `docs/` is never
-  installed to `~/.claude/`, so a shipped command/skill body must never
-  instruct the executing agent to read a `docs/` path at runtime.
-- **Task workflow** — [.claude/domain/task-workflow.md](.claude/domain/task-workflow.md)
-  explains the dual-LLM author/implementer split (Claude Code authors,
-  qwen2.5-coder:14b via aider implements) and the per-task body schema.
-  Read when touching any `task-*` command or the body schema.
-- **Context workflow** — [.claude/domain/context-workflow.md](.claude/domain/context-workflow.md)
-  explains the navigation context layer under `.claude/context/`: why it
-  exists, the six-section per-file schema, the `INDEX.md` `Last updated`
-  anchor, and the four `/context-update` modes. Read when touching
-  `/context-build`, `/context-update`, or the context-file schema.
-- **Refactor workflow** — [.claude/domain/refactor-workflow.md](.claude/domain/refactor-workflow.md)
-  explains the philosophy and invariants behind `/refactor-codebase`:
-  behaviour preservation, plan-first approval gate, the five focus
-  concerns, `scope=` semantics, and phase ordering. Read when touching
-  `/refactor-codebase` or extending its phase model.
-- **Product workflow** — [.claude/domain/product-workflow.md](.claude/domain/product-workflow.md)
-  explains the product pipeline (`/domain-setup` → `/product-design` →
-  `/architect` → `/task-add`): the document set, the `FEATURES.md` schema
-  and feature state machine, the `[STALE]` task status and `Feature:` line,
-  the iterate guard, and the reconciliation protocol. Read when touching
-  any of those commands or the feature/task schemas.
+- **Design rules** — see [README.md](README.md) and design rules embedded in repo history (versioning, copy-not-symlink, env overrides `CHOSKO_LLM_HOME` / `CLAUDE_HOME`, idempotency).
+- **Authoring** — [docs/authoring-guide.md](docs/authoring-guide.md) is source of truth for frontmatter schema, naming, versioning. "docs/ is authoring-time-only" note load-bearing: `docs/` never installed to `~/.claude/`, so shipped command/skill body must never tell executing agent to read `docs/` path at runtime.
+- **Task workflow** — [.claude/domain/task-workflow.md](.claude/domain/task-workflow.md) explains dual-LLM author/implementer split (Claude Code authors, qwen2.5-coder:14b via aider implements) and per-task body schema. Read when touching any `task-*` command or body schema.
+- **Context workflow** — [.claude/domain/context-workflow.md](.claude/domain/context-workflow.md) explains navigation context layer under `.claude/context/`: why exists, six-section per-file schema, `INDEX.md` `Last updated` anchor, four `/context-update` modes. Read when touching `/context-build`, `/context-update`, or context-file schema.
+- **Refactor workflow** — [.claude/domain/refactor-workflow.md](.claude/domain/refactor-workflow.md) explains philosophy + invariants behind `/refactor-codebase`: behaviour preservation, plan-first approval gate, five focus concerns, `scope=` semantics, phase ordering. Read when touching `/refactor-codebase` or extending phase model.
+- **Product workflow** — [.claude/domain/product-workflow.md](.claude/domain/product-workflow.md) explains product pipeline (`/domain-setup` → `/product-design` → `/architect` → `/task-add`): document set, `FEATURES.md` schema + feature state machine, `[STALE]` task status + `Feature:` line, iterate guard, reconciliation protocol. Read when touching those commands or feature/task schemas.
 
 ## Hard rules
 
-- Every command (`commands/<name>.md`) and every skill (`skills/<name>/SKILL.md`)
-  has YAML frontmatter with `name`, `version`, `type`, `description`. Files
-  missing `version` will be rejected by `cmd-add` / `cmd-update`.
-- The filesystem is the source of truth. There is no lockfile. `ls --installed`
-  walks `~/.claude/`; `ls --available` walks `~/.chosko-llm/`.
-- Install mode is **copy**, never symlink. Edits in the working repo do not
-  reach `~/.claude/` until the user runs `chosko-llm update`.
-- All scripts honor `CHOSKO_LLM_HOME` and `CLAUDE_HOME`. Don't hardcode
-  `~/.chosko-llm` or `~/.claude` in new code — use the helpers in
-  `scripts/lib.sh`.
-- Every script under `scripts/` starts with `set -euo pipefail` and sources
-  `lib.sh`.
+- Every command (`commands/<name>.md`) and skill (`skills/<name>/SKILL.md`) needs YAML frontmatter: `name`, `version`, `type`, `description`. Files missing `version` rejected by `cmd-add` / `cmd-update`.
+- Filesystem = source of truth. No lockfile. `ls --installed` walks `~/.claude/`; `ls --available` walks `~/.chosko-llm/`.
+- Install mode: **copy**, never symlink. Edits in working repo don't reach `~/.claude/` until user runs `chosko-llm update`.
+- All scripts honor `CHOSKO_LLM_HOME` and `CLAUDE_HOME`. Don't hardcode `~/.chosko-llm` or `~/.claude` in new code — use helpers in `scripts/lib.sh`.
+- Every script under `scripts/` starts with `set -euo pipefail`, sources `lib.sh`.
 
 ## Testing
 
 Testing policy for /task-implement: skip-tests-unattended
 
-This project has no test suite by design. It ships markdown prompts and thin
-shell wrappers; changes are verified by reading the diff and by running the
-CLI against a real clone.
+No test suite by design. Ships markdown prompts + thin shell wrappers; changes verified by reading diff + running CLI against real clone.
 
 ## Versioning
 
-- Bump the root `VERSION` file on **every change that ships** — features,
-  CLI behavior, scripts, or docs. It is the repo-level version `install.sh`
-  reports; if it never moves, the reported version drifts from reality.
-- Use semver for the bump: **patch** for fixes and doc-only changes,
-  **minor** for a new feature / command / skill, **major** for a breaking
-  change to the CLI surface.
-- The root `VERSION` is distinct from the per-feature `version:` frontmatter
-  on a command or skill (which versions that one feature for `cmd-add` /
-  `cmd-update`). Bumping a feature's frontmatter does **not** replace bumping
-  `VERSION`; a feature change bumps both.
+- Bump root `VERSION` file on **every shipped change** — features, CLI behavior, scripts, docs. It's repo-level version `install.sh` reports; if never moves, reported version drifts from reality.
+- Semver bump: **patch** for fixes/doc-only, **minor** for new feature/command/skill, **major** for breaking CLI surface change.
+- Root `VERSION` distinct from per-feature `version:` frontmatter on command/skill (versions that one feature for `cmd-add` / `cmd-update`). Bumping feature frontmatter doesn't replace bumping `VERSION`; feature change bumps both.
 
-## When asked to add a new feature
+## When asked to add new feature
 
-1. Decide command vs. skill. Commands are single `.md` files; skills are
-   folders with a `SKILL.md` and optional supporting files.
-2. Create the file (or folder + `SKILL.md`) under `commands/` or `skills/`
-   with full frontmatter. `name` MUST match the filename / folder name
-   (kebab-case).
-3. Start at `version: 0.1.0` for new features. See the authoring guide for
-   bump rules.
-4. Tell the user the working-repo verification path:
-   `cd` into a clone where `install.sh` has already run, then
-   `./bin/chosko-llm ls --available` should list the new feature with the
-   correct version.
+1. Decide command vs. skill. Commands = single `.md` files; skills = folders with `SKILL.md` + optional supporting files.
+2. Create file (or folder + `SKILL.md`) under `commands/` or `skills/` with full frontmatter. `name` MUST match filename/folder name (kebab-case).
+3. Start new features at `version: 0.1.0`. See authoring guide for bump rules.
+4. Tell user working-repo verification path: `cd` into clone where `install.sh` already ran, then `./bin/chosko-llm ls --available` should list new feature w/ correct version.
 
 ## When asked to change CLI behavior
 
-CLI logic lives in `bin/chosko-llm` (proxy only — keep it minimal) and
-`scripts/cmd-*.sh`. Shared helpers belong in `scripts/lib.sh`. Changes ride
-to users via `chosko-llm upgrade`; users do not need to re-run `install.sh`
-unless `bin/chosko-llm` itself changed in a way that broke pre-existing
-proxies — in that case, document it in the commit.
+CLI logic lives in `bin/chosko-llm` (proxy only — keep minimal) and `scripts/cmd-*.sh`. Shared helpers in `scripts/lib.sh`. Changes ride to users via `chosko-llm upgrade`; users needn't re-run `install.sh` unless `bin/chosko-llm` itself changed in way that broke pre-existing proxies — then document in commit.
 
 ## Things to avoid
 
-- Adding new dependencies (yq, jq, python). Keep everything POSIX-ish bash
-  with awk/sed/grep. `parse_frontmatter` in `lib.sh` is intentionally minimal.
-- Symlink-based install modes. The user has explicitly chosen copy semantics.
-- Lockfiles or state files. The filesystem and frontmatter are the state.
+- New dependencies (yq, jq, python). Keep everything POSIX-ish bash w/ awk/sed/grep. `parse_frontmatter` in `lib.sh` intentionally minimal.
+- Symlink-based install modes. User explicitly chose copy semantics.
+- Lockfiles or state files. Filesystem + frontmatter is state.

@@ -2,12 +2,10 @@
 
 Last updated: 2026-07-28
 
-Navigation layer for `chosko-llm`. Read this first, then the files relevant to
-your task. Open source files only when a context file's **When to read the
-source** section says it's necessary.
+Nav layer for `chosko-llm`. Read this first, then files relevant to task. Open source files only when context file's **When to read the source** section say necessary.
 
-Canonical project docs live outside this folder and remain authoritative:
-- `../../CLAUDE.md` — hard rules and authoring entry-point.
+Canonical project docs live outside this folder, stay authoritative:
+- `../../CLAUDE.md` — hard rules, authoring entry-point.
 - `../../README.md` — user-facing overview.
 - `../../docs/authoring-guide.md` — frontmatter/versioning truth.
 - `../../docs/cli-help.txt` — CLI help text shipped to users.
@@ -16,33 +14,32 @@ Canonical project docs live outside this folder and remain authoritative:
 
 | File | Covers |
 | --- | --- |
-| [cli-entry.md](./cli-entry.md) | Bootstrap (`install.sh`/`uninstall.sh`), the `bin/chosko-llm` proxy that dispatches subcommands, and the daily auto-upgrade hook. |
+| [cli-entry.md](./cli-entry.md) | Bootstrap (`install.sh`/`uninstall.sh`), `bin/chosko-llm` proxy dispatch subcommands, daily auto-upgrade hook. |
 | [shared-lib.md](./shared-lib.md) | `scripts/lib.sh` — logging, colors, frontmatter, path resolution, claude-md sections, statusline prompt, auto-upgrade state, validation. Sourced by every subcommand. |
-| [cmd-ls.md](./cmd-ls.md) | `scripts/cmd-ls.sh` — list features with installed/latest versions; `--installed` / `--available` filters; TTY footer hints. |
-| [cmd-show.md](./cmd-show.md) | `scripts/cmd-show.sh` — inspect one feature (versions, status, description, body/diff); handles local-only. |
-| [cmd-add.md](./cmd-add.md) | `scripts/cmd-add.sh` — install a feature (command/skill/claude-md/statusline, or `--all`) into `$CLAUDE_HOME`; refuses if already installed. |
-| [cmd-rm.md](./cmd-rm.md) | `scripts/cmd-rm.sh` — uninstall a feature (command/skill/claude-md/statusline) from `$CLAUDE_HOME`. |
-| [cmd-update.md](./cmd-update.md) | `scripts/cmd-update.sh` — re-copy a feature (or version-aware `--all`); installs if missing. |
-| [cmd-upgrade.md](./cmd-upgrade.md) | `scripts/cmd-upgrade.sh` — `git pull` the managed clone, refresh the proxy; `--enable-auto`/`--disable-auto` toggles. |
-| [cmd-channel.md](./cmd-channel.md) | `scripts/cmd-channel.sh` — point the managed clone at a branch ('channel') to test unmerged work; no-arg shows current, `--list` shows available, `<branch>` switches + refreshes the proxy. |
-| [cmd-export.md](./cmd-export.md) | `scripts/cmd-export.sh` — package a repo's Claude config into a Markdown file or a zip via `select_export_files`; output dir from `export_dir_path`. |
+| [cmd-ls.md](./cmd-ls.md) | `scripts/cmd-ls.sh` — list features w/ installed/latest versions; `--installed` / `--available` filters; TTY footer hints. |
+| [cmd-show.md](./cmd-show.md) | `scripts/cmd-show.sh` — inspect one feature (versions, status, description, body/diff); handle local-only. |
+| [cmd-add.md](./cmd-add.md) | `scripts/cmd-add.sh` — install feature (command/skill/claude-md/statusline, or `--all`) into `$CLAUDE_HOME`; refuse if already installed. |
+| [cmd-rm.md](./cmd-rm.md) | `scripts/cmd-rm.sh` — uninstall feature (command/skill/claude-md/statusline) from `$CLAUDE_HOME`. |
+| [cmd-update.md](./cmd-update.md) | `scripts/cmd-update.sh` — re-copy feature (or version-aware `--all`); install if missing. |
+| [cmd-upgrade.md](./cmd-upgrade.md) | `scripts/cmd-upgrade.sh` — `git pull` managed clone, refresh proxy; `--enable-auto`/`--disable-auto` toggle. |
+| [cmd-channel.md](./cmd-channel.md) | `scripts/cmd-channel.sh` — point managed clone at branch ('channel') to test unmerged work; no-arg show current, `--list` show available, `<branch>` switch + refresh proxy. |
+| [cmd-export.md](./cmd-export.md) | `scripts/cmd-export.sh` — package repo's Claude config into Markdown file or zip via `select_export_files`; output dir from `export_dir_path`. |
 | [cmd-help.md](./cmd-help.md) | `scripts/cmd-help.sh` — print `docs/cli-help.txt` or fallback help. |
-| [cmd-task-impl.md](./cmd-task-impl.md) | `scripts/cmd-task-impl.sh` — external-LLM (aider+Ollama) orchestrator of the 7-step task-implement flow for the current project. |
+| [cmd-task-impl.md](./cmd-task-impl.md) | `scripts/cmd-task-impl.sh` — external-LLM (aider+Ollama) orchestrator of 7-step task-implement flow for current project. |
 | [lib-task-external.md](./lib-task-external.md) | `scripts/lib-task-external.sh` — project-scoped backlog parse/mutate/guard helpers beneath `cmd-task-impl.sh`. |
-| [features.md](./features.md) | Shipped artifacts under `commands/`, `skills/`, `claude-md/`, and `statusline/`; cross-refs to the authoring guide. |
+| [features.md](./features.md) | Shipped artifacts under `commands/`, `skills/`, `claude-md/`, `statusline/`; cross-refs to authoring guide. |
 
 ## Domain
 
 | File | Covers |
 | --- | --- |
 | [../domain/task-workflow.md](../domain/task-workflow.md) | Dual-LLM task workflow: Claude Code authors via `/task-add`, qwen2.5-coder:14b via aider implements. Body schema, body↔TASKS.md split, static implement-prompt artifact. |
-| [../domain/context-workflow.md](../domain/context-workflow.md) | Navigation context layer under `.claude/context/`: six-section per-file schema, INDEX.md `Last updated` anchor, four `/context-update` modes. |
-| [../domain/refactor-workflow.md](../domain/refactor-workflow.md) | Behaviour-preserving refactor workflow: prime directive, plan-first approval gate, the five focus concerns, `scope=` semantics, phase ordering. |
-| [../domain/product-workflow.md](../domain/product-workflow.md) | Product pipeline (`/domain-setup` → `/product-design` → `/architect` → `/task-add`): document set, `FEATURES.md` schema and feature state machine, `[STALE]` status and `Feature:` line, iterate guard, reconciliation protocol. |
+| [../domain/context-workflow.md](../domain/context-workflow.md) | Nav context layer under `.claude/context/`: six-section per-file schema, INDEX.md `Last updated` anchor, four `/context-update` modes. |
+| [../domain/refactor-workflow.md](../domain/refactor-workflow.md) | Behaviour-preserving refactor workflow: prime directive, plan-first approval gate, five focus concerns, `scope=` semantics, phase ordering. |
+| [../domain/product-workflow.md](../domain/product-workflow.md) | Product pipeline (`/domain-setup` → `/product-design` → `/architect` → `/task-add`): document set, `FEATURES.md` schema + feature state machine, `[STALE]` status + `Feature:` line, iterate guard, reconciliation protocol. |
 
 ## Conventions
 
-- Source references use repo-root-relative paths and fully qualified names,
-  e.g. `scripts/lib.sh::resolve_feature`.
+- Source references use repo-root-relative paths + fully qualified names, e.g. `scripts/lib.sh::resolve_feature`.
 - Cross-references to sibling context files use relative links (`./other.md`).
 - Cross-references to canonical docs use `../../`-prefixed paths.
