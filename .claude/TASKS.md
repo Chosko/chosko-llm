@@ -87,7 +87,7 @@ Preconditions: none
 
 ## 91. Document that docs/ is not deployed and must not be a runtime source for authored features
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: docs/authoring-guide.md, CLAUDE.md
 Preconditions: none

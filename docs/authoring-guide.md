@@ -3,6 +3,26 @@
 This guide covers how to write new **commands** and **skills** in this repo so
 the `chosko-llm` CLI can install them.
 
+## docs/ is authoring-time-only — never a runtime source
+
+`scripts/cmd-add.sh` installs only `commands/`, `skills/`, `claude-md/`, and
+`statusline/` into `~/.claude/`. `docs/` is never copied there, and a deployed
+command/skill runs with the user's own project as its working directory, not
+this repo — so a path like `docs/authoring-guide.md` does not exist at
+runtime for an installed feature.
+
+This document (and README.md, and a task's Hints when the task is about
+improving this repo) may safely reference `docs/` paths, because those are
+read by a human or by Claude Code working **on this repo**, at authoring
+time. What must **never** happen: a `commands/*.md` or `skills/*/SKILL.md`
+body instructing the agent executing that command/skill to read a `docs/`
+path at runtime. Any procedural content a shipped command or skill actually
+needs must be stated inline in that command/skill's own file — or, if it
+needs to reach the user's global `CLAUDE.md`, shipped as a `claude-md`
+feature, since that's the only `docs`-adjacent content that actually gets
+merged into an installed target. See CLAUDE.md's "Authoritative references"
+section for the one-line pointer back to this note.
+
 ## Frontmatter schema
 
 Every feature file starts with a YAML frontmatter block. All four fields are
@@ -269,3 +289,9 @@ a project-level fact recorded once in that project's CLAUDE.md by
 - **Editing the managed clone (`~/.chosko-llm/`) directly.** `chosko-llm upgrade`
   will refuse to fast-forward over local changes. Always edit the working repo,
   push, then `upgrade`.
+- **Telling a shipped command/skill to read a `docs/` path at runtime.**
+  `docs/` is never installed to `~/.claude/`, so the executing agent has no
+  such file at hand — this creates a dangling reference the moment the
+  command runs in a deployed target. Fix: inline the procedure in the
+  command/skill body itself, or ship it as a `claude-md` feature if it needs
+  to reach the user's global `CLAUDE.md`.
