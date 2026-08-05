@@ -51,7 +51,7 @@ Preconditions: 97
 
 ## 99. Add nested-layout support to /context-update
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/context-update/SKILL.md, skills/context-update/nested.md, VERSION
 Preconditions: 97

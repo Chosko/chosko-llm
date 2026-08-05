@@ -1,8 +1,8 @@
 ---
 name: context-update
-version: 1.3.0
+version: 1.4.0
 type: skill
-description: Update an existing navigation context layer after code changes, then auto-commit and push the context files it updated. Pass --no-commit to leave them uncommitted, or --no-push to commit without pushing.
+description: Update an existing navigation context layer after code changes, then auto-commit and push the context files it updated. Works on both flat and nested layers; on a nested layer pass unit=<names> to scope the run to specific units. Pass --no-commit to leave them uncommitted, or --no-push to commit without pushing.
 replaces: command:context-update
 ---
 
@@ -48,8 +48,26 @@ replaces: command:context-update
 # Usage — commit as usual but skip the push:
 #   /context-update --no-push
 #   Combinable with any mode: /context-update full --no-push
+#
+# Usage — nested layers only: update only specific units (leaves):
+#   /context-update unit=api,worker
+#   Also disambiguates a files= name that exists in more than one unit:
+#   /context-update unit=api files=client
 
 $ARGUMENTS
+
+SUPPORTING FILES (read on demand — not up front)
+
+This skill's common path is the whole of SKILL.md: a flat context layer,
+one `INDEX.md` with every context file beside it. The nested path lives in
+a sibling file, so a flat run never pays for it.
+
+| Read this file | Exactly when |
+| -------------- | ------------ |
+| `./nested.md`  | PREPARATION step P.2a read `Layout: nested` from the index. |
+
+Do not read `./nested.md` speculatively. On a flat run the file is never
+opened.
 
 ---
 
@@ -61,11 +79,18 @@ P.1 Locate the context layer:
     - If still not found, abort and tell the user to run /context-build first
       to create the initial context layer.
 
-P.2 Read INDEX.md to get:
-    - The `Layout:` marker line directly under the title (see P.2a).
+P.2 Read INDEX.md and resolve the layout marker (P.2a) FIRST, before taking
+    anything else from the file. Once the layout is known to be flat, take
+    from INDEX.md:
     - The full list of context files and their one-line descriptions.
     - The "Last updated" timestamp (format: YYYY-MM-DD).
     Do not read any context files or source files yet.
+
+    On a nested layer the index is a router: it lists units, not context
+    files, and it carries no "Last updated" at all. Do not read a date from
+    it, and do not treat its absence as the missing-date fallback — that
+    fallback is a flat-layout rule. `./nested.md` states how the file list
+    and the dates are resolved instead.
 
 P.2a Detect the layout from the marker, and only from the marker:
     - `Layout: flat` → LAYOUT = flat.
@@ -75,11 +100,16 @@ P.2a Detect the layout from the marker, and only from the marker:
     Never infer the layout from folder counts, subdirectories, or file
     contents. The marker line is the only source of truth.
 
-    If LAYOUT is nested, STOP immediately. Report that the layer declares
-    `Layout: nested`, that this skill does not yet support the nested layout,
-    and that nested support arrives in a later release. Write nothing, stage
-    nothing, commit nothing. Do not fall back to treating the layer as flat —
-    a half-handled nested run would stamp dates and stage files wrongly.
+    If LAYOUT is nested, read `./nested.md` now and follow it for the rest
+    of the run. It replaces P.2's file list, P.3's mode resolution, P.4's
+    scope report, Phase 2 step 2.4 and Phase 3's staging list; everything
+    else in this file still applies. Do not carry on down the flat path — a
+    half-handled nested run would stamp dates and stage files wrongly.
+    BACKFILL_MARKER is never true on a nested layer: the marker was read, so
+    there is nothing to backfill.
+
+    If LAYOUT is flat, do not open `./nested.md` at all. This is the common
+    path and the rest of this file is written for it.
 
 P.3 Parse $ARGUMENTS. First, check for the confirmation flag:
 
