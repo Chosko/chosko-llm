@@ -130,6 +130,42 @@ Context bundle above.>
 
 `Target:` is updated to `local` when the body is enriched.
 
+## Short-form body schema (`--short`)
+
+`/task-add --short` is for trivial, low-ambiguity tasks where the normal
+deep PHASE 1 investigation (reading CLAUDE.md, `.claude/context/`, and
+`.claude/domain/` files for grounding) costs more tokens than the task
+itself. It trades pre-implementation grounding for insertion-time
+efficiency: `/task-implement` resolves the details at execution time
+instead.
+
+```
+# Task <N> — <Title>
+
+Target: claude
+
+## Goal
+<1–3 sentences: what and why. No more.>
+
+## Decisions
+<Only present when a genuine non-obvious call was made during the (now
+minimal) authoring pass, exactly as in the thin schema. Usually absent.>
+```
+
+`## Acceptance criteria` and `## Hints` are omitted entirely — not left as
+placeholders — since authoring them without the deep investigation would
+likely produce content that is wrong or vacuous. PHASE 1.5 (split check) is
+skipped entirely under `--short`, same as `--no-split`: a task specific
+enough to qualify for `--short` is by definition not a bundle of
+independent deliverables. PHASE 2 is not skipped wholesale, though — it
+still asks about ambiguity inherent to the user's own description; it just
+does not ask about ambiguity that would only have surfaced through the
+investigation `--short` skips.
+
+`--short` is mutually exclusive with `--enrich` and with `feature=<slug>`
+— both imply exactly the deep investigation `--short` exists to skip. It
+composes normally with `--no-commit` and `--no-push`.
+
 ## TASKS.md summary block format
 
 ```

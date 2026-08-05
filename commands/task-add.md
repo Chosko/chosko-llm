@@ -1,8 +1,8 @@
 ---
 name: task-add
-version: 0.13.0
+version: 0.14.0
 type: command
-description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit and push. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, appending a final documentation-update task when new tasks were drafted, and setting the feature [PLANNED]. Pass --enrich to produce a self-contained body for a local LLM in one shot, --no-split to always write exactly one task, --no-commit to write the files but skip the commit (and push), or --no-push to commit without pushing.
+description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit and push. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, appending a final documentation-update task when new tasks were drafted, and setting the feature [PLANNED]. Pass --enrich to produce a self-contained body for a local LLM in one shot, --short for trivial low-ambiguity tasks to skip the deep PHASE 1 investigation and write a minimal Goal-only body (mutually exclusive with --enrich and feature=), --no-split to always write exactly one task, --no-commit to write the files but skip the commit (and push), or --no-push to commit without pushing.
 ---
 
 # /task-add
@@ -14,10 +14,11 @@ description: Plan a new task entry conversationally, confirm with the user, writ
 # units; pass `--no-split` to always get exactly one task. With
 # `feature=<slug>`, plans from a `/architect` feature document instead of a
 # prose description, and reconciles tasks that feature already generated.
-# Usage: /task-add [--enrich] [--no-split] [--no-commit] [--no-push] <free-form description of the task>
+# Usage: /task-add [--enrich] [--short] [--no-split] [--no-commit] [--no-push] <free-form description of the task>
 #        /task-add feature=<slug> [--enrich] [--no-split] [--no-commit] [--no-push] [scope-narrowing text]
 # Example: /task-add fix the URL normalization so two LinkedIn URLs dedupe
 # Example: /task-add --enrich add CSV export command
+# Example: /task-add --short document the current deployment method
 # Example: /task-add --no-split add CSV export and PDF export commands
 # Example: /task-add feature=session-handling
 # Example: /task-add feature=user-profile just the avatar upload
@@ -43,6 +44,11 @@ in one shot — read `commands/task-enrich.md` for the enriched format and
 apply it directly during authoring. Do not write a plain body first and then
 enrich it.
 
+With `--short`, skip the deep PHASE 1 investigation for a trivial,
+low-ambiguity task and write a minimal Goal-only body instead — see the
+ARGUMENT NOTE and SHORT-FORM BODY sections below. `--short` is mutually
+exclusive with `--enrich` and `feature=<slug>`.
+
 Never write to any file before the user confirms the draft.
 
 $ARGUMENTS
@@ -66,13 +72,31 @@ strip it; PHASE 1.5 is skipped entirely and exactly one task is always
 written. When NO_SPLIT is false (the default), PHASE 1.5 considers whether
 a split would produce better units.
 
+Also scan for the optional `--short` flag. If present, set SHORT = true and
+strip it. `--short` is for trivial, low-ambiguity tasks where the normal
+deep PHASE 1 investigation costs more tokens than the task itself; under
+SHORT, PHASE 1 is reduced to the minimum needed to fill the `Files:` line
+(light Grep/Glob only — no reading of CLAUDE.md, `.claude/context/`, or
+`.claude/domain/` files for grounding), PHASE 1.5 is skipped entirely
+exactly as under `--no-split` (a short task is never split; SHORT implies
+NO_SPLIT = true), and the body is written using the SHORT-FORM BODY schema
+below instead of the default one. PHASE 2 still runs — SHORT only removes
+the deep-investigation source of open questions, not ambiguity inherent to
+the user's own description (see PHASE 2 below). `--short` is mutually
+exclusive with `--enrich` and with `feature=<slug>` — both imply exactly
+the deep investigation `--short` exists to skip. If `--short` appears with
+either, stop with: `--short cannot be combined with --enrich or
+feature=<slug>. Pick one.` `--short` composes normally with `--no-commit`
+and `--no-push`.
+
 Finally, scan for an optional `feature=<slug>` argument. If present, set
-FEATURE = the slug and strip it; it composes with all three flags above.
-Whatever free-form text remains is NOT the task description in this mode —
-it narrows or annotates the scope (`feature=user-profile just the avatar
-upload`), and the feature document stays the primary source. When FEATURE
-is unset, every phase behaves exactly as it always has: no feature
-resolution, no reconciliation, no `Feature:` line, no new prompts.
+FEATURE = the slug and strip it; it composes with all flags above except
+`--short` (see the mutual-exclusion rule above). Whatever free-form text
+remains is NOT the task description in this mode — it narrows or annotates
+the scope (`feature=user-profile just the avatar upload`), and the feature
+document stays the primary source. When FEATURE is unset, every phase
+behaves exactly as it always has: no feature resolution, no
+reconciliation, no `Feature:` line, no new prompts.
 
 ---
 
@@ -268,6 +292,29 @@ format guidance of these two sections.
 
 ---
 
+PER-TASK BODY FILE FORMAT — `--short` mode
+
+```
+# Task <N> — <Title>
+
+Target: claude
+
+## Goal
+<1–3 sentences: what and why. No more — a short task resolves its own
+details at implementation time.>
+
+## Decisions
+<Only present when a genuine non-obvious call was made during the (now
+minimal) authoring pass. Same rule as the default schema. Usually absent.>
+```
+
+`## Acceptance criteria` and `## Hints` are omitted entirely — not left as
+placeholders — since authoring them without the deep PHASE 1 investigation
+would produce content that is likely wrong or vacuous. `/task-implement`
+resolves those details at execution time instead.
+
+---
+
 STATUS TAGS (the only allowed values, recorded in TASKS.md)
 
 - `[MISSING]` — behavior not implemented at all. **Default for new tasks.**
@@ -291,6 +338,18 @@ a different pre-implementation state.
 ---
 
 PHASE 1 — READ (silent)
+
+**When SHORT is true**, this phase is reduced to the minimum needed to fill
+the `Files:` line: step 1 below, and step 2 using light Grep/Glob only (no
+Read of CLAUDE.md, `.claude/context/`, or `.claude/domain/` files for
+grounding — the whole point of `--short` is skipping that investigation).
+Steps 3 (Hints) and 5 (`--enrich`, which cannot co-occur with `--short`) do
+not apply, since the short-form body omits `## Hints`. Step 4 (Decisions)
+still applies, but only for non-obvious choices visible from the
+description and the light scan — not from a deep read `--short` skips.
+Step 4b still applies if the light scan or the description itself surfaces
+a manual-intervention need. Continue straight to PHASE 1.5 (skipped, as
+under `--no-split`) and then PHASE 2.
 
 1. Read `.claude/TASKS.md`. Note:
    - The current `Last task number: N` value — new task ID = N + 1.
@@ -345,7 +404,10 @@ saying what you're reading.
 
 ---
 
-PHASE 1.5 — SPLIT CHECK (skipped entirely when NO_SPLIT is true)
+PHASE 1.5 — SPLIT CHECK (skipped entirely when NO_SPLIT is true, or SHORT is
+true — `--short` forces `--no-split` behavior, since a task specific enough
+to qualify for `--short` is by definition not a bundle of independent
+deliverables)
 
 Using the grounded picture from PHASE 1, judge whether the description
 would produce better units as multiple tasks — either because it bundles
@@ -393,6 +455,14 @@ PHASE 2 — ASK (conversational)
 Ask only about things you cannot resolve from the code or the user's
 description. 1–4 focused questions max. Suggest the answer you'd pick and
 why so the user can confirm with a single word.
+
+**When SHORT is true**, this phase is NOT skipped wholesale — it still asks
+about ambiguity inherent to the user's own description (e.g. the
+description admits multiple plausible interpretations, or names a target
+that doesn't clearly resolve). It does not ask about ambiguity that would
+only have surfaced through the deep investigation `--short` skips — those
+are two different sources of open questions, and only the former applies
+under `--short`.
 
 If there are zero open questions after PHASE 1 (and PHASE 1.5), say so in
 one line and skip to PHASE 3.
@@ -471,6 +541,11 @@ Draft body:
   ## Implementation steps   ← --enrich mode only
   …
 ```
+
+**When SHORT is true** (SPLIT is always none in this mode, per PHASE 1.5),
+the draft body omits `## Acceptance criteria` and `## Hints` entirely and
+keeps `## Goal` to 1–3 sentences — see PER-TASK BODY FILE FORMAT — `--short`
+mode above. `## Decisions` remains conditional as usual.
 
 When SPLIT is set (multiple parts), render every part's full draft in one
 message, using sequential IDs starting at `previous Last + 1`:
@@ -770,7 +845,13 @@ DO NOT:
   go together.
 - Bundle multiple commits for a split — PHASE 5 makes exactly one commit
   covering all parts.
-- Run PHASE 1.5 at all when `--no-split` is passed.
+- Run PHASE 1.5 at all when `--no-split` or `--short` is passed.
+- Combine `--short` with `--enrich` or `feature=<slug>` — stop with an
+  error instead (see the ARGUMENT NOTE mutual-exclusion rule).
+- Write placeholder `## Acceptance criteria` or `## Hints` sections in a
+  `--short` body — omit them entirely.
+- Skip PHASE 2 wholesale under `--short` — it still asks about ambiguity
+  inherent to the user's own description.
 - Edit `.claude/domain/features/<slug>.md`, or any other domain document.
   They are read-only here; `/architect` owns them.
 - Write `Doc:` or `Source:` in a `.claude/FEATURES.md` entry. This command

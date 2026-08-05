@@ -15,7 +15,7 @@ Preconditions: none
 
 ## 82. Add --short option to /task-add for lightweight tasks
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-add.md, .claude/domain/task-workflow.md
 Preconditions: none
