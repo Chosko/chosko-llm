@@ -51,9 +51,10 @@ Palette guidance:
 Helper: `_use_color_stdout` — returns 0 when color should apply to stdout.
 
 ### Frontmatter
-- `parse_frontmatter <file>` — emits `key=value` lines for four recognized keys:
-  `name`, `version`, `type`, `description`. Reads only first `--- ... ---` block.
-  Quotes stripped. Unknown keys silently dropped.
+- `parse_frontmatter <file>` — emits `key=value` lines for five recognized keys:
+  `name`, `version`, `type`, `description`, `replaces`. Reads only first
+  `--- ... ---` block. Quotes stripped. Unknown keys silently dropped.
+  `replaces` optional (kind migration, below); other four required in practice.
 - `read_frontmatter_field <file> <field>` — prints one field's value, empty if absent.
 
 ### Path resolution
@@ -102,10 +103,36 @@ finds it while file stays directly executable.
   clone or bare name ambiguous (matches more than one of
   command/skill/claude-md/statusline). Used by `cmd-add` / `cmd-update`.
 
+### Kind migration (`replaces:`)
+Install copy-based, never prunes — feature changing kind
+(`commands/<n>.md` → `skills/<n>/SKILL.md`) would leave stale installed
+artifact beside new one under same `/<n>` name. Superseding feature declares
+`replaces: <kind>:<name>` in frontmatter; helpers act on that. No state file —
+fact rides same `git pull` as rename.
+- `src_path_for_kind <kind> <name>` → managed-clone source file for that kind;
+  non-zero on unknown kind.
+- `parse_replaces_spec <spec>` → splits `command:foo` into `kind\nname`;
+  non-zero if no recognized prefix.
+- `artifact_is_installed <kind> <name>` → 0 if installed under `$CLAUDE_HOME`.
+- `remove_installed_artifact <kind> <name>` → deletes with `cmd-rm` semantics
+  per kind (`rm -f` command/statusline, `rm -rf` skill, `remove_section`
+  claude-md).
+- `apply_replaces <kind> <name>` → post-install hook. Reads the just-installed
+  feature's `replaces:`; if named artifact installed, removes it and logs
+  `Migrated <old-kind> '<name>' -> <new-kind> '<name>'`. Silent when key absent
+  or old artifact not installed. Warns + no-ops on malformed spec or
+  self-replacement. Called by `cmd-add` (single-feature) and `cmd-update`
+  (single-feature + `--all` migration path).
+- `find_replacement <old-kind> <old-name>` → scans managed clone
+  (commands, skills, claude-md, statusline) for feature declaring
+  `replaces: <old-kind>:<old-name>`. Prints `<kind>\n<name>` on first hit,
+  returns 1 on none. Used by `cmd-update --all`'s stale-artifact branch.
+
 ### Validation
 - `require_versioned_source <file>` — `die`s if file missing or its
   frontmatter missing non-empty `version` or `name`. Called by
-  `cmd-add` and `cmd-update` before copying.
+  `cmd-add` and `cmd-update` before copying. Never checks `replaces` —
+  that key always optional.
 
 ### Auto-upgrade state
 Helpers over gitignored key=value file `$CHOSKO_LLM_HOME/.auto-upgrade-state`
@@ -119,9 +146,14 @@ Helpers over gitignored key=value file `$CHOSKO_LLM_HOME/.auto-upgrade-state`
 
 ## Internal patterns
 
-- **Frontmatter parsing awk-only.** Adding fifth field means changing
-  awk regex in `parse_frontmatter`. No yq/jq/python — see
-  `../../CLAUDE.md` hard rules.
+- **Frontmatter parsing awk-only.** Adding sixth field means changing
+  awk regex in `parse_frontmatter` (the fifth, `replaces`, already cost that
+  edit). No yq/jq/python — see `../../CLAUDE.md` hard rules.
+- **Migration is declarative, not a map.** `replaces:` lives on the feature
+  that supersedes the old one, so no rename map / migration script / state
+  file outside the filesystem. `--all` resolves migration from the *stale*
+  side because the replacement isn't installed yet — iterating installed
+  artifacts is the only place the stale one is visible.
 - **Path helpers only place** `$CHOSKO_LLM_HOME` and
   `$CLAUDE_HOME` should concatenate with subpaths. New code must use
   helpers; don't hardcode `~/.chosko-llm` / `~/.claude`.
@@ -155,3 +187,6 @@ Helpers over gitignored key=value file `$CHOSKO_LLM_HOME/.auto-upgrade-state`
   `skill:` prefixes parsed → `resolve_feature` in `lib.sh`.
 - Changing what makes source file installable → `require_versioned_source`
   in `lib.sh`.
+- Changing kind-migration semantics (spec syntax, deletion rules, scan order)
+  → `apply_replaces` / `find_replacement` / `remove_installed_artifact` in
+  `lib.sh`.

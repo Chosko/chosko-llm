@@ -155,3 +155,5 @@ case "$kind" in
     print_statusline_prompt "$name" "$dst"
     ;;
 esac
+
+apply_replaces "$kind" "$name"

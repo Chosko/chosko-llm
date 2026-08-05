@@ -70,6 +70,21 @@ update_one() {
   esac
 }
 
+# migrate_stale <installed-kind> <name>
+# An installed artifact has no source in the managed clone. If some feature in
+# the clone declares `replaces: <kind>:<name>`, install that replacement and let
+# apply_replaces drop the stale artifact. Returns 0 when a migration happened,
+# 1 when nothing in the clone claims this artifact.
+migrate_stale() {
+  local old_kind="$1" old_name="$2" found new_kind new_name
+  found="$(find_replacement "$old_kind" "$old_name" || true)"
+  [ -n "$found" ] || return 1
+  new_kind="$(printf '%s\n' "$found" | sed -n 1p)"
+  new_name="$(printf '%s\n' "$found" | sed -n 2p)"
+  update_one "$new_kind" "$new_name"
+  apply_replaces "$new_kind" "$new_name"
+}
+
 # version_cmp <a> <b>
 # Prints -1, 0, or 1 — the ordering of semver strings a vs b.
 # Returns non-zero exit code if either string is empty or non-semver.
@@ -106,6 +121,8 @@ if [ "$1" = "--all" ]; then
         esac
         update_one command "$base"
         any=1
+      elif migrate_stale command "$base"; then
+        any=1
       else
         log_warn "Skipping command '$base': no source in managed clone."
       fi
@@ -129,6 +146,8 @@ if [ "$1" = "--all" ]; then
         esac
         update_one skill "$base"
         any=1
+      elif migrate_stale skill "$base"; then
+        any=1
       else
         log_warn "Skipping skill '$base': no source in managed clone."
       fi
@@ -151,6 +170,8 @@ if [ "$1" = "--all" ]; then
         esac
         update_one claude-md "$name"
         any=1
+      elif migrate_stale claude-md "$name"; then
+        any=1
       else
         log_warn "Skipping claude-md '$name': no source in managed clone."
       fi
@@ -172,6 +193,8 @@ if [ "$1" = "--all" ]; then
         esac
         update_one statusline "$base"
         any=1
+      elif migrate_stale statusline "$base"; then
+        any=1
       else
         log_warn "Skipping statusline '$base': no source in managed clone."
       fi
@@ -186,3 +209,4 @@ fi
 spec="$1"
 mapfile -t resolved < <(resolve_feature "$spec")
 update_one "${resolved[0]}" "${resolved[1]}"
+apply_replaces "${resolved[0]}" "${resolved[1]}"

@@ -32,6 +32,12 @@ Side effects:
   copy-pasteable prompt for wiring `"statusLine"` key in
   `$CLAUDE_HOME/settings.json` — no settings.json edit here.
 - Logs single `Installed <kind> '<name>' v<version> -> <path>` line.
+- Single-feature path only: after install, `apply_replaces` honours the
+  source's optional `replaces: <kind>:<name>` — removes that artifact if
+  installed, logs `Migrated <old-kind> '<name>' -> <new-kind> '<name>'`.
+  Silent when key absent or old artifact not installed. `--all` loop does
+  **not** call it; a stale artifact left that way is picked up by
+  `update --all`'s migration path.
 
 ## Internal patterns
 
@@ -67,4 +73,6 @@ Side effects:
 - Changing what gets copied for skill (e.g. excluding patterns) →
   `cp -R` call in `skill)` branch and `--all` loop of `cmd-add.sh`.
 - Tweaking success log line format → `cmd-add.sh`.
+- Changing kind-migration behavior on install → `apply_replaces` call after
+  the `esac` in `cmd-add.sh`, and `apply_replaces` in `lib.sh`.
 - Changing `--all` enumeration or skip logic → `--all` block in `cmd-add.sh`.

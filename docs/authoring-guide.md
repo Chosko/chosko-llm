@@ -46,6 +46,49 @@ description: One short sentence summarizing the feature.
 | `type`        | `command` for `commands/*.md`, `skill` for `skills/*/SKILL.md`, `claude-md` for `claude-md/*.md`, `statusline` for `statusline/*.sh`. |
 | `description` | A single paragraph, no line breaks. For a simple feature, one short sentence is enough. A command or skill with several flags/modes may use a longer, multi-clause description that documents them — that detail is what `chosko-llm show <feature>` and (for skills) Claude Code's own skill-discovery listing surface to the user before they read the body. `chosko-llm ls` does not print `description` at all (see its `NAME KIND INSTALLED LATEST STATUS` columns), so description length never affects that table. |
 
+### `replaces:` — the optional fifth field
+
+A fifth key, `replaces:`, is optional and unset on almost every feature. Set it
+only when a feature **changes kind** — most often when `commands/<n>.md` is
+rewritten as `skills/<n>/SKILL.md`.
+
+Install is copy-based and never prunes, so without it the old artifact stays
+installed forever next to the new one: two definitions of one `/<n>` slash
+command. `update --all` would only report
+`Skipping command '<n>': no source in managed clone.` and leave it there.
+
+```markdown
+---
+name: context-build
+version: 1.0.0
+type: skill
+description: Build a navigation context layer.
+replaces: command:context-build
+---
+```
+
+| Field      | Rules                                                                  |
+| ---------- | ---------------------------------------------------------------------- |
+| `replaces` | Optional. A kind-prefixed spec: `command:<name>`, `skill:<name>`, `claude-md:<name>`, or `statusline:<name>`. Names the artifact this feature supersedes. A feature may not name itself. |
+
+What the CLI does with it:
+
+- `chosko-llm add <spec>` / `chosko-llm update <spec>` — after installing the
+  feature, if the named artifact is installed, remove it (same deletion
+  semantics as `chosko-llm rm` for that kind) and log
+  `Migrated command 'context-build' -> skill 'context-build'`. If it is not
+  installed, nothing happens and nothing is logged.
+- `chosko-llm update --all` — when an installed artifact has no source in the
+  managed clone, the clone is scanned for a feature declaring `replaces:` for
+  it. On a hit, the replacement is installed and the stale artifact removed. On
+  no hit, the usual `Skipping … no source in managed clone.` warning is emitted.
+
+**Drop the key a release or two after the migration has propagated.** It exists
+to fix up installs that predate the rename; once everyone has run
+`chosko-llm upgrade && chosko-llm update --all`, it is dead weight, and a stale
+`replaces:` will delete a genuinely new artifact if someone later reuses the old
+name for the old kind.
+
 ## <a id="commands"></a>Authoring a command
 
 1. Create `commands/<name>.md`.

@@ -28,12 +28,16 @@ Exit codes:
 Side effects:
 - Single feature: delete existing target (`rm -f` for command/statusline,
   `rm -rf` for skill), copy fresh (`chmod +x` for statusline);
-  claude-md re-inject via `inject_section`.
+  claude-md re-inject via `inject_section`. Then `apply_replaces` — if
+  source frontmatter carries `replaces: <kind>:<name>` and that artifact
+  installed, remove it, log `Migrated <old-kind> '<name>' -> <new-kind>
+  '<name>'`. Silent otherwise.
 - `--all`: per installed feature, compare versions with `version_cmp`,
   log `Already up-to-date` (equal), `Local version ahead … — skipping`
-  (installed newer), or update (source newer). Emit
-  `Skipping <kind> '<base>': no source in managed clone.` when source
-  disappeared, `Skipping … version unreadable` when version unparseable.
+  (installed newer), or update (source newer). When source disappeared,
+  try `migrate_stale` first (below); only on no replacement emit
+  `Skipping <kind> '<base>': no source in managed clone.`.
+  `Skipping … version unreadable` when version unparseable.
 - One `Updated <kind> '<name>' -> v<version>` log line per actual update.
 
 ## Internal patterns
@@ -51,6 +55,13 @@ Side effects:
 - **Single-feature path uses `resolve_feature`** (managed clone) — can
   install-if-missing. `--all` path iterates `$CLAUDE_HOME` directly,
   including CLAUDE.md section markers for claude-md artifacts.
+- **`migrate_stale <kind> <name>`** (script-local, defined above
+  `version_cmp`) hooks the existing "no source" branch of all four `--all`
+  loops — no new iteration pass. Calls `find_replacement`; on hit runs
+  `update_one` for the replacement then `apply_replaces` to drop the stale
+  artifact, and sets `any=1`. Returns 1 on no hit so the `elif` falls through
+  to the unchanged warning. Globs expand before the loop body runs, so
+  deleting the current entry mid-loop is safe.
 
 ## Domain dependencies
 
@@ -72,6 +83,8 @@ Side effects:
 
 - Change `--all` version-comparison semantics → `version_cmp` and
   per-kind `--all` blocks in `scripts/cmd-update.sh`.
+- Change kind-migration behavior on `--all` → `migrate_stale` in
+  `cmd-update.sh` and `find_replacement` / `apply_replaces` in `lib.sh`.
 - Change skill-update merge vs. replace behavior → `skill)` branch's
   `rm -rf && cp -R` in `cmd-update.sh`.
 - Add `--dry-run` → `cmd-update.sh`.

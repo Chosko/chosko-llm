@@ -15,7 +15,7 @@ Preconditions: none
 
 ## 95. Support feature kind migration (command → skill) in the CLI
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/lib.sh, scripts/cmd-update.sh, scripts/cmd-add.sh, docs/authoring-guide.md, .claude/context/shared-lib.md, .claude/context/cmd-update.md, .claude/context/cmd-add.md, VERSION
 Preconditions: none

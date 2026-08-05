@@ -62,7 +62,8 @@ fi
 # ---------- frontmatter ----------
 
 # parse_frontmatter <file>
-# Emits key=value lines for: name, version, type, description.
+# Emits key=value lines for: name, version, type, description, replaces.
+# `replaces` is optional — see the kind-migration section below.
 # Reads only the first YAML frontmatter block delimited by --- ... ---.
 # Quietly ignores keys it doesn't care about.
 parse_frontmatter() {
@@ -88,7 +89,7 @@ parse_frontmatter() {
       if (val ~ /^".*"$/ || val ~ /^'\''.*'\''$/) {
         val = substr(val, 2, length(val) - 2)
       }
-      if (key == "name" || key == "version" || key == "type" || key == "description") {
+      if (key == "name" || key == "version" || key == "type" || key == "description" || key == "replaces") {
         print key "=" val
       }
     }
@@ -306,6 +307,121 @@ resolve_feature() {
   elif [ $has_sl -eq 1 ];   then printf 'statusline\n%s\n' "$name"
   else die "No feature named '$name' found in $CHOSKO_LLM_HOME (commands/, skills/, claude-md/, or statusline/)."
   fi
+}
+
+# ---------- kind migration (replaces:) ----------
+# Install is copy-based and never prunes, so a feature that changes kind
+# (commands/<n>.md becomes skills/<n>/SKILL.md) would leave the stale installed
+# artifact sitting next to the new one under the same /<n> name. The superseding
+# feature declares `replaces: <kind>:<name>` in its frontmatter; the helpers
+# below act on that declaration. No state file — the fact travels in the same
+# git pull that ships the rename.
+
+# src_path_for_kind <kind> <name>
+# The managed-clone source file for a feature of that kind. Returns non-zero
+# for an unknown kind.
+src_path_for_kind() {
+  case "$1" in
+    command)    src_command_path    "$2" ;;
+    skill)      src_skill_path      "$2" ;;
+    claude-md)  src_claudemd_path   "$2" ;;
+    statusline) src_statusline_path "$2" ;;
+    *) return 1 ;;
+  esac
+}
+
+# parse_replaces_spec <spec>
+# Splits a kind-prefixed spec ("command:foo") into two lines: kind\nname.
+# Returns non-zero if the spec carries no recognized kind prefix.
+parse_replaces_spec() {
+  case "$1" in
+    command:*)    printf 'command\n%s\n'    "${1#command:}"    ;;
+    skill:*)      printf 'skill\n%s\n'      "${1#skill:}"      ;;
+    claude-md:*)  printf 'claude-md\n%s\n'  "${1#claude-md:}"  ;;
+    statusline:*) printf 'statusline\n%s\n' "${1#statusline:}" ;;
+    *) return 1 ;;
+  esac
+}
+
+# artifact_is_installed <kind> <name>
+# Returns 0 if an artifact of that kind/name exists under $CLAUDE_HOME.
+artifact_is_installed() {
+  case "$1" in
+    command)    [ -f "$(inst_command_path    "$2")" ] ;;
+    skill)      [ -d "$(inst_skill_dir       "$2")" ] ;;
+    claude-md)  claudemd_is_installed "$2" ;;
+    statusline) [ -f "$(inst_statusline_path "$2")" ] ;;
+    *) return 1 ;;
+  esac
+}
+
+# remove_installed_artifact <kind> <name>
+# Deletes an installed artifact using the same semantics as `cmd-rm` for its
+# kind. Assumes artifact_is_installed already said yes.
+remove_installed_artifact() {
+  case "$1" in
+    command)    rm -f  "$(inst_command_path    "$2")" ;;
+    skill)      rm -rf "$(inst_skill_dir       "$2")" ;;
+    claude-md)  remove_section "$2" ;;
+    statusline) rm -f  "$(inst_statusline_path "$2")" ;;
+    *) die "Unknown kind: $1" ;;
+  esac
+}
+
+# apply_replaces <kind> <name>
+# Post-install hook: honour the just-installed feature's `replaces:` key. If it
+# names an artifact that is still installed, remove it and log one migration
+# line. Silent when the key is absent or the named artifact is not installed.
+apply_replaces() {
+  local new_kind="$1" new_name="$2" src spec parsed old_kind old_name
+  src="$(src_path_for_kind "$new_kind" "$new_name")" || return 0
+  spec="$(read_frontmatter_field "$src" replaces || true)"
+  [ -n "$spec" ] || return 0
+
+  parsed="$(parse_replaces_spec "$spec" || true)"
+  old_kind="$(printf '%s\n' "$parsed" | sed -n 1p)"
+  old_name="$(printf '%s\n' "$parsed" | sed -n 2p)"
+  if [ -z "$old_kind" ] || [ -z "$old_name" ]; then
+    log_warn "Ignoring malformed 'replaces: $spec' in $src — expected <kind>:<name>."
+    return 0
+  fi
+  if [ "$old_kind" = "$new_kind" ] && [ "$old_name" = "$new_name" ]; then
+    log_warn "Ignoring 'replaces: $spec' in $src — a feature cannot replace itself."
+    return 0
+  fi
+
+  artifact_is_installed "$old_kind" "$old_name" || return 0
+  remove_installed_artifact "$old_kind" "$old_name"
+  log_success "Migrated $old_kind '$old_name' -> $new_kind '$new_name'"
+}
+
+# find_replacement <old-kind> <old-name>
+# Scans the managed clone for the feature declaring `replaces:
+# <old-kind>:<old-name>`. Prints "<kind>\n<name>" on the first hit; prints
+# nothing and returns 1 when no feature claims it.
+find_replacement() {
+  local want="$1:$2" f
+  for f in "$CHOSKO_LLM_HOME"/commands/*.md; do
+    [ -f "$f" ] || continue
+    [ "$(read_frontmatter_field "$f" replaces || true)" = "$want" ] || continue
+    printf 'command\n%s\n' "$(basename "$f" .md)"; return 0
+  done
+  for f in "$CHOSKO_LLM_HOME"/skills/*/SKILL.md; do
+    [ -f "$f" ] || continue
+    [ "$(read_frontmatter_field "$f" replaces || true)" = "$want" ] || continue
+    printf 'skill\n%s\n' "$(basename "$(dirname "$f")")"; return 0
+  done
+  for f in "$CHOSKO_LLM_HOME"/claude-md/*.md; do
+    [ -f "$f" ] || continue
+    [ "$(read_frontmatter_field "$f" replaces || true)" = "$want" ] || continue
+    printf 'claude-md\n%s\n' "$(basename "$f" .md)"; return 0
+  done
+  for f in "$CHOSKO_LLM_HOME"/statusline/*.sh; do
+    [ -f "$f" ] || continue
+    [ "$(read_frontmatter_field "$f" replaces || true)" = "$want" ] || continue
+    printf 'statusline\n%s\n' "$(basename "$f" .sh)"; return 0
+  done
+  return 1
 }
 
 # ---------- auto-upgrade state ----------
