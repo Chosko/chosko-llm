@@ -4,7 +4,7 @@ Last task number: 103
 
 ---
 
-## 94. Run /cavecompress lite on shipped commands and skills, with peer-review before commit
+## 94. Run /cavecompress full on shipped commands and skills, with peer-review before commit
 
 Status: [MISSING]
 Target: claude+human
