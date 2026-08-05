@@ -1,6 +1,8 @@
 # Context workflow — navigation layer for future sessions
 
-Project ship two commands, `/context-build` and `/context-update`, together maintain **navigation context layer** under `.claude/context/`. Read doc when touching either command, changing per-context-file schema, or reasoning how context layer relate to domain docs and `CLAUDE.md`.
+Project ship two skills, `/context-build` (`skills/context-build/SKILL.md`) and `/context-update` (`skills/context-update/SKILL.md`), together maintain **navigation context layer** under `.claude/context/`. Read doc when touching either skill, changing per-context-file schema, or reasoning how context layer relate to domain docs and `CLAUDE.md`.
+
+Both were `commands/*.md` until task 97. Converted to skills so nested-layout detail can live in read-on-demand sibling files (`nested.md`) — flat runs never pay tokens for nested path. Old command files deleted; each `SKILL.md` carry `replaces: command:<name>` so `chosko-llm update --all` migrate stale installs (see [docs/authoring-guide.md](../../docs/authoring-guide.md)).
 
 ## Why this exists
 
@@ -63,6 +65,9 @@ Rules:
 
 - Detection = **read that line**. Never infer layout from file contents, folder count, or presence of subdirectories. Inference guesses; marker states.
 - Marker missing → layout is **flat**. Every pre-existing layer therefore keeps working untouched, no migration needed.
+- `/context-build` **writes** `Layout: flat` into every `INDEX.md` it authors (Phase 2), directly under title.
+- `/context-update` **backfills** it: layer whose `INDEX.md` lack `Layout:` line get `Layout: flat` inserted as part of step 2.4 index update. Fires on **every mode**, including Mode A run finding nothing else to update — then `INDEX.md` alone written, staged, committed. Self-migrating; no separate migration command.
+- Marker reading happen in `/context-build` Phase 1 / `/context-update` PREPARATION, detected layout stated in scope report. `Layout: nested` currently **stops the run cleanly** (nested path not implemented yet) — never half-handled as flat.
 - Marker lives in `.claude/context/INDEX.md`, not `CLAUDE.md`. Detection costs zero extra reads (commands already open `INDEX.md` first), marker travels with layer it describes, and conversion flips exactly one source of truth.
 
 ## Nested layout — router + leaves
@@ -124,7 +129,7 @@ Per-context-file six-section schema, 150-line cap per context file, 10-line snip
 2. **Phase 2 — Author.** Write `INDEX.md` first as checklist, then each context file using six-section schema.
 3. **Phase 3 — Wire entry-point.** Add navigation instruction at top of `CLAUDE.md` (create minimal one if absent). Verify every source file referenced from at least one context file; flag orphans, no auto-create files for them.
 
-Command refuses refactor source code, refuses modify existing domain files.
+Skill refuses refactor source code, refuses modify existing domain files.
 
 ## `/context-update` — four modes
 
@@ -137,9 +142,11 @@ Run after code changes. Modes mutually inclusive where noted:
 
 Phase 1 produces per-file plain-language diff summary ("PUBLIC API: append_row gained dry_run:bool"); Phase 2 edits sections in place — preserving accurate sections verbatim, updating only what changed, refreshing `Last updated` in INDEX last. Files growing past 150 lines flagged for splitting, not split automatically.
 
-Phase 3 then **auto-commits and pushes** run, putting `/context-update` in committing group alongside `/task-add` and `/task-clean` (`/context-build` stays uncommitted-by-default, pushing only under `--commit`). Stages exactly context files Phase 2 wrote plus `INDEX.md` — explicit paths only, never catch-all — makes one commit. Phase 2 changed nothing → no commit (no empty commit). Non-git VCS → commit honours `CLAUDE.md` `## VCS` mapping (git→`cm`), push step skipped entirely. Hook-skipping flags (`--no-verify`, `--amend`, `--no-gpg-sign`) never used; hook failure surfaced, files left staged. Both commands follow commit-and-push protocol in [docs/authoring-guide.md](../../docs/authoring-guide.md) — pull at start, commit, re-sync, push — skippable via `--no-push` (implied by `--no-commit` for `/context-update`); see doc for algorithm.
+Phase 3 then **auto-commits and pushes** run, putting `/context-update` in committing group alongside `/task-add` and `/task-clean` (`/context-build` stays uncommitted-by-default, pushing only under `--commit`). Stages exactly context files Phase 2 wrote plus `INDEX.md` — explicit paths only, never catch-all — makes one commit. Phase 2 changed nothing → no commit (no empty commit). Non-git VCS → commit honours `CLAUDE.md` `## VCS` mapping (git→`cm`), push step skipped entirely. Hook-skipping flags (`--no-verify`, `--amend`, `--no-gpg-sign`) never used; hook failure surfaced, files left staged. Both skills follow commit-and-push protocol — pull at start, commit, re-sync, push — skippable via `--no-push` (implied by `--no-commit` for `/context-update`). Protocol stated inline in each `SKILL.md`, not by reference: `docs/` never installed to `~/.claude/`, so shipped body must never point runtime agent at a `docs/` path. Authoring-time algorithm reference: [docs/authoring-guide.md](../../docs/authoring-guide.md).
 
-## Authoring discipline for these commands
+Marker-backfill-only run (Mode A found nothing, but `INDEX.md` lacked `Layout:`) is **not** a no-op: `INDEX.md` changed, so it stage and commit as usual.
+
+## Authoring discipline for these skills
 
 - Treat `.claude/context/` as only writable surface. Domain files, source code out of scope — flag, don't edit.
 - Preserve existing structure on update. Schema part of contract: future sessions rely on section names predictable.
@@ -150,4 +157,5 @@ Phase 3 then **auto-commits and pushes** run, putting `/context-update` in commi
 
 - [`../../CLAUDE.md`](../../CLAUDE.md) — navigation instruction lives at top; hard rules below.
 - [`../context/INDEX.md`](../context/INDEX.md) — live navigation index for this repo, with `Last updated` anchor.
-- `commands/context-build.md`, `commands/context-update.md` — command implementations.
+- `skills/context-build/SKILL.md`, `skills/context-update/SKILL.md` — skill implementations.
+- [`../../docs/authoring-guide.md`](../../docs/authoring-guide.md) — frontmatter schema incl. `replaces:` kind-migration key.

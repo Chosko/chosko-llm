@@ -1,12 +1,13 @@
 ---
 name: context-update
-version: 1.2.0
-type: command
+version: 1.3.0
+type: skill
 description: Update an existing navigation context layer after code changes, then auto-commit and push the context files it updated. Pass --no-commit to leave them uncommitted, or --no-push to commit without pushing.
+replaces: command:context-update
 ---
 
 # /context-update
-# Global command: updates an existing navigation context layer after code changes.
+# Global skill: updates an existing navigation context layer after code changes.
 # Requires /context-build to have been run first to create the initial context layer.
 #
 # Usage — smart update (default, no arguments):
@@ -61,9 +62,24 @@ P.1 Locate the context layer:
       to create the initial context layer.
 
 P.2 Read INDEX.md to get:
+    - The `Layout:` marker line directly under the title (see P.2a).
     - The full list of context files and their one-line descriptions.
     - The "Last updated" timestamp (format: YYYY-MM-DD).
     Do not read any context files or source files yet.
+
+P.2a Detect the layout from the marker, and only from the marker:
+    - `Layout: flat` → LAYOUT = flat.
+    - No `Layout:` line at all → LAYOUT = flat, and set BACKFILL_MARKER = true.
+      This layer predates the marker; step 2.4 will add it.
+    - `Layout: nested` → LAYOUT = nested.
+    Never infer the layout from folder counts, subdirectories, or file
+    contents. The marker line is the only source of truth.
+
+    If LAYOUT is nested, STOP immediately. Report that the layer declares
+    `Layout: nested`, that this skill does not yet support the nested layout,
+    and that nested support arrives in a later release. Write nothing, stage
+    nothing, commit nothing. Do not fall back to treating the layer as flat —
+    a half-handled nested run would stamp dates and stage files wrongly.
 
 P.3 Parse $ARGUMENTS. First, check for the confirmation flag:
 
@@ -91,8 +107,7 @@ P.3 Parse $ARGUMENTS. First, check for the confirmation flag:
     If "--no-push" is present in $ARGUMENTS, set NO_PUSH = true and strip it
     before parsing the rest. NO_PUSH only matters when NO_COMMIT is false:
     it skips the pull-at-start / re-sync / push steps of PHASE 3's
-    commit-and-push protocol (docs/authoring-guide.md) while still
-    committing as always.
+    commit-and-push protocol while still committing as always.
 
     Unless NO_COMMIT is true or the project's CLAUDE.md carries a `## VCS`
     override (non-git), pull at start here, before determining the update
@@ -114,8 +129,11 @@ P.3 Parse $ARGUMENTS. First, check for the confirmation flag:
       - Check for uncommitted changes: git diff --name-only HEAD
       - If uncommitted changes exist, report them and ask the user whether to
         include them in this update run.
-      - If no uncommitted changes either, report "Context is up to date" and exit.
-    If the "Last updated" field is missing from INDEX.md, fall back to MODE D (full).
+      - If no uncommitted changes either, report "Context is up to date". If
+        BACKFILL_MARKER is true, still run the marker backfill (see 2.4) —
+        INDEX.md alone is written, staged and committed — then exit. Otherwise
+        exit without writing anything.
+    If the "Last updated" field is missing from INDEX.md, fall back to MODE B (full).
 
     MODE B — Full update (argument "full" provided):
     Update all context files in the context layer, regardless of git history.
@@ -137,12 +155,15 @@ P.3 Parse $ARGUMENTS. First, check for the confirmation flag:
     orphaned — do not create new context files, flag only.
 
 P.4 Report the parsed scope before doing any work:
+    - The detected layout (`flat`), read from the `Layout:` marker — or that
+      the marker was absent and will be backfilled as `Layout: flat`.
     - Which mode was selected and why.
     - The "Last updated" date read from INDEX.md (all modes).
     - Which git command was run and which source files it returned (Modes A and C).
     - Which context files are in scope for this update run.
     - Any unrecognized file= names or orphaned source files detected.
-    - If Mode A found no changes: state this clearly and exit without proceeding.
+    - If Mode A found no changes: state this clearly, note whether a marker
+      backfill will still be written, and exit without proceeding further.
 
 If AUTO_CONFIRM is false: STOP and wait for user confirmation before proceeding.
 If AUTO_CONFIRM is true: proceed immediately to Phase 1.
@@ -216,6 +237,13 @@ PHASE 2 — Update the context files
     review manually."
 
 2.4 Update INDEX.md last:
+    - Backfill the layout marker: if BACKFILL_MARKER is true (INDEX.md carried
+      no `Layout:` line), insert `Layout: flat` on its own line directly under
+      the title. This fires on EVERY mode, including a Mode A run that found
+      nothing else to update — in that case INDEX.md is the only file written,
+      and it is staged and committed on its own by Phase 3. Every layer built
+      before the marker existed migrates itself this way; there is no separate
+      migration command.
     - Update one-line descriptions for any files whose purpose has shifted.
     - Add entries for any new context files (there should be none in an update run —
       if you feel a new file is needed, flag it and ask the user).
@@ -226,6 +254,7 @@ PHASE 2 — Update the context files
 
 Report:
 - List of files updated with a summary of what changed in each.
+- Whether the `Layout: flat` marker was backfilled into INDEX.md.
 - List of files skipped (no changes found).
 - Any files flagged for splitting.
 - Any domain knowledge files that may need manual review.
@@ -236,28 +265,30 @@ Report:
 
 PHASE 3 — Commit and push the updated context files
 
-`/context-update` auto-commits (and pushes) its work, matching `/task-add`
-and `/task-clean`. This phase runs after Phase 2's report, with no
+/context-update auto-commits (and pushes) its work, matching /task-add
+and /task-clean. This phase runs after Phase 2's report, with no
 confirmation prompt of its own (it is unaffected by AUTO_CONFIRM —
 committing is the default behavior). The pull-at-start already ran in
 PREPARATION, before the scope was even determined.
 
 3.0 If NO_COMMIT is true, skip committing (and pushing) entirely: the
-    context files Phase 2 updated (plus the INDEX.md "Last updated" bump)
-    are left uncommitted in the working tree. Report what was updated and
-    remind the user that nothing was committed — they should commit when
-    ready. Do not run any git command. Then stop.
+    context files Phase 2 updated (plus the INDEX.md "Last updated" bump
+    and any marker backfill) are left uncommitted in the working tree.
+    Report what was updated and remind the user that nothing was committed
+    — they should commit when ready. Do not run any git command. Then stop.
 
-3.1 If Phase 2 modified NO files (e.g. Mode A found nothing to update, or
-    every in-scope file was skipped), make no commit (and no push). Do not
-    create an empty commit. Report "Context already up to date — nothing
-    committed." and stop.
+3.1 If Phase 2 modified NO files at all (e.g. Mode A found nothing to
+    update AND no marker backfill was needed), make no commit (and no
+    push). Do not create an empty commit. Report "Context already up to
+    date — nothing committed." and stop. A marker-backfill-only run is NOT
+    a no-op: INDEX.md changed, so it is staged and committed as usual.
 
 3.2 Otherwise, stage EXACTLY the context-layer files this run wrote —
     the updated context files plus INDEX.md (whose "Last updated" line
-    Phase 2 bumped). Build the path list explicitly from the Phase 2
-    "files updated" report; never use a catch-all (`git add -A`,
-    `git add .`, `git add -u`). Files Phase 2 skipped are NOT staged.
+    Phase 2 bumped, and possibly its backfilled `Layout: flat` marker).
+    Build the path list explicitly from the Phase 2 "files updated" report;
+    never use a catch-all (`git add -A`, `git add .`, `git add -u`). Files
+    Phase 2 skipped are NOT staged.
 
 3.3 Commit the staged paths with a single descriptive message:
 
@@ -268,12 +299,13 @@ PREPARATION, before the scope was even determined.
 
     Use a headline that names the subject (e.g.
     "Update context layer: cli, sheet" when a small, nameable set
-    changed). Keep to the repo's existing commit style.
+    changed). For a backfill-only run, name that instead (e.g.
+    "Add Layout marker to context index"). Keep to the repo's existing
+    commit style.
 
 3.4 On commit success, report the commit hash (`git rev-parse --short
     HEAD`). Then, unless NO_PUSH is true or this project's CLAUDE.md
-    carries a `## VCS` override, re-sync (`git pull`) and `git push` per
-    docs/authoring-guide.md's commit-and-push protocol.
+    carries a `## VCS` override, re-sync (`git pull`) and `git push`.
 
 3.5 On commit failure (e.g. a pre-commit hook rejects the commit): surface
     the exact output. Do NOT retry, amend, or use `--no-verify` /

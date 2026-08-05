@@ -33,7 +33,7 @@ Preconditions: none
 
 ## 97. Convert /context-build and /context-update to skills and emit the Layout marker
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/context-build/SKILL.md, skills/context-update/SKILL.md, commands/context-build.md, commands/context-update.md, .claude/domain/context-workflow.md, VERSION
 Preconditions: 95, 96

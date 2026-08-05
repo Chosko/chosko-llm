@@ -64,13 +64,16 @@ Currently shipped:
   leaves versioned artifacts uncommitted by default; `--commit` commits
   exactly those paths.** Handles "running session's tool index doesn't
   refresh after `claude mcp add`" gotcha by telling user to restart.
-- `commands/context-build.md` — introduces navigation context layer. Leaves
-  it uncommitted by default; `--commit` commits layer (INDEX, context
-  files, CLAUDE.md edit) with explicit paths only.
-- `commands/context-update.md` — refreshes existing context layer, then
+- `skills/context-build/SKILL.md` — introduces navigation context layer,
+  stamping `Layout: flat` into the INDEX it authors. Leaves it uncommitted
+  by default; `--commit` commits layer (INDEX, context files, CLAUDE.md
+  edit) with explicit paths only. Carries `replaces: command:context-build`.
+- `skills/context-update/SKILL.md` — refreshes existing context layer,
+  backfilling `Layout: flat` into any INDEX lacking the marker, then
   auto-commits context files it updated (explicit paths only; no commit
   when nothing changed). Joins auto-committing group with `/task-add`
-  and `/task-clean`. `--no-commit` leaves updates uncommitted.
+  and `/task-clean`. `--no-commit` leaves updates uncommitted. Carries
+  `replaces: command:context-update`.
 - `commands/domain-setup.md` — initializes domain knowledge layer, same
   way `/task-setup` initializes backlog: `.claude/domain/`,
   `.claude/domain/features/`, `.claude/domain/INDEX.md` whose

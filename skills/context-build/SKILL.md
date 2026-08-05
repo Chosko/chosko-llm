@@ -1,12 +1,13 @@
 ---
 name: context-build
-version: 0.3.1
-type: command
+version: 0.4.0
+type: skill
 description: Build a navigation context layer to reduce token cost in future Claude Code sessions. Pass --commit to commit and push the context layer (--commit --no-push to skip the push); default leaves it uncommitted.
+replaces: command:context-build
 ---
 
 # /context-build
-# Global command: introduces a navigation layer of context files to reduce token cost
+# Global skill: introduces a navigation layer of context files to reduce token cost
 # in future Claude Code sessions on any project.
 # Usage: /context-build
 # Usage with hint: /context-build "source code lives under lib/ not src/"
@@ -29,13 +30,12 @@ leaves all output uncommitted, exactly as before.
 
 Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
 matters when COMMIT is true: it skips the pull-at-start / re-sync / push
-steps of the commit-and-push protocol (docs/authoring-guide.md) while
-still committing as always. When COMMIT is true and the project's
-CLAUDE.md does not carry a `## VCS` override (non-git), pull at start —
-run `git pull` on the current branch before Phase 1 begins. A conflict
-stops the run here — report the conflict output and tell the user to
-resolve manually and re-run. (No pull happens when COMMIT is false — there
-is nothing this run will commit or push.)
+steps of the commit-and-push protocol while still committing as always.
+When COMMIT is true and the project's CLAUDE.md does not carry a `## VCS`
+override (non-git), pull at start — run `git pull` on the current branch
+before Phase 1 begins. A conflict stops the run here — report the conflict
+output and tell the user to resolve manually and re-run. (No pull happens
+when COMMIT is false — there is nothing this run will commit or push.)
 
 CONSTRAINTS
 - Do not refactor any source code.
@@ -53,6 +53,20 @@ YOUR TASK — three phases. Stop at the end of each phase and report before cont
 ---
 
 PHASE 1 — Analysis (no files written yet)
+
+1.0 Detect the layout of any pre-existing context layer.
+    If `.claude/context/INDEX.md` (or the project's equivalent index) already
+    exists, read the `Layout:` line directly under its title:
+    - `Layout: flat`, or no `Layout:` line at all → LAYOUT = flat.
+    - `Layout: nested` → LAYOUT = nested.
+    If no index exists at all, this is a fresh build: LAYOUT = flat.
+    Never infer the layout from folder counts, subdirectories, or file
+    contents — the marker line is the only source of truth.
+
+    If LAYOUT is nested, STOP immediately. Report that the layer declares
+    `Layout: nested`, that this skill does not yet support the nested layout,
+    and that nested support arrives in a later release. Write nothing. Do not
+    fall back to treating the layer as flat.
 
 1.1 Discover the project layout:
     - Identify the language(s) and primary source directories.
@@ -86,6 +100,8 @@ PHASE 1 — Analysis (no files written yet)
     entry point for future sessions.
 
 Report:
+- The detected layout (`flat`) and where the marker was read from (or that no
+  index existed yet, so this is a fresh flat build).
 - Summary of discovered project layout (languages, source dirs, existing context files).
 - Proposed folder layout with rationale.
 - List of context files you intend to create, each with a one-line description.
@@ -100,6 +116,19 @@ PHASE 2 — Author the context files
 
 2.1 Create the context folder and the INDEX file first. INDEX must list every planned
     context file even before they exist, so it can be used as a checklist.
+
+    The INDEX header must carry the layout marker on its own line, directly
+    under the title:
+
+    ```
+    # Context index
+
+    Layout: flat
+    Last updated: YYYY-MM-DD
+    ```
+
+    Write `Layout: flat` verbatim. It is what /context-update and future runs
+    read to decide how to treat this layer; never omit it and never infer it.
 
 2.2 Create each context file. Every file must contain:
 
@@ -136,6 +165,7 @@ PHASE 2 — Author the context files
 
 Report:
 - Files created with line counts.
+- Confirmation that INDEX.md carries the `Layout: flat` marker.
 - Any area where the codebase resisted summarization (a signal for future refactoring,
   but do not refactor now — flag only).
 
@@ -162,7 +192,8 @@ PHASE 3 — Wire the entry point
     Do not create new context files to cover orphans — flag only.
 
 3.3 Verify that INDEX.md is complete and accurate: every context file exists, every
-    one-line description matches the file's actual content.
+    one-line description matches the file's actual content, and the `Layout: flat`
+    marker is present directly under the title.
 
 Report:
 - The exact changes made to CLAUDE.md (show as a diff or before/after).
@@ -195,8 +226,7 @@ ARGUMENT NOTE already ran):
 3. Commit once: `git commit -m "Add navigation context layer"`.
 4. On commit success, report the commit hash (`git rev-parse --short HEAD`).
    Then, unless NO_PUSH is true or this project's CLAUDE.md carries a
-   `## VCS` override, re-sync (`git pull`) and `git push` per
-   docs/authoring-guide.md's commit-and-push protocol.
+   `## VCS` override, re-sync (`git pull`) and `git push`.
 5. On commit failure (e.g. a pre-commit hook rejects the commit): surface
    the exact output. Do NOT retry, amend, or use `--no-verify` /
    `--no-gpg-sign`. Files remain staged but uncommitted; tell the user.
