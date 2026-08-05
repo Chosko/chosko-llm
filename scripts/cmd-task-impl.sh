@@ -183,6 +183,10 @@ for n in "${TASKS[@]}"; do
   [ -n "$block" ] || die "Task $n not found in $(project_tasks_index)."
   body="$(project_task_body "$n")"
   [ -f "$body" ] || die "Task $n body file missing at $body. Backlog is corrupt."
+  target="$(task_target "$n" || true)"
+  if [ -n "$target" ] && [ "$target" != "claude" ]; then
+    die "Task $n has Target: $target — task-impl only drives Target: claude tasks unattended. Implement it interactively via /task-implement instead."
+  fi
 done
 
 # ---------- per-task workflow ----------
@@ -219,11 +223,21 @@ run_aider() {
 
 implement_one() {
   local n="$1"
-  local title status files body
+  local title status files body target
   title="$(task_title "$n")"
   status="$(task_status "$n")"
   files="$(task_files "$n")"
   body="$(project_task_body "$n")"
+  target="$(task_target "$n" || true)"
+
+  if [ -n "$target" ] && [ "$target" != "claude" ]; then
+    # Refuse rather than skip: a non-claude Target (claude+human, human,
+    # local) means the task's body may declare manual-intervention
+    # checkpoints (human-in-loop.md's protocol) or an enriched-body flow
+    # this orchestrator does not drive. An unattended, non-interactive
+    # orchestrator cannot make the judgment calls those checkpoints need.
+    die "Task $n has Target: $target — task-impl only drives Target: claude tasks unattended. Implement it interactively via /task-implement instead."
+  fi
 
   case "$status" in
     "[MISSING]"|"[STUBBED]"|"[INCORRECT]"|"[PARTIAL]") ;;

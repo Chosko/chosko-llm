@@ -83,6 +83,8 @@ task_files()         { task_field "$1" Files; }
 task_title()         { task_field "$1" Title; }
 # task_preconditions <N> — comma-separated task numbers or "none".
 task_preconditions() { task_field "$1" Preconditions; }
+# task_target <N>      — the task's Target field (e.g. "claude", "human").
+task_target()        { task_field "$1" Target; }
 
 # ---------- TASKS.md mutation ----------
 

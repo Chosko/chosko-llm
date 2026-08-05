@@ -42,7 +42,7 @@ Preconditions: none
 
 ## 85. Hard-refuse non-claude Target tasks in the unattended task-impl orchestrator
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/cmd-task-impl.sh, scripts/lib-task-external.sh
 Preconditions: none
