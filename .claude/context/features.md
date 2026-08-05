@@ -150,15 +150,16 @@ Currently shipped:
   leaves them uncommitted.
 - `skills/task-implement/` — implement backlog tasks end-to-end with a
   tests-first sequence. The repo's only skill: `SKILL.md` carries the common path (clean
-  tree, known test runner, numbered `target: claude` task) and five
+  tree, known test runner, numbered `target: claude` task) and six
   supporting files are read only when their branch fires —
   `dirty-tree.md` (non-empty `git status`), `test-runner.md` (runner must
   be inferred; mirrors task-setup's table), `no-test-suite.md`,
   `human-in-loop.md`, `unity-mcp-checkpoints.md` (Unity-MCP-driven
   checkpoints — read only when the current human-in-loop task's project
   declares the `Unity MCP for /task-implement:` marker AND the
-  `mcp__UnityMCP__*` tools are connected this session), and `body-schemas.md`
-  (non-current body schema).
+  `mcp__UnityMCP__*` tools are connected this session), `body-schemas.md`
+  (non-current body schema), and `delegated-runs.md` (a 2+-task run the
+  user delegated to subagents).
   Reads each task's body file from `.claude/tasks/<N>.md` only when
   needed and treats it as the primary context source — only fans out to
   CLAUDE.md and the context layer when the body doesn't cover what's
@@ -184,7 +185,14 @@ Currently shipped:
   warns naming the originating feature and offers implement-anyway or stop
   (`all` / `next` skip stale tasks and report them, rather than deciding
   for the user) — the interactive counterpart to `chosko-llm task-impl`
-  refusing a stale task outright. Commits each task
+  refusing a stale task outright. On a run resolving to 2+ tasks, offers
+  to implement each task in a fresh subagent so later tasks don't inherit
+  earlier ones' context; agents are spawned one at a time and never in
+  parallel (shared working tree, branch, and `TASKS.md`), each owning its
+  task's status flips, commit, and push, while `claude+human` / `human` /
+  explicitly requested `[STALE]` tasks stay in the parent conversation
+  because they need the user present. `--agents` / `--no-agents`
+  pre-answer the prompt; single-task runs never see it. Commits each task
   separately; `--no-commit` runs the full sequence but skips the
   per-task commits, leaving every task's changes uncommitted.
 - `skills/product-design/` — design a product top-down with the user and

@@ -350,6 +350,34 @@ with the same verify loop, and still handles the bookkeeping (status flips,
 the commit of the user's changes). `all`/`next` runs warn when the resolved
 list contains human-involving tasks — they cannot run unattended.
 
+### Delegated runs
+
+A run whose selector resolves to 2 or more tasks offers to implement each
+task in a fresh subagent. The motivation is context, not throughput: in a
+single conversation, task 1's reading and diffs are still loaded when task 3
+starts, so later tasks get progressively less headroom. One agent per task
+gives each the full window while the parent keeps only run-level
+bookkeeping. `--agents` / `--no-agents` pre-answer the question; a run of
+fewer than 2 tasks never asks it and is unchanged.
+
+Agents are **sequential, never parallel** — every task in the run shares one
+working tree, one branch, and one `.claude/TASKS.md`, so concurrency would
+race on status flips, staging, and pushes. The parent blocks on each agent
+before spawning the next, re-reads `TASKS.md` in between (the agent wrote
+the status), and halts the whole run on a failure rather than continuing.
+
+Delegation is partial by design. `claude+human` and `human` tasks, and
+`[STALE]` tasks requested explicitly by number, stay in the parent
+conversation: all three depend on a question put to the user — a manual
+checkpoint's confirmation, or the stale implement-anyway/stop choice — and a
+subagent cannot hold that conversation. A mixed run states which tasks go
+where before starting. Each delegated agent still owns its task's status
+flips, its single commit, and its single push, so the one-commit /
+one-push-per-task invariant holds regardless of where the task ran.
+
+Protocol details live in `skills/task-implement/delegated-runs.md`, read
+only when delegation is active.
+
 ## Cross-references
 
 - [`../../CLAUDE.md`](../../CLAUDE.md) — hard rules (authoring, versioning,

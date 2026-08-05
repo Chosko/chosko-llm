@@ -96,7 +96,7 @@ Preconditions: none
 
 ## 92. Offer per-task subagent delegation on multi-task /task-implement runs
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, .claude/domain/task-workflow.md, .claude/context/features.md, VERSION
 Preconditions: none

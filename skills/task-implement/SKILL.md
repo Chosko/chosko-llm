@@ -1,8 +1,8 @@
 ---
 name: task-implement
-version: 0.15.0
+version: 0.16.0
 type: skill
-description: Implement one or more tasks from the project's task backlog end-to-end using a tests-first sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits and pushes each task separately; pass --no-commit to skip the per-task commits (and pushes), or --no-push to keep committing without pushing. Supports `next` to implement the first eligible task. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd|skip-tests-unattended` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time. In skip-tests mode, pass `-y` to suppress the per-task "Proceed?" confirmation for that run; the `skip-tests-unattended` marker value makes that the default for every run without needing `-y`.
+description: Implement one or more tasks from the project's task backlog end-to-end using a tests-first sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits and pushes each task separately; pass --no-commit to skip the per-task commits (and pushes), or --no-push to keep committing without pushing. Supports `next` to implement the first eligible task. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd|skip-tests-unattended` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time. In skip-tests mode, pass `-y` to suppress the per-task "Proceed?" confirmation for that run; the `skip-tests-unattended` marker value makes that the default for every run without needing `-y`. On a run resolving to 2+ tasks, offers to implement each task in a fresh subagent so later tasks don't inherit earlier ones' context — agents run one at a time, never in parallel, and `claude+human` / `human` / explicitly-requested `[STALE]` tasks stay in the parent conversation because they need the user present; pass `--agents` / `--no-agents` to pre-answer.
 ---
 
 # /task-implement
@@ -16,6 +16,8 @@ description: Implement one or more tasks from the project's task backlog end-to-
 #        /task-implement <args> --no-commit   (run the tests-first flow, skip commits and pushes)
 #        /task-implement <args> --no-push     (commit each task as usual, skip the pushes)
 #        /task-implement <args> -y            (skip-tests mode: no per-task Proceed? prompt)
+#        /task-implement <args> --agents      (2+ tasks: one fresh subagent per task, sequentially)
+#        /task-implement <args> --no-agents   (2+ tasks: run everything in this conversation)
 # Examples: /task-implement 12
 #           /task-implement 12 13 14
 #           /task-implement all
@@ -23,6 +25,7 @@ description: Implement one or more tasks from the project's task backlog end-to-
 #           /task-implement all --no-commit
 #           /task-implement all --no-push
 #           /task-implement all -y
+#           /task-implement all -y --agents
 
 GOAL
 For each requested task, in the order given:
@@ -60,6 +63,7 @@ tasks. Everything below is loaded only when its branch actually applies.
 | `./human-in-loop.md` | The current task's `Target:` is `claude+human` or `human`. |
 | `./unity-mcp-checkpoints.md` | A `claude+human`/`human` task where CLAUDE.md carries the `Unity MCP for /task-implement:` marker AND the `mcp__UnityMCP__*` tools are present this session (read after `./human-in-loop.md`, per its gate). |
 | `./body-schemas.md`  | The task body does NOT match the current schema (Goal / Acceptance criteria / Decisions / Hints). |
+| `./delegated-runs.md` | DELEGATE is true — the resolved list holds 2+ tasks and the user opted into per-task subagents (or passed `--agents`). Never on a single-task run, nor when the user declined. |
 
 Do not read a supporting file speculatively. If none of the conditions
 above fire, the run never touches one.
@@ -95,6 +99,15 @@ project whose CLAUDE.md declares `Testing policy for /task-implement:
 skip-tests-unattended` sets AUTO_CONFIRM = true for every run without
 needing `-y` on the command line; passing `-y` explicitly is redundant but
 harmless in that case.
+
+Also scan for the optional `--agents` / `--no-agents` pair and strip
+whichever appears. They are mutually exclusive — if both appear, stop with:
+`--agents and --no-agents cannot be combined. Pick one.` They pre-answer
+PRE-FLIGHT step 2b's delegation question: `--agents` sets DELEGATE = true,
+`--no-agents` sets DELEGATE = false, and either way that question is not
+asked. With neither flag, DELEGATE is undecided here and step 2b resolves
+it. `--agents` on a run that resolves to fewer than 2 tasks is accepted and
+ignored — the run stays in-context — rather than being an error.
 
 After stripping the flag, `$ARGUMENTS` is one of:
 - A whitespace-separated list of task numbers — implement those tasks in
@@ -276,6 +289,30 @@ PRE-FLIGHT CHECKS (before any task)
    `.claude/tasks/<N>.md` is read only when its task becomes the
    current one (Step 1 of the per-task workflow).
 
+2b. **Delegation check.** Only when the resolved list holds 2 or more
+   tasks. With fewer than 2, DELEGATE is false, nothing is asked, and the
+   run is exactly as it has always been — skip this step entirely.
+
+   If `--agents` or `--no-agents` was passed, DELEGATE is already set;
+   don't ask. Otherwise ask once:
+
+   > This run covers <k> tasks. Implement each one in a fresh subagent, so
+   > later tasks don't inherit the context of earlier ones? Agents run one
+   > after another, never in parallel.
+   >
+   > A. **Yes** — one agent per task, sequentially.
+   > B. **No** — implement everything in this conversation.
+
+   Wait for an explicit answer. Silence, an unclear reply, or EOF means
+   B — in-context, the existing behavior. Do not treat a non-answer as
+   approval.
+
+   If DELEGATE is true, read `./delegated-runs.md` now and follow it for
+   the rest of the run. `claude+human` / `human` tasks and explicitly
+   requested `[STALE]` tasks are never delegated — the parent implements
+   those in this conversation, and that file governs how the split is
+   announced and executed.
+
 3. If the project has a CLAUDE.md, read it — it's small and global.
    Defer reading the broader `.claude/context/` and `.claude/domain/`
    layers until per-task Step 1 indicates a need (see USING THE TASK
@@ -284,6 +321,8 @@ PRE-FLIGHT CHECKS (before any task)
 4. Briefly tell the user what you're about to do — one line per task —
    then start. In full test mode, no per-task confirmation prompt; in
    skip-tests mode, prompt before each task unless AUTO_CONFIRM is true.
+   When DELEGATE is true, that summary also says which tasks go to agents
+   and which run in this conversation (see `./delegated-runs.md`).
 
 5. **Pull at start.** Unless NO_COMMIT is true (nothing will be committed
    this run, so nothing to push) or the project's CLAUDE.md carries a
@@ -298,7 +337,13 @@ PRE-FLIGHT CHECKS (before any task)
 
 PER-TASK WORKFLOW
 
-For each task, in order:
+For each task, in order.
+
+When DELEGATE is true, this workflow is what each spawned agent performs
+for its one task — the parent runs it directly only for the tasks
+`./delegated-runs.md` keeps in the parent (`claude+human`, `human`, and
+explicitly requested `[STALE]` tasks). The steps themselves are identical
+either way.
 
 ### Step 1 — Mark IN PROGRESS
 
@@ -448,6 +493,12 @@ Never retry, never force-push.
 
 BETWEEN TASKS
 
+When DELEGATE is true, `./delegated-runs.md` governs what happens between
+tasks — it covers the same ground (re-read TASKS.md, progress line,
+skip-tests "Proceed?") plus verifying what the returning agent did. Follow
+it instead of the list below for delegated tasks; a task the parent
+implements itself follows the list as usual.
+
 After committing a task, before starting the next:
 1. **In --no-commit mode, skip this dirty-tree check entirely** — the
    previous task's changes are deliberately left uncommitted and will
@@ -480,6 +531,11 @@ If any step fails in a way you cannot resolve:
   want to do next (revert with `git restore`, fix manually, edit the
   task spec).
 
+A failure inside a delegated task is not a special case: the parent stops
+the run without spawning the next agent, and reports which tasks completed
+(with hashes), which failed and what the agent said, and which were never
+started. See `./delegated-runs.md`.
+
 A Step 7 push failure or pre-push conflict is a distinct case: the task's
 commit already succeeded (status legitimately `[DONE]`, changes committed
 locally) — only the sync/push step failed. Do not revert the commit or
@@ -503,6 +559,10 @@ DO NOT:
   it anyway, or pick one up in an `all` / `next` run.
 - Write a `Feature:` line into any task. It is `/task-add`'s field; this
   skill only reads it.
+- Spawn delegated agents in parallel, or spawn the next one before the
+  previous has returned — the tasks share one working tree and branch.
+- Delegate a `claude+human` / `human` / `[STALE]` task to an agent, or
+  offer delegation at all on a run resolving to fewer than 2 tasks.
 - Force-push, retry a failed push, defer a task's push to end-of-run, or
   push unless `--no-push`/`--no-commit` was passed — each task pushes
   immediately after its own commit (Step 7), per
