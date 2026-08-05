@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 101
+Last task number: 103
 
 ---
 
@@ -73,3 +73,21 @@ Status: [MISSING]
 Target: claude
 Files: README.md, docs/cli-help.txt, docs/authoring-guide.md, .claude/context/features.md, .claude/context/INDEX.md, commands/project-setup.md, .claude/domain/context-workflow.md, VERSION
 Preconditions: 97, 98, 99, 100
+
+---
+
+## 102. Add install-scope resolution (--local / --global) to lib.sh
+
+Status: [MISSING]
+Target: claude
+Files: scripts/lib.sh, .claude/context/shared-lib.md, VERSION
+Preconditions: none
+
+---
+
+## 103. Wire --local / --global into ls, add, rm, update, show
+
+Status: [MISSING]
+Target: claude
+Files: scripts/cmd-ls.sh, scripts/cmd-add.sh, scripts/cmd-rm.sh, scripts/cmd-update.sh, scripts/cmd-show.sh, docs/cli-help.txt, README.md, .claude/context/cmd-ls.md, .claude/context/cmd-add.md, .claude/context/cmd-rm.md, .claude/context/cmd-update.md, .claude/context/cmd-show.md, .claude/context/INDEX.md, VERSION
+Preconditions: 102
