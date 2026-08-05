@@ -1,6 +1,6 @@
 ---
 name: task-setup
-version: 1.2.0
+version: 1.2.1
 type: command
 description: Initialize the project's task backlog — creates .claude/TASKS.md, the .claude/tasks/ directory, and the external-LLM wiring under .claude/external/ (implement-prompt, tests-prompt, run-affected-tests.sh, run-full-tests.sh). Authoring command — leaves everything uncommitted for review by default; pass --commit to commit (and push) the scaffolding, or --commit --no-push to commit without pushing.
 ---
@@ -311,55 +311,47 @@ directly via aider)
 ```
 # Task <N> — <Title>
 
-## Description
-<Plain prose explanation …>
+Target: claude
 
-### Files to modify
-<Comma-separated list, identical to the `Files:` field in the task's
-TASKS.md summary block. The output surface — what an implementer will
-edit. Replicated here so an external LLM fed only this body file knows
-what to touch.>
+## Goal
+<One paragraph: what and why.>
 
-### Required reading
-<Bulleted list of `path:line-range — why` entries the implementer
-should `/add` to aider before editing.>
+## Acceptance criteria
+- <Verifiable outcome.>
+- <…>
 
-### Relevant snippets
-<Optional. 5–30 line excerpts of central, non-obvious code, prefixed
-with `path:line` origins.>
+## Decisions
+<Only present when non-obvious choices were made during authoring — by
+the user or by Claude. Each bullet: the choice and a brief why. Omit
+the section entirely when no contested calls exist; its absence is
+meaningful.>
 
-### Conventions to follow
-<Bulleted list of project rules (drawn from CLAUDE.md and the relevant
-context layer).>
+## Manual interventions
+<Only present when Target is claude+human or human — numbered
+checkpoints an agent must pause at for a human to perform in an
+external tool, each ending in a verifiable outcome. See
+commands/task-add.md's TARGET VALUES & MANUAL INTERVENTIONS section.>
 
-### Out of scope
-<Bulleted list of things the implementer must NOT do — explicit
-guardrails.>
-
-### Root cause
-<Optional. Bugfixes when non-obvious.>
-
-### Behavior change
-<Concrete rules.>
-
-### Doc updates
-<Optional. Required when behavior changes touch a documented surface.>
-
-### Tests
-<Test files / smoke checklists and assertions.>
-
-### Definition of done
-- <Bullets.>
-- Full test suite passes.
+## Hints
+<Required. Always present. File paths the implementer should touch:
+edit targets, test files, documentation, collateral files. Write
+"none" explicitly only when nothing collateral genuinely exists.>
+- <path/to/file>
+- <…>
 ```
+
+`--enrich` mode appends two more sections — `## Context bundle` and
+`## Implementation steps` — and sets `Target: local`. See
+commands/task-add.md for the full schema, including `--short` mode's
+reduced Goal-only body.
 
 The per-task file is self-contained — an external LLM fed only this
 file plus `.claude/external/implement-prompt.md` should have enough
 context to implement. The tracking metadata that DOES NOT live in the
-body is `Status:` and `Preconditions:` — those describe the task's
-place in the backlog, not its implementation, and live only in
-`TASKS.md`. `Files:` is intentionally duplicated as `### Files to
-modify` because it's part of the implementation contract.
+body is `Status:`, `Preconditions:`, and `Feature:` — those describe
+the task's place in the backlog, not its implementation, and live only
+in `TASKS.md`. `Files:` is intentionally duplicated inside `## Hints`
+because it's part of the implementation contract.
 
 ---
 
@@ -380,10 +372,15 @@ file-edit (SEARCH/REPLACE) tools.
 ## Inputs
 
 - The task body file at `.claude/tasks/<N>.md` (provided as a `--read`
-  context). Sections you should expect: Description, Files to modify,
-  Required reading, Relevant snippets (optional), Conventions to
-  follow, Out of scope, Behavior change, Tests, Definition of done.
-- The project's CLAUDE.md and any context/domain layer it cites.
+  context). Sections you should expect: a `Target:` line, `## Goal`,
+  `## Acceptance criteria`, `## Decisions` (optional, present only when
+  non-obvious choices were made), `## Manual interventions` (present
+  only when `Target:` is `claude+human` or `human` — not expected in a
+  headless aider run; treat its presence as a Stop condition), and
+  `## Hints` (file paths to touch).
+- The project's CLAUDE.md and any context/domain layer it cites — read
+  these directly instead of relying on a curated reading list, since
+  the task body does not include one.
 
 ## Execution model
 
@@ -401,41 +398,46 @@ file-edit (SEARCH/REPLACE) tools.
 
 ## Procedure
 
-1. Read the task body in full. Description and Behavior change tell
-   you what to build; "Files to modify" is the output surface.
-2. For every entry in "Required reading", `/add` the file to aider's
-   context before you start editing.
-3. Skim CLAUDE.md if you have not already; honor every rule under
-   "Conventions to follow".
-4. Implement the change one file at a time, only touching files in
-   "Files to modify" (plus genuine collateral such as imports or
-   fixture updates). Stop at any rule under "Out of scope".
-5. Add or extend the test files / smoke checklists named under
-   "Tests".
-6. Verify every bullet under "Definition of done" is observable.
-7. If the project has an automated test suite, run it; all tests must
+1. Read the task body in full. "## Goal" tells you what to build and
+   why; "## Hints" names the files to touch — treat it as the output
+   surface.
+2. Read CLAUDE.md and the project's context/domain layer directly (it
+   is not summarized in the task body) to ground yourself in project
+   conventions before editing.
+3. Honor every bullet under "## Decisions", if present — these are
+   non-obvious calls already made during authoring; do not relitigate
+   them. If "## Manual interventions" is present, stop — a headless
+   aider run cannot pause for a human checkpoint; report this instead
+   of proceeding.
+4. Implement the change one file at a time, only touching files named
+   under "## Hints" (plus genuine collateral such as imports or
+   fixture updates).
+5. Verify every bullet under "## Acceptance criteria" is observable in
+   the result.
+6. If the project has an automated test suite, run it; all tests must
    pass before you consider the task complete.
 
 ## Output discipline
 
 - Use aider SEARCH/REPLACE diff blocks. No speculative refactors.
-- Do not modify files outside "Files to modify" without explanation.
+- Do not modify files outside "## Hints" without explanation.
 - Do not change the task body file (`.claude/tasks/<N>.md`) or
   `.claude/TASKS.md` — those are managed by `/task-add` and
   `/task-implement`, not by the implementer.
 - **No deferred work.** Implement the full task in this single
   pass — no `TODO` / `FIXME` markers, no "I'll add this next time"
   comments, no half-applied edits. If you cannot complete a piece
-  of "Files to modify", treat it as a Stop condition and report.
+  of "## Hints", treat it as a Stop condition and report.
 
 ## Stop conditions
 
 If any of the following hold, stop and report rather than proceeding:
 - The task body is ambiguous on a decision you cannot defer.
-- A file listed in "Required reading" is missing.
+- The task body carries a "## Manual interventions" section — this
+  implies a human checkpoint a headless run cannot honor.
 - A test that you did not introduce starts failing.
-- A change you must make falls outside "Files to modify" and you
-  cannot justify it as collateral.
+- A change you must make falls outside "## Hints" and you cannot
+  justify it as collateral.
 === END external/implement-prompt.md ===
 ```
 
@@ -462,10 +464,15 @@ tests pass afterward.
 ## Inputs
 
 - The task body file at `.claude/tasks/<N>.md` (provided as a `--read`
-  context). Sections you should expect: Description, Files to modify,
-  Required reading, Relevant snippets (optional), Conventions to
-  follow, Out of scope, Behavior change, Tests, Definition of done.
-- The project's CLAUDE.md and any context/domain layer it cites.
+  context). Sections you should expect: a `Target:` line, `## Goal`,
+  `## Acceptance criteria`, `## Decisions` (optional, present only when
+  non-obvious choices were made), `## Manual interventions` (present
+  only when `Target:` is `claude+human` or `human` — not expected in a
+  headless aider run; treat its presence as a Stop condition), and
+  `## Hints` (file paths to touch, including any test files).
+- The project's CLAUDE.md and any context/domain layer it cites — read
+  these directly instead of relying on a curated reading list, since
+  the task body does not include one.
 
 ## Execution model
 
@@ -483,18 +490,22 @@ tests pass afterward.
 
 ## Procedure
 
-1. Read the task body in full. The "Tests" section is the contract you
-   must encode; "Definition of done" tells you which behaviors deserve
-   a regression guard.
-2. For every entry in "Required reading", `/add` the file to aider's
-   context before editing.
-3. Identify the test files among "Files to modify" — anything under
-   `tests/`, `test/`, `__tests__/`, `spec/`, or matching `*_test.*` /
-   `*.test.*` / `*Test.*`.
-4. Add or extend ONLY those test files. Encode every assertion the
-   "Tests" section names, plus the regression guards implied by
-   "Definition of done".
-5. Use the project's existing test style and helpers — match what is
+1. Read the task body in full. "## Acceptance criteria" is the
+   contract you must encode as tests; there is no dedicated "Tests"
+   section — the criteria themselves name which behaviors deserve a
+   regression guard.
+2. Read CLAUDE.md and the project's context/domain layer directly (it
+   is not summarized in the task body) to ground yourself in project
+   conventions before editing.
+3. If "## Manual interventions" is present, stop — a headless aider
+   run cannot pause for a human checkpoint; report this instead of
+   proceeding.
+4. Identify the test files among the paths listed under "## Hints" —
+   anything under `tests/`, `test/`, `__tests__/`, `spec/`, or matching
+   `*_test.*` / `*.test.*` / `*Test.*`.
+5. Add or extend ONLY those test files. Encode every outcome named
+   under "## Acceptance criteria" as a real assertion.
+6. Use the project's existing test style and helpers — match what is
    already in the file.
 
 ## Output discipline
@@ -504,20 +515,21 @@ tests pass afterward.
 - Do not modify the task body file (`.claude/tasks/<N>.md`) or
   `.claude/TASKS.md` — those are managed by `/task-add` and the
   task-impl orchestrator, not by the implementer.
-- **No scaffolding-only output.** Every test named in the task
-  body's `Tests` section must have real assertions in this single
-  pass. No `pass`-bodied test functions, no `TODO` / `# implement
-  here` placeholders, no fixture-only files. If a behaviour cannot
-  be asserted yet (e.g. the production symbol does not exist),
-  write the assertion against the intended behaviour anyway — the
-  impl pass will make it pass.
+- **No scaffolding-only output.** Every outcome named in "## Acceptance
+  criteria" must have real assertions in this single pass. No
+  `pass`-bodied test functions, no `TODO` / `# implement here`
+  placeholders, no fixture-only files. If a behaviour cannot be
+  asserted yet (e.g. the production symbol does not exist), write the
+  assertion against the intended behaviour anyway — the impl pass
+  will make it pass.
 
 ## Stop conditions
 
 If any of the following hold, stop and report rather than proceeding:
-- The "Tests" section is ambiguous on a decision you cannot defer.
-- A file listed in "Required reading" is missing.
-- The task lists no test files at all under "Files to modify".
+- "## Acceptance criteria" is ambiguous on a decision you cannot defer.
+- The task body carries a "## Manual interventions" section — this
+  implies a human checkpoint a headless run cannot honor.
+- The task lists no test files at all under "## Hints".
 === END external/tests-prompt.md ===
 ```
 

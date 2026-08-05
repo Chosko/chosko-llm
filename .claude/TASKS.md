@@ -24,7 +24,7 @@ Preconditions: none
 
 ## 83. Fix stale task-body schema in task-setup.md's external prompt templates
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-setup.md
 Preconditions: none
