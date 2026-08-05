@@ -2,20 +2,28 @@
 
 Project ship three skills — `/context-build` (`skills/context-build/SKILL.md`), `/context-update` (`skills/context-update/SKILL.md`), `/context-convert` (`skills/context-convert/SKILL.md`) — together maintain **navigation context layer** under `.claude/context/`. Read doc when touching any of them, changing per-context-file schema, or reasoning how context layer relate to domain docs and `CLAUDE.md`.
 
-Both were `commands/*.md` until task 97. Converted to skills so nested-layout detail can live in read-on-demand sibling files (`nested.md`) — flat runs never pay tokens for nested path. Old command files deleted; each `SKILL.md` carry `replaces: command:<name>` so `chosko-llm update --all` migrate stale installs (see [docs/authoring-guide.md](../../docs/authoring-guide.md)).
+`/context-build` and `/context-update` were `commands/*.md` until task 97 (v0.46.0). Converted to skills so nested-layout detail can live in read-on-demand sibling files (`nested.md`) — flat runs never pay tokens for nested path. Old command files deleted; each `SKILL.md` carry `replaces: command:<name>` so `chosko-llm update --all` migrate stale installs (see [docs/authoring-guide.md](../../docs/authoring-guide.md)). `/context-convert` new in task 100 (v0.49.0), never a command, so no `replaces:`.
+
+Family at a glance:
+
+| Skill | Owns | Supporting files | Commits |
+| --- | --- | --- | --- |
+| `/context-build` | Creating layer that not exist. Flat default; `nested` / `nested=<units>` for router+leaves. Refuse convert existing layer. | `nested.md` (read only on nested run) | Uncommitted by default; `--commit` |
+| `/context-update` | Refreshing layer that exist. Four modes. Backfills `Layout:` marker. | `nested.md` (read only when marker say nested) | Auto-commits; `--no-commit` |
+| `/context-convert` | Restructuring layer that exist, either direction. Move content, never rewrite. | none — every run is about nesting | Uncommitted by default; `--commit` |
 
 ## Why this exists
 
 Without navigation layer, Claude Code answer questions about repo by reading multiple full source files upfront — expensive tokens, slow. Navigation layer: set of small, structured `.md` summaries let future session decide which source files actually open, based on cheap descriptions instead of full reads.
 
-Layer built once with `/context-build`, kept fresh with `/context-update` after code changes. `CLAUDE.md` get navigation pointer at top so every session enter through `INDEX.md` first.
+Layer built once with `/context-build`, kept fresh with `/context-update` after code changes, restructured with `/context-convert` when it outgrow its layout. `CLAUDE.md` get navigation pointer at top so every session enter through `INDEX.md` first — that pointer name `.claude/context/INDEX.md`, entry point in **both** layouts, so it never need editing when layout change.
 
 ## Scope: structure, not domain
 
 Two layers deliberately separate:
 
-- **Context layer** (`.claude/context/*.md`) — describes **codebase structure**: what files implement which area, public APIs, internal patterns, where read source. Owned, rewritten by `/context-build` and `/context-update`.
-- **Domain layer** (e.g. `.claude/domain/*.md`, `docs/`, `CLAUDE.md`) — describes **business rules, workflows, design decisions, hard rules**. Owned by humans (or purpose-built commands like `/task-setup`). Context commands cross-reference domain files but **never modify them**. Code change imply domain rule shifted → `/context-update` flags for manual review, no rewrite.
+- **Context layer** (`.claude/context/*.md`) — describes **codebase structure**: what files implement which area, public APIs, internal patterns, where read source. Owned, rewritten by `/context-build` and `/context-update`, moved (never rewritten) by `/context-convert`.
+- **Domain layer** (e.g. `.claude/domain/*.md`, `docs/`, `CLAUDE.md`) — describes **business rules, workflows, design decisions, hard rules**. Owned by humans (or purpose-built commands like `/task-setup`). All three context skills cross-reference domain files but **never modify them**. Code change imply domain rule shifted → `/context-update` flags for manual review, no rewrite.
 
 This file itself domain file — describes context-workflow process. Not part of navigation layer.
 
@@ -129,7 +137,11 @@ Per-context-file six-section schema, 150-line cap per context file, 10-line snip
 2. **Phase 2 — Author.** Write `INDEX.md` first as checklist, then each context file using six-section schema.
 3. **Phase 3 — Wire entry-point.** Add navigation instruction at top of `CLAUDE.md` (create minimal one if absent). Verify every source file referenced from at least one context file; flag orphans, no auto-create files for them.
 
-Skill refuses refactor source code, refuses modify existing domain files.
+Layout chosen by argument, not inference: no argument → flat (default, and what Phase 2 stamp as `Layout: flat`); `nested` → skill propose units in Phase 1; `nested=<unit1>,<unit2>` → user name units, skill still decide which file land in which. Nested run read `skills/context-build/nested.md`; flat run never open it.
+
+Skill refuses refactor source code, refuses modify existing domain files, and refuses **convert** — nested build over layer that already exist stop and point at `/context-convert`. `/context-build` only ever author layer that not exist.
+
+`/project-setup` always invoke `/context-build` with no layout argument (flat), and never offer nested: first-time setup has no basis for picking unit seams.
 
 ## `/context-update` — four modes
 
@@ -139,6 +151,7 @@ Run after code changes. Modes mutually inclusive where noted:
 - **MODE B — Full (`full`).** Rewrites every context file regardless of git history. Also fallback when `Last updated` missing.
 - **MODE C — Targeted (`files=<names>` and/or `git=<ref>`).** `files=` takes comma-separated context filenames (no path/extension). `git=` takes `uncommitted`, SHA, branch, or range like `HEAD~3..HEAD`. Both given → union of target sets updated.
 - **`-y` / `--yes`** — non-interactive; skips all confirmation gates, still produces same reports. Combinable with any mode. Mode A's "nothing to update" exit still fires under `--yes`.
+- **`unit=<name>[,<name>]`** — nested layers only; scope run to named leaves, leaving other leaves and their dates untouched. Also disambiguate `files=` when same context filename exist in two units. Not applicable on flat layer. Nested run read `skills/context-update/nested.md`; flat run never open it.
 
 Phase 1 produces per-file plain-language diff summary ("PUBLIC API: append_row gained dry_run:bool"); Phase 2 edits sections in place — preserving accurate sections verbatim, updating only what changed, refreshing `Last updated` in INDEX last. Files growing past 150 lines flagged for splitting, not split automatically.
 
@@ -177,12 +190,18 @@ Domain files, source code and `CLAUDE.md` are untouched, matching the rest of th
 
 - Treat `.claude/context/` as only writable surface. Domain files, source code out of scope — flag, don't edit.
 - Preserve existing structure on update. Schema part of contract: future sessions rely on section names predictable.
-- `Last updated` date load-bearing — every `/context-update` run must rewrite it on success, or smart-update degrades.
+- `Last updated` date load-bearing — every `/context-update` run must rewrite it on success, or smart-update degrades. Nested: date live on leaf, one per unit, and run rewrite only leaves it touched. Router never carry date at all.
+- Layout known by reading `Layout:` marker, never by inferring from folders. Missing marker mean flat.
+- Depth capped at two levels (router + one rank of leaves). Lifting cap is deliberate future work, not a bug to fix in passing.
+- Nesting change only where index files live and which index own which file. Six-section schema, 150-line file cap, 10-line snippet cap identical in both layouts.
 - Source-file references use relative paths; sibling context refs use `./other.md`; canonical-doc refs use `../../`-prefixed paths (see `.claude/context/INDEX.md` Conventions section).
 
 ## Cross-references
 
 - [`../../CLAUDE.md`](../../CLAUDE.md) — navigation instruction lives at top; hard rules below.
-- [`../context/INDEX.md`](../context/INDEX.md) — live navigation index for this repo, with `Last updated` anchor.
-- `skills/context-build/SKILL.md`, `skills/context-update/SKILL.md`, `skills/context-convert/SKILL.md` — skill implementations.
+- [`../context/INDEX.md`](../context/INDEX.md) — live navigation index for this repo, with `Layout: flat` marker and `Last updated` anchor. Reference example of marker-bearing flat index; this repo stays flat deliberately (thirteen context files, no unit seams worth a router).
+- `skills/context-build/SKILL.md` (+ `nested.md`), `skills/context-update/SKILL.md` (+ `nested.md`), `skills/context-convert/SKILL.md` — skill implementations.
+- [`../context/features.md`](../context/features.md) — shipped-artifact inventory; per-skill entries for all three.
+- [`../../README.md`](../../README.md) — user-facing account of the family and the two layouts.
+- [`../../commands/project-setup.md`](../../commands/project-setup.md) — wizard that orchestrates `/context-build` (flat only).
 - [`../../docs/authoring-guide.md`](../../docs/authoring-guide.md) — frontmatter schema incl. `replaces:` kind-migration key.

@@ -69,7 +69,7 @@ Preconditions: 98, 99
 
 ## 101. Document the context skill family and refresh its context layer
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/cli-help.txt, docs/authoring-guide.md, .claude/context/features.md, .claude/context/INDEX.md, commands/project-setup.md, .claude/domain/context-workflow.md, VERSION
 Preconditions: 97, 98, 99, 100

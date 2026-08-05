@@ -1,6 +1,8 @@
 # Context index
 
-Last updated: 2026-07-28
+Layout: flat
+
+Last updated: 2026-08-05
 
 Nav layer for `chosko-llm`. Read this first, then files relevant to task. Open source files only when context file's **When to read the source** section say necessary.
 
@@ -27,19 +29,20 @@ Canonical project docs live outside this folder, stay authoritative:
 | [cmd-help.md](./cmd-help.md) | `scripts/cmd-help.sh` — print `docs/cli-help.txt` or fallback help. |
 | [cmd-task-impl.md](./cmd-task-impl.md) | `scripts/cmd-task-impl.sh` — external-LLM (aider+Ollama) orchestrator of 7-step task-implement flow for current project. |
 | [lib-task-external.md](./lib-task-external.md) | `scripts/lib-task-external.sh` — project-scoped backlog parse/mutate/guard helpers beneath `cmd-task-impl.sh`. |
-| [features.md](./features.md) | Shipped artifacts under `commands/`, `skills/`, `claude-md/`, `statusline/`; cross-refs to authoring guide. |
+| [features.md](./features.md) | Shipped artifacts under `commands/`, `skills/`, `claude-md/`, `statusline/`; frontmatter contract incl. optional `replaces:`; cross-refs to authoring guide. |
 
 ## Domain
 
 | File | Covers |
 | --- | --- |
 | [../domain/task-workflow.md](../domain/task-workflow.md) | Dual-LLM task workflow: Claude Code authors via `/task-add`, qwen2.5-coder:14b via aider implements. Body schema, body↔TASKS.md split, static implement-prompt artifact. |
-| [../domain/context-workflow.md](../domain/context-workflow.md) | Nav context layer under `.claude/context/`: six-section per-file schema, INDEX.md `Last updated` anchor, four `/context-update` modes. |
+| [../domain/context-workflow.md](../domain/context-workflow.md) | Nav context layer under `.claude/context/`: the three skills (`/context-build`, `/context-update`, `/context-convert`), six-section per-file schema, `Layout:` marker, flat vs. nested layout, `Last updated` anchor (per-leaf when nested), four `/context-update` modes. |
 | [../domain/refactor-workflow.md](../domain/refactor-workflow.md) | Behaviour-preserving refactor workflow: prime directive, plan-first approval gate, five focus concerns, `scope=` semantics, phase ordering. |
 | [../domain/product-workflow.md](../domain/product-workflow.md) | Product pipeline (`/domain-setup` → `/product-design` → `/architect` → `/task-add`): document set, `FEATURES.md` schema + feature state machine, `[STALE]` status + `Feature:` line, iterate guard, reconciliation protocol. |
 
 ## Conventions
 
+- `Layout: flat` under the title declares this layer's shape: one index, every context file beside it. Deliberate — thirteen files, no unit seams worth a router. Read the marker, never infer the layout. Restructuring is `/context-convert`'s job, not a hand edit.
 - Source references use repo-root-relative paths + fully qualified names, e.g. `scripts/lib.sh::resolve_feature`.
 - Cross-references to sibling context files use relative links (`./other.md`).
 - Cross-references to canonical docs use `../../`-prefixed paths.

@@ -21,6 +21,12 @@ Usage:
   chosko-llm update <feature>         Re-copy a feature from the managed clone (installs if missing).
   chosko-llm update --all             Update every installed feature whose version is lower than the
                                       managed clone (skips up-to-date and locally-ahead features).
+                                      Also migrates a feature that changed kind: if an installed
+                                      artifact has no source in the clone but another feature there
+                                      declares it as 'replaces:', the replacement is installed and
+                                      the stale copy removed. This is how the context-build and
+                                      context-update commands became skills — after 'upgrade', a
+                                      single 'update --all' completes the move.
 
   chosko-llm upgrade                  git pull the managed clone and refresh the CLI proxy.
                                       Does NOT re-install features — use 'update --all' for that.

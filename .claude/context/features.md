@@ -39,14 +39,16 @@ Currently shipped:
   `/context-build`'s DOMAIN DEPENDENCIES sections link to domain files; its
   GATHER step detects existing `.claude/domain/` and offers indexing docs
   already there), then
-  `/context-build` (most context-hungry, gated command). On Unity
+  `/context-build` (a skill since v0.46.0; most context-hungry, gated
+  step, and the wizard always invokes it in its default FLAT layout —
+  never `nested`). On Unity
   projects also offers `/unity-mcp-setup`, invoked LAST (after
   `/context-build`, so freshly-built context layer exists for its
   `mcp-tools.md` doc) — wizard only offers and delegates, holds no MCP
   logic itself. By default everything, including
   sub-commands' output, left uncommitted for user review and commit
-  in one pass — matching other authoring commands (`/context-build`,
-  `/context-update`, `/task-enrich`, `/refactor-*`). With `--commit` it
+  in one pass — matching other authoring features (`/context-build`,
+  `/context-convert`, `/task-enrich`, `/refactor-*`). With `--commit` it
   commits own artifacts first, then runs sub-commands with `--commit`
   so each commits own output. VCS detection decides whether to inject
   VCS-mapping section (and, under `--commit`, which VCS commits target).
@@ -64,16 +66,39 @@ Currently shipped:
   leaves versioned artifacts uncommitted by default; `--commit` commits
   exactly those paths.** Handles "running session's tool index doesn't
   refresh after `claude mcp add`" gotcha by telling user to restart.
-- `skills/context-build/SKILL.md` — introduces navigation context layer,
-  stamping `Layout: flat` into the INDEX it authors. Leaves it uncommitted
-  by default; `--commit` commits layer (INDEX, context files, CLAUDE.md
-  edit) with explicit paths only. Carries `replaces: command:context-build`.
-- `skills/context-update/SKILL.md` — refreshes existing context layer,
-  backfilling `Layout: flat` into any INDEX lacking the marker, then
-  auto-commits context files it updated (explicit paths only; no commit
-  when nothing changed). Joins auto-committing group with `/task-add`
-  and `/task-clean`. `--no-commit` leaves updates uncommitted. Carries
-  `replaces: command:context-update`.
+- `skills/context-build/` — introduces navigation context layer. Three
+  phases: analysis (no writes, stops for approval), author, wire CLAUDE.md
+  entry-point. Flat by default, stamping `Layout: flat` into the INDEX it
+  authors; `nested` / `nested=<unit1>,<unit2>` builds router + per-unit
+  leaves instead. One supporting file, `nested.md`, read ON DEMAND — only
+  when the run is nested — so flat runs (the common path) never pay its
+  tokens. Refuses to convert an existing layer, pointing at
+  `/context-convert`. Leaves output uncommitted by default; `--commit`
+  commits layer (INDEX, context files, CLAUDE.md edit) with explicit paths
+  only. Carries `replaces: command:context-build`.
+- `skills/context-update/` — refreshes existing context layer. Four modes
+  (smart / `full` / `files=`+`git=` targeted / `-y`), backfills
+  `Layout: flat` into any INDEX lacking the marker, then auto-commits
+  context files it updated (explicit paths only; no commit when nothing
+  changed). Joins auto-committing group with `/task-add` and
+  `/task-clean`. `--no-commit` leaves updates uncommitted. One supporting
+  file, `nested.md`, read ON DEMAND when the layer's marker says
+  `Layout: nested` — covers per-leaf `Last updated` (each leaf its own
+  date authority, router has none), one-leaf-per-file ownership, and
+  `unit=<name>` scoping/disambiguation.
+- `skills/context-convert/` — restructures an existing layer between the
+  two layouts in place, either direction; `/context-build` refuses that
+  operation and points here. Direction inferred from the `Layout:` marker,
+  forceable with `to=nested` / `to=flat`; `nested=` pre-seeds unit names
+  only, never file placement. Plan-first: Phase 1 reports every path move,
+  date decision and link rewrite, then stops (`-y` skips the gate).
+  Content is MOVED, never rewritten — the only in-file edit is a relative
+  link whose depth changed. Dates fail safe both ways (flat→nested: every
+  leaf inherits the flat date verbatim; nested→flat: the MINIMUM leaf
+  date, never max, never today). No `nested.md` split — every run of this
+  skill concerns the nested layout, so there is no cheap flat path to
+  keep. Authoring-command commit family: `--commit` to commit and push.
+  No `replaces:` — it is new, not a migration.
 - `commands/domain-setup.md` — initializes domain knowledge layer, same
   way `/task-setup` initializes backlog: `.claude/domain/`,
   `.claude/domain/features/`, `.claude/domain/INDEX.md` whose
@@ -150,7 +175,7 @@ Currently shipped:
   body files + `.claude/FEATURES.md` when changed); `--no-commit`
   leaves uncommitted.
 - `skills/task-implement/` — implements backlog tasks end-to-end with
-  tests-first sequence. Repo's only skill: `SKILL.md` carries common path (clean
+  tests-first sequence. `SKILL.md` carries common path (clean
   tree, known test runner, numbered `target: claude` task); six
   supporting files read only when their branch fires —
   `dirty-tree.md` (non-empty `git status`), `test-runner.md` (runner must
@@ -319,8 +344,16 @@ name: <kebab-case>          # MUST match filename / folder name
 version: <semver>           # required; install refuses without it
 type: command | skill
 description: <one line>
+replaces: command:<name>     # OPTIONAL, only on a kind change; see below
 ---
 ```
+
+`replaces:` is the optional fifth key from the kind-migration path: set it when
+a feature changes kind (`commands/<n>.md` rewritten as `skills/<n>/SKILL.md`),
+so `add`/`update`/`update --all` remove the superseded artifact from
+`$CLAUDE_HOME` instead of leaving two definitions of one slash command. Live
+examples: `skills/context-build/SKILL.md` and `skills/context-update/SKILL.md`.
+Drop the key once the migration has propagated.
 
 See `../../docs/authoring-guide.md` for canonical spec, including
 semver bump rules, commit-control convention, three places task
@@ -336,6 +369,14 @@ its state in versioned project document.
 - **Skills are folders, not single files.** Bare `skills/foo.md` is
   ignored by every script. See `feature_kind` in
   [shared-lib.md](./shared-lib.md).
+- **Supporting files are read on demand.** A skill folder's non-`SKILL.md`
+  files exist so the common path stays cheap: `SKILL.md` names the branch
+  and the file to read when it fires, and nothing else reads them.
+  `skills/task-implement/` (seven), `skills/product-design/` (four),
+  `skills/architect/` (three), `skills/context-build/nested.md` and
+  `skills/context-update/nested.md` (one each) all follow this. Whole
+  folder is copied on install regardless — the saving is tokens per run,
+  not bytes on disk.
 - **No state file.** Versions live in frontmatter; what's installed is
   whatever exists under `$CLAUDE_HOME`. See `../../CLAUDE.md` hard rules.
 

@@ -254,13 +254,51 @@ schemas and extended workflows) that Claude can lean on when driving the
 editor over the `UnityMCP` server. Install it like any other feature with
 `chosko-llm add skill:unity-mcp-skill`.
 
-### Keep Claude oriented — `/context-build` and `/context-update`
+### Keep Claude oriented — `/context-build`, `/context-update`, `/context-convert`
 
 Build a *navigation layer*: small structured summaries that let future Claude Code sessions
 open only the source files they need, saving tokens.
 
+All three ship as **skills**, not commands (`/context-build` and
+`/context-update` were commands before v0.46.0 — see the migration note below).
+
 - `/context-build` — create the layer once. (it can be invoked automatically by `/project-setup` if chosen when asked). Commits only under `--commit`, and pushes too unless `--no-push` is also passed.
 - `/context-update` — refresh only the parts the latest diffs touched. Commits and pushes automatically; `--no-commit` skips both, `--no-push` commits without pushing.
+- `/context-convert` — restructure a layer you already have from one layout to
+  the other, without rebuilding it from source. Plan-first: it reports every
+  move, date decision and link rewrite, then stops for approval (`-y` skips the
+  gate). Commits only under `--commit`.
+
+#### Two layouts: flat by default, nested on demand
+
+- **Flat** (the default, and what every existing layer already is) — one
+  `.claude/context/INDEX.md` with every context file beside it. Nothing to opt
+  into; this is what `/context-build` produces when you pass no layout argument.
+- **Nested** (opt in with `/context-build nested`, or
+  `/context-build nested=api,worker` to name the units yourself) — a *router*
+  `INDEX.md` that lists units, plus one *leaf* `INDEX.md` per unit that owns
+  that unit's context files. Worth it on a repo big enough that a single index
+  is itself an expensive read. Nesting is capped at two levels: router plus one
+  rank of leaves.
+
+Each leaf carries its own `Last updated` date, so refreshing one unit does not
+make the others look fresher than they are; `/context-update unit=<name>` scopes
+a run to a single leaf. The per-file six-section schema, the 150-line file cap
+and the snippet cap are identical in both layouts — only *where the index files
+live* changes.
+
+A layer declares its own shape with a `Layout: flat` / `Layout: nested` line
+directly under the title of `.claude/context/INDEX.md`. Detection is that line
+and nothing else — a missing marker means flat, so pre-existing layers keep
+working and `/context-update` backfills the marker on its next run.
+`/context-build` will not convert an existing layer; that is `/context-convert`'s
+job.
+
+> **Upgrading from an older install:** `/context-build` and `/context-update`
+> used to be commands. The new skills declare `replaces: command:<name>`, so
+> `chosko-llm upgrade && chosko-llm update --all` installs the skill and removes
+> the stale command copy for you — you should not end up with two definitions of
+> the same slash command.
 
 ### Clean up safely — `/refactor-codebase` and `/refactor-tests`
 

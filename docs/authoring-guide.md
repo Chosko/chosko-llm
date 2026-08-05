@@ -83,6 +83,20 @@ What the CLI does with it:
   it. On a hit, the replacement is installed and the stale artifact removed. On
   no hit, the usual `Skipping … no source in managed clone.` warning is emitted.
 
+Two lessons from the first real migration (`context-build` and `context-update`,
+both `commands/<n>.md` → `skills/<n>/SKILL.md` in v0.46.0):
+
+- **Delete the old file in the same commit that adds the new one.** `replaces:`
+  cleans up the *user's* install; it does nothing about the clone. Leaving
+  `commands/<n>.md` in the repo alongside `skills/<n>/SKILL.md` gives two
+  sources for one name, and `resolve_feature` has to be disambiguated with a
+  `command:` / `skill:` prefix on every call.
+- **Version the new artifact above the old one.** `update --all` compares
+  versions, so the replacement must be a bump on what the user has installed, or
+  the migration path is never taken. Continue the old feature's version series
+  rather than restarting at `0.1.0` — a command-to-skill rewrite is not a new
+  feature to its users.
+
 **Drop the key a release or two after the migration has propagated.** It exists
 to fix up installs that predate the rename; once everyone has run
 `chosko-llm upgrade && chosko-llm update --all`, it is dead weight, and a stale
@@ -244,12 +258,16 @@ same value and users have no signal that there is anything to refresh.
 
 ## Commit-and-push convention
 
-Commands that write files split into two groups, each exposing one opt-in
-flag so the user can override the default commit behaviour:
+Features that write files split into two groups, each exposing one opt-in
+flag so the user can override the default commit behaviour. The split is about
+*behaviour*, not kind — several members of both groups (`/context-build`,
+`/context-update`, `/context-convert`, `/task-implement`, `/product-design`,
+`/architect`) ship as skills, and the rules below apply to them unchanged:
 
 - **Authoring commands (uncommitted by default).** `/context-build`,
-  `/task-enrich`, `/refactor-codebase`, `/refactor-tests`, `/task-setup`,
-  `/domain-setup`, `/unity-mcp-setup`, `/product-design`, `/architect`, and
+  `/context-convert`, `/task-enrich`, `/refactor-codebase`, `/refactor-tests`,
+  `/task-setup`, `/domain-setup`, `/unity-mcp-setup`, `/product-design`,
+  `/architect`, and
   `/project-setup` write their output and leave it in the working tree
   for review. They accept **`--commit`** to commit what they wrote at the
   end.
@@ -307,7 +325,7 @@ steps 1, 3, and 4 above while still committing as it does today.
 - For auto-committing commands (`/task-add`, `/task-clean`,
   `/task-implement`, `/context-update`), `--no-commit` implies `--no-push`
   — there is nothing to push.
-- For authoring commands (`/context-build`, `/task-enrich`,
+- For authoring commands (`/context-build`, `/context-convert`, `/task-enrich`,
   `/refactor-codebase`, `/refactor-tests`, `/task-setup`, `/domain-setup`,
   `/unity-mcp-setup`, `/product-design`, `/architect`, `/project-setup`),
   which only commit under `--commit`, `--commit --no-push` is a valid
