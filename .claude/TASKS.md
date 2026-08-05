@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 91
+Last task number: 92
 
 ---
 
@@ -90,4 +90,13 @@ Preconditions: none
 Status: [MISSING]
 Target: claude
 Files: docs/authoring-guide.md, CLAUDE.md
+Preconditions: none
+
+---
+
+## 92. Offer per-task subagent delegation on multi-task /task-implement runs
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, .claude/domain/task-workflow.md, .claude/context/features.md, VERSION
 Preconditions: none
