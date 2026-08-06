@@ -17,6 +17,7 @@ CLI:
 - `--diff` — compare latest vs installed (summary; add `--content` for line
   diff). These three mutually exclusive (`die` if more than one).
 - `--content` — also print body of selected copy (or diff).
+- `--local` / `--global` — scope, see below.
 - `-h` / `--help` — usage, exit 0.
 
 Default view (no flag): installed copy if installed, else latest.
@@ -31,6 +32,19 @@ than one view flag, or unresolvable/ambiguous name.
 
 ## Internal patterns
 
+- **Scope (`--local` / `--global`, task 103).** First line after sourcing
+  `lib.sh` calls `resolve_scope "$@"` then re-sets `$@` from `SCOPE_ARGS`;
+  existing flag parsing runs unchanged on the cleaned arguments. No flag =
+  `--global`, byte-identical to pre-103 behavior. The claude-md `inst_file`
+  and `loc` come from `claudemd_target_path` (task 103, in `lib.sh`)
+  instead of a hardcoded `$CLAUDE_HOME/CLAUDE.md`, so local scope inspects
+  `<cwd>/CLAUDE.md` rather than `<cwd>/.claude/CLAUDE.md`. `show` never
+  `die`s on a statusline feature in local scope (unlike `add`/`rm`/`update`)
+  — instead the footer's tip block is replaced with a
+  "statusline scripts are global-only" note whenever `kind = statusline`
+  and `scope_is_local`, while the metadata block above still renders
+  normally (naturally showing "not installed" since no local statusline
+  path exists).
 - **Own resolver, not `lib.sh::resolve_feature`.** `resolve_show_feature`
   matches feature existing in EITHER managed clone OR `$CLAUDE_HOME`,
   so local-only installs inspectable. Keep its `command:`/`skill:`/
@@ -60,7 +74,8 @@ than one view flag, or unresolvable/ambiguous name.
 
 - [shared-lib.md](./shared-lib.md) — `src_*` / `inst_*` path helpers,
   `read_frontmatter_field`, `claudemd_is_installed` /
-  `claudemd_installed_version`, and `C_*` colors.
+  `claudemd_installed_version` / `claudemd_target_path`, scope helpers
+  `resolve_scope` / `scope_is_local`, and `C_*` colors.
 - [cmd-ls.md](./cmd-ls.md) — multi-feature listing; `show` single-feature
   deep-dive, footer tip point back at `add`/`update`.
 
@@ -72,3 +87,6 @@ than one view flag, or unresolvable/ambiguous name.
   `cmd-show.sh`.
 - Change diff rendering (currently `diff -u` over extracted bodies) →
   `diff)` branch in `cmd-show.sh`.
+- Change the statusline-in-local-scope footer note → the
+  `scope_is_local` check just before the `case "$status"` footer block in
+  `cmd-show.sh`.

@@ -78,7 +78,7 @@ Preconditions: none
 
 ## 103. Wire --local / --global into ls, add, rm, update, show
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/cmd-ls.sh, scripts/cmd-add.sh, scripts/cmd-rm.sh, scripts/cmd-update.sh, scripts/cmd-show.sh, docs/cli-help.txt, README.md, .claude/context/cmd-ls.md, .claude/context/cmd-add.md, .claude/context/cmd-rm.md, .claude/context/cmd-update.md, .claude/context/cmd-show.md, .claude/context/INDEX.md, VERSION
 Preconditions: 102

@@ -52,8 +52,10 @@ Helper: `_use_color_stdout` — returns 0 when color should apply to stdout.
 
 ### Scope resolution
 Lets a caller install into a per-project `.claude/` instead of the global
-one. No subcommand consumes it yet (task 103 wires it into `ls` / `add` /
-`rm` / `update` / `show`) — sourcing `lib.sh` without calling `resolve_scope`
+one. `ls`, `add`, `rm`, `update`, and `show` all consume it (task 103) —
+each calls `resolve_scope "$@"` as the first line after sourcing `lib.sh`,
+then re-sets its positional parameters from `SCOPE_ARGS` before its own
+flag parsing runs. Sourcing `lib.sh` without calling `resolve_scope`
 changes nothing.
 - `CHOSKO_LLM_SCOPE` — `local` or `global`, default `global`.
 - `SCOPE_ARGS` — array, empty by default. Safe to expand under `set -u` via
@@ -74,6 +76,14 @@ changes nothing.
 - `scope_supports_kind <kind>` — 1 for `statusline` in local scope (per-project
   statusline scripts are out of scope — it installs an executable plus a
   `settings.json` wiring step), 0 for every other kind/scope combination.
+- `claudemd_target_path` (task 103) — prints the CLAUDE.md file claude-md
+  artifacts read/write: `$CLAUDE_HOME/CLAUDE.md` in global scope, but
+  `<cwd>/CLAUDE.md` (one directory up from `$CLAUDE_HOME`, which is
+  `<cwd>/.claude` in local scope) in local scope — a project's CLAUDE.md
+  lives at its root, not nested under `.claude/`. `claudemd_is_installed`,
+  `claudemd_installed_version`, `inject_section`, and `remove_section` all
+  call this instead of hardcoding `$CLAUDE_HOME/CLAUDE.md`, so every
+  claude-md-consuming subcommand is scope-aware for free.
 
 ### Frontmatter
 - `parse_frontmatter <file>` — emits `key=value` lines for five recognized keys:
@@ -218,3 +228,5 @@ Helpers over gitignored key=value file `$CHOSKO_LLM_HOME/.auto-upgrade-state`
 - Changing scope semantics (flag parsing, local-root marker, which kinds are
   scope-restricted) → `resolve_scope` / `scope_is_local` / `scope_label` /
   `scope_supports_kind` in `lib.sh`.
+- Changing where claude-md sections read/write in local scope →
+  `claudemd_target_path` in `lib.sh`.

@@ -208,28 +208,45 @@ open_in_file_manager() {
   fi
 }
 
+# claudemd_target_path
+# Prints the CLAUDE.md file that claude-md artifacts read/write. In global
+# scope this is $CLAUDE_HOME/CLAUDE.md (Claude Code's global instructions
+# file). In local scope, $CLAUDE_HOME is <cwd>/.claude (where commands and
+# skills go), but a project's CLAUDE.md lives at the project root, one
+# directory up — so claude-md sections target <cwd>/CLAUDE.md instead.
+claudemd_target_path() {
+  if scope_is_local; then
+    printf '%s/CLAUDE.md' "$(dirname "$CLAUDE_HOME")"
+  else
+    printf '%s/CLAUDE.md' "$CLAUDE_HOME"
+  fi
+}
+
 # claudemd_is_installed <name>
-# Returns 0 if a managed section for <name> exists in $CLAUDE_HOME/CLAUDE.md.
+# Returns 0 if a managed section for <name> exists in claudemd_target_path.
 claudemd_is_installed() {
-  local name="$1" target="$CLAUDE_HOME/CLAUDE.md"
+  local name="$1" target
+  target="$(claudemd_target_path)"
   [ -f "$target" ] && grep -qF "<!-- chosko-llm:${name}:begin" "$target"
 }
 
 # claudemd_installed_version <name>
 # Prints the version recorded in the begin tag, or empty if not installed.
 claudemd_installed_version() {
-  local name="$1" target="$CLAUDE_HOME/CLAUDE.md"
+  local name="$1" target
+  target="$(claudemd_target_path)"
   [ -f "$target" ] || return 0
   grep "<!-- chosko-llm:${name}:begin" "$target" 2>/dev/null \
     | sed 's/.*:begin v\([^ ]*\) -->.*/\1/' | head -1
 }
 
 # inject_section <name> <version> <src_file>
-# Inserts or replaces the named managed section in $CLAUDE_HOME/CLAUDE.md.
+# Inserts or replaces the named managed section in claudemd_target_path.
 # Body is the content of <src_file> after its frontmatter closing ---.
 inject_section() {
   local name="$1" version="$2" src_file="$3"
-  local target="$CLAUDE_HOME/CLAUDE.md"
+  local target
+  target="$(claudemd_target_path)"
   local begin_tag="<!-- chosko-llm:${name}:begin v${version} -->"
   local end_tag="<!-- chosko-llm:${name}:end -->"
   local begin_marker="<!-- chosko-llm:${name}:begin"
@@ -275,9 +292,10 @@ inject_section() {
 }
 
 # remove_section <name>
-# Removes a managed section from $CLAUDE_HOME/CLAUDE.md.
+# Removes a managed section from claudemd_target_path.
 remove_section() {
-  local name="$1" target="$CLAUDE_HOME/CLAUDE.md"
+  local name="$1" target
+  target="$(claudemd_target_path)"
   [ -f "$target" ] || die "CLAUDE.md not found at $target"
   grep -qF "<!-- chosko-llm:${name}:begin" "$target" \
     || die "claude-md '$name' is not installed in $target"

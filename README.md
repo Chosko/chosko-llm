@@ -112,6 +112,21 @@ chosko-llm export --archive       # writes a .zip instead, for uploading to a Cl
 
 The default Markdown shape concatenates every selected file into one document — suited to a Claude Project's knowledge base, where the whole thing gets ingested at once. `--archive` writes a zip with the files under a top-level `<repo>/` directory plus a root `MANIFEST.md`, suited to a Claude chat, where the assistant reads members selectively. Both shapes draw from the same file-selection rules, so they never disagree about what a repo's config is. Output goes to `$CHOSKO_LLM_EXPORT_DIR` (default `~/claude-exports`), created if missing; the written path is printed on success.
 
+### Per-repository installs
+
+`ls`, `show`, `add`, `rm`, and `update` all accept `--local` / `--global`. `--global` (the default) targets `$CLAUDE_HOME` as usual. `--local` targets `<cwd>/.claude` instead, so a feature can be installed into a single repository rather than globally:
+
+```sh
+chosko-llm add refactor-codebase --local   # install into <cwd>/.claude/ instead of ~/.claude/
+chosko-llm ls --local                      # list what's installed in <cwd>/.claude
+chosko-llm update --all --local            # refresh everything installed locally
+chosko-llm rm refactor-codebase --local    # remove it again
+```
+
+`--local` requires `<cwd>/CLAUDE.md` to already exist — run it from the project root (or run `/project-setup` first on an empty directory). claude-md artifacts are the one exception to the `.claude/` target: they inject their managed section into `<cwd>/CLAUDE.md` itself, since that's the file Claude Code actually reads for the project.
+
+statusline scripts are global-only — a status bar belongs to your terminal, not a repository. A single-feature `add`/`update`/`rm` naming a statusline feature fails with `--local`; `add --all --local` and `update --all --local` skip the statusline pass instead of failing; `ls --local` omits it entirely; `show --local` on a statusline feature reports it as global-only rather than erroring.
+
 ### Feature names
 
 A bare name like `refactor-codebase` matches commands, skills, claude-md artifacts, and statusline scripts. If a name is ambiguous, disambiguate with `command:<name>`, `skill:<name>`, `claude-md:<name>`, or `statusline:<name>`.

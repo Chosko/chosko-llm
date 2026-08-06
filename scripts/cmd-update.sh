@@ -4,13 +4,26 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib.sh
 source "$SCRIPT_DIR/lib.sh"
 
+resolve_scope "$@"
+set -- ${SCOPE_ARGS[@]+"${SCOPE_ARGS[@]}"}
+
 usage() {
   cat <<EOF
 Usage:
-  chosko-llm update <feature>     Re-copy a feature from the managed clone (installs if missing).
-  chosko-llm update --all         Update every currently installed feature.
+  chosko-llm update <feature> [--local | --global]   Re-copy a feature from the managed clone
+                                                       (installs if missing).
+  chosko-llm update --all [--local | --global]        Update every currently installed feature.
+
+  --local   Operate on <cwd>/.claude instead of \$CLAUDE_HOME. Requires <cwd>/CLAUDE.md
+            to exist. statusline is global-only: a single-feature statusline request
+            fails; --all skips it.
+  --global  Operate on \$CLAUDE_HOME (default).
 EOF
 }
+
+case "${1:-}" in
+  -h|--help) usage; exit 0 ;;
+esac
 
 if [ $# -lt 1 ]; then
   usage
@@ -30,7 +43,7 @@ update_one() {
       mkdir -p "$(dirname "$dst")"
       [ -f "$dst" ] && rm -f "$dst"
       cp "$src" "$dst"
-      log_success "Updated command '$name' -> v$(read_frontmatter_field "$src" version)"
+      log_success "Updated command '$name' -> v$(read_frontmatter_field "$src" version) (scope: $CHOSKO_LLM_SCOPE)"
       ;;
     skill)
       local src_dir src_skill dst_dir
@@ -42,7 +55,7 @@ update_one() {
       mkdir -p "$(dirname "$dst_dir")"
       [ -d "$dst_dir" ] && rm -rf "$dst_dir"
       cp -R "$src_dir" "$dst_dir"
-      log_success "Updated skill '$name' -> v$(read_frontmatter_field "$src_skill" version)"
+      log_success "Updated skill '$name' -> v$(read_frontmatter_field "$src_skill" version) (scope: $CHOSKO_LLM_SCOPE)"
       ;;
     claude-md)
       local src
@@ -52,7 +65,7 @@ update_one() {
       local version
       version="$(read_frontmatter_field "$src" version)"
       inject_section "$name" "$version" "$src"
-      log_success "Updated claude-md '$name' -> v$version"
+      log_success "Updated claude-md '$name' -> v$version (scope: $CHOSKO_LLM_SCOPE)"
       ;;
     statusline)
       local src dst
@@ -64,7 +77,7 @@ update_one() {
       [ -f "$dst" ] && rm -f "$dst"
       cp "$src" "$dst"
       chmod +x "$dst"
-      log_success "Updated statusline '$name' -> v$(read_frontmatter_field "$src" version)"
+      log_success "Updated statusline '$name' -> v$(read_frontmatter_field "$src" version) (scope: $CHOSKO_LLM_SCOPE)"
       ;;
     *) die "Unknown kind: $kind" ;;
   esac
@@ -153,7 +166,8 @@ if [ "$1" = "--all" ]; then
       fi
     done
   fi
-  if [ -f "$CLAUDE_HOME/CLAUDE.md" ]; then
+  claudemd_target="$(claudemd_target_path)"
+  if [ -f "$claudemd_target" ]; then
     while IFS= read -r line; do
       name= inst_ver= src_ver= cmp=
       name="$(printf '%s' "$line" | sed 's/<!-- chosko-llm:\([^:]*\):begin.*/\1/')"
@@ -175,9 +189,11 @@ if [ "$1" = "--all" ]; then
       else
         log_warn "Skipping claude-md '$name': no source in managed clone."
       fi
-    done < <(grep '<!-- chosko-llm:.*:begin' "$CLAUDE_HOME/CLAUDE.md" 2>/dev/null || true)
+    done < <(grep '<!-- chosko-llm:.*:begin' "$claudemd_target" 2>/dev/null || true)
   fi
-  if [ -d "$CLAUDE_HOME/statusline" ]; then
+  if scope_is_local; then
+    log_info "Skipping statusline features — global-only, not supported with --local."
+  elif [ -d "$CLAUDE_HOME/statusline" ]; then
     for f in "$CLAUDE_HOME"/statusline/*.sh; do
       [ -e "$f" ] || continue
       base="$(basename "$f" .sh)"
@@ -208,5 +224,8 @@ fi
 # missing, per spec.
 spec="$1"
 mapfile -t resolved < <(resolve_feature "$spec")
+if ! scope_supports_kind "${resolved[0]}"; then
+  die "statusline scripts are global-only. Re-run without --local."
+fi
 update_one "${resolved[0]}" "${resolved[1]}"
 apply_replaces "${resolved[0]}" "${resolved[1]}"

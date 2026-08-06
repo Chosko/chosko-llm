@@ -4,6 +4,25 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib.sh
 source "$SCRIPT_DIR/lib.sh"
 
+resolve_scope "$@"
+set -- ${SCOPE_ARGS[@]+"${SCOPE_ARGS[@]}"}
+
+case "${1:-}" in
+  -h|--help)
+    cat <<EOF
+Usage: chosko-llm rm <feature> [--local | --global]
+
+  <feature>     Remove an installed feature: <name>, command:<name>,
+                skill:<name>, claude-md:<name>, or statusline:<name>.
+  --local       Remove from <cwd>/.claude instead of \$CLAUDE_HOME. Requires
+                <cwd>/CLAUDE.md to exist. statusline is global-only and
+                fails with --local.
+  --global      Remove from \$CLAUDE_HOME (default).
+EOF
+    exit 0
+    ;;
+esac
+
 if [ $# -lt 1 ]; then
   die "Usage: chosko-llm rm <feature>"
 fi
@@ -39,28 +58,32 @@ resolve_installed() {
 
 kind="$(resolve_installed)"
 
+if ! scope_supports_kind "$kind"; then
+  die "statusline scripts are global-only. Re-run without --local."
+fi
+
 case "$kind" in
   command)
     target="$(inst_command_path "$name")"
     [ -f "$target" ] || die "Command '$name' is not installed."
     rm -f "$target"
-    log_success "Removed command '$name' ($target)"
+    log_success "Removed command '$name' ($target) (scope: $CHOSKO_LLM_SCOPE)"
     ;;
   skill)
     target="$(inst_skill_dir "$name")"
     [ -d "$target" ] || die "Skill '$name' is not installed."
     rm -rf "$target"
-    log_success "Removed skill '$name' ($target)"
+    log_success "Removed skill '$name' ($target) (scope: $CHOSKO_LLM_SCOPE)"
     ;;
   claude-md)
     remove_section "$name"
-    log_success "Removed claude-md '$name' from $CLAUDE_HOME/CLAUDE.md"
+    log_success "Removed claude-md '$name' from $(claudemd_target_path) (scope: $CHOSKO_LLM_SCOPE)"
     ;;
   statusline)
     target="$(inst_statusline_path "$name")"
     [ -f "$target" ] || die "statusline '$name' is not installed."
     rm -f "$target"
-    log_success "Removed statusline '$name' ($target)"
+    log_success "Removed statusline '$name' ($target) (scope: $CHOSKO_LLM_SCOPE)"
     log_warn "If $CLAUDE_HOME/settings.json's \"statusLine\" key still points at $target, update or remove it."
     ;;
 esac

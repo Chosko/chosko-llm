@@ -28,6 +28,17 @@ Usage:
                                       context-update commands became skills — after 'upgrade', a
                                       single 'update --all' completes the move.
 
+  --local / --global (on ls, show, add, rm, update)
+                                      --local installs into <cwd>/.claude instead of $CLAUDE_HOME,
+                                      for a per-repository install — claude-md artifacts inject into
+                                      <cwd>/CLAUDE.md itself. Requires <cwd>/CLAUDE.md to already
+                                      exist (run from the project root; run /project-setup first on
+                                      an empty directory). --global targets $CLAUDE_HOME (the
+                                      default). statusline scripts are global-only: a single-feature
+                                      statusline request with --local fails; '--all --local' skips
+                                      statusline silently; 'ls --local' omits it entirely; 'show
+                                      --local' on a statusline feature reports it as global-only.
+
   chosko-llm upgrade                  git pull the managed clone and refresh the CLI proxy.
                                       Does NOT re-install features — use 'update --all' for that.
                                       Runs automatically once a day on the first command (opt-in;

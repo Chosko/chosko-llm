@@ -14,24 +14,40 @@ CLI:
 - `chosko-llm add --all` — install every feature in managed clone
   (commands, skills, claude-md artifacts, AND statusline scripts) not
   yet installed; already-installed skipped with info log.
+- `chosko-llm add <feature> --local` / `--global` — scope, see below.
 
 Exit codes:
 - 0 on successful copy (or `--all` with nothing new to install).
 - 1 (via `die`) if no argument, feature not in managed clone,
-  source missing required frontmatter, or target already
-  installed.
+  source missing required frontmatter, target already
+  installed, or a single-feature `statusline` request with `--local`.
 
 Side effects:
-- Creates `$CLAUDE_HOME/commands/` or `$CLAUDE_HOME/skills/` if missing.
+- Creates `$CLAUDE_HOME/commands/` or `$CLAUDE_HOME/skills/` if missing
+  (`$CLAUDE_HOME` is `<cwd>/.claude` in local scope).
 - Commands: copies one `.md` file.
 - Skills: recursive copy (`cp -R`) of entire skill directory.
-- claude-md: injects managed section into `$CLAUDE_HOME/CLAUDE.md` via
+- claude-md: injects managed section into `claudemd_target_path` via
   `inject_section` (no file copy); refuses if section already exists.
+  `claudemd_target_path` is `$CLAUDE_HOME/CLAUDE.md` globally but
+  `<cwd>/CLAUDE.md` in local scope (task 103).
 - Statusline: copies `.sh` file to `$CLAUDE_HOME/statusline/<name>.sh`,
   `chmod +x`'s it, then calls `print_statusline_prompt` — prints
   copy-pasteable prompt for wiring `"statusLine"` key in
-  `$CLAUDE_HOME/settings.json` — no settings.json edit here.
-- Logs single `Installed <kind> '<name>' v<version> -> <path>` line.
+  `$CLAUDE_HOME/settings.json` — no settings.json edit here. Global-only:
+  never reachable in local scope (see below).
+- Logs single `Installed <kind> '<name>' v<version> -> <path> (scope:
+  <scope>)` line.
+
+**Scope (`--local` / `--global`, task 103).** First line after sourcing
+`lib.sh` calls `resolve_scope "$@"` then re-sets `$@` from `SCOPE_ARGS`;
+existing flag parsing runs unchanged on the cleaned arguments. No flag =
+`--global`, byte-identical to pre-103 behavior. Single-feature path: after
+`resolve_feature` returns `kind`, `scope_supports_kind "$kind"` gates the
+install — `die`s naming statusline global-only if it fails. `--all` path:
+the statusline block is guarded by `scope_is_local` — in local scope it
+logs one info line and skips the whole pass rather than failing the run;
+in global scope it behaves as before.
 - Single-feature path only: after install, `apply_replaces` honours the
   source's optional `replaces: <kind>:<name>` — removes that artifact if
   installed, logs `Migrated <old-kind> '<name>' -> <new-kind> '<name>'`.
@@ -61,7 +77,8 @@ Side effects:
 ## Cross-references
 
 - [shared-lib.md](./shared-lib.md) — `resolve_feature`,
-  `require_versioned_source`, `src_*` / `inst_*` path helpers.
+  `require_versioned_source`, `src_*` / `inst_*` path helpers, scope
+  helpers `resolve_scope` / `scope_supports_kind` / `claudemd_target_path`.
 - [cmd-update.md](./cmd-update.md) — "refresh / reinstall" counterpart;
   `update` installs if missing, usable in place of `add`.
 - [cmd-rm.md](./cmd-rm.md) — inverse operation.
@@ -76,3 +93,6 @@ Side effects:
 - Changing kind-migration behavior on install → `apply_replaces` call after
   the `esac` in `cmd-add.sh`, and `apply_replaces` in `lib.sh`.
 - Changing `--all` enumeration or skip logic → `--all` block in `cmd-add.sh`.
+- Changing scope behavior (statusline refusal, `--all` skip logic) →
+  `resolve_scope` call, `scope_supports_kind` check, and the `--all`
+  statusline block in `cmd-add.sh`.

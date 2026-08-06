@@ -2,7 +2,7 @@
 
 Layout: flat
 
-Last updated: 2026-08-05
+Last updated: 2026-08-06
 
 Nav layer for `chosko-llm`. Read this first, then files relevant to task. Open source files only when context file's **When to read the source** section say necessary.
 

@@ -4,6 +4,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib.sh
 source "$SCRIPT_DIR/lib.sh"
 
+resolve_scope "$@"
+set -- ${SCOPE_ARGS[@]+"${SCOPE_ARGS[@]}"}
+
 filter="all"
 case "${1:-}" in
   ""|--all)    filter="all" ;;
@@ -11,11 +14,15 @@ case "${1:-}" in
   --available) filter="available" ;;
   -h|--help)
     cat <<EOF
-Usage: chosko-llm ls [--installed | --available]
+Usage: chosko-llm ls [--installed | --available] [--local | --global]
 
   (no flag)     List all known features with installed and latest versions.
   --installed   Show only features that are currently installed.
   --available   Show only features that exist in the managed clone.
+  --local       List <cwd>/.claude instead of \$CLAUDE_HOME. Requires
+                <cwd>/CLAUDE.md to exist. Omits statusline scripts, which
+                are global-only.
+  --global      List \$CLAUDE_HOME (default).
 EOF
     exit 0
     ;;
@@ -68,8 +75,10 @@ collect_names() {
             basename "$f" .md
           done
         fi
-        if [ -f "$CLAUDE_HOME/CLAUDE.md" ]; then
-          grep '<!-- chosko-llm:.*:begin' "$CLAUDE_HOME/CLAUDE.md" 2>/dev/null \
+        local claudemd_target
+        claudemd_target="$(claudemd_target_path)"
+        if [ -f "$claudemd_target" ]; then
+          grep '<!-- chosko-llm:.*:begin' "$claudemd_target" 2>/dev/null \
             | sed 's/<!-- chosko-llm:\([^:]*\):begin.*/\1/' || true
         fi
       } | sort -u
@@ -88,6 +97,7 @@ collect_names() {
 
 list_all() {
   local filter="$1"
+  printf '%sHome: %s%s\n\n' "$C_DIM" "$(scope_label)" "$C_RESET"
   print_header
   local found=0
   local installable=() updatable=()
@@ -217,7 +227,7 @@ list_all() {
     local src_file inst_ver src_ver inst_col latest_col
     src_file="$(src_claudemd_path "$name")"
 
-    if [ -f "$CLAUDE_HOME/CLAUDE.md" ] && grep -qF "<!-- chosko-llm:${name}:begin" "$CLAUDE_HOME/CLAUDE.md" 2>/dev/null; then
+    if claudemd_is_installed "$name"; then
       inst_ver="$(claudemd_installed_version "$name" || true)"
       inst_col="${inst_ver:-unversioned}"
     else
@@ -271,6 +281,7 @@ list_all() {
     found=1
   done < <(collect_names claude-md)
 
+  if ! scope_is_local; then
   while IFS= read -r name; do
     [ -n "$name" ] || continue
     local inst_file src_file inst_ver src_ver inst_col latest_col
@@ -330,6 +341,7 @@ list_all() {
     printf '%s%s%s\n' "$status_color" "$status_col" "$C_RESET"
     found=1
   done < <(collect_names statusline)
+  fi
 
   [ $found -eq 1 ] || log_info "No features found."
 

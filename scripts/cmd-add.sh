@@ -4,7 +4,24 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib.sh
 source "$SCRIPT_DIR/lib.sh"
 
-if [ $# -lt 1 ]; then
+resolve_scope "$@"
+set -- ${SCOPE_ARGS[@]+"${SCOPE_ARGS[@]}"}
+
+if [ $# -lt 1 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+  if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+    cat <<EOF
+Usage: chosko-llm add <feature> [--local | --global] | --all [--local | --global]
+
+  <feature>     Install a feature: <name>, command:<name>, skill:<name>,
+                claude-md:<name>, or statusline:<name>.
+  --all         Install every feature not yet installed.
+  --local       Install into <cwd>/.claude instead of \$CLAUDE_HOME. Requires
+                <cwd>/CLAUDE.md to exist. statusline is global-only: a
+                single-feature statusline request fails; --all skips it.
+  --global      Install into \$CLAUDE_HOME (default).
+EOF
+    exit 0
+  fi
   die "Usage: chosko-llm add <feature> | --all"
 fi
 
@@ -26,7 +43,7 @@ if [ "$1" = "--all" ]; then
       fi
       mkdir -p "$(dirname "$dst")"
       cp "$f" "$dst"
-      log_success "Installed command '$base' v$version -> $dst"
+      log_success "Installed command '$base' v$version -> $dst (scope: $CHOSKO_LLM_SCOPE)"
       any=1
     done
   fi
@@ -51,7 +68,7 @@ if [ "$1" = "--all" ]; then
       fi
       mkdir -p "$(dirname "$dst_dir")"
       cp -R "$d" "$dst_dir"
-      log_success "Installed skill '$base' v$version -> $dst_dir"
+      log_success "Installed skill '$base' v$version -> $dst_dir (scope: $CHOSKO_LLM_SCOPE)"
       any=1
     done
   fi
@@ -69,11 +86,13 @@ if [ "$1" = "--all" ]; then
         continue
       fi
       inject_section "$base" "$version" "$f"
-      log_success "Installed claude-md '$base' v$version -> $CLAUDE_HOME/CLAUDE.md"
+      log_success "Installed claude-md '$base' v$version -> $(claudemd_target_path) (scope: $CHOSKO_LLM_SCOPE)"
       any=1
     done
   fi
-  if [ -d "$CHOSKO_LLM_HOME/statusline" ]; then
+  if scope_is_local; then
+    log_info "Skipping statusline features — global-only, not supported with --local."
+  elif [ -d "$CHOSKO_LLM_HOME/statusline" ]; then
     for f in "$CHOSKO_LLM_HOME"/statusline/*.sh; do
       [ -e "$f" ] || continue
       base="$(basename "$f" .sh)"
@@ -90,7 +109,7 @@ if [ "$1" = "--all" ]; then
       mkdir -p "$(dirname "$dst")"
       cp "$f" "$dst"
       chmod +x "$dst"
-      log_success "Installed statusline '$base' v$version -> $dst"
+      log_success "Installed statusline '$base' v$version -> $dst (scope: $CHOSKO_LLM_SCOPE)"
       print_statusline_prompt "$base" "$dst"
       any=1
     done
@@ -104,6 +123,10 @@ mapfile -t resolved < <(resolve_feature "$spec")
 kind="${resolved[0]}"
 name="${resolved[1]}"
 
+if ! scope_supports_kind "$kind"; then
+  die "statusline scripts are global-only. Re-run without --local."
+fi
+
 case "$kind" in
   command)
     src="$(src_command_path "$name")"
@@ -115,7 +138,7 @@ case "$kind" in
     mkdir -p "$(dirname "$dst")"
     cp "$src" "$dst"
     version="$(read_frontmatter_field "$src" version)"
-    log_success "Installed command '$name' v$version -> $dst"
+    log_success "Installed command '$name' v$version -> $dst (scope: $CHOSKO_LLM_SCOPE)"
     ;;
   skill)
     src_dir="$(src_skill_dir "$name")"
@@ -128,7 +151,7 @@ case "$kind" in
     mkdir -p "$(dirname "$dst_dir")"
     cp -R "$src_dir" "$dst_dir"
     version="$(read_frontmatter_field "$src_skill" version)"
-    log_success "Installed skill '$name' v$version -> $dst_dir"
+    log_success "Installed skill '$name' v$version -> $dst_dir (scope: $CHOSKO_LLM_SCOPE)"
     ;;
   claude-md)
     src="$(src_claudemd_path "$name")"
@@ -138,7 +161,7 @@ case "$kind" in
     fi
     version="$(read_frontmatter_field "$src" version)"
     inject_section "$name" "$version" "$src"
-    log_success "Installed claude-md '$name' v$version -> $CLAUDE_HOME/CLAUDE.md"
+    log_success "Installed claude-md '$name' v$version -> $(claudemd_target_path) (scope: $CHOSKO_LLM_SCOPE)"
     ;;
   statusline)
     src="$(src_statusline_path "$name")"
@@ -151,7 +174,7 @@ case "$kind" in
     cp "$src" "$dst"
     chmod +x "$dst"
     version="$(read_frontmatter_field "$src" version)"
-    log_success "Installed statusline '$name' v$version -> $dst"
+    log_success "Installed statusline '$name' v$version -> $dst (scope: $CHOSKO_LLM_SCOPE)"
     print_statusline_prompt "$name" "$dst"
     ;;
 esac

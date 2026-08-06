@@ -4,9 +4,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib.sh
 source "$SCRIPT_DIR/lib.sh"
 
+resolve_scope "$@"
+set -- ${SCOPE_ARGS[@]+"${SCOPE_ARGS[@]}"}
+
 usage() {
   cat <<EOF
-Usage: chosko-llm show <feature> [--installed | --latest | --diff] [--content]
+Usage: chosko-llm show <feature> [--installed | --latest | --diff] [--content] [--local | --global]
 
   Inspect a single feature: name, kind, installed/latest version, status,
   description, and path.
@@ -16,6 +19,9 @@ Usage: chosko-llm show <feature> [--installed | --latest | --diff] [--content]
   --latest      Show the latest copy from the managed clone.
   --diff        Compare latest vs installed (summary; add --content for a line diff).
   --content     Also print the body of the selected copy (or the diff).
+  --local       Inspect <cwd>/.claude instead of \$CLAUDE_HOME. Requires
+                <cwd>/CLAUDE.md to exist. statusline is reported as global-only.
+  --global      Inspect \$CLAUDE_HOME (default).
 
   <feature> may be a bare name or 'command:<name>', 'skill:<name>',
   'claude-md:<name>', or 'statusline:<name>' to disambiguate.
@@ -111,7 +117,7 @@ case "$kind" in
     ;;
   claude-md)
     src_file="$(src_claudemd_path "$name")"
-    inst_file="$CLAUDE_HOME/CLAUDE.md"
+    inst_file="$(claudemd_target_path)"
     [ -f "$src_file" ] && src_exists=1 || true
     claudemd_is_installed "$name" && inst_exists=1 || true
     ;;
@@ -169,7 +175,7 @@ esac
 case "$kind" in
   command)    loc="$inst_file" ;;
   skill)      loc="$(inst_skill_dir "$name")" ;;
-  claude-md)  loc="$CLAUDE_HOME/CLAUDE.md (section: chosko-llm:$name)" ;;
+  claude-md)  loc="$(claudemd_target_path) (section: chosko-llm:$name)" ;;
   statusline) loc="$inst_file" ;;
 esac
 if [ "$inst_exists" -eq 1 ]; then path_display="$loc"; else path_display="$loc (not yet installed)"; fi
@@ -183,7 +189,7 @@ print_installed_body() {
         index($0, b) { grab = 1; next }
         grab && index($0, e) { grab = 0; next }
         grab { print }
-      ' "$CLAUDE_HOME/CLAUDE.md"
+      ' "$(claudemd_target_path)"
       ;;
   esac
 }
@@ -270,24 +276,28 @@ esac
 
 # ---------- footer suggestions ----------
 echo
-case "$status" in
-  "not installed")
-    printf '%sTip:%s run `chosko-llm add %s` to install this feature.\n' "$C_DIM" "$C_RESET" "$name"
-    ;;
-  "updatable")
-    printf '%sTip:%s run `chosko-llm update %s` to update (installed %s%s%s -> %s%s%s).\n' \
-      "$C_YELLOW" "$C_RESET" "$name" \
-      "$C_DIM" "$inst_col" "$C_RESET" \
-      "$C_GREEN" "$latest_col" "$C_RESET"
-    printf '     run `chosko-llm show %s --diff --content` to preview the changes.\n' "$name"
-    ;;
-  "up-to-date")
-    printf '%sThis feature is up to date.%s\n' "$C_GREEN" "$C_RESET"
-    ;;
-  "local only")
-    printf '%sThis feature is installed but not in the managed clone; `chosko-llm upgrade` will not change it.%s\n' "$C_CYAN" "$C_RESET"
-    ;;
-esac
+if [ "$kind" = statusline ] && scope_is_local; then
+  printf '%sstatusline scripts are global-only; re-run without --local to inspect the installed copy.%s\n' "$C_CYAN" "$C_RESET"
+else
+  case "$status" in
+    "not installed")
+      printf '%sTip:%s run `chosko-llm add %s` to install this feature.\n' "$C_DIM" "$C_RESET" "$name"
+      ;;
+    "updatable")
+      printf '%sTip:%s run `chosko-llm update %s` to update (installed %s%s%s -> %s%s%s).\n' \
+        "$C_YELLOW" "$C_RESET" "$name" \
+        "$C_DIM" "$inst_col" "$C_RESET" \
+        "$C_GREEN" "$latest_col" "$C_RESET"
+      printf '     run `chosko-llm show %s --diff --content` to preview the changes.\n' "$name"
+      ;;
+    "up-to-date")
+      printf '%sThis feature is up to date.%s\n' "$C_GREEN" "$C_RESET"
+      ;;
+    "local only")
+      printf '%sThis feature is installed but not in the managed clone; `chosko-llm upgrade` will not change it.%s\n' "$C_CYAN" "$C_RESET"
+      ;;
+  esac
+fi
 
 if [ "$show_content" -ne 1 ]; then
   if [ "$effective_view" = "diff" ]; then
