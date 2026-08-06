@@ -6,6 +6,10 @@
 : "${CHOSKO_LLM_HOME:=$HOME/.chosko-llm}"
 : "${CLAUDE_HOME:=$HOME/.claude}"
 
+# Install scope — set by resolve_scope; defaults to global until called.
+: "${CHOSKO_LLM_SCOPE:=global}"
+SCOPE_ARGS=()
+
 # ---------- logging ----------
 
 _use_color() {
@@ -58,6 +62,68 @@ if _use_color_stdout; then
 else
   C_GREEN='' C_YELLOW='' C_CYAN='' C_BLUE='' C_MAGENTA='' C_DIM='' C_BOLD='' C_RESET=''
 fi
+
+# ---------- scope resolution ----------
+
+# resolve_scope "$@"
+# Scans every argument for --local / --global. Dies if both appear. Sets
+# global CHOSKO_LLM_SCOPE ("local" or "global", default "global") and global
+# array SCOPE_ARGS to the arguments with the scope flag removed, order and
+# embedded whitespace preserved. In local scope, requires $PWD/CLAUDE.md to
+# exist and repoints CLAUDE_HOME to "$PWD/.claude" (overriding any inherited
+# CLAUDE_HOME). In global scope, CLAUDE_HOME is left untouched.
+resolve_scope() {
+  local args=() arg saw_local=0 saw_global=0
+  for arg in "$@"; do
+    case "$arg" in
+      --local)  saw_local=1 ;;
+      --global) saw_global=1 ;;
+      *) args+=("$arg") ;;
+    esac
+  done
+
+  if [ $saw_local -eq 1 ] && [ $saw_global -eq 1 ]; then
+    die "--local and --global cannot be combined. Pick one."
+  fi
+
+  if [ $saw_local -eq 1 ]; then
+    CHOSKO_LLM_SCOPE=local
+    if [ ! -f "$PWD/CLAUDE.md" ]; then
+      die "--local requires $PWD/CLAUDE.md to exist. Run --local from the project root; if this is an empty directory, run /project-setup first."
+    fi
+    CLAUDE_HOME="$PWD/.claude"
+  else
+    CHOSKO_LLM_SCOPE=global
+  fi
+
+  SCOPE_ARGS=(${args[@]+"${args[@]}"})
+}
+
+# scope_is_local — returns 0 in local scope, 1 otherwise.
+scope_is_local() {
+  [ "$CHOSKO_LLM_SCOPE" = local ]
+}
+
+# scope_label — prints a human-readable scope for log lines, including the
+# resolved CLAUDE_HOME path, e.g. "local (/path/to/repo/.claude)".
+scope_label() {
+  if scope_is_local; then
+    printf 'local (%s)' "$CLAUDE_HOME"
+  else
+    printf 'global (%s)' "$CLAUDE_HOME"
+  fi
+}
+
+# scope_supports_kind <kind>
+# Returns 1 for kind "statusline" in local scope (per-project statusline
+# scripts are out of scope); 0 for every other kind/scope combination.
+scope_supports_kind() {
+  local kind="$1"
+  if scope_is_local && [ "$kind" = statusline ]; then
+    return 1
+  fi
+  return 0
+}
 
 # ---------- frontmatter ----------
 

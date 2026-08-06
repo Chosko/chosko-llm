@@ -69,7 +69,7 @@ Preconditions: 97, 98, 99, 100
 
 ## 102. Add install-scope resolution (--local / --global) to lib.sh
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/lib.sh, .claude/context/shared-lib.md, VERSION
 Preconditions: none

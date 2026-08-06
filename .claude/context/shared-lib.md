@@ -50,6 +50,31 @@ Palette guidance:
 
 Helper: `_use_color_stdout` — returns 0 when color should apply to stdout.
 
+### Scope resolution
+Lets a caller install into a per-project `.claude/` instead of the global
+one. No subcommand consumes it yet (task 103 wires it into `ls` / `add` /
+`rm` / `update` / `show`) — sourcing `lib.sh` without calling `resolve_scope`
+changes nothing.
+- `CHOSKO_LLM_SCOPE` — `local` or `global`, default `global`.
+- `SCOPE_ARGS` — array, empty by default. Safe to expand under `set -u` via
+  `set -- ${SCOPE_ARGS[@]+"${SCOPE_ARGS[@]}"}` even when never assigned.
+- `resolve_scope "$@"` — scans every argument for `--local` / `--global`
+  (order-agnostic — the flag may appear anywhere in the arg list); `die`s if
+  both appear. Sets `CHOSKO_LLM_SCOPE` and `SCOPE_ARGS` (args with the scope
+  flag stripped, order and embedded whitespace preserved). In local scope,
+  requires `$PWD/CLAUDE.md` to exist — `die`s naming the missing file and
+  pointing at `/project-setup` otherwise — then sets
+  `CLAUDE_HOME="$PWD/.claude"`, overriding any inherited `CLAUDE_HOME`. In
+  global scope, `CLAUDE_HOME` is left untouched (env override still
+  honoured). Local root is always `$PWD`, never a VCS query or upward walk —
+  `--local` is an explicit "you are at the project root" contract.
+- `scope_is_local` — 0 in local scope, 1 otherwise.
+- `scope_label` — human-readable scope for log lines, e.g.
+  `local (/path/to/repo/.claude)`.
+- `scope_supports_kind <kind>` — 1 for `statusline` in local scope (per-project
+  statusline scripts are out of scope — it installs an executable plus a
+  `settings.json` wiring step), 0 for every other kind/scope combination.
+
 ### Frontmatter
 - `parse_frontmatter <file>` — emits `key=value` lines for five recognized keys:
   `name`, `version`, `type`, `description`, `replaces`. Reads only first
@@ -190,3 +215,6 @@ Helpers over gitignored key=value file `$CHOSKO_LLM_HOME/.auto-upgrade-state`
 - Changing kind-migration semantics (spec syntax, deletion rules, scan order)
   → `apply_replaces` / `find_replacement` / `remove_installed_artifact` in
   `lib.sh`.
+- Changing scope semantics (flag parsing, local-root marker, which kinds are
+  scope-restricted) → `resolve_scope` / `scope_is_local` / `scope_label` /
+  `scope_supports_kind` in `lib.sh`.
