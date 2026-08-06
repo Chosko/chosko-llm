@@ -129,8 +129,8 @@ compute_status() {
     "updatable")         status_color="$C_YELLOW" ;;
     "not installed")     status_color="$C_DIM"    ;;
     "local only")        status_color="$C_CYAN"   ;;
-    "superseded")         status_color="$C_YELLOW" ;;
-    "migration pending")  status_color="$C_YELLOW" ;;
+    "superseded")         status_color="$C_MAGENTA" ;;
+    "migration pending")  status_color="$C_BLUE"    ;;
     *)                    status_color=""          ;;
   esac
   printf '%s\n%s\n' "$status_col" "$status_color"

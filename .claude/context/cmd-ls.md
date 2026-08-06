@@ -65,7 +65,8 @@ In local scope, the statusline listing pass is skipped entirely (wrapped in
   feature's `replaces:`, per `lib.sh::find_replacement`) and `migration
   pending` (a `not installed` row whose own `replaces:` names a currently
   installed artifact, per `lib.sh::check_migration_pending`). Both render
-  `C_YELLOW` and feed the `migrating` array, not `installable`/`updatable`
+  distinct colors (`superseded` `C_MAGENTA`, `migration pending` `C_BLUE`)
+  and feed the `migrating` array, not `installable`/`updatable`
   — a `superseded` row is not "add"-able, a `migration pending` row is not
   a plain install. The probes only run when the base status is already
   `local only` / `not installed`, never on every row.

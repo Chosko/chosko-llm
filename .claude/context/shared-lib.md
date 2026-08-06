@@ -35,10 +35,18 @@ Palette guidance:
 
 *Status colors* (STATUS column of `ls`, `Status:` field of `show`):
 - `C_GREEN` — success status (e.g. `up-to-date`).
-- `C_YELLOW` — warning / attention (e.g. `updatable`, and the two
-  kind-migration statuses `superseded` / `migration pending`, task 104).
+- `C_YELLOW` — warning / attention (e.g. `updatable`).
 - `C_DIM` — de-emphasised (e.g. `not installed`, `—` placeholders).
 - `C_CYAN` — local-only highlight (e.g. `local only`).
+- `C_MAGENTA` — `superseded` (kind-migration status, task 104): the old
+  artifact on its way out.
+- `C_BLUE` — `migration pending` (kind-migration status, task 104): the new
+  artifact waiting to land.
+
+The two kind-migration statuses deliberately differ from each other and from
+`updatable`, so the two sides of one migration are distinguishable at a
+glance. They reuse the kind-column colors, but never collide with them — the
+STATUS and KIND columns are separate.
 
 *Kind colors* (KIND column of `ls`, `Kind:` field of `show`):
 - `C_BLUE` — `command` kind.

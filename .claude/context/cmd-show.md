@@ -52,7 +52,8 @@ than one view flag, or unresolvable/ambiguous name.
   resolvers in `lib.sh` and `cmd-rm.sh`.
 - **Status vocabulary mirrors `cmd-ls`** exactly: `up-to-date` / `updatable`
   / `not installed` / `local only` / `superseded` / `migration pending`,
-  same color mapping (both new ones `C_YELLOW`, task 104). Change
+  same color mapping (`superseded` `C_MAGENTA`, `migration pending`
+  `C_BLUE`, task 104 — each side of a migration distinct). Change
   vocabulary means change both scripts.
 - **Kind-migration statuses (task 104).** After the base status is
   computed, a `local only` result is re-checked via

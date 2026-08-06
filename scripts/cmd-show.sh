@@ -258,8 +258,8 @@ case "$status" in
   "updatable")         status_c="$C_YELLOW" ;;
   "not installed")     status_c="$C_DIM"    ;;
   "local only")        status_c="$C_CYAN"   ;;
-  "superseded")         status_c="$C_YELLOW" ;;
-  "migration pending")  status_c="$C_YELLOW" ;;
+  "superseded")         status_c="$C_MAGENTA" ;;
+  "migration pending")  status_c="$C_BLUE"    ;;
 esac
 
 inst_c="";   [ "$inst_col"   = "—" ] && inst_c="$C_DIM"
@@ -338,11 +338,11 @@ else
       ;;
     "superseded")
       printf '%sTip:%s this artifact was replaced by %s '"'"'%s'"'"'; run `chosko-llm update --all` to complete the migration.\n' \
-        "$C_YELLOW" "$C_RESET" "$mig_kind" "$mig_name"
+        "$C_MAGENTA" "$C_RESET" "$mig_kind" "$mig_name"
       ;;
     "migration pending")
       printf '%sTip:%s installing this will remove the installed %s '"'"'%s'"'"'; run `chosko-llm update --all`.\n' \
-        "$C_YELLOW" "$C_RESET" "$mig_kind" "$mig_name"
+        "$C_BLUE" "$C_RESET" "$mig_kind" "$mig_name"
       ;;
   esac
 fi
