@@ -132,7 +132,7 @@ Preconditions: 94
 
 ## 96. Document the claude-council gate and bump the repo version
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: docs/authoring-guide.md, .claude/domain/product-workflow.md, .claude/context/features.md, README.md, VERSION
 Preconditions: 94, 95
