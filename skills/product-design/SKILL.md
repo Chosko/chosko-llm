@@ -1,6 +1,6 @@
 ---
 name: product-design
-version: 0.4.0
+version: 0.5.0
 type: skill
 description: Brainstorm and design a product from the ground up with the user, producing high-level design documentation under .claude/domain/ — a product design doc whose features are described from the user-experience angle, a technical direction (stack, topology, data, hosting) that /architect adopts, plus an optional business model. Resumable across sessions: the state lives in design-process.md, not in conversation history, and every phase transition rewrites the stage marker before the phase ends. Works greenfield or brownfield (detected by reading the repo). Its output is /architect's input. Requires /domain-setup to have run. Nothing is committed by default; pass --commit to commit and push exactly the documents written (--commit --no-push to skip the push).
 ---
@@ -54,6 +54,7 @@ SUPPORTING FILES (read on demand — not up front)
 | `./business-model.md` | The user opted into business modelling — read before the business-model questions in PHASE 2 and before writing `business-model.md` in PHASE 3. |
 | `./technical-direction.md` | Start of PHASE 6, and again before PHASE 7 writes `technical-direction.md`. |
 | `./resuming.md` | PHASE 0 found an existing `.claude/domain/design-process.md`. |
+| `./council-gate.md` | PHASE 6 reaches a genuine technical fork on the GREENFIELD branch — a real trade-off with nameable stakes, expensive to reverse once features are architected against it. Never on the brownfield branch, and never when the blocker is a missing fact. |
 
 Do not read a supporting file speculatively. A greenfield first run with no
 business modelling never touches `./business-model.md` or `./resuming.md`.
@@ -310,7 +311,11 @@ cross-cutting concerns.
   confirm-and-record rather than re-litigate what is already settled.
 - **Greenfield** — propose candidates with trade-offs and a recommendation,
   the same discipline `skills/architect/tech-stack-selection.md` uses for a
-  feature-level stack choice, but scoped to the whole product.
+  feature-level stack choice, but scoped to the whole product. On an axis
+  that is a genuine fork — defensible candidates, nameable stakes, expensive
+  to reverse once features are architected against it — read
+  `./council-gate.md` and follow it before you recommend. It is silent and
+  costs nothing when claude-council isn't installed.
 
 The **user decides when this phase is done** — ask, and keep going until
 they say so. Never advance on your own.
@@ -340,6 +345,9 @@ the final report:
   open decisions.
 - The next step: `/architect <feature>` to turn one of them into a
   low-level feature document, and `/task-add feature=<slug>` after that.
+- If the council was convened in PHASE 6: the question, the run SHA, the
+  verdict, and the paths of the report and transcript it wrote, so the user
+  can keep or delete them. Say nothing at all when it was not convened.
 - If `WRITTEN` is non-empty and `--commit` was NOT passed, an explicit
   reminder that nothing was committed.
 
@@ -406,7 +414,16 @@ DO NOT:
 - Write entries in `.claude/FEATURES.md` or documents under
   `.claude/domain/features/`. Both belong to `/architect`.
 - Advance a phase without the user's explicit go-ahead. PHASE 2, PHASE 4,
-  and PHASE 6 end when the user says they end.
+  and PHASE 6 end when the user says they end — a council verdict is an
+  input to that, never a substitute for it, however confident it came back.
+- Add the report and transcript claude-council writes for itself
+  (`council-report-*.html`, `council-transcript-*.md`) to `WRITTEN`, or stage
+  them under `--commit`. They are the council's output, not this skill's.
+  Name their paths in the final report and leave them in the working tree
+  for the user to keep or delete.
+- Offer the council gate on PHASE 6's brownfield branch, or write anything
+  to the `design-process.md` stage marker when convening it. See
+  `./council-gate.md`.
 - Overwrite an existing domain document without explicit confirmation.
   Hand-written docs are canonical brownfield input — read them, build on
   them, never clobber them.

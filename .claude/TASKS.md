@@ -123,7 +123,7 @@ Preconditions: none
 
 ## 95. Add the claude-council decision gate to /product-design PHASE 6
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/product-design/council-gate.md, skills/product-design/SKILL.md, skills/product-design/technical-direction.md
 Preconditions: 94
