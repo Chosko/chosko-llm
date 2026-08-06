@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 93
+Last task number: 96
 
 ---
 
@@ -109,3 +109,30 @@ Status: [MISSING]
 Target: claude
 Files: CLAUDE.md, .claude/context/cmd-upgrade.md, .claude/context/cmd-help.md, .claude/context/lib-task-external.md, .claude/context/cmd-channel.md, .claude/context/cli-entry.md, .claude/context/INDEX.md, .claude/context/cmd-add.md, .claude/context/cmd-export.md, .claude/context/cmd-ls.md, .claude/context/cmd-rm.md, .claude/context/cmd-show.md, .claude/context/cmd-task-impl.md, .claude/context/cmd-update.md, .claude/context/shared-lib.md, .claude/context/features.md, .claude/domain/context-workflow.md, .claude/domain/product-workflow.md, .claude/domain/refactor-workflow.md, .claude/domain/task-workflow.md
 Preconditions: none
+
+---
+
+## 94. Add an optional claude-council decision gate to /architect
+
+Status: [DONE]
+Target: claude
+Files: skills/architect/council-gate.md, skills/architect/SKILL.md, skills/architect/tech-stack-selection.md
+Preconditions: none
+
+---
+
+## 95. Add the claude-council decision gate to /product-design PHASE 6
+
+Status: [DONE]
+Target: claude
+Files: skills/product-design/council-gate.md, skills/product-design/SKILL.md, skills/product-design/technical-direction.md
+Preconditions: 94
+
+---
+
+## 96. Document the claude-council gate and bump the repo version
+
+Status: [DONE]
+Target: claude
+Files: docs/authoring-guide.md, .claude/domain/product-workflow.md, .claude/context/features.md, README.md, VERSION
+Preconditions: 94, 95

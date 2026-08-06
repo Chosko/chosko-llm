@@ -58,6 +58,12 @@ Then **make a recommendation**, with the reason in one sentence. Presenting
 three balanced options and no opinion pushes the decision back onto the user
 without giving them anything they didn't already have.
 
+Before you recommend, read [`./council-gate.md`](./council-gate.md) and follow
+it. A greenfield stack choice is the fork that gate exists for: the options
+are genuinely defensible, the stakes are nameable (every feature document
+inherits the answer), and it is the most expensive decision here to reverse.
+The gate is silent and costs nothing when claude-council isn't installed.
+
 Example shape:
 
 > **Candidate A — <stack>.** <One line on what it is.> Fits because <specific

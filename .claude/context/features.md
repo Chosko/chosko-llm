@@ -227,7 +227,19 @@ Currently shipped:
   reporting the process complete). The stage marker in `design-process.md`
   is rewritten before every phase ends, so an interrupted session resumes
   from a truthful stage — there is no `resume` argument, since the document
-  is the state. `product-design.md` and `business-model.md` stay high-level
+  is the state. A fifth supporting file, `council-gate.md`, loads only when
+  PHASE 6 reaches a genuine technical fork on the GREENFIELD branch: it
+  delegates the decision to the separately-installed claude-council skill
+  (detected at `${CLAUDE_HOME:-$HOME/.claude}/skills/claude-council/SKILL.md`,
+  silent and no-op when absent), invoked with no mode argument so
+  claude-council's own Quick/Standard/Deep triage applies. The brownfield
+  branch is excluded — confirm-and-record over an existing stack is not a
+  fork. Dissent folds into `product-design.md`'s design decisions; the
+  council's own report/transcript are owned by neither skill and never enter
+  `WRITTEN` or `--commit`; the `design-process.md` stage marker is not
+  written when convening, since a mid-phase consultation is not a phase
+  transition. Kept in step with the `/architect` copy — see
+  `../../docs/authoring-guide.md`. `product-design.md` and `business-model.md` stay high-level
   by construction: implementation detail is `/architect`'s output;
   `technical-direction.md` is the one document where stack and
   infrastructure detail belongs. It never writes `.claude/FEATURES.md`,
@@ -253,10 +265,19 @@ Currently shipped:
   the document) — stopping at mid-to-high technical level, no code, no
   file-by-file plans, those being `/task-add`'s output; PHASE 3 writes the
   documents, the `FEATURES.md` entries, the INDEX rows, and any upstream
-  design change. Three supporting files load only on their branch:
+  design change. Four supporting files load only on their branch:
   `iterating.md` (the feature already has an entry), `tech-stack-
   selection.md` (no existing stack in either form — an existing stack
-  always wins), `feature-doc-template.md` (PHASE 3, always; its
+  always wins), `council-gate.md` (PHASE 2 hit a genuine design fork —
+  optional delegation to the separately-installed claude-council skill at
+  the stack choice, the architecture shape, and the low-level split;
+  detected under `CLAUDE_HOME`, silent and no-op when absent, invoked with
+  no mode argument, dissent folding into the feature document's Open
+  questions, its verdict recorded in the PHASE 2 progress marker so a
+  resumed session never re-convenes, and its report/transcript kept out of
+  `WRITTEN` under a second narrow carve-out to the "nothing written before
+  PHASE 3" rule; kept in step with the `/product-design` copy),
+  `feature-doc-template.md` (PHASE 3, always; its
   Architecture section opens with a stack reference — "Built on <stack> per
   the product design", naming `technical-direction.md` when that's the
   source — rather than restating the choice). Writes `Status:` / `Doc:` /

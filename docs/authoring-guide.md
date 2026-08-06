@@ -162,6 +162,46 @@ different reasons. A partial rollout of a status tag fails the guard, which is
 the point: the two encodings of the workflow cannot be allowed to drift
 silently.
 
+## Keeping the two `council-gate.md` copies in step
+
+The optional claude-council decision gate is encoded twice, as
+`skills/architect/council-gate.md` and
+`skills/product-design/council-gate.md`. **Touch one, touch the other.**
+
+This duplication is forced by the install model, not an oversight — do not
+"fix" it by extracting a shared file. Skills install as self-contained
+folders: `cmd-add` copies `skills/<name>/` recursively into `$CLAUDE_HOME`,
+and nothing outside that folder travels with it. A shared file at, say,
+`skills/_shared/council-gate.md` would exist in this repo and be absent on
+every machine that installed the skill — the worst possible failure, because
+it works for the author and breaks for everyone else. Two folders, two
+copies, one obligation to keep them aligned.
+
+Each copy carries a header naming its sibling, so an editor who opens one
+learns about the other immediately.
+
+The two files are intentionally *near*-identical, not identical. The
+divergences are flagged inline in both, and there are exactly two:
+
+1. **Fold-back target.** `/architect` folds surviving minority dissent into
+   the feature document's Open questions section; `/product-design` folds it
+   into `product-design.md`'s design decisions (or
+   `technical-direction.md`'s open-decisions section when the axis is
+   recorded as explicitly open).
+2. **The PHASE 3 write barrier.** `/architect` forbids writing any file
+   before PHASE 3, so its copy documents the narrow carve-out that lets
+   claude-council write its own report and transcript.
+   `/product-design` has no such prohibition — it stubs documents in PHASE 1
+   and writes in PHASE 3, 5, and 7 — so its copy says explicitly that no
+   carve-out is needed.
+
+A third difference is structural rather than textual: `/product-design`'s
+copy is gated to PHASE 6's greenfield branch, since brownfield is
+confirm-and-record over a stack that already exists and has no fork to
+pressure-test.
+
+Anything else that drifts between the two is a bug.
+
 ## State that outlives a session belongs in a project document
 
 A skill whose phases span multiple sessions must keep its state in a

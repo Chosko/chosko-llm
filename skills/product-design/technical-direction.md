@@ -33,7 +33,10 @@ Use PHASE 1's judgement, already made.
   cover.
 - **Greenfield.** Work through every axis that applies. For any axis with a
   real choice, propose two or three candidates, state the trade-offs, and
-  recommend one — never leave the user with an unranked list.
+  recommend one — never leave the user with an unranked list. Where that
+  choice is a genuine fork, [`./council-gate.md`](./council-gate.md) applies
+  before you recommend; it is greenfield-only and silent when claude-council
+  isn't installed.
 
 ## Stack
 
