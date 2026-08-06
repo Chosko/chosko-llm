@@ -1,6 +1,6 @@
 ---
 name: architect
-version: 0.4.0
+version: 0.5.0
 type: skill
 description: Turn one or more high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md — the bridge between /product-design and /task-add. Grounds the architecture in the project's recorded technical-direction.md or existing code, or proposes a tech stack when there is neither. Runs from a product-design section, named features, or a bare prompt with no design documents at all. Re-architecting a feature that already has tasks triggers an iterate guard: refuses outright while any task is [IN PROGRESS], otherwise asks, then flips surviving tasks to [STALE] and the feature to [ITERATED]. Requires /domain-setup. Nothing committed by default; pass --commit to commit and push exactly the written paths (--commit --no-push to skip the push).
 ---
@@ -47,6 +47,7 @@ SUPPORTING FILES (read on demand — not up front)
 | `./iterating.md` | PHASE 0 finds the target feature already has a `FEATURES.md` entry. Read before PHASE 0b. |
 | `./tech-stack-selection.md` | The project has NO existing tech stack AND no `technical-direction.md` (greenfield). Read at the start of PHASE 2. |
 | `./feature-doc-template.md` | PHASE 3, always — the feature-document schema and the `FEATURES.md` entry format. |
+| `./council-gate.md` | PHASE 2 reaches a genuine design fork — a real trade-off with nameable stakes, expensive to reverse once tasks exist. Not on a fork settled by an existing stack, and not when the blocker is a missing fact (that is a PHASE 1 clarification). |
 
 Do not read a supporting file speculatively. The common path — a brownfield
 project, a feature architected for the first time — reads only
@@ -221,7 +222,10 @@ Then:
 1. Propose the shape — the components this feature needs, what each is
    responsible for, and how they talk. Where there is a real choice, present
    two or three options with their trade-offs and a recommendation, rather
-   than presenting one design as inevitable.
+   than presenting one design as inevitable. When that choice is a genuine
+   fork — defensible options, nameable stakes, expensive to reverse once
+   tasks exist — read `./council-gate.md` and follow it before you
+   recommend.
 2. Descend into the parts that carry risk: data and state, the interfaces
    between components, what happens at the boundaries with existing code.
 3. Ask about the decisions you cannot make from the code — anything where
@@ -229,7 +233,9 @@ Then:
 4. Identify the seams: where does this feature end and the next begin? A
    high-level feature that will not fit in one document is where the
    low-level split comes from. Propose the split and let the user confirm
-   it.
+   it. Where the split could defensibly fall in more than one place and the
+   choice would shape every task generated from it, `./council-gate.md`
+   applies here too.
 5. Name the dependencies on other features, and the open questions you could
    not close. Open questions go into the document rather than being
    resolved by guesswork.
@@ -248,7 +254,9 @@ covered (stack chosen, shape proposed, data/interfaces/seams discussed,
 dependencies and open questions named) and whenever the conversation might
 end, write or rewrite `.claude/domain/features/<target-slug>.architect-progress.md`
 with a short recap — which of the steps above are covered, the decisions
-made so far as a few bullets, and any open questions raised so far. Keep it
+made so far as a few bullets, any open questions raised so far, and any
+council verdict already obtained (see `./council-gate.md` step 8 — recording
+it is what stops a resumed session from paying for the same run twice). Keep it
 short: this is a resume aid, not a second copy of the feature document, and
 it carries none of `FEATURES.md`'s or `TASKS.md`'s status vocabulary
 (no `[NEW]`/`[PLANNED]`/`[IN PROGRESS]`/etc.), so it can never be confused
@@ -315,6 +323,9 @@ Read `./feature-doc-template.md` for both schemas below.
 - Whether an interrupted-session marker was found at PHASE 0 and how it was
   resolved (resumed or started fresh), and that each written feature's
   marker was cleared in PHASE 3.
+- If the council was convened: the question, the run SHA, the verdict, and
+  the paths of the report and transcript it wrote, so the user can keep or
+  delete them. Say nothing at all when it was not convened.
 - When `WRITTEN` is non-empty and `--commit` was not passed: an explicit
   reminder that nothing was committed.
 
@@ -355,8 +366,13 @@ If COMMIT is true (the pull-at-start from PHASE 0 already ran):
 ---
 
 DO NOT:
-- Write any file before PHASE 3, with exactly one exception: the PHASE 2
-  progress marker (`.claude/domain/features/<target-slug>.architect-progress.md`).
+- Write any file before PHASE 3, with exactly two exceptions: the PHASE 2
+  progress marker (`.claude/domain/features/<target-slug>.architect-progress.md`),
+  and the report and transcript claude-council writes for itself when the
+  PHASE 2 council gate is convened (`council-report-*.html`,
+  `council-transcript-*.md` — see `./council-gate.md`). The second carve-out
+  is narrow: it permits those two files and nothing else, and neither ever
+  enters `WRITTEN` or a `--commit` staging list.
   Everything else — feature documents, `FEATURES.md`, `INDEX.md`,
   `product-design.md` — is PHASE 3's job, not PHASE 2's.
 - Write implementation-level detail: real code, class-by-class breakdowns,
@@ -382,7 +398,9 @@ DO NOT:
 - Override the `[IN PROGRESS]` refusal in PHASE 0b — not on the user's
   insistence, not with a flag. Tell them to finish or reset that task
   first.
-- Advance past PHASE 2 without the user confirming the architecture.
+- Advance past PHASE 2 without the user confirming the architecture — a
+  council verdict is an input to that confirmation, never a substitute for
+  it, however confident it came back.
 - Run any git/VCS command unless `--commit` was passed; and with it, stage
   only the explicit `WRITTEN` paths, never a catch-all, push per the
   commit-and-push protocol unless `--no-push` was passed, and never

@@ -114,7 +114,7 @@ Preconditions: none
 
 ## 94. Add an optional claude-council decision gate to /architect
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/architect/council-gate.md, skills/architect/SKILL.md, skills/architect/tech-stack-selection.md
 Preconditions: none
