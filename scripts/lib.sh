@@ -508,6 +508,27 @@ find_replacement() {
   return 1
 }
 
+# check_migration_pending <kind> <name>
+# For a clone feature not yet installed, checks whether its own `replaces:`
+# declaration names an artifact that is currently installed — meaning a
+# plain `add` would leave two artifacts side by side instead of completing
+# a kind migration. Prints "<old-kind>\n<old-name>" and returns 0 on a hit;
+# returns 1 with no output otherwise. Companion to `find_replacement`, which
+# answers the same question from the other side (an installed, source-less
+# artifact asking "am I superseded?").
+check_migration_pending() {
+  local kind="$1" name="$2" src spec parsed old_kind old_name
+  src="$(src_path_for_kind "$kind" "$name")" || return 1
+  spec="$(read_frontmatter_field "$src" replaces || true)"
+  [ -n "$spec" ] || return 1
+  parsed="$(parse_replaces_spec "$spec")" || return 1
+  old_kind="$(printf '%s\n' "$parsed" | sed -n 1p)"
+  old_name="$(printf '%s\n' "$parsed" | sed -n 2p)"
+  [ -n "$old_kind" ] && [ -n "$old_name" ] || return 1
+  artifact_is_installed "$old_kind" "$old_name" || return 1
+  printf '%s\n%s\n' "$old_kind" "$old_name"
+}
+
 # ---------- auto-upgrade state ----------
 # A tiny key=value state file in the managed clone tracks the daily
 # auto-upgrade preference and when it last ran. It is gitignored so the

@@ -17,11 +17,13 @@ CLI:
 
 Output: `Home: <scope_label>` line, blank line, then text table, header
 `NAME KIND INSTALLED LATEST STATUS`. `KIND` is `command`, `skill`,
-`claude-md`, or `statusline`. Missing values render `—`. Installed file w/
-no `version` frontmatter shows `unversioned`. On interactive terminal,
-suggestions block follows table (install / update hints, plus
-always-present `show` inspect hint); suppressed when stdout piped or
-redirected.
+`claude-md`, or `statusline`. `STATUS` is one of `up-to-date` /
+`updatable` / `not installed` / `local only` / `superseded` / `migration
+pending` — the last two flag a feature mid kind-migration (task 104).
+Missing values render `—`. Installed file w/ no `version` frontmatter
+shows `unversioned`. On interactive terminal, suggestions block follows
+table (install / update / migrate hints, plus always-present `show`
+inspect hint); suppressed when stdout piped or redirected.
 
 **Scope (`--local` / `--global`, task 103).** First line after sourcing
 `lib.sh` calls `resolve_scope "$@"` then re-sets `$@` from `SCOPE_ARGS`, so
@@ -51,11 +53,22 @@ In local scope, the statusline listing pass is skipped entirely (wrapped in
 - **Footer suggestions TTY-gated.** After table, `cmd-ls` prints
   actionable hints on stdout only when stdout is terminal (`[ -t 1 ]`);
   piped/redirected output stays clean table. Block contains `add`
-  hint for installable features, `update` hint for outdated ones (or
-  `Everything is up to date.` when neither applies), ALWAYS ends w/
-  `Run 'chosko-llm show <feature>' to inspect a feature.` Installable +
-  updatable names accumulated from filtered rows during three
+  hint for installable features, `update` hint for outdated ones, a
+  migrate hint when any row is `superseded`/`migration pending` (or
+  `Everything is up to date.` when none of the three apply), ALWAYS ends
+  w/ `Run 'chosko-llm show <feature>' to inspect a feature.` Installable +
+  updatable + migrating names accumulated from filtered rows during four
   listing passes — counts reflect what actually shown.
+- **Kind-migration statuses (task 104).** `compute_status` (shared by all
+  four passes) extends the base four-value vocabulary with `superseded`
+  (a `local only` row whose installed artifact is claimed by some clone
+  feature's `replaces:`, per `lib.sh::find_replacement`) and `migration
+  pending` (a `not installed` row whose own `replaces:` names a currently
+  installed artifact, per `lib.sh::check_migration_pending`). Both render
+  `C_YELLOW` and feed the `migrating` array, not `installable`/`updatable`
+  — a `superseded` row is not "add"-able, a `migration pending` row is not
+  a plain install. The probes only run when the base status is already
+  `local only` / `not installed`, never on every row.
 
 ## Domain dependencies
 

@@ -95,12 +95,53 @@ collect_names() {
   esac
 }
 
+# compute_status <kind> <name> <inst_col> <latest_col>
+# Prints "<status_col>\n<status_color>". Extends the base four-value
+# vocabulary (not installed / local only / up-to-date / updatable) with two
+# migration-aware statuses when a replaces: declaration ties this row to its
+# counterpart: "superseded" (installed, no source, but a clone feature
+# claims to replace it) and "migration pending" (in the clone, not
+# installed, but its own replaces: names an installed artifact). The
+# find_replacement / check_migration_pending probes only run on rows that
+# are already local-only / not-installed — never on every row.
+compute_status() {
+  local kind="$1" name="$2" inst_col="$3" latest_col="$4"
+  local status_col
+  if [ "$inst_col" = "—" ]; then
+    status_col="not installed"
+  elif [ "$latest_col" = "—" ]; then
+    status_col="local only"
+  elif [ "$inst_col" = "$latest_col" ]; then
+    status_col="up-to-date"
+  else
+    status_col="updatable"
+  fi
+
+  if [ "$status_col" = "local only" ] && find_replacement "$kind" "$name" >/dev/null; then
+    status_col="superseded"
+  elif [ "$status_col" = "not installed" ] && check_migration_pending "$kind" "$name" >/dev/null; then
+    status_col="migration pending"
+  fi
+
+  local status_color
+  case "$status_col" in
+    "up-to-date")        status_color="$C_GREEN"  ;;
+    "updatable")         status_color="$C_YELLOW" ;;
+    "not installed")     status_color="$C_DIM"    ;;
+    "local only")        status_color="$C_CYAN"   ;;
+    "superseded")         status_color="$C_YELLOW" ;;
+    "migration pending")  status_color="$C_YELLOW" ;;
+    *)                    status_color=""          ;;
+  esac
+  printf '%s\n%s\n' "$status_col" "$status_color"
+}
+
 list_all() {
   local filter="$1"
   printf '%sHome: %s%s\n\n' "$C_DIM" "$(scope_label)" "$C_RESET"
   print_header
   local found=0
-  local installable=() updatable=()
+  local installable=() updatable=() migrating=()
 
   while IFS= read -r name; do
     [ -n "$name" ] || continue
@@ -127,30 +168,15 @@ list_all() {
       available) [ "$latest_col" = "—" ] && continue ;;
     esac
 
-    local status_col
-    if [ "$inst_col" = "—" ]; then
-      status_col="not installed"
-    elif [ "$latest_col" = "—" ]; then
-      status_col="local only"
-    elif [ "$inst_col" = "$latest_col" ]; then
-      status_col="up-to-date"
-    else
-      status_col="updatable"
-    fi
+    local status_col status_color
+    { read -r status_col; read -r status_color; } < <(compute_status command "$name" "$inst_col" "$latest_col")
 
     case "$status_col" in
-      "not installed") installable+=("$name") ;;
-      "updatable")     updatable+=("$name") ;;
+      "not installed")                  installable+=("$name") ;;
+      "updatable")                      updatable+=("$name") ;;
+      "superseded"|"migration pending") migrating+=("$name") ;;
     esac
 
-    local status_color
-    case "$status_col" in
-      "up-to-date")    status_color="$C_GREEN"  ;;
-      "updatable")     status_color="$C_YELLOW" ;;
-      "not installed") status_color="$C_DIM"    ;;
-      "local only")    status_color="$C_CYAN"   ;;
-      *)               status_color=""          ;;
-    esac
     local inst_color latest_color
     [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
     [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
@@ -187,30 +213,15 @@ list_all() {
       available) [ "$latest_col" = "—" ] && continue ;;
     esac
 
-    local status_col
-    if [ "$inst_col" = "—" ]; then
-      status_col="not installed"
-    elif [ "$latest_col" = "—" ]; then
-      status_col="local only"
-    elif [ "$inst_col" = "$latest_col" ]; then
-      status_col="up-to-date"
-    else
-      status_col="updatable"
-    fi
+    local status_col status_color
+    { read -r status_col; read -r status_color; } < <(compute_status skill "$name" "$inst_col" "$latest_col")
 
     case "$status_col" in
-      "not installed") installable+=("$name") ;;
-      "updatable")     updatable+=("$name") ;;
+      "not installed")                  installable+=("$name") ;;
+      "updatable")                      updatable+=("$name") ;;
+      "superseded"|"migration pending") migrating+=("$name") ;;
     esac
 
-    local status_color
-    case "$status_col" in
-      "up-to-date")    status_color="$C_GREEN"  ;;
-      "updatable")     status_color="$C_YELLOW" ;;
-      "not installed") status_color="$C_DIM"    ;;
-      "local only")    status_color="$C_CYAN"   ;;
-      *)               status_color=""          ;;
-    esac
     local inst_color latest_color
     [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
     [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
@@ -246,30 +257,15 @@ list_all() {
       available) [ "$latest_col" = "—" ] && continue ;;
     esac
 
-    local status_col
-    if [ "$inst_col" = "—" ]; then
-      status_col="not installed"
-    elif [ "$latest_col" = "—" ]; then
-      status_col="local only"
-    elif [ "$inst_col" = "$latest_col" ]; then
-      status_col="up-to-date"
-    else
-      status_col="updatable"
-    fi
+    local status_col status_color
+    { read -r status_col; read -r status_color; } < <(compute_status claude-md "$name" "$inst_col" "$latest_col")
 
     case "$status_col" in
-      "not installed") installable+=("$name") ;;
-      "updatable")     updatable+=("$name") ;;
+      "not installed")                  installable+=("$name") ;;
+      "updatable")                      updatable+=("$name") ;;
+      "superseded"|"migration pending") migrating+=("$name") ;;
     esac
 
-    local status_color
-    case "$status_col" in
-      "up-to-date")    status_color="$C_GREEN"  ;;
-      "updatable")     status_color="$C_YELLOW" ;;
-      "not installed") status_color="$C_DIM"    ;;
-      "local only")    status_color="$C_CYAN"   ;;
-      *)               status_color=""          ;;
-    esac
     local inst_color latest_color
     [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
     [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
@@ -307,30 +303,15 @@ list_all() {
       available) [ "$latest_col" = "—" ] && continue ;;
     esac
 
-    local status_col
-    if [ "$inst_col" = "—" ]; then
-      status_col="not installed"
-    elif [ "$latest_col" = "—" ]; then
-      status_col="local only"
-    elif [ "$inst_col" = "$latest_col" ]; then
-      status_col="up-to-date"
-    else
-      status_col="updatable"
-    fi
+    local status_col status_color
+    { read -r status_col; read -r status_color; } < <(compute_status statusline "$name" "$inst_col" "$latest_col")
 
     case "$status_col" in
-      "not installed") installable+=("$name") ;;
-      "updatable")     updatable+=("$name") ;;
+      "not installed")                  installable+=("$name") ;;
+      "updatable")                      updatable+=("$name") ;;
+      "superseded"|"migration pending") migrating+=("$name") ;;
     esac
 
-    local status_color
-    case "$status_col" in
-      "up-to-date")    status_color="$C_GREEN"  ;;
-      "updatable")     status_color="$C_YELLOW" ;;
-      "not installed") status_color="$C_DIM"    ;;
-      "local only")    status_color="$C_CYAN"   ;;
-      *)               status_color=""          ;;
-    esac
     local inst_color latest_color
     [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
     [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
@@ -348,7 +329,7 @@ list_all() {
   # Actionable suggestions, gated to an interactive stdout so piped/redirected
   # output stays a clean table. Counts reflect the filtered, displayed rows.
   if [ "$found" -eq 1 ] && [ -t 1 ]; then
-    local n_inst="${#installable[@]}" n_upd="${#updatable[@]}"
+    local n_inst="${#installable[@]}" n_upd="${#updatable[@]}" n_mig="${#migrating[@]}"
     printf '\n'
     local suggested=0
     if [ "$n_inst" -eq 1 ]; then
@@ -360,6 +341,9 @@ list_all() {
       printf "Run 'chosko-llm update %s' to update it.\n" "${updatable[0]}"; suggested=1
     elif [ "$n_upd" -ge 2 ]; then
       printf "Run 'chosko-llm update --all' to update all %d updatable features.\n" "$n_upd"; suggested=1
+    fi
+    if [ "$n_mig" -ge 1 ]; then
+      printf "Run 'chosko-llm update --all' to migrate %d feature(s) that changed kind.\n" "$n_mig"; suggested=1
     fi
     [ "$suggested" -eq 1 ] || printf 'Everything is up to date.\n'
     printf "Run 'chosko-llm show <feature>' to inspect a feature.\n"

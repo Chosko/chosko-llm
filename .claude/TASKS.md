@@ -87,7 +87,7 @@ Preconditions: 102
 
 ## 104. Surface pending kind migrations in `ls` and `show`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/cmd-ls.sh, scripts/cmd-show.sh, scripts/lib.sh, docs/cli-help.txt, .claude/context/cmd-ls.md, .claude/context/cmd-show.md, .claude/context/shared-lib.md, VERSION
 Preconditions: none

@@ -35,7 +35,8 @@ Palette guidance:
 
 *Status colors* (STATUS column of `ls`, `Status:` field of `show`):
 - `C_GREEN` — success status (e.g. `up-to-date`).
-- `C_YELLOW` — warning / attention (e.g. `updatable`).
+- `C_YELLOW` — warning / attention (e.g. `updatable`, and the two
+  kind-migration statuses `superseded` / `migration pending`, task 104).
 - `C_DIM` — de-emphasised (e.g. `not installed`, `—` placeholders).
 - `C_CYAN` — local-only highlight (e.g. `local only`).
 
@@ -161,7 +162,19 @@ fact rides same `git pull` as rename.
 - `find_replacement <old-kind> <old-name>` → scans managed clone
   (commands, skills, claude-md, statusline) for feature declaring
   `replaces: <old-kind>:<old-name>`. Prints `<kind>\n<name>` on first hit,
-  returns 1 on none. Used by `cmd-update --all`'s stale-artifact branch.
+  returns 1 on none. Used by `cmd-update --all`'s stale-artifact branch,
+  and by `cmd-ls`/`cmd-show` (task 104) to flag a `local only` row as
+  `superseded`.
+- `check_migration_pending <kind> <name>` (task 104) → the mirror image of
+  `find_replacement`, asked from the *new* side. For a clone feature not
+  yet installed, reads its own `replaces:`, and if the named artifact is
+  currently installed (`artifact_is_installed`), prints `<old-kind>\n
+  <old-name>` and returns 0 — meaning a plain `add` would leave two
+  artifacts side by side instead of completing the migration. Returns 1
+  with no output when `replaces:` is absent, malformed, or names
+  something not installed. Used by `cmd-ls`/`cmd-show` to flag a `not
+  installed` row as `migration pending`, and by `cmd-show`'s ambiguous-name
+  `die` to name the pending migration in its error.
 
 ### Validation
 - `require_versioned_source <file>` — `die`s if file missing or its
@@ -223,8 +236,8 @@ Helpers over gitignored key=value file `$CHOSKO_LLM_HOME/.auto-upgrade-state`
 - Changing what makes source file installable → `require_versioned_source`
   in `lib.sh`.
 - Changing kind-migration semantics (spec syntax, deletion rules, scan order)
-  → `apply_replaces` / `find_replacement` / `remove_installed_artifact` in
-  `lib.sh`.
+  → `apply_replaces` / `find_replacement` / `check_migration_pending` /
+  `remove_installed_artifact` in `lib.sh`.
 - Changing scope semantics (flag parsing, local-root marker, which kinds are
   scope-restricted) → `resolve_scope` / `scope_is_local` / `scope_label` /
   `scope_supports_kind` in `lib.sh`.

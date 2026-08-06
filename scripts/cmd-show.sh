@@ -83,7 +83,24 @@ resolve_show_feature() {
   fi
 
   local total=$((has_cmd + has_skill + has_cm + has_sl))
-  if   [ "$total" -gt 1 ];    then die "Feature name '$name' is ambiguous. Disambiguate with 'command:$name', 'skill:$name', 'claude-md:$name', or 'statusline:$name'."
+  if [ "$total" -gt 1 ]; then
+    local migration_note="" k present mig_out old_kind old_name
+    for k in command skill claude-md statusline; do
+      case "$k" in
+        command)    present=$has_cmd ;;
+        skill)      present=$has_skill ;;
+        claude-md)  present=$has_cm ;;
+        statusline) present=$has_sl ;;
+      esac
+      [ "$present" -eq 1 ] || continue
+      if mig_out="$(check_migration_pending "$k" "$name")"; then
+        old_kind="$(printf '%s\n' "$mig_out" | sed -n 1p)"
+        old_name="$(printf '%s\n' "$mig_out" | sed -n 2p)"
+        migration_note=$'\n'"This name is mid-migration: '$k:$name' will replace the installed $old_kind '$old_name'; run \`chosko-llm update --all\` to complete it."
+        break
+      fi
+    done
+    die "Feature name '$name' is ambiguous. Disambiguate with 'command:$name', 'skill:$name', 'claude-md:$name', or 'statusline:$name'.${migration_note}"
   elif [ "$has_cmd" -eq 1 ];  then printf 'command\n%s\n'   "$name"
   elif [ "$has_skill" -eq 1 ]; then printf 'skill\n%s\n'    "$name"
   elif [ "$has_cm" -eq 1 ];   then printf 'claude-md\n%s\n' "$name"
@@ -151,6 +168,27 @@ elif [ "$inst_col" = "$latest_col" ]; then status="up-to-date"
 else                                       status="updatable"
 fi
 
+# Migration-aware statuses: a "local only" row may actually be a stale
+# artifact superseded by a clone feature's replaces:; a "not installed" row
+# may be that superseding feature itself, whose replaces: names the artifact
+# it would remove. mig_kind/mig_name name the other side of the migration
+# for the footer tip below.
+mig_kind=""
+mig_name=""
+if [ "$status" = "local only" ]; then
+  if mig_out="$(find_replacement "$kind" "$name")"; then
+    status="superseded"
+    mig_kind="$(printf '%s\n' "$mig_out" | sed -n 1p)"
+    mig_name="$(printf '%s\n' "$mig_out" | sed -n 2p)"
+  fi
+elif [ "$status" = "not installed" ]; then
+  if mig_out="$(check_migration_pending "$kind" "$name")"; then
+    status="migration pending"
+    mig_kind="$(printf '%s\n' "$mig_out" | sed -n 1p)"
+    mig_name="$(printf '%s\n' "$mig_out" | sed -n 2p)"
+  fi
+fi
+
 # Descriptions (claude-md installed sections carry no frontmatter).
 src_desc=""
 inst_desc=""
@@ -216,10 +254,12 @@ esac
 
 status_c=""
 case "$status" in
-  "up-to-date")    status_c="$C_GREEN"  ;;
-  "updatable")     status_c="$C_YELLOW" ;;
-  "not installed") status_c="$C_DIM"    ;;
-  "local only")    status_c="$C_CYAN"   ;;
+  "up-to-date")        status_c="$C_GREEN"  ;;
+  "updatable")         status_c="$C_YELLOW" ;;
+  "not installed")     status_c="$C_DIM"    ;;
+  "local only")        status_c="$C_CYAN"   ;;
+  "superseded")         status_c="$C_YELLOW" ;;
+  "migration pending")  status_c="$C_YELLOW" ;;
 esac
 
 inst_c="";   [ "$inst_col"   = "—" ] && inst_c="$C_DIM"
@@ -295,6 +335,14 @@ else
       ;;
     "local only")
       printf '%sThis feature is installed but not in the managed clone; `chosko-llm upgrade` will not change it.%s\n' "$C_CYAN" "$C_RESET"
+      ;;
+    "superseded")
+      printf '%sTip:%s this artifact was replaced by %s '"'"'%s'"'"'; run `chosko-llm update --all` to complete the migration.\n' \
+        "$C_YELLOW" "$C_RESET" "$mig_kind" "$mig_name"
+      ;;
+    "migration pending")
+      printf '%sTip:%s installing this will remove the installed %s '"'"'%s'"'"'; run `chosko-llm update --all`.\n' \
+        "$C_YELLOW" "$C_RESET" "$mig_kind" "$mig_name"
       ;;
   esac
 fi

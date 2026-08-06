@@ -51,8 +51,22 @@ than one view flag, or unresolvable/ambiguous name.
   `claude-md:`/`statusline:` prefix parsing and 4-way ambiguity in sync with
   resolvers in `lib.sh` and `cmd-rm.sh`.
 - **Status vocabulary mirrors `cmd-ls`** exactly: `up-to-date` / `updatable`
-  / `not installed` / `local only`, same color mapping. Change vocabulary
-  means change both scripts.
+  / `not installed` / `local only` / `superseded` / `migration pending`,
+  same color mapping (both new ones `C_YELLOW`, task 104). Change
+  vocabulary means change both scripts.
+- **Kind-migration statuses (task 104).** After the base status is
+  computed, a `local only` result is re-checked via
+  `lib.sh::find_replacement` — if some clone feature's `replaces:` claims
+  this installed artifact, status becomes `superseded` and `mig_kind`/
+  `mig_name` hold the replacement's kind/name. A `not installed` result is
+  re-checked via `lib.sh::check_migration_pending` — if this clone
+  feature's own `replaces:` names a currently installed artifact, status
+  becomes `migration pending` and `mig_kind`/`mig_name` hold that stale
+  artifact's kind/name. Both feed a dedicated footer tip pointing at
+  `chosko-llm update --all`. `resolve_show_feature`'s ambiguous-name `die`
+  also probes `check_migration_pending` across every kind the bare name
+  matches, appending one line naming the pending migration when found —
+  the die itself is unchanged otherwise; only the message gains a line.
 - **claude-md bodies have no frontmatter once installed.** Installed
   description unavailable for claude-md (managed section carries no
   YAML); body extracted from begin/end markers in
