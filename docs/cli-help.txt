@@ -15,12 +15,19 @@ Usage:
                                       Use --diff --content for a line-by-line diff. --installed
                                       and --latest pick which copy to show.
 
-  chosko-llm add <feature>            Copy a feature from the managed clone into $CLAUDE_HOME.
-                                      Errors if the feature is already installed (use 'update').
+  chosko-llm add <feature> [<feature>…]  Copy one or more features from the managed clone into
+                                      $CLAUDE_HOME. Errors if a feature is already installed (use
+                                      'update'). With multiple names, each is installed
+                                      independently: a failure on one (already installed, unknown
+                                      name, statusline + --local) is logged and the rest still run;
+                                      exit code is 1 if any failed. e.g. 'add foo skill:bar claude-md:baz'.
   chosko-llm add --all                Install all features from the managed clone that are not yet
-                                      installed. Already-installed features are skipped.
+                                      installed. Already-installed features are skipped. Cannot be
+                                      combined with explicit feature names.
   chosko-llm rm  <feature>            Delete an installed feature from $CLAUDE_HOME.
-  chosko-llm update <feature>         Re-copy a feature from the managed clone (installs if missing).
+  chosko-llm update <feature> [<feature>…]  Re-copy one or more features from the managed clone
+                                      (installs any that are missing). Same best-effort, multi-name
+                                      behavior as 'add'. e.g. 'update foo skill:bar claude-md:baz'.
   chosko-llm update --all             Update every installed feature whose version is lower than the
                                       managed clone (skips up-to-date and locally-ahead features).
                                       Also migrates a feature that changed kind: if an installed

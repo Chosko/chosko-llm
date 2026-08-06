@@ -2,25 +2,34 @@
 
 ## Overview
 
-`scripts/cmd-add.sh` copy single feature from managed clone into
+`scripts/cmd-add.sh` copy one or more features from managed clone into
 `$CLAUDE_HOME`. Refuse overwrite already-installed feature — for
 that, use `update`.
 
 ## Public API
 
 CLI:
-- `chosko-llm add <feature>` — `<feature>` is `<name>`, `command:<name>`,
-  `skill:<name>`, `claude-md:<name>`, or `statusline:<name>`.
+- `chosko-llm add <feature> [<feature> ...]` — `<feature>` is `<name>`,
+  `command:<name>`, `skill:<name>`, `claude-md:<name>`, or
+  `statusline:<name>`. One or more space-separated specs (task 105);
+  each resolved/installed independently via `add_one` (function, runs
+  each name in its own subshell so an internal `die` aborts only that
+  name — see Internal patterns).
 - `chosko-llm add --all` — install every feature in managed clone
   (commands, skills, claude-md artifacts, AND statusline scripts) not
-  yet installed; already-installed skipped with info log.
+  yet installed; already-installed skipped with info log. Dies if
+  combined with any explicit feature name (checked before the `--all`
+  branch runs).
 - `chosko-llm add <feature> --local` / `--global` — scope, see below.
 
 Exit codes:
-- 0 on successful copy (or `--all` with nothing new to install).
-- 1 (via `die`) if no argument, feature not in managed clone,
-  source missing required frontmatter, target already
-  installed, or a single-feature `statusline` request with `--local`.
+- 0 if every name succeeded (or `--all` with nothing new to install).
+- 1 if `--all` combined with explicit names, no argument, or **any**
+  name in the list failed (feature not in managed clone, source
+  missing required frontmatter, target already installed, or a
+  `statusline` request with `--local`) — best-effort: other names in
+  the same invocation still run; each failure logs via `log_error`
+  (through `die` inside the per-name subshell) and the run continues.
 
 Side effects:
 - Creates `$CLAUDE_HOME/commands/` or `$CLAUDE_HOME/skills/` if missing
@@ -67,6 +76,15 @@ in global scope it behaves as before.
   `add` from `update` — keep it.
 - **Skills copy recursively.** Any supporting files alongside `SKILL.md`
   ride along. Authoring guide documents this for skill authors.
+- **Per-name isolation via subshell (task 105).** `add_one` wraps its
+  whole body in `( ... )` so any `die` inside — `resolve_feature`,
+  `require_versioned_source`, the "already installed" checks —
+  terminates only that subshell, not the parent script; the caller's
+  `for spec in "$@"` loop keeps going and tracks a `failed` flag.
+  `resolve_feature` failure is doubly nested (its own `die` fires
+  inside the `<(...)` process substitution feeding `mapfile`), so
+  `add_one` explicitly checks `kind`/`name` came back non-empty rather
+  than relying on `mapfile` raising an error.
 
 ## Domain dependencies
 
@@ -87,6 +105,9 @@ in global scope it behaves as before.
 
 - Changing "already installed → error" policy (e.g. adding `--force`
   flag) → `scripts/cmd-add.sh`.
+- Changing multi-name looping or best-effort/continue-on-error
+  semantics → `add_one` function and the trailing `for spec in "$@"`
+  loop in `cmd-add.sh`.
 - Changing what gets copied for skill (e.g. excluding patterns) →
   `cp -R` call in `skill)` branch and `--all` loop of `cmd-add.sh`.
 - Tweaking success log line format → `cmd-add.sh`.

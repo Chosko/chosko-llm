@@ -39,6 +39,7 @@ chosko-llm --version           # print the installed version (also: -v, version)
 
 ```sh
 chosko-llm add <feature>       # install a feature into ~/.claude/
+chosko-llm add <f1> <f2> ...   # install several features in one call (best-effort: one bad name doesn't block the rest)
 chosko-llm rm <feature>        # remove an installed feature
 ```
 
@@ -48,6 +49,7 @@ chosko-llm rm <feature>        # remove an installed feature
 chosko-llm upgrade             # pull the latest source from the repo
 chosko-llm update --all        # re-copy all installed features from the updated source
 chosko-llm update <feature>    # re-copy one feature
+chosko-llm update <f1> <f2> ...  # re-copy several features in one call (same best-effort semantics as add)
 ```
 
 Run `upgrade` first, then `update --all` to pick up new versions. `upgrade` only refreshes the source; it does not touch installed features.

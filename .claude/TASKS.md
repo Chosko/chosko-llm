@@ -96,7 +96,7 @@ Preconditions: none
 
 ## 105. Make `add` and `update` accept multiple feature names in one invocation
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/cmd-add.sh, scripts/cmd-update.sh, docs/cli-help.txt, README.md, .claude/context/cmd-add.md, .claude/context/cmd-update.md, VERSION
 Preconditions: none

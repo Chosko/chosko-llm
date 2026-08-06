@@ -4,29 +4,34 @@ Compressed markdown ready.
 
 ## Overview
 
-`scripts/cmd-update.sh` re-copy feature from managed clone into
+`scripts/cmd-update.sh` re-copy one or more features from managed clone into
 `$CLAUDE_HOME`, replace whatever there. Install if missing —
 unlike `add`, no refuse on absence.
 
 ## Public API
 
 CLI:
-- `chosko-llm update <feature>` — single feature; same spec syntax as `add`
-  (`<name>`, `command:`/`skill:`/`claude-md:`/`statusline:` prefixed).
-  Install if missing.
+- `chosko-llm update <feature> [<feature> ...]` — one or more
+  space-separated specs (task 105), same spec syntax as `add` (`<name>`,
+  `command:`/`skill:`/`claude-md:`/`statusline:` prefixed). Each name
+  resolved/updated independently via `update_one_spec` (function, runs
+  each name in its own subshell — same isolation pattern as `cmd-add`'s
+  `add_one`, see Internal patterns); install if missing.
 - `chosko-llm update --all` — iterate installed commands
   (`$CLAUDE_HOME/commands/*.md`), skills (`$CLAUDE_HOME/skills/*/`),
   claude-md sections (markers in `claudemd_target_path`), statusline
   scripts (`$CLAUDE_HOME/statusline/*.sh`, skipped entirely in local
   scope), update only those whose managed-clone source version **newer**
-  than installed.
+  than installed. Dies if combined with any explicit feature name.
 - `chosko-llm update <feature> --local` / `--global` — scope, see below.
 
 Exit codes:
-- 0 success (including `--all` with nothing to update).
-- 1 (via `die`) on no argument, missing source, missing/invalid
-  frontmatter on source, or a single-feature `statusline` request with
-  `--local`.
+- 0 if every name succeeded (including `--all` with nothing to update).
+- 1 if `--all` combined with explicit names, no argument, or **any**
+  name in the list failed (missing source, missing/invalid frontmatter,
+  or a `statusline` request with `--local`) — best-effort: other names
+  in the same invocation still run; each failure logs via `log_error`
+  (through `die` inside the per-name subshell) and the run continues.
 
 Side effects:
 - Single feature: delete existing target (`rm -f` for command/statusline,
@@ -69,6 +74,13 @@ update — `die`s naming statusline global-only if it fails, before
 - **Single-feature path uses `resolve_feature`** (managed clone) — can
   install-if-missing. `--all` path iterates `$CLAUDE_HOME` directly,
   including CLAUDE.md section markers for claude-md artifacts.
+- **Per-name isolation via subshell (task 105).** `update_one_spec`
+  wraps `resolve_feature` + `scope_supports_kind` + `update_one` +
+  `apply_replaces` in `( ... )` so any `die` inside terminates only that
+  subshell; the caller's `for spec in "$@"` loop keeps going and tracks
+  a `failed` flag. Same pattern as `cmd-add.sh`'s `add_one` — see that
+  file's Internal patterns for the `resolve_feature`/`mapfile`
+  double-nesting note.
 - **`migrate_stale <kind> <name>`** (script-local, defined above
   `version_cmp`) hooks the existing "no source" branch of all four `--all`
   loops — no new iteration pass. Calls `find_replacement`; on hit runs
@@ -103,6 +115,9 @@ update — `die`s naming statusline global-only if it fails, before
 - Change skill-update merge vs. replace behavior → `skill)` branch's
   `rm -rf && cp -R` in `cmd-update.sh`.
 - Add `--dry-run` → `cmd-update.sh`.
+- Changing multi-name looping or best-effort/continue-on-error
+  semantics → `update_one_spec` function and the trailing
+  `for spec in "$@"` loop in `cmd-update.sh`.
 - Change scope behavior (statusline refusal/skip) → `resolve_scope` call,
   `scope_supports_kind` check, and the `--all` statusline block in
   `cmd-update.sh`.

@@ -10,11 +10,15 @@ set -- ${SCOPE_ARGS[@]+"${SCOPE_ARGS[@]}"}
 if [ $# -lt 1 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
   if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
     cat <<EOF
-Usage: chosko-llm add <feature> [--local | --global] | --all [--local | --global]
+Usage: chosko-llm add <feature> [<feature> ...] [--local | --global] | --all [--local | --global]
 
   <feature>     Install a feature: <name>, command:<name>, skill:<name>,
-                claude-md:<name>, or statusline:<name>.
-  --all         Install every feature not yet installed.
+                claude-md:<name>, or statusline:<name>. Multiple names may be
+                given in one call; each is installed independently and a
+                failure on one (already installed, unknown name, statusline
+                + --local) does not stop the rest.
+  --all         Install every feature not yet installed. Cannot be combined
+                with explicit feature names.
   --local       Install into <cwd>/.claude instead of \$CLAUDE_HOME. Requires
                 <cwd>/CLAUDE.md to exist. statusline is global-only: a
                 single-feature statusline request fails; --all skips it.
@@ -22,8 +26,14 @@ Usage: chosko-llm add <feature> [--local | --global] | --all [--local | --global
 EOF
     exit 0
   fi
-  die "Usage: chosko-llm add <feature> | --all"
+  die "Usage: chosko-llm add <feature> [<feature> ...] | --all"
 fi
+
+for a in "$@"; do
+  if [ "$a" = "--all" ] && [ $# -gt 1 ]; then
+    die "--all cannot be combined with explicit feature names."
+  fi
+done
 
 if [ "$1" = "--all" ]; then
   any=0
@@ -118,65 +128,81 @@ if [ "$1" = "--all" ]; then
   exit 0
 fi
 
-spec="$1"
-mapfile -t resolved < <(resolve_feature "$spec")
-kind="${resolved[0]}"
-name="${resolved[1]}"
+# add_one <spec>
+# Installs a single feature spec. Runs in a subshell so an internal `die`
+# (unknown/ambiguous spec, already installed, missing version) only aborts
+# this one name — the caller's loop keeps going. die() already logs via
+# log_error before exiting, so no extra message is needed here.
+add_one() {
+  local spec="$1"
+  (
+    mapfile -t resolved < <(resolve_feature "$spec")
+    kind="${resolved[0]:-}"
+    name="${resolved[1]:-}"
+    [ -n "$kind" ] && [ -n "$name" ] || exit 1
 
-if ! scope_supports_kind "$kind"; then
-  die "statusline scripts are global-only. Re-run without --local."
-fi
+    if ! scope_supports_kind "$kind"; then
+      die "statusline scripts are global-only. Re-run without --local."
+    fi
 
-case "$kind" in
-  command)
-    src="$(src_command_path "$name")"
-    dst="$(inst_command_path "$name")"
-    require_versioned_source "$src"
-    if [ -e "$dst" ]; then
-      die "Command '$name' is already installed at $dst. Use 'chosko-llm update $name' to refresh."
-    fi
-    mkdir -p "$(dirname "$dst")"
-    cp "$src" "$dst"
-    version="$(read_frontmatter_field "$src" version)"
-    log_success "Installed command '$name' v$version -> $dst (scope: $CHOSKO_LLM_SCOPE)"
-    ;;
-  skill)
-    src_dir="$(src_skill_dir "$name")"
-    src_skill="$(src_skill_path "$name")"
-    dst_dir="$(inst_skill_dir "$name")"
-    require_versioned_source "$src_skill"
-    if [ -e "$dst_dir" ]; then
-      die "Skill '$name' is already installed at $dst_dir. Use 'chosko-llm update $name' to refresh."
-    fi
-    mkdir -p "$(dirname "$dst_dir")"
-    cp -R "$src_dir" "$dst_dir"
-    version="$(read_frontmatter_field "$src_skill" version)"
-    log_success "Installed skill '$name' v$version -> $dst_dir (scope: $CHOSKO_LLM_SCOPE)"
-    ;;
-  claude-md)
-    src="$(src_claudemd_path "$name")"
-    require_versioned_source "$src"
-    if claudemd_is_installed "$name"; then
-      die "claude-md '$name' is already installed. Use 'chosko-llm update claude-md:$name' to refresh."
-    fi
-    version="$(read_frontmatter_field "$src" version)"
-    inject_section "$name" "$version" "$src"
-    log_success "Installed claude-md '$name' v$version -> $(claudemd_target_path) (scope: $CHOSKO_LLM_SCOPE)"
-    ;;
-  statusline)
-    src="$(src_statusline_path "$name")"
-    dst="$(inst_statusline_path "$name")"
-    require_versioned_source "$src"
-    if [ -e "$dst" ]; then
-      die "statusline '$name' is already installed at $dst. Use 'chosko-llm update $name' to refresh."
-    fi
-    mkdir -p "$(dirname "$dst")"
-    cp "$src" "$dst"
-    chmod +x "$dst"
-    version="$(read_frontmatter_field "$src" version)"
-    log_success "Installed statusline '$name' v$version -> $dst (scope: $CHOSKO_LLM_SCOPE)"
-    print_statusline_prompt "$name" "$dst"
-    ;;
-esac
+    case "$kind" in
+      command)
+        src="$(src_command_path "$name")"
+        dst="$(inst_command_path "$name")"
+        require_versioned_source "$src"
+        if [ -e "$dst" ]; then
+          die "Command '$name' is already installed at $dst. Use 'chosko-llm update $name' to refresh."
+        fi
+        mkdir -p "$(dirname "$dst")"
+        cp "$src" "$dst"
+        version="$(read_frontmatter_field "$src" version)"
+        log_success "Installed command '$name' v$version -> $dst (scope: $CHOSKO_LLM_SCOPE)"
+        ;;
+      skill)
+        src_dir="$(src_skill_dir "$name")"
+        src_skill="$(src_skill_path "$name")"
+        dst_dir="$(inst_skill_dir "$name")"
+        require_versioned_source "$src_skill"
+        if [ -e "$dst_dir" ]; then
+          die "Skill '$name' is already installed at $dst_dir. Use 'chosko-llm update $name' to refresh."
+        fi
+        mkdir -p "$(dirname "$dst_dir")"
+        cp -R "$src_dir" "$dst_dir"
+        version="$(read_frontmatter_field "$src_skill" version)"
+        log_success "Installed skill '$name' v$version -> $dst_dir (scope: $CHOSKO_LLM_SCOPE)"
+        ;;
+      claude-md)
+        src="$(src_claudemd_path "$name")"
+        require_versioned_source "$src"
+        if claudemd_is_installed "$name"; then
+          die "claude-md '$name' is already installed. Use 'chosko-llm update claude-md:$name' to refresh."
+        fi
+        version="$(read_frontmatter_field "$src" version)"
+        inject_section "$name" "$version" "$src"
+        log_success "Installed claude-md '$name' v$version -> $(claudemd_target_path) (scope: $CHOSKO_LLM_SCOPE)"
+        ;;
+      statusline)
+        src="$(src_statusline_path "$name")"
+        dst="$(inst_statusline_path "$name")"
+        require_versioned_source "$src"
+        if [ -e "$dst" ]; then
+          die "statusline '$name' is already installed at $dst. Use 'chosko-llm update $name' to refresh."
+        fi
+        mkdir -p "$(dirname "$dst")"
+        cp "$src" "$dst"
+        chmod +x "$dst"
+        version="$(read_frontmatter_field "$src" version)"
+        log_success "Installed statusline '$name' v$version -> $dst (scope: $CHOSKO_LLM_SCOPE)"
+        print_statusline_prompt "$name" "$dst"
+        ;;
+    esac
 
-apply_replaces "$kind" "$name"
+    apply_replaces "$kind" "$name"
+  )
+}
+
+failed=0
+for spec in "$@"; do
+  add_one "$spec" || failed=1
+done
+exit $failed

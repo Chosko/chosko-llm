@@ -10,10 +10,13 @@ set -- ${SCOPE_ARGS[@]+"${SCOPE_ARGS[@]}"}
 usage() {
   cat <<EOF
 Usage:
-  chosko-llm update <feature> [--local | --global]   Re-copy a feature from the managed clone
-                                                       (installs if missing).
+  chosko-llm update <feature> [<feature> ...] [--local | --global]   Re-copy features from the
+                                                                      managed clone (installs any
+                                                                      that are missing).
   chosko-llm update --all [--local | --global]        Update every currently installed feature.
 
+  <feature> Multiple names may be given in one call; each is updated independently and a
+            failure on one (unknown name, statusline + --local) does not stop the rest.
   --local   Operate on <cwd>/.claude instead of \$CLAUDE_HOME. Requires <cwd>/CLAUDE.md
             to exist. statusline is global-only: a single-feature statusline request
             fails; --all skips it.
@@ -29,6 +32,12 @@ if [ $# -lt 1 ]; then
   usage
   exit 1
 fi
+
+for a in "$@"; do
+  if [ "$a" = "--all" ] && [ $# -gt 1 ]; then
+    die "--all cannot be combined with explicit feature names."
+  fi
+done
 
 # Update a single feature given (kind, name). kind is command|skill.
 update_one() {
@@ -220,12 +229,30 @@ if [ "$1" = "--all" ]; then
   exit 0
 fi
 
-# Single feature path. Resolve against managed clone — `update` installs if
-# missing, per spec.
-spec="$1"
-mapfile -t resolved < <(resolve_feature "$spec")
-if ! scope_supports_kind "${resolved[0]}"; then
-  die "statusline scripts are global-only. Re-run without --local."
-fi
-update_one "${resolved[0]}" "${resolved[1]}"
-apply_replaces "${resolved[0]}" "${resolved[1]}"
+# update_one_spec <spec>
+# Resolves and updates a single feature spec against the managed clone —
+# `update` installs if missing, per spec. Runs in a subshell so an internal
+# `die` (unknown/ambiguous spec, statusline + --local) only aborts this one
+# name — the caller's loop keeps going. die() already logs via log_error
+# before exiting, so no extra message is needed here.
+update_one_spec() {
+  local spec="$1"
+  (
+    mapfile -t resolved < <(resolve_feature "$spec")
+    kind="${resolved[0]:-}"
+    name="${resolved[1]:-}"
+    [ -n "$kind" ] && [ -n "$name" ] || exit 1
+
+    if ! scope_supports_kind "$kind"; then
+      die "statusline scripts are global-only. Re-run without --local."
+    fi
+    update_one "$kind" "$name"
+    apply_replaces "$kind" "$name"
+  )
+}
+
+failed=0
+for spec in "$@"; do
+  update_one_spec "$spec" || failed=1
+done
+exit $failed
