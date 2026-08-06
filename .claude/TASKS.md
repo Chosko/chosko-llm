@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 104
+Last task number: 105
 
 ---
 
@@ -90,6 +90,15 @@ Preconditions: 102
 Status: [DONE]
 Target: claude
 Files: scripts/cmd-ls.sh, scripts/cmd-show.sh, scripts/lib.sh, docs/cli-help.txt, .claude/context/cmd-ls.md, .claude/context/cmd-show.md, .claude/context/shared-lib.md, VERSION
+Preconditions: none
+
+---
+
+## 105. Make `add` and `update` accept multiple feature names in one invocation
+
+Status: [MISSING]
+Target: claude
+Files: scripts/cmd-add.sh, scripts/cmd-update.sh, docs/cli-help.txt, README.md, .claude/context/cmd-add.md, .claude/context/cmd-update.md, VERSION
 Preconditions: none
 
 ---
