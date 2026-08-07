@@ -174,7 +174,7 @@ Run ends w/ feature at `[PLANNED]`, `Tasks:` line listing surviving and newly cr
 
 When `feature=<slug>` run drafts at least one new task (plain or part of reconciliation), `/task-add` appends one more: `Target: claude` task titled "Update documentation for feature `<slug>`", w/ `Preconditions:` naming every other new task from run — signalling should land once they have. Hints drawn from whichever of README.md, `docs/authoring-guide.md`, relevant `.claude/domain/*.md` files, `.claude/context/features.md`, `.claude/context/INDEX.md` actually describe behavior run's tasks change. Reconciliation-only run creating no new tasks gets no documentation task — nothing new to document.
 
-Documents owned by another command in pipeline — `.claude/domain/features/<slug>.md` (`/architect`) and `product-design.md` / `technical-direction.md` / `business-model.md` (`/product-design`) — never added to doc task's Hints silently; `/task-add` asks explicit confirmation first, defaults to leaving them out, since otherwise stay read-only outside owning command.
+Documents owned by another command in pipeline — `.claude/domain/features/<slug>.md` (`/architect`) and `product-design.md` / `technical-direction.md` / `business-model.md` (`/product-design`) — MAY appear in doc task's Hints. Not illegal move: feature changing its own design surface routinely needs document brought back in line w/ what shipped. Illegal move is doing it silently — `/task-add` names file and its owner at PHASE 3 gate, where user can strike it, and never writes owned document into task user wasn't told about. Ownership still means one writer per artifact for the *pipeline commands*: `/task-add` itself never edits these files.
 
 ## Who writes what
 

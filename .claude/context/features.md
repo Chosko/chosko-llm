@@ -149,9 +149,10 @@ Currently shipped:
   `Preconditions:` listing run's other new task IDs) whose Hints point at
   affected README.md / authoring-guide.md / domain / context-layer docs;
   skipped on reconciliation-only run. `/architect`-owned and
-  `/product-design`-owned documents never added to that task's Hints
-  without asking first. Free-form text alongside slug narrows scope;
-  feature document read-only. Free-form path unchanged when
+  `/product-design`-owned documents MAY appear in that task's Hints, but
+  never silently — file and owner named at PHASE 3 gate, user can strike
+  it. Free-form text alongside slug narrows scope;
+  feature document read-only to `/task-add` itself. Free-form path unchanged when
   `feature=` absent.
   Documents two product-pipeline additions to backlog schema: optional
   `Feature: <slug>` summary-block line (feature-derived tasks

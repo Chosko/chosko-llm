@@ -1,6 +1,6 @@
 ---
 name: task-add
-version: 0.14.0
+version: 1.0.0
 type: command
 description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit and push. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, appending a final documentation-update task when new tasks were drafted, and setting the feature [PLANNED]. Pass --enrich to produce a self-contained body for a local LLM in one shot, --short for trivial low-ambiguity tasks to skip the deep PHASE 1 investigation and write a minimal Goal-only body (mutually exclusive with --enrich and feature=), --no-split to always write exactly one task, --no-commit to write the files but skip the commit (and push), or --no-push to commit without pushing.
 ---
@@ -591,7 +591,7 @@ Part 1/k — Draft body:
 **When FEATURE is set** and at least one new task was drafted above (single
 or split), also render the documentation task's draft here, last, using the
 next sequential ID after the others. See DOCUMENTATION TASK below for its
-content and the ownership-gate question that precedes it. Skip this
+content and the ownership notice that accompanies it. Skip this
 entirely on a reconciliation-only run that drafts zero new tasks.
 
 End with: **"Approve and write?"**
@@ -677,21 +677,29 @@ up to date with this run's other new tasks once they're implemented:
   these actually describe the behavior this run's tasks change. Not a
   fixed list; judge per feature, same as any other task's Hints.
 
-**Ownership gate.** Some of the collateral PHASE 1 surfaces is NOT owned by
-this command: `.claude/domain/features/<slug>.md` (owned by `/architect`)
-and `product-design.md` / `technical-direction.md` / `business-model.md`
-(owned by `/product-design`). Never add one of these to the doc task's
-Hints silently. Instead, during PHASE 3, surface it explicitly and ask:
+**Ownership notice.** Some of the collateral PHASE 1 surfaces is owned by
+another command in this pipeline: `.claude/domain/features/<slug>.md` (owned
+by `/architect`) and `product-design.md` / `technical-direction.md` /
+`business-model.md` (owned by `/product-design`). Listing one of these in the
+doc task's Hints is **allowed** — a feature that changed its own design
+surface routinely needs its document brought back in line with what shipped,
+and the doc task is the right place to flag that. Judge inclusion on the same
+grounds as any other Hint: does this file actually describe behavior this
+run's tasks change?
 
-> The doc-update task could also flag `.claude/domain/features/<slug>.md`
-> for review, since this feature changed its own design surface — but that
-> file is owned by `/architect`, not this command. Include it in the doc
-> task's Hints anyway? Default: leave it out — it stays read-only outside
-> its owning command elsewhere in this pipeline.
+What is not allowed is including one silently. Whenever the drafted Hints
+name an owned document, say so plainly in PHASE 3, naming the file and its
+owner:
 
-Wait for an explicit answer; silence is not approval, same as any other
-PHASE 3 confirmation. Include the file in the drafted task only on
-explicit yes.
+> Note: the doc-update task's Hints include
+> `.claude/domain/features/<slug>.md`, which is owned by `/architect` rather
+> than this command — this feature changed its own design surface, so the doc
+> task flags it for review. Say so if you'd rather it stayed out.
+
+No separate answer is required: the file rides on the PHASE 3 approval like
+every other part of the plan, and is dropped if the user says to. The point
+is that the user never discovers an owned document in a written task without
+having been told.
 
 ---
 
@@ -863,7 +871,9 @@ DO NOT:
 - Change any behavior of the free-form path when `feature=` is absent. The
   feature mode is additive; a plain `/task-add <description>` run must be
   indistinguishable from before.
-- Silently add an `/architect`-owned or `/product-design`-owned document to
-  the documentation task's Hints — ask first (see DOCUMENTATION TASK).
+- Add an `/architect`-owned or `/product-design`-owned document to the
+  documentation task's Hints without naming it and its owner at the PHASE 3
+  gate (see DOCUMENTATION TASK). Including it is allowed; doing it silently
+  is not.
 - Draft a documentation task on a reconciliation-only run that creates zero
   new tasks.
