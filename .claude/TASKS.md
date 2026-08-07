@@ -185,7 +185,7 @@ Feature: plan-readout
 
 ## 114. Add milestone grouping to /task-list
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-list.md, VERSION
 Preconditions: 111
