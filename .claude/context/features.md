@@ -307,8 +307,16 @@ Currently shipped:
   Input is `product-design.md` section, named features, or bare
   free-form prompt (usable on codebase that never ran
   `/product-design`); with no argument lists design's features and
-  asks. PHASE 0 gates on `/domain-setup`, reads design/technical-
-  direction/feature/context layers, detects whether stack exists — a
+  asks. Input resolution has TWO modes, in two on-demand files (below),
+  dispatched PER TARGET rather than per run: slice mode activates purely on
+  `.claude/domain/product-roadmap.md` carrying at least one milestone with a
+  `Covers:` line (no flag file, no settings key, no frontmatter switch), and
+  a target whose section that roadmap does not slice takes the traditional
+  path anyway, stated in one line — so adoption is incremental and a project
+  with no roadmap behaves exactly as before. `--no-slices` forces traditional
+  mode per run (silent no-op where there is no roadmap). PHASE 0 gates on
+  `/domain-setup`, reads design/technical-
+  direction/feature/context layers, probes for the roadmap, detects whether stack exists — a
   present `technical-direction.md` counts as stack that exists, exactly
   like established codebase, so PHASE 2a skipped and
   `tech-stack-selection.md` never read on that path; PHASE 0b is iterate guard; PHASE 1 clarifies (skipped when nothing ambiguous,
@@ -320,7 +328,18 @@ Currently shipped:
   the document) — stopping at mid-to-high technical level, no code, no
   file-by-file plans, those being `/task-add`'s output; PHASE 3 writes the
   documents, the `FEATURES.md` entries, the INDEX rows, and any upstream
-  design change. Four supporting files load only on their branch:
+  design change. Six supporting files load only on their branch:
+  `sectioned-input.md` and `sliced-input.md` — the two input-resolution
+  modes, mutually exclusive per target and never both read for the same
+  target: `sectioned-input.md` when the target resolves traditionally (no
+  roadmap, or `--no-slices`, or a roadmap that does not slice this target's
+  section), matching against `product-design.md` sections and existing
+  `FEATURES.md` slugs; `sliced-input.md` when a roadmap slice matches the
+  target, carrying slice resolution (one match architects it, several across
+  milestones ask, the union is never architected and the milestone never
+  guessed), the exact-then-prose section matching rule, the slice's
+  exclusions flowing into the feature document's non-goals, and the extended
+  `Source:` — then
   `iterating.md` (the feature already has an entry), `tech-stack-
   selection.md` (no existing stack in either form — an existing stack
   always wins), `council-gate.md` (PHASE 2 hit a genuine design fork —
@@ -337,7 +356,12 @@ Currently shipped:
   the product design", naming `technical-direction.md` when that's the
   source — rather than restating the choice). Writes `Status:` / `Doc:` /
   `Source:` in `FEATURES.md` and never `Tasks:` — the by-line split that
-  lets it share the file with `/task-add`. The only writer of `[STALE]`:
+  lets it share the file with `/task-add`. `Source:` carries an optional
+  ` (<milestone-slug>)` suffix written only in slice mode
+  (`product-design.md § Authentication (m1-mvp)`), absent on traditional-mode
+  and `prompt` features, backward compatible, and the sole mechanism by which
+  a low-level feature knows its milestone. Reads `product-roadmap.md`, never
+  writes it, and never reads `PLAN.md`. The only writer of `[STALE]`:
   the iterate guard refuses outright while any generated task is
   `[IN PROGRESS]` (no override), else asks, then flips surviving
   non-`[DONE]` tasks to `[STALE]` and feature `[PLANNED]` →

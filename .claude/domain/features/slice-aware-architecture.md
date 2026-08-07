@@ -180,16 +180,24 @@ headings.
 
 ## Open questions
 
-- **Whether a low-level feature may legitimately span two slices.** The
-  design assumes not, and that assumption is what makes the milestone tree
-  crossing-free. A shared component genuinely needed by an early slice and
-  substantially extended by a later one is the case that would test it; the
-  expected answer is two features, but it has not been proven against a real
-  example.
-- **How slice scope statements are matched to section headings.** Prose
-  matching against `product-design.md` headings is forgiving but fuzzy. An
-  exact-heading rule is stricter and breaks when a heading is reworded. Left
-  to implementation, and worth revisiting if mismatches show up.
+- **Whether a low-level feature may legitimately span two slices.** Still
+  open, and untested by what shipped. The design assumes not, and that
+  assumption is what makes the milestone tree crossing-free. A shared
+  component genuinely needed by an early slice and substantially extended by
+  a later one is the case that would test it; the expected answer is two
+  features, but it has not been proven against a real example.
+- ~~**How slice scope statements are matched to section headings.**~~
+  **Settled at implementation**, in `skills/architect/sliced-input.md`: an
+  exact match on the section name comes first (case-insensitive, tolerant of
+  surrounding whitespace and trailing punctuation); only when nothing matches
+  exactly does a forgiving prose match apply, and a prose match is never
+  silent — the matched slice and its milestone are stated in one line for the
+  user to correct. A fuzzy candidate is never considered alongside an exact
+  one. The tie-break argument was failure direction: a strict exact-heading
+  rule fails *closed*, dropping the target into traditional mode silently,
+  which is the one outcome a user would not notice. Still worth revisiting if
+  mismatches show up in practice.
 - **Whether `--no-slices` should also be available per target** rather than
-  per run. No evidence yet that a mixed run needs it, since unsliced sections
-  already fall back on their own.
+  per run. Still open. Shipped per run, as designed: no evidence yet that a
+  mixed run needs the finer grain, since unsliced sections already fall back
+  on their own.

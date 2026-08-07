@@ -184,7 +184,7 @@ work survives across sessions, machines, and people.
 | 0 — scaffold | [`/domain-setup`](#set-up-the-domain-layer--domain-setup) | nothing | the domain layer + an empty `.claude/FEATURES.md` |
 | 1 — design | [`/product-design`](#design-a-product--product-design) | you, and the repo when it already has code | `product-design.md`, `technical-direction.md`, optional `business-model.md`, `design-process.md` |
 | 1b — roadmap | [`/product-roadmap`](#decide-what-ships-when--product-roadmap) | you, plus `product-design.md` when you have one | `product-roadmap.md` — ordered milestones and their scope slices |
-| 2 — architect | [`/architect`](#design-how-to-build-it--architect) | a high-level feature, or a bare prompt | `.claude/domain/features/<slug>.md` + a `FEATURES.md` entry |
+| 2 — architect | [`/architect`](#design-how-to-build-it--architect) | a high-level feature, or a bare prompt — one milestone's scope slice of it when you have a roadmap | `.claude/domain/features/<slug>.md` + a `FEATURES.md` entry |
 | 3 — plan | `/task-add feature=<slug>` | a feature document | task bodies + `TASKS.md` entries |
 | 4 — build | `/task-implement` | a task body | code, one commit per task |
 
@@ -427,6 +427,24 @@ data, and contracts — no code, no file-by-file plans. Those come from
 
 You can run it from a `/product-design` feature, from a feature name, or from
 a bare description with no design documents at all.
+
+**Slice mode.** If you've written a roadmap, `/architect` doesn't decompose a
+whole product feature at once — it architects one *scope slice*, the share of
+that feature a single milestone takes on. It switches into this mode purely on
+finding `.claude/domain/product-roadmap.md` with a milestone that has a
+`Covers:` line; there is no flag to turn on and nothing to configure. The
+slice's scope statement becomes the boundary, its exclusions become the
+feature document's non-goals, and the milestone is recorded on the
+`FEATURES.md` entry as `Source: product-design.md § Authentication (m1-mvp)`.
+Every low-level feature then belongs to exactly one milestone.
+
+The choice is made **per feature, not per run**: a section your roadmap
+doesn't slice takes the ordinary path even on a roadmapped project, and it
+tells you when it does. If a section is sliced across several milestones it
+asks which one you mean rather than guessing — and it never architects the
+union of two slices. A project with no roadmap behaves exactly as it always
+has, silently. Pass `--no-slices` to ignore the roadmap for a run; on a
+project without one, the flag does nothing.
 
 Re-architecting a feature that already produced tasks is guarded: if any of
 those tasks is `[IN PROGRESS]` it refuses outright, and otherwise it asks

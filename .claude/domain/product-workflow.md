@@ -15,7 +15,7 @@ Pipeline exists to make handoff explicit. Cost: set of files must agree on schem
 | 0 — scaffold | `/domain-setup` | nothing | domain layer + empty `FEATURES.md` |
 | 1 — design | `/product-design` | user, repo when brownfield | `product-design.md`, `technical-direction.md`, optional `business-model.md`, `design-process.md` |
 | 1b — roadmap | `/product-roadmap` | user, `product-design.md` when present (optional), existing roadmap as its own resume state, `FEATURES.md` read-only | `product-roadmap.md` + its domain `INDEX.md` row |
-| 2 — architect | `/architect` | high-level feature, or bare prompt, plus `technical-direction.md` when exists | `features/<slug>.md` + `FEATURES.md` entry |
+| 2 — architect | `/architect` | high-level feature, or bare prompt, plus `technical-direction.md` when exists, plus `product-roadmap.md` slice when target section sliced | `features/<slug>.md` + `FEATURES.md` entry |
 | 3 — plan | `/task-add feature=<slug>` | feature doc | task bodies + `TASKS.md` entries |
 | 4 — build | `/task-implement` | task body | code |
 
@@ -79,7 +79,7 @@ Sections: purpose, scope and non-goals, architecture (components + responsibilit
 
 Status: [NEW]
 Doc: .claude/domain/features/<slug>.md
-Source: product-design.md § <section>
+Source: product-design.md § <section>[ (<milestone-slug>)]
 Tasks: none
 
 ---
@@ -90,7 +90,7 @@ Tasks: none
 | `<slug>` | Stable kebab-case identifier. Never renamed — same rule as task IDs stable. |
 | `Status:` | One of `[NEW]` / `[ITERATED]` / `[PLANNED]`. See below. |
 | `Doc:` | Path to feature document. |
-| `Source:` | Where feature came from — `product-design.md § <section>`, or literal `prompt` when architected directly, no design docs. |
+| `Source:` | Where feature came from — `product-design.md § <section>`, or literal `prompt` when architected directly, no design docs. Optional ` (<milestone-slug>)` suffix when feature came from roadmap scope slice: `Source: product-design.md § Authentication (m1-mvp)`. Absent on traditional-mode and `prompt` features — backward compatible, readers ignoring suffix keep working. Sole mechanism by which low-level feature knows its milestone. |
 | `Tasks:` | Comma-separated task IDs generated from feature, or `none`. |
 
 No `Last feature number` counter, no numeric IDs: slugs are identifiers, nothing to count.
@@ -147,6 +147,20 @@ Task status meaning *design this task generated from has changed*. Set by `/arch
 
 Status vocabulary duplicated in shell: `scripts/check-task-parity.sh` holds canonical tag list, `scripts/cmd-task-impl.sh` holds implementable-status allowlist. Any vocabulary change must land in both, or parity guard fails.
 
+## Slice-aware resolution (`/architect`)
+
+`/architect` has two input-resolution modes, in two on-demand supporting files: `skills/architect/sectioned-input.md` (traditional — target matched against `product-design.md` sections and existing `FEATURES.md` slugs) and `skills/architect/sliced-input.md` (slice mode). Project w/ no roadmap behaves exactly as before.
+
+- **Activation probe:** `.claude/domain/product-roadmap.md` present, carrying at least one milestone w/ `Covers:` line. Whole of the configuration — no flag file, no settings key, no frontmatter switch.
+- **Dispatch per target, not per run.** Roadmap slicing `§ Authentication` may say nothing about `§ Config export`; each target resolves independently, so unsliced section takes traditional path even on roadmapped project. Makes adoption incremental.
+- **Resolution:** find every slice whose section matches target; one match → architect it; several across different milestones → ask which, listing each w/ milestone and scope statement. User may name milestone in invocation to skip question. Union of several slices never architected, milestone never guessed.
+- **Slice scope statement is a boundary.** Its exclusions become the feature document's non-goals — section already in template, only source of content new.
+- **Milestone recorded in `Source:`** as the optional parenthetical, above.
+- **`--no-slices`** forces traditional mode on roadmapped project; silent no-op where no roadmap. Per run, not per target — unsliced sections already fall back on their own.
+- **Failure contract:** no roadmap or no `Covers:` line → traditional mode, silently (normal state of most projects, not a warning); roadmap present but target section unsliced → traditional mode for that target, stated in one line; slice whose section absent from `product-design.md` → architect anyway, warn once, matching `/product-roadmap` warning rather than refusing on same condition.
+
+`PLAN.md` never read here, `product-roadmap.md` never written. Everything else in `/architect` — gate, iterate guard, clarify, architecture conversation, write rules, commit protocol — untouched by slice mode.
+
 ## The iterate guard (`/architect`)
 
 Before re-architecting feature already having entry, `/architect` reads its `Tasks:` IDs, looks each up in `TASKS.md`:
@@ -191,11 +205,11 @@ Exactly one writer per artifact, `FEATURES.md` deliberate exception.
 | `domain/INDEX.md` | `/domain-setup` creates it; `/product-design` and `/architect` register docs they add |
 | `design-process.md` | `/product-design` |
 | `product-design.md` | `/product-design`; `/architect` writes back clarifications, architecture-driven changes |
-| `product-roadmap.md` | `/product-roadmap`, only writer. Reads `product-design.md` and `FEATURES.md`, writes neither. |
+| `product-roadmap.md` | `/product-roadmap`, only writer. Reads `product-design.md` and `FEATURES.md`, writes neither. `/architect` reads it to resolve slices, never writes it — wrong slice fixed by re-running `/product-roadmap`. |
 | `technical-direction.md` | `/product-design` owns it. `/architect` reads it, adopts as established stack when present, treats exactly as existing codebase stack — skipping tech-stack selection, referencing from feature documents rather than restating, never writing to it. |
 | `business-model.md` | `/product-design` |
 | `features/<slug>.md` | `/architect` |
-| `FEATURES.md` | `/architect` owns entries, `Status:`, `Doc:`, `Source:`. `/task-add` owns `Tasks:`, flip to `[PLANNED]`. `/task-clean` prunes dropped IDs from `Tasks:`. |
+| `FEATURES.md` | `/architect` owns entries, `Status:`, `Doc:`, `Source:` — including `Source:`'s optional milestone suffix, no new writer. `/task-add` owns `Tasks:`, flip to `[PLANNED]`. `/task-clean` prunes dropped IDs from `Tasks:`. |
 | `TASKS.md` | `/task-add`, `/task-implement`, `/task-clean` as today; `/architect` only to flip statuses to `[STALE]` |
 | `council-report-*.html`, `council-transcript-*.md` | claude-council, when the council gate is convened. Owned by **neither** skill: never added to `WRITTEN`, never staged by `--commit`, never deleted. Both stages name their paths in the closing report and leave them in the working tree for the user to keep or delete. |
 
