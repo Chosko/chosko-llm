@@ -438,11 +438,50 @@ Currently shipped:
   `skills/task-implement/unity-mcp-checkpoints.md` checkpoint flow) by
   giving Claude reusable reference when operating editor via
   `mcp__UnityMCP__*` tools.
+- `commands/production-status.md` — read side of the planning layer. Thin
+  read-only reporter (a command, not a skill: no conversation, no supporting
+  files) joining `.claude/PLAN.md`, `.claude/FEATURES.md`, `.claude/TASKS.md`
+  and `.claude/domain/product-roadmap.md`, all read-only. Eight output
+  sections in fixed order: the milestone (slug, title, `Status:`, plus `Goal:`
+  and `Exit criteria:` echoed verbatim from the roadmap); its features in plan
+  order with `FEATURES.md` status, task rollup and readiness; the ready set;
+  the ONE recommended next feature (first ready in plan order); blocked
+  features each named with what blocks it and why; coverage gaps (milestones
+  with `Features: none`, plus `product-design.md` sections no `Covers:` names);
+  unplanned features (`FEATURES.md` slugs missing from the plan, plus
+  `Unscheduled`); remaining milestones one line each. READINESS is the only
+  computation and is derived every read, never stored: ready when every edge
+  pointing at the feature comes from a feature `[PLANNED]` in `FEATURES.md`
+  with all tasks `[DONE]`/`[SKIP]`; no edges → ready; else blocked. An edge
+  slug resolving to no feature FAILS OPEN — reported as a plan inconsistency,
+  feature treated as ready. Task rollup is counts per status by default,
+  `--task-ids` names each ID; `milestone=<slug>` scopes sections 1–5 and an
+  unknown slug stops listing available slugs (matching `/task-add
+  feature=<slug>`). Staleness is STRUCTURAL, never temporal — names slugs
+  missing from `PLAN.md`, never compares `Last reconciled:` against dates or
+  mtimes. Failure contract is degradation throughout (no roadmap omits
+  goal/exit criteria, no `TASKS.md` drops rollups, no `[ACTIVE]` reports the
+  first `[PLANNED]`); the only stops are a missing `PLAN.md` and an unknown
+  `milestone=`. Writes nothing, runs NO shell command of any kind, never opens
+  a file under `.claude/tasks/`, and never starts the work it recommends.
 - `commands/task-list.md` — prints backlog as compact read-only
   summary. Marks `claude+human` / `human` tasks with `⚠ <target>`, shows
   `[<slug>]` for tasks with `Feature:` line, appends `⚠ stale` to
-  `[STALE]` tasks. Reads only `.claude/TASKS.md`; never opens body
-  files.
+  `[STALE]` tasks. When `.claude/PLAN.md` exists, also groups tasks under
+  milestone headings in plan order, resolving each task's `Feature:` slug
+  through the milestones' `Features:` lists, and appends `⚠ blocked by <slug>`
+  when the task's feature is blocked — same readiness rule as
+  `/production-status`, duplicated rather than shared (one paragraph of logic
+  in a markdown prompt), with an unresolvable edge slug ignored rather than
+  treated as a blocker. Tasks with no `Feature:` line and slugs no milestone
+  lists (including `Unscheduled` ones) fall under one trailing `Unplanned`
+  heading; empty milestones get no heading. Marker order stated explicitly in
+  the body: `⚠ <target>`, `[<slug>]`, `(deps: N, M)`, `⚠ stale`,
+  `⚠ blocked by <slug>`. Filter applies before grouping, so it works within
+  groups; summary line unchanged. NO `PLAN.md` → byte-for-byte the old output,
+  a silent no-op with no warning and no pointer at `/production-plan`. Reads
+  `.claude/TASKS.md`, plus `PLAN.md` and `FEATURES.md` when a plan exists;
+  never opens body files, feature docs or the roadmap.
 - `commands/task-enrich.md` — expands thin (`target: claude`) task body
   into enriched self-contained body (`target: local`) for local LLM
   implementer. Appends `## Context bundle` and `## Implementation steps`

@@ -195,7 +195,7 @@ Feature: plan-readout
 
 ## 115. Update documentation for feature plan-readout
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/cli-help.txt, .claude/context/features.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/domain/features/plan-readout.md, VERSION
 Preconditions: 113, 114

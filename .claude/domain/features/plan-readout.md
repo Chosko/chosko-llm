@@ -63,6 +63,16 @@ reporter with no conversation and no supporting files, exactly the register
 7. **Unplanned features** — `FEATURES.md` slugs absent from `PLAN.md`.
 8. Remaining milestones, one line each.
 
+**Two arguments**, settled at implementation. `--task-ids` switches the task
+rollup from counts per status to naming each task ID — counts keep a
+milestone's feature list scannable, which is the command's whole register, and
+the flag recovers precision without a second command. `milestone=<slug>`
+scopes sections 1–5 to a named milestone rather than the active one, and an
+unknown slug is the report's only stop besides a missing `PLAN.md`, listing
+the available slugs exactly as `/task-add feature=<slug>` does. The split
+follows the existing convention: `key=value` for a named target, `--flag` for
+a boolean.
+
 **Readiness** is the only real computation. A feature is ready when every
 dependency edge pointing at it originates from a feature that is `[PLANNED]`
 in `FEATURES.md` with all of its tasks `[DONE]` or `[SKIP]`. A feature with
@@ -114,12 +124,22 @@ refusal — a read-only report must never be the thing that stops a session:
 
 - No `PLAN.md` → `/production-status` says the project has no plan and points
   at `/production-plan`. `/task-list` behaves exactly as today.
+- No `FEATURES.md` → report the plan's structure — milestones, order, edges —
+  with no feature statuses or rollups, and point at `/domain-setup` and
+  `/architect`. `/task-list` treats a plan with no feature index as no plan,
+  since it could compute neither a group's blockers nor anything else the
+  grouping adds.
 - No roadmap → milestone goals and exit criteria are omitted; everything else
   reports normally.
 - No `TASKS.md` → features report with no task rollup, and every feature with
   satisfied dependencies is ready.
 - No active milestone → report the first `[PLANNED]` one and say that none is
   active.
+- More than one `[ACTIVE]` milestone → report the first in plan order, name
+  them all, and call it a plan inconsistency `/production-plan` resolves.
+  Unlike `/production-plan`, which asks, a read-only report cannot ask.
+- An unknown `milestone=<slug>` → stop, listing the milestone slugs that do
+  exist. This and a missing `PLAN.md` are the only two stops in the command.
 - A dependency edge naming an unknown slug → report it as a plan
   inconsistency and treat the feature as ready rather than permanently
   blocked. Failing open matters here: a hand-edited plan must not make the
@@ -141,16 +161,35 @@ refusal — a read-only report must never be the thing that stops a session:
 
 ## Open questions
 
+Reviewed against what shipped in `commands/production-status.md` and
+`commands/task-list.md`. One question was settled by the implementation and is
+recorded as settled; the other two are restated with what shipping made
+concrete.
+
+- **How much of a task rollup belongs in a feature line.** Settled as
+  **counts per status by default, `--task-ids` to name each task**. Counts
+  keep a milestone's feature list scannable, which is the whole register the
+  command occupies, and the flag recovers precision without a second command
+  or a second output shape to maintain. Nothing here stays open — the two
+  granularities the question weighed are both available, and choosing between
+  them is now the reader's call rather than the design's.
 - **Whether `/production-status` and `/task-list` should stay two commands.**
-  They read overlapping data and their outputs will look similar under
-  milestone grouping. Merging them behind a flag is the alternative; kept
-  separate for now because one reports features and the other reports tasks,
-  and the registers are different.
-- **How much of a task rollup belongs in a feature line.** Counts per status
-  are compact but lossy; naming each task is precise and long. Left to
-  implementation.
+  Still open, and shipping made its cost concrete rather than hypothetical:
+  the readiness rule is now stated **twice**, once in each command body, and
+  the two statements must be kept in step by hand. That duplication was
+  chosen deliberately — these are markdown prompts, and a third file holding
+  one paragraph of logic costs more to read than the paragraph does to repeat
+  — but it is exactly the kind of drift a merge would remove. The trigger to
+  revisit: the two definitions diverging in practice, or a third reader
+  needing the same rule. Until then they stay separate, because one reports
+  features in plan order and the other reports tasks in ID order, and the
+  registers are different.
 - **Whether the report should flag a milestone whose exit criteria look
-  unmeetable.** This is where [product-roadmap](./product-roadmap.md)'s
-  dropped exit-criteria check would land if it is ever wanted — as a derived
+  unmeetable.** Still open, and untouched by this implementation: the exit
+  criteria are echoed verbatim in section 1 and nothing is derived from them.
+  This is still where [product-roadmap](./product-roadmap.md)'s dropped
+  exit-criteria check would land if it is ever wanted — as a derived
   observation in a read-only report rather than a gate in a writer, which is
-  a better home for it.
+  a better home for it. What shipping clarified is the shape it would take:
+  another derived section beside coverage gaps, computed on every read, with
+  no state added anywhere.

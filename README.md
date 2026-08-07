@@ -192,6 +192,11 @@ work survives across sessions, machines, and people.
 Stages are **entered, not marched through**. Nothing downstream requires that
 an upstream stage was ever run.
 
+Reading across the whole of it there is one more command,
+[`/production-status`](#see-what-to-build-next--production-status). It writes
+nothing and belongs to no stage: it joins `PLAN.md`, `FEATURES.md` and
+`TASKS.md` and tells you which feature to start next.
+
 **Where to start.** Two realistic starting conditions:
 
 - **A brand new product.** Run `/domain-setup`, then `/product-design` to work
@@ -507,6 +512,49 @@ roadmap and `TASKS.md` without writing any of them. Nothing is committed by
 default; `--commit` commits and pushes what the run wrote (`--commit
 --no-push` to skip the push).
 
+### See what to build next — `/production-status`
+
+Reports what to build next by joining `PLAN.md`, `FEATURES.md` and `TASKS.md`
+— the active milestone with its roadmap goal and exit criteria, its features
+in plan order with their task rollup and readiness, the ready set, the single
+recommended next feature, blocked features named with their blocker, coverage
+gaps, features missing from the plan, and the remaining milestones. It writes
+nothing.
+
+The plan says what belongs where and in what order, `FEATURES.md` says whether
+a feature's tasks match its design, and `TASKS.md` says whether the work is
+done. The useful answer is in the join of the three and in none of them alone,
+so this command computes it **on every read** and stores nothing:
+
+- **Ready** — every dependency edge pointing at the feature comes from a
+  feature that is `[PLANNED]` with all of its tasks `[DONE]` or `[SKIP]`. No
+  dependencies means ready.
+- **Blocked** — anything else, and always *named with what blocks it* and why,
+  so a blocked list is somewhere to go rather than a dead end.
+- **Recommended** — the first ready feature in plan order. Exactly one, and
+  the command stops there: it reports the next thing to build, it doesn't
+  start it.
+
+Task rollups are counts per status by default (`4 tasks — DONE: 2, MISSING:
+2`); pass `--task-ids` to name each task instead. `milestone=<slug>` reports a
+named milestone rather than the active one.
+
+Staleness is **structural, not temporal**: rather than checking dates, the
+report simply names every `FEATURES.md` slug missing from `PLAN.md` and points
+you at `/production-plan`. A plan that has fallen behind says so by having
+gaps.
+
+Nothing here refuses. No roadmap drops the goals and exit criteria, no
+`TASKS.md` drops the rollups, no active milestone reports the first planned
+one, and a dependency edge naming a feature that doesn't exist is reported as
+a plan inconsistency with the feature treated as ready — failing open, because
+a hand-edited plan must never make the report claim there's nothing to do. The
+only thing it won't do is run without a `PLAN.md`, and then it tells you to
+run `/production-plan`.
+
+Read-only in the strict sense: no writes, no commits, no shell commands, and
+it never opens a task body under `.claude/tasks/`.
+
 ### Pressure-testing a decision — `claude-council`
 
 `/product-design` and `/architect` both reach forks where two or three
@@ -553,7 +601,7 @@ tasks. The core idea is to spend more focus in planning and writing down tasks, 
 - `/task-setup` — initialize the backlog.
 - `/task-add` — plan a task and write it down. This is the real strength of this workflow: invoke the command with a very short description, let Claude Code investigate and expand it, in a conversational way. Claude will ask every question needed to fill the gaps, then it will write everything down for further implementation. It may propose splitting the description into several tasks when that gives better units (independent deliverables, or one task that's too large) — pass `--no-split` to always get exactly one task.
 - `/task-add feature=<slug>` — plan from an `/architect` feature document instead of a description. The document is the input, so you don't re-explain the work in prose; a feature usually becomes several tasks. Run it again after re-architecting and it *reconciles* rather than duplicating: each existing task is either left alone, updated in place, or skipped with a reason and replaced — and `[DONE]` tasks are never touched. When the run drafts any new task, it appends one more at the end to update the affected documentation once the others land. You approve the whole plan, reconciliation included, in one pass.
-- `/task-list` — show what's pending.
+- `/task-list` — show what's pending. On a project with a `.claude/PLAN.md` it groups the backlog **by milestone in plan order**, resolving each task's `Feature:` slug through the plan, and flags any task whose feature is blocked with `⚠ blocked by <slug>` alongside the existing markers; tasks with no feature, or one the plan doesn't list, fall under a trailing `Unplanned` heading. With no plan, the output is exactly what it has always been — no grouping, no flags, and no message about the missing plan.
 - `/task-implement` — build a task end-to-end, test-first, one commit (and push) each.
 - `/task-clean` — prune finished tasks.
 

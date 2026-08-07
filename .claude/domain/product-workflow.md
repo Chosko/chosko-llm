@@ -1,6 +1,6 @@
 # Product workflow — from product idea to implementation task
 
-Source of truth for product pipeline: commands taking product from brainstorm through architecture to implementable backlog, docs they exchange, three status vocabularies keeping design, delivery and backlog in sync. Read when touching `/domain-setup`, `/product-design`, `/product-roadmap`, `/architect`, `/production-plan`, or feature-aware parts of `/task-add` and `/task-clean`.
+Source of truth for product pipeline: commands taking product from brainstorm through architecture to implementable backlog, docs they exchange, three status vocabularies keeping design, delivery and backlog in sync. Read when touching `/domain-setup`, `/product-design`, `/product-roadmap`, `/architect`, `/production-plan`, `/production-status`, or feature-aware parts of `/task-add`, `/task-list` and `/task-clean`.
 
 ## Why this exists
 
@@ -19,6 +19,9 @@ Pipeline exists to make handoff explicit. Cost: set of files must agree on schem
 | 2b — sequence | `/production-plan` | `FEATURES.md` (slugs, `Status:`, `Source:`, `Tasks:`), each feature doc's `## Dependencies`, `product-roadmap.md` when present (optional), `TASKS.md` for `[SHIPPED]` proposal — all read-only | `PLAN.md` |
 | 3 — plan | `/task-add feature=<slug>` | feature doc | task bodies + `TASKS.md` entries |
 | 4 — build | `/task-implement` | task body | code |
+| read | `/production-status` | `PLAN.md`, `FEATURES.md`, `TASKS.md`, `product-roadmap.md` — all read-only | terminal output only; **nothing written** |
+
+Last row is not a stage — nothing hands to it, it hands to nothing. It's the read side, spanning the whole pipeline; see [The read stage](#the-read-stage-production-status) below.
 
 Stages entered, not marched through. Project w/ existing codebase commonly starts stage 0 then jumps stage 2; project whose next change obvious skips to stage 3 w/ free-form description, same as today. Nothing downstream requires upstream stage ever ran.
 
@@ -201,6 +204,22 @@ Reconciliation never writes anything but `PLAN.md`, never re-derives an ordering
 
 Deliberately NOT plan-aware, deferred by the feature's open questions: `/task-add feature=<slug>` does not warn on unsatisfied dependencies, `/task-implement` and `chosko-llm task-impl` do not honour plan order, and no bash script parses `PLAN.md`.
 
+## The read stage (`/production-status`)
+
+A plan nobody reads changes no decisions. `PLAN.md` holds milestones, order and edges; `FEATURES.md` holds each feature's design/backlog state; `TASKS.md` holds the work. **The useful answer lives in the join of all three and in none of them alone** — a feature is workable when it's in the active milestone, its dependencies are finished, and its tasks exist. `/production-status` computes that join and reports it.
+
+Command, not skill: thin read-only reporter, no conversation, no supporting files — the register `/task-list` occupies. **Writes nothing**: no status flips, no reordering, no commit, no cached answer, no shell command of any kind. Never opens a file under `.claude/tasks/` — `TASKS.md` carries everything. Every writer in this layer is `/production-plan`.
+
+Eight output sections in fixed order: (1) the milestone — slug, title, `Status:`, plus `Goal:` and `Exit criteria:` echoed verbatim from the roadmap; (2) its features in plan order, each w/ `FEATURES.md` status, task rollup and readiness; (3) the ready set; (4) the ONE recommended next feature — first ready in plan order; (5) blocked features, each named w/ what blocks it; (6) coverage gaps — milestones w/ `Features: none` (outstanding `/architect` work) and `product-design.md` sections no `Covers:` names; (7) unplanned features; (8) remaining milestones, one line each. Plan order is the report's order, because that order is the priority.
+
+**Readiness and coverage are derived on every read, never stored.** Feature is ready when every dependency edge pointing at it originates from a feature `[PLANNED]` in `FEATURES.md` w/ all its tasks `[DONE]` or `[SKIP]`; no edges → ready; everything else blocked, always named w/ its blocker so a blocked list is actionable rather than a dead end. Deriving means it can never be wrong about a task someone just finished — and it's why `PLAN.md` stores no readiness or coverage rollup: storing derivable state creates a second thing to keep in sync. Rollup granularity: counts per status by default, `--task-ids` names each task. `milestone=<slug>` scopes to a named milestone; unknown slug stops listing available slugs, same as `/task-add feature=<slug>`.
+
+**Staleness is structural, not temporal.** Report names every `FEATURES.md` slug missing from `PLAN.md` and points at `/production-plan`; nothing compares `Last reconciled:` against modification times or dates. A plan that has fallen behind says so by having gaps — no state this product doesn't keep.
+
+**Failure contract is degradation, never refusal** — a read-only report must never be the thing that stops a session. No roadmap → omit goal and exit criteria. No `TASKS.md` → no rollups, every dependency-satisfied feature ready. No `[ACTIVE]` milestone → report first `[PLANNED]`, say none is active. Edge naming an unknown slug → report the plan inconsistency and treat the feature as ready, **failing open**: a hand-edited plan must not make the report claim there is nothing to do. Only stops: no `PLAN.md` (point at `/production-plan`) and an unknown `milestone=`.
+
+**It reports work, never selects or starts it.** Naming the next ready feature is where the command ends; `/task-add feature=<slug>` and `/task-implement` are how work begins.
+
 ## Task-side additions
 
 Pipeline adds two things to task backlog. Both invisible to free-form tasks — behave exactly as always.
@@ -285,7 +304,7 @@ Exactly one writer per artifact, `FEATURES.md` deliberate exception.
 | `business-model.md` | `/product-design` |
 | `features/<slug>.md` | `/architect` |
 | `FEATURES.md` | `/architect` owns entries, `Status:`, `Doc:`, `Source:` — including `Source:`'s optional milestone suffix, no new writer. `/task-add` owns `Tasks:`, flip to `[PLANNED]`. `/task-clean` prunes dropped IDs from `Tasks:`. |
-| `PLAN.md` | `/production-plan`, sole writer, and the only file it writes. Reads `FEATURES.md`, feature documents, `product-roadmap.md` and `TASKS.md` strictly read-only — a problem it spots in any of them is reported, never fixed there. No other command in the pipeline reads or writes it. |
+| `PLAN.md` | `/production-plan`, sole writer, and the only file it writes. Reads `FEATURES.md`, feature documents, `product-roadmap.md` and `TASKS.md` strictly read-only — a problem it spots in any of them is reported, never fixed there. Its only *readers* are `/production-status` and `/task-list`; no other command in the pipeline reads it, and nothing but `/production-plan` writes it. |
 | `TASKS.md` | `/task-add`, `/task-implement`, `/task-clean` as today; `/architect` only to flip statuses to `[STALE]` |
 | `council-report-*.html`, `council-transcript-*.md` | claude-council, when the council gate is convened. Owned by **neither** skill: never added to `WRITTEN`, never staged by `--commit`, never deleted. Both stages name their paths in the closing report and leave them in the working tree for the user to keep or delete. |
 
@@ -342,6 +361,8 @@ divergences.
 
 ## Commit and push
 
+`/production-status` runs no git command at all and has no `--commit` — it is a reporter, not an author, and has nothing to commit.
+
 `/domain-setup`, `/product-design`, `/product-roadmap`, `/architect`, `/production-plan`: all authoring commands/skills — uncommitted by default, `--commit` opts in. When `--commit` passed, all five follow commit-and-push protocol in [docs/authoring-guide.md](../../docs/authoring-guide.md) — pull at start, commit, re-sync, push — not plain `git commit`. `--no-push` (only meaningful alongside `--commit`) skips sync/push cycle, commits locally only. Algorithm not re-derived here; see that doc.
 
 ## Domain layer vs. context layer
@@ -373,4 +394,4 @@ No `resume` argument. Weeks can pass between sessions, flag wouldn't be remember
 - [`./task-workflow.md`](./task-workflow.md) — backlog schema this pipeline feeds: `TASKS.md` summary blocks, body schemas, `Target:` values.
 - [`./context-workflow.md`](./context-workflow.md) — context layer, structure/domain boundary reconciled above.
 - [`../context/features.md`](../context/features.md) — shipped artifacts, including every command named here.
-- `commands/domain-setup.md`, `commands/task-add.md`, `commands/task-clean.md`, `skills/product-design/SKILL.md`, `skills/product-roadmap/SKILL.md`, `skills/architect/SKILL.md`, `skills/production-plan/SKILL.md` — the implementations.
+- `commands/domain-setup.md`, `commands/task-add.md`, `commands/task-clean.md`, `commands/task-list.md`, `commands/production-status.md`, `skills/product-design/SKILL.md`, `skills/product-roadmap/SKILL.md`, `skills/architect/SKILL.md`, `skills/production-plan/SKILL.md` — the implementations.
