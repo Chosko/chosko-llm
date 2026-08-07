@@ -175,7 +175,7 @@ for review by default; override with `--commit` / `--no-commit`.
 
 ### The product pipeline — from idea to merged code
 
-Five of these commands form one continuous pipeline. Each stage hands its
+Six of these commands form one continuous pipeline. Each stage hands its
 output to the next as a **document in the repo**, not as conversation, so the
 work survives across sessions, machines, and people.
 
@@ -183,6 +183,7 @@ work survives across sessions, machines, and people.
 | --- | --- | --- | --- |
 | 0 — scaffold | [`/domain-setup`](#set-up-the-domain-layer--domain-setup) | nothing | the domain layer + an empty `.claude/FEATURES.md` |
 | 1 — design | [`/product-design`](#design-a-product--product-design) | you, and the repo when it already has code | `product-design.md`, `technical-direction.md`, optional `business-model.md`, `design-process.md` |
+| 1b — roadmap | [`/product-roadmap`](#decide-what-ships-when--product-roadmap) | you, plus `product-design.md` when you have one | `product-roadmap.md` — ordered milestones and their scope slices |
 | 2 — architect | [`/architect`](#design-how-to-build-it--architect) | a high-level feature, or a bare prompt | `.claude/domain/features/<slug>.md` + a `FEATURES.md` entry |
 | 3 — plan | `/task-add feature=<slug>` | a feature document | task bodies + `TASKS.md` entries |
 | 4 — build | `/task-implement` | a task body | code, one commit per task |
@@ -375,6 +376,38 @@ below.
 The output — including `technical-direction.md` — is `/architect`'s input.
 Nothing is committed by default; `--commit` commits and pushes what the run
 wrote (`--commit --no-push` to skip the push).
+
+### Decide what ships when — `/product-roadmap`
+
+Writes `.claude/domain/product-roadmap.md`: an ordered list of milestones,
+each with the outcome it delivers (`Goal:`), what makes it shippable
+(`Exit criteria:`), why it comes where it does (`Rationale:`), and the
+**scope slices** saying which share of a high-level feature it takes on
+(`Covers:`). Plus a `Not now` list where every deferral carries the trigger
+that would pull it back in, and the sequencing questions you couldn't close.
+
+A slice names a `product-design.md` section and states its scope in prose —
+and what really matters is the exclusions: "email and password only; no
+third-party providers, no SSO". `§ Authentication` can appear in an early
+milestone and again in a much later one, because how a feature splits across
+releases is a business call, not an architectural one. `Covers:` is a
+*decomposition instruction for `/architect`*, not a promise about what ships,
+so a section spread over several milestones is normal and nothing checks that
+the slices add up.
+
+Milestone slugs (`m1-mvp`) are stable and never renumbered — order is just
+list position, so you can insert a milestone between two others freely. The
+roadmap carries **no status, no dates and no estimates**: it records intent,
+not progress. It reads `.claude/FEATURES.md` and never writes it — when you
+edit a slice whose section has already been architected, it says so and points
+you at `/architect <slug>` rather than changing anything downstream.
+
+Requires `/domain-setup`. `product-design.md` is optional — you can draft a
+roadmap from a bare description. Re-run it whenever the plan moves: the
+document is its own resume state, so a later run proposes changes against
+what's already there, behind the same single approval gate. Nothing is
+committed by default; `--commit` commits and pushes what the run wrote
+(`--commit --no-push` to skip the push).
 
 ### Design how to build it — `/architect`
 

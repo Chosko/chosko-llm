@@ -271,6 +271,36 @@ Currently shipped:
   infrastructure detail belongs. Never writes `.claude/FEATURES.md`,
   feature docs, or tasks. **Authoring skill — nothing committed by default;
   `--commit` stages exactly documents written in one commit.**
+- `skills/product-roadmap/` — product-level WHEN of the pipeline, between
+  `/product-design` and `/architect`. Writes one document,
+  `.claude/domain/product-roadmap.md`, plus its `.claude/domain/INDEX.md`
+  row, and nothing else — never `FEATURES.md`, `PLAN.md`, `TASKS.md`, or
+  `product-design.md`. Ordered milestone blocks keyed by stable kebab-case
+  slug (`m1-mvp`), each carrying `Goal:` / `Exit criteria:` / `Rationale:` /
+  `Covers:`, then `Not now` (every deferral carries trigger that pulls it
+  back) and `Open sequencing questions`. Order is list position, so
+  milestone inserted between two others needs no renumber; slice identity is
+  `(milestone, section)` pair, no fourth identifier vocabulary. `Covers:`
+  entries name `product-design.md` sections, never `FEATURES.md` slugs, and
+  each carries prose scope statement whose payload is its exclusions —
+  decomposition instruction for `/architect`, not delivery claim, so partial
+  coverage of section across milestones is normal case and nothing validates
+  completeness. Carries NO milestone state: no `Status:` line, no dates, no
+  estimates — that's a later feature's, same intent/state split keeping
+  feature statuses out of `product-design.md`. PHASE 0 gates on
+  `/domain-setup` (only refusal in skill), reads domain INDEX,
+  `product-design.md` when present (optional — usable from bare
+  description), any existing roadmap as its own resume state (no marker
+  file, document is state), and `.claude/FEATURES.md` READ-ONLY. PHASE 1 is
+  conversation and run's single approval gate; PHASE 2 is only write phase.
+  Both failure modes are warnings, not refusals: `Covers:` entry naming
+  section absent from `product-design.md`, and editing slice whose section
+  already has features (names slugs, points at `/architect <slug>`, proceeds
+  on user's say-so — `[ITERATED]` stays `/architect`'s field). No supporting
+  files — schema inline, one file per folder. **Authoring skill — nothing
+  committed by default; `--commit` stages exactly written paths in one
+  commit, `--no-push` skips the push; `--commit` with nothing written makes
+  no commit and says so.**
 - `skills/architect/` — stage 2 of product pipeline: turns one or more
   high-level features into low-level feature documents under
   `.claude/domain/features/`, each indexed by `.claude/FEATURES.md` entry.

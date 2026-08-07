@@ -115,7 +115,7 @@ Feature: product-roadmap
 
 ## 107. Update documentation for feature product-roadmap
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/cli-help.txt, .claude/context/features.md, .claude/domain/product-workflow.md, VERSION
 Preconditions: 106

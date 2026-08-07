@@ -1,6 +1,6 @@
 # Product workflow — from product idea to implementation task
 
-Source of truth for product pipeline: commands taking product from brainstorm through architecture to implementable backlog, docs they exchange, two status vocabularies keeping design and backlog in sync. Read when touching `/domain-setup`, `/product-design`, `/architect`, or feature-aware parts of `/task-add` and `/task-clean`.
+Source of truth for product pipeline: commands taking product from brainstorm through architecture to implementable backlog, docs they exchange, two status vocabularies keeping design and backlog in sync. Read when touching `/domain-setup`, `/product-design`, `/product-roadmap`, `/architect`, or feature-aware parts of `/task-add` and `/task-clean`.
 
 ## Why this exists
 
@@ -14,6 +14,7 @@ Pipeline exists to make handoff explicit. Cost: set of files must agree on schem
 | --- | --- | --- | --- |
 | 0 — scaffold | `/domain-setup` | nothing | domain layer + empty `FEATURES.md` |
 | 1 — design | `/product-design` | user, repo when brownfield | `product-design.md`, `technical-direction.md`, optional `business-model.md`, `design-process.md` |
+| 1b — roadmap | `/product-roadmap` | user, `product-design.md` when present (optional), existing roadmap as its own resume state, `FEATURES.md` read-only | `product-roadmap.md` + its domain `INDEX.md` row |
 | 2 — architect | `/architect` | high-level feature, or bare prompt, plus `technical-direction.md` when exists | `features/<slug>.md` + `FEATURES.md` entry |
 | 3 — plan | `/task-add feature=<slug>` | feature doc | task bodies + `TASKS.md` entries |
 | 4 — build | `/task-implement` | task body | code |
@@ -35,6 +36,7 @@ below. It changes nothing when the skill isn't installed.
     INDEX.md                      the domain-layer index
     design-process.md             resumable state of a /product-design run
     product-design.md             high-level product design
+    product-roadmap.md            the ordered milestones and their scope slices
     technical-direction.md        the product's technical foundations
     business-model.md             business model (only when requested)
     features/<slug>.md            one doc per low-level feature
@@ -45,6 +47,10 @@ below. It changes nothing when the skill isn't installed.
 ### `product-design.md`
 
 Sections: product summary, target users, UX and key flows, big design decisions, high-level feature set. Documentational register — WHAT and, some, HOW. Rationale belongs in conversation and `design-process.md`, not here.
+
+### `product-roadmap.md`
+
+Ordered milestone blocks keyed by stable kebab-case slug (`m1-mvp`), each carrying `Goal:` (an outcome, not a feature list), `Exit criteria:`, `Rationale:`, `Covers:`; then `Not now` (each deferral w/ trigger pulling it back in) and `Open sequencing questions`. Order is list position — slug carries none, so milestone inserted between two others needs no renumber. `Covers:` entries name `product-design.md` sections, never `FEATURES.md` slugs, each w/ prose scope statement whose payload is its exclusions; slice identity is `(milestone, section)` pair. `Covers:` is decomposition instruction for `/architect`, not delivery claim — partial coverage of section across milestones normal, nothing validates completeness. No `Status:` line, no dates, no estimates: milestone state is not the roadmap's, same intent/state split keeping feature statuses out of `product-design.md`. Document is also `/product-roadmap`'s resume state — no marker file.
 
 ### `technical-direction.md`
 
@@ -185,6 +191,7 @@ Exactly one writer per artifact, `FEATURES.md` deliberate exception.
 | `domain/INDEX.md` | `/domain-setup` creates it; `/product-design` and `/architect` register docs they add |
 | `design-process.md` | `/product-design` |
 | `product-design.md` | `/product-design`; `/architect` writes back clarifications, architecture-driven changes |
+| `product-roadmap.md` | `/product-roadmap`, only writer. Reads `product-design.md` and `FEATURES.md`, writes neither. |
 | `technical-direction.md` | `/product-design` owns it. `/architect` reads it, adopts as established stack when present, treats exactly as existing codebase stack — skipping tech-stack selection, referencing from feature documents rather than restating, never writing to it. |
 | `business-model.md` | `/product-design` |
 | `features/<slug>.md` | `/architect` |
@@ -245,7 +252,7 @@ divergences.
 
 ## Commit and push
 
-`/domain-setup`, `/product-design`, `/architect`: all authoring commands/skills — uncommitted by default, `--commit` opts in. When `--commit` passed, all three follow commit-and-push protocol in [docs/authoring-guide.md](../../docs/authoring-guide.md) — pull at start, commit, re-sync, push — not plain `git commit`. `--no-push` (only meaningful alongside `--commit`) skips sync/push cycle, commits locally only. Algorithm not re-derived here; see that doc.
+`/domain-setup`, `/product-design`, `/product-roadmap`, `/architect`: all authoring commands/skills — uncommitted by default, `--commit` opts in. When `--commit` passed, all four follow commit-and-push protocol in [docs/authoring-guide.md](../../docs/authoring-guide.md) — pull at start, commit, re-sync, push — not plain `git commit`. `--no-push` (only meaningful alongside `--commit`) skips sync/push cycle, commits locally only. Algorithm not re-derived here; see that doc.
 
 ## Domain layer vs. context layer
 
@@ -276,4 +283,4 @@ No `resume` argument. Weeks can pass between sessions, flag wouldn't be remember
 - [`./task-workflow.md`](./task-workflow.md) — backlog schema this pipeline feeds: `TASKS.md` summary blocks, body schemas, `Target:` values.
 - [`./context-workflow.md`](./context-workflow.md) — context layer, structure/domain boundary reconciled above.
 - [`../context/features.md`](../context/features.md) — shipped artifacts, including every command named here.
-- `commands/domain-setup.md`, `commands/task-add.md`, `commands/task-clean.md`, `skills/product-design/SKILL.md`, `skills/architect/SKILL.md` — the implementations.
+- `commands/domain-setup.md`, `commands/task-add.md`, `commands/task-clean.md`, `skills/product-design/SKILL.md`, `skills/product-roadmap/SKILL.md`, `skills/architect/SKILL.md` — the implementations.
