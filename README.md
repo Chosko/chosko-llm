@@ -367,6 +367,11 @@ conversation for anything the written documents don't yet cover and folds
 it in automatically, so detail raised in the interview doesn't quietly die
 with the session.
 
+On a greenfield project, when PHASE 6 hits a technical fork that genuinely
+matters, it can route the decision through the council — see
+[Pressure-testing a decision](#pressure-testing-a-decision--claude-council)
+below.
+
 The output — including `technical-direction.md` — is `/architect`'s input.
 Nothing is committed by default; `--commit` commits and pushes what the run
 wrote (`--commit --no-push` to skip the push).
@@ -395,8 +400,50 @@ those tasks is `[IN PROGRESS]` it refuses outright, and otherwise it asks
 before marking the surviving tasks `[STALE]` and the feature `[ITERATED]` —
 then tells you to reconcile with `/task-add feature=<slug>`.
 
+At a genuine design fork — the stack choice, the shape of the architecture,
+or where the low-level split falls — it can route the decision through the
+council; see below.
+
 Nothing committed by default; `--commit` commits and pushes exactly the
 written paths (`--commit --no-push` to skip the push).
+
+### Pressure-testing a decision — `claude-council`
+
+`/product-design` and `/architect` both reach forks where two or three
+options are genuinely defensible and the wrong pick is expensive to undo.
+Both can hand that decision to
+[claude-council](https://github.com/TorpedoD/claude-council) — a separate,
+independently maintained skill that runs the question through five thinking
+lenses (Red Team, First Principles, Expansionist, Outsider, Executor),
+peer-reviews them anonymously, forces an adversarial debate when the
+consensus looks too clean, and returns a verdict that keeps any minority
+dissent intact.
+
+It's **entirely optional**. Install it if you want it:
+
+```sh
+npx skills add TorpedoD/claude-council
+```
+
+When it's installed, the two commands offer to convene it at a real fork and
+wait for your yes. When it isn't, they say nothing and behave exactly as they
+always have — no prompt, no warning, no missing-dependency error. chosko-llm
+never installs it for you and doesn't depend on it.
+
+Two things worth knowing:
+
+- **The council advises; you still decide.** Its verdict feeds the
+  recommendation you're shown. `/architect` still won't leave PHASE 2 without
+  your confirmation, and `/product-design`'s PHASE 6 still ends when you say
+  it ends.
+- **Dissent is kept, not resolved.** A minority view that survives the
+  synthesis lands in the feature document's open questions, or in
+  `product-design.md`'s design decisions — recorded as a live concern rather
+  than quietly dropped.
+
+The council writes its own HTML report and markdown transcript into the
+working directory. Neither command commits them or deletes them; you're told
+where they landed and can keep or bin them.
 
 ### Work through a backlog — the `task-*` commands
 
