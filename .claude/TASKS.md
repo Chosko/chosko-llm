@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 112
+Last task number: 115
 
 ---
 
@@ -170,5 +170,35 @@ Target: claude
 Files: README.md, docs/cli-help.txt, .claude/context/features.md, .claude/domain/product-workflow.md, .claude/domain/features/production-plan.md, VERSION
 Preconditions: 111
 Feature: production-plan
+
+---
+
+## 113. Add the /production-status command
+
+Status: [MISSING]
+Target: claude
+Files: commands/production-status.md, VERSION
+Preconditions: 111
+Feature: plan-readout
+
+---
+
+## 114. Add milestone grouping to /task-list
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-list.md, VERSION
+Preconditions: 111
+Feature: plan-readout
+
+---
+
+## 115. Update documentation for feature plan-readout
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/cli-help.txt, .claude/context/features.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/domain/features/plan-readout.md, VERSION
+Preconditions: 113, 114
+Feature: plan-readout
 
 ---

@@ -31,9 +31,9 @@ Tasks: 111, 112
 
 ## plan-readout — What to build next, and the backlog read through the plan
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/plan-readout.md
 Source: product-design.md § Roadmap and planning
-Tasks: none
+Tasks: 113, 114, 115
 
 ---
