@@ -136,7 +136,7 @@ Currently shipped:
   writes exactly one task. Auto-commits written files (all parts in
   one commit for split); `--no-commit` leaves uncommitted.
   With `feature=<slug>` plans from `/architect` feature document
-  instead of prose description (stage 3 of pipeline): resolves slug
+  instead of prose description (stage 5 of pipeline): resolves slug
   through `.claude/FEATURES.md`, reads `Doc:` path as primary context
   source, inverts split check (design unit usually several
   implementation units), tags every new summary block `Feature: <slug>`,
@@ -301,7 +301,7 @@ Currently shipped:
   committed by default; `--commit` stages exactly written paths in one
   commit, `--no-push` skips the push; `--commit` with nothing written makes
   no commit and says so.**
-- `skills/architect/` — stage 2 of product pipeline: turns one or more
+- `skills/architect/` — stage 3 of product pipeline: turns one or more
   high-level features into low-level feature documents under
   `.claude/domain/features/`, each indexed by `.claude/FEATURES.md` entry.
   Input is `product-design.md` section, named features, or bare

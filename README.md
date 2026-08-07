@@ -183,11 +183,11 @@ work survives across sessions, machines, and people.
 | --- | --- | --- | --- |
 | 0 — scaffold | [`/domain-setup`](#set-up-the-domain-layer--domain-setup) | nothing | the domain layer + an empty `.claude/FEATURES.md` |
 | 1 — design | [`/product-design`](#design-a-product--product-design) | you, and the repo when it already has code | `product-design.md`, `technical-direction.md`, optional `business-model.md`, `design-process.md` |
-| 1b — roadmap | [`/product-roadmap`](#decide-what-ships-when--product-roadmap) | you, plus `product-design.md` when you have one | `product-roadmap.md` — ordered milestones and their scope slices |
-| 2 — architect | [`/architect`](#design-how-to-build-it--architect) | a high-level feature, or a bare prompt — one milestone's scope slice of it when you have a roadmap | `.claude/domain/features/<slug>.md` + a `FEATURES.md` entry |
-| 2b — sequence | [`/production-plan`](#decide-what-to-build-next--production-plan) | `FEATURES.md`, the feature documents' dependencies, the roadmap when you have one | `.claude/PLAN.md` — features per milestone, in order, plus the dependency edges |
-| 3 — plan | `/task-add feature=<slug>` | a feature document | task bodies + `TASKS.md` entries |
-| 4 — build | `/task-implement` | a task body | code, one commit per task |
+| 2 — roadmap | [`/product-roadmap`](#decide-what-ships-when--product-roadmap) | you, plus `product-design.md` when you have one | `product-roadmap.md` — ordered milestones and their scope slices |
+| 3 — architect | [`/architect`](#design-how-to-build-it--architect) | a high-level feature, or a bare prompt — one milestone's scope slice of it when you have a roadmap | `.claude/domain/features/<slug>.md` + a `FEATURES.md` entry |
+| 4 — sequence | [`/production-plan`](#decide-what-to-build-next--production-plan) | `FEATURES.md`, the feature documents' dependencies, the roadmap when you have one | `.claude/PLAN.md` — features per milestone, in order, plus the dependency edges |
+| 5 — plan | `/task-add feature=<slug>` | a feature document | task bodies + `TASKS.md` entries |
+| 6 — build | `/task-implement` | a task body | code, one commit per task |
 
 Stages are **entered, not marched through**. Nothing downstream requires that
 an upstream stage was ever run.

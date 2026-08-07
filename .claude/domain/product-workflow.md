@@ -14,18 +14,18 @@ Pipeline exists to make handoff explicit. Cost: set of files must agree on schem
 | --- | --- | --- | --- |
 | 0 — scaffold | `/domain-setup` | nothing | domain layer + empty `FEATURES.md` |
 | 1 — design | `/product-design` | user, repo when brownfield | `product-design.md`, `technical-direction.md`, optional `business-model.md`, `design-process.md` |
-| 1b — roadmap | `/product-roadmap` | user, `product-design.md` when present (optional), existing roadmap as its own resume state, `FEATURES.md` read-only | `product-roadmap.md` + its domain `INDEX.md` row |
-| 2 — architect | `/architect` | high-level feature, or bare prompt, plus `technical-direction.md` when exists, plus `product-roadmap.md` slice when target section sliced | `features/<slug>.md` + `FEATURES.md` entry |
-| 2b — sequence | `/production-plan` | `FEATURES.md` (slugs, `Status:`, `Source:`, `Tasks:`), each feature doc's `## Dependencies`, `product-roadmap.md` when present (optional), `TASKS.md` for `[SHIPPED]` proposal — all read-only | `PLAN.md` |
-| 3 — plan | `/task-add feature=<slug>` | feature doc | task bodies + `TASKS.md` entries |
-| 4 — build | `/task-implement` | task body | code |
+| 2 — roadmap | `/product-roadmap` | user, `product-design.md` when present (optional), existing roadmap as its own resume state, `FEATURES.md` read-only | `product-roadmap.md` + its domain `INDEX.md` row |
+| 3 — architect | `/architect` | high-level feature, or bare prompt, plus `technical-direction.md` when exists, plus `product-roadmap.md` slice when target section sliced | `features/<slug>.md` + `FEATURES.md` entry |
+| 4 — sequence | `/production-plan` | `FEATURES.md` (slugs, `Status:`, `Source:`, `Tasks:`), each feature doc's `## Dependencies`, `product-roadmap.md` when present (optional), `TASKS.md` for `[SHIPPED]` proposal — all read-only | `PLAN.md` |
+| 5 — plan | `/task-add feature=<slug>` | feature doc | task bodies + `TASKS.md` entries |
+| 6 — build | `/task-implement` | task body | code |
 | read | `/production-status` | `PLAN.md`, `FEATURES.md`, `TASKS.md`, `product-roadmap.md` — all read-only | terminal output only; **nothing written** |
 
 Last row is not a stage — nothing hands to it, it hands to nothing. It's the read side, spanning the whole pipeline; see [The read stage](#the-read-stage-production-status) below.
 
-Stages entered, not marched through. Project w/ existing codebase commonly starts stage 0 then jumps stage 2; project whose next change obvious skips to stage 3 w/ free-form description, same as today. Nothing downstream requires upstream stage ever ran.
+Stages entered, not marched through. Project w/ existing codebase commonly starts stage 0 then jumps stage 3; project whose next change obvious skips to stage 5 w/ free-form description, same as today. Nothing downstream requires upstream stage ever ran.
 
-Stages 1 and 2 can optionally route a genuine decision fork through
+Stages 1 and 3 can optionally route a genuine decision fork through
 claude-council before recommending — see [The council gate](#the-council-gate-optional)
 below. It changes nothing when the skill isn't installed.
 
@@ -312,7 +312,7 @@ Exactly one writer per artifact, `FEATURES.md` deliberate exception.
 
 ## The council gate (optional)
 
-Stages 1 and 2 can pressure-test a genuine decision fork through
+Stages 1 and 3 can pressure-test a genuine decision fork through
 [claude-council](https://github.com/TorpedoD/claude-council), a separately
 installed skill that runs a decision through five thinking lenses, peer-reviews
 them anonymously, forces an adversarial debate when consensus looks
@@ -331,7 +331,7 @@ Where it fires:
 | Stage | Fork | Gated by |
 | --- | --- | --- |
 | 1 — `/product-design` | PHASE 6 technical foundations, **greenfield only** | `skills/product-design/council-gate.md` |
-| 2 — `/architect` | PHASE 2a stack choice, PHASE 2b architecture shape, PHASE 2b low-level split | `skills/architect/council-gate.md` |
+| 3 — `/architect` | PHASE 2a stack choice, PHASE 2b architecture shape, PHASE 2b low-level split | `skills/architect/council-gate.md` |
 
 PHASE 6 is deliberately the higher-leverage of the two: `technical-direction.md`
 becomes a standing constraint that `/architect` adopts rather than re-argues, so
@@ -345,10 +345,10 @@ Three invariants hold at both gates:
    not a council question; a fork already settled by an existing stack or a
    present `technical-direction.md` is not a fork at all.
 2. **The council informs, never decides.** The user still confirms the
-   architecture (stage 2) and still says when PHASE 6 ends (stage 1). A
+   architecture (stage 3) and still says when PHASE 6 ends (stage 1). A
    confident verdict is not a go-ahead.
 3. **Dissent survives.** The minority ledger lands in the feature document's
-   Open questions (stage 2) or `product-design.md`'s design decisions
+   Open questions (stage 3) or `product-design.md`'s design decisions
    (stage 1) — a live concern to revisit, never flattened into the verdict.
 
 The gate is invoked with no mode argument, leaving claude-council's own

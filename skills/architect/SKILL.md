@@ -1,6 +1,6 @@
 ---
 name: architect
-version: 0.6.0
+version: 0.6.1
 type: skill
 description: Turn one or more high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md — the bridge between /product-design and /task-add. Grounds the architecture in the project's recorded technical-direction.md or existing code, or proposes a tech stack when there is neither. Runs from a product-design section, named features, or a bare prompt with no design documents at all. On a project whose .claude/domain/product-roadmap.md slices the target section, it switches per target into slice mode: it architects one milestone's scope slice rather than the whole section, turns the slice's exclusions into the document's non-goals, and records the milestone as a parenthetical on the FEATURES.md Source: line; pass --no-slices to force traditional resolution. Re-architecting a feature that already has tasks triggers an iterate guard: refuses outright while any task is [IN PROGRESS], otherwise asks, then flips surviving tasks to [STALE] and the feature to [ITERATED]. Requires /domain-setup. At a genuine design fork it offers to convene claude-council when that skill is installed, and is silent when it is not. Nothing committed by default; pass --commit to commit and push exactly the written paths (--commit --no-push to skip the push).
 ---
@@ -8,7 +8,7 @@ description: Turn one or more high-level features into low-level feature documen
 # /architect
 # Global skill: design the implementation architecture of one or more
 # features and write it down as low-level feature documentation under
-# `.claude/domain/features/`, indexed in `.claude/FEATURES.md`. Stage 2 of
+# `.claude/domain/features/`, indexed in `.claude/FEATURES.md`. Stage 3 of
 # the product pipeline: consumes a high-level feature (or a bare prompt) and
 # produces the document `/task-add feature=<slug>` turns into tasks.
 # Usage: /architect                        (read product-design.md, ask which feature)

@@ -1,6 +1,6 @@
 ---
 name: task-add
-version: 1.0.0
+version: 1.0.1
 type: command
 description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit and push. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, appending a final documentation-update task when new tasks were drafted, and setting the feature [PLANNED]. Pass --enrich to produce a self-contained body for a local LLM in one shot, --short for trivial low-ambiguity tasks to skip the deep PHASE 1 investigation and write a minimal Goal-only body (mutually exclusive with --enrich and feature=), --no-split to always write exactly one task, --no-commit to write the files but skip the commit (and push), or --no-push to commit without pushing.
 ---
@@ -33,7 +33,7 @@ Two input modes share that flow:
   in every respect by the feature mode below.
 - **Feature** (`feature=<slug>`) — plan from the low-level feature document
   `/architect` wrote, and reconcile any tasks that feature already
-  generated. This is stage 3 of the product pipeline.
+  generated. This is stage 5 of the product pipeline.
 
 By default, the body contains: Goal, Acceptance criteria, Decisions (when
 applicable), and Hints. Claude navigates the project at implementation time
