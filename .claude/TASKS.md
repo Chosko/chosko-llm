@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 107
+Last task number: 110
 
 ---
 
@@ -120,5 +120,35 @@ Target: claude
 Files: README.md, docs/cli-help.txt, .claude/context/features.md, .claude/domain/product-workflow.md, VERSION
 Preconditions: 106
 Feature: product-roadmap
+
+---
+
+## 108. Extract /architect's input resolution into sectioned-input.md
+
+Status: [MISSING]
+Target: claude
+Files: skills/architect/SKILL.md, skills/architect/sectioned-input.md, VERSION
+Preconditions: none
+Feature: slice-aware-architecture
+
+---
+
+## 109. Add slice-aware input resolution to /architect
+
+Status: [MISSING]
+Target: claude
+Files: skills/architect/SKILL.md, skills/architect/sliced-input.md, skills/architect/feature-doc-template.md, VERSION
+Preconditions: 106, 108
+Feature: slice-aware-architecture
+
+---
+
+## 110. Update documentation for feature slice-aware-architecture
+
+Status: [MISSING]
+Target: claude
+Files: README.md, .claude/domain/product-workflow.md, .claude/context/features.md, .claude/domain/features/slice-aware-architecture.md, VERSION
+Preconditions: 108, 109
+Feature: slice-aware-architecture
 
 ---

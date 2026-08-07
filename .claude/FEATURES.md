@@ -13,10 +13,10 @@ Tasks: 106, 107
 
 ## slice-aware-architecture — `/architect` resolves a scope slice when the project has a roadmap
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/slice-aware-architecture.md
 Source: product-design.md § Roadmap and planning
-Tasks: none
+Tasks: 108, 109, 110
 
 ---
 
