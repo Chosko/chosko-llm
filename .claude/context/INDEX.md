@@ -33,12 +33,7 @@ Canonical project docs live outside this folder, stay authoritative:
 
 ## Domain
 
-| File | Covers |
-| --- | --- |
-| [../domain/task-workflow.md](../domain/task-workflow.md) | Dual-LLM task workflow: Claude Code authors via `/task-add`, qwen2.5-coder:14b via aider implements. Body schema, body↔TASKS.md split, static implement-prompt artifact. |
-| [../domain/context-workflow.md](../domain/context-workflow.md) | Nav context layer under `.claude/context/`: the three skills (`/context-build`, `/context-update`, `/context-convert`), six-section per-file schema, `Layout:` marker, flat vs. nested layout, `Last updated` anchor (per-leaf when nested), four `/context-update` modes. |
-| [../domain/refactor-workflow.md](../domain/refactor-workflow.md) | Behaviour-preserving refactor workflow: prime directive, plan-first approval gate, five focus concerns, `scope=` semantics, phase ordering. |
-| [../domain/product-workflow.md](../domain/product-workflow.md) | Product pipeline (`/domain-setup` → `/product-design` → `/architect` → `/task-add`): document set, `FEATURES.md` schema + feature state machine, `[STALE]` status + `Feature:` line, iterate guard, reconciliation protocol. |
+Product and rules knowledge — what the product is, why it is built this way — lives in its own layer and is indexed there, not here: [../domain/INDEX.md](../domain/INDEX.md).
 
 ## Conventions
 

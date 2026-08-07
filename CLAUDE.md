@@ -2,7 +2,10 @@
 
 ## Navigation
 
-Any task on this codebase: read [.claude/context/INDEX.md](.claude/context/INDEX.md) first. Then read only context files relevant to task. Open source files (under `scripts/`, `bin/`, `install.sh`, `uninstall.sh`, etc.) only when relevant context file's **When to read the source** section says needed.
+Two navigation layers, separate jobs:
+
+- **Codebase structure** — which file implements what: read [.claude/context/INDEX.md](.claude/context/INDEX.md) first on any task on this codebase. Then read only context files relevant to task. Open source files (under `scripts/`, `bin/`, `install.sh`, `uninstall.sh`, etc.) only when relevant context file's **When to read the source** section says needed.
+- **Product and domain knowledge** — what this product is, how its features are designed, and why the architecture is what it is: read [.claude/domain/INDEX.md](.claude/domain/INDEX.md), then only the domain files relevant to your task.
 
 ## About
 
