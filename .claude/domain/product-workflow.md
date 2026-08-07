@@ -1,6 +1,6 @@
 # Product workflow — from product idea to implementation task
 
-Source of truth for product pipeline: commands taking product from brainstorm through architecture to implementable backlog, docs they exchange, two status vocabularies keeping design and backlog in sync. Read when touching `/domain-setup`, `/product-design`, `/product-roadmap`, `/architect`, or feature-aware parts of `/task-add` and `/task-clean`.
+Source of truth for product pipeline: commands taking product from brainstorm through architecture to implementable backlog, docs they exchange, three status vocabularies keeping design, delivery and backlog in sync. Read when touching `/domain-setup`, `/product-design`, `/product-roadmap`, `/architect`, `/production-plan`, or feature-aware parts of `/task-add` and `/task-clean`.
 
 ## Why this exists
 
@@ -16,6 +16,7 @@ Pipeline exists to make handoff explicit. Cost: set of files must agree on schem
 | 1 — design | `/product-design` | user, repo when brownfield | `product-design.md`, `technical-direction.md`, optional `business-model.md`, `design-process.md` |
 | 1b — roadmap | `/product-roadmap` | user, `product-design.md` when present (optional), existing roadmap as its own resume state, `FEATURES.md` read-only | `product-roadmap.md` + its domain `INDEX.md` row |
 | 2 — architect | `/architect` | high-level feature, or bare prompt, plus `technical-direction.md` when exists, plus `product-roadmap.md` slice when target section sliced | `features/<slug>.md` + `FEATURES.md` entry |
+| 2b — sequence | `/production-plan` | `FEATURES.md` (slugs, `Status:`, `Source:`, `Tasks:`), each feature doc's `## Dependencies`, `product-roadmap.md` when present (optional), `TASKS.md` for `[SHIPPED]` proposal — all read-only | `PLAN.md` |
 | 3 — plan | `/task-add feature=<slug>` | feature doc | task bodies + `TASKS.md` entries |
 | 4 — build | `/task-implement` | task body | code |
 
@@ -31,6 +32,7 @@ below. It changes nothing when the skill isn't installed.
 .claude/
   TASKS.md                        the task backlog index
   FEATURES.md                     the feature index (sibling of TASKS.md)
+  PLAN.md                         the production plan (third index beside the other two)
   tasks/<N>.md                    one body per task
   domain/
     INDEX.md                      the domain-layer index
@@ -42,7 +44,7 @@ below. It changes nothing when the skill isn't installed.
     features/<slug>.md            one doc per low-level feature
 ```
 
-`FEATURES.md` sits at `.claude/` root not inside `domain/` — indexes work items, like `TASKS.md`. Feature *documents* it points at: knowledge, live in domain layer.
+`FEATURES.md` sits at `.claude/` root not inside `domain/` — indexes work items, like `TASKS.md`. Feature *documents* it points at: knowledge, live in domain layer. `PLAN.md` sits there for same reason: indexes work items, knowledge it indexes lives in domain layer.
 
 ### `product-design.md`
 
@@ -125,6 +127,79 @@ Two transitions illegal:
 ### `[ITERATED]` is the actionable state
 
 `[NEW]`, `[PLANNED]`: steady states. `[ITERATED]` means *design moved, backlog hasn't caught up* — work queued may no longer be correct. One state demanding action, can't recover by inspecting filesystem — why stored not derived. Commands reporting features surface it prominently.
+
+## `PLAN.md` — the production plan
+
+Third index at `.claude/` root, beside `TASKS.md` and `FEATURES.md`. Written by `/production-plan` and by nothing else. Answers what `FEATURES.md` can't: which low-level feature belongs to which milestone, in what order, and after what.
+
+```
+# Plan
+
+Roadmap: .claude/domain/product-roadmap.md
+Last reconciled: <YYYY-MM-DD>
+
+---
+
+## <milestone-slug> — <milestone title>
+
+Status: [PLANNED]
+Covers: product-design.md § <Section>, product-design.md § <Section>
+Features: <slug>, <slug>, <slug>
+
+---
+
+## Unscheduled
+
+Features: <slug>, <slug>
+
+## Dependencies
+
+- <slug>: depends on <slug>, <slug>
+```
+
+- **`Roadmap:`** names roadmap plan was built against, or literal `none`. **`Last reconciled:`** informational only — nothing computes from it; real staleness signal is `FEATURES.md` slug missing from plan.
+- **`Features:` is ordered and order IS the priority.** No `P0`/`P1` label, no dates, estimates, sizes, percentages: second ordering beside ordered list eventually contradicts it. Empty milestone carries `Features: none` — coverage gap meaning `/architect` hasn't run its slices yet, warning not error.
+- **`Covers:` derived**, rewritten every run from roadmap's own `Covers:` lines (section names only; scope prose stays in roadmap), so it can't drift and hand edits to it don't survive. Omitted entirely where no roadmap.
+- **`Unscheduled`** block carries `Features:` only — no `Status:`, no `Covers:` — and is written even when empty, so schema is uniform.
+- **`## Dependencies` is ONE flat edge list** at foot of document, not `Depends:` line per feature. Two reasons: keeps `PLAN.md` from becoming second index keyed by feature slug, and puts every edge in one place where cycle is visible to human reader.
+- Milestones appear in **roadmap order** (list position, never slug). Milestone the roadmap no longer lists is kept where it sits, flagged, `Covers:` dropped — nothing left to derive it from.
+- **Nothing derivable is stored.** Readiness, coverage and per-feature task rollups computed at read time, never persisted.
+
+Feature's milestone is **inherited by lookup**, not inference: the ` (<milestone-slug>)` parenthetical on its `FEATURES.md` `Source:` line, written by `/architect` in slice mode. No parenthetical, or `Source: prompt` → `Unscheduled`. Explicit placement overrides the parenthetical, is reported plainly at approval gate, never gated or refused — roadmap makes no completeness claim for it to violate.
+
+Dependency **edges**: feature documents propose, `PLAN.md` records. Skill reads each document's `## Dependencies` prose, proposes edge set machine-readably, user confirms, plan stores it. **Prose is never rewritten** — it stays human-facing statement, edge list is its parsable projection, and drift is resolved by re-running the skill, same reconciliation pattern `/task-add feature=<slug>` uses. Storing confirmed edges is exactly what allows an edge the documents never stated. Only feature-to-feature edges: task-level ordering is `Preconditions:`, untouched.
+
+Two invariants **refuse rather than warn**, both validated before any write, neither with an override flag: a **cycle** (reported as the actual cycle path) and a **dependency in a later milestone** (reported with both features and both milestones). Within a milestone, `Features:` must be topological order of edges restricted to it. Dependency on an `Unscheduled` feature is a *warning*, not that refusal — `Unscheduled` has no position, so it can't be "later".
+
+## Milestone status vocabulary
+
+Third status vocabulary in pipeline, deliberately small. Lives in `PLAN.md`, not the roadmap: roadmap holds intent, this index holds state — same split as `product-design.md` versus `FEATURES.md`, and it keeps one writer per artifact.
+
+| Status | Meaning | Written by |
+| --- | --- | --- |
+| `[PLANNED]` | Scheduled, not started. | `/production-plan`, on first write |
+| `[ACTIVE]` | Being built now. **At most one milestone at a time.** | `/production-plan`, on user's say-so |
+| `[SHIPPED]` | Delivered. **Terminal.** | `/production-plan`, only on user confirmation |
+
+`[SHIPPED]` is *proposed* only when every feature in the milestone is `[PLANNED]` in `FEATURES.md` **and** all their tasks are `[DONE]` or `[SKIP]` in `TASKS.md` — the one thing task state is read for — and always confirmed by user rather than applied automatically. **It can never reopen**: follow-up work is always a new milestone, same discipline making `[DONE]` terminal for tasks and `[PLANNED]` → `[NEW]` illegal for features. More than one `[ACTIVE]` → reported, user asked which is meant; never picked automatically.
+
+Three vocabularies, three jobs, kept separate on purpose: **feature** status says whether backlog matches design, **task** status says whether work is done, **milestone** status says whether it shipped. Conflating any two turns one index into second, permanently stale copy of another.
+
+## Reconciliation (`/production-plan`)
+
+Re-run diffs plan against current `FEATURES.md` and roadmap, presents everything behind **one approval gate**, matching `/task-add`'s single-gate convention. Starts from existing plan and proposes a diff, never a blank page — rebuilding from scratch would throw away the two things only the plan holds: orderings inside each milestone, and confirmed edges the feature documents don't state.
+
+| Situation | Action |
+| --- | --- |
+| Feature in `FEATURES.md`, absent from plan | Proposed for placement — its `Source:` milestone, or `Unscheduled`. This is the plan's real staleness signal. |
+| Slug in plan, gone from `FEATURES.md` | Reported and dropped, with every edge naming it. Hand-deleted feature must not break run or leave edge pointing at nothing. |
+| Feature is `[ITERATED]` | Its document's dependencies re-read, edge **diff** proposed — never wholesale replacement, which would delete a stored edge the docs never stated. |
+| Milestone in roadmap, absent from plan | Added, at its roadmap position, `[PLANNED]`, `Features: none`. |
+| Milestone in plan, gone from roadmap | Reported, kept and flagged — hand edits tolerated, not silently reverted. |
+
+Reconciliation never writes anything but `PLAN.md`, never re-derives an ordering the user set, never resets a milestone `Status:`, and adds no second gate. Validation runs on reconciled proposal exactly as on first run: plan valid yesterday can be invalid today because a milestone moved.
+
+Deliberately NOT plan-aware, deferred by the feature's open questions: `/task-add feature=<slug>` does not warn on unsatisfied dependencies, `/task-implement` and `chosko-llm task-impl` do not honour plan order, and no bash script parses `PLAN.md`.
 
 ## Task-side additions
 
@@ -210,6 +285,7 @@ Exactly one writer per artifact, `FEATURES.md` deliberate exception.
 | `business-model.md` | `/product-design` |
 | `features/<slug>.md` | `/architect` |
 | `FEATURES.md` | `/architect` owns entries, `Status:`, `Doc:`, `Source:` — including `Source:`'s optional milestone suffix, no new writer. `/task-add` owns `Tasks:`, flip to `[PLANNED]`. `/task-clean` prunes dropped IDs from `Tasks:`. |
+| `PLAN.md` | `/production-plan`, sole writer, and the only file it writes. Reads `FEATURES.md`, feature documents, `product-roadmap.md` and `TASKS.md` strictly read-only — a problem it spots in any of them is reported, never fixed there. No other command in the pipeline reads or writes it. |
 | `TASKS.md` | `/task-add`, `/task-implement`, `/task-clean` as today; `/architect` only to flip statuses to `[STALE]` |
 | `council-report-*.html`, `council-transcript-*.md` | claude-council, when the council gate is convened. Owned by **neither** skill: never added to `WRITTEN`, never staged by `--commit`, never deleted. Both stages name their paths in the closing report and leave them in the working tree for the user to keep or delete. |
 
@@ -266,7 +342,7 @@ divergences.
 
 ## Commit and push
 
-`/domain-setup`, `/product-design`, `/product-roadmap`, `/architect`: all authoring commands/skills — uncommitted by default, `--commit` opts in. When `--commit` passed, all four follow commit-and-push protocol in [docs/authoring-guide.md](../../docs/authoring-guide.md) — pull at start, commit, re-sync, push — not plain `git commit`. `--no-push` (only meaningful alongside `--commit`) skips sync/push cycle, commits locally only. Algorithm not re-derived here; see that doc.
+`/domain-setup`, `/product-design`, `/product-roadmap`, `/architect`, `/production-plan`: all authoring commands/skills — uncommitted by default, `--commit` opts in. When `--commit` passed, all five follow commit-and-push protocol in [docs/authoring-guide.md](../../docs/authoring-guide.md) — pull at start, commit, re-sync, push — not plain `git commit`. `--no-push` (only meaningful alongside `--commit`) skips sync/push cycle, commits locally only. Algorithm not re-derived here; see that doc.
 
 ## Domain layer vs. context layer
 
@@ -297,4 +373,4 @@ No `resume` argument. Weeks can pass between sessions, flag wouldn't be remember
 - [`./task-workflow.md`](./task-workflow.md) — backlog schema this pipeline feeds: `TASKS.md` summary blocks, body schemas, `Target:` values.
 - [`./context-workflow.md`](./context-workflow.md) — context layer, structure/domain boundary reconciled above.
 - [`../context/features.md`](../context/features.md) — shipped artifacts, including every command named here.
-- `commands/domain-setup.md`, `commands/task-add.md`, `commands/task-clean.md`, `skills/product-design/SKILL.md`, `skills/product-roadmap/SKILL.md`, `skills/architect/SKILL.md` — the implementations.
+- `commands/domain-setup.md`, `commands/task-add.md`, `commands/task-clean.md`, `skills/product-design/SKILL.md`, `skills/product-roadmap/SKILL.md`, `skills/architect/SKILL.md`, `skills/production-plan/SKILL.md` — the implementations.

@@ -175,7 +175,7 @@ for review by default; override with `--commit` / `--no-commit`.
 
 ### The product pipeline — from idea to merged code
 
-Six of these commands form one continuous pipeline. Each stage hands its
+Seven of these commands form one continuous pipeline. Each stage hands its
 output to the next as a **document in the repo**, not as conversation, so the
 work survives across sessions, machines, and people.
 
@@ -185,6 +185,7 @@ work survives across sessions, machines, and people.
 | 1 — design | [`/product-design`](#design-a-product--product-design) | you, and the repo when it already has code | `product-design.md`, `technical-direction.md`, optional `business-model.md`, `design-process.md` |
 | 1b — roadmap | [`/product-roadmap`](#decide-what-ships-when--product-roadmap) | you, plus `product-design.md` when you have one | `product-roadmap.md` — ordered milestones and their scope slices |
 | 2 — architect | [`/architect`](#design-how-to-build-it--architect) | a high-level feature, or a bare prompt — one milestone's scope slice of it when you have a roadmap | `.claude/domain/features/<slug>.md` + a `FEATURES.md` entry |
+| 2b — sequence | [`/production-plan`](#decide-what-to-build-next--production-plan) | `FEATURES.md`, the feature documents' dependencies, the roadmap when you have one | `.claude/PLAN.md` — features per milestone, in order, plus the dependency edges |
 | 3 — plan | `/task-add feature=<slug>` | a feature document | task bodies + `TASKS.md` entries |
 | 4 — build | `/task-implement` | a task body | code, one commit per task |
 
@@ -233,11 +234,12 @@ worth understanding before you hit it:
    replaced. `[DONE]` tasks are never touched. The feature returns to
    `[PLANNED]`.
 
-Two vocabularies are at work and they mean different things. A **feature**
+Three vocabularies are at work and they mean different things. A **feature**
 status (`[NEW]` / `[ITERATED]` / `[PLANNED]`) describes whether the backlog
 matches the design — never whether the feature is built. A **task** status
-(`[MISSING]` … `[DONE]`) describes the work itself. `[ITERATED]` is the one
-state that demands action.
+(`[MISSING]` … `[DONE]`) describes the work itself. A **milestone** status in
+`PLAN.md` (`[PLANNED]` / `[ACTIVE]` / `[SHIPPED]`) describes delivery.
+`[ITERATED]` is the one state that demands action.
 
 The sections below are the per-command reference.
 
@@ -457,6 +459,53 @@ council; see below.
 
 Nothing committed by default; `--commit` commits and pushes exactly the
 written paths (`--commit --no-push` to skip the push).
+
+### Decide what to build next — `/production-plan`
+
+Writes `.claude/PLAN.md`: a third index beside `TASKS.md` and `FEATURES.md`
+saying which low-level feature belongs to which milestone, **in what order**,
+and after what. The roadmap says which outcomes come first; this says which
+architected features that implies and which one you can actually start.
+
+Each milestone block carries a `Status:`, a derived `Covers:` line, and an
+ordered `Features:` list — and that order **is** the priority. There is no
+`P0`/`P1` label, no size, no estimate and no date, because a second ordering
+alongside the list would eventually contradict it. Everything not yet placed
+sits in an `Unscheduled` block. All the dependency edges live in one flat
+`## Dependencies` list at the foot of the document, where a cycle is visible
+to a human reader.
+
+A feature's milestone is **inherited, not guessed**: it comes from the
+parenthetical `/architect` writes on the `FEATURES.md` `Source:` line
+(`… § Authentication (m1-mvp)`). Features architected without a roadmap start
+in `Unscheduled`. You can place any feature by hand and that wins — an
+override is reported plainly at the approval gate, never refused.
+
+The edges come from prose. Each feature document already has a
+`## Dependencies` section; the skill proposes the edge set it implies, you
+confirm or edit it, and `PLAN.md` stores the result. The prose stays the
+human-facing statement and is never rewritten — which is also what lets you
+record an edge the documents never stated.
+
+Then it **refuses the two arrangements that cannot be built**: a dependency
+cycle (reported as the actual cycle path, with no override flag) and a feature
+scheduled before something it needs (reported with both features and both
+milestones). Validation runs before anything is written.
+
+Milestone status is `[PLANNED]` / `[ACTIVE]` / `[SHIPPED]`, at most one
+`[ACTIVE]` at a time. `[SHIPPED]` is only ever *proposed* — when every feature
+in the milestone is `[PLANNED]` and all their tasks are `[DONE]` or `[SKIP]`
+— and it never reopens; follow-up work is a new milestone.
+
+Requires `/domain-setup` and at least one architected feature. A roadmap is
+**optional**: without one everything lands in `Unscheduled` and the dependency
+ordering still works. Re-run it whenever features or milestones move — it
+reconciles against the current `FEATURES.md` and roadmap behind the same
+single approval gate, keeping the orderings and edges you set. It is the sole
+writer of `PLAN.md` and reads `FEATURES.md`, the feature documents, the
+roadmap and `TASKS.md` without writing any of them. Nothing is committed by
+default; `--commit` commits and pushes what the run wrote (`--commit
+--no-push` to skip the push).
 
 ### Pressure-testing a decision — `claude-council`
 

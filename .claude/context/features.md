@@ -371,6 +371,59 @@ Currently shipped:
   is `/product-design`'s document. **Authoring skill — nothing committed by
   default; `--commit` stages exactly written paths (including TASKS.md
   when guard fired) in one commit.**
+- `skills/production-plan/` — feature-level WHEN of the pipeline, between
+  `/architect` and `/task-add`. Sole writer of `.claude/PLAN.md`, a third
+  index beside `TASKS.md` and `FEATURES.md`, and writes NOTHING else — never
+  `FEATURES.md`, `TASKS.md`, feature docs, `product-roadmap.md`,
+  `product-design.md`, or the domain `INDEX.md`. Schema: `Roadmap:` (or
+  `none`) and informational `Last reconciled:` headers; one block per
+  milestone carrying `Status:`, derived `Covers:` and ordered `Features:`; an
+  `Unscheduled` block (`Features:` only, written even when empty); and ONE
+  flat `## Dependencies` edge list (`- <slug>: depends on <slug>, <slug>`)
+  rather than a `Depends:` line per feature — keeps `PLAN.md` from becoming a
+  second index keyed by feature slug and puts every edge where a cycle is
+  visible. `Features:` order IS the priority: no `P0`/`P1`, no dates,
+  estimates, sizes or readiness/coverage rollups (derived at read time).
+  `Covers:` is rewritten from the roadmap's own `Covers:` lines every run, so
+  hand edits to it never survive. PHASE 0 gates ONLY on `.claude/FEATURES.md`
+  (points at `/domain-setup`; the skill's one gate) — a roadmap is optional,
+  and without one everything lands in `Unscheduled` and ordering still works;
+  no features at all writes nothing and says so. Read pass is entirely
+  read-only: `FEATURES.md` (slugs, `Status:`, `Source:`, `Tasks:`), each
+  feature doc's `## Dependencies` section, `product-roadmap.md` when present,
+  any existing `PLAN.md` as resume state, and `.claude/TASKS.md` for the
+  `[SHIPPED]` proposal alone. PHASE 1 inherits each milestone by LOOKUP off
+  the `Source:` parenthetical `/architect` writes (never inferred from
+  section names or `Covers:` prose; no parenthetical and `Source: prompt` →
+  `Unscheduled`), orders each milestone, proposes the edge set from each
+  document's prose for the user to confirm — prose is never rewritten, and a
+  stored edge the docs never stated is legitimate — and handles milestone
+  status `[PLANNED]` / `[ACTIVE]` / `[SHIPPED]`, at most one `[ACTIVE]`,
+  `[SHIPPED]` proposed only when every feature is `[PLANNED]` and every task
+  `[DONE]`/`[SKIP]`, always confirmed, never reopened. Explicit placement
+  overrides the parenthetical, is reported plainly, never gated or refused.
+  PHASE 2 validates BEFORE the gate and before any write, and both invariants
+  REFUSE with no override flag: a cycle is reported as the actual cycle path,
+  and a dependency in a later milestone is reported with both features and
+  both milestones (a dependency on an `Unscheduled` feature is a warning
+  instead — `Unscheduled` has no position, so it cannot be "later"); each
+  milestone's `Features:` must be a topological order of the edges restricted
+  to it. PHASE 2 ends at the run's single approval gate; PHASE 3 is the only
+  write phase. One supporting file, `reconciling.md`, read on demand when
+  PHASE 0 finds an existing `PLAN.md` — the five-situation re-run table
+  (feature absent from the plan proposed for placement; plan slug gone from
+  `FEATURES.md` reported and dropped along with its edges; `[ITERATED]`
+  feature's dependencies re-read as a DIFF, never a wholesale replacement;
+  roadmap milestone added in roadmap order; plan milestone gone from the
+  roadmap reported, kept and flagged) — all folded into that same one gate,
+  mirroring `/task-add`'s convention. Other failures are reports, not
+  refusals: an edge slug resolving to no feature is dropped, a milestone with
+  no features is a warning, `>1 [ACTIVE]` reports and asks. Nothing
+  plan-aware exists in `/task-add`, `/task-implement`, or the bash CLI —
+  deferred by the feature's open questions. **Authoring skill — nothing
+  committed by default; `--commit` stages exactly `.claude/PLAN.md` in one
+  commit, `--no-push` skips the push; `--commit` with nothing written makes
+  no commit and says so.**
 - `skills/unity-mcp-skill/` — Unity-MCP operator guide vendored from
   upstream skill. `SKILL.md` carries resource-first workflow,
   core tool categories, best-practice patterns for driving Unity

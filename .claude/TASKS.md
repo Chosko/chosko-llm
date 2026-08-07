@@ -165,7 +165,7 @@ Feature: production-plan
 
 ## 112. Update documentation for feature production-plan
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/cli-help.txt, .claude/context/features.md, .claude/domain/product-workflow.md, .claude/domain/features/production-plan.md, VERSION
 Preconditions: 111

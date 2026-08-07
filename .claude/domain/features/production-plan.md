@@ -87,7 +87,10 @@ reconciliation pattern `/task-add feature=<slug>` already uses.
 - **Ordering.** Within a milestone, the `Features:` list must be a
   topological order of the edges restricted to it. A dependency living in a
   *later* milestone is refused outright — it cannot be satisfied by the time
-  it is needed.
+  it is needed. A dependency on a feature in `Unscheduled` is **not** that
+  refusal: `Unscheduled` has no position, so it cannot be "later". It is
+  reported as a warning — the dependency is unschedulable until that feature
+  is placed — and the run continues.
 - **Cycles.** Reported as the actual cycle path, and refused. No override
   flag: a cycle is not a judgement call.
 
@@ -135,7 +138,11 @@ Features: <slugs with no milestone yet>
 - <slug>: depends on <slug>, <slug>
 ```
 
-- **`Features:`** is ordered, and the order *is* the priority.
+- **`Roadmap:`** names the roadmap the plan was built against, or the literal
+  `none` on a project that has no roadmap.
+- **`Features:`** is ordered, and the order *is* the priority. A milestone
+  with no features carries `Features: none`, and the `Unscheduled` block is
+  written even when empty, so the schema is uniform for a reader.
 - **`Covers:`** is **derived** — rewritten every run from the roadmap's own
   `Covers:` lines — so it cannot drift. It is present for readability, not as
   a source of truth.
@@ -209,18 +216,36 @@ versus `FEATURES.md`, and it keeps one writer per artifact.
 
 ## Open questions
 
-- **Whether `chosko-llm task-impl` should honour plan order.** Deferred by
-  decision, with no trigger set — recorded in the same register as the
-  local-install-drift note in [product-design.md](../product-design.md).
-  Doing it means parsing `PLAN.md` from bash with awk and sed, in the largest
-  script in the repo, under the no-new-dependencies rule.
+Reviewed against what shipped in `skills/production-plan/`. The two
+deferrals below are unchanged; the two after them were settled by the
+implementation and are recorded as settled, with the residue that is still
+genuinely open.
+
+- **Whether `chosko-llm task-impl` should honour plan order.** Still open,
+  still deferred by decision with no trigger set — recorded in the same
+  register as the local-install-drift note in
+  [product-design.md](../product-design.md). Nothing plan-aware shipped in
+  the bash CLI. Doing it means parsing `PLAN.md` from bash with awk and sed,
+  in the largest script in the repo, under the no-new-dependencies rule.
 - **Whether `/task-add feature=<slug>` should warn when a feature's
-  dependencies are unsatisfied.** Deferred on the same terms.
-- **Whether the edge list should be derivable rather than stored.** Storing
-  confirmed edges is what allows an edge the documents do not state; deriving
-  them on every run would remove drift entirely. The confirm-and-store choice
-  buys expressiveness at the price of a reconciliation step.
-- **How a milestone with no features should be reported.** Today it is a
-  coverage gap meaning `/architect` has not run on its slices yet, which is
-  useful information rather than an error — but it is indistinguishable from
-  a milestone that was written and then emptied.
+  dependencies are unsatisfied.** Still open, deferred on the same terms.
+  `/task-add` was not touched and does not read `PLAN.md`.
+- **Whether the edge list should be derivable rather than stored.** Settled
+  as **stored**, and the reconciliation step that choice costs is now
+  concrete rather than hypothetical: on an `[ITERATED]` feature the skill
+  re-reads the document's `## Dependencies` prose and proposes an edge
+  *diff*, never a wholesale replacement, precisely so that a confirmed edge
+  the documents never stated survives the re-run. What stays open is only
+  whether the expressiveness is worth it in practice — an answer that needs
+  usage, not more design. The trigger to revisit: users routinely accepting
+  every proposed diff without adding edges of their own, which would mean the
+  edge set was derivable all along.
+- **How a milestone with no features should be reported.** Settled as a
+  **warning, never an error** — raised at the approval gate and repeated in
+  the closing report — because the usual cause is that `/architect` has not
+  run on that milestone's slices yet, which is useful information rather than
+  a fault. What stays open is the ambiguity itself: nothing distinguishes a
+  milestone whose slices were never architected from one that was written and
+  then emptied, and the plan holds no history that could tell them apart.
+  Resolving it would mean storing something derivable, which this feature
+  deliberately does not do.
