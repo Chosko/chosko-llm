@@ -155,7 +155,7 @@ Feature: slice-aware-architecture
 
 ## 111. Add the /production-plan skill and the PLAN.md schema
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/production-plan/SKILL.md, skills/production-plan/reconciling.md, VERSION
 Preconditions: 106, 109
