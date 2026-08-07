@@ -4,10 +4,10 @@
 
 ## product-roadmap — Milestones, outcomes, and the scope slices that decompose them
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/product-roadmap.md
 Source: product-design.md § Roadmap and planning
-Tasks: none
+Tasks: 106, 107
 
 ---
 

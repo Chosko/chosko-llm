@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 105
+Last task number: 107
 
 ---
 
@@ -100,5 +100,25 @@ Status: [DONE]
 Target: claude
 Files: scripts/cmd-add.sh, scripts/cmd-update.sh, docs/cli-help.txt, README.md, .claude/context/cmd-add.md, .claude/context/cmd-update.md, VERSION
 Preconditions: none
+
+---
+
+## 106. Add the /product-roadmap skill and the roadmap document schema
+
+Status: [MISSING]
+Target: claude
+Files: skills/product-roadmap/SKILL.md, VERSION
+Preconditions: none
+Feature: product-roadmap
+
+---
+
+## 107. Update documentation for feature product-roadmap
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/cli-help.txt, .claude/context/features.md, .claude/domain/product-workflow.md, VERSION
+Preconditions: 106
+Feature: product-roadmap
 
 ---
