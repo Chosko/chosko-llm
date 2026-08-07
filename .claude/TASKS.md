@@ -135,7 +135,7 @@ Feature: slice-aware-architecture
 
 ## 109. Add slice-aware input resolution to /architect
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/architect/SKILL.md, skills/architect/sliced-input.md, skills/architect/feature-doc-template.md, VERSION
 Preconditions: 106, 108
