@@ -1,6 +1,6 @@
 ---
 name: architect
-version: 0.5.0
+version: 0.5.1
 type: skill
 description: Turn one or more high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md — the bridge between /product-design and /task-add. Grounds the architecture in the project's recorded technical-direction.md or existing code, or proposes a tech stack when there is neither. Runs from a product-design section, named features, or a bare prompt with no design documents at all. Re-architecting a feature that already has tasks triggers an iterate guard: refuses outright while any task is [IN PROGRESS], otherwise asks, then flips surviving tasks to [STALE] and the feature to [ITERATED]. Requires /domain-setup. At a genuine design fork it offers to convene claude-council when that skill is installed, and is silent when it is not. Nothing committed by default; pass --commit to commit and push exactly the written paths (--commit --no-push to skip the push).
 ---
@@ -44,6 +44,7 @@ SUPPORTING FILES (read on demand — not up front)
 
 | Read this file | Exactly when |
 | -------------- | ------------ |
+| `./sectioned-input.md` | PHASE 0, always — the input forms, how a target resolves against `product-design.md`'s sections and existing `FEATURES.md` slugs, and the `Source:` value that produces. |
 | `./iterating.md` | PHASE 0 finds the target feature already has a `FEATURES.md` entry. Read before PHASE 0b. |
 | `./tech-stack-selection.md` | The project has NO existing tech stack AND no `technical-direction.md` (greenfield). Read at the start of PHASE 2. |
 | `./feature-doc-template.md` | PHASE 3, always — the feature-document schema and the `FEATURES.md` entry format. |
@@ -51,7 +52,7 @@ SUPPORTING FILES (read on demand — not up front)
 
 Do not read a supporting file speculatively. The common path — a brownfield
 project, a feature architected for the first time — reads only
-`./feature-doc-template.md`.
+`./sectioned-input.md` and `./feature-doc-template.md`.
 
 ---
 
@@ -67,15 +68,9 @@ matters when COMMIT is true: it skips the pull-at-start / re-sync / push
 steps of the commit-and-push protocol (docs/authoring-guide.md) while
 still committing as always.
 
-What remains is the input, resolved in PHASE 0. It is one of:
-
-- **Empty** — read `product-design.md` and ask which feature(s) to
-  architect.
-- **One or more feature names** — matched against `product-design.md`'s
-  high-level features and against existing `FEATURES.md` slugs.
-- **A free-form description** — architect that, with no design documents
-  required. This is the path on a project that has code but has never run
-  `/product-design`.
+What remains is the input, resolved in PHASE 0. Its forms — empty, one or
+more feature names, or a free-form description — are listed in
+`./sectioned-input.md`, which PHASE 0 reads.
 
 Maintain a `WRITTEN` list of every path this invocation wrote. It drives the
 final report and the optional commit.
@@ -115,11 +110,9 @@ the conflict output and tell the user to resolve manually and re-run.
 6. Source files, only where the context layer is thin or absent and the
    design genuinely depends on how something currently works.
 
-**Resolve the target feature(s).** With no argument, list
-`product-design.md`'s high-level features and ask which to architect. With
-names, match them; when a name matches nothing, say so and ask rather than
-guessing. Confirm the resolved list back to the user in one line before
-continuing.
+**Resolve the target feature(s).** Read `./sectioned-input.md` and follow
+it: it carries the input forms, the matching rules, and the `Source:` value
+this mode produces.
 
 **Detect whether a stack exists.** A present `technical-direction.md` counts
 as a stack that exists, exactly like an established codebase stack — note

@@ -125,7 +125,7 @@ Feature: product-roadmap
 
 ## 108. Extract /architect's input resolution into sectioned-input.md
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/architect/SKILL.md, skills/architect/sectioned-input.md, VERSION
 Preconditions: none
