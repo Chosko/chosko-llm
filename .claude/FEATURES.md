@@ -22,10 +22,10 @@ Tasks: 108, 109, 110
 
 ## production-plan — `PLAN.md`: milestone membership, ordering, and the dependency graph
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/production-plan.md
 Source: product-design.md § Roadmap and planning
-Tasks: none
+Tasks: 111, 112
 
 ---
 

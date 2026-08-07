@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 110
+Last task number: 112
 
 ---
 
@@ -150,5 +150,25 @@ Target: claude
 Files: README.md, .claude/domain/product-workflow.md, .claude/context/features.md, .claude/domain/features/slice-aware-architecture.md, VERSION
 Preconditions: 108, 109
 Feature: slice-aware-architecture
+
+---
+
+## 111. Add the /production-plan skill and the PLAN.md schema
+
+Status: [MISSING]
+Target: claude
+Files: skills/production-plan/SKILL.md, skills/production-plan/reconciling.md, VERSION
+Preconditions: 106, 109
+Feature: production-plan
+
+---
+
+## 112. Update documentation for feature production-plan
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/cli-help.txt, .claude/context/features.md, .claude/domain/product-workflow.md, .claude/domain/features/production-plan.md, VERSION
+Preconditions: 111
+Feature: production-plan
 
 ---
