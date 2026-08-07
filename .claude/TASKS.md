@@ -105,7 +105,7 @@ Preconditions: none
 
 ## 106. Add the /product-roadmap skill and the roadmap document schema
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/product-roadmap/SKILL.md, VERSION
 Preconditions: none
