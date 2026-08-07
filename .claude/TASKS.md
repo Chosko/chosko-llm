@@ -175,7 +175,7 @@ Feature: production-plan
 
 ## 113. Add the /production-status command
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/production-status.md, VERSION
 Preconditions: 111
