@@ -71,8 +71,29 @@ is absent and points at `/domain-setup`; a read pass over
 `product-design.md` and any existing roadmap; a conversational round; a
 single write phase behind one approval gate.
 
+**The steer fork** decides who proposes the order, and it is asked before
+anything is drafted — riding on the message that already closes the read
+pass, so it costs no round trip the run was not spending anyway. Sequencing
+is the one input the pipeline cannot derive: every other stage reads its
+answer out of a document, but the order to build in is business intent and
+lives with the user. A draft written before they have spoken can be
+well-built and still be the wrong strategy, and it anchors both sides — the
+user argues against a proposal instead of stating a plan, and the skill,
+having written rationales, defends the structure it produced. Hence two
+branches. `propose` is the original behaviour, unchanged, and remains right
+whenever the user has no ordering in mind. `given` takes the milestone
+skeleton first and drafts goals, criteria, rationale and slices from it,
+governed by `/product-design`'s **contribute, don't just ask** rule so the
+branch does not decay into transcription. The question is skipped, rather
+than asked as ceremony, when the answer is already in hand: free-form
+arguments that carry an ordering, or a revision whose existing document is
+itself the strategy.
+
 **The document**, at `.claude/domain/product-roadmap.md`, registered as a row
-in the domain `INDEX.md`. Ordered milestone blocks, each carrying:
+in the domain `INDEX.md`. A preamble carrying a `Strategy:` paragraph — the
+premise the whole order rests on, the user's where they had one and the
+skill's own value/risk/dependency argument where they did not — then ordered
+milestone blocks, each carrying:
 
 - `Goal:` — the outcome the milestone delivers, as an outcome and not a
   feature list.
@@ -84,6 +105,22 @@ in the domain `INDEX.md`. Ordered milestone blocks, each carrying:
 Two further sections: **Not now**, holding deliberately deferred work each
 with the trigger that would pull it back in, and **Open sequencing
 questions**.
+
+**The strategic premise** lives in the preamble rather than in a section or a
+per-milestone field, and it is global where `Rationale:` is local: the
+premise says why the sequence as a whole runs this way, `Rationale:` says why
+one milestone precedes the next. It earns its place by being the thing a
+revision must not silently lose — without it, the reasoning behind an order
+survives only as seven separate comparative arguments, and a re-run months
+later re-litigates a decision nobody wrote down. It is labelled rather than
+left as bare prose for exactly that reason: a re-run has to locate it to
+honour the rule that it is **read as input, never rewritten to agree with a
+new order**. A premise edited to match whatever was decided last is not
+recording a reason, only echoing a decision, so a delta that contradicts it
+is raised as a warning and the user says which one moves. The preamble's
+existing constraints bind it unchanged: no dates, no estimates, no status,
+and a deadline surfacing inside a premise becomes an open sequencing
+question like any other.
 
 **Scope slices** are the load-bearing idea. A high-level feature is a design
 unit, not a scheduling unit: the axis that splits it across releases is
@@ -140,7 +177,10 @@ The document is also the skill's resume state, in the same spirit as
 `design-process.md` for `/product-design` — but with no separate marker
 file, because a roadmap conversation is a single round rather than eight
 phases. A re-run reads the existing document, proposes changes against it,
-and writes behind one approval gate.
+and writes behind one approval gate. The `Strategy:` premise is part of that
+state and the part with the strictest read/write asymmetry: read on every
+revision to check the proposed delta against, written only when the user
+decides the premise itself has moved.
 
 ## Interfaces and contracts
 
@@ -152,6 +192,9 @@ and writes behind one approval gate.
   [slice-aware-architecture](./slice-aware-architecture.md).
 - `Goal:` and `Exit criteria:` — read by humans, and echoed by
   [plan-readout](./plan-readout.md).
+- The `Strategy:` premise — read by humans, and by the skill's own revisions
+  as the thing a proposed delta is checked against. No other feature consumes
+  it.
 
 **Expects:** the domain layer exists (`/domain-setup` has run).
 `product-design.md` is read when present but not required — the skill is
@@ -166,6 +209,9 @@ usable from a bare description, as `/architect` is.
   document.
 - Editing a slice whose section already has architected features → warn and
   point at `/architect`; proceed on the user's say-so.
+- A revision whose deltas contradict the recorded `Strategy:` premise → warn,
+  name the contradiction, and ask which one moves. Never resolve it by
+  rewriting the premise.
 - `--commit` with nothing written → make no commit and say so.
 
 ## Dependencies

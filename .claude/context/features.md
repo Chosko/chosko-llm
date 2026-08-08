@@ -275,7 +275,10 @@ Currently shipped:
   `/product-design` and `/architect`. Writes one document,
   `.claude/domain/product-roadmap.md`, plus its `.claude/domain/INDEX.md`
   row, and nothing else — never `FEATURES.md`, `PLAN.md`, `TASKS.md`, or
-  `product-design.md`. Ordered milestone blocks keyed by stable kebab-case
+  `product-design.md`. Preamble carries `Strategy:` paragraph — premise whole
+  order rests on, global where `Rationale:` is local (why the sequence runs
+  this way vs. why one milestone precedes next), labelled so revision can
+  locate it. Then ordered milestone blocks keyed by stable kebab-case
   slug (`m1-mvp`), each carrying `Goal:` / `Exit criteria:` / `Rationale:` /
   `Covers:`, then `Not now` (every deferral carries trigger that pulls it
   back) and `Open sequencing questions`. Order is list position, so
@@ -287,16 +290,31 @@ Currently shipped:
   coverage of section across milestones is normal case and nothing validates
   completeness. Carries NO milestone state: no `Status:` line, no dates, no
   estimates — that's a later feature's, same intent/state split keeping
-  feature statuses out of `product-design.md`. PHASE 0 gates on
+  feature statuses out of `product-design.md`. Dates/status bar binds
+  `Strategy:` too; deadline surfacing there becomes open sequencing question.
+  PHASE 0 gates on
   `/domain-setup` (only refusal in skill), reads domain INDEX,
   `product-design.md` when present (optional — usable from bare
   description), any existing roadmap as its own resume state (no marker
-  file, document is state), and `.claude/FEATURES.md` READ-ONLY. PHASE 1 is
-  conversation and run's single approval gate; PHASE 2 is only write phase.
-  Both failure modes are warnings, not refusals: `Covers:` entry naming
-  section absent from `product-design.md`, and editing slice whose section
+  file, document is state), and `.claude/FEATURES.md` READ-ONLY. PHASE 0 then
+  settles `STEER` in the same message as its findings summary (costs no extra
+  round trip): one question — "ordering in mind, or should I propose one?" —
+  because sequencing is business intent the documents can't contain, and a
+  draft written first anchors both user and skill. `given` = take milestone
+  skeleton first, draft goals/criteria/rationale/slices from it, governed by
+  `/product-design`'s contribute-don't-just-ask so branch doesn't decay into
+  transcription; `propose` = original draft-first behaviour, unchanged.
+  Question SKIPPED (not asked as ceremony) when `$ARGUMENTS` carried an
+  ordering or revision already has roadmap. PHASE 1 is
+  conversation and run's single approval gate (steer question is a question,
+  not an approval); PHASE 2 is only write phase.
+  Three failure modes are warnings, not refusals: `Covers:` entry naming
+  section absent from `product-design.md`, editing slice whose section
   already has features (names slugs, points at `/architect <slug>`, proceeds
-  on user's say-so — `[ITERATED]` stays `/architect`'s field). No supporting
+  on user's say-so — `[ITERATED]` stays `/architect`'s field), and revision
+  whose deltas contradict recorded premise (names contradiction, asks which
+  moves — premise is read as input on revision, NEVER rewritten to agree with
+  a newly-decided order). No supporting
   files — schema inline, one file per folder. **Authoring skill — nothing
   committed by default; `--commit` stages exactly written paths in one
   commit, `--no-push` skips the push; `--commit` with nothing written makes

@@ -27,7 +27,7 @@ task IDs per feature — is [../FEATURES.md](../FEATURES.md).
 
 | File | Covers |
 | --- | --- |
-| [features/product-roadmap.md](./features/product-roadmap.md) | The roadmap document and the `/product-roadmap` skill: milestones with goals and exit criteria, and the scope slices that decide which share of a high-level feature each milestone takes. |
+| [features/product-roadmap.md](./features/product-roadmap.md) | The roadmap document and the `/product-roadmap` skill: the strategic premise behind the order, milestones with goals and exit criteria, the scope slices that decide which share of a high-level feature each milestone takes, and the steer fork deciding who proposes the order. |
 | [features/slice-aware-architecture.md](./features/slice-aware-architecture.md) | The `/architect` change that resolves a scope slice instead of a whole section when the project has a roadmap, with both resolution modes in on-demand files so unroadmapped projects behave exactly as today. |
 | [features/production-plan.md](./features/production-plan.md) | `.claude/PLAN.md` and the `/production-plan` skill: milestone inheritance, ordered feature lists, the dependency graph, cycle and ordering validation, and milestone status. |
 | [features/plan-readout.md](./features/plan-readout.md) | The read side: `/production-status`'s what-to-build-next report and milestone-aware grouping in `/task-list`. Writes nothing; every fact is derived at read time. |

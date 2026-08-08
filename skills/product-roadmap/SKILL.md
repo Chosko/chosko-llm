@@ -1,8 +1,8 @@
 ---
 name: product-roadmap
-version: 0.1.0
+version: 0.2.0
 type: skill
-description: Write the product's roadmap into .claude/domain/product-roadmap.md — an ordered list of milestones, each with a goal, exit criteria, rationale, and the scope slices saying which share of a high-level feature it takes on. The product-level WHEN of the pipeline, sitting between /product-design and /architect. Usable from a bare description when product-design.md doesn't exist yet, and re-runnable: the document is its own resume state, so a later run proposes changes against what is already there. Reads .claude/FEATURES.md and never writes it, and carries no milestone status — that belongs to the plan, not the roadmap. Requires /domain-setup. Nothing committed by default; pass --commit to commit and push exactly what the run wrote (--commit --no-push to skip the push).
+description: Write the product's roadmap into .claude/domain/product-roadmap.md — an ordered list of milestones, each with a goal, exit criteria, rationale, and the scope slices saying which share of a high-level feature it takes on. The product-level WHEN of the pipeline, sitting between /product-design and /architect. Asks whether you already have an ordering in mind before drafting one, so a strategy you arrived with steers the roadmap instead of arguing with a draft, and records that strategic premise in the document. Usable from a bare description when product-design.md doesn't exist yet, and re-runnable: the document is its own resume state, so a later run proposes changes against what is already there. Reads .claude/FEATURES.md and never writes it, and carries no milestone status — that belongs to the plan, not the roadmap. Requires /domain-setup. Nothing committed by default; pass --commit to commit and push exactly what the run wrote (--commit --no-push to skip the push).
 ---
 
 # /product-roadmap
@@ -65,6 +65,13 @@ what the next milestone is meant to achieve, a constraint, a deadline, a
 feature the user wants pulled forward or pushed back. Fold it into PHASE 1
 rather than treating it as a command.
 
+When that context carries an **ordering** — a first release, a sequence, a
+"before" or "after", something explicitly deferred — the user's strategy has
+arrived up front. Set `STEER = given` and treat it as the seed PHASE 1
+drafts *from*, not as commentary on a draft you write anyway. Acknowledge it
+in the PHASE 0 summary before anything is drafted. Otherwise leave `STEER`
+unset; PHASE 0 settles it.
+
 Maintain a `WRITTEN` list of every path this invocation wrote. It drives the
 final report and the optional commit.
 
@@ -103,23 +110,71 @@ conflict output and tell the user to resolve manually and re-run.
    byte to it.
 
 Say in two or three lines what you found — first run or revision, how many
-milestones exist today, whether `product-design.md` is present — then
-continue.
+milestones exist today, whether `product-design.md` is present.
+
+**Then, in the same message, settle who proposes the order.** Sequencing is
+the one input the documents cannot contain. Everything else in the pipeline
+is derived from something readable; the order to build in is business
+intent, and it lives with the user. A roadmap drafted before they have
+spoken can be well-built and still be the wrong strategy — and once it is
+written, both sides argue against a draft instead of thinking from a blank
+page. So unless `STEER` is already settled, ask one short question and stop
+for the answer:
+
+> Do you already have an ordering in mind, or should I propose one?
+
+Set `STEER` to `given` or `propose` from the reply. Draft nothing before it
+arrives.
+
+Skip the question — do not ask it as ceremony — when the answer is already
+in hand:
+
+- **`$ARGUMENTS` carried an ordering.** `STEER` is already `given`. Say back
+  what you took the strategy to be, in a line or two, and let the user
+  correct it.
+- **A revision with an existing roadmap.** The document is the strategy:
+  `STEER = given`, seeded from what is there, and PHASE 1 discusses the delta
+  as always. Ask only when the user's context signals a rethink rather than
+  an increment.
 
 ---
 
 PHASE 1 — THE ROADMAP CONVERSATION
 
-One conversational round, not a form. Contribute rather than only extract:
-propose an ordering with reasons, name what you would defer and why, and
-flag a milestone that looks too big to ship.
+One conversational round, not a form. How it opens depends on `STEER`; what
+it has to cover does not.
+
+**`STEER = propose`.** Draft first. Propose an ordering with reasons, name
+what you would defer and why, and flag a milestone that looks too big to
+ship. The user reacts to something concrete.
+
+**`STEER = given`.** Take the skeleton first — the milestone list, its rough
+order, and what the first release holds — then draft the rest *from* it:
+goals, exit criteria, rationale, and above all the scope slices. Ask only
+what the skeleton leaves open, each question carrying the answer you would
+pick and why, so it can be confirmed in a word.
+
+**Contribute, don't just ask.** This binds hardest on the `given` branch,
+where the pull is to become a stenographer. Taking the user's ordering does
+not suspend your judgement: still flag the milestone too big to ship, still
+name what you would defer and why, still refuse a slice with no exclusions
+in it, still say when the order fights a dependency. A branch that only
+transcribes is worth less than the draft it replaced. Argue where you
+disagree — the ordering is the user's call, and the case against it is yours
+to make before they commit to it.
 
 Cover, in whatever order the conversation wants:
 
-1. **The milestones and their order.** What is the first shippable outcome,
-   and what does each one after it unlock? Order is the product of value,
-   risk and dependency — say which is driving each placement. On a revision,
-   start from the existing list and discuss the delta.
+1. **The milestones, their order, and the premise behind it.** What is the
+   first shippable outcome, and what does each one after it unlock? Order is
+   the product of value, risk and dependency — say which is driving each
+   placement. Settle too the **strategic premise** the whole sequence rests
+   on: the bet, constraint or priority that explains why this order rather
+   than another. On the `given` branch it is the user's, stated back in your
+   own words for confirmation; on `propose` it is the argument your draft
+   rests on, which you owe them out loud rather than leaving implicit across
+   seven separate rationales. It goes in the document preamble. On a
+   revision, start from the existing list and premise and discuss the delta.
 2. **Per milestone: the goal**, stated as an *outcome* a user or the
    business gets, never as a feature list.
 3. **Per milestone: exit criteria** — what has to be true for it to be
@@ -139,7 +194,7 @@ Cover, in whatever order the conversation wants:
 7. **The sequencing questions you could not close.** They go into the
    document rather than being resolved by guesswork.
 
-**Two warnings, both non-blocking.** Raise them where they arise, in one or
+**Three warnings, all non-blocking.** Raise them where they arise, in one or
 two lines each, and carry on:
 
 - **A `Covers:` entry naming a section that `product-design.md` does not
@@ -154,6 +209,10 @@ two lines each, and carry on:
   `/architect <slug>`. Then proceed on the user's say-so. Nothing here flips
   a feature's `Status:` — `[ITERATED]` is `/architect`'s field, and writing
   it from this skill would put two writers on one line.
+- **A revision whose deltas contradict the recorded premise.** Name the
+  contradiction and ask which one moves: the milestones, or the premise. Do
+  not quietly restate the premise so the document agrees with its new order.
+  A premise rewritten to match whatever was decided last records nothing.
 
 **Milestone identity.** Each milestone gets a stable kebab-case slug,
 e.g. `m1-mvp`, chosen once and never renamed and never renumbered — the same
@@ -193,6 +252,11 @@ Add both to `WRITTEN`.
 
 <One short paragraph: what this roadmap covers and what it is for. No dates,
 no estimates, no status.>
+
+Strategy: <one short paragraph — the premise the whole order rests on. The
+bet, constraint or priority that explains why the milestones run in this
+sequence rather than another. The user's strategy where they had one, your
+own value/risk/dependency argument where they did not.>
 
 ---
 
@@ -239,7 +303,20 @@ Rules the schema is not free to bend:
   keeps feature statuses out of `product-design.md`. Do not add the field,
   and do not smuggle it in as prose like "(current)" or "(shipped)".
 - **No dates, no estimates, no sizing, no velocity.** If the user wants a
-  date, record it as an open sequencing question rather than a field.
+  date, record it as an open sequencing question rather than a field. This
+  binds the `Strategy:` paragraph as hard as anywhere else — a deadline that
+  surfaces inside a strategic premise becomes an open sequencing question
+  too.
+- **The preamble's `Strategy:` paragraph is global; `Rationale:` is local.**
+  The premise explains why the sequence as a whole runs this way;
+  `Rationale:` stays comparative — why *this* milestone before the next. State
+  the premise once, above, and do not restate it in every milestone.
+- **On a revision the recorded premise is input, not output.** Read it before
+  proposing any delta. Where the delta contradicts it, raise it in PHASE 1
+  (third warning) and let the user say which one moves. Never edit the
+  premise so the document agrees with an order decided later in the same run:
+  a premise that always agrees with the milestones is not recording a reason,
+  it is echoing a decision.
 - **`Covers:` entries name `product-design.md` sections, never
   `FEATURES.md` slugs.** The roadmap must stay writable before anything has
   been architected. Where no `product-design.md` exists, use the section
@@ -265,6 +342,7 @@ coverage report is computed and none is stored.
 
 **Closing report.** State:
 
+- The strategic premise recorded, and whether this run changed it.
 - Every milestone, in order, with its slug and one-line goal.
 - Every slice added, changed or removed in this run.
 - Every warning raised in PHASE 1 — sections missing from
@@ -337,8 +415,19 @@ DO NOT:
 - Descend into technical territory — components, data models, interfaces,
   libraries, file paths, code. Capture a hard technical constraint in one
   line if the user states one; designing against it is `/architect`'s job.
-- Advance past PHASE 1 without the user confirming the roadmap. There is
-  exactly one approval gate and this is it.
+- Draft a roadmap before `STEER` is settled, or write a draft that ignores an
+  ordering the user already supplied and reconciles with it afterwards. The
+  point of asking is that the answer arrives before the draft, not after.
+- Turn the steer question into ceremony. When `$ARGUMENTS` already carried an
+  ordering, or a revision already has a roadmap to start from, the answer is
+  in hand — say what you took it to be and move on.
+- Let the `given` branch turn you into a stenographer. The user owns the
+  order; the rigor is still yours.
+- Rewrite the `Strategy:` premise so it agrees with an order decided later in
+  the same run. Contradictions get raised, not smoothed.
+- Advance past PHASE 1 without the user confirming the roadmap. PHASE 0's
+  steer question is a question, not an approval — this is the one gate
+  guarding a write.
 - Run any git/VCS command unless `--commit` was passed; and with it, stage
   only the explicit `WRITTEN` paths, never a catch-all, push per the
   commit-and-push protocol unless `--no-push` was passed, and never
