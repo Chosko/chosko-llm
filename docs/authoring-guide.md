@@ -282,6 +282,45 @@ Two rules make it work:
   to decide where to pick up, and reports a mismatch with the documents
   rather than re-deriving the stage from their contents.
 
+## A question the user picks an answer from needs parallel arms
+
+When a skill asks the user to choose, the answer is often rendered as
+selectable options, and the labels are derived by re-voicing the question in
+the user's mouth. Re-voicing happens **per arm**. So a disjunction whose arms
+have different grammatical subjects yields labels that disagree about who
+"I" is.
+
+`skills/product-roadmap/` is the worked example, having shipped the bug
+first. PHASE 0 asked:
+
+> Do you already have an ordering in mind, or should I propose one?
+
+Unambiguous as prose — the agent is speaking throughout. Rendered as options
+it produced `I have an ordering` (I = the user, from arm one) beside
+`I'll propose one` (I = the agent, echoing arm two): one pronoun naming two
+people in one list. The option descriptions flipped with them, "*You* draft
+an ordering" against "*You* tell me the sequence…".
+
+Three rules, cheapest first:
+
+- **Prefer no disjunction at all.** A single arm cannot disagree with itself.
+  "Do you have an ordering in mind? If not, I'll propose one." puts the
+  question in the first sentence and the default in the second — and the
+  second is a *statement*, not an arm, so it never becomes a label.
+- **Where both paths must be on screen, make the arms parallel** — same
+  subject, same form — so re-voicing transforms both or neither. Possessive
+  noun phrases do this well: "start from your ordering, or from my draft?"
+  flips as a pair into "my ordering" / "your draft", and a collision becomes
+  structurally impossible rather than merely unlikely.
+- **Pin the reply mapping in the skill body.** Wording governs what an agent
+  is *likely* to render; only a stated mapping governs what it *must*. One
+  line — yes → `given`, no → `propose` — removes the last thing being
+  re-derived on every run.
+
+The test to apply before shipping any such question: *can one arm be re-voiced
+without the other changing the same way?* If it can, the labels will
+eventually disagree.
+
 ## Versioning
 
 Use semver. Bump rules:

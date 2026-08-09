@@ -1,6 +1,6 @@
 ---
 name: product-roadmap
-version: 0.2.0
+version: 0.2.1
 type: skill
 description: Write the product's roadmap into .claude/domain/product-roadmap.md — an ordered list of milestones, each with a goal, exit criteria, rationale, and the scope slices saying which share of a high-level feature it takes on. The product-level WHEN of the pipeline, sitting between /product-design and /architect. Asks whether you already have an ordering in mind before drafting one, so a strategy you arrived with steers the roadmap instead of arguing with a draft, and records that strategic premise in the document. Usable from a bare description when product-design.md doesn't exist yet, and re-runnable: the document is its own resume state, so a later run proposes changes against what is already there. Reads .claude/FEATURES.md and never writes it, and carries no milestone status — that belongs to the plan, not the roadmap. Requires /domain-setup. Nothing committed by default; pass --commit to commit and push exactly what the run wrote (--commit --no-push to skip the push).
 ---
@@ -121,10 +121,17 @@ written, both sides argue against a draft instead of thinking from a blank
 page. So unless `STEER` is already settled, ask one short question and stop
 for the answer:
 
-> Do you already have an ordering in mind, or should I propose one?
+> Do you have an ordering in mind? If not, I'll propose one.
 
-Set `STEER` to `given` or `propose` from the reply. Draft nothing before it
-arrives.
+Ask it as written, in two sentences. They do different jobs: the first is the
+question, the second states the default without becoming a second thing to
+answer. Do not compress them into one either/or. A disjunction hands the
+reply two arms to mirror into answer options, and arms with different
+subjects — "*you* have an ordering" against "should *I* propose one" —
+mirror into labels whose "I" means the user in one and you in the other.
+
+Map the reply straight onto `STEER`: yes → `given`, no → `propose`. Draft
+nothing before it arrives.
 
 Skip the question — do not ask it as ceremony — when the answer is already
 in hand:

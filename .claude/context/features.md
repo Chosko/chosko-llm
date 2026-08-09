@@ -298,9 +298,13 @@ Currently shipped:
   description), any existing roadmap as its own resume state (no marker
   file, document is state), and `.claude/FEATURES.md` READ-ONLY. PHASE 0 then
   settles `STEER` in the same message as its findings summary (costs no extra
-  round trip): one question — "ordering in mind, or should I propose one?" —
+  round trip): "Do you have an ordering in mind? If not, I'll propose one." —
   because sequencing is business intent the documents can't contain, and a
-  draft written first anchors both user and skill. `given` = take milestone
+  draft written first anchors both user and skill. Two sentences, NOT an
+  either/or, and the skill says so: a disjunction gives the reply two arms to
+  mirror into answer options, and arms w/ different subjects ("you have" vs.
+  "should I propose") mirror into labels whose "I" means user in one and agent
+  in other. Reply maps straight: yes → `given`, no → `propose`. `given` = take milestone
   skeleton first, draft goals/criteria/rationale/slices from it, governed by
   `/product-design`'s contribute-don't-just-ask so branch doesn't decay into
   transcription; `propose` = original draft-first behaviour, unchanged.
