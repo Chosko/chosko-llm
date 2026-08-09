@@ -429,6 +429,15 @@ a project-level fact recorded once in that project's CLAUDE.md by
 - **Editing the managed clone (`~/.chosko-llm/`) directly.** `chosko-llm upgrade`
   will refuse to fast-forward over local changes. Always edit the working repo,
   push, then `upgrade`.
+- **Committing a new `scripts/*.sh` non-executable.** The proxy `exec`s
+  `scripts/cmd-<sub>.sh` directly, with no `bash` prefix, so a subcommand
+  tracked at `644` fails outright on any clone where `install.sh` has not
+  run. Three code paths blanket-`chmod +x "$CHOSKO_LLM_HOME"/scripts/*.sh`
+  (`install.sh`, `cmd-upgrade.sh`, `cmd-channel.sh`), which hides the mistake
+  from users but leaves the tracked mode wrong — and it then re-dirties the
+  working tree of every developer who runs the CLI against their own clone.
+  Everything under `scripts/` is `755`, sourced libraries included. Fix:
+  `git update-index --chmod=+x scripts/<file>.sh`.
 - **Telling a shipped command/skill to read a `docs/` path at runtime.**
   `docs/` is never installed to `~/.claude/`, so the executing agent has no
   such file at hand — this creates a dangling reference the moment the
