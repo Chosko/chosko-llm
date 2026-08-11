@@ -68,7 +68,7 @@ Usage:
                                       with 'chosko-llm channel master'.
 
   chosko-llm export [<repo>]          Package <repo>'s Claude config (CLAUDE.md, AGENTS.md,
-                                      README.md, curated .claude/*.md|json|toml) into one
+                                      README.md, curated .claude/*.md|json|toml|sh) into one
                                       Markdown file for a Claude Project's knowledge base.
                                       <repo> defaults to the current directory. Prints the
                                       written path on success.

@@ -104,7 +104,7 @@ It follows the same test-first sequence — write failing tests, implement, watc
 
 ### Exporting a repo's Claude config
 
-`chosko-llm export` packages a repo's Claude config — `CLAUDE.md`, `AGENTS.md`, `README.md`, and the curated Markdown/JSON/TOML subset of `.claude/` — into a single hand-off artifact, useful for sharing a repo's setup outside the working directory:
+`chosko-llm export` packages a repo's Claude config — `CLAUDE.md`, `AGENTS.md`, `README.md`, and the curated Markdown/JSON/TOML/shell subset of `.claude/` (the shell part covers hooks and the task-setup test runners, which `settings.json` and the backlog wiring reference) — into a single hand-off artifact, useful for sharing a repo's setup outside the working directory:
 
 ```sh
 chosko-llm export                 # writes ~/claude-exports/<repo>-claude-config.md

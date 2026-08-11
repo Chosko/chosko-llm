@@ -3,7 +3,7 @@
 ## Overview
 
 `scripts/cmd-export.sh` packages repo Claude config — `CLAUDE.md`,
-`AGENTS.md`, `README.md`, curated Markdown/JSON/TOML subset of
+`AGENTS.md`, `README.md`, curated Markdown/JSON/TOML/shell subset of
 `.claude/` — into single hand-off artifact. Default shape: one
 concatenated Markdown file, fit for Claude Project's knowledge base
 (ingested all at once). `--archive` writes zip instead, fit for Claude
@@ -31,7 +31,12 @@ CLI:
 
 Selection (`select_export_files <repo_dir>`, repo-relative paths on stdout):
 - Includes: `CLAUDE.md`, `AGENTS.md`, `README.md` at repo root, plus files
-  under `.claude/` matching `*.md`, `*.json`, `*.toml` (recursively).
+  under `.claude/` matching `*.md`, `*.json`, `*.toml`, `*.sh` (recursively).
+  `*.sh` is in the subset because a repo's Claude config now contains
+  executables that other *selected* files point at: `.claude/hooks/*.sh`
+  (named by `settings.json`'s `hooks` key) and `.claude/external/run-*-tests.sh`
+  (named by the task-setup wiring). Without it an export carried the
+  reference and not its target — the wiring arrived pointing at nothing.
 - Excludes: `.claude/projects/`, `.claude/history/`, `.claude/todos/`,
   `.claude/tasks/` (all pruned, not just filtered — kept off `find`
   traversal entirely so large `projects/` history or task backlog don't
