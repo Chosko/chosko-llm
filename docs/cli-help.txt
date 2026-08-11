@@ -19,7 +19,7 @@ Usage:
                                       $CLAUDE_HOME. Errors if a feature is already installed (use
                                       'update'). With multiple names, each is installed
                                       independently: a failure on one (already installed, unknown
-                                      name, statusline + --local) is logged and the rest still run;
+                                      name, wrong scope for the kind) is logged and the rest still run;
                                       exit code is 1 if any failed. e.g. 'add foo skill:bar claude-md:baz'.
   chosko-llm add --all                Install all features from the managed clone that are not yet
                                       installed. Already-installed features are skipped. Cannot be
@@ -47,6 +47,10 @@ Usage:
                                       statusline request with --local fails; '--all --local' skips
                                       statusline silently; 'ls --local' omits it entirely; 'show
                                       --local' on a statusline feature reports it as global-only.
+                                      hooks are local-only, the exact mirror: a single-feature hook
+                                      request without --local fails; '--all' in global scope skips
+                                      hooks silently; 'ls --global' omits them; 'show --global' on a
+                                      hook reports it as local-only.
 
   chosko-llm upgrade                  git pull the managed clone and refresh the CLI proxy.
                                       Does NOT re-install features — use 'update --all' for that.
@@ -88,14 +92,18 @@ Usage:
   chosko-llm help                     Show this help.
 
 Feature names:
-  Bare names (e.g. 'refactor-reviewer') match commands, skills, claude-md artifacts, and
-  statusline scripts. If a name is ambiguous, disambiguate with 'command:<name>',
-  'skill:<name>', 'claude-md:<name>', or 'statusline:<name>'.
+  Bare names (e.g. 'refactor-reviewer') match commands, skills, claude-md artifacts,
+  statusline scripts, and hooks. If a name is ambiguous, disambiguate with 'command:<name>',
+  'skill:<name>', 'claude-md:<name>', 'statusline:<name>', or 'hook:<name>'.
   claude-md artifacts inject managed sections into $CLAUDE_HOME/CLAUDE.md rather than copying
   a standalone file. Sections are delimited by HTML comments so user content is preserved.
   statusline scripts install to $CLAUDE_HOME/statusline/<name>.sh; 'add' then prints a prompt
   for a Claude Code session to wire the installed path into settings.json's "statusLine" key
   (this CLI does not edit settings.json itself).
+  hooks install to <cwd>/.claude/hooks/<name>.sh and are local-only — a hook only fires where
+  it is committed, and a cloud container clones the repo and nothing else. 'add' prints a
+  prompt to wire it into the project's settings.json (again, never edited by this CLI). Commit
+  both the script and settings.json, and restart the session: hook config is read at startup.
 
 Environment:
   CHOSKO_LLM_HOME   Path to the managed clone. Default: ~/.chosko-llm

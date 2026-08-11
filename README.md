@@ -131,11 +131,13 @@ statusline scripts are global-only — a status bar belongs to your terminal, no
 
 ### Feature names
 
-A bare name like `refactor-codebase` matches commands, skills, claude-md artifacts, and statusline scripts. If a name is ambiguous, disambiguate with `command:<name>`, `skill:<name>`, `claude-md:<name>`, or `statusline:<name>`.
+A bare name like `refactor-codebase` matches commands, skills, claude-md artifacts, statusline scripts, and hooks. If a name is ambiguous, disambiguate with `command:<name>`, `skill:<name>`, `claude-md:<name>`, `statusline:<name>`, or `hook:<name>`.
 
 claude-md artifacts are a third feature kind: rather than copying a standalone file, they inject a managed section into `~/.claude/CLAUDE.md`. The section is delimited by HTML comment markers, so your own CLAUDE.md content around it is preserved.
 
 statusline scripts are a fourth feature kind: a status-bar shell script installed to `~/.claude/statusline/<name>.sh`. Since `settings.json`'s shape isn't this repo's to own, `chosko-llm add` doesn't edit it — it prints a copy-pasteable prompt for a Claude Code session to safely merge the installed path into the top-level `"statusLine"` key.
+
+hooks are a fifth feature kind: a script Claude Code runs on a hook event, installed to `<cwd>/.claude/hooks/<name>.sh` with the same printed-prompt approach to `settings.json`. Hooks are **local-only**, the mirror of statusline's global-only rule — a hook only fires where it is committed, and a cloud container clones the repository and nothing else, so a globally wired hook could never reach the agent it governs. A single-feature hook request without `--local` fails; `add --all` / `update --all` in global scope skip the hook pass; `ls --global` omits hooks; `show --global` on a hook reports it as local-only.
 
 ## Uninstall
 
@@ -500,32 +502,40 @@ task-impl` CLI then drives a **local** LLM (aider + Ollama, e.g.
 as it goes. The offline counterpart to `/task-implement` — the backlog runs
 under Claude interactively or a local model in batch.
 
-### Survive a cloud session — `claude-md:remote-session-protocol`
+### Survive a cloud session — `hook:remote-session-protocol`
 
 In a Claude Code cloud session, a question asked with the `AskUserQuestion`
 tool can be re-asked while you're away from the keyboard, burning tokens and
-occasionally leaving two agents doing the same work. This claude-md artifact
-replaces that tool, in cloud sessions only, with a plain-text protocol: batch
-every open question into one numbered message with lettered options and a
-recommendation each, then end the turn and wait. Nothing polls, so a slow
-reply costs nothing; and because the batch is one self-contained message, a
-session picked back up later gets the questions and their answers as a whole.
+occasionally leaving two agents doing the same work. This hook denies that tool
+in cloud sessions and hands Claude a plain-text protocol instead: batch every
+open question into one numbered message with lettered options and a
+recommendation each, then end the turn and wait. Nothing polls, so a slow reply
+costs nothing; and because the batch is one self-contained message, a session
+picked back up later gets the questions and their answers as a whole.
 
 ```sh
-chosko-llm add claude-md:remote-session-protocol --local
-git add CLAUDE.md && git commit -m "Add remote session protocol"
+chosko-llm add hook:remote-session-protocol --local
+# paste the printed prompt into a Claude Code session to wire settings.json
+git add .claude/hooks .claude/settings.json && git commit -m "Add remote session protocol"
 ```
 
-**Install it `--local` and commit the result.** A cloud container clones your
-repo and nothing else — `~/.claude/CLAUDE.md` doesn't exist there, so a global
-install can never reach the agent this artifact is meant to govern. The
-project's own committed `CLAUDE.md` is the only channel that arrives.
+**Install it `--local` and commit both halves.** A cloud container clones your
+repo and nothing else, so only the project's own committed `.claude/` arrives —
+which is why hooks are local-only. `add` prints a prompt for a Claude Code
+session to merge the wiring into `.claude/settings.json`; this CLI never edits
+that file itself. Claude Code reads hook config at session start, so restart
+the session (or start a fresh cloud one) before expecting it to fire.
 
-Detection is positive-only: the protocol engages when `CLAUDE_CODE_REMOTE` is
-`true` or `CLAUDE_CODE_REMOTE_ENVIRONMENT_TYPE` is non-empty, and local
-sessions keep the normal question UI untouched. Those variable names are not a
-public API, so if they change the section quietly stops firing rather than
-misfiring locally — edit the artifact when that happens.
+Detection is positive-only, and the shell does it rather than the model: the
+hook engages when `CLAUDE_CODE_REMOTE` is `true` or
+`CLAUDE_CODE_REMOTE_ENVIRONMENT_TYPE` is non-empty, and prints nothing at all
+otherwise, so local sessions keep the normal question UI untouched. Those
+variable names are not a public API, so if they change the hook quietly stops
+firing rather than blocking the tool everywhere — edit the script when that
+happens.
+
+Because it is a hook rather than a `CLAUDE.md` section, it costs zero tokens in
+every session where it doesn't fire.
 
 ---
 

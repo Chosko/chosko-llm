@@ -13,11 +13,13 @@ case "${1:-}" in
 Usage: chosko-llm rm <feature> [--local | --global]
 
   <feature>     Remove an installed feature: <name>, command:<name>,
-                skill:<name>, claude-md:<name>, or statusline:<name>.
+                skill:<name>, claude-md:<name>, statusline:<name>, or
+                hook:<name>.
   --local       Remove from <cwd>/.claude instead of \$CLAUDE_HOME. Requires
                 <cwd>/CLAUDE.md to exist. statusline is global-only and
                 fails with --local.
-  --global      Remove from \$CLAUDE_HOME (default).
+  --global      Remove from \$CLAUDE_HOME (default). hook is local-only and
+                fails with --global.
 EOF
     exit 0
     ;;
@@ -34,6 +36,7 @@ case "$spec" in
   skill:*)      prefix=skill;      name="${spec#skill:}"      ;;
   claude-md:*)  prefix=claude-md;  name="${spec#claude-md:}"  ;;
   statusline:*) prefix=statusline; name="${spec#statusline:}" ;;
+  hook:*)       prefix=hook;       name="${spec#hook:}"       ;;
 esac
 
 # For rm we look at what's actually installed, not the source.
@@ -41,17 +44,19 @@ resolve_installed() {
   if [ -n "$prefix" ]; then
     echo "$prefix"; return
   fi
-  local has_cmd=0 has_skill=0 has_cm=0 has_sl=0
+  local has_cmd=0 has_skill=0 has_cm=0 has_sl=0 has_hook=0
   [ -f "$(inst_command_path "$name")" ] && has_cmd=1
   [ -f "$(inst_skill_path   "$name")" ] && has_skill=1
   claudemd_is_installed "$name" && has_cm=1 || true
   [ -f "$(inst_statusline_path "$name")" ] && has_sl=1
-  local total=$(( has_cmd + has_skill + has_cm + has_sl ))
-  if   [ $total -gt 1 ];    then die "Multiple installed features named '$name'. Disambiguate with 'command:$name', 'skill:$name', 'claude-md:$name', or 'statusline:$name'."
+  [ -f "$(inst_hook_path "$name")" ] && has_hook=1
+  local total=$(( has_cmd + has_skill + has_cm + has_sl + has_hook ))
+  if   [ $total -gt 1 ];    then die "Multiple installed features named '$name'. Disambiguate with 'command:$name', 'skill:$name', 'claude-md:$name', 'statusline:$name', or 'hook:$name'."
   elif [ $has_cmd -eq 1 ];  then echo command
   elif [ $has_skill -eq 1 ]; then echo skill
   elif [ $has_cm -eq 1 ];   then echo claude-md
   elif [ $has_sl -eq 1 ];   then echo statusline
+  elif [ $has_hook -eq 1 ]; then echo hook
   else die "No feature named '$name' is installed under $CLAUDE_HOME."
   fi
 }
@@ -59,7 +64,7 @@ resolve_installed() {
 kind="$(resolve_installed)"
 
 if ! scope_supports_kind "$kind"; then
-  die "statusline scripts are global-only. Re-run without --local."
+  die "$(scope_violation_message "$kind")"
 fi
 
 case "$kind" in
@@ -85,5 +90,12 @@ case "$kind" in
     rm -f "$target"
     log_success "Removed statusline '$name' ($target) (scope: $CHOSKO_LLM_SCOPE)"
     log_warn "If $CLAUDE_HOME/settings.json's \"statusLine\" key still points at $target, update or remove it."
+    ;;
+  hook)
+    target="$(inst_hook_path "$name")"
+    [ -f "$target" ] || die "hook '$name' is not installed."
+    rm -f "$target"
+    log_success "Removed hook '$name' ($target) (scope: $CHOSKO_LLM_SCOPE)"
+    log_warn "Remove this hook's entry from $(hook_settings_path) too — a wired hook pointing at a deleted script fails on every session."
     ;;
 esac

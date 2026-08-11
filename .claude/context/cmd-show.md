@@ -11,7 +11,8 @@ body or line-by-line diff. Unlike `ls`, can also inspect
 
 CLI:
 - `chosko-llm show <feature>` — `<feature>` bare name or
-  `command:<name>`, `skill:<name>`, `claude-md:<name>`, `statusline:<name>`.
+  `command:<name>`, `skill:<name>`, `claude-md:<name>`, `statusline:<name>`,
+  `hook:<name>`.
 - `--installed` — show installed copy (notes if not installed).
 - `--latest` — show latest copy from managed clone.
 - `--diff` — compare latest vs installed (summary; add `--content` for line
@@ -41,6 +42,8 @@ than one view flag, or unresolvable/ambiguous name.
   `<cwd>/CLAUDE.md` rather than `<cwd>/.claude/CLAUDE.md`. `show` never
   `die`s on a statusline feature in local scope (unlike `add`/`rm`/`update`)
   — instead the footer's tip block is replaced with a
+  "hooks are local-only" note whenever `kind = hook` and scope is global, and
+  the
   "statusline scripts are global-only" note whenever `kind = statusline`
   and `scope_is_local`, while the metadata block above still renders
   normally (naturally showing "not installed" since no local statusline

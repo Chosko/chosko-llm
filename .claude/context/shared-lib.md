@@ -53,6 +53,7 @@ STATUS and KIND columns are separate.
 - `C_MAGENTA` — `skill` kind.
 - `C_CYAN` — `claude-md` kind. (Dual-use w/ `local only` status — fine, separate columns.)
 - `C_GREEN` — `statusline` kind. (Dual-use w/ `up-to-date` status — fine, separate columns.)
+- `C_YELLOW` — `hook` kind. (Dual-use w/ `updatable` status — fine, separate columns.)
 
 *Structural*:
 - `C_BOLD` — structural emphasis (header rows, `Usage:` headings, `show` header line).
@@ -82,9 +83,15 @@ changes nothing.
 - `scope_is_local` — 0 in local scope, 1 otherwise.
 - `scope_label` — human-readable scope for log lines, e.g.
   `local (/path/to/repo/.claude)`.
-- `scope_supports_kind <kind>` — 1 for `statusline` in local scope (per-project
-  statusline scripts are out of scope — it installs an executable plus a
-  `settings.json` wiring step), 0 for every other kind/scope combination.
+- `scope_supports_kind <kind>` — 1 for the two kinds that only make sense in
+  one scope, 0 for every other kind/scope combination. Two mirrored rules:
+  `statusline` is GLOBAL-only (a status bar belongs to a terminal, not a repo);
+  `hook` is LOCAL-only (a hook must be committed to the repo it governs — a
+  cloud container clones the repo and nothing else, so a globally wired hook
+  can never fire there).
+- `scope_violation_message <kind>` — the `die` text for a kind
+  `scope_supports_kind` just rejected. Lives in `lib.sh` so `cmd-add`,
+  `cmd-rm` and `cmd-update` word both rules identically.
 - `claudemd_target_path` (task 103) — prints the CLAUDE.md file claude-md
   artifacts read/write: `$CLAUDE_HOME/CLAUDE.md` in global scope, but
   `<cwd>/CLAUDE.md` (one directory up from `$CLAUDE_HOME`, which is
@@ -108,10 +115,14 @@ Source paths in managed clone:
 - `src_skill_dir <name>`     → `$CHOSKO_LLM_HOME/skills/<name>`
 - `src_claudemd_path <name>` → `$CHOSKO_LLM_HOME/claude-md/<name>.md`
 - `src_statusline_path <name>` → `$CHOSKO_LLM_HOME/statusline/<name>.sh`
+- `src_hook_path <name>`       → `$CHOSKO_LLM_HOME/hooks/<name>.sh`
 
 Installed paths under `$CLAUDE_HOME` mirror same shape:
 - `inst_command_path <name>`, `inst_skill_path <name>`, `inst_skill_dir <name>`,
-  `inst_statusline_path <name>`.
+  `inst_statusline_path <name>`, `inst_hook_path <name>`.
+- `hook_settings_path` → `$CLAUDE_HOME/settings.json`. Hooks being local-only,
+  this is always `<cwd>/.claude/settings.json` — the file that travels with
+  the repo.
 
 Export output:
 - `export_dir_path` → `$CHOSKO_LLM_EXPORT_DIR` if set, else `$HOME/claude-exports`.
@@ -138,14 +149,32 @@ finds it while file stays directly executable.
   top-level `"statusLine"` key into `$CLAUDE_HOME/settings.json`. No
   jq/automated JSON editing — `cmd-add.sh` calls this after install instead.
 
+### hooks
+Fifth feature kind: script Claude Code runs on a hook event, copied verbatim
+to `$CLAUDE_HOME/hooks/<name>.sh` and `chmod +x`'d. Frontmatter in the same
+bash no-op heredoc statusline uses, plus `event:` (required) and `matcher:`
+(optional) — both read by `parse_frontmatter`, ignored on every other kind.
+LOCAL-ONLY kind (see `scope_supports_kind` above).
+- `require_hook_source <file>` → dies when `event:` missing. Runs alongside
+  `require_versioned_source`; a hook with no event is unwireable, so it is
+  refused rather than half-installed.
+- `print_hook_prompt <name> <src_file>` → copy-pasteable prompt telling the
+  user to have a Claude Code session merge this hook into the project's
+  `settings.json` under `hooks.<event>` (and the `matcher` entry when the
+  frontmatter names one). Wires `$CLAUDE_PROJECT_DIR/.claude/hooks/<name>.sh`,
+  NOT the absolute install path — settings.json is committed and travels to
+  other machines and to cloud containers. Same no-jq reasoning as statusline.
+  Called by `cmd-add.sh` after install, and by `cmd-update.sh` only when the
+  hook was not already installed (re-copying a script cannot re-wire JSON).
+
 ### Feature kind
 - `feature_kind <name>` → `command | skill | both | none` (checks managed clone).
 - `installed_kind <name>` → same, checks `$CLAUDE_HOME`.
 - `resolve_feature <spec>` — accepts `<name>`, `command:<name>`,
-  `skill:<name>`, `claude-md:<name>`, or `statusline:<name>`. Prints two
-  lines on stdout: `<kind>\n<name>`. Errors if feature not in managed
-  clone or bare name ambiguous (matches more than one of
-  command/skill/claude-md/statusline). Used by `cmd-add` / `cmd-update`.
+  `skill:<name>`, `claude-md:<name>`, `statusline:<name>`, or `hook:<name>`.
+  Prints two lines on stdout: `<kind>\n<name>`. Errors if feature not in
+  managed clone or bare name ambiguous (matches more than one of
+  command/skill/claude-md/statusline/hook). Used by `cmd-add` / `cmd-update`.
 
 ### Kind migration (`replaces:`)
 Install copy-based, never prunes — feature changing kind
@@ -159,7 +188,7 @@ fact rides same `git pull` as rename.
   non-zero if no recognized prefix.
 - `artifact_is_installed <kind> <name>` → 0 if installed under `$CLAUDE_HOME`.
 - `remove_installed_artifact <kind> <name>` → deletes with `cmd-rm` semantics
-  per kind (`rm -f` command/statusline, `rm -rf` skill, `remove_section`
+  per kind (`rm -f` command/statusline/hook, `rm -rf` skill, `remove_section`
   claude-md).
 - `apply_replaces <kind> <name>` → post-install hook. Reads the just-installed
   feature's `replaces:`; if named artifact installed, removes it and logs
@@ -168,7 +197,7 @@ fact rides same `git pull` as rename.
   self-replacement. Called by `cmd-add` (single-feature) and `cmd-update`
   (single-feature + `--all` migration path).
 - `find_replacement <old-kind> <old-name>` → scans managed clone
-  (commands, skills, claude-md, statusline) for feature declaring
+  (commands, skills, claude-md, statusline, hooks) for feature declaring
   `replaces: <old-kind>:<old-name>`. Prints `<kind>\n<name>` on first hit,
   returns 1 on none. Used by `cmd-update --all`'s stale-artifact branch,
   and by `cmd-ls`/`cmd-show` (task 104) to flag a `local only` row as

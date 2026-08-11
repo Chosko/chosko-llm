@@ -10,13 +10,13 @@ that, use `update`.
 
 CLI:
 - `chosko-llm add <feature> [<feature> ...]` — `<feature>` is `<name>`,
-  `command:<name>`, `skill:<name>`, `claude-md:<name>`, or
-  `statusline:<name>`. One or more space-separated specs (task 105);
+  `command:<name>`, `skill:<name>`, `claude-md:<name>`, `statusline:<name>`,
+  or `hook:<name>`. One or more space-separated specs (task 105);
   each resolved/installed independently via `add_one` (function, runs
   each name in its own subshell so an internal `die` aborts only that
   name — see Internal patterns).
 - `chosko-llm add --all` — install every feature in managed clone
-  (commands, skills, claude-md artifacts, AND statusline scripts) not
+  (commands, skills, claude-md artifacts, statusline scripts, AND hooks) not
   yet installed; already-installed skipped with info log. Dies if
   combined with any explicit feature name (checked before the `--all`
   branch runs).
@@ -40,6 +40,11 @@ Side effects:
   `inject_section` (no file copy); refuses if section already exists.
   `claudemd_target_path` is `$CLAUDE_HOME/CLAUDE.md` globally but
   `<cwd>/CLAUDE.md` in local scope (task 103).
+- Hook: copies `.sh` file to `$CLAUDE_HOME/hooks/<name>.sh` (i.e.
+  `<cwd>/.claude/hooks/` — hooks are local-only), `chmod +x`'s it, then calls
+  `print_hook_prompt` for the settings.json wiring. Validated by
+  `require_hook_source` on top of `require_versioned_source`: no `event:` in
+  frontmatter, no install.
 - Statusline: copies `.sh` file to `$CLAUDE_HOME/statusline/<name>.sh`,
   `chmod +x`'s it, then calls `print_statusline_prompt` — prints
   copy-pasteable prompt for wiring `"statusLine"` key in
@@ -47,6 +52,12 @@ Side effects:
   never reachable in local scope (see below).
 - Logs single `Installed <kind> '<name>' v<version> -> <path> (scope:
   <scope>)` line.
+
+**Scope: two mirrored kind rules.** `statusline` is global-only, `hook` is
+local-only. Single-feature path `die`s via `scope_violation_message "$kind"`,
+which words both rules; the `--all` path guards the statusline pass with
+`scope_is_local` and the hook pass with `! scope_is_local`, logging one info
+line and skipping rather than failing the run.
 
 **Scope (`--local` / `--global`, task 103).** First line after sourcing
 `lib.sh` calls `resolve_scope "$@"` then re-sets `$@` from `SCOPE_ARGS`;

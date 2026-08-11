@@ -17,7 +17,7 @@ CLI:
 
 Output: `Home: <scope_label>` line, blank line, then text table, header
 `NAME KIND INSTALLED LATEST STATUS`. `KIND` is `command`, `skill`,
-`claude-md`, or `statusline`. `STATUS` is one of `up-to-date` /
+`claude-md`, `statusline`, or `hook`. `STATUS` is one of `up-to-date` /
 `updatable` / `not installed` / `local only` / `superseded` / `migration
 pending` — the last two flag a feature mid kind-migration (task 104).
 Missing values render `—`. Installed file w/ no `version` frontmatter
@@ -32,7 +32,8 @@ No flag = `--global`, byte-identical to pre-103 behavior. `--local` repoints
 `CLAUDE_HOME` at `<cwd>/.claude` (`resolve_scope` in `lib.sh`, task 102) and
 requires `<cwd>/CLAUDE.md`. `list_all` prints `scope_label` above the table.
 In local scope, the statusline listing pass is skipped entirely (wrapped in
-`if ! scope_is_local`) — statusline is global-only. The claude-md pass reads
+`if ! scope_is_local`) — statusline is global-only. The hook pass mirrors it,
+wrapped in `if scope_is_local`, so `ls --global` omits hooks. The claude-md pass reads
 `claudemd_target_path` (task 103, in `lib.sh`) instead of a hardcoded
 `$CLAUDE_HOME/CLAUDE.md`, since local scope's claude-md target is
 `<cwd>/CLAUDE.md`, not `<cwd>/.claude/CLAUDE.md`.

@@ -5,8 +5,9 @@ the `chosko-llm` CLI can install them.
 
 ## docs/ is authoring-time-only — never a runtime source
 
-`scripts/cmd-add.sh` installs only `commands/`, `skills/`, `claude-md/`, and
-`statusline/` into `~/.claude/`. `docs/` is never copied there, and a deployed
+`scripts/cmd-add.sh` installs only `commands/`, `skills/`, `claude-md/`,
+`statusline/`, and `hooks/` into `~/.claude/` (or, in local scope, into the
+project's `.claude/`). `docs/` is never copied there, and a deployed
 command/skill runs with the user's own project as its working directory, not
 this repo — so a path like `docs/authoring-guide.md` does not exist at
 runtime for an installed feature.
@@ -43,7 +44,7 @@ description: One short sentence summarizing the feature.
 | ------------- | ------------------------------------------------------------------------ |
 | `name`        | kebab-case. MUST match the filename (without `.md`) or the skill folder. |
 | `version`     | Semantic version, e.g. `0.1.0`, `1.2.0`. Required — install will refuse without it. |
-| `type`        | `command` for `commands/*.md`, `skill` for `skills/*/SKILL.md`, `claude-md` for `claude-md/*.md`, `statusline` for `statusline/*.sh`. |
+| `type`        | `command` for `commands/*.md`, `skill` for `skills/*/SKILL.md`, `claude-md` for `claude-md/*.md`, `statusline` for `statusline/*.sh`, `hook` for `hooks/*.sh`. |
 | `description` | A single paragraph, no line breaks. For a simple feature, one short sentence is enough. A command or skill with several flags/modes may use a longer, multi-clause description that documents them — that detail is what `chosko-llm show <feature>` and (for skills) Claude Code's own skill-discovery listing surface to the user before they read the body. `chosko-llm ls` does not print `description` at all (see its `NAME KIND INSTALLED LATEST STATUS` columns), so description length never affects that table. |
 
 ### `replaces:` — the optional fifth field
@@ -69,7 +70,9 @@ replaces: command:context-build
 
 | Field      | Rules                                                                  |
 | ---------- | ---------------------------------------------------------------------- |
-| `replaces` | Optional. A kind-prefixed spec: `command:<name>`, `skill:<name>`, `claude-md:<name>`, or `statusline:<name>`. Names the artifact this feature supersedes. A feature may not name itself. |
+| `replaces` | Optional. A kind-prefixed spec: `command:<name>`, `skill:<name>`, `claude-md:<name>`, `statusline:<name>`, or `hook:<name>`. Names the artifact this feature supersedes. A feature may not name itself. |
+| `event`    | Required on `hook` features, ignored on every other kind. The Claude Code hook event the script wires into — `PreToolUse`, `SessionStart`, and so on. Install refuses a hook without it, since the wiring prompt cannot name an event it was not told. |
+| `matcher`  | Optional, `hook` only. Narrows the event to one tool (e.g. `AskUserQuestion`). Omit it for events that take no matcher. |
 
 What the CLI does with it:
 
@@ -163,6 +166,55 @@ a mismatch will break `update --all`.
    and the project avoids adding a `jq`/`python` dependency for shell-side
    brace-matching).
 
+## <a id="hook"></a>Authoring a hook
+
+1. Create `hooks/<name>.sh`, an executable bash script Claude Code runs on a
+   hook event. Frontmatter goes in the same bash no-op heredoc a statusline
+   uses, plus the two hook-only keys:
+
+   ```sh
+   #!/usr/bin/env bash
+   : <<'CHOSKO_FRONTMATTER'
+   ---
+   name: remote-session-protocol
+   version: 0.1.0
+   type: hook
+   description: One short sentence summarizing the feature.
+   event: PreToolUse
+   matcher: AskUserQuestion
+   ---
+   CHOSKO_FRONTMATTER
+   # ... the actual hook script ...
+   ```
+
+2. The filename (minus `.sh`) **must** match the `name` field, same rule as
+   every other kind.
+3. **Never use `set -euo pipefail` in a hook.** This is the one place the
+   repo-wide rule is inverted: a `PreToolUse` hook that exits 2 *blocks* the
+   tool call, so an incidental failure under `set -e` turns into a block the
+   author never intended. End every path in an explicit `exit 0` and let the
+   script's stdout carry the decision instead.
+4. A hook that declines to decide prints **nothing** and exits 0 — that is how
+   the gated branch stays a no-op rather than interfering.
+5. `chosko-llm add <name> --local` copies the script to
+   `$CLAUDE_HOME/hooks/<name>.sh` and prints a copy-pasteable prompt for a
+   Claude Code session to merge it into the project's `settings.json`. As with
+   the statusline, this repo does not edit `settings.json` itself. The wiring
+   prompt names `$CLAUDE_PROJECT_DIR/.claude/hooks/<name>.sh`, never an
+   absolute path — `settings.json` is committed and travels to other machines
+   and to cloud containers.
+
+**Hooks are local-only**, the mirror of the statusline's global-only rule: a
+hook only fires where it is committed, and a cloud container clones the
+repository and nothing else, so a hook wired into a global `settings.json`
+could never reach the agent it governs. `add`/`rm`/`update` on a single hook
+fail without `--local`; `--all` in global scope skips the hook pass; `ls
+--global` omits hooks; `show --global` reports them as local-only.
+
+Both halves must be committed — the script *and* the `settings.json` wiring —
+and Claude Code snapshots hook config at session start, so a newly wired hook
+needs a fresh session before it fires.
+
 ## Tool discipline is global — do not restate it
 
 Do **not** add a `TOOL DISCIPLINE` block to a command or skill. The
@@ -176,12 +228,13 @@ does not.
 Soft dependency: installing `claude-md:tool-usage-policy` is the recommended
 baseline for all commands and skills in this repo.
 
-The same applies to `claude-md:remote-session-protocol`: do not teach a
-command or skill how to ask questions in a cloud session, and do not have one
-call `AskUserQuestion` by name. Write approval gates the way they are written
-today — "ask the user", "stop for approval" — and let that artifact decide the
-delivery, text batch or question UI, per session. A command that hardcodes
-either one defeats it.
+The same applies to `hook:remote-session-protocol`: do not teach a command or
+skill how to ask questions in a cloud session, and do not have one call
+`AskUserQuestion` by name. Write approval gates the way they are written today
+— "ask the user", "stop for approval" — and let the hook decide the delivery,
+text batch or question UI, per session. A command that hardcodes either one
+defeats it. The hook costs nothing when it is not firing, which is the reason
+it is a hook and not a `CLAUDE.md` section.
 
 What *does* belong in a command is a constraint specific to **that** command
 — e.g. "this is the only phase that shells out", or "never use the Write tool

@@ -13,16 +13,18 @@ if [ $# -lt 1 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
 Usage: chosko-llm add <feature> [<feature> ...] [--local | --global] | --all [--local | --global]
 
   <feature>     Install a feature: <name>, command:<name>, skill:<name>,
-                claude-md:<name>, or statusline:<name>. Multiple names may be
-                given in one call; each is installed independently and a
-                failure on one (already installed, unknown name, statusline
-                + --local) does not stop the rest.
+                claude-md:<name>, statusline:<name>, or hook:<name>. Multiple
+                names may be given in one call; each is installed
+                independently and a failure on one (already installed,
+                unknown name, wrong scope for the kind) does not stop the rest.
   --all         Install every feature not yet installed. Cannot be combined
                 with explicit feature names.
   --local       Install into <cwd>/.claude instead of \$CLAUDE_HOME. Requires
                 <cwd>/CLAUDE.md to exist. statusline is global-only: a
                 single-feature statusline request fails; --all skips it.
-  --global      Install into \$CLAUDE_HOME (default).
+  --global      Install into \$CLAUDE_HOME (default). hook is local-only, the
+                mirror rule: a single-feature hook request fails; --all skips
+                it.
 EOF
     exit 0
   fi
@@ -124,6 +126,34 @@ if [ "$1" = "--all" ]; then
       any=1
     done
   fi
+  if ! scope_is_local; then
+    log_info "Skipping hook features — local-only, not supported with --global."
+  elif [ -d "$CHOSKO_LLM_HOME/hooks" ]; then
+    for f in "$CHOSKO_LLM_HOME"/hooks/*.sh; do
+      [ -e "$f" ] || continue
+      base="$(basename "$f" .sh)"
+      dst="$(inst_hook_path "$base")"
+      if [ -e "$dst" ]; then
+        log_info "Already installed: hook '$base' — skipping"
+        continue
+      fi
+      version="$(read_frontmatter_field "$f" version || true)"
+      if [ -z "$version" ]; then
+        log_warn "Skipping hook '$base': missing version in frontmatter"
+        continue
+      fi
+      if [ -z "$(read_frontmatter_field "$f" event || true)" ]; then
+        log_warn "Skipping hook '$base': missing event in frontmatter"
+        continue
+      fi
+      mkdir -p "$(dirname "$dst")"
+      cp "$f" "$dst"
+      chmod +x "$dst"
+      log_success "Installed hook '$base' v$version -> $dst (scope: $CHOSKO_LLM_SCOPE)"
+      print_hook_prompt "$base" "$f"
+      any=1
+    done
+  fi
   [ $any -eq 1 ] || log_info "Nothing to install — all features already installed."
   exit 0
 fi
@@ -142,7 +172,7 @@ add_one() {
     [ -n "$kind" ] && [ -n "$name" ] || exit 1
 
     if ! scope_supports_kind "$kind"; then
-      die "statusline scripts are global-only. Re-run without --local."
+      die "$(scope_violation_message "$kind")"
     fi
 
     case "$kind" in
@@ -194,6 +224,21 @@ add_one() {
         version="$(read_frontmatter_field "$src" version)"
         log_success "Installed statusline '$name' v$version -> $dst (scope: $CHOSKO_LLM_SCOPE)"
         print_statusline_prompt "$name" "$dst"
+        ;;
+      hook)
+        src="$(src_hook_path "$name")"
+        dst="$(inst_hook_path "$name")"
+        require_versioned_source "$src"
+        require_hook_source "$src"
+        if [ -e "$dst" ]; then
+          die "hook '$name' is already installed at $dst. Use 'chosko-llm update $name --local' to refresh."
+        fi
+        mkdir -p "$(dirname "$dst")"
+        cp "$src" "$dst"
+        chmod +x "$dst"
+        version="$(read_frontmatter_field "$src" version)"
+        log_success "Installed hook '$name' v$version -> $dst (scope: $CHOSKO_LLM_SCOPE)"
+        print_hook_prompt "$name" "$src"
         ;;
     esac
 
