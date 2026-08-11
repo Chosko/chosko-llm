@@ -2,8 +2,8 @@
 
 `chosko-llm` is a personal, git-backed workbench for Claude Code
 configuration. It is two halves of one product: a small CLI that installs
-commands, skills, CLAUDE.md snippets, and statuslines into `~/.claude/` on
-any machine, and an authoring environment — domain docs, a navigation
+commands, skills, CLAUDE.md snippets, statuslines, and hooks into
+`~/.claude/` — or into a single repository — on any machine, and an authoring environment — domain docs, a navigation
 context layer, a task backlog, and a frontmatter contract — that makes
 those features reliable to design, plan, implement, and maintain. The
 distribution half answers "how does my config reach this machine"; the
@@ -147,8 +147,11 @@ inspects one feature — versions, status, description, body, or a diff
 against the installed copy. `add`, `rm`, and `update` move features across,
 one at a time or with `--all`. The default target is `~/.claude/`;
 `--local` installs into the current repository instead, for agents that
-cannot run `install.sh` themselves. All four artifact kinds — commands,
-skills, CLAUDE.md snippets, statuslines — use the same verbs. Serves every
+cannot run `install.sh` themselves. All five artifact kinds — commands,
+skills, CLAUDE.md snippets, statuslines, hooks — use the same verbs. Two of
+them are scope-bound in opposite directions: a statusline belongs to a
+terminal and is global-only; a hook only fires where it is committed and is
+local-only. Serves every
 user; completes the zero-to-configured flow and is the whole of the
 `--local` deploy flow. Copies placed with `--local` can drift, as recorded
 under design decisions above.

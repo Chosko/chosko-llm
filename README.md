@@ -577,8 +577,9 @@ Every feature requires YAML frontmatter (`name`, `version`, `type`, `description
 | `skills/<name>/SKILL.md`     | A Claude Code skill. Frontmatter required.                               |
 | `claude-md/<name>.md`        | A CLAUDE.md snippet feature, merged into the user's CLAUDE.md.           |
 | `statusline/<name>.sh`       | A status-line script feature, installed to `~/.claude/statusline/`.      |
+| `hooks/<name>.sh`            | A hook-event script feature, installed to a project's `.claude/hooks/` (local-only). |
 | `.claude/context/`           | Navigation context layer (`INDEX.md` + per-source files) for this repo.  |
 | `.claude/domain/`            | Domain workflow docs (task, context, refactor) referenced by `CLAUDE.md`. |
 | `.claude/TASKS.md` / `.claude/tasks/` | This repo's own task backlog and per-task body files.           |
-| `docs/authoring-guide.md`    | How to write a new command or skill.                                     |
+| `docs/authoring-guide.md`    | How to write a new feature of any kind.                                  |
 | `docs/cli-help.txt`          | Help text rendered by `chosko-llm help`.                                 |

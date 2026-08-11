@@ -51,7 +51,7 @@ than one view flag, or unresolvable/ambiguous name.
 - **Own resolver, not `lib.sh::resolve_feature`.** `resolve_show_feature`
   matches feature existing in EITHER managed clone OR `$CLAUDE_HOME`,
   so local-only installs inspectable. Keep its `command:`/`skill:`/
-  `claude-md:`/`statusline:` prefix parsing and 4-way ambiguity in sync with
+  `claude-md:`/`statusline:`/`hook:` prefix parsing and 5-way ambiguity in sync with
   resolvers in `lib.sh` and `cmd-rm.sh`.
 - **Status vocabulary mirrors `cmd-ls`** exactly: `up-to-date` / `updatable`
   / `not installed` / `local only` / `superseded` / `migration pending`,

@@ -27,7 +27,7 @@ CLI is proxy: `~/bin/chosko-llm` parses subcommand, execs `~/.chosko-llm/scripts
 
 ## Hard rules
 
-- Every command (`commands/<name>.md`) and skill (`skills/<name>/SKILL.md`) needs YAML frontmatter: `name`, `version`, `type`, `description`. Files missing `version` rejected by `cmd-add` / `cmd-update`.
+- Every feature — command (`commands/<name>.md`), skill (`skills/<name>/SKILL.md`), claude-md (`claude-md/<name>.md`), statusline (`statusline/<name>.sh`), hook (`hooks/<name>.sh`) — needs YAML frontmatter: `name`, `version`, `type`, `description`. Files missing `version` rejected by `cmd-add` / `cmd-update`. Hooks additionally need `event:` (and may carry `matcher:`); `.sh` kinds keep their frontmatter in a bash no-op heredoc after the shebang.
 - Filesystem = source of truth. No lockfile. `ls --installed` walks `~/.claude/`; `ls --available` walks `~/.chosko-llm/`.
 - Install mode: **copy**, never symlink. Edits in working repo don't reach `~/.claude/` until user runs `chosko-llm update`.
 - All scripts honor `CHOSKO_LLM_HOME` and `CLAUDE_HOME`. Don't hardcode `~/.chosko-llm` or `~/.claude` in new code — use helpers in `scripts/lib.sh`.
@@ -47,7 +47,7 @@ No test suite by design. Ships markdown prompts + thin shell wrappers; changes v
 
 ## When asked to add new feature
 
-1. Decide command vs. skill. Commands = single `.md` files; skills = folders with `SKILL.md` + optional supporting files.
+1. Decide the kind. Commands = single `.md` files; skills = folders with `SKILL.md` + optional supporting files; claude-md = a section injected into a CLAUDE.md; statusline = a status-bar `.sh` (global-only); hook = a `.sh` Claude Code runs on a hook event (local-only — it must be committed to the repo it governs).
 2. Create file (or folder + `SKILL.md`) under `commands/` or `skills/` with full frontmatter. `name` MUST match filename/folder name (kebab-case).
 3. Start new features at `version: 0.1.0`. See authoring guide for bump rules.
 4. Tell user working-repo verification path: `cd` into clone where `install.sh` already ran, then `./bin/chosko-llm ls --available` should list new feature w/ correct version.
