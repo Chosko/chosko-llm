@@ -158,6 +158,11 @@ LOCAL-ONLY kind (see `scope_supports_kind` above).
 - `require_hook_source <file>` → dies when `event:` missing. Runs alongside
   `require_versioned_source`; a hook with no event is unwireable, so it is
   refused rather than half-installed.
+- `hook_wiring_label <event> <matcher>` → names the settings.json slot a hook
+  occupies: `hooks.PreToolUse[matcher=AskUserQuestion]`, or `hooks.<event>`
+  when the feature declares no matcher. Used by `cmd-update` to name the OLD
+  slot when an update moves a hook, since settings.json carries no version of
+  its own and the stale entry has to be removed by hand.
 - `print_hook_prompt <name> <src_file>` → copy-pasteable prompt telling the
   user to have a Claude Code session merge this hook into the project's
   `settings.json` under `hooks.<event>` (and the `matcher` entry when the

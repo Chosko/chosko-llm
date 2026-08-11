@@ -38,9 +38,13 @@ Exit codes:
 Side effects:
 - Single feature: delete existing target (`rm -f` for command/statusline/hook,
   `rm -rf` for skill), copy fresh (`chmod +x` for statusline and hook);
-  a hook prints its settings.json wiring prompt only when it was NOT already
-  installed — re-copying a script cannot re-wire JSON, and an update leaves
-  existing wiring valid;
+  a hook prints its settings.json wiring prompt when it was NOT already
+  installed, and ALSO when its `event:` / `matcher:` changed — re-copying a
+  script cannot re-wire JSON, so a body-only change stays quiet but a moved
+  hook would otherwise fire on the wrong tool or not at all. The installed
+  copy's own frontmatter is read BEFORE the overwrite; it is the only record
+  of what was merged into settings.json, which has no version. The warning
+  names both slots via `hook_wiring_label`;
   claude-md re-inject via `inject_section` into `claudemd_target_path`.
   Then `apply_replaces` — if source frontmatter carries
   `replaces: <kind>:<name>` and that artifact installed, remove it, log

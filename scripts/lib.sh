@@ -357,6 +357,20 @@ To activate '$name', open a Claude Code session and paste this prompt:
 EOF
 }
 
+# hook_wiring_label <event> <matcher>
+# Human-readable name for the settings.json slot a hook occupies, e.g.
+# "hooks.PreToolUse[matcher=AskUserQuestion]" or "hooks.SessionStart" when the
+# feature declares no matcher. Used to name the OLD slot when an update moves
+# a hook, since that entry has to be removed by hand.
+hook_wiring_label() {
+  local event="$1" matcher="$2"
+  if [ -n "$matcher" ]; then
+    printf 'hooks.%s[matcher=%s]' "$event" "$matcher"
+  else
+    printf 'hooks.%s' "$event"
+  fi
+}
+
 # print_hook_prompt <name> <src_file>
 # Prints a copy-pasteable prompt for a Claude Code session to safely merge this
 # hook into the project's settings.json. Same reasoning as the statusline

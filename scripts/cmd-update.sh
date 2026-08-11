@@ -96,16 +96,35 @@ update_one() {
       [ -f "$src" ] || die "No source for hook '$name' at $src"
       require_versioned_source "$src"
       require_hook_source "$src"
-      local was_installed=0
-      [ -f "$dst" ] && was_installed=1
+      # Read the wiring the INSTALLED copy declares BEFORE overwriting it. That
+      # copy is the only record of what was actually merged into settings.json,
+      # which carries no version of its own.
+      local was_installed=0 old_event="" old_matcher=""
+      if [ -f "$dst" ]; then
+        was_installed=1
+        old_event="$(read_frontmatter_field "$dst" event || true)"
+        old_matcher="$(read_frontmatter_field "$dst" matcher || true)"
+      fi
       mkdir -p "$(dirname "$dst")"
       [ -f "$dst" ] && rm -f "$dst"
       cp "$src" "$dst"
       chmod +x "$dst"
       log_success "Updated hook '$name' -> v$(read_frontmatter_field "$src" version) (scope: $CHOSKO_LLM_SCOPE)"
-      # Re-copying the script cannot re-wire settings.json, so only a fresh
-      # install needs the prompt; an update leaves existing wiring valid.
-      [ $was_installed -eq 1 ] || print_hook_prompt "$name" "$src"
+      # Re-copying a script cannot re-wire settings.json. A body-only change
+      # leaves the existing wiring valid and stays quiet; a changed event or
+      # matcher invalidates it, and the stale entry would leave the hook firing
+      # on the wrong tool or not at all — so name the old slot and re-prompt.
+      if [ $was_installed -eq 0 ]; then
+        print_hook_prompt "$name" "$src"
+      else
+        local new_event new_matcher
+        new_event="$(read_frontmatter_field "$src" event || true)"
+        new_matcher="$(read_frontmatter_field "$src" matcher || true)"
+        if [ "$old_event" != "$new_event" ] || [ "$old_matcher" != "$new_matcher" ]; then
+          log_warn "hook '$name' moved its wiring: $(hook_wiring_label "$old_event" "$old_matcher") -> $(hook_wiring_label "$new_event" "$new_matcher"). Remove the old entry from $(hook_settings_path), then apply the prompt below."
+          print_hook_prompt "$name" "$src"
+        fi
+      fi
       ;;
     *) die "Unknown kind: $kind" ;;
   esac

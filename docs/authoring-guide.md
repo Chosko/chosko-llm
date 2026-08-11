@@ -1,7 +1,8 @@
 # Authoring guide
 
-This guide covers how to write new **commands** and **skills** in this repo so
-the `chosko-llm` CLI can install them.
+This guide covers how to write new features of any kind — **commands**,
+**skills**, **claude-md** artifacts, **statuslines**, and **hooks** — in this
+repo so the `chosko-llm` CLI can install them.
 
 ## docs/ is authoring-time-only — never a runtime source
 
@@ -26,14 +27,16 @@ section for the one-line pointer back to this note.
 
 ## Frontmatter schema
 
-Every feature file starts with a YAML frontmatter block. All four fields are
-required.
+Every feature file starts with a YAML frontmatter block. All four fields below
+are required on every kind; hooks add `event:` (see the `replaces:` section for
+that table). For the two `.sh` kinds the block lives in a bash no-op heredoc
+rather than at the top of the file — see the statusline and hook sections.
 
 ```markdown
 ---
 name: refactor-reviewer
 version: 1.2.0
-type: command            # or: skill
+type: command            # or: skill | claude-md | statusline | hook
 description: One short sentence summarizing the feature.
 ---
 
@@ -214,6 +217,14 @@ fail without `--local`; `--all` in global scope skips the hook pass; `ls
 Both halves must be committed — the script *and* the `settings.json` wiring —
 and Claude Code snapshots hook config at session start, so a newly wired hook
 needs a fresh session before it fires.
+
+**Changing `event:` or `matcher:` in a released hook moves its wiring.** The
+script is versioned; `settings.json` is not. `chosko-llm update` compares the
+installed copy's frontmatter against the new source, and when either key moved
+it warns, names the old slot to delete, and re-prints the wiring prompt. A
+body-only change stays silent. Treat such a move as at least a **minor** bump,
+and expect every user of the hook to edit their `settings.json` — the update
+cannot do it for them.
 
 ## Tool discipline is global — do not restate it
 
