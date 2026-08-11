@@ -18,6 +18,10 @@
           {
             "type": "command",
             "command": "printf 'PROBE-PRETOOLUSE %s remote=%s\\n' \"$(date -u +%FT%TZ)\" \"${CLAUDE_CODE_REMOTE:-unset}\" >> /tmp/hook-probe.log 2>/dev/null; exit 0"
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/ask-gate.sh\""
           }
         ]
       }
