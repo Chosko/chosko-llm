@@ -176,6 +176,13 @@ does not.
 Soft dependency: installing `claude-md:tool-usage-policy` is the recommended
 baseline for all commands and skills in this repo.
 
+The same applies to `claude-md:remote-session-protocol`: do not teach a
+command or skill how to ask questions in a cloud session, and do not have one
+call `AskUserQuestion` by name. Write approval gates the way they are written
+today — "ask the user", "stop for approval" — and let that artifact decide the
+delivery, text batch or question UI, per session. A command that hardcodes
+either one defeats it.
+
 What *does* belong in a command is a constraint specific to **that** command
 — e.g. "this is the only phase that shells out", or "never use the Write tool
 on an existing body file". Put such a line in the section it governs, not in

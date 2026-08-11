@@ -500,6 +500,33 @@ task-impl` CLI then drives a **local** LLM (aider + Ollama, e.g.
 as it goes. The offline counterpart to `/task-implement` — the backlog runs
 under Claude interactively or a local model in batch.
 
+### Survive a cloud session — `claude-md:remote-session-protocol`
+
+In a Claude Code cloud session, a question asked with the `AskUserQuestion`
+tool can be re-asked while you're away from the keyboard, burning tokens and
+occasionally leaving two agents doing the same work. This claude-md artifact
+replaces that tool, in cloud sessions only, with a plain-text protocol: batch
+every open question into one numbered message with lettered options and a
+recommendation each, then end the turn and wait. Nothing polls, so a slow
+reply costs nothing; and because the batch is one self-contained message, a
+session picked back up later gets the questions and their answers as a whole.
+
+```sh
+chosko-llm add claude-md:remote-session-protocol --local
+git add CLAUDE.md && git commit -m "Add remote session protocol"
+```
+
+**Install it `--local` and commit the result.** A cloud container clones your
+repo and nothing else — `~/.claude/CLAUDE.md` doesn't exist there, so a global
+install can never reach the agent this artifact is meant to govern. The
+project's own committed `CLAUDE.md` is the only channel that arrives.
+
+Detection is positive-only: the protocol engages when `CLAUDE_CODE_REMOTE` is
+`true` or `CLAUDE_CODE_REMOTE_ENVIRONMENT_TYPE` is non-empty, and local
+sessions keep the normal question UI untouched. Those variable names are not a
+public API, so if they change the section quietly stops firing rather than
+misfiring locally — edit the artifact when that happens.
+
 ---
 
 ## Development

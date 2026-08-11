@@ -351,6 +351,20 @@ Currently shipped:
 - `claude-md/tool-usage-policy.md` — claude-md artifact: global tool-usage
   guidance injected into `$CLAUDE_HOME/CLAUDE.md`. Installed/updated/removed
   via `claude-md:` kind, not as copied file.
+- `claude-md/remote-session-protocol.md` — claude-md artifact: in a confirmed
+  remote cloud session, replaces `AskUserQuestion` with one numbered text
+  batch (options + recommendation per question) and an immediate end of turn,
+  so a slow reply can't drive a re-ask loop. Gate is **positive-only**:
+  `CLAUDE_CODE_REMOTE=true` or non-empty
+  `CLAUDE_CODE_REMOTE_ENVIRONMENT_TYPE`; anything else — unset, empty, failed
+  check — is an ordinary local session where `AskUserQuestion` stays allowed.
+  False negatives are the accepted failure direction (renamed variable ⇒
+  section stops firing ⇒ retune it), deliberately not "when in doubt, assume
+  remote". Unlike `tool-usage-policy`, its useful scope is **local**
+  (`add claude-md:remote-session-protocol --local`) and the edited
+  `<cwd>/CLAUDE.md` must be committed: `$CLAUDE_HOME/CLAUDE.md` does not exist
+  inside the cloud container, so a global install can never reach the agent
+  the artifact governs.
 - `statusline/session-statusline.sh` — statusline artifact: model · cwd ·
   git branch · context% · cost · 5h/7d rate limits. Installed/updated/removed
   via `statusline:` kind; `chosko-llm add` prints settings.json
