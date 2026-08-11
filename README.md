@@ -104,7 +104,7 @@ It follows the same test-first sequence — write failing tests, implement, watc
 
 ### Exporting a repo's Claude config
 
-`chosko-llm export` packages a repo's Claude config — `CLAUDE.md`, `AGENTS.md`, `README.md`, and the curated Markdown/JSON/TOML subset of `.claude/` — into a single hand-off artifact, useful for sharing a repo's setup outside the working directory:
+`chosko-llm export` packages a repo's Claude config — `CLAUDE.md`, `AGENTS.md`, `README.md`, and the curated Markdown/JSON/TOML/shell subset of `.claude/` (the shell part covers hooks and the task-setup test runners, which `settings.json` and the backlog wiring reference) — into a single hand-off artifact, useful for sharing a repo's setup outside the working directory:
 
 ```sh
 chosko-llm export                 # writes ~/claude-exports/<repo>-claude-config.md
@@ -131,11 +131,13 @@ statusline scripts are global-only — a status bar belongs to your terminal, no
 
 ### Feature names
 
-A bare name like `refactor-codebase` matches commands, skills, claude-md artifacts, and statusline scripts. If a name is ambiguous, disambiguate with `command:<name>`, `skill:<name>`, `claude-md:<name>`, or `statusline:<name>`.
+A bare name like `refactor-codebase` matches commands, skills, claude-md artifacts, statusline scripts, and hooks. If a name is ambiguous, disambiguate with `command:<name>`, `skill:<name>`, `claude-md:<name>`, `statusline:<name>`, or `hook:<name>`.
 
 claude-md artifacts are a third feature kind: rather than copying a standalone file, they inject a managed section into `~/.claude/CLAUDE.md`. The section is delimited by HTML comment markers, so your own CLAUDE.md content around it is preserved.
 
 statusline scripts are a fourth feature kind: a status-bar shell script installed to `~/.claude/statusline/<name>.sh`. Since `settings.json`'s shape isn't this repo's to own, `chosko-llm add` doesn't edit it — it prints a copy-pasteable prompt for a Claude Code session to safely merge the installed path into the top-level `"statusLine"` key.
+
+hooks are a fifth feature kind: a script Claude Code runs on a hook event, installed to `<cwd>/.claude/hooks/<name>.sh` with the same printed-prompt approach to `settings.json`. Hooks are **local-only**, the mirror of statusline's global-only rule — a hook only fires where it is committed, and a cloud container clones the repository and nothing else, so a globally wired hook could never reach the agent it governs. A single-feature hook request without `--local` fails; `add --all` / `update --all` in global scope skip the hook pass; `ls --global` omits hooks; `show --global` on a hook reports it as local-only.
 
 ## Uninstall
 
@@ -500,6 +502,41 @@ task-impl` CLI then drives a **local** LLM (aider + Ollama, e.g.
 as it goes. The offline counterpart to `/task-implement` — the backlog runs
 under Claude interactively or a local model in batch.
 
+### Survive a cloud session — `hook:remote-session-protocol`
+
+In a Claude Code cloud session, a question asked with the `AskUserQuestion`
+tool can be re-asked while you're away from the keyboard, burning tokens and
+occasionally leaving two agents doing the same work. This hook denies that tool
+in cloud sessions and hands Claude a plain-text protocol instead: batch every
+open question into one numbered message with lettered options and a
+recommendation each, then end the turn and wait. Nothing polls, so a slow reply
+costs nothing; and because the batch is one self-contained message, a session
+picked back up later gets the questions and their answers as a whole.
+
+```sh
+chosko-llm add hook:remote-session-protocol --local
+# paste the printed prompt into a Claude Code session to wire settings.json
+git add .claude/hooks .claude/settings.json && git commit -m "Add remote session protocol"
+```
+
+**Install it `--local` and commit both halves.** A cloud container clones your
+repo and nothing else, so only the project's own committed `.claude/` arrives —
+which is why hooks are local-only. `add` prints a prompt for a Claude Code
+session to merge the wiring into `.claude/settings.json`; this CLI never edits
+that file itself. Claude Code reads hook config at session start, so restart
+the session (or start a fresh cloud one) before expecting it to fire.
+
+Detection is positive-only, and the shell does it rather than the model: the
+hook engages when `CLAUDE_CODE_REMOTE` is `true` or
+`CLAUDE_CODE_REMOTE_ENVIRONMENT_TYPE` is non-empty, and prints nothing at all
+otherwise, so local sessions keep the normal question UI untouched. Those
+variable names are not a public API, so if they change the hook quietly stops
+firing rather than blocking the tool everywhere — edit the script when that
+happens.
+
+Because it is a hook rather than a `CLAUDE.md` section, it costs zero tokens in
+every session where it doesn't fire.
+
 ---
 
 ## Development
@@ -540,8 +577,9 @@ Every feature requires YAML frontmatter (`name`, `version`, `type`, `description
 | `skills/<name>/SKILL.md`     | A Claude Code skill. Frontmatter required.                               |
 | `claude-md/<name>.md`        | A CLAUDE.md snippet feature, merged into the user's CLAUDE.md.           |
 | `statusline/<name>.sh`       | A status-line script feature, installed to `~/.claude/statusline/`.      |
+| `hooks/<name>.sh`            | A hook-event script feature, installed to a project's `.claude/hooks/` (local-only). |
 | `.claude/context/`           | Navigation context layer (`INDEX.md` + per-source files) for this repo.  |
 | `.claude/domain/`            | Domain workflow docs (task, context, refactor) referenced by `CLAUDE.md`. |
 | `.claude/TASKS.md` / `.claude/tasks/` | This repo's own task backlog and per-task body files.           |
-| `docs/authoring-guide.md`    | How to write a new command or skill.                                     |
+| `docs/authoring-guide.md`    | How to write a new feature of any kind.                                  |
 | `docs/cli-help.txt`          | Help text rendered by `chosko-llm help`.                                 |

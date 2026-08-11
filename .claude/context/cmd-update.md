@@ -19,7 +19,9 @@ CLI:
   `add_one`, see Internal patterns); install if missing.
 - `chosko-llm update --all` — iterate installed commands
   (`$CLAUDE_HOME/commands/*.md`), skills (`$CLAUDE_HOME/skills/*/`),
-  claude-md sections (markers in `claudemd_target_path`), statusline
+  claude-md sections (markers in `claudemd_target_path`), hooks
+  (`$CLAUDE_HOME/hooks/*.sh`, skipped entirely in GLOBAL scope — the mirror
+  rule), statusline
   scripts (`$CLAUDE_HOME/statusline/*.sh`, skipped entirely in local
   scope), update only those whose managed-clone source version **newer**
   than installed. Dies if combined with any explicit feature name.
@@ -34,8 +36,15 @@ Exit codes:
   (through `die` inside the per-name subshell) and the run continues.
 
 Side effects:
-- Single feature: delete existing target (`rm -f` for command/statusline,
-  `rm -rf` for skill), copy fresh (`chmod +x` for statusline);
+- Single feature: delete existing target (`rm -f` for command/statusline/hook,
+  `rm -rf` for skill), copy fresh (`chmod +x` for statusline and hook);
+  a hook prints its settings.json wiring prompt when it was NOT already
+  installed, and ALSO when its `event:` / `matcher:` changed — re-copying a
+  script cannot re-wire JSON, so a body-only change stays quiet but a moved
+  hook would otherwise fire on the wrong tool or not at all. The installed
+  copy's own frontmatter is read BEFORE the overwrite; it is the only record
+  of what was merged into settings.json, which has no version. The warning
+  names both slots via `hook_wiring_label`;
   claude-md re-inject via `inject_section` into `claudemd_target_path`.
   Then `apply_replaces` — if source frontmatter carries
   `replaces: <kind>:<name>` and that artifact installed, remove it, log

@@ -115,21 +115,45 @@ scope_label() {
 }
 
 # scope_supports_kind <kind>
-# Returns 1 for kind "statusline" in local scope (per-project statusline
-# scripts are out of scope); 0 for every other kind/scope combination.
+# Returns 1 for the two kinds that only make sense in one scope; 0 for every
+# other kind/scope combination. The two rules are mirror images:
+#   statusline is GLOBAL-only — a status bar belongs to a terminal, not a repo.
+#   hook is LOCAL-only — a hook has to reach the agent it governs, and a cloud
+#     container clones the repository and nothing else, so a hook wired into a
+#     global settings.json can never fire there. Only a project's own committed
+#     .claude/ travels.
 scope_supports_kind() {
   local kind="$1"
   if scope_is_local && [ "$kind" = statusline ]; then
     return 1
   fi
+  if ! scope_is_local && [ "$kind" = hook ]; then
+    return 1
+  fi
   return 0
+}
+
+# scope_violation_message <kind>
+# The die message for a kind scope_supports_kind just rejected. Lives here so
+# add / rm / update word the two mirrored rules identically.
+scope_violation_message() {
+  case "$1" in
+    statusline) printf 'statusline scripts are global-only. Re-run without --local.' ;;
+    hook)       printf 'hooks are local-only — a hook only fires if it is committed to the repository it governs. Re-run with --local from the project root.' ;;
+    *)          printf '%s is not supported in %s scope.' "$1" "$CHOSKO_LLM_SCOPE" ;;
+  esac
 }
 
 # ---------- frontmatter ----------
 
 # parse_frontmatter <file>
-# Emits key=value lines for: name, version, type, description, replaces.
+# Emits key=value lines for: name, version, type, description, replaces,
+# event, matcher.
 # `replaces` is optional — see the kind-migration section below.
+# `event` and `matcher` are read for the hook kind only: `event` names the
+# Claude Code hook event to wire the script into (PreToolUse, SessionStart, …)
+# and `matcher` optionally narrows it to one tool. Both are ignored on every
+# other kind.
 # Reads only the first YAML frontmatter block delimited by --- ... ---.
 # Quietly ignores keys it doesn't care about.
 parse_frontmatter() {
@@ -155,7 +179,7 @@ parse_frontmatter() {
       if (val ~ /^".*"$/ || val ~ /^'\''.*'\''$/) {
         val = substr(val, 2, length(val) - 2)
       }
-      if (key == "name" || key == "version" || key == "type" || key == "description" || key == "replaces") {
+      if (key == "name" || key == "version" || key == "type" || key == "description" || key == "replaces" || key == "event" || key == "matcher") {
         print key "=" val
       }
     }
@@ -177,12 +201,19 @@ src_skill_path()    { printf '%s/skills/%s/SKILL.md' "$CHOSKO_LLM_HOME" "$1"; }
 src_skill_dir()     { printf '%s/skills/%s' "$CHOSKO_LLM_HOME" "$1"; }
 src_claudemd_path() { printf '%s/claude-md/%s.md' "$CHOSKO_LLM_HOME" "$1"; }
 src_statusline_path() { printf '%s/statusline/%s.sh' "$CHOSKO_LLM_HOME" "$1"; }
+src_hook_path()       { printf '%s/hooks/%s.sh' "$CHOSKO_LLM_HOME" "$1"; }
 
 # Installed paths under CLAUDE_HOME.
 inst_command_path() { printf '%s/commands/%s.md' "$CLAUDE_HOME" "$1"; }
 inst_skill_path()   { printf '%s/skills/%s/SKILL.md' "$CLAUDE_HOME" "$1"; }
 inst_skill_dir()    { printf '%s/skills/%s' "$CLAUDE_HOME" "$1"; }
 inst_statusline_path() { printf '%s/statusline/%s.sh' "$CLAUDE_HOME" "$1"; }
+inst_hook_path()       { printf '%s/hooks/%s.sh' "$CLAUDE_HOME" "$1"; }
+
+# hook_settings_path
+# The settings.json a hook's wiring belongs in. Hooks are local-only, so this
+# is always <cwd>/.claude/settings.json — the file that travels with the repo.
+hook_settings_path() { printf '%s/settings.json' "$CLAUDE_HOME"; }
 
 # export_dir_path
 # Prints the directory `chosko-llm export` writes into: $CHOSKO_LLM_EXPORT_DIR
@@ -326,6 +357,56 @@ To activate '$name', open a Claude Code session and paste this prompt:
 EOF
 }
 
+# hook_wiring_label <event> <matcher>
+# Human-readable name for the settings.json slot a hook occupies, e.g.
+# "hooks.PreToolUse[matcher=AskUserQuestion]" or "hooks.SessionStart" when the
+# feature declares no matcher. Used to name the OLD slot when an update moves
+# a hook, since that entry has to be removed by hand.
+hook_wiring_label() {
+  local event="$1" matcher="$2"
+  if [ -n "$matcher" ]; then
+    printf 'hooks.%s[matcher=%s]' "$event" "$matcher"
+  else
+    printf 'hooks.%s' "$event"
+  fi
+}
+
+# print_hook_prompt <name> <src_file>
+# Prints a copy-pasteable prompt for a Claude Code session to safely merge this
+# hook into the project's settings.json. Same reasoning as the statusline
+# prompt: settings.json's shape isn't ours to own, and merging into a nested
+# array of existing hooks is exactly the job we refuse to do in awk.
+#
+# The wired command deliberately uses $CLAUDE_PROJECT_DIR rather than the
+# absolute install path — settings.json is committed and travels to other
+# machines and to cloud containers, where an absolute local path would be wrong.
+print_hook_prompt() {
+  local name="$1" src_file="$2" event matcher settings entry
+  event="$(read_frontmatter_field "$src_file" event || true)"
+  matcher="$(read_frontmatter_field "$src_file" matcher || true)"
+  settings="$(hook_settings_path)"
+
+  if [ -n "$matcher" ]; then
+    entry="the {\"matcher\":\"$matcher\"} entry of the hooks.$event array"
+  else
+    entry="a matcher-less entry of the hooks.$event array"
+  fi
+
+  cat <<EOF
+
+To activate '$name', open a Claude Code session in this project and paste this prompt:
+
+  Update $settings: add
+  {"type":"command","command":"\$CLAUDE_PROJECT_DIR/.claude/hooks/$name.sh"}
+  to $entry, creating "hooks", the "$event" array, or that entry if any of them
+  are absent. Preserve every other key in the file and every hook already wired.
+
+Then commit both $settings and the script: hooks are read from the
+repository, so an uncommitted hook never reaches a cloud session. Claude Code
+snapshots hook config at session start — restart the session to pick it up.
+EOF
+}
+
 # feature_kind <name> -> command | skill | both | none
 # Looks at the managed clone (the source of truth for what's authorable).
 feature_kind() {
@@ -354,8 +435,9 @@ installed_kind() {
 }
 
 # resolve_feature <spec>
-# Accepts: "<name>", "command:<name>", "skill:<name>", "claude-md:<name>".
-# Prints two lines on stdout: kind\nname  (kind = command|skill|claude-md).
+# Accepts: "<name>", "command:<name>", "skill:<name>", "claude-md:<name>",
+# "statusline:<name>", "hook:<name>".
+# Prints two lines on stdout: kind\nname.
 # Errors out if ambiguous or not found in the managed clone.
 resolve_feature() {
   local spec="$1"
@@ -365,6 +447,7 @@ resolve_feature() {
     skill:*)      prefix=skill;      name="${spec#skill:}"      ;;
     claude-md:*)  prefix=claude-md;  name="${spec#claude-md:}"  ;;
     statusline:*) prefix=statusline; name="${spec#statusline:}" ;;
+    hook:*)       prefix=hook;       name="${spec#hook:}"       ;;
   esac
 
   if [ -n "$prefix" ]; then
@@ -373,23 +456,26 @@ resolve_feature() {
       skill)      [ -f "$(src_skill_path      "$name")" ] || die "No such skill in managed clone: $name"   ;;
       claude-md)  [ -f "$(src_claudemd_path   "$name")" ] || die "No such claude-md in managed clone: $name" ;;
       statusline) [ -f "$(src_statusline_path "$name")" ] || die "No such statusline in managed clone: $name" ;;
+      hook)       [ -f "$(src_hook_path       "$name")" ] || die "No such hook in managed clone: $name" ;;
     esac
     printf '%s\n%s\n' "$prefix" "$name"
     return 0
   fi
 
-  local has_cmd=0 has_skill=0 has_cm=0 has_sl=0
+  local has_cmd=0 has_skill=0 has_cm=0 has_sl=0 has_hook=0
   [ -f "$(src_command_path    "$name")" ] && has_cmd=1
   [ -f "$(src_skill_path      "$name")" ] && has_skill=1
   [ -f "$(src_claudemd_path   "$name")" ] && has_cm=1
   [ -f "$(src_statusline_path "$name")" ] && has_sl=1
-  local total=$(( has_cmd + has_skill + has_cm + has_sl ))
-  if   [ $total -gt 1 ];    then die "Feature name '$name' is ambiguous. Disambiguate with 'command:$name', 'skill:$name', 'claude-md:$name', or 'statusline:$name'."
+  [ -f "$(src_hook_path       "$name")" ] && has_hook=1
+  local total=$(( has_cmd + has_skill + has_cm + has_sl + has_hook ))
+  if   [ $total -gt 1 ];    then die "Feature name '$name' is ambiguous. Disambiguate with 'command:$name', 'skill:$name', 'claude-md:$name', 'statusline:$name', or 'hook:$name'."
   elif [ $has_cmd -eq 1 ];  then printf 'command\n%s\n'   "$name"
   elif [ $has_skill -eq 1 ]; then printf 'skill\n%s\n'    "$name"
   elif [ $has_cm -eq 1 ];   then printf 'claude-md\n%s\n' "$name"
   elif [ $has_sl -eq 1 ];   then printf 'statusline\n%s\n' "$name"
-  else die "No feature named '$name' found in $CHOSKO_LLM_HOME (commands/, skills/, claude-md/, or statusline/)."
+  elif [ $has_hook -eq 1 ]; then printf 'hook\n%s\n'      "$name"
+  else die "No feature named '$name' found in $CHOSKO_LLM_HOME (commands/, skills/, claude-md/, statusline/, or hooks/)."
   fi
 }
 
@@ -410,6 +496,7 @@ src_path_for_kind() {
     skill)      src_skill_path      "$2" ;;
     claude-md)  src_claudemd_path   "$2" ;;
     statusline) src_statusline_path "$2" ;;
+    hook)       src_hook_path       "$2" ;;
     *) return 1 ;;
   esac
 }
@@ -423,6 +510,7 @@ parse_replaces_spec() {
     skill:*)      printf 'skill\n%s\n'      "${1#skill:}"      ;;
     claude-md:*)  printf 'claude-md\n%s\n'  "${1#claude-md:}"  ;;
     statusline:*) printf 'statusline\n%s\n' "${1#statusline:}" ;;
+    hook:*)       printf 'hook\n%s\n'       "${1#hook:}"       ;;
     *) return 1 ;;
   esac
 }
@@ -435,6 +523,7 @@ artifact_is_installed() {
     skill)      [ -d "$(inst_skill_dir       "$2")" ] ;;
     claude-md)  claudemd_is_installed "$2" ;;
     statusline) [ -f "$(inst_statusline_path "$2")" ] ;;
+    hook)       [ -f "$(inst_hook_path       "$2")" ] ;;
     *) return 1 ;;
   esac
 }
@@ -448,6 +537,7 @@ remove_installed_artifact() {
     skill)      rm -rf "$(inst_skill_dir       "$2")" ;;
     claude-md)  remove_section "$2" ;;
     statusline) rm -f  "$(inst_statusline_path "$2")" ;;
+    hook)       rm -f  "$(inst_hook_path       "$2")" ;;
     *) die "Unknown kind: $1" ;;
   esac
 }
@@ -504,6 +594,11 @@ find_replacement() {
     [ -f "$f" ] || continue
     [ "$(read_frontmatter_field "$f" replaces || true)" = "$want" ] || continue
     printf 'statusline\n%s\n' "$(basename "$f" .sh)"; return 0
+  done
+  for f in "$CHOSKO_LLM_HOME"/hooks/*.sh; do
+    [ -f "$f" ] || continue
+    [ "$(read_frontmatter_field "$f" replaces || true)" = "$want" ] || continue
+    printf 'hook\n%s\n' "$(basename "$f" .sh)"; return 0
   done
   return 1
 }
@@ -584,4 +679,14 @@ require_versioned_source() {
   local fname
   fname="$(read_frontmatter_field "$file" name || true)"
   [ -n "$fname" ] || die "Refusing to install: $file is missing a 'name' field in its frontmatter."
+}
+
+# require_hook_source <file>
+# Extra validation for the hook kind on top of require_versioned_source: the
+# wiring prompt can only name an event it was told about, so a hook without
+# `event` is unwireable and refused rather than half-installed.
+require_hook_source() {
+  local file="$1" event
+  event="$(read_frontmatter_field "$file" event || true)"
+  [ -n "$event" ] || die "Refusing to install: $file is missing an 'event' field in its frontmatter (e.g. 'event: PreToolUse')."
 }

@@ -22,7 +22,8 @@ Usage: chosko-llm ls [--installed | --available] [--local | --global]
   --local       List <cwd>/.claude instead of \$CLAUDE_HOME. Requires
                 <cwd>/CLAUDE.md to exist. Omits statusline scripts, which
                 are global-only.
-  --global      List \$CLAUDE_HOME (default).
+  --global      List \$CLAUDE_HOME (default). Omits hooks, which are
+                local-only.
 EOF
     exit 0
     ;;
@@ -85,6 +86,15 @@ collect_names() {
       ;;
     statusline)
       for dir in "$CHOSKO_LLM_HOME/statusline" "$CLAUDE_HOME/statusline"; do
+        [ -d "$dir" ] || continue
+        for f in "$dir"/*.sh; do
+          [ -e "$f" ] || continue
+          basename "$f" .sh
+        done
+      done | sort -u
+      ;;
+    hook)
+      for dir in "$CHOSKO_LLM_HOME/hooks" "$CLAUDE_HOME/hooks"; do
         [ -d "$dir" ] || continue
         for f in "$dir"/*.sh; do
           [ -e "$f" ] || continue
@@ -322,6 +332,55 @@ list_all() {
     printf '%s%s%s\n' "$status_color" "$status_col" "$C_RESET"
     found=1
   done < <(collect_names statusline)
+  fi
+
+  # Mirror of the statusline pass: hooks are local-only, so they are listed in
+  # local scope and omitted entirely in global scope.
+  if scope_is_local; then
+  while IFS= read -r name; do
+    [ -n "$name" ] || continue
+    local inst_file src_file inst_ver src_ver inst_col latest_col
+    inst_file="$(inst_hook_path "$name")"
+    src_file="$(src_hook_path "$name")"
+
+    if [ -f "$inst_file" ]; then
+      inst_ver="$(read_frontmatter_field "$inst_file" version || true)"
+      inst_col="${inst_ver:-unversioned}"
+    else
+      inst_col="—"
+    fi
+
+    if [ -f "$src_file" ]; then
+      src_ver="$(read_frontmatter_field "$src_file" version || true)"
+      [ -n "$src_ver" ] && latest_col="$src_ver" || latest_col="—"
+    else
+      latest_col="—"
+    fi
+
+    case "$filter" in
+      installed) [ "$inst_col" = "—" ] && continue ;;
+      available) [ "$latest_col" = "—" ] && continue ;;
+    esac
+
+    local status_col status_color
+    { read -r status_col; read -r status_color; } < <(compute_status hook "$name" "$inst_col" "$latest_col")
+
+    case "$status_col" in
+      "not installed")                  installable+=("$name") ;;
+      "updatable")                      updatable+=("$name") ;;
+      "superseded"|"migration pending") migrating+=("$name") ;;
+    esac
+
+    local inst_color latest_color
+    [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
+    [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
+    _colored_cell ""              "$name"       ""        30
+    _colored_cell "$C_YELLOW"     "hook"        "$C_RESET" 8
+    _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
+    _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
+    printf '%s%s%s\n' "$status_color" "$status_col" "$C_RESET"
+    found=1
+  done < <(collect_names hook)
   fi
 
   [ $found -eq 1 ] || log_info "No features found."

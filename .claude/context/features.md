@@ -1,4 +1,4 @@
-# Features (commands, skills, claude-md & statusline)
+# Features (commands, skills, claude-md, statusline & hooks)
 
 Artifacts this repo *ships*. CLI installs and updates them.
 
@@ -21,6 +21,17 @@ Feature kinds, keyed by feature name (kebab-case):
   shape to own, `chosko-llm add` skip editing it — prints copy-pasteable
   prompt for Claude Code session to merge key in safely. `chosko-llm
   add/rm/update/ls/show` treat as `statusline:` kind.
+- `hooks/<name>.sh` — executable script Claude Code runs on hook event.
+  Frontmatter in same bash no-op heredoc as statusline, plus two hook-only
+  keys: `event:` (required — `PreToolUse`, `SessionStart`, …; install refuses
+  without it) and `matcher:` (optional, narrows event to one tool). Installed
+  to `$CLAUDE_HOME/hooks/<name>.sh`; `add` prints settings.json wiring prompt
+  same way statusline does, naming `$CLAUDE_PROJECT_DIR/...` not absolute path
+  since settings.json is committed and travels. **Local-only kind** — exact
+  mirror of statusline's global-only rule; see `scope_supports_kind` in
+  [shared-lib.md](./shared-lib.md). Both halves (script + settings.json) must
+  be committed, and Claude Code snapshots hook config at session start, so
+  new wiring needs fresh session.
 
 Currently shipped:
 - `commands/project-setup.md` — interactive first-time project init
@@ -351,6 +362,25 @@ Currently shipped:
 - `claude-md/tool-usage-policy.md` — claude-md artifact: global tool-usage
   guidance injected into `$CLAUDE_HOME/CLAUDE.md`. Installed/updated/removed
   via `claude-md:` kind, not as copied file.
+- `hooks/remote-session-protocol.sh` — hook artifact (`event: PreToolUse`,
+  `matcher: AskUserQuestion`): in a confirmed remote cloud session it DENIES
+  the tool and returns the text protocol as `permissionDecisionReason` — one
+  numbered batch, lettered options, a recommendation each, then end of turn —
+  so a slow reply can't drive a re-ask loop. Gate is **positive-only** and
+  evaluated by the shell, not the model: `CLAUDE_CODE_REMOTE=true` or non-empty
+  `CLAUDE_CODE_REMOTE_ENVIRONMENT_TYPE`; anything else prints nothing (= no
+  permission decision) and the tool proceeds untouched. False negatives are the
+  accepted failure direction (renamed variable ⇒ hook stops firing ⇒ retune
+  it), deliberately not "when in doubt, assume remote". `IS_SANDBOX` is
+  explicitly NOT a signal — local sessions are sandboxed too. Carries no
+  `set -euo pipefail` by design: exit 2 from a `PreToolUse` hook blocks the
+  call, so every path ends in explicit `exit 0`. Chosen over a `CLAUDE.md`
+  section (the first implementation, dropped before merge) because a hook costs
+  zero resident tokens in the sessions where it never fires, and denial is
+  enforcement rather than guidance. Verified end-to-end against live cloud
+  sessions: project-committed hooks are trusted in containers, the matcher
+  binds, the deny lands, and the model asked in text without retrying the
+  denied tool.
 - `statusline/session-statusline.sh` — statusline artifact: model · cwd ·
   git branch · context% · cost · 5h/7d rate limits. Installed/updated/removed
   via `statusline:` kind; `chosko-llm add` prints settings.json
@@ -363,9 +393,11 @@ Every feature file requires complete frontmatter block:
 ---
 name: <kebab-case>          # MUST match filename / folder name
 version: <semver>           # required; install refuses without it
-type: command | skill
+type: command | skill | claude-md | statusline | hook
 description: <one line>
 replaces: command:<name>     # OPTIONAL, only on a kind change; see below
+event: PreToolUse            # hook kind ONLY; required there
+matcher: AskUserQuestion     # hook kind ONLY; optional, narrows event to one tool
 ---
 ```
 

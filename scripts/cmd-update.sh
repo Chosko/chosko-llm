@@ -16,11 +16,12 @@ Usage:
   chosko-llm update --all [--local | --global]        Update every currently installed feature.
 
   <feature> Multiple names may be given in one call; each is updated independently and a
-            failure on one (unknown name, statusline + --local) does not stop the rest.
+            failure on one (unknown name, wrong scope for the kind) does not stop the rest.
   --local   Operate on <cwd>/.claude instead of \$CLAUDE_HOME. Requires <cwd>/CLAUDE.md
             to exist. statusline is global-only: a single-feature statusline request
             fails; --all skips it.
-  --global  Operate on \$CLAUDE_HOME (default).
+  --global  Operate on \$CLAUDE_HOME (default). hook is local-only, the mirror rule:
+            a single-feature hook request fails; --all skips it.
 EOF
 }
 
@@ -87,6 +88,43 @@ update_one() {
       cp "$src" "$dst"
       chmod +x "$dst"
       log_success "Updated statusline '$name' -> v$(read_frontmatter_field "$src" version) (scope: $CHOSKO_LLM_SCOPE)"
+      ;;
+    hook)
+      local src dst
+      src="$(src_hook_path "$name")"
+      dst="$(inst_hook_path "$name")"
+      [ -f "$src" ] || die "No source for hook '$name' at $src"
+      require_versioned_source "$src"
+      require_hook_source "$src"
+      # Read the wiring the INSTALLED copy declares BEFORE overwriting it. That
+      # copy is the only record of what was actually merged into settings.json,
+      # which carries no version of its own.
+      local was_installed=0 old_event="" old_matcher=""
+      if [ -f "$dst" ]; then
+        was_installed=1
+        old_event="$(read_frontmatter_field "$dst" event || true)"
+        old_matcher="$(read_frontmatter_field "$dst" matcher || true)"
+      fi
+      mkdir -p "$(dirname "$dst")"
+      [ -f "$dst" ] && rm -f "$dst"
+      cp "$src" "$dst"
+      chmod +x "$dst"
+      log_success "Updated hook '$name' -> v$(read_frontmatter_field "$src" version) (scope: $CHOSKO_LLM_SCOPE)"
+      # Re-copying a script cannot re-wire settings.json. A body-only change
+      # leaves the existing wiring valid and stays quiet; a changed event or
+      # matcher invalidates it, and the stale entry would leave the hook firing
+      # on the wrong tool or not at all — so name the old slot and re-prompt.
+      if [ $was_installed -eq 0 ]; then
+        print_hook_prompt "$name" "$src"
+      else
+        local new_event new_matcher
+        new_event="$(read_frontmatter_field "$src" event || true)"
+        new_matcher="$(read_frontmatter_field "$src" matcher || true)"
+        if [ "$old_event" != "$new_event" ] || [ "$old_matcher" != "$new_matcher" ]; then
+          log_warn "hook '$name' moved its wiring: $(hook_wiring_label "$old_event" "$old_matcher") -> $(hook_wiring_label "$new_event" "$new_matcher"). Remove the old entry from $(hook_settings_path), then apply the prompt below."
+          print_hook_prompt "$name" "$src"
+        fi
+      fi
       ;;
     *) die "Unknown kind: $kind" ;;
   esac
@@ -225,6 +263,31 @@ if [ "$1" = "--all" ]; then
       fi
     done
   fi
+  if ! scope_is_local; then
+    log_info "Skipping hook features — local-only, not supported with --global."
+  elif [ -d "$CLAUDE_HOME/hooks" ]; then
+    for f in "$CLAUDE_HOME"/hooks/*.sh; do
+      [ -e "$f" ] || continue
+      base="$(basename "$f" .sh)"
+      if [ -f "$(src_hook_path "$base")" ]; then
+        inst_ver="$(read_frontmatter_field "$f" version || true)"
+        src_ver="$(read_frontmatter_field "$(src_hook_path "$base")" version || true)"
+        cmp="$(version_cmp "$inst_ver" "$src_ver" 2>/dev/null || echo "?")"
+        case "$cmp" in
+          0)  log_info "Already up-to-date: hook '$base' (v$inst_ver)"; continue ;;
+          1)  log_warn "Local version ahead: hook '$base' (local v$inst_ver, latest v$src_ver) — skipping" ; continue ;;
+          -1) ;; # fall through to update_one
+          *)  log_warn "Skipping hook '$base': version unreadable — update manually"; continue ;;
+        esac
+        update_one hook "$base"
+        any=1
+      elif migrate_stale hook "$base"; then
+        any=1
+      else
+        log_warn "Skipping hook '$base': no source in managed clone."
+      fi
+    done
+  fi
   [ $any -eq 1 ] || log_info "Nothing to update."
   exit 0
 fi
@@ -244,7 +307,7 @@ update_one_spec() {
     [ -n "$kind" ] && [ -n "$name" ] || exit 1
 
     if ! scope_supports_kind "$kind"; then
-      die "statusline scripts are global-only. Re-run without --local."
+      die "$(scope_violation_message "$kind")"
     fi
     update_one "$kind" "$name"
     apply_replaces "$kind" "$name"

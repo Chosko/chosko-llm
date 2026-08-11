@@ -21,10 +21,10 @@ Usage: chosko-llm show <feature> [--installed | --latest | --diff] [--content] [
   --content     Also print the body of the selected copy (or the diff).
   --local       Inspect <cwd>/.claude instead of \$CLAUDE_HOME. Requires
                 <cwd>/CLAUDE.md to exist. statusline is reported as global-only.
-  --global      Inspect \$CLAUDE_HOME (default).
+  --global      Inspect \$CLAUDE_HOME (default). hook is reported as local-only.
 
   <feature> may be a bare name or 'command:<name>', 'skill:<name>',
-  'claude-md:<name>', or 'statusline:<name>' to disambiguate.
+  'claude-md:<name>', 'statusline:<name>', or 'hook:<name>' to disambiguate.
 EOF
 }
 
@@ -63,13 +63,15 @@ resolve_show_feature() {
     skill:*)      prefix=skill;      name="${spec#skill:}" ;;
     claude-md:*)  prefix=claude-md;  name="${spec#claude-md:}" ;;
     statusline:*) prefix=statusline; name="${spec#statusline:}" ;;
+    hook:*)       prefix=hook;       name="${spec#hook:}" ;;
   esac
 
-  local has_cmd=0 has_skill=0 has_cm=0 has_sl=0
+  local has_cmd=0 has_skill=0 has_cm=0 has_sl=0 has_hook=0
   if [ -f "$(src_command_path "$name")" ] || [ -f "$(inst_command_path "$name")" ]; then has_cmd=1; fi
   if [ -f "$(src_skill_path "$name")" ]   || [ -f "$(inst_skill_path "$name")" ];   then has_skill=1; fi
   if [ -f "$(src_claudemd_path "$name")" ] || claudemd_is_installed "$name";         then has_cm=1; fi
   if [ -f "$(src_statusline_path "$name")" ] || [ -f "$(inst_statusline_path "$name")" ]; then has_sl=1; fi
+  if [ -f "$(src_hook_path "$name")" ] || [ -f "$(inst_hook_path "$name")" ]; then has_hook=1; fi
 
   if [ -n "$prefix" ]; then
     case "$prefix" in
@@ -77,20 +79,22 @@ resolve_show_feature() {
       skill)      [ "$has_skill" -eq 1 ] || die "No skill named '$name' (installed or available)." ;;
       claude-md)  [ "$has_cm" -eq 1 ]    || die "No claude-md named '$name' (installed or available)." ;;
       statusline) [ "$has_sl" -eq 1 ]    || die "No statusline named '$name' (installed or available)." ;;
+      hook)       [ "$has_hook" -eq 1 ]  || die "No hook named '$name' (installed or available)." ;;
     esac
     printf '%s\n%s\n' "$prefix" "$name"
     return 0
   fi
 
-  local total=$((has_cmd + has_skill + has_cm + has_sl))
+  local total=$((has_cmd + has_skill + has_cm + has_sl + has_hook))
   if [ "$total" -gt 1 ]; then
     local migration_note="" k present mig_out old_kind old_name
-    for k in command skill claude-md statusline; do
+    for k in command skill claude-md statusline hook; do
       case "$k" in
         command)    present=$has_cmd ;;
         skill)      present=$has_skill ;;
         claude-md)  present=$has_cm ;;
         statusline) present=$has_sl ;;
+        hook)       present=$has_hook ;;
       esac
       [ "$present" -eq 1 ] || continue
       if mig_out="$(check_migration_pending "$k" "$name")"; then
@@ -100,11 +104,12 @@ resolve_show_feature() {
         break
       fi
     done
-    die "Feature name '$name' is ambiguous. Disambiguate with 'command:$name', 'skill:$name', 'claude-md:$name', or 'statusline:$name'.${migration_note}"
+    die "Feature name '$name' is ambiguous. Disambiguate with 'command:$name', 'skill:$name', 'claude-md:$name', 'statusline:$name', or 'hook:$name'.${migration_note}"
   elif [ "$has_cmd" -eq 1 ];  then printf 'command\n%s\n'   "$name"
   elif [ "$has_skill" -eq 1 ]; then printf 'skill\n%s\n'    "$name"
   elif [ "$has_cm" -eq 1 ];   then printf 'claude-md\n%s\n' "$name"
   elif [ "$has_sl" -eq 1 ];   then printf 'statusline\n%s\n' "$name"
+  elif [ "$has_hook" -eq 1 ]; then printf 'hook\n%s\n'      "$name"
   else die "No feature named '$name' found (installed or in the managed clone)."
   fi
 }
@@ -141,6 +146,12 @@ case "$kind" in
   statusline)
     src_file="$(src_statusline_path "$name")"
     inst_file="$(inst_statusline_path "$name")"
+    [ -f "$src_file" ]  && src_exists=1  || true
+    [ -f "$inst_file" ] && inst_exists=1 || true
+    ;;
+  hook)
+    src_file="$(src_hook_path "$name")"
+    inst_file="$(inst_hook_path "$name")"
     [ -f "$src_file" ]  && src_exists=1  || true
     [ -f "$inst_file" ] && inst_exists=1 || true
     ;;
@@ -215,13 +226,14 @@ case "$kind" in
   skill)      loc="$(inst_skill_dir "$name")" ;;
   claude-md)  loc="$(claudemd_target_path) (section: chosko-llm:$name)" ;;
   statusline) loc="$inst_file" ;;
+  hook)       loc="$inst_file" ;;
 esac
 if [ "$inst_exists" -eq 1 ]; then path_display="$loc"; else path_display="$loc (not yet installed)"; fi
 
 # Body extractors.
 print_installed_body() {
   case "$kind" in
-    command|skill|statusline) cat "$inst_file" ;;
+    command|skill|statusline|hook) cat "$inst_file" ;;
     claude-md)
       awk -v b="<!-- chosko-llm:${name}:begin" -v e="<!-- chosko-llm:${name}:end -->" '
         index($0, b) { grab = 1; next }
@@ -233,7 +245,7 @@ print_installed_body() {
 }
 print_latest_body() {
   case "$kind" in
-    command|skill|statusline) cat "$src_file" ;;
+    command|skill|statusline|hook) cat "$src_file" ;;
     claude-md)
       awk 'BEGIN { seen = 0; past = 0 }
         /^---[[:space:]]*$/ { if (!seen) { seen = 1; next } else if (!past) { past = 1; next } }
@@ -250,6 +262,7 @@ case "$kind" in
   skill)      kind_c="$C_MAGENTA" ;;
   claude-md)  kind_c="$C_CYAN" ;;
   statusline) kind_c="$C_GREEN" ;;
+  hook)       kind_c="$C_YELLOW" ;;
 esac
 
 status_c=""
@@ -318,6 +331,8 @@ esac
 echo
 if [ "$kind" = statusline ] && scope_is_local; then
   printf '%sstatusline scripts are global-only; re-run without --local to inspect the installed copy.%s\n' "$C_CYAN" "$C_RESET"
+elif [ "$kind" = hook ] && ! scope_is_local; then
+  printf '%shooks are local-only; re-run with --local from a project root to inspect the installed copy.%s\n' "$C_CYAN" "$C_RESET"
 else
   case "$status" in
     "not installed")

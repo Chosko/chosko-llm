@@ -8,7 +8,7 @@
 
 CLI:
 - `chosko-llm rm <feature>` — `<feature>` = `<name>`, `command:<name>`,
-  `skill:<name>`, `claude-md:<name>`, or `statusline:<name>`.
+  `skill:<name>`, `claude-md:<name>`, `statusline:<name>`, or `hook:<name>`.
 - `chosko-llm rm <feature> --local` / `--global` — scope, see below.
 - `-h` / `--help` — usage, exit 0.
 
@@ -25,6 +25,9 @@ Side effects:
   `claudemd_target_path` (user content around preserved).
   `claudemd_target_path` is `$CLAUDE_HOME/CLAUDE.md` globally but
   `<cwd>/CLAUDE.md` in local scope (task 103).
+- hook: `rm -f` on `.sh` file, then warning — remind user to drop the entry
+  from `hook_settings_path` too, since wiring pointing at a deleted script
+  fails on every session.
 - statusline: `rm -f` on `.sh` file, then warning — remind user update/remove
   `"statusLine"` key in `$CLAUDE_HOME/settings.json` if still pointing at
   deleted path. Global-only — `--local` `die`s before reaching this branch.

@@ -2,7 +2,7 @@
 
 Layout: flat
 
-Last updated: 2026-08-06
+Last updated: 2026-08-11
 
 Nav layer for `chosko-llm`. Read this first, then files relevant to task. Open source files only when context file's **When to read the source** section say necessary.
 
@@ -20,8 +20,8 @@ Canonical project docs live outside this folder, stay authoritative:
 | [shared-lib.md](./shared-lib.md) | `scripts/lib.sh` — logging, colors, frontmatter, path resolution, claude-md sections, statusline prompt, auto-upgrade state, validation. Sourced by every subcommand. |
 | [cmd-ls.md](./cmd-ls.md) | `scripts/cmd-ls.sh` — list features w/ installed/latest versions; `--installed` / `--available` filters; TTY footer hints. |
 | [cmd-show.md](./cmd-show.md) | `scripts/cmd-show.sh` — inspect one feature (versions, status, description, body/diff); handle local-only. |
-| [cmd-add.md](./cmd-add.md) | `scripts/cmd-add.sh` — install feature (command/skill/claude-md/statusline, or `--all`) into `$CLAUDE_HOME`; refuse if already installed. |
-| [cmd-rm.md](./cmd-rm.md) | `scripts/cmd-rm.sh` — uninstall feature (command/skill/claude-md/statusline) from `$CLAUDE_HOME`. |
+| [cmd-add.md](./cmd-add.md) | `scripts/cmd-add.sh` — install feature (command/skill/claude-md/statusline/hook, or `--all`) into `$CLAUDE_HOME`; refuse if already installed. |
+| [cmd-rm.md](./cmd-rm.md) | `scripts/cmd-rm.sh` — uninstall feature (command/skill/claude-md/statusline/hook) from `$CLAUDE_HOME`. |
 | [cmd-update.md](./cmd-update.md) | `scripts/cmd-update.sh` — re-copy feature (or version-aware `--all`); install if missing. |
 | [cmd-upgrade.md](./cmd-upgrade.md) | `scripts/cmd-upgrade.sh` — `git pull` managed clone, refresh proxy; `--enable-auto`/`--disable-auto` toggle. |
 | [cmd-channel.md](./cmd-channel.md) | `scripts/cmd-channel.sh` — point managed clone at branch ('channel') to test unmerged work; no-arg show current, `--list` show available, `<branch>` switch + refresh proxy. |
@@ -29,7 +29,7 @@ Canonical project docs live outside this folder, stay authoritative:
 | [cmd-help.md](./cmd-help.md) | `scripts/cmd-help.sh` — print `docs/cli-help.txt` or fallback help. |
 | [cmd-task-impl.md](./cmd-task-impl.md) | `scripts/cmd-task-impl.sh` — external-LLM (aider+Ollama) orchestrator of 7-step task-implement flow for current project. |
 | [lib-task-external.md](./lib-task-external.md) | `scripts/lib-task-external.sh` — project-scoped backlog parse/mutate/guard helpers beneath `cmd-task-impl.sh`. |
-| [features.md](./features.md) | Shipped artifacts under `commands/`, `skills/`, `claude-md/`, `statusline/`; frontmatter contract incl. optional `replaces:`; cross-refs to authoring guide. |
+| [features.md](./features.md) | Shipped artifacts under `commands/`, `skills/`, `claude-md/`, `statusline/`, `hooks/`; frontmatter contract incl. optional `replaces:` and the hook-only `event:` / `matcher:`; cross-refs to authoring guide. |
 
 ## Domain
 

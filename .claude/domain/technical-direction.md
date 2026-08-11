@@ -20,7 +20,9 @@ first `---` block, recognizing five keys.
 by an agent, not code the CLI runs. This is the product's defining
 technical fact: the frontmatter contract carries the weight a type system
 would carry elsewhere, and it is why there is no test suite. The one
-shipped statusline is bash.
+shipped statusline is bash, as is the one shipped hook — which additionally
+inverts the repo's `set -euo pipefail` rule, since a `PreToolUse` hook that
+exits 2 blocks the tool call it was only meant to observe.
 
 **Windows runs through git-bash.** `bin/chosko-llm.cmd` locates it and
 forwards; all behaviour stays single-sourced in the bash proxy.
