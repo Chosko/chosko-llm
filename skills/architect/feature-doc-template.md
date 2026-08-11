@@ -102,7 +102,7 @@ Appended for a new feature, updated in place for an existing one:
 
 Status: [NEW]
 Doc: .claude/domain/features/<slug>.md
-Source: product-design.md § <section>
+Source: product-design.md § <section>[ (<milestone-slug>)]
 Tasks: none
 
 ---
@@ -113,11 +113,21 @@ Tasks: none
 | `<slug>` | `/architect` | Stable kebab-case identifier. Never renamed, never reused. |
 | `Status:` | `/architect` | `[NEW]` / `[ITERATED]` here. `[PLANNED]` is `/task-add`'s. |
 | `Doc:` | `/architect` | Path to the feature document. |
-| `Source:` | `/architect` | `product-design.md § <section>`, or the literal `prompt` when architected with no design documents. |
+| `Source:` | `/architect` | `product-design.md § <section>`, or the literal `prompt` when architected with no design documents. Gains an optional ` (<milestone-slug>)` suffix when the feature came from a roadmap scope slice — see `./sliced-input.md`. |
 | `Tasks:` | **`/task-add`** | Write `none` only when creating a brand-new entry. On an existing entry, leave the line untouched. |
 
 There is no `Last feature number` counter and no numeric IDs — slugs are the
 identifiers, so there is nothing to count.
+
+The `Source:` milestone suffix, written only in slice mode, looks like this:
+
+```
+Source: product-design.md § Authentication (m1-mvp)
+```
+
+It is optional and backward compatible — absent on traditional-mode features
+and on `Source: prompt` features, so every existing entry stays valid and a
+reader that ignores the suffix keeps working.
 
 ### The `Tasks:` rule, restated
 

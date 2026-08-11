@@ -177,7 +177,7 @@ for review by default; override with `--commit` / `--no-commit`.
 
 ### The product pipeline — from idea to merged code
 
-Five of these commands form one continuous pipeline. Each stage hands its
+Seven of these commands form one continuous pipeline. Each stage hands its
 output to the next as a **document in the repo**, not as conversation, so the
 work survives across sessions, machines, and people.
 
@@ -185,12 +185,19 @@ work survives across sessions, machines, and people.
 | --- | --- | --- | --- |
 | 0 — scaffold | [`/domain-setup`](#set-up-the-domain-layer--domain-setup) | nothing | the domain layer + an empty `.claude/FEATURES.md` |
 | 1 — design | [`/product-design`](#design-a-product--product-design) | you, and the repo when it already has code | `product-design.md`, `technical-direction.md`, optional `business-model.md`, `design-process.md` |
-| 2 — architect | [`/architect`](#design-how-to-build-it--architect) | a high-level feature, or a bare prompt | `.claude/domain/features/<slug>.md` + a `FEATURES.md` entry |
-| 3 — plan | `/task-add feature=<slug>` | a feature document | task bodies + `TASKS.md` entries |
-| 4 — build | `/task-implement` | a task body | code, one commit per task |
+| 2 — roadmap | [`/product-roadmap`](#decide-what-ships-when--product-roadmap) | you, plus `product-design.md` when you have one | `product-roadmap.md` — ordered milestones and their scope slices |
+| 3 — architect | [`/architect`](#design-how-to-build-it--architect) | a high-level feature, or a bare prompt — one milestone's scope slice of it when you have a roadmap | `.claude/domain/features/<slug>.md` + a `FEATURES.md` entry |
+| 4 — sequence | [`/production-plan`](#decide-what-to-build-next--production-plan) | `FEATURES.md`, the feature documents' dependencies, the roadmap when you have one | `.claude/PLAN.md` — features per milestone, in order, plus the dependency edges |
+| 5 — plan | `/task-add feature=<slug>` | a feature document | task bodies + `TASKS.md` entries |
+| 6 — build | `/task-implement` | a task body | code, one commit per task |
 
 Stages are **entered, not marched through**. Nothing downstream requires that
 an upstream stage was ever run.
+
+Reading across the whole of it there is one more command,
+[`/production-status`](#see-what-to-build-next--production-status). It writes
+nothing and belongs to no stage: it joins `PLAN.md`, `FEATURES.md` and
+`TASKS.md` and tells you which feature to start next.
 
 **Where to start.** Two realistic starting conditions:
 
@@ -234,11 +241,12 @@ worth understanding before you hit it:
    replaced. `[DONE]` tasks are never touched. The feature returns to
    `[PLANNED]`.
 
-Two vocabularies are at work and they mean different things. A **feature**
+Three vocabularies are at work and they mean different things. A **feature**
 status (`[NEW]` / `[ITERATED]` / `[PLANNED]`) describes whether the backlog
 matches the design — never whether the feature is built. A **task** status
-(`[MISSING]` … `[DONE]`) describes the work itself. `[ITERATED]` is the one
-state that demands action.
+(`[MISSING]` … `[DONE]`) describes the work itself. A **milestone** status in
+`PLAN.md` (`[PLANNED]` / `[ACTIVE]` / `[SHIPPED]`) describes delivery.
+`[ITERATED]` is the one state that demands action.
 
 The sections below are the per-command reference.
 
@@ -378,6 +386,38 @@ The output — including `technical-direction.md` — is `/architect`'s input.
 Nothing is committed by default; `--commit` commits and pushes what the run
 wrote (`--commit --no-push` to skip the push).
 
+### Decide what ships when — `/product-roadmap`
+
+Writes `.claude/domain/product-roadmap.md`: an ordered list of milestones,
+each with the outcome it delivers (`Goal:`), what makes it shippable
+(`Exit criteria:`), why it comes where it does (`Rationale:`), and the
+**scope slices** saying which share of a high-level feature it takes on
+(`Covers:`). Plus a `Not now` list where every deferral carries the trigger
+that would pull it back in, and the sequencing questions you couldn't close.
+
+A slice names a `product-design.md` section and states its scope in prose —
+and what really matters is the exclusions: "email and password only; no
+third-party providers, no SSO". `§ Authentication` can appear in an early
+milestone and again in a much later one, because how a feature splits across
+releases is a business call, not an architectural one. `Covers:` is a
+*decomposition instruction for `/architect`*, not a promise about what ships,
+so a section spread over several milestones is normal and nothing checks that
+the slices add up.
+
+Milestone slugs (`m1-mvp`) are stable and never renumbered — order is just
+list position, so you can insert a milestone between two others freely. The
+roadmap carries **no status, no dates and no estimates**: it records intent,
+not progress. It reads `.claude/FEATURES.md` and never writes it — when you
+edit a slice whose section has already been architected, it says so and points
+you at `/architect <slug>` rather than changing anything downstream.
+
+Requires `/domain-setup`. `product-design.md` is optional — you can draft a
+roadmap from a bare description. Re-run it whenever the plan moves: the
+document is its own resume state, so a later run proposes changes against
+what's already there, behind the same single approval gate. Nothing is
+committed by default; `--commit` commits and pushes what the run wrote
+(`--commit --no-push` to skip the push).
+
 ### Design how to build it — `/architect`
 
 Takes a high-level feature and decides how it will actually be built, then
@@ -397,6 +437,24 @@ data, and contracts — no code, no file-by-file plans. Those come from
 You can run it from a `/product-design` feature, from a feature name, or from
 a bare description with no design documents at all.
 
+**Slice mode.** If you've written a roadmap, `/architect` doesn't decompose a
+whole product feature at once — it architects one *scope slice*, the share of
+that feature a single milestone takes on. It switches into this mode purely on
+finding `.claude/domain/product-roadmap.md` with a milestone that has a
+`Covers:` line; there is no flag to turn on and nothing to configure. The
+slice's scope statement becomes the boundary, its exclusions become the
+feature document's non-goals, and the milestone is recorded on the
+`FEATURES.md` entry as `Source: product-design.md § Authentication (m1-mvp)`.
+Every low-level feature then belongs to exactly one milestone.
+
+The choice is made **per feature, not per run**: a section your roadmap
+doesn't slice takes the ordinary path even on a roadmapped project, and it
+tells you when it does. If a section is sliced across several milestones it
+asks which one you mean rather than guessing — and it never architects the
+union of two slices. A project with no roadmap behaves exactly as it always
+has, silently. Pass `--no-slices` to ignore the roadmap for a run; on a
+project without one, the flag does nothing.
+
 Re-architecting a feature that already produced tasks is guarded: if any of
 those tasks is `[IN PROGRESS]` it refuses outright, and otherwise it asks
 before marking the surviving tasks `[STALE]` and the feature `[ITERATED]` —
@@ -408,6 +466,96 @@ council; see below.
 
 Nothing committed by default; `--commit` commits and pushes exactly the
 written paths (`--commit --no-push` to skip the push).
+
+### Decide what to build next — `/production-plan`
+
+Writes `.claude/PLAN.md`: a third index beside `TASKS.md` and `FEATURES.md`
+saying which low-level feature belongs to which milestone, **in what order**,
+and after what. The roadmap says which outcomes come first; this says which
+architected features that implies and which one you can actually start.
+
+Each milestone block carries a `Status:`, a derived `Covers:` line, and an
+ordered `Features:` list — and that order **is** the priority. There is no
+`P0`/`P1` label, no size, no estimate and no date, because a second ordering
+alongside the list would eventually contradict it. Everything not yet placed
+sits in an `Unscheduled` block. All the dependency edges live in one flat
+`## Dependencies` list at the foot of the document, where a cycle is visible
+to a human reader.
+
+A feature's milestone is **inherited, not guessed**: it comes from the
+parenthetical `/architect` writes on the `FEATURES.md` `Source:` line
+(`… § Authentication (m1-mvp)`). Features architected without a roadmap start
+in `Unscheduled`. You can place any feature by hand and that wins — an
+override is reported plainly at the approval gate, never refused.
+
+The edges come from prose. Each feature document already has a
+`## Dependencies` section; the skill proposes the edge set it implies, you
+confirm or edit it, and `PLAN.md` stores the result. The prose stays the
+human-facing statement and is never rewritten — which is also what lets you
+record an edge the documents never stated.
+
+Then it **refuses the two arrangements that cannot be built**: a dependency
+cycle (reported as the actual cycle path, with no override flag) and a feature
+scheduled before something it needs (reported with both features and both
+milestones). Validation runs before anything is written.
+
+Milestone status is `[PLANNED]` / `[ACTIVE]` / `[SHIPPED]`, at most one
+`[ACTIVE]` at a time. `[SHIPPED]` is only ever *proposed* — when every feature
+in the milestone is `[PLANNED]` and all their tasks are `[DONE]` or `[SKIP]`
+— and it never reopens; follow-up work is a new milestone.
+
+Requires `/domain-setup` and at least one architected feature. A roadmap is
+**optional**: without one everything lands in `Unscheduled` and the dependency
+ordering still works. Re-run it whenever features or milestones move — it
+reconciles against the current `FEATURES.md` and roadmap behind the same
+single approval gate, keeping the orderings and edges you set. It is the sole
+writer of `PLAN.md` and reads `FEATURES.md`, the feature documents, the
+roadmap and `TASKS.md` without writing any of them. Nothing is committed by
+default; `--commit` commits and pushes what the run wrote (`--commit
+--no-push` to skip the push).
+
+### See what to build next — `/production-status`
+
+Reports what to build next by joining `PLAN.md`, `FEATURES.md` and `TASKS.md`
+— the active milestone with its roadmap goal and exit criteria, its features
+in plan order with their task rollup and readiness, the ready set, the single
+recommended next feature, blocked features named with their blocker, coverage
+gaps, features missing from the plan, and the remaining milestones. It writes
+nothing.
+
+The plan says what belongs where and in what order, `FEATURES.md` says whether
+a feature's tasks match its design, and `TASKS.md` says whether the work is
+done. The useful answer is in the join of the three and in none of them alone,
+so this command computes it **on every read** and stores nothing:
+
+- **Ready** — every dependency edge pointing at the feature comes from a
+  feature that is `[PLANNED]` with all of its tasks `[DONE]` or `[SKIP]`. No
+  dependencies means ready.
+- **Blocked** — anything else, and always *named with what blocks it* and why,
+  so a blocked list is somewhere to go rather than a dead end.
+- **Recommended** — the first ready feature in plan order. Exactly one, and
+  the command stops there: it reports the next thing to build, it doesn't
+  start it.
+
+Task rollups are counts per status by default (`4 tasks — DONE: 2, MISSING:
+2`); pass `--task-ids` to name each task instead. `milestone=<slug>` reports a
+named milestone rather than the active one.
+
+Staleness is **structural, not temporal**: rather than checking dates, the
+report simply names every `FEATURES.md` slug missing from `PLAN.md` and points
+you at `/production-plan`. A plan that has fallen behind says so by having
+gaps.
+
+Nothing here refuses. No roadmap drops the goals and exit criteria, no
+`TASKS.md` drops the rollups, no active milestone reports the first planned
+one, and a dependency edge naming a feature that doesn't exist is reported as
+a plan inconsistency with the feature treated as ready — failing open, because
+a hand-edited plan must never make the report claim there's nothing to do. The
+only thing it won't do is run without a `PLAN.md`, and then it tells you to
+run `/production-plan`.
+
+Read-only in the strict sense: no writes, no commits, no shell commands, and
+it never opens a task body under `.claude/tasks/`.
 
 ### Pressure-testing a decision — `claude-council`
 
@@ -455,7 +603,7 @@ tasks. The core idea is to spend more focus in planning and writing down tasks, 
 - `/task-setup` — initialize the backlog.
 - `/task-add` — plan a task and write it down. This is the real strength of this workflow: invoke the command with a very short description, let Claude Code investigate and expand it, in a conversational way. Claude will ask every question needed to fill the gaps, then it will write everything down for further implementation. It may propose splitting the description into several tasks when that gives better units (independent deliverables, or one task that's too large) — pass `--no-split` to always get exactly one task.
 - `/task-add feature=<slug>` — plan from an `/architect` feature document instead of a description. The document is the input, so you don't re-explain the work in prose; a feature usually becomes several tasks. Run it again after re-architecting and it *reconciles* rather than duplicating: each existing task is either left alone, updated in place, or skipped with a reason and replaced — and `[DONE]` tasks are never touched. When the run drafts any new task, it appends one more at the end to update the affected documentation once the others land. You approve the whole plan, reconciliation included, in one pass.
-- `/task-list` — show what's pending.
+- `/task-list` — show what's pending. On a project with a `.claude/PLAN.md` it groups the backlog **by milestone in plan order**, resolving each task's `Feature:` slug through the plan, and flags any task whose feature is blocked with `⚠ blocked by <slug>` alongside the existing markers; tasks with no feature, or one the plan doesn't list, fall under a trailing `Unplanned` heading. With no plan, the output is exactly what it has always been — no grouping, no flags, and no message about the missing plan.
 - `/task-implement` — build a task end-to-end, test-first, one commit (and push) each.
 - `/task-clean` — prune finished tasks.
 

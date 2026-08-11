@@ -118,13 +118,19 @@ agents that cannot run `install.sh` still have the commands they need.
   and deliberately unaddressed today: local copies installed with `--local`
   may drift from the global version, and `ls` / `update` have no local
   awareness — both wait on evidence that the drift actually costs
-  something.
+  something. On the same terms, and with no trigger set: `chosko-llm
+  task-impl` does not honour plan order, and `/task-add feature=<slug>` does
+  not warn when a feature's dependencies are unsatisfied. Both were weighed
+  while designing the planning layer and left out, the first because parsing
+  `PLAN.md` from bash falls to the largest script in the repo under the
+  no-dependencies rule, the second because nothing yet shows the warning
+  would change a decision.
 
 ## High-level features
 
-Ten features, listed in the order the product is experienced: the four that
-distribute configuration to a machine, then the six that author it. Where a
-feature's mechanism is already specified in a workflow document, this
+Eleven features, listed in the order the product is experienced: the four
+that distribute configuration to a machine, then the seven that author it.
+Where a feature's mechanism is already specified in a workflow document, this
 section names the experience and points there rather than restating it.
 
 ### Machine bootstrap
@@ -198,6 +204,41 @@ low-level feature document plus its entry in the feature index. The
 director decides, Claude writes. First half of the idea-to-shipped flow.
 The document set, the feature index schema, and the feature status
 vocabulary are specified in [product-workflow.md](./product-workflow.md).
+
+### Roadmap and planning
+
+Answers when, which the pipeline above and the backlog below both leave open.
+`/product-roadmap` records an ordered set of milestones — each with the
+outcome it delivers, the criteria that make it shippable, and the share it
+takes of each high-level feature. That share is the load-bearing idea: a
+high-level feature is a design unit, not a scheduling unit, and the axis that
+splits it across releases is business strategy rather than architecture, so
+"Authentication" can mean email and password in an early milestone and
+third-party providers in a much later one. Those **scope slices** are what
+`/architect` then decomposes, one at a time, so no low-level feature ever
+straddles a release.
+
+`/production-plan` takes it from there at feature level, writing
+`.claude/PLAN.md`: which architected feature sits in which milestone, in what
+order, and after which others. Dependencies are proposed from the prose each
+feature document already carries and recorded as a graph; a cycle, or a
+dependency scheduled after the thing that needs it, is refused rather than
+warned about. Position in a milestone's list is the priority — there is no
+second priority axis to contradict it.
+
+`/production-status` reads the result and answers the question the whole
+layer exists for: what to build next, what is blocked and by what, and which
+roadmap slices have no architected features yet. `/task-list` groups the
+backlog by milestone when a plan exists. Both write nothing and derive
+everything at read time.
+
+Serves the director deciding what the next release contains, and Claude as
+the operator that has to pick up work in a defensible order. The roadmap
+holds intent and rationale in the domain layer; `PLAN.md` holds state beside
+`TASKS.md` and `FEATURES.md`, the same split as `product-design.md` versus
+`FEATURES.md`. Both stages are entered, never mandatory: a project with no
+roadmap gets dependency ordering anyway, and every command above behaves
+exactly as it does today when neither document exists.
 
 ### Task backlog
 

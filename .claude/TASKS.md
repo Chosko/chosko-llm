@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 105
+Last task number: 115
 
 ---
 
@@ -100,5 +100,105 @@ Status: [DONE]
 Target: claude
 Files: scripts/cmd-add.sh, scripts/cmd-update.sh, docs/cli-help.txt, README.md, .claude/context/cmd-add.md, .claude/context/cmd-update.md, VERSION
 Preconditions: none
+
+---
+
+## 106. Add the /product-roadmap skill and the roadmap document schema
+
+Status: [DONE]
+Target: claude
+Files: skills/product-roadmap/SKILL.md, VERSION
+Preconditions: none
+Feature: product-roadmap
+
+---
+
+## 107. Update documentation for feature product-roadmap
+
+Status: [DONE]
+Target: claude
+Files: README.md, docs/cli-help.txt, .claude/context/features.md, .claude/domain/product-workflow.md, VERSION
+Preconditions: 106
+Feature: product-roadmap
+
+---
+
+## 108. Extract /architect's input resolution into sectioned-input.md
+
+Status: [DONE]
+Target: claude
+Files: skills/architect/SKILL.md, skills/architect/sectioned-input.md, VERSION
+Preconditions: none
+Feature: slice-aware-architecture
+
+---
+
+## 109. Add slice-aware input resolution to /architect
+
+Status: [DONE]
+Target: claude
+Files: skills/architect/SKILL.md, skills/architect/sliced-input.md, skills/architect/feature-doc-template.md, VERSION
+Preconditions: 106, 108
+Feature: slice-aware-architecture
+
+---
+
+## 110. Update documentation for feature slice-aware-architecture
+
+Status: [DONE]
+Target: claude
+Files: README.md, .claude/domain/product-workflow.md, .claude/context/features.md, .claude/domain/features/slice-aware-architecture.md, VERSION
+Preconditions: 108, 109
+Feature: slice-aware-architecture
+
+---
+
+## 111. Add the /production-plan skill and the PLAN.md schema
+
+Status: [DONE]
+Target: claude
+Files: skills/production-plan/SKILL.md, skills/production-plan/reconciling.md, VERSION
+Preconditions: 106, 109
+Feature: production-plan
+
+---
+
+## 112. Update documentation for feature production-plan
+
+Status: [DONE]
+Target: claude
+Files: README.md, docs/cli-help.txt, .claude/context/features.md, .claude/domain/product-workflow.md, .claude/domain/features/production-plan.md, VERSION
+Preconditions: 111
+Feature: production-plan
+
+---
+
+## 113. Add the /production-status command
+
+Status: [DONE]
+Target: claude
+Files: commands/production-status.md, VERSION
+Preconditions: 111
+Feature: plan-readout
+
+---
+
+## 114. Add milestone grouping to /task-list
+
+Status: [DONE]
+Target: claude
+Files: commands/task-list.md, VERSION
+Preconditions: 111
+Feature: plan-readout
+
+---
+
+## 115. Update documentation for feature plan-readout
+
+Status: [DONE]
+Target: claude
+Files: README.md, docs/cli-help.txt, .claude/context/features.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/domain/features/plan-readout.md, VERSION
+Preconditions: 113, 114
+Feature: plan-readout
 
 ---

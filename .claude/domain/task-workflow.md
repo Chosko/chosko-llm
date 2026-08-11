@@ -142,7 +142,11 @@ Feature: <slug>          # optional — feature-derived tasks only
 
 Optional summary-block line carrying slug of feature document task generated from. Written only by `/task-add feature=<slug>`; absent entirely on free-form tasks (never `Feature: none`), so presence distinguishes the two. Lives in index not body, same reason `Status:` and `Preconditions:` do: backlog metadata, not implementation contract.
 
-Reconciliation depends on it — without line, re-planning run can't tell which existing tasks belong to feature being re-planned. Readers of backlog (`/task-list`, `/task-implement`) treat it as informational.
+Reconciliation depends on it — without line, re-planning run can't tell which existing tasks belong to feature being re-planned. `/task-implement` treats it as informational.
+
+`/task-list` does more with it when project has `.claude/PLAN.md`: resolves slug through plan's milestone `Features:` lists to find task's milestone, groups backlog under milestone headings **in plan order**, and appends `⚠ blocked by <slug>` when task's feature is blocked (same readiness rule `/production-status` uses — feature blocked when some dependency edge pointing at it originates from feature not `[PLANNED]` w/ all tasks `[DONE]`/`[SKIP]`; unresolvable edge slug ignored, not treated as blocker). Task w/ no `Feature:` line, or one naming slug no milestone lists (incl. `Unscheduled` slugs), groups under trailing `Unplanned` heading. Marker order fixed and stated in command body: `⚠ <target>`, `[<slug>]`, `(deps: N, M)`, `⚠ stale`, `⚠ blocked by <slug>`. Status filter applies before grouping, so it works within groups.
+
+**No `PLAN.md` → none of that happens**, and command says nothing about it: output byte-for-byte what it always was, silent no-op not a warning. Most projects using `/task-list` have no roadmap. See [product-workflow.md § The read stage](./product-workflow.md#the-read-stage-production-status).
 
 ## `[STALE]` — drift marker
 

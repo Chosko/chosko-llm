@@ -147,7 +147,7 @@ Currently shipped:
   writes exactly one task. Auto-commits written files (all parts in
   one commit for split); `--no-commit` leaves uncommitted.
   With `feature=<slug>` plans from `/architect` feature document
-  instead of prose description (stage 3 of pipeline): resolves slug
+  instead of prose description (stage 5 of pipeline): resolves slug
   through `.claude/FEATURES.md`, reads `Doc:` path as primary context
   source, inverts split check (design unit usually several
   implementation units), tags every new summary block `Feature: <slug>`,
@@ -160,9 +160,10 @@ Currently shipped:
   `Preconditions:` listing run's other new task IDs) whose Hints point at
   affected README.md / authoring-guide.md / domain / context-layer docs;
   skipped on reconciliation-only run. `/architect`-owned and
-  `/product-design`-owned documents never added to that task's Hints
-  without asking first. Free-form text alongside slug narrows scope;
-  feature document read-only. Free-form path unchanged when
+  `/product-design`-owned documents MAY appear in that task's Hints, but
+  never silently — file and owner named at PHASE 3 gate, user can strike
+  it. Free-form text alongside slug narrows scope;
+  feature document read-only to `/task-add` itself. Free-form path unchanged when
   `feature=` absent.
   Documents two product-pipeline additions to backlog schema: optional
   `Feature: <slug>` summary-block line (feature-derived tasks
@@ -281,14 +282,74 @@ Currently shipped:
   infrastructure detail belongs. Never writes `.claude/FEATURES.md`,
   feature docs, or tasks. **Authoring skill — nothing committed by default;
   `--commit` stages exactly documents written in one commit.**
-- `skills/architect/` — stage 2 of product pipeline: turns one or more
+- `skills/product-roadmap/` — product-level WHEN of the pipeline, between
+  `/product-design` and `/architect`. Writes one document,
+  `.claude/domain/product-roadmap.md`, plus its `.claude/domain/INDEX.md`
+  row, and nothing else — never `FEATURES.md`, `PLAN.md`, `TASKS.md`, or
+  `product-design.md`. Preamble carries `Strategy:` paragraph — premise whole
+  order rests on, global where `Rationale:` is local (why the sequence runs
+  this way vs. why one milestone precedes next), labelled so revision can
+  locate it. Then ordered milestone blocks keyed by stable kebab-case
+  slug (`m1-mvp`), each carrying `Goal:` / `Exit criteria:` / `Rationale:` /
+  `Covers:`, then `Not now` (every deferral carries trigger that pulls it
+  back) and `Open sequencing questions`. Order is list position, so
+  milestone inserted between two others needs no renumber; slice identity is
+  `(milestone, section)` pair, no fourth identifier vocabulary. `Covers:`
+  entries name `product-design.md` sections, never `FEATURES.md` slugs, and
+  each carries prose scope statement whose payload is its exclusions —
+  decomposition instruction for `/architect`, not delivery claim, so partial
+  coverage of section across milestones is normal case and nothing validates
+  completeness. Carries NO milestone state: no `Status:` line, no dates, no
+  estimates — that's a later feature's, same intent/state split keeping
+  feature statuses out of `product-design.md`. Dates/status bar binds
+  `Strategy:` too; deadline surfacing there becomes open sequencing question.
+  PHASE 0 gates on
+  `/domain-setup` (only refusal in skill), reads domain INDEX,
+  `product-design.md` when present (optional — usable from bare
+  description), any existing roadmap as its own resume state (no marker
+  file, document is state), and `.claude/FEATURES.md` READ-ONLY. PHASE 0 then
+  settles `STEER` in the same message as its findings summary (costs no extra
+  round trip): "Do you have an ordering in mind? If not, I'll propose one." —
+  because sequencing is business intent the documents can't contain, and a
+  draft written first anchors both user and skill. Two sentences, NOT an
+  either/or, and the skill says so: a disjunction gives the reply two arms to
+  mirror into answer options, and arms w/ different subjects ("you have" vs.
+  "should I propose") mirror into labels whose "I" means user in one and agent
+  in other. Reply maps straight: yes → `given`, no → `propose`. `given` = take milestone
+  skeleton first, draft goals/criteria/rationale/slices from it, governed by
+  `/product-design`'s contribute-don't-just-ask so branch doesn't decay into
+  transcription; `propose` = original draft-first behaviour, unchanged.
+  Question SKIPPED (not asked as ceremony) when `$ARGUMENTS` carried an
+  ordering or revision already has roadmap. PHASE 1 is
+  conversation and run's single approval gate (steer question is a question,
+  not an approval); PHASE 2 is only write phase.
+  Three failure modes are warnings, not refusals: `Covers:` entry naming
+  section absent from `product-design.md`, editing slice whose section
+  already has features (names slugs, points at `/architect <slug>`, proceeds
+  on user's say-so — `[ITERATED]` stays `/architect`'s field), and revision
+  whose deltas contradict recorded premise (names contradiction, asks which
+  moves — premise is read as input on revision, NEVER rewritten to agree with
+  a newly-decided order). No supporting
+  files — schema inline, one file per folder. **Authoring skill — nothing
+  committed by default; `--commit` stages exactly written paths in one
+  commit, `--no-push` skips the push; `--commit` with nothing written makes
+  no commit and says so.**
+- `skills/architect/` — stage 3 of product pipeline: turns one or more
   high-level features into low-level feature documents under
   `.claude/domain/features/`, each indexed by `.claude/FEATURES.md` entry.
   Input is `product-design.md` section, named features, or bare
   free-form prompt (usable on codebase that never ran
   `/product-design`); with no argument lists design's features and
-  asks. PHASE 0 gates on `/domain-setup`, reads design/technical-
-  direction/feature/context layers, detects whether stack exists — a
+  asks. Input resolution has TWO modes, in two on-demand files (below),
+  dispatched PER TARGET rather than per run: slice mode activates purely on
+  `.claude/domain/product-roadmap.md` carrying at least one milestone with a
+  `Covers:` line (no flag file, no settings key, no frontmatter switch), and
+  a target whose section that roadmap does not slice takes the traditional
+  path anyway, stated in one line — so adoption is incremental and a project
+  with no roadmap behaves exactly as before. `--no-slices` forces traditional
+  mode per run (silent no-op where there is no roadmap). PHASE 0 gates on
+  `/domain-setup`, reads design/technical-
+  direction/feature/context layers, probes for the roadmap, detects whether stack exists — a
   present `technical-direction.md` counts as stack that exists, exactly
   like established codebase, so PHASE 2a skipped and
   `tech-stack-selection.md` never read on that path; PHASE 0b is iterate guard; PHASE 1 clarifies (skipped when nothing ambiguous,
@@ -300,7 +361,18 @@ Currently shipped:
   the document) — stopping at mid-to-high technical level, no code, no
   file-by-file plans, those being `/task-add`'s output; PHASE 3 writes the
   documents, the `FEATURES.md` entries, the INDEX rows, and any upstream
-  design change. Four supporting files load only on their branch:
+  design change. Six supporting files load only on their branch:
+  `sectioned-input.md` and `sliced-input.md` — the two input-resolution
+  modes, mutually exclusive per target and never both read for the same
+  target: `sectioned-input.md` when the target resolves traditionally (no
+  roadmap, or `--no-slices`, or a roadmap that does not slice this target's
+  section), matching against `product-design.md` sections and existing
+  `FEATURES.md` slugs; `sliced-input.md` when a roadmap slice matches the
+  target, carrying slice resolution (one match architects it, several across
+  milestones ask, the union is never architected and the milestone never
+  guessed), the exact-then-prose section matching rule, the slice's
+  exclusions flowing into the feature document's non-goals, and the extended
+  `Source:` — then
   `iterating.md` (the feature already has an entry), `tech-stack-
   selection.md` (no existing stack in either form — an existing stack
   always wins), `council-gate.md` (PHASE 2 hit a genuine design fork —
@@ -317,7 +389,12 @@ Currently shipped:
   the product design", naming `technical-direction.md` when that's the
   source — rather than restating the choice). Writes `Status:` / `Doc:` /
   `Source:` in `FEATURES.md` and never `Tasks:` — the by-line split that
-  lets it share the file with `/task-add`. The only writer of `[STALE]`:
+  lets it share the file with `/task-add`. `Source:` carries an optional
+  ` (<milestone-slug>)` suffix written only in slice mode
+  (`product-design.md § Authentication (m1-mvp)`), absent on traditional-mode
+  and `prompt` features, backward compatible, and the sole mechanism by which
+  a low-level feature knows its milestone. Reads `product-roadmap.md`, never
+  writes it, and never reads `PLAN.md`. The only writer of `[STALE]`:
   the iterate guard refuses outright while any generated task is
   `[IN PROGRESS]` (no override), else asks, then flips surviving
   non-`[DONE]` tasks to `[STALE]` and feature `[PLANNED]` →
@@ -327,6 +404,59 @@ Currently shipped:
   is `/product-design`'s document. **Authoring skill — nothing committed by
   default; `--commit` stages exactly written paths (including TASKS.md
   when guard fired) in one commit.**
+- `skills/production-plan/` — feature-level WHEN of the pipeline, between
+  `/architect` and `/task-add`. Sole writer of `.claude/PLAN.md`, a third
+  index beside `TASKS.md` and `FEATURES.md`, and writes NOTHING else — never
+  `FEATURES.md`, `TASKS.md`, feature docs, `product-roadmap.md`,
+  `product-design.md`, or the domain `INDEX.md`. Schema: `Roadmap:` (or
+  `none`) and informational `Last reconciled:` headers; one block per
+  milestone carrying `Status:`, derived `Covers:` and ordered `Features:`; an
+  `Unscheduled` block (`Features:` only, written even when empty); and ONE
+  flat `## Dependencies` edge list (`- <slug>: depends on <slug>, <slug>`)
+  rather than a `Depends:` line per feature — keeps `PLAN.md` from becoming a
+  second index keyed by feature slug and puts every edge where a cycle is
+  visible. `Features:` order IS the priority: no `P0`/`P1`, no dates,
+  estimates, sizes or readiness/coverage rollups (derived at read time).
+  `Covers:` is rewritten from the roadmap's own `Covers:` lines every run, so
+  hand edits to it never survive. PHASE 0 gates ONLY on `.claude/FEATURES.md`
+  (points at `/domain-setup`; the skill's one gate) — a roadmap is optional,
+  and without one everything lands in `Unscheduled` and ordering still works;
+  no features at all writes nothing and says so. Read pass is entirely
+  read-only: `FEATURES.md` (slugs, `Status:`, `Source:`, `Tasks:`), each
+  feature doc's `## Dependencies` section, `product-roadmap.md` when present,
+  any existing `PLAN.md` as resume state, and `.claude/TASKS.md` for the
+  `[SHIPPED]` proposal alone. PHASE 1 inherits each milestone by LOOKUP off
+  the `Source:` parenthetical `/architect` writes (never inferred from
+  section names or `Covers:` prose; no parenthetical and `Source: prompt` →
+  `Unscheduled`), orders each milestone, proposes the edge set from each
+  document's prose for the user to confirm — prose is never rewritten, and a
+  stored edge the docs never stated is legitimate — and handles milestone
+  status `[PLANNED]` / `[ACTIVE]` / `[SHIPPED]`, at most one `[ACTIVE]`,
+  `[SHIPPED]` proposed only when every feature is `[PLANNED]` and every task
+  `[DONE]`/`[SKIP]`, always confirmed, never reopened. Explicit placement
+  overrides the parenthetical, is reported plainly, never gated or refused.
+  PHASE 2 validates BEFORE the gate and before any write, and both invariants
+  REFUSE with no override flag: a cycle is reported as the actual cycle path,
+  and a dependency in a later milestone is reported with both features and
+  both milestones (a dependency on an `Unscheduled` feature is a warning
+  instead — `Unscheduled` has no position, so it cannot be "later"); each
+  milestone's `Features:` must be a topological order of the edges restricted
+  to it. PHASE 2 ends at the run's single approval gate; PHASE 3 is the only
+  write phase. One supporting file, `reconciling.md`, read on demand when
+  PHASE 0 finds an existing `PLAN.md` — the five-situation re-run table
+  (feature absent from the plan proposed for placement; plan slug gone from
+  `FEATURES.md` reported and dropped along with its edges; `[ITERATED]`
+  feature's dependencies re-read as a DIFF, never a wholesale replacement;
+  roadmap milestone added in roadmap order; plan milestone gone from the
+  roadmap reported, kept and flagged) — all folded into that same one gate,
+  mirroring `/task-add`'s convention. Other failures are reports, not
+  refusals: an edge slug resolving to no feature is dropped, a milestone with
+  no features is a warning, `>1 [ACTIVE]` reports and asks. Nothing
+  plan-aware exists in `/task-add`, `/task-implement`, or the bash CLI —
+  deferred by the feature's open questions. **Authoring skill — nothing
+  committed by default; `--commit` stages exactly `.claude/PLAN.md` in one
+  commit, `--no-push` skips the push; `--commit` with nothing written makes
+  no commit and says so.**
 - `skills/unity-mcp-skill/` — Unity-MCP operator guide vendored from
   upstream skill. `SKILL.md` carries resource-first workflow,
   core tool categories, best-practice patterns for driving Unity
@@ -341,11 +471,50 @@ Currently shipped:
   `skills/task-implement/unity-mcp-checkpoints.md` checkpoint flow) by
   giving Claude reusable reference when operating editor via
   `mcp__UnityMCP__*` tools.
+- `commands/production-status.md` — read side of the planning layer. Thin
+  read-only reporter (a command, not a skill: no conversation, no supporting
+  files) joining `.claude/PLAN.md`, `.claude/FEATURES.md`, `.claude/TASKS.md`
+  and `.claude/domain/product-roadmap.md`, all read-only. Eight output
+  sections in fixed order: the milestone (slug, title, `Status:`, plus `Goal:`
+  and `Exit criteria:` echoed verbatim from the roadmap); its features in plan
+  order with `FEATURES.md` status, task rollup and readiness; the ready set;
+  the ONE recommended next feature (first ready in plan order); blocked
+  features each named with what blocks it and why; coverage gaps (milestones
+  with `Features: none`, plus `product-design.md` sections no `Covers:` names);
+  unplanned features (`FEATURES.md` slugs missing from the plan, plus
+  `Unscheduled`); remaining milestones one line each. READINESS is the only
+  computation and is derived every read, never stored: ready when every edge
+  pointing at the feature comes from a feature `[PLANNED]` in `FEATURES.md`
+  with all tasks `[DONE]`/`[SKIP]`; no edges → ready; else blocked. An edge
+  slug resolving to no feature FAILS OPEN — reported as a plan inconsistency,
+  feature treated as ready. Task rollup is counts per status by default,
+  `--task-ids` names each ID; `milestone=<slug>` scopes sections 1–5 and an
+  unknown slug stops listing available slugs (matching `/task-add
+  feature=<slug>`). Staleness is STRUCTURAL, never temporal — names slugs
+  missing from `PLAN.md`, never compares `Last reconciled:` against dates or
+  mtimes. Failure contract is degradation throughout (no roadmap omits
+  goal/exit criteria, no `TASKS.md` drops rollups, no `[ACTIVE]` reports the
+  first `[PLANNED]`); the only stops are a missing `PLAN.md` and an unknown
+  `milestone=`. Writes nothing, runs NO shell command of any kind, never opens
+  a file under `.claude/tasks/`, and never starts the work it recommends.
 - `commands/task-list.md` — prints backlog as compact read-only
   summary. Marks `claude+human` / `human` tasks with `⚠ <target>`, shows
   `[<slug>]` for tasks with `Feature:` line, appends `⚠ stale` to
-  `[STALE]` tasks. Reads only `.claude/TASKS.md`; never opens body
-  files.
+  `[STALE]` tasks. When `.claude/PLAN.md` exists, also groups tasks under
+  milestone headings in plan order, resolving each task's `Feature:` slug
+  through the milestones' `Features:` lists, and appends `⚠ blocked by <slug>`
+  when the task's feature is blocked — same readiness rule as
+  `/production-status`, duplicated rather than shared (one paragraph of logic
+  in a markdown prompt), with an unresolvable edge slug ignored rather than
+  treated as a blocker. Tasks with no `Feature:` line and slugs no milestone
+  lists (including `Unscheduled` ones) fall under one trailing `Unplanned`
+  heading; empty milestones get no heading. Marker order stated explicitly in
+  the body: `⚠ <target>`, `[<slug>]`, `(deps: N, M)`, `⚠ stale`,
+  `⚠ blocked by <slug>`. Filter applies before grouping, so it works within
+  groups; summary line unchanged. NO `PLAN.md` → byte-for-byte the old output,
+  a silent no-op with no warning and no pointer at `/production-plan`. Reads
+  `.claude/TASKS.md`, plus `PLAN.md` and `FEATURES.md` when a plan exists;
+  never opens body files, feature docs or the roadmap.
 - `commands/task-enrich.md` — expands thin (`target: claude`) task body
   into enriched self-contained body (`target: local`) for local LLM
   implementer. Appends `## Context bundle` and `## Implementation steps`
