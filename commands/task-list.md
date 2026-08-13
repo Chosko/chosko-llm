@@ -1,6 +1,6 @@
 ---
 name: task-list
-version: 0.5.0
+version: 0.5.1
 type: command
 description: Print the project's task backlog as a compact summary, optionally filtered by status. Marks human-in-the-loop tasks (target claude+human or human) with a ⚠ so the user can see which tasks need them present, marks [STALE] tasks whose originating feature was re-architected, and shows the Feature: slug on feature-derived tasks. When the project has a .claude/PLAN.md, groups tasks by milestone in plan order — resolving each task's Feature: slug through the plan — and flags tasks whose feature is blocked with the blocker's name; with no plan, output is exactly what it has always been. Read-only — reads TASKS.md, and PLAN.md plus FEATURES.md when a plan exists, never the per-task body files.
 ---
@@ -100,9 +100,9 @@ the task's group.
 **Blocked-ness** uses exactly the rule `/production-status` uses; the two
 commands share the rule, not an implementation. A feature is **blocked**
 when some dependency edge pointing at it originates from a feature that
-is **not** `[PLANNED]` in `FEATURES.md` with **all** of its tasks
-`[DONE]` or `[SKIP]` in `TASKS.md`. A feature with no incoming edges is
-never blocked. An edge naming a slug that resolves to no feature is
+is **not** `[DONE]` in `FEATURES.md`, and **not** `[PLANNED]` with **all**
+of its tasks `[DONE]` or `[SKIP]` in `TASKS.md`. A feature with no incoming
+edges is never blocked. An edge naming a slug that resolves to no feature is
 ignored rather than treated as a blocker — fail open, so a hand-edited
 plan cannot flag the whole backlog.
 

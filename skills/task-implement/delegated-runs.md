@@ -76,7 +76,11 @@ worse, stall waiting for an answer nobody sees. Include:
 After each agent returns, and before the next spawn:
 
 1. Re-read `.claude/TASKS.md` with the Read tool. The agent wrote a status
-   there and the parent's copy is stale.
+   there and the parent's copy is stale. If the returned task carries a
+   `Feature:` line and landed `[DONE]`, apply SKILL.md's FEATURE COMPLETION
+   check here — same check Step 6 runs for an in-context task, just
+   triggered by this re-read instead. Still don't propose anything; that
+   stays batched to the end of the whole run.
 2. Confirm the agent actually did what it claims — the status it reports
    should match the file, and under the default (committing) mode
    `git status --porcelain` should be clean. A mismatch is a failure; see

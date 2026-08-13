@@ -1,8 +1,13 @@
 ---
 name: task-implement
-version: 0.17.0
+version: 0.18.0
 type: skill
-description: Implement one or more tasks from the project's task backlog end-to-end using a tests-first sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits and pushes each task separately; pass --no-commit to skip the per-task commits (and pushes), or --no-push to keep committing without pushing. Supports `next` to implement the first eligible task. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd|skip-tests-unattended` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time. In skip-tests mode, pass `-y` to suppress the per-task "Proceed?" confirmation for that run; the `skip-tests-unattended` marker value makes that the default for every run without needing `-y`. On a run resolving to 2+ tasks, offers to implement each task in a fresh subagent so later tasks don't inherit earlier ones' context — agents run one at a time, never in parallel, and `claude+human` / `human` / explicitly-requested `[STALE]` tasks stay in the parent conversation because they need the user present; pass `--agents` / `--no-agents` to pre-answer.
+description: Implement one or more tasks from the project's task backlog end-to-end using a tests-first sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits and pushes each task separately; pass --no-commit to skip the per-task commits (and pushes), or --no-push to keep committing without pushing. Supports `next` to implement the first eligible task. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd|skip-tests-unattended` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time. In skip-tests mode, pass `-y` to suppress the per-task "Proceed?" confirmation for that run; the `skip-tests-unattended` marker value makes that the default for every run without needing `-y`. On a run resolving to 2+ tasks, offers to implement each task in a fresh subagent so later tasks don't inherit earlier ones' context — agents run one at a time, never in parallel, and `claude+human` / `human` / explicitly-requested `[STALE]` tasks stay in the parent conversation because they need the user present; pass `--agents` / `--no-agents` to pre-answer. When a `Feature:`-tagged task
+lands `[DONE]` and leaves every task for that feature `[DONE]`/`[SKIP]`,
+records it as a completion candidate and, once at the very end of the run
+(batched across the whole run, never per-task), proposes flipping that
+feature's `FEATURES.md` `Status:` from `[PLANNED]` to `[DONE]` — the user
+decides, per feature; declined or unnamed slugs stay `[PLANNED]`.
 ---
 
 # /task-implement
@@ -44,6 +49,11 @@ run and report. Do not proceed to subsequent tasks. Do not commit a broken
 task. Under `--no-commit`, when the run completes, end with a reminder that
 nothing was committed — every task's changes sit in the working tree for the
 user to review and commit.
+
+When a completed task carries a `Feature:` line and it was the last task for
+that feature to reach `[DONE]`/`[SKIP]`, the run notes the feature as a
+completion candidate but proposes nothing until every requested task is
+done — once, for the whole batch. See FEATURE COMPLETION below.
 
 $ARGUMENTS
 
@@ -468,6 +478,10 @@ Use the Edit tool to update this task's `Status:` line in
 
 The default is `[DONE]`.
 
+If this task's TASKS.md summary block carries a `Feature: <slug>` line and
+the status just written is `[DONE]`, apply the FEATURE COMPLETION check
+below before moving to Step 7.
+
 ### Step 7 — Commit and push   [skipped in --no-commit mode]
 
 If NO_COMMIT is true, do not commit (or push) this task. Leave all files
@@ -554,6 +568,91 @@ After committing a task, before starting the next:
 
 ---
 
+FEATURE COMPLETION
+
+Applies only to tasks whose TASKS.md summary block carries a `Feature:
+<slug>` line — free-form tasks never trigger this.
+
+When Step 6 lands a task at `[DONE]` and it carries `Feature: <slug>`, check
+every other summary block in `.claude/TASKS.md` that carries the same
+`Feature: <slug>`. If every one of them is now `[DONE]` or `[SKIP]`, AND
+`.claude/FEATURES.md`'s entry for `<slug>` currently reads `Status:
+[PLANNED]`, record `<slug>` as a completion candidate in memory for the rest
+of the run. This is the only outcome of the check — do not propose anything
+yet, and do not re-check a slug already recorded.
+
+A `[PARTIAL]` task never triggers this check, even if it carries a
+`Feature:` line. A feature whose `FEATURES.md` status is `[NEW]`,
+`[ITERATED]`, or already `[DONE]` never becomes a candidate either — only a
+`[PLANNED]` feature can.
+
+This check runs wherever a task's terminal status becomes visible to the
+parent: at the end of Step 6 for a task the parent implemented itself, and
+during the delegated-run "re-read TASKS.md" step (`./delegated-runs.md`) for
+a task a subagent implemented. Either way it's the parent that accumulates
+the candidate list across the whole run.
+
+**Propose once, at the very end of the run** — after the last requested
+task's Step 7 (or Step 6, under `--no-commit`), never mid-run even on a
+many-task batch. If the candidate list is empty, say nothing about this at
+all. Otherwise, present every candidate together:
+
+> All tasks for this feature are now `[DONE]`/`[SKIP]`:
+>
+>   password-auth — Password authentication (tasks 31, 32, 33, 34, 35)
+>
+> Flip it to `[DONE]` in FEATURES.md?
+
+or, with more than one candidate:
+
+> All tasks for these features are now `[DONE]`/`[SKIP]`:
+>
+>   password-auth — Password authentication (tasks 31, 32, 33, 34, 35)
+>   session-handling — Session handling (tasks 36, 37)
+>
+> Flip any of these to `[DONE]` in FEATURES.md? Name the slugs, or say
+> "all" / "none".
+
+Wait for an explicit answer; silence is not approval and leaves every
+candidate `[PLANNED]`. A slug the user declines, or doesn't name, stays
+`[PLANNED]` — mention that in the closing report, but don't ask again this
+run.
+
+For each slug the user approves, use the Edit tool to change that entry's
+`Status:` line in `.claude/FEATURES.md` to `[DONE]`. Nothing else in the
+entry changes.
+
+If NO_COMMIT is true, leave the edited `.claude/FEATURES.md` uncommitted
+alongside the run's other uncommitted changes, same as Step 7 — skip the
+rest of this paragraph. Otherwise, if at least one slug was approved, stage
+`.claude/FEATURES.md` and create exactly ONE commit covering every flip
+approved this run, even when several features completed in the same batch —
+this is separate from, and in addition to, the per-task commits already
+made:
+
+```
+Mark feature(s) <slug>[, <slug> …] [DONE]
+```
+
+Then re-sync (`git pull`) and `git push` per `docs/authoring-guide.md`'s
+commit-and-push protocol, exactly as Step 7 does (skipped under
+`--no-push`). A pre-push conflict here is handled the same way a Step 7
+conflict is: report it, leave the local commit intact, tell the user it
+needs a manual sync + push.
+
+A human may flip a feature to `[DONE]` by hand at any time, entirely outside
+this skill. This proposal is the only place `/task-implement` itself writes
+that status, and it never overwrites a status a human already set —
+including a feature a human already marked `[DONE]` by hand, which never
+becomes a candidate in the first place (its `FEATURES.md` status is no
+longer `[PLANNED]`).
+
+`chosko-llm task-impl` (the headless shell orchestrator) never runs this
+check and never touches `FEATURES.md` — there is no human present to
+answer the proposal.
+
+---
+
 FAILURE HANDLING
 
 If any step fails in a way you cannot resolve:
@@ -602,3 +701,8 @@ DO NOT:
   push unless `--no-push`/`--no-commit` was passed — each task pushes
   immediately after its own commit (Step 7), per
   docs/authoring-guide.md's commit-and-push protocol.
+- Propose a `[DONE]` feature flip mid-run, or per-task — FEATURE COMPLETION
+  proposals are batched to the very end of the run, always.
+- Flip a `FEATURES.md` `Status:` to `[DONE]` without the user naming that
+  slug in response to the proposal, or flip any status other than
+  `[PLANNED]` → `[DONE]` there.

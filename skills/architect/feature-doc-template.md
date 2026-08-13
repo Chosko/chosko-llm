@@ -111,7 +111,7 @@ Tasks: none
 | Field | Written by | Notes |
 | --- | --- | --- |
 | `<slug>` | `/architect` | Stable kebab-case identifier. Never renamed, never reused. |
-| `Status:` | `/architect` | `[NEW]` / `[ITERATED]` here. `[PLANNED]` is `/task-add`'s. |
+| `Status:` | `/architect` | `[NEW]` / `[ITERATED]` here. `[PLANNED]` is `/task-add`'s; `[DONE]` is `/task-implement`'s (proposed, user-confirmed) or a human's by hand — this skill only reads it. |
 | `Doc:` | `/architect` | Path to the feature document. |
 | `Source:` | `/architect` | `product-design.md § <section>`, or the literal `prompt` when architected with no design documents. Gains an optional ` (<milestone-slug>)` suffix when the feature came from a roadmap scope slice — see `./sliced-input.md`. |
 | `Tasks:` | **`/task-add`** | Write `none` only when creating a brand-new entry. On an existing entry, leave the line untouched. |
@@ -144,14 +144,19 @@ it — the link reconciliation depends on.
 | (none) | `[NEW]` | First write of a new feature. |
 | `[NEW]` | `[NEW]` | Re-architecting a feature that was never planned. |
 | `[PLANNED]` | `[ITERATED]` | Re-architecting a feature whose tasks exist (PHASE 0b). |
+| `[DONE]` | `[ITERATED]` | Re-architecting a feature already marked complete (PHASE 0b). |
 | `[ITERATED]` | `[ITERATED]` | Re-architecting again before re-planning. |
 
 Illegal, and not to be written under any circumstances:
 
-- **`[PLANNED]` → `[NEW]`.** Tasks were generated from this feature. Even if
-  every one is later pruned, the feature stays `[PLANNED]`.
+- **`[PLANNED]` or `[DONE]` → `[NEW]`.** Tasks were generated from this
+  feature. Even if every one is later pruned, the feature stays `[PLANNED]`
+  (or `[DONE]`).
 - **`[NEW]` → `[ITERATED]`.** `[ITERATED]` means the backlog drifted from the
   design; with no tasks downstream there is nothing to drift from.
+- **`[DONE]` → `[PLANNED]`.** This skill never writes `[DONE]` and never
+  reopens it directly — reopening a completed feature happens only via
+  `[ITERATED]` (this skill's job) or a human editing the file by hand.
 
 ---
 

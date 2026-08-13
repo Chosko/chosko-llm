@@ -1,6 +1,6 @@
 ---
 name: production-plan
-version: 0.1.0
+version: 0.1.1
 type: skill
 description: Write the production plan into .claude/PLAN.md — a third index beside TASKS.md and FEATURES.md recording which low-level feature belongs to which milestone, in what order, and after what. The feature-level WHEN of the pipeline, sitting between /architect and /task-add. Inherits each feature's milestone from the parenthetical on its FEATURES.md Source: line, turns each feature document's Dependencies prose into a confirmed edge list, and refuses the two arrangements that cannot be built — a dependency cycle, and a feature scheduled before something it needs. Re-runnable: a later run reconciles the plan against the current FEATURES.md and roadmap behind one approval gate. Requires /domain-setup; a roadmap is optional — without one every feature lands in Unscheduled and dependency ordering still works. Sole writer of PLAN.md; reads FEATURES.md, the feature documents, the roadmap and TASKS.md and writes none of them. Nothing committed by default; pass --commit to commit and push exactly what the run wrote (--commit --no-push to skip the push).
 ---
@@ -203,9 +203,11 @@ else:
   (in the existing plan, or after the user's answer) → report both and ask
   which one is meant. Do not pick one.
 - **`[SHIPPED]` is proposed, never applied automatically.** Propose it for a
-  milestone only when *every* feature in it is `[PLANNED]` in `FEATURES.md`
-  **and** every task on those features' `Tasks:` lines is `[DONE]` or
-  `[SKIP]` in `TASKS.md`. Then ask; the user confirms or declines.
+  milestone only when *every* feature in it is `[DONE]` in `FEATURES.md`, or
+  `[PLANNED]` **and** every task on its `Tasks:` line is `[DONE]` or
+  `[SKIP]` in `TASKS.md` — a `[DONE]` feature already satisfies that same
+  bar, just recorded on `FEATURES.md` instead of derived here. Then ask; the
+  user confirms or declines.
 - **`[SHIPPED]` never reopens.** Not on request, not with a flag. Follow-up
   work on a shipped milestone is a *new* milestone in the roadmap — the same
   discipline that makes `[DONE]` terminal for tasks and `[PLANNED]` → `[NEW]`

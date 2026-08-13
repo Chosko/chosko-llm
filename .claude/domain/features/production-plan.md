@@ -164,9 +164,11 @@ kept deliberately small:
 | `[SHIPPED]` | Delivered. Terminal. |
 
 `[SHIPPED]` is *proposed* by the skill only when every feature in the
-milestone is `[PLANNED]` in `FEATURES.md` and all of their tasks are `[DONE]`
-or `[SKIP]`, and it is always confirmed by the user rather than applied
-automatically. It can never reopen — follow-up work is always a new
+milestone is `[DONE]` in `FEATURES.md`, or `[PLANNED]` with all of its tasks
+`[DONE]` or `[SKIP]` — a `[PLANNED]` feature meeting that bar and a `[DONE]`
+feature describe the same backlog state, one derived from `TASKS.md`, the
+other already recorded — and it is always confirmed by the user rather than
+applied automatically. It can never reopen — follow-up work is always a new
 milestone, the same discipline that makes `[DONE]` terminal for tasks and
 `[PLANNED]` → `[NEW]` illegal for features.
 

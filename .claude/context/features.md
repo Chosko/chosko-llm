@@ -231,7 +231,14 @@ Currently shipped:
   since need user present. `--agents` / `--no-agents`
   pre-answer prompt; single-task runs never see it. Commits each task
   separately; `--no-commit` runs full sequence but skips
-  per-task commits, leaving every task's changes uncommitted.
+  per-task commits, leaving every task's changes uncommitted. When a
+  `Feature:`-tagged task lands `[DONE]` and leaves every task for that
+  feature `[DONE]`/`[SKIP]`, records it as a completion candidate; once, at
+  the very end of the run (batched across the whole run, never per-task),
+  proposes flipping each candidate's `FEATURES.md` `Status:` from
+  `[PLANNED]` to `[DONE]` — user decides per feature, one commit covers
+  every flip approved. `chosko-llm task-impl` (headless orchestrator) never
+  runs this check.
 - `skills/product-design/` — designs product top-down with user, writes
   result into domain layer: `design-process.md` (state
   file), `product-design.md`, `technical-direction.md`, and — only when
@@ -397,8 +404,8 @@ Currently shipped:
   writes it, and never reads `PLAN.md`. The only writer of `[STALE]`:
   the iterate guard refuses outright while any generated task is
   `[IN PROGRESS]` (no override), else asks, then flips surviving
-  non-`[DONE]` tasks to `[STALE]` and feature `[PLANNED]` →
-  `[ITERATED]`. That guard also only reason it touches
+  non-`[DONE]` tasks to `[STALE]` and feature status to `[ITERATED]` (from
+  `[PLANNED]` or `[DONE]`). That guard also only reason it touches
   `.claude/TASKS.md`, writes nothing there but `Status:` lines. Slugs
   stable, never renamed. Never writes `technical-direction.md` — that
   is `/product-design`'s document. **Authoring skill — nothing committed by
@@ -432,9 +439,9 @@ Currently shipped:
   document's prose for the user to confirm — prose is never rewritten, and a
   stored edge the docs never stated is legitimate — and handles milestone
   status `[PLANNED]` / `[ACTIVE]` / `[SHIPPED]`, at most one `[ACTIVE]`,
-  `[SHIPPED]` proposed only when every feature is `[PLANNED]` and every task
-  `[DONE]`/`[SKIP]`, always confirmed, never reopened. Explicit placement
-  overrides the parenthetical, is reported plainly, never gated or refused.
+  `[SHIPPED]` proposed only when every feature is `[DONE]`, or `[PLANNED]`
+  with every task `[DONE]`/`[SKIP]`, always confirmed, never reopened.
+  Explicit placement overrides the parenthetical, is reported plainly, never gated or refused.
   PHASE 2 validates BEFORE the gate and before any write, and both invariants
   REFUSE with no override flag: a cycle is reported as the actual cycle path,
   and a dependency in a later milestone is reported with both features and
@@ -484,8 +491,9 @@ Currently shipped:
   unplanned features (`FEATURES.md` slugs missing from the plan, plus
   `Unscheduled`); remaining milestones one line each. READINESS is the only
   computation and is derived every read, never stored: ready when every edge
-  pointing at the feature comes from a feature `[PLANNED]` in `FEATURES.md`
-  with all tasks `[DONE]`/`[SKIP]`; no edges → ready; else blocked. An edge
+  pointing at the feature comes from a feature `[DONE]` in `FEATURES.md`, or
+  `[PLANNED]` with all tasks `[DONE]`/`[SKIP]`; no edges → ready; else
+  blocked. An edge
   slug resolving to no feature FAILS OPEN — reported as a plan inconsistency,
   feature treated as ready. Task rollup is counts per status by default,
   `--task-ids` names each ID; `milestone=<slug>` scopes sections 1–5 and an
