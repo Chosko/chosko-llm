@@ -489,8 +489,11 @@ Currently shipped:
   features each named with what blocks it and why; coverage gaps (milestones
   with `Features: none`, plus `product-design.md` sections no `Covers:` names);
   unplanned features (`FEATURES.md` slugs missing from the plan, plus
-  `Unscheduled`); remaining milestones one line each. READINESS is the only
-  computation and is derived every read, never stored: ready when every edge
+  `Unscheduled`); remaining milestones one line each. A `[DONE]` feature has
+  no readiness of its own computed — reported plainly, never in the ready
+  set, the blocked list, or the recommendation, though it still satisfies
+  edges dependents point at it. READINESS otherwise is the only computation
+  and is derived every read, never stored: ready when every edge
   pointing at the feature comes from a feature `[DONE]` in `FEATURES.md`, or
   `[PLANNED]` with all tasks `[DONE]`/`[SKIP]`; no edges → ready; else
   blocked. An edge

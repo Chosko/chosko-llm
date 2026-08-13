@@ -1,8 +1,8 @@
 ---
 name: production-status
-version: 0.1.1
+version: 0.1.2
 type: command
-description: Report what to build next by joining PLAN.md, FEATURES.md and TASKS.md — the active milestone with its roadmap goal and exit criteria, its features in plan order with their task rollup and readiness, the ready set, the single recommended next feature, blocked features named with their blocker, coverage gaps, features missing from the plan, and the remaining milestones. Readiness and coverage are derived on every read. Read-only — writes nothing, runs no shell, and never opens a file under .claude/tasks/.
+description: Report what to build next by joining PLAN.md, FEATURES.md and TASKS.md — the active milestone with its roadmap goal and exit criteria, its features in plan order with their task rollup and readiness, the ready set, the single recommended next feature, blocked features named with their blocker, coverage gaps, features missing from the plan, and the remaining milestones. Readiness and coverage are derived on every read. A [DONE] feature is reported plainly, never as ready, blocked, or recommended — it still satisfies dependency edges pointing at it. Read-only — writes nothing, runs no shell, and never opens a file under .claude/tasks/.
 ---
 
 # /production-status
@@ -103,11 +103,19 @@ THE MILESTONE BEING REPORTED
 
 READINESS (derived on every read, never stored)
 
-A feature is **ready** when **every** dependency edge pointing at it
-originates from a feature that is `[DONE]` in `FEATURES.md`, or `[PLANNED]`
-**and** has all of its tasks `[DONE]` or `[SKIP]` in `TASKS.md` — a `[DONE]`
-feature already carries that same guarantee, just recorded on `FEATURES.md`
-instead of rolled up from `TASKS.md` each time.
+Readiness is a question about a feature that still has work pending. A
+`[DONE]` feature never has its own readiness computed — it's already
+finished, not ready to start. It's reported plainly in section 2 (below)
+and never appears in the ready set (3), the blocked list (5), or as the
+recommended next feature (4). It still satisfies any dependency edge a
+*dependent* feature points at it — that's the other half of this section.
+
+For every feature that is NOT `[DONE]`: it is **ready** when **every**
+dependency edge pointing at it originates from a feature that is `[DONE]`
+in `FEATURES.md`, or `[PLANNED]` **and** has all of its tasks `[DONE]` or
+`[SKIP]` in `TASKS.md` — a `[DONE]` feature already carries that same
+guarantee, just recorded on `FEATURES.md` instead of rolled up from
+`TASKS.md` each time.
 
 - A feature with no dependency edges is ready.
 - Everything else is **blocked**, and is always named together with what
@@ -148,21 +156,32 @@ them, and do not warn twice.
 ```
 1. <slug>            [PLANNED]   4 tasks — DONE: 2, MISSING: 2    ready
 2. <slug>            [NEW]       no tasks yet                     blocked by <slug>
+3. <slug>            [DONE]      5 tasks — DONE: 5
 ```
 
-Each carries its `FEATURES.md` status, its task rollup, and its readiness. A
-slug in `Features:` with no `FEATURES.md` entry is reported as a plan
-inconsistency on its own line and carries no status or rollup.
+Each carries its `FEATURES.md` status, its task rollup, and its readiness —
+except a `[DONE]` row, which ends after the rollup: no `ready`, no `blocked
+by`, nothing computed, because a finished feature has no readiness to
+report. A slug in `Features:` with no `FEATURES.md` entry is reported as a
+plan inconsistency on its own line and carries no status or rollup.
 `Features: none` → say the milestone has no features and that `/architect`
 has not run its `Covers:` slices yet.
 
-**3. The ready set.** Every ready feature in this milestone, in plan order.
-Empty → say so, and say what the nearest blocker is.
+**3. The ready set.** Every ready feature in this milestone, in plan
+order — never one that's `[DONE]`; there's nothing left to start on a
+finished feature. Empty because everything is blocked → say so, and say
+what the nearest blocker is. Empty because every otherwise-ready feature in
+the milestone is already `[DONE]` → say that instead: nothing left to plan
+in this milestone, and point at `/production-plan` in case it's ready to
+propose `[SHIPPED]`.
 
 **4. The recommended next feature** — the **first ready feature in plan
-order**, exactly one, named on its own with its task rollup. If it has no
-tasks yet, say the next step is `/task-add feature=<slug>`. If it already has
-tasks, say the next step is `/task-implement`. Nothing is started here.
+order** from the set in section 3 (so never a `[DONE]` one), exactly one,
+named on its own with its task rollup. If it has no tasks yet, say the next
+step is `/task-add feature=<slug>`. If it already has tasks, say the next
+step is `/task-implement`. If section 3 is empty, say there is nothing to
+recommend right now, echoing whichever of the two reasons section 3 gave.
+Nothing is started here.
 
 **5. Blocked features.** Every blocked feature in this milestone, each with
 every unsatisfied dependency and why it is unsatisfied.
