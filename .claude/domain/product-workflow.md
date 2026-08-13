@@ -107,8 +107,9 @@ Feature status tracks relationship between design and backlog. Says nothing whet
 | Status | Meaning | Written by |
 | --- | --- | --- |
 | `[NEW]` | Architected, never planned. No tasks exist. | `/architect`, on first write |
-| `[ITERATED]` | Planned, design since changed. | `/architect`, when re-architecting `[PLANNED]` feature |
+| `[ITERATED]` | Planned, design since changed. | `/architect`, when re-architecting `[PLANNED]` or `[DONE]` feature |
 | `[PLANNED]` | Tasks exist, match current design. | `/task-add feature=<slug>` |
+| `[DONE]` | Every task is `[DONE]` or `[SKIP]`; nothing left to build against the current design. | User, by hand — or `/task-implement`, proposed at the end of a run and only on the user's confirmation. See [task-workflow.md § `[DONE]` feature-completion proposal](./task-workflow.md#done-feature-completion-proposal). |
 
 ### Transitions
 
@@ -117,19 +118,26 @@ Feature status tracks relationship between design and backlog. Says nothing whet
 | `[NEW]` | `[PLANNED]` | `/task-add feature=<slug>` |
 | `[ITERATED]` | `[PLANNED]` | `/task-add feature=<slug>` reconciles backlog |
 | `[PLANNED]` | `[ITERATED]` | `/architect` re-architects feature |
+| `[PLANNED]` | `[DONE]` | `/task-implement` proposes it (last task of the feature lands `[DONE]`/`[SKIP]`), user confirms — or a human flips it by hand |
+| `[DONE]` | `[ITERATED]` | `/architect` re-architects a completed feature |
 | `[NEW]` | `[NEW]` | `/architect` re-architects unplanned feature |
 | `[ITERATED]` | `[ITERATED]` | `/architect` runs again before re-planning |
 
 Two self-transitions: common case not error. Re-architecting when no new tasks generated since — changes nothing about design/backlog relationship.
 
-Two transitions illegal:
+Transitions illegal:
 
-- **`[PLANNED]` → `[NEW]`.** Tasks generated from feature. Happened, can't un-happen. Even if every task later removed by `/task-clean`, feature stays `[PLANNED]` — tasks existed, resolved.
+- **`[PLANNED]` or `[DONE]` → `[NEW]`.** Tasks generated from feature. Happened, can't un-happen. Even if every task later removed by `/task-clean`, feature stays `[PLANNED]` (or `[DONE]`) — tasks existed, resolved.
 - **`[NEW]` → `[ITERATED]`.** `[ITERATED]` means backlog drifted from design. No tasks downstream, nothing to drift from.
+- **`[DONE]` → `[PLANNED]`.** `[DONE]` doesn't reopen on its own — reopening happens only by moving through `[ITERATED]` (re-architecting) or by a human editing the file directly. `/task-add feature=<slug>` never targets a `[DONE]` feature: with no `[STALE]`/`[MISSING]` tasks and nothing `[ITERATED]`, there is nothing left for it to reconcile.
 
 ### `[ITERATED]` is the actionable state
 
-`[NEW]`, `[PLANNED]`: steady states. `[ITERATED]` means *design moved, backlog hasn't caught up* — work queued may no longer be correct. One state demanding action, can't recover by inspecting filesystem — why stored not derived. Commands reporting features surface it prominently.
+`[NEW]`, `[PLANNED]`, `[DONE]`: steady states. `[ITERATED]` means *design moved, backlog hasn't caught up* — work queued may no longer be correct. One state demanding action, can't recover by inspecting filesystem — why stored not derived. Commands reporting features surface it prominently.
+
+### `[DONE]` is proposed, never applied silently
+
+Same discipline as `PLAN.md`'s `[SHIPPED]`: a status this consequential is never flipped without the user in the loop. `/task-implement` is the only command that proposes it, and only at the point defined in [task-workflow.md § `[DONE]` feature-completion proposal](./task-workflow.md#done-feature-completion-proposal) — never mid-run, never without asking. A human can flip a feature to `[DONE]` by hand at any time regardless of `/task-implement`; the skill never overwrites a status a human already set, and never treats a hand-set `[DONE]` as something to second-guess.
 
 ## `PLAN.md` — the production plan
 
@@ -184,7 +192,7 @@ Third status vocabulary in pipeline, deliberately small. Lives in `PLAN.md`, not
 | `[ACTIVE]` | Being built now. **At most one milestone at a time.** | `/production-plan`, on user's say-so |
 | `[SHIPPED]` | Delivered. **Terminal.** | `/production-plan`, only on user confirmation |
 
-`[SHIPPED]` is *proposed* only when every feature in the milestone is `[PLANNED]` in `FEATURES.md` **and** all their tasks are `[DONE]` or `[SKIP]` in `TASKS.md` — the one thing task state is read for — and always confirmed by user rather than applied automatically. **It can never reopen**: follow-up work is always a new milestone, same discipline making `[DONE]` terminal for tasks and `[PLANNED]` → `[NEW]` illegal for features. More than one `[ACTIVE]` → reported, user asked which is meant; never picked automatically.
+`[SHIPPED]` is *proposed* only when every feature in the milestone is `[DONE]`, or `[PLANNED]` in `FEATURES.md` **and** all its tasks are `[DONE]` or `[SKIP]` in `TASKS.md` — a `[PLANNED]` feature meeting that bar and a `[DONE]` feature describe the same backlog state, one recorded on `FEATURES.md`, the other not yet — and always confirmed by user rather than applied automatically. **It can never reopen**: follow-up work is always a new milestone, same discipline making `[DONE]` terminal for tasks and `[PLANNED]` → `[NEW]` illegal for features. More than one `[ACTIVE]` → reported, user asked which is meant; never picked automatically.
 
 Three vocabularies, three jobs, kept separate on purpose: **feature** status says whether backlog matches design, **task** status says whether work is done, **milestone** status says whether it shipped. Conflating any two turns one index into second, permanently stale copy of another.
 
@@ -212,7 +220,7 @@ Command, not skill: thin read-only reporter, no conversation, no supporting file
 
 Eight output sections in fixed order: (1) the milestone — slug, title, `Status:`, plus `Goal:` and `Exit criteria:` echoed verbatim from the roadmap; (2) its features in plan order, each w/ `FEATURES.md` status, task rollup and readiness; (3) the ready set; (4) the ONE recommended next feature — first ready in plan order; (5) blocked features, each named w/ what blocks it; (6) coverage gaps — milestones w/ `Features: none` (outstanding `/architect` work) and `product-design.md` sections no `Covers:` names; (7) unplanned features; (8) remaining milestones, one line each. Plan order is the report's order, because that order is the priority.
 
-**Readiness and coverage are derived on every read, never stored.** Feature is ready when every dependency edge pointing at it originates from a feature `[PLANNED]` in `FEATURES.md` w/ all its tasks `[DONE]` or `[SKIP]`; no edges → ready; everything else blocked, always named w/ its blocker so a blocked list is actionable rather than a dead end. Deriving means it can never be wrong about a task someone just finished — and it's why `PLAN.md` stores no readiness or coverage rollup: storing derivable state creates a second thing to keep in sync. Rollup granularity: counts per status by default, `--task-ids` names each task. `milestone=<slug>` scopes to a named milestone; unknown slug stops listing available slugs, same as `/task-add feature=<slug>`.
+**Readiness and coverage are derived on every read, never stored.** Feature is ready when every dependency edge pointing at it originates from a feature `[DONE]`, or `[PLANNED]` in `FEATURES.md` w/ all its tasks `[DONE]` or `[SKIP]`; no edges → ready; everything else blocked, always named w/ its blocker so a blocked list is actionable rather than a dead end. Deriving means it can never be wrong about a task someone just finished — and it's why `PLAN.md` stores no readiness or coverage rollup: storing derivable state creates a second thing to keep in sync. Rollup granularity: counts per status by default, `--task-ids` names each task. `milestone=<slug>` scopes to a named milestone; unknown slug stops listing available slugs, same as `/task-add feature=<slug>`.
 
 **Staleness is structural, not temporal.** Report names every `FEATURES.md` slug missing from `PLAN.md` and points at `/production-plan`; nothing compares `Last reconciled:` against modification times or dates. A plan that has fallen behind says so by having gaps — no state this product doesn't keep.
 
@@ -261,7 +269,7 @@ Before re-architecting feature already having entry, `/architect` reads its `Tas
 
 1. **Any `[IN PROGRESS]` task → refuse.** Report task, stop. No override: work actively underway against current design, changing it underneath in-flight implementation corrupts both.
 2. **Any other non-`[DONE]` task → ask.** List tasks w/ statuses and titles, state re-architecting may invalidate them, offer stop or proceed.
-3. **On proceed** — flip every non-`[DONE]` task to `[STALE]`, set feature `[PLANNED]` → `[ITERATED]`.
+3. **On proceed** — flip every non-`[DONE]` task to `[STALE]`, set feature status to `[ITERATED]` (from `[PLANNED]` or `[DONE]`).
 4. **No tasks at all** (`[NEW]`, or `Tasks: none`) → skip guard entirely.
 5. **IDs resolving to no task** ignored, not error. `/task-clean` normally prunes them, but hand-edited backlog shouldn't break run.
 
@@ -303,7 +311,7 @@ Exactly one writer per artifact, `FEATURES.md` deliberate exception.
 | `technical-direction.md` | `/product-design` owns it. `/architect` reads it, adopts as established stack when present, treats exactly as existing codebase stack — skipping tech-stack selection, referencing from feature documents rather than restating, never writing to it. |
 | `business-model.md` | `/product-design` |
 | `features/<slug>.md` | `/architect` |
-| `FEATURES.md` | `/architect` owns entries, `Status:`, `Doc:`, `Source:` — including `Source:`'s optional milestone suffix, no new writer. `/task-add` owns `Tasks:`, flip to `[PLANNED]`. `/task-clean` prunes dropped IDs from `Tasks:`. |
+| `FEATURES.md` | `/architect` owns entries, `Status:`, `Doc:`, `Source:` — including `Source:`'s optional milestone suffix, no new writer. `/task-add` owns `Tasks:`, flip to `[PLANNED]`. `/task-clean` prunes dropped IDs from `Tasks:`. `/task-implement` may flip a `[PLANNED]` feature to `[DONE]`, and only that transition, and only on the user's confirmation. A human may also flip `Status:` to `[DONE]` directly by hand at any time — the one field on this file with no single command owner. |
 | `PLAN.md` | `/production-plan`, sole writer, and the only file it writes. Reads `FEATURES.md`, feature documents, `product-roadmap.md` and `TASKS.md` strictly read-only — a problem it spots in any of them is reported, never fixed there. Its only *readers* are `/production-status` and `/task-list`; no other command in the pipeline reads it, and nothing but `/production-plan` writes it. |
 | `TASKS.md` | `/task-add`, `/task-implement`, `/task-clean` as today; `/architect` only to flip statuses to `[STALE]` |
 | `council-report-*.html`, `council-transcript-*.md` | claude-council, when the council gate is convened. Owned by **neither** skill: never added to `WRITTEN`, never staged by `--commit`, never deleted. Both stages name their paths in the closing report and leave them in the working tree for the user to keep or delete. |

@@ -1,6 +1,6 @@
 ---
 name: domain-setup
-version: 0.2.1
+version: 0.2.2
 type: command
 description: Initialize the project's domain knowledge layer — creates .claude/domain/, .claude/domain/features/, a .claude/domain/INDEX.md that indexes any pre-existing domain docs, the .claude/FEATURES.md feature index, and a CLAUDE.md pointer to the domain index. Idempotent and re-runnable on projects that already have hand-written domain docs. Authoring command — leaves everything uncommitted for review by default; pass --commit to commit (and push) the scaffolding, or --commit --no-push to commit without pushing.
 ---
@@ -198,9 +198,12 @@ Tasks: none
 ---
 ```
 
-`Status:` is one of `[NEW]` / `[ITERATED]` / `[PLANNED]`. There is no
-`Last feature number` counter and no numeric IDs — slugs are the
-identifiers, so there is nothing to count.
+`Status:` is one of `[NEW]` / `[ITERATED]` / `[PLANNED]` / `[DONE]`. This
+command only ever writes the empty file above — a fresh `FEATURES.md` never
+has an entry, so `[DONE]` (written later by `/task-implement`, proposed and
+user-confirmed, or by a human editing the file by hand) never appears here.
+There is no `Last feature number` counter and no numeric IDs — slugs are
+the identifiers, so there is nothing to count.
 
 ---
 

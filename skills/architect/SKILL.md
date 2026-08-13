@@ -1,8 +1,8 @@
 ---
 name: architect
-version: 0.6.1
+version: 0.7.0
 type: skill
-description: Turn one or more high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md — the bridge between /product-design and /task-add. Grounds the architecture in the project's recorded technical-direction.md or existing code, or proposes a tech stack when there is neither. Runs from a product-design section, named features, or a bare prompt with no design documents at all. On a project whose .claude/domain/product-roadmap.md slices the target section, it switches per target into slice mode: it architects one milestone's scope slice rather than the whole section, turns the slice's exclusions into the document's non-goals, and records the milestone as a parenthetical on the FEATURES.md Source: line; pass --no-slices to force traditional resolution. Re-architecting a feature that already has tasks triggers an iterate guard: refuses outright while any task is [IN PROGRESS], otherwise asks, then flips surviving tasks to [STALE] and the feature to [ITERATED]. Requires /domain-setup. At a genuine design fork it offers to convene claude-council when that skill is installed, and is silent when it is not. Nothing committed by default; pass --commit to commit and push exactly the written paths (--commit --no-push to skip the push).
+description: Turn one or more high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md — the bridge between /product-design and /task-add. Grounds the architecture in the project's recorded technical-direction.md or existing code, or proposes a tech stack when there is neither. Runs from a product-design section, named features, or a bare prompt with no design documents at all. On a project whose .claude/domain/product-roadmap.md slices the target section, it switches per target into slice mode: it architects one milestone's scope slice rather than the whole section, turns the slice's exclusions into the document's non-goals, and records the milestone as a parenthetical on the FEATURES.md Source: line; pass --no-slices to force traditional resolution. Re-architecting a feature that already has tasks triggers an iterate guard: refuses outright while any task is [IN PROGRESS], otherwise asks, then flips surviving tasks to [STALE] and the feature to [ITERATED] — from [PLANNED] or from [DONE] alike. Requires /domain-setup. At a genuine design fork it offers to convene claude-council when that skill is installed, and is silent when it is not. Nothing committed by default; pass --commit to commit and push exactly the written paths (--commit --no-push to skip the push).
 ---
 
 # /architect
@@ -190,7 +190,8 @@ existing target feature:
    titles, state that re-architecting may invalidate them, and offer stop or
    proceed.
 4. **On proceed** — flip every non-`[DONE]` task to `[STALE]` in
-   `.claude/TASKS.md` and set the feature `[PLANNED]` → `[ITERATED]`.
+   `.claude/TASKS.md` and set the feature's status to `[ITERATED]` (from
+   `[PLANNED]` or `[DONE]`).
 5. **No tasks at all** (`Tasks: none`, or a `[NEW]` feature) → skip the
    guard; the status stays as it is. A feature already `[ITERATED]` stays
    `[ITERATED]`.
@@ -338,7 +339,8 @@ Read `./feature-doc-template.md` for both schemas below.
 **Closing report.** State:
 
 - Each feature written, its slug, its document path, and its status
-  transition (`— → [NEW]`, `[PLANNED] → [ITERATED]`, `[NEW] → [NEW]`).
+  transition (`— → [NEW]`, `[PLANNED] → [ITERATED]`, `[DONE] → [ITERATED]`,
+  `[NEW] → [NEW]`).
 - Every task flipped to `[STALE]` by PHASE 0b, with its ID and title.
 - The reconciliation command for each affected feature:
   `/task-add feature=<slug>`.
@@ -410,7 +412,10 @@ DO NOT:
 - Write or overwrite the `Tasks:` line of an existing `FEATURES.md` entry.
   It is `/task-add`'s field; this skill owns `Status:`, `Doc:`, and
   `Source:` only.
-- Write `[PLANNED]`, or move a `[PLANNED]` feature back to `[NEW]`.
+- Write `[PLANNED]` or `[DONE]`, or move a `[PLANNED]`/`[DONE]` feature back
+  to `[NEW]`. `[DONE]` is `/task-implement`'s field (proposed, user-
+  confirmed) or a human's by hand — this skill only ever reads it, to
+  decide whether the iterate guard applies.
 - Edit source code. This skill designs and documents; it implements nothing.
 - Write or edit `technical-direction.md`. It is `/product-design`'s
   document; this skill reads and adopts it, and a genuine mismatch is a

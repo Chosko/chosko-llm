@@ -74,9 +74,10 @@ follows the existing convention: `key=value` for a named target, `--flag` for
 a boolean.
 
 **Readiness** is the only real computation. A feature is ready when every
-dependency edge pointing at it originates from a feature that is `[PLANNED]`
-in `FEATURES.md` with all of its tasks `[DONE]` or `[SKIP]`. A feature with
-no dependencies is ready. Everything else is blocked, named with its blocker.
+dependency edge pointing at it originates from a feature that is `[DONE]`
+in `FEATURES.md`, or `[PLANNED]` with all of its tasks `[DONE]` or `[SKIP]`.
+A feature with no dependencies is ready. Everything else is blocked, named
+with its blocker.
 Derived on every read, never stored — which also means it can never be wrong
 about a task someone just finished.
 

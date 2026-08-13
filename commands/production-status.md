@@ -1,6 +1,6 @@
 ---
 name: production-status
-version: 0.1.0
+version: 0.1.1
 type: command
 description: Report what to build next by joining PLAN.md, FEATURES.md and TASKS.md — the active milestone with its roadmap goal and exit criteria, its features in plan order with their task rollup and readiness, the ready set, the single recommended next feature, blocked features named with their blocker, coverage gaps, features missing from the plan, and the remaining milestones. Readiness and coverage are derived on every read. Read-only — writes nothing, runs no shell, and never opens a file under .claude/tasks/.
 ---
@@ -104,8 +104,10 @@ THE MILESTONE BEING REPORTED
 READINESS (derived on every read, never stored)
 
 A feature is **ready** when **every** dependency edge pointing at it
-originates from a feature that is `[PLANNED]` in `FEATURES.md` **and** has
-all of its tasks `[DONE]` or `[SKIP]` in `TASKS.md`.
+originates from a feature that is `[DONE]` in `FEATURES.md`, or `[PLANNED]`
+**and** has all of its tasks `[DONE]` or `[SKIP]` in `TASKS.md` — a `[DONE]`
+feature already carries that same guarantee, just recorded on `FEATURES.md`
+instead of rolled up from `TASKS.md` each time.
 
 - A feature with no dependency edges is ready.
 - Everything else is **blocked**, and is always named together with what

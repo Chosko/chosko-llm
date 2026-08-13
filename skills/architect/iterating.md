@@ -85,8 +85,11 @@ Two writes, both narrow:
    `[STALE]`. Edit only `Status:` lines. Never create, delete, reorder, or
    otherwise edit task entries, and never touch a task's body file.
 2. **In `.claude/FEATURES.md`**, set the feature's `Status:` to
-   `[ITERATED]` if it is currently `[PLANNED]`. A feature already
-   `[ITERATED]` stays `[ITERATED]`.
+   `[ITERATED]` if it is currently `[PLANNED]` or `[DONE]`. A feature
+   already `[ITERATED]` stays `[ITERATED]`. Re-architecting a `[DONE]`
+   feature is not a special case — it reaches this guard with every one of
+   its tasks already `[DONE]` or `[SKIP]`, so step 3 above only ever has
+   `[SKIP]` tasks to list, if any.
 
 `[DONE]` tasks are never touched. Completed work stands regardless of what
 the design does afterwards; follow-up work is a new task, not a reopened

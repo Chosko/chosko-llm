@@ -240,13 +240,21 @@ worth understanding before you hit it:
    alone, updated in place (back to `[MISSING]`), or skipped with a reason and
    replaced. `[DONE]` tasks are never touched. The feature returns to
    `[PLANNED]`.
+6. Once tasks 31–35 are all `[DONE]`/`[SKIP]`, `/task-implement` notices —
+   the last one to land triggers the check — and proposes, once, at the end
+   of the run: flip `password-auth` to `[DONE]` in `FEATURES.md`? You decide;
+   a many-task run batches every feature it finished into one proposal at
+   the very end, never one per task. You can also flip a feature to `[DONE]`
+   by hand, any time, with no command involved.
 
 Three vocabularies are at work and they mean different things. A **feature**
-status (`[NEW]` / `[ITERATED]` / `[PLANNED]`) describes whether the backlog
-matches the design — never whether the feature is built. A **task** status
-(`[MISSING]` … `[DONE]`) describes the work itself. A **milestone** status in
-`PLAN.md` (`[PLANNED]` / `[ACTIVE]` / `[SHIPPED]`) describes delivery.
-`[ITERATED]` is the one state that demands action.
+status (`[NEW]` / `[ITERATED]` / `[PLANNED]` / `[DONE]`) describes whether
+the backlog matches the design — never whether the feature is built, except
+for `[DONE]`, which says both at once: backlog matches design *and* every
+task finished. A **task** status (`[MISSING]` … `[DONE]`) describes the work
+itself. A **milestone** status in `PLAN.md` (`[PLANNED]` / `[ACTIVE]` /
+`[SHIPPED]`) describes delivery. `[ITERATED]` is the one state that demands
+action; `[DONE]` is the one a human always confirms.
 
 The sections below are the per-command reference.
 
@@ -604,7 +612,7 @@ tasks. The core idea is to spend more focus in planning and writing down tasks, 
 - `/task-add` — plan a task and write it down. This is the real strength of this workflow: invoke the command with a very short description, let Claude Code investigate and expand it, in a conversational way. Claude will ask every question needed to fill the gaps, then it will write everything down for further implementation. It may propose splitting the description into several tasks when that gives better units (independent deliverables, or one task that's too large) — pass `--no-split` to always get exactly one task.
 - `/task-add feature=<slug>` — plan from an `/architect` feature document instead of a description. The document is the input, so you don't re-explain the work in prose; a feature usually becomes several tasks. Run it again after re-architecting and it *reconciles* rather than duplicating: each existing task is either left alone, updated in place, or skipped with a reason and replaced — and `[DONE]` tasks are never touched. When the run drafts any new task, it appends one more at the end to update the affected documentation once the others land. You approve the whole plan, reconciliation included, in one pass.
 - `/task-list` — show what's pending. On a project with a `.claude/PLAN.md` it groups the backlog **by milestone in plan order**, resolving each task's `Feature:` slug through the plan, and flags any task whose feature is blocked with `⚠ blocked by <slug>` alongside the existing markers; tasks with no feature, or one the plan doesn't list, fall under a trailing `Unplanned` heading. With no plan, the output is exactly what it has always been — no grouping, no flags, and no message about the missing plan.
-- `/task-implement` — build a task end-to-end, test-first, one commit (and push) each.
+- `/task-implement` — build a task end-to-end, test-first, one commit (and push) each. When a feature-derived task finishes the last task for its feature, proposes — once, at the end of the run — flipping that feature to `[DONE]` in `FEATURES.md`; you decide.
 - `/task-clean` — prune finished tasks.
 
 `/task-add`, `/task-clean`, and `/task-implement` commit automatically and

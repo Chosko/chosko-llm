@@ -142,9 +142,9 @@ Feature: <slug>          # optional — feature-derived tasks only
 
 Optional summary-block line carrying slug of feature document task generated from. Written only by `/task-add feature=<slug>`; absent entirely on free-form tasks (never `Feature: none`), so presence distinguishes the two. Lives in index not body, same reason `Status:` and `Preconditions:` do: backlog metadata, not implementation contract.
 
-Reconciliation depends on it — without line, re-planning run can't tell which existing tasks belong to feature being re-planned. `/task-implement` treats it as informational.
+Reconciliation depends on it — without line, re-planning run can't tell which existing tasks belong to feature being re-planned. `/task-implement` mostly treats it as informational, with one exception: it's what the `[DONE]` feature-completion proposal (below) uses to find every task belonging to a slug.
 
-`/task-list` does more with it when project has `.claude/PLAN.md`: resolves slug through plan's milestone `Features:` lists to find task's milestone, groups backlog under milestone headings **in plan order**, and appends `⚠ blocked by <slug>` when task's feature is blocked (same readiness rule `/production-status` uses — feature blocked when some dependency edge pointing at it originates from feature not `[PLANNED]` w/ all tasks `[DONE]`/`[SKIP]`; unresolvable edge slug ignored, not treated as blocker). Task w/ no `Feature:` line, or one naming slug no milestone lists (incl. `Unscheduled` slugs), groups under trailing `Unplanned` heading. Marker order fixed and stated in command body: `⚠ <target>`, `[<slug>]`, `(deps: N, M)`, `⚠ stale`, `⚠ blocked by <slug>`. Status filter applies before grouping, so it works within groups.
+`/task-list` does more with it when project has `.claude/PLAN.md`: resolves slug through plan's milestone `Features:` lists to find task's milestone, groups backlog under milestone headings **in plan order**, and appends `⚠ blocked by <slug>` when task's feature is blocked (same readiness rule `/production-status` uses — feature blocked when some dependency edge pointing at it originates from feature not `[DONE]` and not `[PLANNED]` w/ all tasks `[DONE]`/`[SKIP]`; unresolvable edge slug ignored, not treated as blocker). Task w/ no `Feature:` line, or one naming slug no milestone lists (incl. `Unscheduled` slugs), groups under trailing `Unplanned` heading. Marker order fixed and stated in command body: `⚠ <target>`, `[<slug>]`, `(deps: N, M)`, `⚠ stale`, `⚠ blocked by <slug>`. Status filter applies before grouping, so it works within groups.
 
 **No `PLAN.md` → none of that happens**, and command says nothing about it: output byte-for-byte what it always was, silent no-op not a warning. Most projects using `/task-list` have no roadmap. See [product-workflow.md § The read stage](./product-workflow.md#the-read-stage-production-status).
 
@@ -257,6 +257,20 @@ Agents **sequential, never parallel** — every task in run shares one working t
 Delegation partial by design. `claude+human` and `human` tasks, and `[STALE]` tasks requested explicitly by number, stay in parent conversation: all three depend on question put to user — manual checkpoint's confirmation, or stale implement-anyway/stop choice — subagent can't hold that conversation. Mixed run states which tasks go where before starting. Each delegated agent still owns its task's status flips, its single commit, its single push, so one-commit / one-push-per-task invariant holds regardless of where task ran.
 
 Protocol details live in `skills/task-implement/delegated-runs.md`, read only when delegation active.
+
+## `[DONE]` feature-completion proposal
+
+When a task carrying a `Feature: <slug>` line lands `[DONE]` in Step 6, and that leaves every task carrying the same `Feature: <slug>` at `[DONE]` or `[SKIP]`, the run records `<slug>` as a completion candidate — but proposes nothing yet. This holds whether the task ran in the parent conversation or in a delegated subagent; the parent already re-reads `TASKS.md` after each task (in-context or delegated), and that's where the check runs.
+
+A candidate is recorded only when the feature's current `FEATURES.md` `Status:` is `[PLANNED]`. A feature that's `[NEW]` or `[ITERATED]` has no business reaching `[DONE]` without `/architect` or `/task-add feature=<slug>` running first — the guard never fires for those, same as it never fires for a feature already `[DONE]`.
+
+Proposals are batched to the end of the run, never asked per-task — a many-task run that finishes several features asks once, for all of them together, after the last requested task's Step 7 (or Step 6, under `--no-commit`). A single-task run reaches "end of run" immediately after that one task, which is what makes "propose when it's the last task of a feature" and "propose only at the end of a batch" the same rule.
+
+On the user's approval — per slug, not all-or-nothing — `/task-implement` edits that entry's `Status:` line in `.claude/FEATURES.md` to `[DONE]` and, unless `--no-commit` was passed, stages the file and creates one commit covering every slug approved this run (even when several features completed in the same batch), separate from the per-task commits, then re-syncs and pushes per `docs/authoring-guide.md`'s commit-and-push protocol (skipped under `--no-push`). A declined or unnamed slug stays `[PLANNED]`; the run doesn't ask about it again.
+
+This is the only write `/task-implement` makes to `FEATURES.md`, and the only status it's allowed to set there — see [product-workflow.md § `[DONE]` is proposed, never applied silently](./product-workflow.md#done-is-proposed-never-applied-silently). A human flipping a feature to `[DONE]` by hand, outside any run, is equally valid and never overwritten.
+
+`chosko-llm task-impl` (the headless orchestrator) never runs this check and never touches `FEATURES.md` — the same as today. The proposal exists precisely because a human has to decide, and the orchestrator has none present.
 
 ## Cross-references
 
