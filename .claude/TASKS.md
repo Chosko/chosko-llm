@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 115
+Last task number: 116
 
 ---
 
@@ -200,5 +200,14 @@ Target: claude
 Files: README.md, docs/cli-help.txt, .claude/context/features.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/domain/features/plan-readout.md, VERSION
 Preconditions: 113, 114
 Feature: plan-readout
+
+---
+
+## 116. Delete-not-append design-process.md content once a run ends
+
+Status: [MISSING]
+Target: claude
+Files: skills/product-design/SKILL.md, skills/product-design/document-templates.md, skills/product-design/resuming.md, docs/authoring-guide.md, .claude/domain/product-workflow.md, .claude/context/features.md
+Preconditions: none
 
 ---
