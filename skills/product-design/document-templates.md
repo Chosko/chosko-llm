@@ -52,19 +52,47 @@ Business modelling: <in scope | out of scope>
 **PHASE <N> — <name>: <not started | in progress | done>**
 
 <One or two sentences: what the last session finished, and what the next
-one should pick up. Written for a reader who has forgotten everything.>
+one should pick up. Written for a reader who has forgotten everything.
+Optionally a short one-liner per document saying what is written in it, and
+one line naming the next step.>
 
 ## Decisions worth keeping
 
-<Rationale that would otherwise be lost with the conversation — the
-alternatives considered and why they were rejected. Grows across sessions;
-append, don't rewrite. Omit the section until there is something to put in
-it.>
+<A flat, undated bullet list. One terse line per entry: the call, plus a
+brief why that would otherwise be lost with the conversation. Omit the
+section until there is something to put in it.>
 ```
 
 The **Current stage** block is what a resume reads. Keep it truthful even
 mid-phase: "PHASE 2 — interview: in progress. Covered users and the two
 main flows; the big design decisions are not started."
+
+### This file shrinks; it does not grow
+
+`design-process.md` is scaffolding for a round in flight, not a record of
+the project. The decisions themselves are durably recorded in
+`product-design.md` / `technical-direction.md` / `business-model.md`, and
+git history is the record of how the file got to its current text. So at
+the end of **any** round that touched it — PHASE 7 finishing the first
+time, and every later amendment — the file is compressed back to the shape
+above by deleting, not by shortening:
+
+- **Current stage** stays one or two sentences plus the short per-document
+  one-liners and a next step, **however many amendment rounds have run**.
+  It is rewritten each time, never grown into a changelog.
+- **Decisions worth keeping** stays a flat, undated bullet list of terse
+  one-line entries. Never dated sub-headers
+  (`### PHASE N revision — <date>`), never `[SUPERSEDED — see …]`-tagged
+  verbatim retention, never a closing-record essay. When a new decision
+  supersedes an old one, the old entry is **deleted outright** and replaced
+  by the new line.
+- Everything that does not clear the "worth remembering" bar — alternatives
+  enumerated, meeting narrative, mid-round working notes — is cut entirely.
+  Only durable WHY that would otherwise be lost survives, one line each.
+
+A precedent already in this document's own content: retired product-name
+candidates are recorded as "full list preserved in git history, not
+re-listed here". That instinct applies to every section, not just that one.
 
 ---
 

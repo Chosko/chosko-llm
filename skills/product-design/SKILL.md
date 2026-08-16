@@ -1,8 +1,8 @@
 ---
 name: product-design
-version: 0.5.0
+version: 0.6.0
 type: skill
-description: Brainstorm and design a product from the ground up with the user, producing high-level design documentation under .claude/domain/ — a product design doc whose features are described from the user-experience angle, a technical direction (stack, topology, data, hosting) that /architect adopts, plus an optional business model. Resumable across sessions: the state lives in design-process.md, not in conversation history, and every phase transition rewrites the stage marker before the phase ends. Works greenfield or brownfield (detected by reading the repo). Its output is /architect's input. Requires /domain-setup to have run. At a genuine greenfield technical fork it offers to convene claude-council when that skill is installed, and is silent when it is not. Nothing is committed by default; pass --commit to commit and push exactly the documents written (--commit --no-push to skip the push).
+description: Brainstorm and design a product from the ground up with the user, producing high-level design documentation under .claude/domain/ — a product design doc whose features are described from the user-experience angle, a technical direction (stack, topology, data, hosting) that /architect adopts, plus an optional business model. Resumable across sessions: the state lives in design-process.md, not in conversation history, and every phase transition rewrites the stage marker before the phase ends. That state file shrinks rather than grows — every round that ends, the first completion and each later amendment alike, compresses it by deleting; once the process is complete a re-run also offers an amend path that edits a decision directly without re-running phases. Works greenfield or brownfield (detected by reading the repo). Its output is /architect's input. Requires /domain-setup to have run. At a genuine greenfield technical fork it offers to convene claude-council when that skill is installed, and is silent when it is not. Nothing is committed by default; pass --commit to commit and push exactly the documents written (--commit --no-push to skip the push).
 ---
 
 # /product-design
@@ -336,10 +336,24 @@ or tasks.
 **Register: documentational**, same discipline as PHASE 3: state the
 decided direction, not the debate that produced it.
 
+**Then compress `design-process.md`** — immediately before writing the
+process-complete marker, not after. The round is over, so the scaffolding
+it needed goes away: re-read the file and delete everything that does not
+clear the "worth remembering" bar, per `./document-templates.md`'s "This
+file shrinks; it does not grow". Concretely: **Current stage** back to one
+or two sentences plus short per-document one-liners and a next step;
+**Decisions worth keeping** back to a flat, undated bullet list of terse
+one-line entries, with any superseded entry deleted rather than marked; no
+dated sub-headers, no `[SUPERSEDED]` blocks, no closing-record essay, no
+mid-round working notes. Deletion, not summarization into a ledger — the
+decisions are already recorded in the other documents, and git history
+holds the text that was cut.
+
 Rewrite the stage marker to record that the process is complete, then give
 the final report:
 
 - Every document written or updated across the whole run, with its path.
+- That `design-process.md` was compressed, and in one line what was cut.
 - The confirmed high-level feature set, one line each.
 - The technical direction, in summary — stack, topology, and any explicitly
   open decisions.
@@ -428,6 +442,10 @@ DO NOT:
   Hand-written docs are canonical brownfield input — read them, build on
   them, never clobber them.
 - End a phase without rewriting the stage marker.
+- Let `design-process.md` grow across rounds — no dated revision headers,
+  no `[SUPERSEDED]`-tagged text kept verbatim, no closing-record essay, no
+  "Current stage" that reads as a changelog. A round that ends compresses
+  the file by deleting; the amend path in `./resuming.md` does the same.
 - Create `business-model.md` unless the user opted into business modelling.
 - Run any git/VCS command unless `--commit` was passed; and with it, stage
   only the explicit `WRITTEN` paths, never a catch-all, push per the

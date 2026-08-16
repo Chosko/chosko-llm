@@ -69,6 +69,8 @@ Sections: revenue model, cost structure, target segments, pricing, go-to-market,
 
 State file. Records method being followed, phase list, current-stage marker. Every phase transition rewrites marker *before* phase ends — interrupted session always resumes from truthful stage.
 
+Shrinks, never grows. End of **any** round touching it — PHASE 7 first completion, and every later amend — compresses it by *deleting*: "Current stage" back to 1–2 sentences + short per-document one-liners + next step (rewritten, never a changelog, however many rounds ran); "Decisions worth keeping" back to flat undated bullet list of terse one-liners, superseded entry deleted outright not `[SUPERSEDED]`-tagged; no dated revision headers, no closing-record essay, no mid-round notes. Deletion not summarization-into-a-ledger: decisions already durable in `product-design.md`/`technical-direction.md`/`business-model.md`, git history holds cut text. Rule also lives generically in [`../../docs/authoring-guide.md`](../../docs/authoring-guide.md)'s outlives-a-session pattern, so future resumable skills inherit it.
+
 ### `features/<slug>.md`
 
 Sections: purpose, scope and non-goals, architecture (components + responsibilities), data and state, interfaces and contracts, dependencies on other features, open questions. Mid-to-high technical level — no file-by-file plans, no real code; that's `/task-add`'s output, produced at planning time against codebase as it then stands.
@@ -393,6 +395,8 @@ This file itself domain file — describes process, not codebase structure.
 - Later run detects file, reads stage, summarizes where last session stopped, offers resume there or start fresh.
 
 No `resume` argument. Weeks can pass between sessions, flag wouldn't be remembered; document already exists, natural anchor. Corollary: marker load-bearing — phase ending without rewriting it degrades every later resume.
+
+**Three paths, not two.** `resuming.md` offers Resume / Start-fresh while process unfinished; once marker says process complete it offers third arm first — **amend a decision**: targeted change not warranting phase re-run. Amend edits relevant document(s) direct (`product-design.md` / `technical-direction.md` / `business-model.md`), never touches phase table, never moves marker off complete, then applies same delete-not-append compression to `design-process.md` before session ends — amendment leaves file same size shape it found. Lives in `resuming.md` as an option, not a CLI flag: document's presence already sole routing signal.
 
 **The PHASE 3 sweep.** PHASE 3 (write-back) other natural session boundary alongside PHASE 2's interview — where uncaptured detail most likely to die w/ context window. After write-back, PHASE 3 automatically re-reads `product-design.md`/`business-model.md` against PHASE 2 conversation, integrates anything documents don't cover — WHAT/HOW into `product-design.md`, business material into `business-model.md`, WHY/rationale/rejected alternatives into `design-process.md`'s "Decisions worth keeping" section. No new approval gate; existing PHASE 3 report is review surface. No-op when nothing missing.
 

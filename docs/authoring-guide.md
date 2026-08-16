@@ -343,7 +343,7 @@ phase transition rewrites that marker **before** the phase ends. A later run
 detects the document, reads the stage, summarizes where the last session
 stopped, and offers to resume or start fresh — with no argument to pass.
 
-Two rules make it work:
+Three rules make it work:
 
 - **The marker is load-bearing.** A phase that ends without rewriting it
   degrades every later resume, and does so silently: the documents look
@@ -352,6 +352,25 @@ Two rules make it work:
 - **The marker is the state, not the documents.** A resume reads the marker
   to decide where to pick up, and reports a mismatch with the documents
   rather than re-deriving the stage from their contents.
+- **The state document shrinks at the end of a round; it never grows.** It
+  is scaffolding for work in flight, not a record of the project — the
+  outputs are the record, and git history holds whatever text was cut. So
+  every round that touches it ends by **deleting**: the first completion and
+  each later amendment alike. Only durable rationale that would otherwise be
+  lost survives, one terse line each, in a flat undated list; a superseded
+  entry is deleted outright when its replacement lands, not tagged and kept.
+  No dated revision sub-headers, no `[SUPERSEDED — see …]` blocks retaining
+  verbatim text, no closing-record essay, and no stage marker grown into a
+  changelog. Left unstated, sessions invent an append-only convention ad hoc
+  and the file balloons — which is exactly what `design-process.md` did
+  before this rule existed.
+
+A skill that offers resume/start-fresh on an unfinished run should also
+offer an **amend** path once its state document says the process is
+complete: a targeted edit to the output documents that re-runs no phases,
+moves no marker, and applies the same end-of-round deletion before it ends.
+Without it, post-completion changes have no defined shape and accumulate in
+the state document.
 
 ## A question the user picks an answer from needs parallel arms
 

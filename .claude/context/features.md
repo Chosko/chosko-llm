@@ -261,14 +261,24 @@ Currently shipped:
   reads back which PHASE 4/5 features drive which choices, branches on
   greenfield/brownfield (confirm-and-record vs. propose-with-recommendation)
   — PHASE 7 writes it into `technical-direction.md`, standing constraint
-  `/architect` designs within. Four supporting files load only when their
+  `/architect` designs within, then compresses `design-process.md`
+  (delete-not-append: "Current stage" back to 1–2 sentences + per-document
+  one-liners + next step, "Decisions worth keeping" back to flat undated
+  terse bullets w/ superseded entries deleted outright — no dated revision
+  headers, no `[SUPERSEDED]` retention, no closing-record essay) immediately
+  before writing the process-complete marker, and says so in its report.
+  Four supporting files load only when their
   branch fires: `document-templates.md` (per-section stubs, read in PHASE 1,
   3, 5, 7), `business-model.md` (strategy question bank — opt-in
   only), `technical-direction.md` (technical question bank, read at
   start of PHASE 6 and again before PHASE 7 writes), `resuming.md` (read
   only when `design-process.md` already exists — also handles marker
   written before PHASE 6/7 existed, offering to continue rather than
-  reporting the process complete). The stage marker in `design-process.md`
+  reporting the process complete; and, once the marker says the process
+  *is* complete, offers a third arm first — **amend a decision**: edits the
+  relevant document directly, re-runs no phase, leaves the marker on
+  complete, and applies the same compression before the session ends, so an
+  amendment leaves the file no larger than it found it). The stage marker in `design-process.md`
   is rewritten before every phase ends, so an interrupted session resumes
   from a truthful stage — there is no `resume` argument, since the document
   is the state. A fifth supporting file, `council-gate.md`, loads only when
