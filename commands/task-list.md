@@ -161,16 +161,9 @@ WORKFLOW
    - Pad the status column so titles align. The longest tag is
      `[IN PROGRESS]` (13 chars).
    - Preserve the original task IDs — they are stable, do NOT
-     renumber for display. Task IDs are not sequential (pruning and
-     filtering leave gaps), so a line starting `N.` is exactly the
-     markdown syntax for an ordered-list item — left unfenced, a
-     markdown renderer treats every one of these lines as list items
-     and renumbers them 1, 2, 3… on display, silently replacing the
-     real ID with a fake sequential one. To prevent that, print the
-     actual per-task block (and the milestone headings and summary
-     line, per steps 4-5) as literal text inside a single fenced code
-     block (\`\`\`), not as normal markdown — this is a requirement on
-     the real output, not just on how this spec formats its examples.
+     renumber for display. IDs aren't sequential, so unfenced `N.`
+     lines get renumbered by markdown renderers. Print the actual
+     output (steps 3-5) inside one fenced code block to keep it literal.
    - If the task's target is `claude+human` or `human`, append
      `⚠ <target>` after the title (before any deps annotation) so
      human-in-the-loop tasks are visible at a glance. Targets `claude`
@@ -205,8 +198,7 @@ WORKFLOW
    print the lines as one flat block, exactly as always.
 
 5. After the per-task lines, print a one-line summary, inside the same
-   fenced code block opened in step 3 (close the fence after this line,
-   not before it):
+   fenced code block:
 
    ```
    <N> tasks shown — MISSING: 4, IN PROGRESS: 1, DONE: 12, SKIP: 1   (last task number: 17)
