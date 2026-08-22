@@ -1,6 +1,6 @@
 ---
 name: task-list
-version: 0.5.1
+version: 0.5.2
 type: command
 description: Print the project's task backlog as a compact summary, optionally filtered by status. Marks human-in-the-loop tasks (target claude+human or human) with a ⚠ so the user can see which tasks need them present, marks [STALE] tasks whose originating feature was re-architected, and shows the Feature: slug on feature-derived tasks. When the project has a .claude/PLAN.md, groups tasks by milestone in plan order — resolving each task's Feature: slug through the plan — and flags tasks whose feature is blocked with the blocker's name; with no plan, output is exactly what it has always been. Read-only — reads TASKS.md, and PLAN.md plus FEATURES.md when a plan exists, never the per-task body files.
 ---
@@ -161,7 +161,9 @@ WORKFLOW
    - Pad the status column so titles align. The longest tag is
      `[IN PROGRESS]` (13 chars).
    - Preserve the original task IDs — they are stable, do NOT
-     renumber for display.
+     renumber for display. IDs aren't sequential, so unfenced `N.`
+     lines get renumbered by markdown renderers. Print the actual
+     output (steps 3-5) inside one fenced code block to keep it literal.
    - If the task's target is `claude+human` or `human`, append
      `⚠ <target>` after the title (before any deps annotation) so
      human-in-the-loop tasks are visible at a glance. Targets `claude`
@@ -195,7 +197,8 @@ WORKFLOW
    milestone headings per PLAN-AWARE GROUPING above. With no `PLAN.md`,
    print the lines as one flat block, exactly as always.
 
-5. After the per-task lines, print a one-line summary:
+5. After the per-task lines, print a one-line summary, inside the same
+   fenced code block:
 
    ```
    <N> tasks shown — MISSING: 4, IN PROGRESS: 1, DONE: 12, SKIP: 1   (last task number: 17)
