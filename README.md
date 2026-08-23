@@ -569,24 +569,28 @@ it never opens a task body under `.claude/tasks/`.
 
 `/product-design` and `/architect` both reach forks where two or three
 options are genuinely defensible and the wrong pick is expensive to undo.
-Both can hand that decision to
-[claude-council](https://github.com/TorpedoD/claude-council) — a separate,
-independently maintained skill that runs the question through five thinking
-lenses (Red Team, First Principles, Expansionist, Outsider, Executor),
-peer-reviews them anonymously, forces an adversarial debate when the
-consensus looks too clean, and returns a verdict that keeps any minority
-dissent intact.
+Both can hand that decision to `claude-council` — a skill that runs the
+question through five thinking lenses (Red Team, First Principles,
+Expansionist, Outsider, Executor), peer-reviews them anonymously, forces an
+adversarial debate when the consensus looks too clean, and returns a verdict
+that keeps any minority dissent intact.
 
-It's **entirely optional**. Install it if you want it:
+chosko-llm ships it, vendored from the upstream project
+[TorpedoD/claude-council](https://github.com/TorpedoD/claude-council) —
+credit and the design are theirs; this repo carries a copy so it installs and
+upgrades like any other feature. Install it the usual way:
 
 ```sh
-npx skills add TorpedoD/claude-council
+chosko-llm add skill:claude-council
 ```
 
-When it's installed, the two commands offer to convene it at a real fork and
-wait for your yes. When it isn't, they say nothing and behave exactly as they
-always have — no prompt, no warning, no missing-dependency error. chosko-llm
-never installs it for you and doesn't depend on it.
+It's **entirely optional** — shipping is not installing. When it's installed,
+the two commands offer to convene it at a real fork and wait for your yes.
+When it isn't, they say nothing and behave exactly as they always have — no
+prompt, no warning, no missing-dependency error.
+
+It needs `jq` on your `PATH`: the council's journal append (Step 10) and
+`/claude-council meta` both use it. The rest of the run works without it.
 
 Two things worth knowing:
 

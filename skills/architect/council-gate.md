@@ -12,8 +12,11 @@ no fork.
 
 ## What this is
 
-[claude-council](https://github.com/TorpedoD/claude-council) is a separately
-installed skill that runs a decision through five thinking lenses — Red Team
+[claude-council](https://github.com/TorpedoD/claude-council) is a skill
+chosko-llm ships (vendored under `skills/claude-council/`) and installs only
+on request — `chosko-llm add skill:claude-council`. It stays opt-in, and this
+gate still detects it rather than assuming it. It runs a decision through
+five thinking lenses — Red Team
 (pre-mortem), First Principles (assumption reframing), Expansionist (option
 generation), Outsider (cross-domain method), and Executor (feasibility) —
 then anonymises them, peer-reviews, forces an adversarial debate when

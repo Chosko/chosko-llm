@@ -283,7 +283,9 @@ Currently shipped:
   from a truthful stage — there is no `resume` argument, since the document
   is the state. A fifth supporting file, `council-gate.md`, loads only when
   PHASE 6 reaches a genuine technical fork on the GREENFIELD branch: it
-  delegates the decision to the separately-installed claude-council skill
+  delegates the decision to the claude-council skill this repo ships
+  (vendored under `skills/claude-council/`, opt-in — installed only when the
+  user runs `chosko-llm add skill:claude-council`)
   (detected at `${CLAUDE_HOME:-$HOME/.claude}/skills/claude-council/SKILL.md`,
   silent and no-op when absent), invoked with no mode argument so
   claude-council's own Quick/Standard/Deep triage applies. The brownfield
@@ -393,7 +395,8 @@ Currently shipped:
   `iterating.md` (the feature already has an entry), `tech-stack-
   selection.md` (no existing stack in either form — an existing stack
   always wins), `council-gate.md` (PHASE 2 hit a genuine design fork —
-  optional delegation to the separately-installed claude-council skill at
+  optional delegation to the claude-council skill this repo ships (opt-in,
+  installed only on `chosko-llm add skill:claude-council`) at
   the stack choice, the architecture shape, and the low-level split;
   detected under `CLAUDE_HOME`, silent and no-op when absent, invoked with
   no mode argument, dissent folding into the feature document's Open
@@ -488,6 +491,25 @@ Currently shipped:
   `skills/task-implement/unity-mcp-checkpoints.md` checkpoint flow) by
   giving Claude reusable reference when operating editor via
   `mcp__UnityMCP__*` tools.
+- `skills/claude-council/` — **vendored**, second of the two (see
+  `skills/unity-mcp-skill/` above). Copy of upstream
+  `TorpedoD/claude-council`: structured LLM-council pressure test for one
+  high-stakes decision — five thinking-lens advisors, anonymised peer
+  review, forced debate on suspiciously clean consensus, dual-chairman
+  synthesis preserving dissent, plus a JSONL journal that feeds a
+  meta-analysis loop. 15 files: `SKILL.md`, seven `references/`, four
+  `scripts/` (jq-backed journal append/outcome/search + meta-analysis),
+  `assets/report-template.html`, `evals/evals.json`, `journal/.gitkeep`.
+  Two vendoring adaptations, re-applied on every upstream re-sync:
+  frontmatter pinned (upstream's `|` block-scalar `description` breaks
+  `parse_frontmatter`; `version` and `type` were absent), and every
+  `~/.claude` literal replaced by `${CLAUDE_HOME:-$HOME/.claude}`. Ships
+  but is **opt-in** — installed only by
+  `chosko-llm add skill:claude-council`, which is exactly the path both
+  `council-gate.md` copies detect, so an uninstalled council still makes
+  the gate a silent no-op. Needs `jq` at run time (journal append,
+  `/claude-council meta`) — documented, not engineered away; see
+  `../../docs/authoring-guide.md` "Vendored skills".
 - `commands/production-status.md` — read side of the planning layer. Thin
   read-only reporter (a command, not a skill: no conversation, no supporting
   files) joining `.claude/PLAN.md`, `.claude/FEATURES.md`, `.claude/TASKS.md`

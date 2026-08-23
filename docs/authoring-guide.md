@@ -305,6 +305,16 @@ every machine that installed the skill — the worst possible failure, because
 it works for the author and breaks for everyone else. Two folders, two
 copies, one obligation to keep them aligned.
 
+Now that `skills/claude-council/` exists in this repo, a second version of the
+same bad idea is available: parking the one shared copy *there*, next to the
+skill the gate talks about. It fails identically and for the same reason. A
+user who runs `chosko-llm add skill:architect` without
+`chosko-llm add skill:claude-council` gets `architect/` and nothing else —
+the reference dangles, and it dangles precisely on the machines where the gate
+is supposed to no-op quietly. The gate must keep working when claude-council is
+absent, which means the gate file has to travel inside the folder that reads
+it. Still two copies, still two folders, still one obligation.
+
 Each copy carries a header naming its sibling, so an editor who opens one
 learns about the other immediately.
 
@@ -329,6 +339,40 @@ confirm-and-record over a stack that already exists and has no fork to
 pressure-test.
 
 Anything else that drifts between the two is a bug.
+
+## Vendored skills
+
+`skills/claude-council/` is not repo-authored. It is a copy of the upstream
+project [TorpedoD/claude-council](https://github.com/TorpedoD/claude-council),
+imported so the council gate is reachable through `chosko-llm add
+skill:claude-council` instead of a second package manager. Treat it as
+foreign code that happens to live here: don't refactor it to local taste,
+don't restyle its prose, and don't split it up.
+
+The copy is not verbatim. Two adaptations were applied at import and must be
+re-applied on every re-sync:
+
+1. **Frontmatter is pinned.** Upstream's `description:` is a `|` block scalar
+   and it carries no `version:` or `type:` — `parse_frontmatter` would read
+   `description=|` and `cmd-add` would reject the file. The shipped block is a
+   single-quoted one-line `description:` plus the required `name`, `version`,
+   `type`. Keep it free of apostrophes: a YAML single-quoted scalar escapes
+   `'` as `''`, and the naive quote-strip leaves that visible.
+2. **No `~/.claude` literals.** Upstream hardcodes the install path in its
+   SKILL.md; the shipped copy uses `${CLAUDE_HOME:-$HOME/.claude}/skills/
+   claude-council/…` throughout, matching the repo's env-override rule and the
+   detection path both `council-gate.md` copies already use.
+
+Upstream drift is resolved by a manual re-sync — re-fetch the tree, diff it
+against `skills/claude-council/`, re-apply those two adaptations, bump the
+skill's `version:` and the root `VERSION`. There is no submodule, no lockfile,
+and no automatic update path, by the same reasoning that makes installs copies
+rather than symlinks.
+
+A vendored skill's runtime prerequisites are documented, not engineered away.
+claude-council needs `jq`; the repo's "no new dependencies" rule governs this
+repo's own `scripts/`, so the requirement is stated in the skill's text and in
+the README instead of being rewritten in awk.
 
 ## State that outlives a session belongs in a project document
 

@@ -323,18 +323,25 @@ Exactly one writer per artifact, `FEATURES.md` deliberate exception.
 ## The council gate (optional)
 
 Stages 1 and 3 can pressure-test a genuine decision fork through
-[claude-council](https://github.com/TorpedoD/claude-council), a separately
-installed skill that runs a decision through five thinking lenses, peer-reviews
-them anonymously, forces an adversarial debate when consensus looks
-artificially clean, and synthesises a verdict preserving minority dissent.
+claude-council — a skill this repo ships, vendored from
+[TorpedoD/claude-council](https://github.com/TorpedoD/claude-council) — that
+runs a decision through five thinking lenses, peer-reviews them anonymously,
+forces an adversarial debate when consensus looks artificially clean, and
+synthesises a verdict preserving minority dissent. Shipping is not installing:
+it reaches the user's Claude home only when they run
+`chosko-llm add skill:claude-council`.
 
 **It is optional delegation, not a dependency.** The pipeline detects the skill
 at `${CLAUDE_HOME:-$HOME/.claude}/skills/claude-council/SKILL.md`. When it is
 absent, both stages proceed with their inline propose-and-recommend flow and
 say nothing — an authoring run must not advertise an uninstalled optional
-dependency mid-flight. Nothing here reimplements the framework, so this repo's
-"no new dependencies" rule is untouched: claude-council's own `jq` requirement
-stays on claude-council's side of the line.
+dependency mid-flight. Nothing here reimplements the framework — the gate
+delegates, it does not re-derive. The "no new dependencies" rule governs this
+repo's own shell code under `scripts/`, which still needs nothing beyond
+POSIX-ish bash with awk/sed/grep. A vendored skill's runtime prerequisites are
+not eliminated by that rule, only documented: claude-council needs `jq` for its
+journal append and `/claude-council meta`, and that requirement is stated in
+the skill's own text and in the README rather than rewritten away.
 
 Where it fires:
 
