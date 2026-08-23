@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 116
+Last task number: 117
 
 ---
 
@@ -208,6 +208,15 @@ Feature: plan-readout
 Status: [DONE]
 Target: claude
 Files: skills/product-design/SKILL.md, skills/product-design/document-templates.md, skills/product-design/resuming.md, docs/authoring-guide.md, .claude/domain/product-workflow.md, .claude/context/features.md
+Preconditions: none
+
+---
+
+## 117. Vendor the claude-council skill as a shipped chosko-llm feature
+
+Status: [MISSING]
+Target: claude
+Files: skills/claude-council/ (SKILL.md, references/, scripts/, assets/, evals/, journal/), README.md, .claude/context/features.md, .claude/domain/product-workflow.md, docs/authoring-guide.md, skills/architect/council-gate.md, skills/architect/SKILL.md, skills/product-design/council-gate.md, skills/product-design/SKILL.md, VERSION
 Preconditions: none
 
 ---
