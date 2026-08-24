@@ -211,7 +211,7 @@ gate stays a runtime check rather than becoming `requires:`.
 
 ---
 
-## [ ] 5. Session continuity
+## [x] 5. Session continuity
 
 ```
 /task-add feature=session-continuity
@@ -226,6 +226,17 @@ files in .claude/sessions/ are themselves hand-written examples of the layout
 this feature specifies; treat them as the reference shape, not as generated
 output.
 ```
+
+**Done — tasks 132–134 authored, commit `b833287`, 2026-08-24.** Decisions
+taken while authoring: `/task-implement` writes no resume marker, so its
+sessions take the full form (the `./delegated-runs.md` row in the
+known-artifact table was a design error — that file is static shipped
+instruction text); `/session-resume` has no task-number selector (task runs
+are the least likely to be paused); pruning is settled — a session file is
+deleted by the resumed session once the work it describes is finished, and a
+`/session-save` in a resumed session deletes the file it resumed from; files
+never resumed are never auto-deleted. Task 134 is pre-authorised to reconcile
+the feature document on seven listed points.
 
 ---
 
