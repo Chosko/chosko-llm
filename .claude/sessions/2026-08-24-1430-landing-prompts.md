@@ -82,7 +82,7 @@ untouched — see the note under prompt 4.
 
 ---
 
-## [ ] 2. Batch launcher
+## [x] 2. Batch launcher
 
 ```
 /task-add feature=task-implement-launcher
@@ -95,6 +95,14 @@ Background, if you need it: .claude/sessions/2026-08-24-1430-ecc-import-architec
 holds the decision log for this whole body of work, including the ECC features
 already assessed and discarded — do not re-propose those.
 ```
+
+**Done — tasks 119–120 authored, commit `3210248`, 2026-08-24.** Authored
+against the post-118 shape of `SKILL.md`, with 119 preconditioned on 118.
+Two divergences from the feature document were accepted: the delegation guard
+reads `Target:` / `Status:` / `Feature:` from the `TASKS.md` summary block
+(not by grepping task bodies), and staleness comes from the `[STALE]` status
+in `TASKS.md` (no `FEATURES.md` join). Task 120 is pre-authorised to
+reconcile the `/architect`-owned feature document on exactly those two points.
 
 ---
 
