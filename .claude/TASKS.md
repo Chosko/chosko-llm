@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 139
+Last task number: 145
 
 ---
 
@@ -436,5 +436,65 @@ Status: [MISSING]
 Target: claude
 Files: commands/task-add.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION
 Preconditions: 129
+
+---
+
+## 140. Add the /runbook-run skill with the schema and subagent-contract references
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/SKILL.md, skills/runbook-run/references/runbook-schema.md, skills/runbook-run/references/subagent-contract.md, VERSION
+Preconditions: 125
+Feature: runbook-suite
+
+---
+
+## 141. Add the /runbook-create command
+
+Status: [MISSING]
+Target: claude
+Files: commands/runbook-create.md, VERSION
+Preconditions: 125, 140
+Feature: runbook-suite
+
+---
+
+## 142. Add the /runbook-list command
+
+Status: [MISSING]
+Target: claude
+Files: commands/runbook-list.md, VERSION
+Preconditions: 125, 140
+Feature: runbook-suite
+
+---
+
+## 143. Add the /runbook-clean command
+
+Status: [MISSING]
+Target: claude
+Files: commands/runbook-clean.md, VERSION
+Preconditions: 125, 140
+Feature: runbook-suite
+
+---
+
+## 144. Add the /runbook-suggest skill
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-suggest/SKILL.md, VERSION
+Preconditions: 125, 140, 141
+Feature: runbook-suite
+
+---
+
+## 145. Update documentation for feature runbook-suite
+
+Status: [MISSING]
+Target: claude
+Files: README.md, .claude/context/features.md, docs/authoring-guide.md, .claude/domain/features/runbook-suite.md, VERSION
+Preconditions: 125, 140, 141, 142, 143, 144
+Feature: runbook-suite
 
 ---
