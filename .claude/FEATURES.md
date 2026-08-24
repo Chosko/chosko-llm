@@ -37,3 +37,48 @@ Source: product-design.md § Roadmap and planning
 Tasks: 113, 114, 115
 
 ---
+
+## session-continuity — Per-project session handoff, linked to the work it belongs to
+
+Status: [NEW]
+Doc: .claude/domain/features/session-continuity.md
+Source: prompt
+Tasks: none
+
+---
+
+## task-peer-review — Review and iterate on implemented work, in a fresh context
+
+Status: [NEW]
+Doc: .claude/domain/features/task-peer-review.md
+Source: prompt
+Tasks: none
+
+---
+
+## task-implement-launcher — The batch parent stops orchestrating and becomes a launcher
+
+Status: [NEW]
+Doc: .claude/domain/features/task-implement-launcher.md
+Source: prompt
+Tasks: none
+
+---
+
+## shared-phase-engine — One authority per rule for the `task-*` suite, and the `requires:` field that makes it safe
+
+Status: [NEW]
+Doc: .claude/domain/features/shared-phase-engine.md
+Source: prompt
+Tasks: none
+
+---
+
+## repo-local-audits — Unshipped audits for building this product, not part of it
+
+Status: [NEW]
+Doc: .claude/domain/features/repo-local-audits.md
+Source: prompt
+Tasks: none
+
+---
