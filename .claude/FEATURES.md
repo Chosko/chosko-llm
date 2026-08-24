@@ -49,10 +49,10 @@ Tasks: none
 
 ## task-peer-review — Review and iterate on implemented work, in a fresh context
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/task-peer-review.md
 Source: prompt
-Tasks: none
+Tasks: 121, 122, 123, 124
 
 ---
 

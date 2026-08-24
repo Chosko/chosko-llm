@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 120
+Last task number: 124
 
 ---
 
@@ -247,5 +247,45 @@ Target: claude
 Files: .claude/context/features.md, .claude/context/INDEX.md, .claude/domain/task-workflow.md, .claude/domain/features/task-implement-launcher.md, VERSION
 Preconditions: 119
 Feature: task-implement-launcher
+
+---
+
+## 121. Add the /task-review skill
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-review/SKILL.md, skills/task-review/remote-diffs.md, VERSION
+Preconditions: 118
+Feature: task-peer-review
+
+---
+
+## 122. Add the /task-iterate skill
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-iterate/SKILL.md, VERSION
+Preconditions: 118, 121
+Feature: task-peer-review
+
+---
+
+## 123. Add the --review / --rounds loop to /task-implement
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-implement/SKILL.md, skills/task-implement/review-rounds.md, skills/task-implement/delegated-runs.md, VERSION
+Preconditions: 118, 119, 121, 122
+Feature: task-peer-review
+
+---
+
+## 124. Update documentation for feature task-peer-review
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/authoring-guide.md, .claude/context/features.md, .claude/context/INDEX.md, .claude/domain/task-workflow.md, .claude/domain/features/task-peer-review.md, VERSION
+Preconditions: 121, 122, 123
+Feature: task-peer-review
 
 ---
