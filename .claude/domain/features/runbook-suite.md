@@ -293,9 +293,12 @@ reconciled by re-reading it, and `/runbook-list` never has to open a body.
 last thing the agent reads:
 
 1. **Preamble** — orient in a fresh session: read the project's `CLAUDE.md` and
-   follow its navigation instructions, including both navigation layers where
-   they exist. It also names the runbook and step this agent is executing, which
-   is what lets a step's subagent use `/runbook-create --append` with no name.
+   follow its navigation instructions as written — the index of each navigation
+   layer, then only the files relevant to this step, never a whole layer. It
+   also names the runbook and step this agent is executing, which is what lets a
+   step's subagent use `/runbook-create --append` with no name. The
+   orchestrator itself reads `CLAUDE.md`, the runbook and the index, and nothing
+   else — it never opens a navigation layer, since it touches no source.
 2. **Background** — the `Companion:` document, if the header names one.
 3. **Do not re-propose** — the runbook's trailing section, if present.
 4. **Context** — the step's `Context:` bullets, if any.
