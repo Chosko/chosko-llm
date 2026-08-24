@@ -9,7 +9,7 @@ Companion handoff: `2026-08-24-1430-ecc-import-architecture.md` beside this file
 
 ---
 
-## 0. Optional — commit the architecture first
+## [x] 0. Optional — commit the architecture first
 
 The five feature docs, the `FEATURES.md` entries and the `.claude/domain/INDEX.md`
 rows are currently uncommitted. Land them before authoring tasks so the task
@@ -31,7 +31,7 @@ that actually changes a feature.
 
 ---
 
-## 1. Delete the dead dual-LLM lane
+## [ ] 1. Delete the dead dual-LLM lane
 
 **This has no feature document.** All its evidence is here and in the council
 transcript, so the prompt carries it.
@@ -73,7 +73,7 @@ already assessed and discarded — do not re-propose those.
 
 ---
 
-## 2. Batch launcher
+## [ ] 2. Batch launcher
 
 ```
 /task-add feature=task-implement-launcher
@@ -89,7 +89,7 @@ already assessed and discarded — do not re-propose those.
 
 ---
 
-## 3. Peer review
+## [ ] 3. Peer review
 
 ```
 /task-add feature=task-peer-review
@@ -123,7 +123,7 @@ already assessed and discarded — do not re-propose those.
 
 ---
 
-## 4. Shared phase engine
+## [ ] 4. Shared phase engine
 
 ```
 /task-add feature=shared-phase-engine
@@ -157,7 +157,7 @@ already assessed and discarded — do not re-propose those.
 
 ---
 
-## 5. Session continuity
+## [ ] 5. Session continuity
 
 ```
 /task-add feature=session-continuity
@@ -175,7 +175,7 @@ output.
 
 ---
 
-## 6. Repo-local audits
+## [ ] 6. Repo-local audits
 
 **Carries the `CLAUDE.md` rule change that would otherwise be lost.**
 
@@ -202,7 +202,7 @@ already assessed and discarded — do not re-propose those.
 
 ---
 
-## 7. Reconcile the stale planning layer
+## [ ] 7. Reconcile the stale planning layer
 
 Not part of the ECC work — a pre-existing inconsistency found while verifying
 council claims. Worth landing before `/production-plan` runs against these five
