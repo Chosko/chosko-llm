@@ -32,17 +32,25 @@ fi
 [ -d "$CHOSKO_LLM_HOME/.git" ] || die "Managed clone $CHOSKO_LLM_HOME is not a git repo. Re-run install.sh."
 
 before="$(git -C "$CHOSKO_LLM_HOME" rev-parse HEAD)"
+# Raw, never resolve_version: that appends " (<git describe>)", which with no
+# tags is a bare sha and changes on every commit.
+version_before="$(raw_version)"
 
 log_info "Pulling latest in $CHOSKO_LLM_HOME"
 git -C "$CHOSKO_LLM_HOME" pull --ff-only
 
 after="$(git -C "$CHOSKO_LLM_HOME" rev-parse HEAD)"
+version_after="$(raw_version)"
 
 if [ "$before" = "$after" ]; then
   log_success "Already up to date."
 else
-  log_info "Pulled changes:"
-  git -C "$CHOSKO_LLM_HOME" log --oneline "$before..$after" >&2 || true
+  # Exactly one of the two: the curated bullets when the version moved, the
+  # commit subjects when it did not.
+  if ! print_changelog_range "$version_before" "$version_after"; then
+    log_info "Pulled changes:"
+    git -C "$CHOSKO_LLM_HOME" log --oneline "$before..$after" >&2 || true
+  fi
 fi
 
 # Refresh the proxy from the managed clone.

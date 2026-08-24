@@ -29,17 +29,26 @@ die() { log_error "$*"; exit 1; }
 
 # ---------- version ----------
 
+# raw_version
+# Prints the trimmed contents of $CHOSKO_LLM_HOME/VERSION, or nothing at all
+# when the file is absent. Deliberately bare: no " (<git describe>)" suffix, so
+# two reads taken either side of a pull are comparable. The only place the
+# VERSION path and its trim are written.
+raw_version() {
+  [ -f "$CHOSKO_LLM_HOME/VERSION" ] || return 0
+  tr -d '[:space:]' < "$CHOSKO_LLM_HOME/VERSION"
+  printf '\n'
+}
+
 # resolve_version
-# Prints the repo-level version string for the managed clone: the trimmed
-# contents of $CHOSKO_LLM_HOME/VERSION, plus " (<git describe>)" when git and a
-# describe value are available. Prints "unknown" if VERSION is missing. This is
-# the single source of the version format — install.sh and cmd-version.sh both
-# use it so they never drift.
+# Prints the repo-level version string for the managed clone: raw_version, plus
+# " (<git describe>)" when git and a describe value are available. Prints
+# "unknown" if VERSION is missing. This is the single source of the version
+# format — install.sh and cmd-version.sh both use it so they never drift.
 resolve_version() {
-  local version="unknown" gitdesc
-  if [ -f "$CHOSKO_LLM_HOME/VERSION" ]; then
-    version="$(tr -d '[:space:]' < "$CHOSKO_LLM_HOME/VERSION")"
-  fi
+  local version gitdesc
+  version="$(raw_version)"
+  [ -n "$version" ] || version="unknown"
   if command -v git >/dev/null 2>&1; then
     gitdesc="$(git -C "$CHOSKO_LLM_HOME" describe --tags --always 2>/dev/null || true)"
     [ -n "$gitdesc" ] && version="$version ($gitdesc)"
@@ -202,6 +211,10 @@ src_skill_dir()     { printf '%s/skills/%s' "$CHOSKO_LLM_HOME" "$1"; }
 src_claudemd_path() { printf '%s/claude-md/%s.md' "$CHOSKO_LLM_HOME" "$1"; }
 src_statusline_path() { printf '%s/statusline/%s.sh' "$CHOSKO_LLM_HOME" "$1"; }
 src_hook_path()       { printf '%s/hooks/%s.sh' "$CHOSKO_LLM_HOME" "$1"; }
+
+# The repo-level changelog in the managed clone. Not a feature: never copied
+# into $CLAUDE_HOME, only read from the clone by `chosko-llm upgrade`.
+src_changelog_path() { printf '%s/CHANGELOG.md' "$CHOSKO_LLM_HOME"; }
 
 # Installed paths under CLAUDE_HOME.
 inst_command_path() { printf '%s/commands/%s.md' "$CLAUDE_HOME" "$1"; }
@@ -664,6 +677,111 @@ auto_upgrade_enabled() {
 # auto_upgrade_due — succeeds when the last run was not today (calendar day).
 auto_upgrade_due() {
   [ "$(auto_upgrade_get last_run)" != "$(date +%Y-%m-%d)" ]
+}
+
+# ---------- changelog ----------
+
+# print_changelog_range <old-version> <new-version>
+# Writes the CHANGELOG.md sections for the versions between two VERSION values
+# to stderr: from <new-version>'s header inclusive, down to but excluding
+# <old-version>'s. The file is descending semver, so that is a single forward
+# scan. Returns 0 when at least one section was printed, 1 otherwise — the
+# caller uses that to decide whether to fall back to a raw commit list.
+#
+# Degrades, never fails: a missing, malformed or unreadable CHANGELOG.md costs
+# the reader their release notes and nothing else. A line inside a section that
+# is neither a header nor a bullet is passed through indented and uncoloured
+# rather than dropped.
+#
+# Colour is gated on _use_color (stderr), not the C_* variables (stdout).
+print_changelog_range() {
+  local old_version="${1:-}" new_version="${2:-}"
+  local file body line rest version remainder rc=0 first=1
+  local bold='' dim='' accent='' reset=''
+
+  file="$(src_changelog_path)"
+  # A clone predating this feature has no changelog. Say nothing.
+  [ -f "$file" ] || return 1
+
+  if [ -z "$new_version" ]; then
+    log_info "Could not read VERSION in $CHOSKO_LLM_HOME — skipping the changelog readout."
+    return 1
+  fi
+  # Nothing moved: the caller's commit list is the whole story.
+  if [ "$old_version" = "$new_version" ]; then
+    return 1
+  fi
+
+  # Single forward scan. Buffered so the END block can tell "old header found"
+  # (print the whole range) from "old header missing" (print only the newest
+  # section, so an unknown prior version cannot dump the entire file).
+  # Exit codes: 10 = no header for the new version, 11 = none for the old,
+  # 12 = empty range (old sits at or above new — a downgrade or channel switch).
+  body="$(awk -v old="$old_version" -v new="$new_version" '
+    /^## / {
+      if ($2 == new)      { found_new = 1; if (!seen_old) { keep = 1; nsec++ } }
+      else if ($2 == old) { found_old = 1; seen_old = 1; keep = 0 }
+      else if (keep)      { nsec++ }
+    }
+    keep { buf[++n] = $0; sect[n] = nsec }
+    END {
+      if (!found_new) exit 10
+      if (n == 0) exit 12
+      for (i = 1; i <= n; i++) {
+        if (!found_old && sect[i] > 1) break
+        print buf[i]
+      }
+      if (!found_old) exit 11
+    }
+  ' "$file" 2>/dev/null)" || rc=$?
+
+  case "$rc" in
+    0|11) ;;
+    10) log_info "CHANGELOG.md has no section for $new_version."; return 1 ;;
+    *) return 1 ;;
+  esac
+
+  if _use_color; then
+    bold=$'\033[1m'; dim=$'\033[2m'; accent=$'\033[36m'; reset=$'\033[0m'
+  fi
+
+  if [ -n "$old_version" ]; then
+    log_info "What changed since $old_version → $new_version"
+  else
+    log_info "What changed in $new_version"
+  fi
+  printf '\n' >&2
+
+  while IFS= read -r line; do
+    case "$line" in
+      '## '*)
+        rest="${line#\#\# }"
+        version="${rest%%[[:space:]]*}"
+        remainder="${rest#"$version"}"
+        [ "$first" -eq 1 ] || printf '\n' >&2
+        first=0
+        printf '  %s%s%s%s%s%s\n' "$bold" "$version" "$reset" "$dim" "$remainder" "$reset" >&2
+        ;;
+      # The marker stays ASCII: colour the two characters the source bullet
+      # already begins with rather than substituting a glyph that can mangle in
+      # a legacy codepage console.
+      '- '*)
+        printf '    %s- %s%s\n' "$accent" "$reset" "${line#- }" >&2
+        ;;
+      '')
+        ;;
+      *)
+        printf '    %s\n' "$line" >&2
+        ;;
+    esac
+  done <<< "$body"
+
+  printf '\n' >&2
+
+  if [ "$rc" -eq 11 ]; then
+    log_info "CHANGELOG.md has no section for ${old_version:-the previous version} — showing only $new_version."
+  fi
+  return 0
 }
 
 # ---------- validation ----------

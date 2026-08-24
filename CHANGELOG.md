@@ -2,6 +2,15 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 0.63.0 — 2026-08-25
+
+- `chosko-llm upgrade` now prints what changed: the `CHANGELOG.md` sections for
+  exactly the versions just pulled, newest first, with the version bold and the
+  bullets colour-marked. The raw `git log --oneline` dump is suppressed when
+  those bullets print, and still appears when the version did not move or the
+  clone has no `CHANGELOG.md`.
+- The same readout appears during daily auto-upgrade.
+
 ## 0.62.4 — 2026-08-25
 
 - `CHANGELOG.md` preamble reduced to one line; the rule, its converse and the ordering rationale live in `CLAUDE.md` and the authoring guide, not in the record.

@@ -521,7 +521,7 @@ Feature: version-changelog
 
 ## 148. Print what changed on upgrade, from CHANGELOG.md
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/lib.sh, scripts/cmd-upgrade.sh, CHANGELOG.md, VERSION
 Preconditions: 146
