@@ -65,6 +65,10 @@ all three downstream projects but is inert scaffolding that nothing consumes.
 Also update CLAUDE.md, docs/authoring-guide.md and .claude/context/ wherever
 they describe the dual-LLM author/implementer split, and remove
 .claude/context/cmd-task-impl.md.
+
+Background, if you need it: .claude/sessions/2026-08-24-1430-ecc-import-architecture.md
+holds the decision log for this whole body of work, including the ECC features
+already assessed and discarded — do not re-propose those.
 ```
 
 ---
@@ -77,6 +81,10 @@ they describe the dual-LLM author/implementer split, and remove
 Read .claude/domain/features/task-implement-launcher.md first. Sequencing: the
 dual-LLM lane deletion must already be done — it removes material from the same
 file. Do not start until that is landed.
+
+Background, if you need it: .claude/sessions/2026-08-24-1430-ecc-import-architecture.md
+holds the decision log for this whole body of work, including the ECC features
+already assessed and discarded — do not re-propose those.
 ```
 
 ---
@@ -107,6 +115,10 @@ in task bodies rather than staying only in the design doc:
    will commit unreviewed work. Subagent nesting to depth 3
    (launcher -> implementor -> reviewer) was confirmed to work, so batch
    --review is in scope.
+
+Background, if you need it: .claude/sessions/2026-08-24-1430-ecc-import-architecture.md
+holds the decision log for this whole body of work, including the ECC features
+already assessed and discarded — do not re-propose those.
 ```
 
 ---
@@ -137,6 +149,10 @@ in scripts/lib.sh splits on the first colon generically, so `requires:
 skill:task-engine` parses with zero changes to lib.sh; and cmd-add installs a
 skill with `cp -R` of the whole folder, which is why the engine must live in a
 skill and not a command.
+
+Background, if you need it: .claude/sessions/2026-08-24-1430-ecc-import-architecture.md
+holds the decision log for this whole body of work, including the ECC features
+already assessed and discarded — do not re-propose those.
 ```
 
 ---
@@ -148,6 +164,13 @@ skill and not a command.
 
 Read .claude/domain/features/session-continuity.md first. Independent of the
 task-* work — can be done at any point.
+
+Background, if you need it: .claude/sessions/2026-08-24-1430-ecc-import-architecture.md
+holds the decision log for this whole body of work, including the ECC features
+already assessed and discarded — do not re-propose those. Note that the two
+files in .claude/sessions/ are themselves hand-written examples of the layout
+this feature specifies; treat them as the reference shape, not as generated
+output.
 ```
 
 ---
@@ -171,6 +194,10 @@ no user receives corrupts the meaning of the version install.sh reports.
 Add a line to CLAUDE.md's Versioning section recording that exception, naming
 .claude/skills/ as the repo-local unshipped location. Without it the next
 session will bump VERSION for these files, because the existing rule says to.
+
+Background, if you need it: .claude/sessions/2026-08-24-1430-ecc-import-architecture.md
+holds the decision log for this whole body of work, including the ECC features
+already assessed and discarded — do not re-propose those.
 ```
 
 ---
@@ -196,6 +223,10 @@ PLAN.md should now be generated for this repo. Five new [NEW] features were
 added on 2026-08-24 (session-continuity, task-peer-review,
 task-implement-launcher, shared-phase-engine, repo-local-audits) and will need
 placing in a milestone if you do generate it.
+
+Background on those five, if you need it:
+.claude/sessions/2026-08-24-1430-ecc-import-architecture.md and the feature
+documents under .claude/domain/features/.
 ```
 
 ---
