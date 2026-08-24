@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 138
+Last task number: 139
 
 ---
 
@@ -427,5 +427,14 @@ Target: claude
 Files: README.md, docs/authoring-guide.md, .claude/context/features.md, .claude/domain/features/repo-local-audits.md, VERSION
 Preconditions: 135, 136, 137
 Feature: repo-local-audits
+
+---
+
+## 139. Replace /task-add's ownership notice with a pre-authorisation gate
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-add.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION
+Preconditions: 129
 
 ---
