@@ -31,7 +31,7 @@ that actually changes a feature.
 
 ---
 
-## [ ] 1. Delete the dead dual-LLM lane
+## [x] 1. Delete the dead dual-LLM lane
 
 **This has no feature document.** All its evidence is here and in the council
 transcript, so the prompt carries it.
@@ -70,6 +70,15 @@ Background, if you need it: .claude/sessions/2026-08-24-1430-ecc-import-architec
 holds the decision log for this whole body of work, including the ECC features
 already assessed and discarded — do not re-propose those.
 ```
+
+**Done — task 118 authored, commit `267c59f`, 2026-08-24.** Decisions taken
+while authoring: the whole enrich apparatus goes too (`/task-enrich`,
+`/task-add --enrich`, `Target: local`, enriched-body schema); `/task-setup`
+keeps emitting `run-affected-tests.sh` / `run-full-tests.sh` (job-hunter-cli
+uses them as its real test dispatcher) but drops the two aider prompt files;
+`scripts/check-task-parity.sh` is deleted; root `VERSION` goes to `1.0.0`.
+Task 118 deliberately leaves `.claude/domain/features/shared-phase-engine.md`
+untouched — see the note under prompt 4.
 
 ---
 
@@ -125,12 +134,27 @@ already assessed and discarded — do not re-propose those.
 
 ## [ ] 4. Shared phase engine
 
+**Carries a stale-document fix.** Task 118 (prompt 1) deletes `/task-enrich`
+and `scripts/check-task-parity.sh`, but
+`.claude/domain/features/shared-phase-engine.md` still names `task-enrich` in
+its migration order and `check-task-parity.sh` among its validation ideas.
+Task 118 left that document alone because it is `/architect`-owned; this
+prompt must fix it before the tasks are derived from it.
+
 ```
 /task-add feature=shared-phase-engine
 
 Read .claude/domain/features/shared-phase-engine.md first. Sequencing: this
 goes LAST of the four that touch skills/task-implement/SKILL.md. Landing it
 before the other three rebases a large restructure onto a file that moved twice.
+
+The feature document is stale in two places and must be corrected BEFORE the
+task bodies are derived from it, so no task inherits the stale references:
+task 118 deletes /task-enrich (commands/task-enrich.md) and
+scripts/check-task-parity.sh. Remove task-enrich from the migration order in
+that document (the surviving consumers are task-list, task-clean, task-add and
+task-implement) and drop check-task-parity.sh from its validation notes. Keep
+the rest of the document as-is.
 
 Make sure the migration order in that document survives into separate tasks —
 it is designed so each step is independently verifiable:
