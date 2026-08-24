@@ -54,6 +54,8 @@ chosko-llm update <f1> <f2> ...  # re-copy several features in one call (same be
 
 Run `upgrade` first, then `update --all` to pick up new versions. `upgrade` only refreshes the source; it does not touch installed features.
 
+When the pull moves the repo-level version, `upgrade` prints what changed — the `CHANGELOG.md` sections for exactly the versions just pulled, newest first. That readout replaces the raw commit list: you get the curated bullets when the version moved, and the `git log --oneline` subjects when it did not (or when the clone is old enough to have no `CHANGELOG.md`). The same block appears when the daily auto-upgrade runs.
+
 #### Channels: trying unmerged work
 
 A **channel** is just the branch the managed clone is checked out on. Switch onto a feature branch to try it before it lands on `master`, then switch back:
@@ -722,17 +724,21 @@ Every feature requires YAML frontmatter (`name`, `version`, `type`, `description
 
 **Versioning.** There are two version axes. The per-feature `version:` frontmatter versions a single command or skill (and gates `add` / `update`). The root `VERSION` file is the repo-level stamp that `install.sh` reports — bump it on every shipped change: patch for fixes and docs, minor for a new feature, major for a breaking CLI change. A feature change bumps both.
 
+A `VERSION` bump without a matching `CHANGELOG.md` section is an incomplete change; conversely, a change that does not bump `VERSION` gets no changelog entry. Run [`./scripts/check-changelog.sh`](scripts/check-changelog.sh) after bumping — it is silent when the top section matches `VERSION`, has at least one bullet, and the version headers are strictly descending semver, and fails naming the first violation otherwise.
+
 ### Repo layout
 
 | Path                         | Purpose                                                                  |
 | ---------------------------- | ------------------------------------------------------------------------ |
 | `install.sh` / `uninstall.sh` | Bootstrap the managed clone and `~/bin` proxy / tear them down.          |
 | `VERSION`                    | Repo-level version stamp, bumped on every shipped change (see below).     |
+| `CHANGELOG.md`               | User-facing changes per `VERSION`, newest first. Read by `upgrade` to print what a pull changed. |
 | `bin/chosko-llm`             | Proxy script copied to `~/bin/chosko-llm` by `install.sh`.               |
 | `bin/chosko-llm.cmd`         | Windows batch shim copied alongside the proxy on Windows.                |
 | `scripts/lib.sh`             | Shared shell helpers (logging, frontmatter, path resolution).            |
 | `scripts/lib-task-external.sh` | Helpers for the external-LLM task workflow.                            |
 | `scripts/cmd-*.sh`           | One file per CLI subcommand. The proxy delegates here.                   |
+| `scripts/check-changelog.sh` | Authoring-time guard: fails when a `VERSION` bump has no matching `CHANGELOG.md` section. Not a subcommand — run it by hand. |
 | `commands/<name>.md`         | A Claude Code command. Frontmatter required.                             |
 | `skills/<name>/SKILL.md`     | A Claude Code skill. Frontmatter required.                               |
 | `claude-md/<name>.md`        | A CLAUDE.md snippet feature, merged into the user's CLAUDE.md.           |

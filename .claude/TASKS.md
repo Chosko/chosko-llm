@@ -531,7 +531,7 @@ Feature: version-changelog
 
 ## 149. Update documentation for feature version-changelog
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/cli-help.txt, .claude/context/shared-lib.md, .claude/context/cmd-upgrade.md, .claude/context/INDEX.md, CHANGELOG.md, VERSION
 Preconditions: 146, 147, 148

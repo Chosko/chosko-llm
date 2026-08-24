@@ -2,7 +2,7 @@
 
 Layout: flat
 
-Last updated: 2026-08-09
+Last updated: 2026-08-25
 
 Nav layer for `chosko-llm`. Read this first, then files relevant to task. Open source files only when context file's **When to read the source** section say necessary.
 
@@ -11,6 +11,8 @@ Canonical project docs live outside this folder, stay authoritative:
 - `../../README.md` — user-facing overview.
 - `../../docs/authoring-guide.md` — frontmatter/versioning truth.
 - `../../docs/cli-help.txt` — CLI help text shipped to users.
+- `../../CHANGELOG.md` — user-facing changes per root `VERSION`, newest first;
+  read by `chosko-llm upgrade` to print what a pull changed.
 
 ## Files
 

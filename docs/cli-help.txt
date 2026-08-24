@@ -54,6 +54,9 @@ Usage:
 
   chosko-llm upgrade                  git pull the managed clone and refresh the CLI proxy.
                                       Does NOT re-install features — use 'update --all' for that.
+                                      Prints what changed for exactly the versions just pulled,
+                                      from the repo's CHANGELOG.md; the raw commit list appears
+                                      instead when the version did not move.
                                       Runs automatically once a day on the first command (opt-in;
                                       enabled at install). Toggle with the flags below.
   chosko-llm upgrade --enable-auto    Enable daily auto-upgrade (sets the preference; no upgrade).

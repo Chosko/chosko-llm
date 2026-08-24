@@ -2,6 +2,15 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 0.63.1 — 2026-08-25
+
+- `README.md` documents the upgrade readout, the rule that a `VERSION` bump
+  without a `CHANGELOG.md` section is incomplete, and the
+  `scripts/check-changelog.sh` guard; `CHANGELOG.md` and that script are now
+  listed in the repo-layout table.
+- `chosko-llm help` notes that `upgrade` prints what changed for the versions
+  just pulled.
+
 ## 0.63.0 — 2026-08-25
 
 - `chosko-llm upgrade` now prints what changed: the `CHANGELOG.md` sections for

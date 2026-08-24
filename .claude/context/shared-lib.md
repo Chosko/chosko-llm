@@ -116,6 +116,9 @@ Source paths in managed clone:
 - `src_claudemd_path <name>` → `$CHOSKO_LLM_HOME/claude-md/<name>.md`
 - `src_statusline_path <name>` → `$CHOSKO_LLM_HOME/statusline/<name>.sh`
 - `src_hook_path <name>`       → `$CHOSKO_LLM_HOME/hooks/<name>.sh`
+- `src_changelog_path`         → `$CHOSKO_LLM_HOME/CHANGELOG.md`. Takes no name —
+  one file, not a per-feature artifact. `CHANGELOG.md` never installed into
+  `$CLAUDE_HOME`, so no `inst_` twin.
 
 Installed paths under `$CLAUDE_HOME` mirror same shape:
 - `inst_command_path <name>`, `inst_skill_path <name>`, `inst_skill_dir <name>`,
@@ -127,6 +130,42 @@ Installed paths under `$CLAUDE_HOME` mirror same shape:
 Export output:
 - `export_dir_path` → `$CHOSKO_LLM_EXPORT_DIR` if set, else `$HOME/claude-exports`.
   Only place that path assembled; used by `cmd-export.sh`.
+
+### Version
+- `raw_version` → trimmed contents of `$CHOSKO_LLM_HOME/VERSION`, empty when
+  file absent. Only place VERSION path + trim written. Bare semver, nothing
+  appended — so two reads taken either side of a pull are comparable.
+- `resolve_version` → unchanged output format (`raw_version` plus
+  ` (<git describe>)` when available, `unknown` when VERSION missing); now
+  reads *through* `raw_version` instead of re-doing the path + trim. Callers
+  (`install.sh`, `cmd-version.sh`) untouched.
+
+Never compare `resolve_version` outputs: no tags in this repo, so
+`git describe --tags --always` yields bare sha that changes every commit.
+`cmd-upgrade.sh` uses `raw_version` for exactly this reason.
+
+### Changelog readout
+- `print_changelog_range <old-version> <new-version>` → writes `CHANGELOG.md`
+  sections for versions just pulled to **stderr**; returns 0 when it printed at
+  least one section, 1 otherwise. Caller (`cmd-upgrade.sh`) uses return value to
+  decide whether to fall back to raw `git log --oneline` dump.
+  Range two-sided: new version's header inclusive, down to but excluding old
+  version's. File descending semver, so single forward `awk` scan — no sort, no
+  second pass, no temp file. Prints framing line via `log_info`; version bold,
+  ` — <date>` dim, bullet's leading `- ` marker cyan, bullet text default.
+  **Degrades, never fails**: missing/malformed/unreadable `CHANGELOG.md` returns
+  1 silently (clones predating the feature are normal); missing header for new
+  version logs one line and prints nothing; missing header for old version
+  prints only the newest section; unrecognised line inside a section passed
+  through indented and uncoloured rather than dropped. Never changes caller's
+  exit code.
+
+**Lives in `lib.sh`, not `cmd-upgrade.sh`**, for two reasons: this is where
+colour handling belongs (`cmd-*.sh` never inline `\033[` escapes — see Internal
+patterns), and the block goes to stderr, so it gates on `_use_color` (the
+predicate `log_info` and friends use: `NO_COLOR` unset **and** `[ -t 2 ]`), NOT
+the `C_*` variables, which are gated on *stdout* being a TTY. Colour off →
+every escape empty string, layout and markers unchanged.
 
 ### claude-md artifacts
 Third feature kind. Instead of copying file, injects managed section into
@@ -285,3 +324,7 @@ Helpers over gitignored key=value file `$CHOSKO_LLM_HOME/.auto-upgrade-state`
   `scope_supports_kind` in `lib.sh`.
 - Changing where claude-md sections read/write in local scope →
   `claudemd_target_path` in `lib.sh`.
+- Changing changelog range extraction, its layout/colours, or its
+  degrade-never-fail branches → `print_changelog_range` in `lib.sh` (the awk
+  scan and the formatting loop are both there); the caller's suppression rule
+  lives in `cmd-upgrade.sh`.
