@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 118
+Last task number: 120
 
 ---
 
@@ -227,5 +227,25 @@ Status: [MISSING]
 Target: claude
 Files: scripts/cmd-task-impl.sh, scripts/lib-task-external.sh, scripts/check-task-parity.sh, scripts/cmd-help.sh, bin/chosko-llm, commands/task-enrich.md, commands/task-add.md, commands/task-setup.md, commands/domain-setup.md, commands/project-setup.md, commands/unity-mcp-setup.md, skills/task-implement/SKILL.md, skills/task-implement/body-schemas.md, skills/architect/iterating.md, docs/cli-help.txt, docs/authoring-guide.md, README.md, CLAUDE.md, VERSION, .claude/external/implement-prompt.md, .claude/external/tests-prompt.md, .claude/context/INDEX.md, .claude/context/features.md, .claude/context/cli-entry.md, .claude/context/cmd-help.md, .claude/context/cmd-task-impl.md, .claude/context/lib-task-external.md, .claude/domain/INDEX.md, .claude/domain/task-workflow.md, .claude/domain/product-design.md, .claude/domain/product-workflow.md, .claude/domain/technical-direction.md
 Preconditions: none
+
+---
+
+## 119. Turn /task-implement's batch parent into a launcher
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-implement/delegated-runs.md, skills/task-implement/SKILL.md, VERSION
+Preconditions: 118
+Feature: task-implement-launcher
+
+---
+
+## 120. Update documentation for feature task-implement-launcher
+
+Status: [MISSING]
+Target: claude
+Files: .claude/context/features.md, .claude/context/INDEX.md, .claude/domain/task-workflow.md, .claude/domain/features/task-implement-launcher.md, VERSION
+Preconditions: 119
+Feature: task-implement-launcher
 
 ---

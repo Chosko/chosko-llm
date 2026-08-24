@@ -58,10 +58,10 @@ Tasks: none
 
 ## task-implement-launcher — The batch parent stops orchestrating and becomes a launcher
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/task-implement-launcher.md
 Source: prompt
-Tasks: none
+Tasks: 119, 120
 
 ---
 
