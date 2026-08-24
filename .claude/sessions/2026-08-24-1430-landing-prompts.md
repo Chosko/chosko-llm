@@ -150,7 +150,7 @@ document on four listed points.
 
 ---
 
-## [ ] 4. Shared phase engine
+## [x] 4. Shared phase engine
 
 **Carries a stale-document fix.** Task 118 (prompt 1) deletes `/task-enrich`
 and `scripts/check-task-parity.sh`, but
@@ -196,6 +196,18 @@ Background, if you need it: .claude/sessions/2026-08-24-1430-ecc-import-architec
 holds the decision log for this whole body of work, including the ECC features
 already assessed and discarded — do not re-propose those.
 ```
+
+**Done — tasks 125–131 authored, commit `06248fc`, 2026-08-24.** The two
+stale-document fixes above were applied in the same commit. Correction to the
+"already verified" fact: `parse_frontmatter` does split on the first colon,
+but `scripts/lib.sh:182` gates emission on a key allowlist, so `requires`
+needs a one-token addition there (task 125 carries it; task 131 reconciles
+the feature document). Migration split: 125 `requires:` field, 126 engine
+extraction, 127 task-list, 128 task-clean, 129 task-add, 130 task-implement
+(preconditioned on 118, 119, 123), 131 docs. `/task-review` and
+`/task-iterate` are deliberately not migration targets (different shared
+surface — see task 130's Decisions), and task 123's `--review` availability
+gate stays a runtime check rather than becoming `requires:`.
 
 ---
 
