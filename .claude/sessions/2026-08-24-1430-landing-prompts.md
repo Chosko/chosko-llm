@@ -277,7 +277,7 @@ pre-authorised to reconcile the feature document on five listed points.
 
 ---
 
-## [ ] 7. Reconcile the stale planning layer
+## [x] 7. Reconcile the stale planning layer
 
 Not part of the ECC work — a pre-existing inconsistency found while verifying
 council claims. Worth landing before `/production-plan` runs against these five
@@ -303,6 +303,18 @@ Background on those five, if you need it:
 .claude/sessions/2026-08-24-1430-ecc-import-architecture.md and the feature
 documents under .claude/domain/features/.
 ```
+
+**Done — 2026-08-24, status flips only.** `product-roadmap`,
+`slice-aware-architecture`, `production-plan` and `plan-readout` flipped
+`[PLANNED]` → `[DONE]` in `.claude/FEATURES.md`; the five ECC features stay
+`[PLANNED]` with tasks 119–138 all `[MISSING]`. **No `PLAN.md` was generated
+and none should be**: user decision — this repo is not a real product and
+needs neither milestones nor a roadmap (there is no
+`.claude/domain/product-roadmap.md` either). The `PLAN.md` half of this
+prompt was a mistake; `FEATURES.md` + `TASKS.md` are the complete planning
+picture here. The companion handoff's "Blockers and open questions" bullet
+about stale `[PLANNED]` statuses and a missing `PLAN.md` is now out of date;
+left as historical record.
 
 ---
 
