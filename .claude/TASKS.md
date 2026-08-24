@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 124
+Last task number: 131
 
 ---
 
@@ -287,5 +287,75 @@ Target: claude
 Files: README.md, docs/authoring-guide.md, .claude/context/features.md, .claude/context/INDEX.md, .claude/domain/task-workflow.md, .claude/domain/features/task-peer-review.md, VERSION
 Preconditions: 121, 122, 123
 Feature: task-peer-review
+
+---
+
+## 125. Add the `requires:` frontmatter field and its install-time resolution
+
+Status: [MISSING]
+Target: claude
+Files: scripts/lib.sh, scripts/cmd-add.sh, scripts/cmd-rm.sh, docs/authoring-guide.md, docs/cli-help.txt, VERSION
+Preconditions: none
+Feature: shared-phase-engine
+
+---
+
+## 126. Create the task-engine skill by verbatim extraction
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-engine/SKILL.md, skills/task-engine/references/resolution.md, skills/task-engine/references/status.md, skills/task-engine/references/targets.md, skills/task-engine/references/stale.md, skills/task-engine/references/tree.md, skills/task-engine/references/commit.md, VERSION
+Preconditions: 118, 125
+Feature: shared-phase-engine
+
+---
+
+## 127. Migrate /task-list onto the task-engine
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-list.md, VERSION
+Preconditions: 125, 126
+Feature: shared-phase-engine
+
+---
+
+## 128. Migrate /task-clean onto the task-engine
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-clean.md, VERSION
+Preconditions: 125, 126, 127
+Feature: shared-phase-engine
+
+---
+
+## 129. Migrate /task-add onto the task-engine
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-add.md, VERSION
+Preconditions: 125, 126, 128
+Feature: shared-phase-engine
+
+---
+
+## 130. Migrate /task-implement onto the task-engine
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-implement/SKILL.md, skills/task-implement/dirty-tree.md, skills/task-implement/body-schemas.md, skills/task-implement/delegated-runs.md, skills/task-implement/review-rounds.md, VERSION
+Preconditions: 118, 119, 123, 125, 126, 129
+Feature: shared-phase-engine
+
+---
+
+## 131. Update documentation for feature shared-phase-engine
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/authoring-guide.md, .claude/context/shared-lib.md, .claude/context/cmd-add.md, .claude/context/cmd-rm.md, .claude/context/features.md, .claude/context/INDEX.md, .claude/domain/task-workflow.md, .claude/domain/features/shared-phase-engine.md, VERSION
+Preconditions: 125, 126, 127, 128, 129, 130
+Feature: shared-phase-engine
 
 ---

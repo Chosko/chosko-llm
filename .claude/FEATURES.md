@@ -67,10 +67,10 @@ Tasks: 119, 120
 
 ## shared-phase-engine — One authority per rule for the `task-*` suite, and the `requires:` field that makes it safe
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/shared-phase-engine.md
 Source: prompt
-Tasks: none
+Tasks: 125, 126, 127, 128, 129, 130, 131
 
 ---
 

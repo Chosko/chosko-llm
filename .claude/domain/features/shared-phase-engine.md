@@ -149,8 +149,8 @@ system is stored.
    change is a visible diff rather than a paraphrase.
 3. Migrate one consumer, `task-list` — the smallest, and read-only, so a
    regression is obvious and harmless.
-4. Migrate the rest: `task-enrich`, `task-clean`, `task-add`, `task-implement`
-   last because it is the one changing for other reasons.
+4. Migrate the rest: `task-clean`, `task-add`, `task-implement` last because it
+   is the one changing for other reasons.
 
 Steps 3 and 4 each bump the migrated feature's `version:` and root `VERSION`.
 
@@ -198,9 +198,8 @@ Hard contracts:
   consumer is copied before its engine; probably harmless since resolution
   happens at run time, not install time, but worth a deliberate decision.
 - **Should `requires:` be validated at authoring time?** A typo produces a
-  dependency that cannot be resolved, caught only on install. A cheap check in
-  `check-task-parity.sh` or a new lint pass would catch it earlier. Related to
-  the repo-local validation work in
+  dependency that cannot be resolved, caught only on install. A cheap lint pass
+  would catch it earlier. Related to the repo-local validation work in
   [repo-local-audits](./repo-local-audits.md).
 - **Is `task-engine` the right granularity?** One engine for the whole suite may
   prove too coarse — `resolution.md` and `commit.md` are useful to features
