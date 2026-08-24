@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 145
+Last task number: 149
 
 ---
 
@@ -496,5 +496,45 @@ Target: claude
 Files: README.md, .claude/context/features.md, docs/authoring-guide.md, .claude/domain/features/runbook-suite.md, VERSION
 Preconditions: 125, 140, 141, 142, 143, 144
 Feature: runbook-suite
+
+---
+
+## 146. Backfill CHANGELOG.md and make a VERSION bump require an entry
+
+Status: [MISSING]
+Target: claude
+Files: CHANGELOG.md, CLAUDE.md, docs/authoring-guide.md, VERSION
+Preconditions: none
+Feature: version-changelog
+
+---
+
+## 147. Add the check-changelog.sh authoring guard
+
+Status: [MISSING]
+Target: claude
+Files: scripts/check-changelog.sh, docs/authoring-guide.md, CHANGELOG.md, VERSION
+Preconditions: 146
+Feature: version-changelog
+
+---
+
+## 148. Print what changed on upgrade, from CHANGELOG.md
+
+Status: [MISSING]
+Target: claude
+Files: scripts/lib.sh, scripts/cmd-upgrade.sh, CHANGELOG.md, VERSION
+Preconditions: 146
+Feature: version-changelog
+
+---
+
+## 149. Update documentation for feature version-changelog
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/cli-help.txt, .claude/context/shared-lib.md, .claude/context/cmd-upgrade.md, .claude/context/INDEX.md, CHANGELOG.md, VERSION
+Preconditions: 146, 147, 148
+Feature: version-changelog
 
 ---
