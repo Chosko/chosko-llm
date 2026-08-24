@@ -4,7 +4,7 @@ Created: 2026-08-24 · Source: manual · Model: opus
 Sequencing: strictly ordered 1→32, one task per step. version-changelog (1–4) lands first so every later VERSION bump writes its CHANGELOG entry; the dual-LLM deletion (5) precedes everything that edits skills/task-implement/SKILL.md; session-continuity (6–8) and repo-local-audits (9–12) are independent of the rest and go next; then the launcher → peer-review → shared-phase-engine chain (13–25) in dependency order because all three features edit skills/task-implement/SKILL.md; 139 (26) needs the post-engine task-add; runbook-suite (27–32) needs `requires:` from 125.
 Companion: .claude/sessions/2026-08-24-1430-ecc-import-architecture.md
 
-## [ ] 1. Backfill CHANGELOG.md and land the versioning rule (task 146)
+## [x] 1. Backfill CHANGELOG.md and land the versioning rule (task 146)
 
 Depends on: none
 
@@ -14,11 +14,14 @@ Context: none
 /task-implement 146
 ```
 
+Done: 2026-08-25 — commit 9477b1f (pushed). CHANGELOG.md created with 105 sections (0.1.0…0.62.2), rule + converse added to CLAUDE.md § Versioning and docs/authoring-guide.md; VERSION 0.62.1→0.62.2. Decisions: 0.53.0 dated 2026-08-07 (ee926e2) carrying 13e01c3 content; 0.52.1 claims shared claude-council commits; 0.59.0 records merge in one bullet; pure-backlog commits yield no bullets. No reference to scripts/check-changelog.sh anywhere yet (deliberately deferred to task 147). Premises held; nuance: 13e01c3 is on master first-parent, roadmap work is the side branch.
+
 ## [ ] 2. Add the check-changelog.sh guard (task 147)
 
 Depends on: 1
 
-Context: none
+Context:
+- 2026-08-25 (from step 1): CLAUDE.md § Versioning and the CHANGELOG.md preamble deliberately do not yet mention `scripts/check-changelog.sh`; task 147 should add that reference when it creates the guard. CHANGELOG.md has 105 sections, top section `0.62.2` = VERSION; strictly descending semver, no sub-headings, no shas.
 
 ```prompt
 /task-implement 147
