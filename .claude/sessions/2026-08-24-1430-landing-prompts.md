@@ -106,7 +106,7 @@ reconcile the `/architect`-owned feature document on exactly those two points.
 
 ---
 
-## [ ] 3. Peer review
+## [x] 3. Peer review
 
 ```
 /task-add feature=task-peer-review
@@ -137,6 +137,16 @@ Background, if you need it: .claude/sessions/2026-08-24-1430-ecc-import-architec
 holds the decision log for this whole body of work, including the ECC features
 already assessed and discarded — do not re-propose those.
 ```
+
+**Done — tasks 121–124 authored, commit `13b0a49`, 2026-08-24.** Split four
+ways: 121 `/task-review`, 122 `/task-iterate`, 123 the `--review` / `--rounds`
+loop in `/task-implement`, 124 docs. Both binding items above landed as
+acceptance criteria (122 + 123, and 123 + `delegated-runs.md` respectively).
+Judgment calls recorded in the bodies: the loop runs before Step 6 (so a
+cap-hit leaves `[IN PROGRESS]`); the finding schema is duplicated between the
+two skills until `shared-phase-engine` ships `requires:`; `--rounds` without
+`--review` is an error. Task 124 is pre-authorised to reconcile the feature
+document on four listed points.
 
 ---
 
