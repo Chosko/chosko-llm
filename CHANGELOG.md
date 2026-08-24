@@ -10,10 +10,21 @@ Two rules keep this file honest, and they are converses of each other:
   artifacts that never reach a user — anything under `.claude/` that is not
   shipped — never bump `VERSION`, so they never appear.
 
+`scripts/check-changelog.sh` guards the first rule and this file's structure;
+run it after every bump.
+
 Sections are ordered by **descending semver, not by date**. The repo's history
 is a DAG: a side branch ran its own bumps while master ran others, and the two
 merged. Descending semver is the only order in which "everything above the
 version you had" is the right answer.
+
+## 0.62.3 — 2026-08-25
+
+- New `scripts/check-changelog.sh`: an authoring-time guard that fails when the
+  top `CHANGELOG.md` section does not match `VERSION`, when sections are out of
+  descending-semver order or duplicated, or when the newest section has no
+  bullets. Silent on success; not a `chosko-llm` subcommand.
+- The authoring guide documents the guard and when to run it.
 
 ## 0.62.2 — 2026-08-25
 

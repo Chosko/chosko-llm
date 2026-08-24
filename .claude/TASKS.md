@@ -511,7 +511,7 @@ Feature: version-changelog
 
 ## 147. Add the check-changelog.sh authoring guard
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/check-changelog.sh, docs/authoring-guide.md, CHANGELOG.md, VERSION
 Preconditions: 146

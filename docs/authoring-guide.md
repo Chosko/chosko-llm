@@ -539,6 +539,38 @@ Everything else on the header line — the separator, the date, the surrounding
 whitespace — is presentational and may be reformatted without breaking
 anything.
 
+#### The guard
+
+Nothing forces a `VERSION` bump to bring its section with it, so run the guard
+whenever you bump `VERSION`:
+
+```sh
+./scripts/check-changelog.sh
+```
+
+It takes no arguments, reads only `VERSION` and `CHANGELOG.md`, writes nothing,
+and exits 0 **in silence** when the file is in order. Otherwise it exits
+non-zero naming the first invariant it found violated:
+
+1. `CHANGELOG.md` exists and has at least one section.
+2. The **top** section's version token equals the trimmed contents of
+   `VERSION`. This is the one that catches the actual mistake; the other three
+   are structural checks that keep the file parseable.
+3. Version headers are strictly descending semver, with no duplicates.
+4. The top section has at least one bullet — a bump that forgot its content
+   rather than one that had none.
+
+It proves nothing about whether the bullets are *true*, or whether they cover
+everything the bump changed. It turns a silent omission into a caught failure,
+which is the whole ambition.
+
+It is deliberately **not** a consumer-side check. A warning from `install.sh`
+or `chosko-llm upgrade` fires on the user's machine, long after the bump, at
+someone who cannot fix it. The guard belongs where the mistake happens, in the
+working repo — so it is not a subcommand either: `bin/chosko-llm` dispatches
+only its known subcommand list, and `chosko-llm check-changelog` is an unknown
+subcommand.
+
 ## Commit-and-push convention
 
 Features that write files split into two groups, each exposing one opt-in
