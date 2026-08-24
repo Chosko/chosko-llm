@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 134
+Last task number: 138
 
 ---
 
@@ -387,5 +387,45 @@ Target: claude
 Files: README.md, .claude/context/features.md, .claude/domain/features/session-continuity.md, docs/authoring-guide.md, VERSION
 Preconditions: 132, 133
 Feature: session-continuity
+
+---
+
+## 135. Record the `.claude/skills/` exemption to the VERSION bump rule
+
+Status: [MISSING]
+Target: claude
+Files: CLAUDE.md, VERSION
+Preconditions: none
+Feature: repo-local-audits
+
+---
+
+## 136. Add the repo-local /context-budget audit skill
+
+Status: [MISSING]
+Target: claude
+Files: .claude/skills/context-budget/SKILL.md
+Preconditions: 135
+Feature: repo-local-audits
+
+---
+
+## 137. Add the repo-local /rule-overlap audit skill
+
+Status: [MISSING]
+Target: claude
+Files: .claude/skills/rule-overlap/SKILL.md
+Preconditions: 135
+Feature: repo-local-audits
+
+---
+
+## 138. Update documentation for feature repo-local-audits
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/authoring-guide.md, .claude/context/features.md, .claude/domain/features/repo-local-audits.md, VERSION
+Preconditions: 135, 136, 137
+Feature: repo-local-audits
 
 ---
