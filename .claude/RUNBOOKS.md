@@ -8,6 +8,6 @@ Status: [RUNNING]
 File: .claude/runbooks/implement-ecc-import.md
 Created: 2026-08-24
 Source: manual
-Steps: 2/32
+Steps: 3/32
 
 ---

@@ -28,7 +28,7 @@ Context:
 ```
 Done: 2026-08-25 — commit 47de381 (pushed). scripts/check-changelog.sh added (four invariants, numeric semver compare, silent on success, not a subcommand); authoring guide gained #### The guard under ### The changelog rule; CLAUDE.md § Versioning names the script (out-of-Files edit, on step 1's fact); VERSION 0.62.2→0.62.3. Premises: scripts/check-task-parity.sh is already red on this branch (unknown status tags [PLANNED]/[NEW]/[ITERATED] on the prompt side) independent of this task; running bin/chosko-llm trips the daily auto-upgrade hook (harmless, leaves gitignored .auto-upgrade-state). Orchestrator follow-up (user request, commit after 47de381): CHANGELOG.md preamble cut to one line, domain doc § 1 and authoring-guide section schema amended, VERSION 0.62.3→0.62.4.
 
-## [ ] 3. Print what changed on upgrade (task 148)
+## [x] 3. Print what changed on upgrade (task 148)
 
 Depends on: 2
 
@@ -38,6 +38,7 @@ Context:
 ```prompt
 /task-implement 148
 ```
+Done: 2026-08-25 — commit 2b28518 (pushed). lib.sh gained raw_version, src_changelog_path, print_changelog_range <old> <new> (return 0 = printed, 1 = nothing printed; single buffered awk pass; internal exit codes 10/11/12; cyan accent); resolve_version refactored onto raw_version; cmd-upgrade.sh prints the range after git pull and dumps git log --oneline only when the printer returns non-zero. VERSION 0.62.4→0.63.0. Premise correction: resolve_version is no longer byte-for-byte identical in one degenerate case — an empty/whitespace-only VERSION file now yields "unknown (sha)" instead of " (sha)"; accepted as the more correct answer. Verified against a throwaway clone in the scratchpad, never the real ~/.chosko-llm.
 
 ## [ ] 4. Documentation for version-changelog (task 149)
 
@@ -45,6 +46,7 @@ Depends on: 3
 
 Context:
 - 2026-08-25 (orchestrator): .claude/domain/features/version-changelog.md § 1 was deliberately amended after the task body was written — the CHANGELOG.md preamble is one line, rules live in CLAUDE.md and the authoring guide. The body's "feature document is deliberately NOT changed" refers to task 149's own scope; do not revert that amendment. CLAUDE.md § Versioning already names scripts/check-changelog.sh (step 2).
+- 2026-08-25 (from step 3): VERSION is now 0.63.0. lib.sh helpers landed as raw_version, src_changelog_path (in the src_*_path family) and print_changelog_range under a `# ---------- changelog ----------` section; the printer writes to stderr, returns 0 when it printed and 1 otherwise; cmd-upgrade.sh suppresses the git log dump exactly when the printer returned 0. Accent colour is cyan.
 
 ```prompt
 /task-implement 149
