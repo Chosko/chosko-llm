@@ -1,22 +1,10 @@
 # Changelog
 
-What changed for a user of the `chosko-llm` CLI or of the features it ships,
-one section per root `VERSION` value, newest first.
+User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
-Two rules keep this file honest, and they are converses of each other:
+## 0.62.4 — 2026-08-25
 
-- **A `VERSION` bump without a matching section here is an incomplete change.**
-- **A change that does not bump `VERSION` gets no entry here.** Repo-local
-  artifacts that never reach a user — anything under `.claude/` that is not
-  shipped — never bump `VERSION`, so they never appear.
-
-`scripts/check-changelog.sh` guards the first rule and this file's structure;
-run it after every bump.
-
-Sections are ordered by **descending semver, not by date**. The repo's history
-is a DAG: a side branch ran its own bumps while master ran others, and the two
-merged. Descending semver is the only order in which "everything above the
-version you had" is the right answer.
+- `CHANGELOG.md` preamble reduced to one line; the rule, its converse and the ordering rationale live in `CLAUDE.md` and the authoring guide, not in the record.
 
 ## 0.62.3 — 2026-08-25
 

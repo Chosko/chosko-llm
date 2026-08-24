@@ -77,9 +77,12 @@ through a `lib.sh` helper rather than hardcoded.
 
 ### 1. `CHANGELOG.md` — the record
 
-Repo root, beside `VERSION` and `README.md`. A short preamble states the
-rule the file lives under and the exemption below it, so the file explains
-itself to a first-time reader. Then one section per version:
+Repo root, beside `VERSION` and `README.md`. The preamble is one line —
+what the file is and where its rules are documented — and nothing more: the
+file is a record, and the rule, its converse and the ordering rationale live
+in `CLAUDE.md` and the authoring guide, never restated here (amended
+2026-08-25; the original design carried a multi-paragraph preamble). Then one
+section per version:
 
 ```
 ## <version> — <YYYY-MM-DD>

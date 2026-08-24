@@ -488,8 +488,9 @@ version has its own visible surface in `chosko-llm ls`.
 
 #### Section schema
 
-`CHANGELOG.md` lives at the repo root, beside `VERSION` and `README.md`. A
-short preamble states the rule and its converse; then one section per version:
+`CHANGELOG.md` lives at the repo root, beside `VERSION` and `README.md`. Its
+preamble is a single line naming what the file is and pointing here for the
+rules — the record never restates them; then one section per version:
 
 ```
 ## <version> — <YYYY-MM-DD>
