@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 131
+Last task number: 134
 
 ---
 
@@ -357,5 +357,35 @@ Target: claude
 Files: README.md, docs/authoring-guide.md, .claude/context/shared-lib.md, .claude/context/cmd-add.md, .claude/context/cmd-rm.md, .claude/context/features.md, .claude/context/INDEX.md, .claude/domain/task-workflow.md, .claude/domain/features/shared-phase-engine.md, VERSION
 Preconditions: 125, 126, 127, 128, 129, 130
 Feature: shared-phase-engine
+
+---
+
+## 132. Add the /session-save command
+
+Status: [MISSING]
+Target: claude
+Files: commands/session-save.md, VERSION
+Preconditions: none
+Feature: session-continuity
+
+---
+
+## 133. Add the /session-resume command
+
+Status: [MISSING]
+Target: claude
+Files: commands/session-resume.md, VERSION
+Preconditions: 132
+Feature: session-continuity
+
+---
+
+## 134. Update documentation for feature session-continuity
+
+Status: [MISSING]
+Target: claude
+Files: README.md, .claude/context/features.md, .claude/domain/features/session-continuity.md, docs/authoring-guide.md, VERSION
+Preconditions: 132, 133
+Feature: session-continuity
 
 ---
