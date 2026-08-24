@@ -91,3 +91,12 @@ Source: prompt
 Tasks: 140, 141, 142, 143, 144, 145
 
 ---
+
+## version-changelog — A curated CHANGELOG, enforced at every VERSION bump and replayed on upgrade
+
+Status: [NEW]
+Doc: .claude/domain/features/version-changelog.md
+Source: prompt
+Tasks: none
+
+---
