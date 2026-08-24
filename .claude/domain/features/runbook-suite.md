@@ -454,13 +454,24 @@ written and stated in the command body so the authoring agent applies them
 rather than approximating them:
 
 1. **Self-contained.** An agent with no history of this conversation can execute
-   it. This is the rule the other eight serve.
+   it. This is the rule the other eight serve. Self-contained means *complete
+   given what the invoked command reads*, not exhaustive: a prompt that invokes
+   a skill which reads its own inputs from disk is complete as the bare
+   invocation.
 2. **Names the document to read first.** Or, where there is none, carries the
    evidence inline — the reference file's step 1 opened with "This has no
-   feature document. All its evidence is here" and then supplied it.
-3. **Carries every decision that exists nowhere on disk.** Anything settled in
-   conversation and not yet written to a file is invisible to a fresh agent and
-   will be re-litigated, usually differently.
+   feature document. All its evidence is here" and then supplied it. When the
+   invoked command names that document itself (`/task-implement 134` reads
+   `.claude/tasks/134.md`), the prompt does not repeat it.
+3. **Carries every decision that exists nowhere on disk — and nothing that
+   already does.** Anything settled in conversation and not yet written to a
+   file is invisible to a fresh agent and will be re-litigated, usually
+   differently. The converse is equally binding: restating what a task body, a
+   feature document or `CLAUDE.md` already says duplicates it, and the duplicate
+   drifts. The correct prompt for an authored task is one line —
+   `/task-implement 134` — because the body carries its decisions, its
+   pre-authorisations and its verification, and `/task-implement` checks its
+   preconditions. One-line prompts are the expected case, not a shortcut.
 4. **States its sequencing and why.** Not "do this third" but "this goes last of
    the four that touch `skills/task-implement/SKILL.md`".
 5. **States what must not be re-proposed.** Options already assessed and
