@@ -469,6 +469,76 @@ Always bump after a meaningful edit. `ls` displays the installed and latest
 versions side by side, so a forgotten bump leaves both columns showing the
 same value and users have no signal that there is anything to refresh.
 
+### The changelog rule
+
+**A root `VERSION` bump without a matching `CHANGELOG.md` section is an
+incomplete change.** Writing the entry is part of what the bump *is*, not a
+courtesy someone remembers afterwards.
+
+The rule's converse holds too, and is stated generically: **a change that does
+not bump `VERSION` gets no `CHANGELOG` entry.** Repo-local artifacts that no
+user ever receives — anything under `.claude/` that is not shipped — never
+bump `VERSION` by their own contract, so they never appear in the changelog
+either. This follows from the general rule rather than being a named
+exception, so it covers any future repo-local artifact on the same footing.
+
+The per-feature `version:` field in a command's or skill's frontmatter is not
+covered by any of this. `CHANGELOG.md` records root `VERSION` only; a feature
+version has its own visible surface in `chosko-llm ls`.
+
+#### Section schema
+
+`CHANGELOG.md` lives at the repo root, beside `VERSION` and `README.md`. A
+short preamble states the rule and its converse; then one section per version:
+
+```
+## <version> — <YYYY-MM-DD>
+
+- <short bullet>
+- <short bullet>
+```
+
+- The date is the commit date of the commit that set that `VERSION` value.
+- Bullets are short and user-facing. Each names the feature, command or script
+  touched and the change a user would notice. No prose paragraphs, no commit
+  shas, no nested lists.
+- **No `Added` / `Changed` / `Fixed` sub-headings.** With a hundred sections of
+  two-to-five bullets, sub-headings would roughly triple the file's length and
+  force a taxonomy judgement on every bullet, for a signal the bullet already
+  carries by naming its artifact.
+
+#### Ordering: descending semver, not chronological
+
+Sections are ordered newest version first by **semver**, never by date, and no
+version appears twice.
+
+This is forced by the repo's history, which is a DAG rather than a line:
+commit `13e01c3` set `VERSION` to `0.53.0` on master while a side branch
+independently ran `0.53.0` … `0.58.2`, the two merging at `bd2a1cf`, so
+master's first-parent sequence jumps `0.53.0` → `0.59.0`. Chronological order
+would interleave the two lines and make "everything above the version you had"
+the wrong answer. Descending semver makes it exactly right, and coincides with
+chronology everywhere outside that merge.
+
+Every distinct `VERSION` value ever recorded gets a section, **branch-only
+values included** — `chosko-llm channel <branch>` exists precisely so a clone
+can sit on unmerged work, so a clone can genuinely be at a version master
+never had.
+
+#### Parser contract
+
+Only three things about the file are load-bearing:
+
+- `^## ` introduces a section.
+- The **first whitespace-delimited token after `## `** is the version. That
+  token is the only thing any parser reads.
+- Everything until the next `^## ` is that section's body; everything above
+  the first `## ` is preamble and is never printed.
+
+Everything else on the header line — the separator, the date, the surrounding
+whitespace — is presentational and may be reformatted without breaking
+anything.
+
 ## Commit-and-push convention
 
 Features that write files split into two groups, each exposing one opt-in

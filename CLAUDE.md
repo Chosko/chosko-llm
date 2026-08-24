@@ -45,6 +45,7 @@ No test suite by design. Ships markdown prompts + thin shell wrappers; changes v
 - Bump root `VERSION` file on **every shipped change** — features, CLI behavior, scripts, docs. It's repo-level version `install.sh` reports; if never moves, reported version drifts from reality.
 - Semver bump: **patch** for fixes/doc-only, **minor** for new feature/command/skill, **major** for breaking CLI surface change.
 - Root `VERSION` distinct from per-feature `version:` frontmatter on command/skill (versions that one feature for `cmd-add` / `cmd-update`). Bumping feature frontmatter doesn't replace bumping `VERSION`; feature change bumps both.
+- **`VERSION` bump without matching `CHANGELOG.md` section is incomplete change.** New section goes on top, `## <version> — <YYYY-MM-DD>`, short user-facing bullets. Converse holds too: **change that doesn't bump `VERSION` gets no `CHANGELOG` entry** — repo-local artifacts nobody receives never bump `VERSION`, so never get one. Schema + ordering rule in [docs/authoring-guide.md](docs/authoring-guide.md) § Versioning.
 
 ## When asked to add new feature
 

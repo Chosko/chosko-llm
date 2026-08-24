@@ -501,7 +501,7 @@ Feature: runbook-suite
 
 ## 146. Backfill CHANGELOG.md and make a VERSION bump require an entry
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: CHANGELOG.md, CLAUDE.md, docs/authoring-guide.md, VERSION
 Preconditions: none
