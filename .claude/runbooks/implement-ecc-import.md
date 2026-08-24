@@ -16,7 +16,7 @@ Context: none
 
 Done: 2026-08-25 — commit 9477b1f (pushed). CHANGELOG.md created with 105 sections (0.1.0…0.62.2), rule + converse added to CLAUDE.md § Versioning and docs/authoring-guide.md; VERSION 0.62.1→0.62.2. Decisions: 0.53.0 dated 2026-08-07 (ee926e2) carrying 13e01c3 content; 0.52.1 claims shared claude-council commits; 0.59.0 records merge in one bullet; pure-backlog commits yield no bullets. No reference to scripts/check-changelog.sh anywhere yet (deliberately deferred to task 147). Premises held; nuance: 13e01c3 is on master first-parent, roadmap work is the side branch.
 
-## [ ] 2. Add the check-changelog.sh guard (task 147)
+## [x] 2. Add the check-changelog.sh guard (task 147)
 
 Depends on: 1
 
@@ -26,12 +26,14 @@ Context:
 ```prompt
 /task-implement 147
 ```
+Done: 2026-08-25 — commit 47de381 (pushed). scripts/check-changelog.sh added (four invariants, numeric semver compare, silent on success, not a subcommand); authoring guide gained #### The guard under ### The changelog rule; CLAUDE.md § Versioning names the script (out-of-Files edit, on step 1's fact); VERSION 0.62.2→0.62.3. Premises: scripts/check-task-parity.sh is already red on this branch (unknown status tags [PLANNED]/[NEW]/[ITERATED] on the prompt side) independent of this task; running bin/chosko-llm trips the daily auto-upgrade hook (harmless, leaves gitignored .auto-upgrade-state). Orchestrator follow-up (user request, commit after 47de381): CHANGELOG.md preamble cut to one line, domain doc § 1 and authoring-guide section schema amended, VERSION 0.62.3→0.62.4.
 
 ## [ ] 3. Print what changed on upgrade (task 148)
 
 Depends on: 2
 
-Context: none
+Context:
+- 2026-08-25 (from steps 1–2): VERSION is now 0.62.4; CHANGELOG.md top section is `0.62.4` and its preamble is a single line (everything above the first `## ` is still preamble and never printed). scripts/check-changelog.sh exists — run it after the bump. Running bin/chosko-llm in the working repo trips the daily auto-upgrade hook (harmless).
 
 ```prompt
 /task-implement 148
@@ -41,7 +43,8 @@ Context: none
 
 Depends on: 3
 
-Context: none
+Context:
+- 2026-08-25 (orchestrator): .claude/domain/features/version-changelog.md § 1 was deliberately amended after the task body was written — the CHANGELOG.md preamble is one line, rules live in CLAUDE.md and the authoring guide. The body's "feature document is deliberately NOT changed" refers to task 149's own scope; do not revert that amendment. CLAUDE.md § Versioning already names scripts/check-changelog.sh (step 2).
 
 ```prompt
 /task-implement 149
@@ -51,7 +54,8 @@ Context: none
 
 Depends on: 4
 
-Context: none
+Context:
+- 2026-08-25 (from step 2): scripts/check-task-parity.sh is already red on this branch before any deletion — it reports [PLANNED], [NEW], [ITERATED] as unknown status tags on the prompt side. Not a regression to fix; relevant only if the task expects a green baseline.
 
 ```prompt
 /task-implement 118
