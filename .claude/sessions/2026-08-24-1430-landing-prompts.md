@@ -240,7 +240,7 @@ the feature document on seven listed points.
 
 ---
 
-## [ ] 6. Repo-local audits
+## [x] 6. Repo-local audits
 
 **Carries the `CLAUDE.md` rule change that would otherwise be lost.**
 
@@ -264,6 +264,16 @@ Background, if you need it: .claude/sessions/2026-08-24-1430-ecc-import-architec
 holds the decision log for this whole body of work, including the ECC features
 already assessed and discarded — do not re-propose those.
 ```
+
+**Done — tasks 135–138 authored, commit `6292991`, 2026-08-24.** 135 is the
+CLAUDE.md exemption (narrow wording, names `.claude/skills/` only, rest of
+`.claude/` still bumps) and gates 136 `/context-budget` and 137
+`/rule-overlap`; 138 docs. Open questions settled: repo-local names must not
+collide with shipped feature names; `/rule-overlap` collects inline with
+`grep`/`awk` (script is the escape hatch); `words × 1.3` kept, output
+labelled as estimates; vendored skills excluded from collection;
+`chosko-llm export` deliberately carries `.claude/skills/`. Task 138 is
+pre-authorised to reconcile the feature document on five listed points.
 
 ---
 
