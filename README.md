@@ -59,6 +59,24 @@ Run `upgrade` first, then `update --all` to pick up new versions. `upgrade` only
 
 When the pull moves the repo-level version, `upgrade` prints what changed — the `CHANGELOG.md` sections for exactly the versions just pulled, newest first. That readout replaces the raw commit list: you get the curated bullets when the version moved, and the `git log --oneline` subjects when it did not (or when the clone is old enough to have no `CHANGELOG.md`). The same block appears when the daily auto-upgrade runs.
 
+#### Reading the changelog on demand
+
+`upgrade`'s readout covers only the versions that one pull moved through. To read the file itself, or to catch up from a point you pick:
+
+```sh
+chosko-llm changelog                  # open CHANGELOG.md in your editor
+chosko-llm changelog --since 1.10.0   # that version's section and everything newer
+chosko-llm changelog --since 2026-08-01   # every section dated on or after that day
+chosko-llm changelog --since 30d      # ...or 2w, 6mo, 1y — counted back from today
+chosko-llm changelog --print          # the whole file on stdout, no editor, no pager
+```
+
+With no arguments it opens the managed clone's `CHANGELOG.md` in `$VISUAL`, else `$EDITOR`, else whatever `git var GIT_EDITOR` reports — and when none of those resolves it falls back to a pager, and then to plain output. It never fails just because you have no editor configured; `--print` is there for scripts that must not spawn anything.
+
+`--since` takes one value in any of three shapes and works out which it is — a version, a date, or a duration — so there's no flag to remember per form. Its output goes to **stdout**, unlike `upgrade`'s readout, so it pipes into `grep` and friends. It's paged only when the block doesn't fit one screen *and* stdout is a terminal: a redirect or a pipe stays a plain stream whatever the length, and `--print` forces that too. A value that matches no section isn't an error — it says so and exits 0. The version form is inclusive of the version you name (`--since 1.10.0` includes 1.10.0), where `upgrade`'s range excludes the version you came from, because there you already had it.
+
+`changelog` reads and nothing more: it never pulls, and it's one of the subcommands the daily auto-upgrade skips.
+
 #### Channels: trying unmerged work
 
 A **channel** is just the branch the managed clone is checked out on. Switch onto a feature branch to try it before it lands on `master`, then switch back:
@@ -159,6 +177,8 @@ Pass `-y` (or `--yes`) to answer every prompt yes for non-interactive use.
 | `NO_COLOR`        | unset           | Set to any value to disable colored output.          |
 | `CHOSKO_LLM_NO_AUTO_UPGRADE` | unset | Set to any value to skip the daily auto-upgrade.     |
 | `CHOSKO_LLM_EXPORT_DIR` | `~/claude-exports` | Where `chosko-llm export` writes its output. |
+| `VISUAL` / `EDITOR` | unset | Which editor `chosko-llm changelog` opens the file in. Falls back to git's. |
+| `PAGER`           | `less -R`       | Which pager `chosko-llm changelog --since` overflows into. |
 
 ---
 

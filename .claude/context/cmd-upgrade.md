@@ -33,6 +33,10 @@ Side effects:
   only; writes nothing, persists nothing between runs.
 - On plain upgrade (no toggle flag), if daily auto-upgrade NOT enabled,
   prints TTY-gated tip to opt in (`chosko-llm upgrade --enable-auto`).
+- Prints a TTY-gated tip pointing at `chosko-llm changelog`, after the
+  `ls --available` / `update --all` tips. The readout above covers only the
+  versions this pull moved through; the whole file is one subcommand away
+  (see [cmd-changelog.md](./cmd-changelog.md)).
 
 ## Internal patterns
 
@@ -47,9 +51,12 @@ Side effects:
   ` (<git describe>)`; no tags in this repo, so that's a bare sha changing every
   commit — useless as a comparison. Comment in source says so; don't "fix" it.
 - **Changelog range two-sided, descending semver**: new version's section
-  inclusive, down to but excluding old version's. Extraction + formatting both
-  live in `print_changelog_range` (`lib.sh`), never inline here — colour
-  handling belongs in `lib.sh`, and this block goes to stderr so it gates on
+  inclusive, down to but excluding old version's. Old bound is **exclusive on
+  purpose** — the user already had that version; `changelog --since` is
+  inclusive for the mirror reason. Extraction lives in `print_changelog_range`
+  (`lib.sh`), never inline here; the layout is `_render_changelog_sections`,
+  which `changelog --since` shares. Colour handling belongs in `lib.sh`, and
+  this block goes to stderr, so `print_changelog_range` hands the renderer
   `_use_color`, not the stdout-gated `C_*` vars.
 - **Commit-list dump suppressed exactly when a range printed.** Branch keys off
   `print_changelog_range`'s return code (0 = printed): curated bullets when the
@@ -71,7 +78,8 @@ Side effects:
 - **No flag gates it.** No `--changelog`, no `--no-changelog`; unconditional
   behaviour of a version-changing pull. `chosko-llm channel <branch>` prints
   nothing of this — a channel switch can move `VERSION` either direction and is
-  a developer action, not an upgrade.
+  a developer action, not an upgrade. The on-demand view is a separate
+  subcommand, `chosko-llm changelog`, not a flag here.
 
 ## Domain dependencies
 
@@ -87,6 +95,8 @@ Side effects:
   *creates* proxy; `upgrade` only refreshes it.
 - [cmd-update.md](./cmd-update.md) — recommended follow-up after
   `upgrade` to actually deploy new versions to `$CLAUDE_HOME`.
+- [cmd-changelog.md](./cmd-changelog.md) — on-demand view onto the same file,
+  sharing the same renderer but writing to stdout under its own colour gate.
 - [shared-lib.md](./shared-lib.md) — sources `lib.sh` for logging,
   `$CHOSKO_LLM_HOME`, `auto_upgrade_*` state helpers behind
   toggle flags and opt-in tip, and `raw_version` +

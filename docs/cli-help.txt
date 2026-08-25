@@ -69,6 +69,22 @@ Usage:
   chosko-llm upgrade --enable-auto    Enable daily auto-upgrade (sets the preference; no upgrade).
   chosko-llm upgrade --disable-auto   Disable daily auto-upgrade (sets the preference; no upgrade).
 
+  chosko-llm changelog                Open the managed clone's CHANGELOG.md in your editor
+                                      ($VISUAL, else $EDITOR, else git's), falling back to a
+                                      pager and then to plain output when none is configured.
+                                      Reads only; never triggers the daily auto-upgrade.
+  chosko-llm changelog --since <value>  Print the sections from <value> forward, on stdout.
+                                      <value> is auto-detected as one of three forms:
+                                        1.10.0       a version — that section and everything newer
+                                        2026-08-01   a date — every section dated on or after it
+                                        30d 2w 6mo 1y  a duration — the same, counted back from today
+                                      Paged only when the block does not fit one screen and
+                                      stdout is a terminal, so piping or redirecting always
+                                      yields the same plain stream. A value matching no section
+                                      says so and exits 0.
+  chosko-llm changelog --print        Write the full changelog to stdout — never an editor, never
+                                      a pager. With --since, it forces that range out unpaged.
+
   chosko-llm channel                  Print the branch ('channel') the managed clone is on.
   chosko-llm channel --list           Fetch origin and list the channels you can switch to,
                                       marking the current one (also: -l).
@@ -114,5 +130,7 @@ Environment:
   CLAUDE_HOME       Path to Claude Code's user directory. Default: ~/.claude
   BIN_DIR           Where the CLI proxy is installed. Default: ~/bin
   NO_COLOR          Set to disable all colored output (table, metadata, log prefixes).
+  VISUAL / EDITOR   Which editor 'changelog' opens the file in. Falls back to git's.
+  PAGER             Which pager 'changelog --since' overflows into. Default: less -R.
   CHOSKO_LLM_NO_AUTO_UPGRADE  Set to skip the daily auto-upgrade (CI / non-interactive use).
   CHOSKO_LLM_EXPORT_DIR  Where 'export' writes its output. Default: ~/claude-exports

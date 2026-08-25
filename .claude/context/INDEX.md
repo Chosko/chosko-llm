@@ -26,6 +26,7 @@ Canonical project docs live outside this folder, stay authoritative:
 | [cmd-rm.md](./cmd-rm.md) | `scripts/cmd-rm.sh` — uninstall feature (command/skill/claude-md/statusline/hook) from `$CLAUDE_HOME`; dependents guard + `--force`. |
 | [cmd-update.md](./cmd-update.md) | `scripts/cmd-update.sh` — re-copy feature (or version-aware `--all`); install if missing. |
 | [cmd-upgrade.md](./cmd-upgrade.md) | `scripts/cmd-upgrade.sh` — `git pull` managed clone, refresh proxy; `--enable-auto`/`--disable-auto` toggle. |
+| [cmd-changelog.md](./cmd-changelog.md) | `scripts/cmd-changelog.sh` — read-only view onto the clone's `CHANGELOG.md`; no-arg opens it in an editor, `--since <version\|date\|duration>` prints a range to stdout, `--print` forces unpaged plain output. |
 | [cmd-channel.md](./cmd-channel.md) | `scripts/cmd-channel.sh` — point managed clone at branch ('channel') to test unmerged work; no-arg show current, `--list` show available, `<branch>` switch + refresh proxy. |
 | [cmd-export.md](./cmd-export.md) | `scripts/cmd-export.sh` — package repo's Claude config into Markdown file or zip via `select_export_files`; output dir from `export_dir_path`. |
 | [cmd-help.md](./cmd-help.md) | `scripts/cmd-help.sh` — print `docs/cli-help.txt` or fallback help. |
@@ -37,7 +38,7 @@ Product and rules knowledge — what the product is, why it is built this way �
 
 ## Conventions
 
-- `Layout: flat` under the title declares this layer's shape: one index, every context file beside it. Deliberate — eleven files, no unit seams worth a router. Read the marker, never infer the layout. Restructuring is `/context-convert`'s job, not a hand edit.
+- `Layout: flat` under the title declares this layer's shape: one index, every context file beside it. Deliberate — a dozen-odd files, no unit seams worth a router. Read the marker, never infer the layout. Restructuring is `/context-convert`'s job, not a hand edit.
 - Source references use repo-root-relative paths + fully qualified names, e.g. `scripts/lib.sh::resolve_feature`.
 - Cross-references to sibling context files use relative links (`./other.md`).
 - Cross-references to canonical docs use `../../`-prefixed paths.

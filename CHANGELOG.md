@@ -2,6 +2,31 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.15.0 — 2026-08-25
+
+- New `chosko-llm changelog` subcommand. With no arguments it opens the managed
+  clone's `CHANGELOG.md` in `$VISUAL`, else `$EDITOR`, else `git var
+  GIT_EDITOR`, falling back to `less -R` and then to plain output — it never
+  fails merely because no editor is configured.
+- `chosko-llm changelog --since <value>` prints the sections from that point
+  forward on stdout, where `<value>` is auto-detected as a version (`1.10.0` —
+  that section and everything newer), a date (`2026-08-01`), or a duration
+  (`30d`, `2w`, `6mo`, `1y`). A value matching no section says so and exits 0;
+  an unreadable one names all three forms.
+- `--since` output is paged only when it does not fit one screen and stdout is
+  a terminal, so a pipe or a redirect always yields the same plain stream.
+  `chosko-llm changelog --print` forces unpaged output and never spawns an
+  editor or a pager.
+- `chosko-llm --version` and `chosko-llm upgrade` each gained a TTY-gated
+  stderr tip pointing at `chosko-llm changelog`. `--version`'s stdout is
+  unchanged.
+- `changelog` joins `version` and `help` in the set of read-only subcommands
+  the daily auto-upgrade skips.
+- `scripts/lib.sh` now owns one changelog renderer, parameterised by output
+  stream and colour gate, shared by `upgrade`'s stderr readout and
+  `changelog --since`'s stdout block, so the two presentations cannot drift.
+  `upgrade`'s output is unchanged.
+
 ## 1.14.1 — 2026-08-25
 
 - Documentation catch-up for the `runbook-suite` feature shipped in 1.10.0–1.14.0.

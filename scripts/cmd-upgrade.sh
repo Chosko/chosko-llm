@@ -70,6 +70,12 @@ chmod +x "$CHOSKO_LLM_HOME"/scripts/*.sh "$CHOSKO_LLM_HOME/bin/chosko-llm" 2>/de
 log_info "Run 'chosko-llm ls --available' to see new or upgradable features."
 log_info "Run 'chosko-llm update --all' to refresh installed features."
 
+# The readout above covers only the versions this pull moved through; point at
+# the whole file for anyone who wants more. TTY-gated, like the auto-upgrade tip.
+if [ -t 2 ]; then
+  log_info "Run 'chosko-llm changelog' to see the full changelog."
+fi
+
 # If the user has opted out of daily auto-upgrade, suggest opting back in.
 if [ -t 2 ] && ! auto_upgrade_enabled; then
   log_info "Tip: enable daily auto-upgrade with: chosko-llm upgrade --enable-auto"

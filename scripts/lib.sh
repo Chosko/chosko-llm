@@ -726,6 +726,217 @@ auto_upgrade_due() {
 
 # ---------- changelog ----------
 
+# _render_changelog_sections <body> <fd> <color-predicate>
+# The single formatter for CHANGELOG.md sections. Writes <body> — raw section
+# text, headers and bullets — to file descriptor <fd> in the shared layout:
+# two-space version indent, four-space bullet indent, a blank line between
+# sections and one after the block; the version bold, its " — <date>" dim, the
+# bullet's leading ASCII "- " marker in the accent colour and the bullet text
+# default. An unrecognised line inside a section is passed through indented and
+# uncoloured rather than dropped.
+#
+# <color-predicate> is the NAME of a function returning 0 when colour applies to
+# the stream this block is going to: `_use_color` for stderr, a caller-captured
+# stdout predicate for stdout. It is a parameter and not read off <fd> on
+# purpose — `changelog --since` may hand its output to a pager, at which point
+# fd 1 is a pipe, and gating on that would silently strip every escape.
+#
+# Both callers — print_changelog_range below (stderr, from `upgrade`) and
+# cmd-changelog.sh (stdout, from `changelog --since`) — go through here, so the
+# two presentations cannot drift apart. Only the gate differs.
+_render_changelog_sections() {
+  local body="$1" fd="$2" color_fn="$3"
+  local line rest version remainder first=1
+  local bold='' dim='' accent='' reset=''
+
+  if "$color_fn"; then
+    bold=$'\033[1m'; dim=$'\033[2m'; accent=$'\033[36m'; reset=$'\033[0m'
+  fi
+
+  while IFS= read -r line; do
+    case "$line" in
+      '## '*)
+        rest="${line#\#\# }"
+        version="${rest%%[[:space:]]*}"
+        remainder="${rest#"$version"}"
+        [ "$first" -eq 1 ] || printf '\n' >&"$fd"
+        first=0
+        printf '  %s%s%s%s%s%s\n' "$bold" "$version" "$reset" "$dim" "$remainder" "$reset" >&"$fd"
+        ;;
+      # The marker stays ASCII: colour the two characters the source bullet
+      # already begins with rather than substituting a glyph that can mangle in
+      # a legacy codepage console.
+      '- '*)
+        printf '    %s- %s%s\n' "$accent" "$reset" "${line#- }" >&"$fd"
+        ;;
+      '')
+        ;;
+      *)
+        printf '    %s\n' "$line" >&"$fd"
+        ;;
+    esac
+  done <<< "$body"
+
+  printf '\n' >&"$fd"
+}
+
+# changelog_since_kind <value>
+# Classifies a `changelog --since` value into one of three disjoint forms and
+# prints it: "version" (1.10.0), "date" (2026-08-01), or "duration" (30d / 2w /
+# 6mo / 1y). Returns 1, printing nothing, when the value is none of them. The
+# shapes cannot collide, which is why --since auto-detects instead of carrying
+# one flag per form.
+changelog_since_kind() {
+  local value="${1:-}"
+  if printf '%s' "$value" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+    printf 'version\n'
+  elif printf '%s' "$value" | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'; then
+    printf 'date\n'
+  elif printf '%s' "$value" | grep -Eq '^[0-9]+(d|w|mo|y)$'; then
+    printf 'duration\n'
+  else
+    return 1
+  fi
+}
+
+# changelog_duration_to_date <duration>
+# Resolves 30d / 2w / 6mo / 1y to the YYYY-MM-DD that many units before today.
+# GNU `date -d` first, BSD `date -v` second, and a pure-awk civil-calendar
+# conversion last, so a shell with neither still answers — no new dependency for
+# date maths. The awk fallback approximates a month as 30 days and a year as
+# 365; the two `date` paths do real calendar arithmetic. Returns 1 when even
+# `date +%Y-%m-%d` is unavailable.
+changelog_duration_to_date() {
+  local duration="${1:-}" n unit word days out today
+  n="${duration%%[!0-9]*}"
+  unit="${duration#"$n"}"
+  case "$unit" in
+    d)  word=days   ; days=$((n))      ;;
+    w)  word=weeks  ; days=$((n * 7))  ;;
+    mo) word=months ; days=$((n * 30)) ;;
+    y)  word=years  ; days=$((n * 365));;
+    *)  return 1 ;;
+  esac
+
+  if out="$(date -d "-$n $word" +%Y-%m-%d 2>/dev/null)" && [ -n "$out" ]; then
+    printf '%s\n' "$out"
+    return 0
+  fi
+  case "$unit" in
+    d)  out="-${n}d" ;;
+    w)  out="-${n}w" ;;
+    mo) out="-${n}m" ;;
+    y)  out="-${n}y" ;;
+  esac
+  if out="$(date -v"$out" +%Y-%m-%d 2>/dev/null)" && [ -n "$out" ]; then
+    printf '%s\n' "$out"
+    return 0
+  fi
+
+  today="$(date +%Y-%m-%d 2>/dev/null || true)"
+  [ -n "$today" ] || return 1
+  awk -v today="$today" -v back="$days" '
+    function days_from_civil(y, m, d,   era, yoe, doy, doe) {
+      if (m <= 2) y -= 1
+      era = int((y >= 0 ? y : y - 399) / 400)
+      yoe = y - era * 400
+      doy = int((153 * (m + (m > 2 ? -3 : 9)) + 2) / 5) + d - 1
+      doe = yoe * 365 + int(yoe / 4) - int(yoe / 100) + doy
+      return era * 146097 + doe - 719468
+    }
+    function civil_from_days(z,   era, doe, yoe, y, doy, mp, d, m) {
+      z += 719468
+      era = int((z >= 0 ? z : z - 146096) / 146097)
+      doe = z - era * 146097
+      yoe = int((doe - int(doe / 1460) + int(doe / 36524) - int(doe / 146096)) / 365)
+      y = yoe + era * 400
+      doy = doe - (365 * yoe + int(yoe / 4) - int(yoe / 100))
+      mp = int((5 * doy + 2) / 153)
+      d = doy - int((153 * mp + 2) / 5) + 1
+      m = mp + (mp < 10 ? 3 : -9)
+      if (m <= 2) y += 1
+      return sprintf("%04d-%02d-%02d", y, m, d)
+    }
+    BEGIN {
+      split(today, t, "-")
+      print civil_from_days(days_from_civil(t[1] + 0, t[2] + 0, t[3] + 0) - back)
+    }
+  '
+}
+
+# select_changelog_sections <kind> <value>
+# Prints the CHANGELOG.md sections a `changelog --since` selection covers,
+# verbatim, on stdout — headers and bodies, never the preamble above the first
+# `## `. <kind> is either:
+#   version — every section from the newest down to and INCLUDING the one whose
+#             header token is <value>. Inclusive on purpose, unlike
+#             print_changelog_range's exclusive old bound: "since 1.10.0" reads
+#             as "1.10.0 and everything after", whereas an upgrading user
+#             already had the version they came from.
+#   date    — every section whose header carries a date on or after <value>.
+#             Plain string comparison of YYYY-MM-DD is enough, and the whole
+#             file is scanned rather than a prefix: the file is ordered by
+#             descending semver, which the merge in this repo's history makes
+#             non-chronological in one place.
+# Returns 1, printing nothing, when the file is missing or nothing matched. A
+# selection that matches nothing is not an error — the caller says so and exits
+# 0.
+select_changelog_sections() {
+  local kind="${1:-}" value="${2:-}" file
+  file="$(src_changelog_path)"
+  [ -f "$file" ] || return 1
+
+  case "$kind" in
+    version)
+      awk -v v="$value" '
+        /^## / {
+          if (stop) halted = 1
+          started = 1
+          if (!halted && $2 == v) { found = 1; stop = 1 }
+        }
+        started && !halted { buf[++n] = $0 }
+        END {
+          if (!found) exit 1
+          for (i = 1; i <= n; i++) print buf[i]
+        }
+      ' "$file" 2>/dev/null
+      ;;
+    date)
+      awk -v since="$value" '
+        /^## / {
+          keep = 0
+          if (match($0, /[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/) &&
+              substr($0, RSTART, RLENGTH) >= since) { keep = 1; found = 1 }
+        }
+        keep { buf[++n] = $0 }
+        END {
+          if (!found) exit 1
+          for (i = 1; i <= n; i++) print buf[i]
+        }
+      ' "$file" 2>/dev/null
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+# terminal_height
+# Prints the terminal's line count: $LINES, else `tput lines`, else 24. Used to
+# decide whether a rendered block fits one screen. Falls back to a constant
+# rather than taking a dependency — `tput` is absent often enough on the bare
+# git-bash this CLI's primary platform ships.
+terminal_height() {
+  local h="${LINES:-}"
+  if [ -z "$h" ] && command -v tput >/dev/null 2>&1; then
+    h="$(tput lines 2>/dev/null || true)"
+  fi
+  case "$h" in
+    ''|*[!0-9]*) h=24 ;;
+  esac
+  printf '%s\n' "$h"
+}
+
 # print_changelog_range <old-version> <new-version>
 # Writes the CHANGELOG.md sections for the versions between two VERSION values
 # to stderr: from <new-version>'s header inclusive, down to but excluding
@@ -741,8 +952,7 @@ auto_upgrade_due() {
 # Colour is gated on _use_color (stderr), not the C_* variables (stdout).
 print_changelog_range() {
   local old_version="${1:-}" new_version="${2:-}"
-  local file body line rest version remainder rc=0 first=1
-  local bold='' dim='' accent='' reset=''
+  local file body rc=0
 
   file="$(src_changelog_path)"
   # A clone predating this feature has no changelog. Say nothing.
@@ -786,10 +996,6 @@ print_changelog_range() {
     *) return 1 ;;
   esac
 
-  if _use_color; then
-    bold=$'\033[1m'; dim=$'\033[2m'; accent=$'\033[36m'; reset=$'\033[0m'
-  fi
-
   if [ -n "$old_version" ]; then
     log_info "What changed since $old_version → $new_version"
   else
@@ -797,31 +1003,10 @@ print_changelog_range() {
   fi
   printf '\n' >&2
 
-  while IFS= read -r line; do
-    case "$line" in
-      '## '*)
-        rest="${line#\#\# }"
-        version="${rest%%[[:space:]]*}"
-        remainder="${rest#"$version"}"
-        [ "$first" -eq 1 ] || printf '\n' >&2
-        first=0
-        printf '  %s%s%s%s%s%s\n' "$bold" "$version" "$reset" "$dim" "$remainder" "$reset" >&2
-        ;;
-      # The marker stays ASCII: colour the two characters the source bullet
-      # already begins with rather than substituting a glyph that can mangle in
-      # a legacy codepage console.
-      '- '*)
-        printf '    %s- %s%s\n' "$accent" "$reset" "${line#- }" >&2
-        ;;
-      '')
-        ;;
-      *)
-        printf '    %s\n' "$line" >&2
-        ;;
-    esac
-  done <<< "$body"
-
-  printf '\n' >&2
+  # Layout and colour both live in the shared renderer. This caller writes to
+  # stderr, so it gates on _use_color — the C_* variables are gated on stdout
+  # being a TTY and would be the wrong tool here.
+  _render_changelog_sections "$body" 2 _use_color
 
   if [ "$rc" -eq 11 ]; then
     log_info "CHANGELOG.md has no section for ${old_version:-the previous version} — showing only $new_version."

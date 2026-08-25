@@ -54,8 +54,13 @@ Explicit non-goals:
 - **Nothing in the shipped commands or skills.** No feature body gains a
   changelog step, no new command, no new skill. This is repo-level and
   CLI-level only.
-- **No new CLI flag and no new subcommand.** The readout is unconditional
-  behaviour of `upgrade`; there is no `--changelog` and no `--no-changelog`.
+- **No new flag on `upgrade`.** Its readout is unconditional behaviour of a
+  version-changing pull; there is no `--changelog` and no `--no-changelog`.
+  *(Amended 2026-08-25, task 150: this originally read "No new CLI flag and no
+  new subcommand", which no longer holds. `chosko-llm changelog`, with its
+  `--since` and `--print` flags, now exists and is in scope — see § Interfaces
+  and contracts. The half that still stands is the one above: `upgrade` itself
+  gained no flag.)*
 - **`CHANGELOG.md` is not a shipped feature.** No frontmatter, never copied
   into `$CLAUDE_HOME`, never listed by `chosko-llm ls`, not added to
   `cmd-export.sh`'s selection. It lives in the managed clone and is read
@@ -65,8 +70,13 @@ Explicit non-goals:
 - **`chosko-llm channel <branch>` prints nothing.** A channel switch can
   move `VERSION` in either direction and is a developer action, not an
   upgrade.
-- **No line wrapping and no pager.** Bullets are short by schema; that is
-  what makes wrapping unnecessary.
+- **No line wrapping.** Bullets are short by schema; that is what makes
+  wrapping unnecessary.
+  *(Amended 2026-08-25, task 150: this originally read "No line wrapping and no
+  pager". The no-pager half is falsified on both sides of `chosko-llm
+  changelog` — the no-argument view falls back to `less -R` when no editor
+  resolves, and `--since` pages when its block does not fit one screen. The
+  no-wrapping half stands, everywhere.)*
 
 ## Architecture
 
@@ -232,6 +242,15 @@ Per `CLAUDE.md`'s hard rule that path assembly and colour handling live in
   `.claude/context/shared-lib.md` records the standing convention that
   `cmd-*.sh` scripts never inline `\033[` escapes.
 
+*(Amended 2026-08-25, task 150: the range printer is no longer the only
+consumer of the formatter. The formatting below was extracted into a shared
+renderer parameterised by **output stream and colour gate**, which the range
+printer calls with fd 2 and `_use_color` and `chosko-llm changelog --since`
+calls with fd 1 and its own captured stdout predicate. `lib.sh` correspondingly
+grew section-selection helpers for `--since` beyond the three additions listed
+here. What did not change: everything still lives in `lib.sh` for the two
+reasons given above.)*
+
 ### 6. The presentation
 
 The block is written to **stderr**, like every other line `cmd-upgrade.sh`
@@ -244,6 +263,16 @@ wrong tool here: they are gated on *stdout* being a TTY, and this block goes
 to stderr. When colour is off, every escape resolves to an empty string and
 the layout, indentation and markers are unchanged, so piped or redirected
 output is clean plain text.
+
+*(Amended 2026-08-25, task 150: that gating statement now holds only for **this**
+caller, the stderr readout. The renderer takes its colour gate as a parameter,
+so `chosko-llm changelog --since`, which writes to stdout, passes the
+stdout-gated predicate instead — and captures it from the command's *original*
+stdout, before a pager can turn fd 1 into a pipe. The rule the original wording
+was protecting is unchanged and now stated stream-wise: use the gate that
+matches the stream, or redirected output carries escapes. Everything else in
+this section — the layout, the ASCII marker, the no-wrapping decision — applies
+identically to both blocks, which is why there is one renderer.)*
 
 Layout, for a pull from `0.61.0` to `0.62.1`:
 
@@ -318,9 +347,17 @@ drift, and a user who has never upgraded has no prior state to be missing.
 
 ### `chosko-llm upgrade`
 
-Unchanged surface: no new flag, no new exit code, no change to the
-`--enable-auto` / `--disable-auto` toggles, which still exit before any of
-this runs. The only difference is what a version-changing pull prints.
+No new flag, no new exit code, no change to the `--enable-auto` /
+`--disable-auto` toggles, which still exit before any of this runs. The
+difference is what a version-changing pull prints.
+
+*(Amended 2026-08-25, task 150: this originally opened "Unchanged surface",
+which no longer holds as written. `upgrade` now also prints one more TTY-gated
+stderr tip — `Run 'chosko-llm changelog' to see the full changelog` — alongside
+its existing `ls --available` / `update --all` tips, and `chosko-llm --version`
+prints a TTY-gated stderr tip of its own after its stdout version line, which
+is itself unchanged. Both are stderr and both are TTY-gated, so neither changes
+what a script capturing stdout receives.)*
 
 | Situation | Behaviour |
 | --- | --- |
@@ -340,6 +377,42 @@ this runs. The only difference is what a version-changing pull prints.
 line inside a section that is neither a header nor a bullet is passed through
 indented and uncoloured rather than dropped — losing content is worse than
 printing something unexpected.
+
+### `chosko-llm changelog`
+
+*(Added 2026-08-25, task 150.)* A read-only view onto the managed clone's
+`CHANGELOG.md`. It never pulls, writes nothing, and is on the daily
+auto-upgrade's skip list beside `version` and `help`.
+
+| Invocation | Behaviour |
+| --- | --- |
+| `changelog` | Opens `$CHOSKO_LLM_HOME/CHANGELOG.md` in `$VISUAL`, else `$EDITOR`, else `git var GIT_EDITOR`; when none resolves, `less -R` on a TTY and `cat` otherwise. **Never fails merely because no editor is configured** — a bare git-bash on Windows commonly has neither variable, and this CLI's primary platform must not fail on first run. |
+| `changelog --print` | The full file on stdout. Never an editor, never a pager — this is what scripts use. |
+| `changelog --since <value>` | The selected sections, rendered, on **stdout**. |
+| `changelog --since <value> --print` | The same, forced unpaged. |
+
+`--since` takes one value in three **disjoint** shapes, auto-detected, with no
+flag per form: a version (`1.10.0`), a date (`2026-08-01`), or a duration
+(`30d` / `2w` / `6mo` / `1y`, resolved against today).
+
+- **The version bound is inclusive** — "since 1.10.0" means 1.10.0 and
+  everything after. This is deliberately the opposite of the `upgrade` range's
+  exclusive old bound, which is right there because the user already had that
+  version.
+- **Output goes to stdout**, unlike `upgrade`'s stderr readout, because it is
+  this command's product and must pipe into `grep`. Every diagnostic — the
+  no-match notice included — goes to stderr, so stdout stays greppable.
+- **Paged only on overflow, and only on a TTY.** The rendered block is measured
+  against the terminal height (`LINES`, else `tput lines`, else 24). Fits: written
+  straight out, no child process. Does not fit: piped to `$PAGER`, else
+  `less -R`, else written straight out. A pipe, a redirect, or `--print` never
+  spawns a pager, so `changelog --since 30d | grep …` behaves the same whatever
+  the content's length. The default pager carries `-R` so the escapes survive.
+- **An unparseable `--since` dies** with a message naming all three forms. A
+  value matching **no** section is not an error: it says so and exits 0.
+- **A missing `CHANGELOG.md` dies here**, unlike in `upgrade`, which is silent
+  about it. Silence is right when the readout is a side effect of another
+  action, and wrong when the file is the thing the user asked for.
 
 ### `scripts/check-changelog.sh`
 
