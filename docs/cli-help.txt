@@ -21,10 +21,17 @@ Usage:
                                       independently: a failure on one (already installed, unknown
                                       name, wrong scope for the kind) is logged and the rest still run;
                                       exit code is 1 if any failed. e.g. 'add foo skill:bar claude-md:baz'.
+                                      Any feature named in a source's 'requires:' is installed first,
+                                      one level deep and into the same scope; a requirement that
+                                      cannot be installed aborts that feature before anything is
+                                      copied for it.
   chosko-llm add --all                Install all features from the managed clone that are not yet
                                       installed. Already-installed features are skipped. Cannot be
                                       combined with explicit feature names.
-  chosko-llm rm  <feature>            Delete an installed feature from $CLAUDE_HOME.
+  chosko-llm rm  <feature>            Delete an installed feature from $CLAUDE_HOME. Refuses when an
+                                      installed feature declares this one in 'requires:', naming
+                                      every dependent.
+  chosko-llm rm  <feature> --force    Remove it anyway, warning which dependents it just broke.
   chosko-llm update <feature> [<feature>…]  Re-copy one or more features from the managed clone
                                       (installs any that are missing). Same best-effort, multi-name
                                       behavior as 'add'. e.g. 'update foo skill:bar claude-md:baz'.

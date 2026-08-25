@@ -292,7 +292,7 @@ Feature: task-peer-review
 
 ## 125. Add the `requires:` frontmatter field and its install-time resolution
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/lib.sh, scripts/cmd-add.sh, scripts/cmd-rm.sh, docs/authoring-guide.md, docs/cli-help.txt, VERSION
 Preconditions: none

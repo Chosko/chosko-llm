@@ -2,6 +2,33 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.7.0 — 2026-08-25
+
+- New optional frontmatter key `requires:`, valid on every feature kind. It
+  names the features a feature reads a file out of, as a comma-separated list
+  of kind-prefixed specs (`requires: skill:task-engine, command:task-add`), so
+  a cross-feature reference can no longer install into a dangling path.
+- `chosko-llm add <feature>` installs what a source declares in `requires:`
+  before installing the feature itself — after validation and before the first
+  copy, so a requirement that cannot be resolved aborts that feature without
+  half-installing it. A requirement already installed is skipped with one info
+  line; a requirement absent from the managed clone, or invalid for the scope,
+  aborts only that feature and the other names in the call still run.
+- `chosko-llm rm <feature>` now refuses to remove a feature that an installed
+  feature still declares in `requires:`, naming every dependent. New `--force`
+  flag removes it anyway and warns which dependents it just broke. `--force`
+  may appear anywhere in the argument list, like `--local` / `--global`.
+- Resolution is deliberately one level deep, unversioned and non-transitive: a
+  requirement's own `requires:` is not followed, there is no version range, no
+  solver, no lockfile and no cycle detection.
+- `add --all`, `update`, `ls` and `uninstall.sh` are unchanged. `--all`
+  installs every feature, so every requirement is satisfied incidentally; a
+  bulk uninstall deletes artifacts directly and is never blocked by the new
+  `rm` guard.
+- No shipped feature declares `requires:` yet — this release only adds the
+  capability. `docs/authoring-guide.md` gains a `requires:` section beside the
+  `replaces:` one, and `chosko-llm help` documents both sides.
+
 ## 1.6.1 — 2026-08-25
 
 - Documentation catch-up for the `task-peer-review` feature shipped in 1.4.0–1.6.0.

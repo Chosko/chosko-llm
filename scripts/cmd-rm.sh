@@ -7,14 +7,27 @@ source "$SCRIPT_DIR/lib.sh"
 resolve_scope "$@"
 set -- ${SCOPE_ARGS[@]+"${SCOPE_ARGS[@]}"}
 
+# --force is stripped the same way resolve_scope strips --local / --global, so
+# it may appear anywhere in the argument list and never reaches the spec.
+force=0
+rm_args=()
+for a in "$@"; do
+  if [ "$a" = "--force" ]; then force=1; else rm_args+=("$a"); fi
+done
+set -- ${rm_args[@]+"${rm_args[@]}"}
+
 case "${1:-}" in
   -h|--help)
     cat <<EOF
-Usage: chosko-llm rm <feature> [--local | --global]
+Usage: chosko-llm rm <feature> [--force] [--local | --global]
 
   <feature>     Remove an installed feature: <name>, command:<name>,
                 skill:<name>, claude-md:<name>, statusline:<name>, or
                 hook:<name>.
+  --force       Remove it even when an installed feature declares it in
+                'requires:'. Without this, such a removal is refused and the
+                dependents are named; with it, they are named as a warning and
+                the removal proceeds.
   --local       Remove from <cwd>/.claude instead of \$CLAUDE_HOME. Requires
                 <cwd>/CLAUDE.md to exist. statusline is global-only and
                 fails with --local.
@@ -65,6 +78,59 @@ kind="$(resolve_installed)"
 
 if ! scope_supports_kind "$kind"; then
   die "$(scope_violation_message "$kind")"
+fi
+
+# ---------- dependents guard ----------
+# Removing a feature that another installed feature reads a file out of leaves
+# the survivor following a dangling path mid-run. Scan the installed set for
+# anything declaring this one in `requires:` before deleting it.
+#
+# The scan reads INSTALLED frontmatter for command, skill, statusline and hook,
+# but the MANAGED-CLONE source for claude-md. That asymmetry is not an
+# oversight: `inject_section` strips frontmatter, so an installed claude-md
+# section carries no `requires:` to read at all — the clone's copy of the same
+# name is the only place the declaration survives.
+want="$kind:$name"
+dependents=""
+
+record_if_dependent() {
+  local file="$1" dep_spec="$2" specs
+  [ -f "$file" ] || return 0
+  # A feature naming itself is not its own dependent — it would otherwise block
+  # its own removal forever.
+  [ "$dep_spec" != "$want" ] || return 0
+  # requires_specs `die`s on a malformed entry; the command substitution keeps
+  # that exit status visible, and `exit 1` aborts rm rather than deleting on a
+  # declaration nobody could read.
+  specs="$(requires_specs "$file")" || exit 1
+  printf '%s\n' "$specs" | grep -qxF -- "$want" || return 0
+  dependents="$dependents $dep_spec"
+}
+
+for f in "$CLAUDE_HOME"/commands/*.md; do
+  record_if_dependent "$f" "command:$(basename "$f" .md)"
+done
+for f in "$CLAUDE_HOME"/skills/*/SKILL.md; do
+  record_if_dependent "$f" "skill:$(basename "$(dirname "$f")")"
+done
+for f in "$CLAUDE_HOME"/statusline/*.sh; do
+  record_if_dependent "$f" "statusline:$(basename "$f" .sh)"
+done
+for f in "$CLAUDE_HOME"/hooks/*.sh; do
+  record_if_dependent "$f" "hook:$(basename "$f" .sh)"
+done
+for f in "$CHOSKO_LLM_HOME"/claude-md/*.md; do
+  [ -f "$f" ] || continue
+  cm_name="$(basename "$f" .md)"
+  claudemd_is_installed "$cm_name" || continue
+  record_if_dependent "$f" "claude-md:$cm_name"
+done
+
+if [ -n "$dependents" ]; then
+  if [ $force -eq 0 ]; then
+    die "Cannot remove $kind '$name': still required by$dependents. Pass --force to remove it anyway."
+  fi
+  log_warn "Removing $kind '$name' with --force — these installed features declare it in 'requires:' and will break:$dependents"
 fi
 
 case "$kind" in

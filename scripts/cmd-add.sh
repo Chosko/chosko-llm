@@ -17,6 +17,9 @@ Usage: chosko-llm add <feature> [<feature> ...] [--local | --global] | --all [--
                 names may be given in one call; each is installed
                 independently and a failure on one (already installed,
                 unknown name, wrong scope for the kind) does not stop the rest.
+                Any feature the source declares in 'requires:' is installed
+                first, one level deep; a requirement that cannot be installed
+                aborts that feature before anything is copied for it.
   --all         Install every feature not yet installed. Cannot be combined
                 with explicit feature names.
   --local       Install into <cwd>/.claude instead of \$CLAUDE_HOME. Requires
@@ -37,6 +40,11 @@ for a in "$@"; do
   fi
 done
 
+# --all deliberately does no `requires:` resolution, and needs none: it
+# installs every feature in the managed clone, so every declared requirement is
+# satisfied incidentally. Copy order within the run is irrelevant too, because a
+# feature resolves its requirement's path when an agent runs it, not when it is
+# installed.
 if [ "$1" = "--all" ]; then
   any=0
   if [ -d "$CHOSKO_LLM_HOME/commands" ]; then
@@ -158,6 +166,41 @@ if [ "$1" = "--all" ]; then
   exit 0
 fi
 
+# install_requires <kind> <name>
+# Installs every feature named in <kind>:<name>'s `requires:` frontmatter that
+# is not already installed. Called from add_one after validation and BEFORE the
+# first copy, so a requirement that cannot be resolved aborts the dependent
+# without ever leaving it half-installed.
+#
+# Resolution is ONE LEVEL DEEP on purpose: a requirement's own `requires:` is
+# not followed. Do not "fix" this later — `requires:` is a flat declaration,
+# not a dependency graph, and the moment it needs a solver it has outgrown this
+# repo's no-lockfile rules.
+#
+# It reuses add_one recursively rather than opening a second install path, so a
+# requirement gets the same scope, the same `scope_supports_kind` rule and the
+# same `scope_violation_message` wording as anything else installed here.
+install_requires() {
+  local kind="$1" name="$2" src specs spec parsed dep_kind dep_name
+  src="$(src_path_for_kind "$kind" "$name")" || return 0
+  # requires_specs `die`s on a malformed entry; command substitution keeps that
+  # exit status visible so the dependent aborts too.
+  specs="$(requires_specs "$src")" || exit 1
+  [ -n "$specs" ] || return 0
+  while IFS= read -r spec; do
+    [ -n "$spec" ] || continue
+    mapfile -t parsed < <(parse_replaces_spec "$spec")
+    dep_kind="${parsed[0]:-}"
+    dep_name="${parsed[1]:-}"
+    if artifact_is_installed "$dep_kind" "$dep_name"; then
+      log_info "Requirement of $kind '$name': $dep_kind '$dep_name' already installed — skipping"
+      continue
+    fi
+    log_info "Requirement of $kind '$name': installing $dep_kind '$dep_name' first"
+    add_one "$spec" || die "Cannot install $kind '$name': its requirement '$spec' could not be installed."
+  done <<< "$specs"
+}
+
 # add_one <spec>
 # Installs a single feature spec. Runs in a subshell so an internal `die`
 # (unknown/ambiguous spec, already installed, missing version) only aborts
@@ -175,11 +218,21 @@ add_one() {
       die "$(scope_violation_message "$kind")"
     fi
 
+    # Every validation that can refuse this feature runs here, ahead of the
+    # case below, and the requirements are installed last of the three — so
+    # nothing is copied for a feature that was going to be refused anyway, and
+    # no requirement is installed for one that cannot itself be installed.
+    src="$(src_path_for_kind "$kind" "$name")"
+    require_versioned_source "$src"
+    if [ "$kind" = "hook" ]; then
+      require_hook_source "$src"
+    fi
+    install_requires "$kind" "$name"
+
     case "$kind" in
       command)
         src="$(src_command_path "$name")"
         dst="$(inst_command_path "$name")"
-        require_versioned_source "$src"
         if [ -e "$dst" ]; then
           die "Command '$name' is already installed at $dst. Use 'chosko-llm update $name' to refresh."
         fi
@@ -192,7 +245,6 @@ add_one() {
         src_dir="$(src_skill_dir "$name")"
         src_skill="$(src_skill_path "$name")"
         dst_dir="$(inst_skill_dir "$name")"
-        require_versioned_source "$src_skill"
         if [ -e "$dst_dir" ]; then
           die "Skill '$name' is already installed at $dst_dir. Use 'chosko-llm update $name' to refresh."
         fi
@@ -203,7 +255,6 @@ add_one() {
         ;;
       claude-md)
         src="$(src_claudemd_path "$name")"
-        require_versioned_source "$src"
         if claudemd_is_installed "$name"; then
           die "claude-md '$name' is already installed. Use 'chosko-llm update claude-md:$name' to refresh."
         fi
@@ -214,7 +265,6 @@ add_one() {
       statusline)
         src="$(src_statusline_path "$name")"
         dst="$(inst_statusline_path "$name")"
-        require_versioned_source "$src"
         if [ -e "$dst" ]; then
           die "statusline '$name' is already installed at $dst. Use 'chosko-llm update $name' to refresh."
         fi
@@ -228,8 +278,6 @@ add_one() {
       hook)
         src="$(src_hook_path "$name")"
         dst="$(inst_hook_path "$name")"
-        require_versioned_source "$src"
-        require_hook_source "$src"
         if [ -e "$dst" ]; then
           die "hook '$name' is already installed at $dst. Use 'chosko-llm update $name --local' to refresh."
         fi

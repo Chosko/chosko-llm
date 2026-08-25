@@ -29,8 +29,11 @@ section for the one-line pointer back to this note.
 
 Every feature file starts with a YAML frontmatter block. All four fields below
 are required on every kind; hooks add `event:` (see the `replaces:` section for
-that table). For the two `.sh` kinds the block lives in a bash no-op heredoc
-rather than at the top of the file — see the statusline and hook sections.
+that table). Two further keys are optional on every kind: `replaces:`, for a
+feature that changes kind, and `requires:`, for a feature that reads a file
+inside another one. Each has its own section below. For the two `.sh` kinds the
+block lives in a bash no-op heredoc rather than at the top of the file — see the
+statusline and hook sections.
 
 This rule governs **shipped features** — the artifacts under `commands/`,
 `skills/`, `claude-md/`, `statusline/` and `hooks/` that the CLI installs. A
@@ -113,6 +116,69 @@ to fix up installs that predate the rename; once everyone has run
 `chosko-llm upgrade && chosko-llm update --all`, it is dead weight, and a stale
 `replaces:` will delete a genuinely new artifact if someone later reuses the old
 name for the old kind.
+
+### `requires:` — the optional dependency field
+
+A feature body that reads a file inside another installed feature — the way the
+`task-*` suite reads `skills/task-engine/references/*.md` — breaks the moment
+that other feature is not installed, and the failure surfaces as an agent
+following a dangling path mid-run rather than as anything the CLI said. Declare
+the dependency instead:
+
+```markdown
+---
+name: task-add
+version: 2.0.0
+type: command
+description: Author a task into the project's backlog.
+requires: skill:task-engine
+---
+```
+
+| Field      | Rules                                                                  |
+| ---------- | ---------------------------------------------------------------------- |
+| `requires` | Optional, valid on every kind. A comma-separated list of kind-prefixed specs — `command:<name>`, `skill:<name>`, `claude-md:<name>`, `statusline:<name>`, `hook:<name>` — naming the features this one reads from. Whitespace around the commas, and around the kind colon, is tolerated. An entry with no kind prefix is refused at install time, naming the offending entry. |
+
+Two or more, in one line:
+
+```yaml
+requires: skill:task-engine, command:task-add
+```
+
+What the CLI does with it:
+
+- `chosko-llm add <spec>` — after the feature resolves and passes validation,
+  but **before anything is copied**, each named feature that is not already
+  installed is installed first, logged as
+  `Requirement of command 'task-add': installing skill 'task-engine' first`.
+  One already installed is skipped with a single info line. One that cannot be
+  installed — absent from the managed clone, or wrong for the scope — aborts
+  that feature having copied nothing for it; other names in the same call still
+  run, and the exit code is 1. A requirement installs into the same scope as
+  its dependent and obeys the same global-only / local-only rules.
+- `chosko-llm add --all` — unchanged, and needs no change: it installs every
+  feature in the clone, so every requirement is satisfied incidentally.
+- `chosko-llm rm <spec>` — refuses when any installed feature declares this one
+  in `requires:`, naming every dependent. `chosko-llm rm <spec> --force`
+  removes it anyway and warns naming the dependents it just broke.
+- `chosko-llm update` and `chosko-llm ls` ignore the key. `update` re-copies
+  what is installed, and a requirement already installed is already in that
+  set. The declaration itself is visible through `chosko-llm show <feature>
+  --content`.
+
+Three limits, all deliberate:
+
+- **One level deep.** A requirement's own `requires:` is not followed.
+- **Unversioned.** `requires: skill:task-engine` names a feature, never a
+  version range. Keep a shared file backward-compatible instead.
+- **Non-transitive, and not a graph.** There is no solver, no lockfile and no
+  cycle detection — the moment a dependency needs one, it has outgrown this
+  repo's rules.
+
+Write the path the dependent actually reads as
+`${CLAUDE_HOME:-$HOME/.claude}/skills/<name>/…`, never `~/.claude` and never a
+`docs/` path. `requires:` guarantees the file is installed; it does nothing
+about a body that looked in the wrong place.
 
 ## <a id="commands"></a>Authoring a command
 

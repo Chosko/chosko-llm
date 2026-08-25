@@ -157,8 +157,12 @@ scope_violation_message() {
 
 # parse_frontmatter <file>
 # Emits key=value lines for: name, version, type, description, replaces,
-# event, matcher.
+# requires, event, matcher.
 # `replaces` is optional — see the kind-migration section below.
+# `requires` is optional and valid on every kind — see the dependency section
+# below. The value is a comma-separated list of kind-prefixed specs, and the
+# split below is on the FIRST colon only, so `skill:task-engine` survives it
+# intact.
 # `event` and `matcher` are read for the hook kind only: `event` names the
 # Claude Code hook event to wire the script into (PreToolUse, SessionStart, …)
 # and `matcher` optionally narrows it to one tool. Both are ignored on every
@@ -188,7 +192,7 @@ parse_frontmatter() {
       if (val ~ /^".*"$/ || val ~ /^'\''.*'\''$/) {
         val = substr(val, 2, length(val) - 2)
       }
-      if (key == "name" || key == "version" || key == "type" || key == "description" || key == "replaces" || key == "event" || key == "matcher") {
+      if (key == "name" || key == "version" || key == "type" || key == "description" || key == "replaces" || key == "requires" || key == "event" || key == "matcher") {
         print key "=" val
       }
     }
@@ -635,6 +639,47 @@ check_migration_pending() {
   [ -n "$old_kind" ] && [ -n "$old_name" ] || return 1
   artifact_is_installed "$old_kind" "$old_name" || return 1
   printf '%s\n%s\n' "$old_kind" "$old_name"
+}
+
+# ---------- dependencies (`requires:`) ----------
+# A feature whose body reads a file inside another installed feature declares
+# that feature in its frontmatter:
+#
+#   requires: skill:task-engine
+#   requires: skill:task-engine, command:task-add
+#
+# `cmd-add` installs what a feature names before installing the feature;
+# `cmd-rm` refuses to remove a feature something installed still requires.
+# Resolution is one level deep, unversioned and non-transitive — a flat
+# declaration, never a dependency graph. See docs/authoring-guide.md.
+
+# requires_specs <file>
+# Prints one kind-prefixed spec per line, one per comma-separated entry of
+# <file>'s optional `requires:` value; whitespace around the commas and around
+# the kind colon is tolerated and empty entries are dropped. Each entry is
+# validated with `parse_replaces_spec` — deliberately the same kind-prefix
+# parser `replaces:` uses, not a second one; the whitespace is squeezed out
+# first so that parser never has to learn about it, and so a stray space cannot
+# turn into a requirement name nothing can resolve. Prints nothing and returns
+# 0 when the key is absent or empty.
+#
+# An entry with no recognised kind prefix is a hard error, not a silent skip:
+# the whole point of the key is to catch a dangling reference at install time
+# rather than mid-run, and a typo that parses to nothing would defeat that. It
+# therefore `die`s — so call it through a command substitution
+# (`specs="$(requires_specs "$f")" || exit 1`), never a process substitution,
+# where the `die` would only kill the subshell and leave the caller running.
+requires_specs() {
+  local file="$1" raw entry
+  raw="$(read_frontmatter_field "$file" requires || true)"
+  [ -n "$raw" ] || return 0
+  while IFS= read -r entry; do
+    entry="$(printf '%s' "$entry" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//; s/[[:space:]]*:[[:space:]]*/:/')"
+    [ -n "$entry" ] || continue
+    parse_replaces_spec "$entry" >/dev/null \
+      || die "Malformed 'requires: $raw' in $file — entry '$entry' has no kind prefix (expected command:, skill:, claude-md:, statusline: or hook:)."
+    printf '%s\n' "$entry"
+  done < <(printf '%s\n' "$raw" | tr ',' '\n')
 }
 
 # ---------- auto-upgrade state ----------
