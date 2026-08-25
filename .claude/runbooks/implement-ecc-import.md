@@ -295,7 +295,7 @@ Context:
 ```
 Done: 2026-08-25 — commit c8ed527 (pushed). skills/task-implement/SKILL.md 1.2.0→1.3.0 with requires: skill:task-engine, cites all six references, new "SHARED RULES (the task-engine)" section; skills/task-implement/dirty-tree.md DELETED (tree.md is its verbatim extraction) — seven supporting files remain; delegated-runs.md cites targets.md § The delegation guard; review-rounds.md points at commit.md and records why the --review availability gate is a runtime check, not requires:. VERSION 1.8.3→1.8.4. Scratch install verified: task-engine installed first; `chosko-llm rm skill:task-engine` refuses naming skill:task-implement. Premise: body is 709 lines not <350. Still open for task 131: references/targets.md's /task-list note ("awaiting its migration") is wrong since task 127.
 
-## [ ] 25. Documentation for shared-phase-engine (task 131)
+## [x] 25. Documentation for shared-phase-engine (task 131)
 
 Depends on: 24
 
@@ -305,12 +305,14 @@ Context:
 ```prompt
 /task-implement 131
 ```
+Done: 2026-08-25 — commits 47d7f6c (task 131) and 3c2d48e (feature shared-phase-engine [DONE], pre-approved), both pushed. README, authoring guide (council-gate rule qualified with skills/task-engine/ as the worked example; non-invocable reference-library skill shape), context layer (shared-lib.md, cmd-add.md, cmd-rm.md, features.md, INDEX.md), domain (task-workflow.md one-authority-per-rule section; feature document reconciled). skills/task-engine/references/targets.md stale /task-list note fixed, task-engine 0.1.0→0.1.1 (deliberate departure from the body's no-shipped-body criterion, on this runbook's instruction). VERSION 1.8.4→1.8.5. Premise corrections: parse_frontmatter allowlist has EIGHT keys (name, version, type, description, replaces, requires, event, matcher), not six; task-implement is 708 lines not 709; the open question about a non-invocable skill surfacing in skill selection was never observed — left open and marked explicitly unverified (task-engine has never been installed on this machine); features.md's task-implement entry corrected to seven supporting files.
 
 ## [ ] 26. Replace /task-add's ownership notice with a pre-authorisation gate (task 139)
 
 Depends on: 25
 
-Context: none
+Context:
+- 2026-08-25 (from steps 19–25): VERSION is now 1.8.5. Feature shared-phase-engine is [DONE]: commands/task-add.md is 2.1.0 with requires: skill:task-engine, citing ${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/{resolution,status,targets,stale,commit}.md; engine-owned rules appear zero times in the body, consumer-unique content (draft templates, PHASE 3/4, feature mode) stays verbatim; the body is 731 lines. skills/task-engine is 0.1.1. Real before/after /task-add runs cannot execute unattended (Approve-and-write gate) — verify by textual walk. Every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh. Verify with CHOSKO_LLM_HOME=E:/projects/chosko-llm ./bin/chosko-llm ls --available. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 139
