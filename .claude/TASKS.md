@@ -119,7 +119,7 @@ Feature: task-peer-review
 
 ## 162. Record the Next field's omission case in the domain layer
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: .claude/domain/product-workflow.md, .claude/domain/features/plan-readout.md, VERSION, CHANGELOG.md
 Preconditions: none

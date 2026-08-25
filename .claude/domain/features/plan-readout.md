@@ -52,12 +52,20 @@ reporter with no conversation and no supporting files, exactly the register
    from the roadmap.
 2. Its features in plan order, each with its `FEATURES.md` status, its task
    rollup from `TASKS.md`, and a **Next** field — the one concrete action the
-   feature needs, rather than a restatement of its readiness.
+   feature needs, rather than a restatement of its readiness. The field is not
+   unconditional: with no `TASKS.md` it is omitted on `[PLANNED]` features,
+   whose next action cannot be derived without task statuses, while every
+   other status keeps its value. That is the failure contract below
+   degrading — a field reported less — and never a further value to derive in
+   its place.
 3. The **ready set** — features whose dependencies are all finished, never
    one that's itself `[DONE]` already.
 4. The single recommended next feature: the first ready feature in plan
    order (so, from the same set — never `[DONE]`), carrying the same **Next**
-   value section 2 gave it — echoed, never derived a second time here.
+   value section 2 gave it — echoed, never derived a second time here. When
+   section 2 gave none — a `[PLANNED]` feature with no `TASKS.md` — section 4
+   omits it too: the echo of an omission is an omission, not licence to derive
+   here what section 2 could not.
 5. **Blocked** features, each named with what blocks it, so a blocked list is
    actionable rather than a dead end.
 6. **Coverage gaps** — roadmap slices with no architected features, which is

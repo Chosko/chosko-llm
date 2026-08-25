@@ -2,6 +2,19 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.22.2 — 2026-08-25
+
+- The domain layer no longer describes `/production-status`'s Next field as an
+  exhaustive five-value list. Both `product-workflow.md` and the `plan-readout`
+  feature doc now record that with no `.claude/TASKS.md` the field is omitted on
+  `[PLANNED]` features — their next action cannot be derived without task
+  statuses — while every other status keeps its value, and that section 4's echo
+  of the recommendation omits it too in that case.
+- The omission is documented as the read-only report's failure contract
+  degrading, not as a sixth value to compute.
+- No behaviour change: documentation only. `commands/production-status.md`
+  already shipped this rule and is unchanged.
+
 ## 1.22.1 — 2026-08-25
 
 - Documentation catch-up for the review cost controls shipped in 1.21.0 and
