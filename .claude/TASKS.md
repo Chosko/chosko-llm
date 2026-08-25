@@ -412,7 +412,7 @@ Feature: repo-local-audits
 
 ## 137. Add the repo-local /rule-overlap audit skill
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: .claude/skills/rule-overlap/SKILL.md
 Preconditions: 135
