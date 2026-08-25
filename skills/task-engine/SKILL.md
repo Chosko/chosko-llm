@@ -1,8 +1,8 @@
 ---
 name: task-engine
-version: 0.1.2
+version: 0.2.0
 type: skill
-description: Reference library for the task-* features — one authority per rule they share. Six files under references/ own backlog resolution and the TASKS.md schema, the status vocabulary and its transitions, Target: values and the delegation guard, [STALE] handling, the dirty-tree prompt protocol, and commit/push gating with --no-commit / --no-push. NOT a skill the user invokes and never a skill to suggest — it takes no arguments, runs nothing, and produces no output; /task-add, /task-list, /task-clean and /task-implement read its files by path while they run, and only they should ever open it.
+description: Reference library for the task-* features — one authority per rule they share. Seven files under references/ own backlog resolution and the TASKS.md schema, the status vocabulary and its transitions, Target: values and the delegation guard, [STALE] handling, the dirty-tree prompt protocol, commit/push gating with --no-commit / --no-push, and the review cost controls behind --review-model / --review-effort. NOT a skill the user invokes and never a skill to suggest — it takes no arguments, runs nothing, and produces no output; /task-add, /task-list, /task-clean, /task-implement and /task-review read its files by path while they run, and only they should ever open it.
 ---
 
 # task-engine
@@ -10,9 +10,9 @@ description: Reference library for the task-* features — one authority per rul
 > **Not directly invocable.** This skill exists so that the rules the
 > `task-*` features share have exactly one home. It has no command, no
 > arguments and no behaviour of its own. Nothing invokes `/task-engine`;
-> nothing should suggest it. `/task-add`, `/task-list`, `/task-clean` and
-> `/task-implement` cite the files below by path while they run, and those
-> files are the only content here.
+> nothing should suggest it. `/task-add`, `/task-list`, `/task-clean`,
+> `/task-implement` and `/task-review` cite the files below by path while they
+> run, and those files are the only content here.
 
 > **Install path assumption:** this skill assumes installation at
 > `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/` — where
@@ -34,6 +34,7 @@ description: Reference library for the task-* features — one authority per rul
 | `references/stale.md` | What `[STALE]` means, who sets and clears it, how the originating feature is found, and how each feature treats a stale task. |
 | `references/tree.md` | The dirty-tree prompt protocol and the folding rules that follow from it. |
 | `references/commit.md` | Commit and push gating: `--no-commit` / `--no-push`, pull-at-start, what may be staged, one commit per unit of work, and commit/push failure handling. |
+| `references/review-budget.md` | Review cost controls: the `--review-model` / `--review-effort` values and their `same` / `auto` reserved words, the deterministic `auto` tier table, the read budget behind the effort axis, what is counted and what never is, and the cap-bound and resolved-pair reports. |
 
 Each file is the **single authority** for its rule. A consuming feature cites
 the file and states only what it does differently.

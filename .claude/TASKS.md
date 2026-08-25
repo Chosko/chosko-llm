@@ -79,7 +79,7 @@ Preconditions: none
 
 ## 158. Add the review-budget protocol to `task-engine`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-engine/references/review-budget.md, skills/task-engine/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: none

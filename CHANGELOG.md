@@ -2,6 +2,18 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.20.0 — 2026-08-25
+
+- `task-engine` gains a seventh reference file, `references/review-budget.md`,
+  the single authority for the review cost controls that back
+  `/task-implement --review`: the `--review-model` / `--review-effort` values
+  and their `same` / `auto` reserved words, the deterministic `auto` tier table
+  (heavy / light / standard, resolved per task from the round's own diff), the
+  read budget behind the effort axis, the rule that the navigation layer is
+  permitted in full and never counted at any tier, and the requirement that a
+  cap which actually binds is reported in one line. No behaviour change on its
+  own — the two consumers, `/task-implement` and `/task-review`, wire up next.
+
 ## 1.19.3 — 2026-08-25
 
 - `/architect`'s iterate guard no longer leaves a cleaned feature stuck at
