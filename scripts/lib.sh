@@ -155,9 +155,21 @@ scope_violation_message() {
 
 # ---------- frontmatter ----------
 
-# parse_frontmatter <file>
-# Emits key=value lines for: name, version, type, description, replaces,
-# requires, event, matcher.
+# _FM_AWK
+# The frontmatter scanner, written once and shared by parse_frontmatter (one
+# file, every key it finds) and read_frontmatter_table (many files, a fixed
+# field list each). Two `mode=` values, one parser: the two entry points differ
+# only in what they do with a key, so a second copy of this program would be a
+# copy that drifts.
+#
+# It scans every file to the end rather than exiting at the frontmatter's
+# closing `---`, because a multi-file run cannot afford to `exit` on the first
+# file. `in_fm` is cleared there instead, so a later `---` block is still
+# ignored and the output is unchanged; the cost is reading the rest of a small
+# markdown file.
+#
+# Recognised keys: name, version, type, description, replaces, requires, event,
+# matcher.
 # `replaces` is optional — see the kind-migration section below.
 # `requires` is optional and valid on every kind — see the dependency section
 # below. The value is a comma-separated list of kind-prefixed specs, and the
@@ -167,36 +179,85 @@ scope_violation_message() {
 # Claude Code hook event to wire the script into (PreToolUse, SessionStart, …)
 # and `matcher` optionally narrows it to one tool. Both are ignored on every
 # other kind.
-# Reads only the first YAML frontmatter block delimited by --- ... ---.
-# Quietly ignores keys it doesn't care about.
+_FM_AWK='
+  function _flush(   i, out) {
+    if (curfile == "") return
+    if (mode == "table") {
+      out = curfile
+      for (i = 1; i <= nf; i++) out = out "\t" ((want[i] in val) ? val[want[i]] : "")
+      print out
+    }
+    curfile = ""
+    delete val
+  }
+  BEGIN { nf = split(fields, want, " ") }
+  FNR == 1 { _flush(); curfile = FILENAME; in_fm = 0; seen_open = 0 }
+  /^---[[:space:]]*$/ {
+    if (!seen_open) { in_fm = 1; seen_open = 1; next }
+    else if (in_fm) { in_fm = 0; next }
+  }
+  in_fm {
+    line = $0
+    # split on first colon
+    idx = index(line, ":")
+    if (idx == 0) next
+    key = substr(line, 1, idx - 1)
+    v = substr(line, idx + 1)
+    # trim
+    gsub(/^[[:space:]]+|[[:space:]]+$/, "", key)
+    gsub(/^[[:space:]]+|[[:space:]]+$/, "", v)
+    # strip optional surrounding quotes
+    if (v ~ /^".*"$/ || v ~ /^'\''.*'\''$/) {
+      v = substr(v, 2, length(v) - 2)
+    }
+    if (key == "name" || key == "version" || key == "type" || key == "description" || key == "replaces" || key == "requires" || key == "event" || key == "matcher") {
+      if (mode == "print") { print key "=" v }
+      else if (!(key in val)) { val[key] = v }
+    }
+  }
+  END { _flush() }
+'
+
+# parse_frontmatter <file>
+# Emits key=value lines, in file order, for every recognised key the file's
+# first frontmatter block declares. Quietly ignores keys it doesn't care about.
 parse_frontmatter() {
   local file="$1"
   [ -f "$file" ] || return 1
-  awk '
-    BEGIN { in_fm = 0; seen_open = 0 }
-    /^---[[:space:]]*$/ {
-      if (!seen_open) { in_fm = 1; seen_open = 1; next }
-      else if (in_fm)  { exit }
-    }
-    in_fm {
-      line = $0
-      # split on first colon
-      idx = index(line, ":")
-      if (idx == 0) next
-      key = substr(line, 1, idx - 1)
-      val = substr(line, idx + 1)
-      # trim
-      gsub(/^[[:space:]]+|[[:space:]]+$/, "", key)
-      gsub(/^[[:space:]]+|[[:space:]]+$/, "", val)
-      # strip optional surrounding quotes
-      if (val ~ /^".*"$/ || val ~ /^'\''.*'\''$/) {
-        val = substr(val, 2, length(val) - 2)
-      }
-      if (key == "name" || key == "version" || key == "type" || key == "description" || key == "replaces" || key == "requires" || key == "event" || key == "matcher") {
-        print key "=" val
-      }
-    }
-  ' "$file"
+  awk -v mode=print -v fields="" "$_FM_AWK" "$file"
+}
+
+# read_frontmatter_table <field-list> <file>...
+# The batch counterpart to read_frontmatter_fields: ONE awk process reads every
+# file given and prints one TAB-separated line per file —
+#
+#   <file> TAB <value-of-field-1> TAB <value-of-field-2> ...
+#
+# — with an empty value where the key is absent and the first occurrence
+# winning where it repeats. <field-list> is a single space-separated string.
+#
+# It exists because `ls` reads two fields off ~2 files per row, and one awk
+# process per file is the dominant cost of the listing on Git Bash for Windows,
+# where a fork plus exec runs ~20 ms. Sixty-odd of those are one here.
+#
+# A file with no lines at all produces no line, so read the output by path
+# rather than by position, and default a missing path to empty values.
+#
+# Every path handed in must exist AND be readable: awk aborts the whole run on
+# one that is not, taking every file after it in the list with it, so the
+# caller's own `-f` / `-r` guards are what decide whether a file counts. That is
+# the price of the batch — one awk per file lost only its own row.
+#
+# TAB is the field separator, so no requested field's value may contain one:
+# a TAB in a non-final value shifts every field after it. (The keys this parses
+# are versions and kind-prefixed specs, so this is a documented limit, not a
+# live case.) Split the result with parameter expansion, not `read -a`: TAB is
+# also IFS whitespace, so `read -a` would collapse two adjacent empty fields
+# into one.
+read_frontmatter_table() {
+  local fields="$1"; shift
+  [ $# -gt 0 ] || return 0
+  awk -v mode=table -v fields="$fields" "$_FM_AWK" "$@"
 }
 
 # read_frontmatter_field <file> <field>
@@ -212,51 +273,79 @@ read_frontmatter_field() {
 # prints one line per requested field, in the order given: the field's value, or
 # an empty line when the key is absent.
 #
-# It exists because `ls` reads both `version` and `requires` off every source
-# file it lists, and two read_frontmatter_field calls parse the same file twice —
-# a cost paid once per row on a listing that runs one row per feature. A caller
-# wanting exactly one field should keep using read_frontmatter_field.
+# It is read_frontmatter_table narrowed to one file, so the two cannot disagree
+# about what a field's value is. A caller wanting exactly one field should keep
+# using read_frontmatter_field; a caller with a whole list of files should use
+# the table directly and pay one awk for all of them.
 #
 # Read the result with one `read -r` per field, in the same order:
 #
 #   { IFS= read -r ver; IFS= read -r req; } \
 #     < <(read_frontmatter_fields "$f" version requires)
 #
-# The line count always matches the field count: parse_frontmatter emits one
-# key=value line per key, so no value can contain a newline. A missing file
-# yields empty values rather than an error, so the caller's own -f guard stays
-# the thing that decides whether the file counts.
+# The line count always matches the field count: no frontmatter value can
+# contain a newline. A missing file yields empty values rather than an error, so
+# the caller's own -f guard stays the thing that decides whether the file counts.
 read_frontmatter_fields() {
   local file="$1"; shift
-  { parse_frontmatter "$file" || true; } | awk -F= -v fields="$*" '
-    !($1 in val) { val[$1] = substr($0, index($0, "=") + 1) }
-    END {
-      n = split(fields, want, " ")
-      for (i = 1; i <= n; i++) print (want[i] in val) ? val[want[i]] : ""
-    }
-  '
+  local row="" rest i
+  [ -f "$file" ] && row="$(read_frontmatter_table "$*" "$file")"
+  # Drop the leading path field; an empty row leaves every value empty.
+  rest="${row#*$'\t'}"
+  [ "$rest" = "$row" ] && rest=""
+  for ((i = 1; i <= $#; i++)); do
+    if [ "$i" -lt "$#" ]; then
+      printf '%s\n' "${rest%%$'\t'*}"
+      rest="${rest#*$'\t'}"
+    else
+      printf '%s\n' "$rest"
+    fi
+  done
 }
 
 # ---------- feature resolution ----------
 
+# feature_path_var <outvar> <root> <kind> <name>
+# Assembles a feature's file path under <root> and assigns it to the variable
+# named <outvar>. Returns non-zero, assigning nothing, for an unknown kind.
+# `skill-dir` is the pseudo-kind for a skill's directory rather than its
+# SKILL.md.
+#
+# This is the ONE place a feature's path shape is written; every named helper
+# below is a printing wrapper over it. The wrappers are the readable form and
+# stay the default. This one exists for callers in a loop: a wrapper has to be
+# invoked as `$(...)`, and a command substitution is a fork — ~12 ms on Git Bash
+# for Windows, paid twice per row by `ls`.
+feature_path_var() {
+  case "$3" in
+    command)    printf -v "$1" '%s/commands/%s.md'     "$2" "$4" ;;
+    skill)      printf -v "$1" '%s/skills/%s/SKILL.md' "$2" "$4" ;;
+    skill-dir)  printf -v "$1" '%s/skills/%s'          "$2" "$4" ;;
+    claude-md)  printf -v "$1" '%s/claude-md/%s.md'    "$2" "$4" ;;
+    statusline) printf -v "$1" '%s/statusline/%s.sh'   "$2" "$4" ;;
+    hook)       printf -v "$1" '%s/hooks/%s.sh'        "$2" "$4" ;;
+    *) return 1 ;;
+  esac
+}
+
 # Source paths in the managed clone.
-src_command_path()  { printf '%s/commands/%s.md' "$CHOSKO_LLM_HOME" "$1"; }
-src_skill_path()    { printf '%s/skills/%s/SKILL.md' "$CHOSKO_LLM_HOME" "$1"; }
-src_skill_dir()     { printf '%s/skills/%s' "$CHOSKO_LLM_HOME" "$1"; }
-src_claudemd_path() { printf '%s/claude-md/%s.md' "$CHOSKO_LLM_HOME" "$1"; }
-src_statusline_path() { printf '%s/statusline/%s.sh' "$CHOSKO_LLM_HOME" "$1"; }
-src_hook_path()       { printf '%s/hooks/%s.sh' "$CHOSKO_LLM_HOME" "$1"; }
+src_command_path()  { local p; feature_path_var p "$CHOSKO_LLM_HOME" command   "$1"; printf '%s' "$p"; }
+src_skill_path()    { local p; feature_path_var p "$CHOSKO_LLM_HOME" skill     "$1"; printf '%s' "$p"; }
+src_skill_dir()     { local p; feature_path_var p "$CHOSKO_LLM_HOME" skill-dir "$1"; printf '%s' "$p"; }
+src_claudemd_path() { local p; feature_path_var p "$CHOSKO_LLM_HOME" claude-md "$1"; printf '%s' "$p"; }
+src_statusline_path() { local p; feature_path_var p "$CHOSKO_LLM_HOME" statusline "$1"; printf '%s' "$p"; }
+src_hook_path()       { local p; feature_path_var p "$CHOSKO_LLM_HOME" hook       "$1"; printf '%s' "$p"; }
 
 # The repo-level changelog in the managed clone. Not a feature: never copied
 # into $CLAUDE_HOME, only read from the clone by `chosko-llm upgrade`.
 src_changelog_path() { printf '%s/CHANGELOG.md' "$CHOSKO_LLM_HOME"; }
 
 # Installed paths under CLAUDE_HOME.
-inst_command_path() { printf '%s/commands/%s.md' "$CLAUDE_HOME" "$1"; }
-inst_skill_path()   { printf '%s/skills/%s/SKILL.md' "$CLAUDE_HOME" "$1"; }
-inst_skill_dir()    { printf '%s/skills/%s' "$CLAUDE_HOME" "$1"; }
-inst_statusline_path() { printf '%s/statusline/%s.sh' "$CLAUDE_HOME" "$1"; }
-inst_hook_path()       { printf '%s/hooks/%s.sh' "$CLAUDE_HOME" "$1"; }
+inst_command_path() { local p; feature_path_var p "$CLAUDE_HOME" command   "$1"; printf '%s' "$p"; }
+inst_skill_path()   { local p; feature_path_var p "$CLAUDE_HOME" skill     "$1"; printf '%s' "$p"; }
+inst_skill_dir()    { local p; feature_path_var p "$CLAUDE_HOME" skill-dir "$1"; printf '%s' "$p"; }
+inst_statusline_path() { local p; feature_path_var p "$CLAUDE_HOME" statusline "$1"; printf '%s' "$p"; }
+inst_hook_path()       { local p; feature_path_var p "$CLAUDE_HOME" hook       "$1"; printf '%s' "$p"; }
 
 # hook_settings_path
 # The settings.json a hook's wiring belongs in. Hooks are local-only, so this
@@ -293,11 +382,18 @@ open_in_file_manager() {
 # file). In local scope, $CLAUDE_HOME is <cwd>/.claude (where commands and
 # skills go), but a project's CLAUDE.md lives at the project root, one
 # directory up — so claude-md sections target <cwd>/CLAUDE.md instead.
-claudemd_target_path() {
+claudemd_target_path() { local p; claudemd_target_path_var p; printf '%s' "$p"; }
+
+# claudemd_target_path_var <outvar>
+# claudemd_target_path assigned to a named variable instead of printed — the
+# same fork-free form, and for the same reason, as feature_path_var above. The
+# local-scope parent directory is taken with parameter expansion rather than
+# `dirname`, which would put an exec back in.
+claudemd_target_path_var() {
   if scope_is_local; then
-    printf '%s/CLAUDE.md' "$(dirname "$CLAUDE_HOME")"
+    printf -v "$1" '%s/CLAUDE.md' "${CLAUDE_HOME%/*}"
   else
-    printf '%s/CLAUDE.md' "$CLAUDE_HOME"
+    printf -v "$1" '%s/CLAUDE.md' "$CLAUDE_HOME"
   fi
 }
 
@@ -305,7 +401,7 @@ claudemd_target_path() {
 # Returns 0 if a managed section for <name> exists in claudemd_target_path.
 claudemd_is_installed() {
   local name="$1" target
-  target="$(claudemd_target_path)"
+  claudemd_target_path_var target
   [ -f "$target" ] && grep -qF "<!-- chosko-llm:${name}:begin" "$target"
 }
 
@@ -549,29 +645,41 @@ src_path_for_kind() {
   esac
 }
 
+# split_kind_spec <kind-outvar> <name-outvar> <spec>
+# Splits a kind-prefixed spec ("command:foo") into the two named variables.
+# Returns non-zero, assigning nothing, if the spec carries no recognized kind
+# prefix. The fork-free form of parse_replaces_spec, which is a printing wrapper
+# over it — same relationship, and same reason, as feature_path_var above.
+split_kind_spec() {
+  case "$3" in
+    command:*)    printf -v "$1" 'command'    ; printf -v "$2" '%s' "${3#command:}"    ;;
+    skill:*)      printf -v "$1" 'skill'      ; printf -v "$2" '%s' "${3#skill:}"      ;;
+    claude-md:*)  printf -v "$1" 'claude-md'  ; printf -v "$2" '%s' "${3#claude-md:}"  ;;
+    statusline:*) printf -v "$1" 'statusline' ; printf -v "$2" '%s' "${3#statusline:}" ;;
+    hook:*)       printf -v "$1" 'hook'       ; printf -v "$2" '%s' "${3#hook:}"       ;;
+    *) return 1 ;;
+  esac
+}
+
 # parse_replaces_spec <spec>
 # Splits a kind-prefixed spec ("command:foo") into two lines: kind\nname.
 # Returns non-zero if the spec carries no recognized kind prefix.
 parse_replaces_spec() {
-  case "$1" in
-    command:*)    printf 'command\n%s\n'    "${1#command:}"    ;;
-    skill:*)      printf 'skill\n%s\n'      "${1#skill:}"      ;;
-    claude-md:*)  printf 'claude-md\n%s\n'  "${1#claude-md:}"  ;;
-    statusline:*) printf 'statusline\n%s\n' "${1#statusline:}" ;;
-    hook:*)       printf 'hook\n%s\n'       "${1#hook:}"       ;;
-    *) return 1 ;;
-  esac
+  local k n
+  split_kind_spec k n "$1" || return 1
+  printf '%s\n%s\n' "$k" "$n"
 }
 
 # artifact_is_installed <kind> <name>
 # Returns 0 if an artifact of that kind/name exists under $CLAUDE_HOME.
 artifact_is_installed() {
+  local p
   case "$1" in
-    command)    [ -f "$(inst_command_path    "$2")" ] ;;
-    skill)      [ -d "$(inst_skill_dir       "$2")" ] ;;
+    command)    feature_path_var p "$CLAUDE_HOME" command    "$2" && [ -f "$p" ] ;;
+    skill)      feature_path_var p "$CLAUDE_HOME" skill-dir  "$2" && [ -d "$p" ] ;;
     claude-md)  claudemd_is_installed "$2" ;;
-    statusline) [ -f "$(inst_statusline_path "$2")" ] ;;
-    hook)       [ -f "$(inst_hook_path       "$2")" ] ;;
+    statusline) feature_path_var p "$CLAUDE_HOME" statusline "$2" && [ -f "$p" ] ;;
+    hook)       feature_path_var p "$CLAUDE_HOME" hook       "$2" && [ -f "$p" ] ;;
     *) return 1 ;;
   esac
 }
@@ -617,38 +725,80 @@ apply_replaces() {
   log_success "Migrated $old_kind '$old_name' -> $new_kind '$new_name'"
 }
 
-# find_replacement <old-kind> <old-name>
-# Scans the managed clone for the feature declaring `replaces:
-# <old-kind>:<old-name>`. Prints "<kind>\n<name>" on the first hit; prints
-# nothing and returns 1 when no feature claims it.
-find_replacement() {
-  local want="$1:$2" f
+# The `replaces:` index — built at most once per process, on first use, and read
+# by both migration probes below.
+#
+# It exists because the probes' old shape rescanned the whole clone per call:
+# every source file, two awk processes each, for a declaration only a couple of
+# features ever carry. `ls` runs a probe on every local-only and every
+# not-installed row, so a clone of N features cost O(N) processes per row and
+# O(N²) for the listing. One awk pass now answers both probes for every row.
+#
+# No state file, per this repo's rules: the index lives in the process and dies
+# with it. It maps only the managed clone, which no command mutates while it
+# runs. The installed side — which add / rm / update do mutate — is deliberately
+# NOT cached; artifact_is_installed still asks the filesystem every time.
+_REPLACES_INDEX_BUILT=0
+declare -A _REPLACES_BY_FILE=()    # clone source path -> its `replaces:` value
+declare -A _REPLACES_CLAIMED_BY=() # "<old-kind>:<old-name>" -> "<kind>:<name>"
+
+_build_replaces_index() {
+  [ "$_REPLACES_INDEX_BUILT" -eq 1 ] && return 0
+  _REPLACES_INDEX_BUILT=1
+
+  # Kind order below matches find_replacement's original scan order, and within
+  # a kind the glob is lexical, so "the first feature to claim it wins" resolves
+  # to exactly the same feature it always did. The `-r` beside each `-f` is what
+  # keeps one unreadable file from aborting the single awk and emptying the
+  # whole index — it is skipped instead, which is what the old per-file read did
+  # with it anyway.
+  local files=() owners=() f n d
   for f in "$CHOSKO_LLM_HOME"/commands/*.md; do
-    [ -f "$f" ] || continue
-    [ "$(read_frontmatter_field "$f" replaces || true)" = "$want" ] || continue
-    printf 'command\n%s\n' "$(basename "$f" .md)"; return 0
+    [ -f "$f" ] && [ -r "$f" ] || continue
+    n="${f##*/}"; files+=("$f"); owners+=("command:${n%.md}")
   done
   for f in "$CHOSKO_LLM_HOME"/skills/*/SKILL.md; do
-    [ -f "$f" ] || continue
-    [ "$(read_frontmatter_field "$f" replaces || true)" = "$want" ] || continue
-    printf 'skill\n%s\n' "$(basename "$(dirname "$f")")"; return 0
+    [ -f "$f" ] && [ -r "$f" ] || continue
+    d="${f%/SKILL.md}"; files+=("$f"); owners+=("skill:${d##*/}")
   done
   for f in "$CHOSKO_LLM_HOME"/claude-md/*.md; do
-    [ -f "$f" ] || continue
-    [ "$(read_frontmatter_field "$f" replaces || true)" = "$want" ] || continue
-    printf 'claude-md\n%s\n' "$(basename "$f" .md)"; return 0
+    [ -f "$f" ] && [ -r "$f" ] || continue
+    n="${f##*/}"; files+=("$f"); owners+=("claude-md:${n%.md}")
   done
   for f in "$CHOSKO_LLM_HOME"/statusline/*.sh; do
-    [ -f "$f" ] || continue
-    [ "$(read_frontmatter_field "$f" replaces || true)" = "$want" ] || continue
-    printf 'statusline\n%s\n' "$(basename "$f" .sh)"; return 0
+    [ -f "$f" ] && [ -r "$f" ] || continue
+    n="${f##*/}"; files+=("$f"); owners+=("statusline:${n%.sh}")
   done
   for f in "$CHOSKO_LLM_HOME"/hooks/*.sh; do
-    [ -f "$f" ] || continue
-    [ "$(read_frontmatter_field "$f" replaces || true)" = "$want" ] || continue
-    printf 'hook\n%s\n' "$(basename "$f" .sh)"; return 0
+    [ -f "$f" ] && [ -r "$f" ] || continue
+    n="${f##*/}"; files+=("$f"); owners+=("hook:${n%.sh}")
   done
-  return 1
+  [ ${#files[@]} -gt 0 ] || return 0
+
+  local line path spec i
+  while IFS= read -r line; do
+    path="${line%%$'\t'*}"
+    spec="${line#*$'\t'}"
+    [ "$spec" = "$line" ] && spec=""
+    _REPLACES_BY_FILE["$path"]="$spec"
+  done < <(read_frontmatter_table replaces "${files[@]}")
+
+  for ((i = 0; i < ${#files[@]}; i++)); do
+    spec="${_REPLACES_BY_FILE[${files[i]}]:-}"
+    [ -n "$spec" ] || continue
+    [ -n "${_REPLACES_CLAIMED_BY[$spec]:-}" ] || _REPLACES_CLAIMED_BY["$spec"]="${owners[i]}"
+  done
+}
+
+# find_replacement <old-kind> <old-name>
+# Answers which feature in the managed clone declares `replaces:
+# <old-kind>:<old-name>`. Prints "<kind>\n<name>" on the first claimant; prints
+# nothing and returns 1 when no feature claims it.
+find_replacement() {
+  _build_replaces_index
+  local hit="${_REPLACES_CLAIMED_BY["$1:$2"]:-}"
+  [ -n "$hit" ] || return 1
+  printf '%s\n%s\n' "${hit%%:*}" "${hit#*:}"
 }
 
 # check_migration_pending <kind> <name>
@@ -660,13 +810,12 @@ find_replacement() {
 # answers the same question from the other side (an installed, source-less
 # artifact asking "am I superseded?").
 check_migration_pending() {
-  local kind="$1" name="$2" src spec parsed old_kind old_name
-  src="$(src_path_for_kind "$kind" "$name")" || return 1
-  spec="$(read_frontmatter_field "$src" replaces || true)"
+  local kind="$1" name="$2" src spec old_kind old_name
+  feature_path_var src "$CHOSKO_LLM_HOME" "$kind" "$name" || return 1
+  _build_replaces_index
+  spec="${_REPLACES_BY_FILE[$src]:-}"
   [ -n "$spec" ] || return 1
-  parsed="$(parse_replaces_spec "$spec")" || return 1
-  old_kind="$(printf '%s\n' "$parsed" | sed -n 1p)"
-  old_name="$(printf '%s\n' "$parsed" | sed -n 2p)"
+  split_kind_spec old_kind old_name "$spec" || return 1
   [ -n "$old_kind" ] && [ -n "$old_name" ] || return 1
   artifact_is_installed "$old_kind" "$old_name" || return 1
   printf '%s\n%s\n' "$old_kind" "$old_name"
@@ -740,30 +889,56 @@ requires_specs_lenient() {
 # file's frontmatter for another field can classify the specs without parsing it
 # a second time — which is what `ls` does, once per row.
 #
-# The split and both trims happen inside one awk rather than a `tr` plus a `sed`
-# per entry: this runs once per listed feature, and a subshell per comma is the
-# kind of cost that is invisible in a unit test and plainly visible in `ls`. The
-# three substitutions are the sed script that preceded it, in the same order —
-# leading space, trailing space, then the FIRST colon's surroundings, which is
-# why the last one is `sub` and not `gsub`.
+# The split and both trims are parameter expansion, not an awk: this runs once
+# per listed feature, and a process per row is the kind of cost that is
+# invisible in a unit test and plainly visible in `ls` on Git Bash for Windows,
+# where a fork plus exec runs ~20 ms. The three steps are the awk substitutions
+# that preceded them, in the same order — leading space, trailing space, then
+# the FIRST colon's surroundings, which is why the last one splits on `%%`/`#`
+# rather than touching every colon.
 requires_specs_from_value() {
-  local raw="${1:-}" entry
+  requires_specs_from_value_into "${1:-}"
+  [ ${#REQUIRES_SPECS[@]} -gt 0 ] || return 0
+  printf '%s\n' "${REQUIRES_SPECS[@]}"
+}
+
+# requires_specs_from_value_into <value>
+# requires_specs_from_value delivered in the global array REQUIRES_SPECS — one
+# "<state><TAB><spec>" element per non-empty entry — instead of on stdout. This
+# is the authority; the printing sibling above formats what it leaves behind.
+#
+# A global array rather than a pipe for the same reason as feature_path_var: a
+# caller reading lines out of this in a loop would need a process substitution,
+# and `ls` calls it once per row. `resolve_scope`/`SCOPE_ARGS` set the
+# precedent for returning an array this way.
+REQUIRES_SPECS=()
+requires_specs_from_value_into() {
+  local raw="${1:-}" rest entry k v __k __n
+  REQUIRES_SPECS=()
   [ -n "$raw" ] || return 0
-  while IFS= read -r entry; do
-    if parse_replaces_spec "$entry" >/dev/null; then
-      printf 'ok\t%s\n' "$entry"
+  rest="$raw"
+  while [ -n "$rest" ]; do
+    case "$rest" in
+      *,*) entry="${rest%%,*}"; rest="${rest#*,}" ;;
+      *)   entry="$rest"; rest="" ;;
+    esac
+    entry="${entry#"${entry%%[![:space:]]*}"}"
+    entry="${entry%"${entry##*[![:space:]]}"}"
+    [ -n "$entry" ] || continue
+    case "$entry" in
+      *:*)
+        k="${entry%%:*}"; v="${entry#*:}"
+        k="${k%"${k##*[![:space:]]}"}"
+        v="${v#"${v%%[![:space:]]*}"}"
+        entry="$k:$v"
+        ;;
+    esac
+    if split_kind_spec __k __n "$entry"; then
+      REQUIRES_SPECS+=($'ok\t'"$entry")
     else
-      printf 'bad\t%s\n' "$entry"
+      REQUIRES_SPECS+=($'bad\t'"$entry")
     fi
-  done < <(printf '%s\n' "$raw" | awk -F, '{
-    for (i = 1; i <= NF; i++) {
-      e = $i
-      sub(/^[[:space:]]+/, "", e)
-      sub(/[[:space:]]+$/, "", e)
-      sub(/[[:space:]]*:[[:space:]]*/, ":", e)
-      if (e != "") print e
-    }
-  }')
+  done
 }
 
 # ---------- auto-upgrade state ----------

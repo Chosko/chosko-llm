@@ -92,7 +92,11 @@ changes nothing.
 - `scope_violation_message <kind>` — the `die` text for a kind
   `scope_supports_kind` just rejected. Lives in `lib.sh` so `cmd-add`,
   `cmd-rm` and `cmd-update` word both rules identically.
-- `claudemd_target_path` (task 103) — prints the CLAUDE.md file claude-md
+- `claudemd_target_path` (task 103) / `claudemd_target_path_var <outvar>`
+  (task 163, the fork-free twin — same relationship, and same reason, as
+  `feature_path_var`; it takes the local-scope parent directory with parameter
+  expansion rather than `dirname`, which would put an exec back in) — the
+  CLAUDE.md file claude-md
   artifacts read/write: `$CLAUDE_HOME/CLAUDE.md` in global scope, but
   `<cwd>/CLAUDE.md` (one directory up from `$CLAUDE_HOME`, which is
   `<cwd>/.claude` in local scope) in local scope — a project's CLAUDE.md
@@ -102,29 +106,57 @@ changes nothing.
   claude-md-consuming subcommand is scope-aware for free.
 
 ### Frontmatter
-- `parse_frontmatter <file>` — emits `key=value` lines for eight recognized keys:
-  `name`, `version`, `type`, `description`, `replaces`, `requires`, `event`,
-  `matcher`. Reads only first `--- ... ---` block. Quotes stripped. Unknown keys
-  silently dropped. First four required in practice; `replaces` optional (kind
-  migration, below), `requires` optional on every kind (dependencies, below),
-  `event`/`matcher` read for hook kind only and ignored elsewhere.
-  Split is on the FIRST colon, so a kind-prefixed value like
-  `skill:task-engine` survives it intact — that's why `requires` cost an
+One scanner, `_FM_AWK`, with two `mode=` values (task 163) — a second copy of
+the parser would be a copy that drifts. It scans each file to the end rather
+than `exit`ing at the closing `---` (a multi-file run cannot exit on the first
+file); `in_fm` is cleared there instead, so a later `---` block is still
+ignored and the output is unchanged.
+- `parse_frontmatter <file>` — `mode=print`. Emits `key=value` lines, in file
+  order, for eight recognized keys: `name`, `version`, `type`, `description`,
+  `replaces`, `requires`, `event`, `matcher`. Reads only first `--- ... ---`
+  block. Quotes stripped. Unknown keys silently dropped. First four required in
+  practice; `replaces` optional (kind migration, below), `requires` optional on
+  every kind (dependencies, below), `event`/`matcher` read for hook kind only
+  and ignored elsewhere. Split is on the FIRST colon, so a kind-prefixed value
+  like `skill:task-engine` survives it intact — that's why `requires` cost an
   allowlist entry and nothing more.
 - `read_frontmatter_field <file> <field>` — prints one field's value, empty if absent.
-- `read_frontmatter_fields <file> <field>…` (task 155) — the parse-once
-  counterpart, for a caller needing two or more fields off the SAME block.
-  Parses once, prints one line per requested field in the order given (empty
-  line for an absent key), so the reader is one `read -r` per field:
+- `read_frontmatter_table <field-list> <file>…` (task 163) — `mode=table`. ONE
+  awk over every file given; prints `<file>` then one TAB-separated value per
+  field, in the order `<field-list>` (a single space-separated string) names
+  them, empty where the key is absent, first occurrence winning where it
+  repeats. **Every path must exist and be readable** — awk aborts the whole run
+  on one that is not, taking every file after it in the list with it, so the
+  caller's own `-f` / `-r` guards stay the decider; that is the price of the
+  batch, where one awk per file lost only its own row. A file with no lines at
+  all produces no output line, so read the result **by path, not by position**.
+  Split each line with parameter expansion, **never `read -a`**: TAB is IFS
+  whitespace, so `read -a` collapses two adjacent empty fields into one. TAB is
+  also the field separator, so no requested field's value may contain one — a
+  documented limit rather than a live case, since the keys read this way are
+  versions and kind-prefixed specs.
+  Exists because one awk process per file was the dominant cost of `cmd-ls` —
+  ~66 of them at ~34 features, ~20 ms each on Git Bash for Windows.
+- `read_frontmatter_fields <file> <field>…` (task 155) — the parse-once reader
+  for a caller needing two or more fields off the SAME block, now
+  `read_frontmatter_table` narrowed to one file so the two cannot disagree about
+  a value. Prints one line per requested field in the order given (empty line
+  for an absent key), so the reader is one `read -r` per field:
   `{ IFS= read -r ver; IFS= read -r req; } < <(read_frontmatter_fields "$f"
-  version requires)`. Line count always matches field count — `parse_frontmatter`
-  emits one line per key, so no value can carry a newline. Missing file yields
-  empty values, not an error; the caller's own `-f` guard stays the decider.
-  Exists because `cmd-ls` reads `version` + `requires` off every source file it
-  lists, and two `read_frontmatter_field` calls parsed each file twice — a cost
-  paid once per row. One field → keep using `read_frontmatter_field`.
+  version requires)`. Line count always matches field count — no frontmatter
+  value can carry a newline. Missing file yields empty values, not an error.
+  One field → keep using `read_frontmatter_field`; a whole list of files → use
+  the table directly and pay one awk for all of them.
 
 ### Path resolution
+- `feature_path_var <outvar> <root> <kind> <name>` (task 163) — **the one place
+  a feature's path shape is written**; assigns rather than prints, and returns
+  non-zero on an unknown kind. Kinds: `command`, `skill`, `skill-dir`,
+  `claude-md`, `statusline`, `hook`. Every named helper below is a printing
+  wrapper over it, and the wrappers stay the readable default — this form exists
+  for callers in a loop, where a `$(...)` is a fork (~12 ms on Git Bash for
+  Windows) and `cmd-ls` paid two per row.
+
 Source paths in managed clone:
 - `src_command_path <name>`  → `$CHOSKO_LLM_HOME/commands/<name>.md`
 - `src_skill_path <name>`    → `$CHOSKO_LLM_HOME/skills/<name>/SKILL.md`
@@ -290,8 +322,12 @@ artifact beside new one under same `/<n>` name. Superseding feature declares
 fact rides same `git pull` as rename.
 - `src_path_for_kind <kind> <name>` → managed-clone source file for that kind;
   non-zero on unknown kind.
-- `parse_replaces_spec <spec>` → splits `command:foo` into `kind\nname`;
+- `split_kind_spec <kind-outvar> <name-outvar> <spec>` (task 163) → the
+  fork-free authority for the kind-prefix split; assigns rather than prints,
   non-zero if no recognized prefix.
+- `parse_replaces_spec <spec>` → splits `command:foo` into `kind\nname`;
+  non-zero if no recognized prefix. A printing wrapper over `split_kind_spec`
+  since task 163; its name predates both extra callers.
 - `artifact_is_installed <kind> <name>` → 0 if installed under `$CLAUDE_HOME`.
 - `remove_installed_artifact <kind> <name>` → deletes with `cmd-rm` semantics
   per kind (`rm -f` command/statusline/hook, `rm -rf` skill, `remove_section`
@@ -302,17 +338,29 @@ fact rides same `git pull` as rename.
   or old artifact not installed. Warns + no-ops on malformed spec or
   self-replacement. Called by `cmd-add` (single-feature) and `cmd-update`
   (single-feature + `--all` migration path).
-- `find_replacement <old-kind> <old-name>` → scans managed clone
-  (commands, skills, claude-md, statusline, hooks) for feature declaring
-  `replaces: <old-kind>:<old-name>`. Prints `<kind>\n<name>` on first hit,
-  returns 1 on none. Used by `cmd-update --all`'s stale-artifact branch,
-  and by `cmd-ls`/`cmd-show` (task 104) to flag a `local only` row as
-  `superseded`.
+- **The `replaces:` index (task 163)** — `_build_replaces_index` fills
+  `_REPLACES_BY_FILE` (clone source path → its `replaces:` value) and
+  `_REPLACES_CLAIMED_BY` (`<old-kind>:<old-name>` → `<kind>:<name>`) from ONE
+  `read_frontmatter_table` over the whole clone, at most once per process, on
+  first use. Both probes below read it. Kind order in the build (commands,
+  skills, claude-md, statusline, hooks) and the lexical globs within each kind
+  are what make "first claimant wins" resolve to the same feature the old
+  per-call scan picked. **No state file** — it lives in the process and dies
+  with it, and it maps only the clone, which no command mutates while it runs.
+  The installed side, which `add`/`rm`/`update` *do* mutate, is deliberately not
+  cached: `artifact_is_installed` still asks the filesystem every time.
+- `find_replacement <old-kind> <old-name>` → which clone feature declares
+  `replaces: <old-kind>:<old-name>`. Prints `<kind>\n<name>` on the first
+  claimant, returns 1 on none. Used by `cmd-update --all`'s stale-artifact
+  branch, and by `cmd-ls`/`cmd-show` (task 104) to flag a `local only` row as
+  `superseded`. Before task 163 it rescanned every source file in the clone per
+  call, two awk processes each — O(N) processes per call and O(N²) for a
+  listing, for a key only a couple of features ever carry.
 - `check_migration_pending <kind> <name>` (task 104) → the mirror image of
   `find_replacement`, asked from the *new* side. For a clone feature not
-  yet installed, reads its own `replaces:`, and if the named artifact is
-  currently installed (`artifact_is_installed`), prints `<old-kind>\n
-  <old-name>` and returns 0 — meaning a plain `add` would leave two
+  yet installed, takes its own `replaces:` from the index, and if the named
+  artifact is currently installed (`artifact_is_installed`), prints
+  `<old-kind>\n<old-name>` and returns 0 — meaning a plain `add` would leave two
   artifacts side by side instead of completing the migration. Returns 1
   with no output when `replaces:` is absent, malformed, or names
   something not installed. Used by `cmd-ls`/`cmd-show` to flag a `not
@@ -345,15 +393,20 @@ never a graph. `cmd-add` installs what a feature names before installing it;
   only — `cmd-ls`'s REQUIRES column, which must not be taken down by one typo
   in one unrelated feature. Install- and removal-time callers stay on
   `requires_specs` and stay fatal; never reroute them here.
-- `requires_specs_from_value <value>` (task 155) → the ONE place the value is
-  actually split and trimmed, taking the raw string instead of a path so a
-  caller that already parsed the file for another field doesn't parse it again
-  — which is what `cmd-ls` does, once per row. Split + both trims happen in a
-  single `awk` rather than a `tr` plus a `sed` per entry: this runs once per
-  listed feature, and a subshell per comma is invisible in a unit test and
-  plainly visible in `ls`. The three substitutions are the old `sed` script in
+- `requires_specs_from_value_into <value>` (task 163) → the ONE place the value
+  is actually split and trimmed, taking the raw string instead of a path so a
+  caller that already parsed the file for another field doesn't parse it again —
+  which is what `cmd-ls` does, once per row. Leaves its result in the **global
+  array `REQUIRES_SPECS`** (`ok<TAB><spec>` / `bad<TAB><entry>` per element) so a
+  looping caller needs no process substitution; `resolve_scope`/`SCOPE_ARGS` set
+  that precedent. Split + both trims are parameter expansion, not an `awk` (task
+  155's shape) and not a `tr` plus a `sed` per entry (the shape before it): this
+  runs once per listed feature, and a process per row is invisible in a unit test
+  and plainly visible in `ls`. The three steps are those `awk` substitutions in
   the same order — leading space, trailing space, then the FIRST colon's
-  surroundings, hence `sub` and not `gsub` on the last.
+  surroundings, hence a `%%`/`#` split on the last and not every colon.
+- `requires_specs_from_value <value>` (task 155) → the printing sibling; formats
+  what `_into` left in `REQUIRES_SPECS`, one line per element.
 
 ### Validation
 - `require_versioned_source <file>` — `die`s if file missing or its
@@ -374,16 +427,24 @@ Helpers over gitignored key=value file `$CHOSKO_LLM_HOME/.auto-upgrade-state`
 ## Internal patterns
 
 - **Frontmatter parsing awk-only.** Adding a field means one more `key == "…"`
-  clause in `parse_frontmatter`'s awk condition — `replaces`, then `event` /
-  `matcher`, then `requires` each cost exactly that edit and nothing else,
-  because the generic first-colon split already handles any value. Cheap, but
-  never free: the allowlist is the only place a key becomes visible, so a new
-  field that is not added there is silently dropped. No yq/jq/python — see
-  `../../CLAUDE.md` hard rules.
-- **`parse_replaces_spec` parses two keys, not one.** `requires:` reuses it
-  for every entry rather than growing a second kind-prefix parser, so
-  `replaces: skill:x` and `requires: skill:x` can never disagree about what a
-  spec means. Its name predates the second caller.
+  clause in `_FM_AWK`'s allowlist — `replaces`, then `event` / `matcher`, then
+  `requires` each cost exactly that edit and nothing else, because the generic
+  first-colon split already handles any value. Cheap, but never free: the
+  allowlist is the only place a key becomes visible, so a new field that is not
+  added there is silently dropped. No yq/jq/python — see `../../CLAUDE.md` hard
+  rules.
+- **A helper that runs per row assigns; a helper that runs once prints (task
+  163).** `feature_path_var`, `claudemd_target_path_var`, `split_kind_spec` and
+  `requires_specs_from_value_into` are the assigning forms; the printing helpers
+  of the same name are wrappers over them and stay the readable default. The
+  split is not stylistic: on Git Bash for Windows a fork is ~12 ms and a fork
+  plus exec ~20 ms, so a `$(...)` or a `< <(...)` inside a per-feature loop is a
+  measurable fraction of a whole command. See [cmd-ls.md](./cmd-ls.md) — that is
+  the caller the assigning forms exist for.
+- **`split_kind_spec` parses two keys, not one.** `requires:` reuses it for
+  every entry rather than growing a second kind-prefix parser, so `replaces:
+  skill:x` and `requires: skill:x` can never disagree about what a spec means.
+  `parse_replaces_spec`'s name predates both extra callers.
 - **Migration is declarative, not a map.** `replaces:` lives on the feature
   that supersedes the old one, so no rename map / migration script / state
   file outside the filesystem. `--all` resolves migration from the *stale*
@@ -417,13 +478,17 @@ Helpers over gitignored key=value file `$CHOSKO_LLM_HOME/.auto-upgrade-state`
 
 ## When to read the source
 
-- Adding/renaming frontmatter field → `parse_frontmatter` in `lib.sh` (the
-  `key == "…"` allowlist inside its awk block).
+- Adding/renaming frontmatter field → the `key == "…"` allowlist in `_FM_AWK` in
+  `lib.sh`. It is shared: the change reaches `parse_frontmatter`,
+  `read_frontmatter_table` and `read_frontmatter_fields` at once.
+- Changing how many processes a caller spends reading frontmatter →
+  `read_frontmatter_table` in `lib.sh` and the caller's own loop.
 - Changing what `requires:` accepts, how entries are split/trimmed, or whether
-  a malformed entry dies rather than being skipped → `requires_specs_from_value`
-  (the split/trim), `requires_specs_lenient` (the file-reading wrapper) and
+  a malformed entry dies rather than being skipped →
+  `requires_specs_from_value_into` (the split/trim),
+  `requires_specs_lenient` (the file-reading wrapper) and
   `requires_specs` (the strict filter over it) in
-  `lib.sh`, plus `parse_replaces_spec` which validates each entry. The
+  `lib.sh`, plus `split_kind_spec` which validates each entry. The
   install-time and removal-time behaviour built on it lives in `cmd-add.sh`
   (`install_requires`) and `cmd-rm.sh` (the dependents guard) — see
   [cmd-add.md](./cmd-add.md) and [cmd-rm.md](./cmd-rm.md).
@@ -433,12 +498,16 @@ Helpers over gitignored key=value file `$CHOSKO_LLM_HOME/.auto-upgrade-state`
   in `lib.sh`.
 - Changing kind-migration semantics (spec syntax, deletion rules, scan order)
   → `apply_replaces` / `find_replacement` / `check_migration_pending` /
-  `remove_installed_artifact` in `lib.sh`.
+  `remove_installed_artifact` in `lib.sh`. Scan order specifically lives in
+  `_build_replaces_index`, which is what decides the first claimant.
 - Changing scope semantics (flag parsing, local-root marker, which kinds are
   scope-restricted) → `resolve_scope` / `scope_is_local` / `scope_label` /
   `scope_supports_kind` in `lib.sh`.
 - Changing where claude-md sections read/write in local scope →
-  `claudemd_target_path` in `lib.sh`.
+  `claudemd_target_path_var` in `lib.sh` (the printing form delegates to it).
+  `cmd-ls.sh::scan_claudemd` mirrors `claudemd_is_installed` /
+  `claudemd_installed_version` in bash — change both or `ls` and `show`
+  disagree.
 - Changing changelog range extraction or its degrade-never-fail branches →
   `print_changelog_range` in `lib.sh`; the caller's suppression rule lives in
   `cmd-upgrade.sh`.

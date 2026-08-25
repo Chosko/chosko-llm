@@ -42,55 +42,77 @@ print_header() {
     "$C_BOLD" "NAME" "KIND" "INSTALLED" "LATEST" "$STATUS_WIDTH" "STATUS" "REQUIRES" "$C_RESET"
 }
 
-# Print a colored, right-padded cell. ANSI codes don't count toward field width,
-# so we pad manually using the visible (plain-text) length of the value.
+# ---------- the fork budget ----------
+# This listing renders one row per feature, and on Git Bash for Windows — the
+# CLI's primary platform — a fork costs ~12 ms and a fork plus exec ~20 ms. A
+# helper invoked as `$(...)` or read through `< <(...)` is therefore not free at
+# this scale: at ~34 features, the per-row command substitutions and one awk per
+# frontmatter file were the whole of a five-second `ls`.
+#
+# So everything below that runs per row appends to a variable instead of
+# printing into a command substitution, and every frontmatter file the listing
+# needs is parsed by ONE awk (`read_frontmatter_table`) before rendering starts.
+# Keep it that way: a `$(...)` added inside one of these loops costs a
+# measurable fraction of the whole command.
+
+# ROW is the row currently being assembled. _colored_cell and _requires_cell
+# append to it; list_all clears it before each row and pushes it when done.
+ROW=""
+
+# Append a colored, right-padded cell to ROW. ANSI codes don't count toward
+# field width, so we pad manually using the visible (plain-text) length of the
+# value.
 # Usage: _colored_cell COLOR TEXT RESET WIDTH SEPARATOR
 _colored_cell() {
   local color="$1" text="$2" reset="$3" width="$4" sep="${5:- }"
   local pad=$(( width - ${#text} ))
   [ $pad -lt 0 ] && pad=0
-  printf '%s%s%s%*s%s' "$color" "$text" "$reset" "$pad" "" "$sep"
+  printf -v ROW '%s%s%s%s%*s%s' "$ROW" "$color" "$text" "$reset" "$pad" "" "$sep"
 }
 
 # _requires_cell <requires-value>
-# Renders the final, unpadded REQUIRES cell: the feature's kind-prefixed specs
-# exactly as declared, comma-separated, or a dimmed em dash when it declares
-# none.
+# Appends the final, unpadded REQUIRES cell to ROW: the feature's kind-prefixed
+# specs exactly as declared, comma-separated, or a dimmed em dash when it
+# declares none.
 #
-# It takes the raw `requires:` value, not a path, because the calling pass has
+# It takes the raw `requires:` value, not a path, because the render loop has
 # already parsed that file's frontmatter for its version column and can hand the
 # second field over for free — reading the file again in here parsed it twice
 # per row on a listing that runs one row per feature.
 #
-# Which file the value came from is the caller's choice, and every pass makes
-# the same one as the LATEST column: the source file's value when that file
-# exists, the installed file's otherwise. So the cell answers what the feature
-# will require after an `update`, and still gives a not-installed row its
+# Which file the value came from is the caller's choice, and every row makes the
+# same one as the LATEST column: the source file's value when that file exists,
+# the installed file's otherwise. So the cell answers what the feature will
+# require after an `update`, and still gives a not-installed row its
 # dependencies before `add`. A source file that exists but declares nothing
 # renders the em dash rather than falling back — the source is the answer, and
-# it said "none". The claude-md pass has only a source value to offer:
+# it said "none". A claude-md row has only a source value to offer:
 # `inject_section` strips frontmatter, so an installed claude-md section carries
 # no `requires:` to fall back to.
 #
 # An entry with no kind prefix is printed raw and dimmed rather than aborting
-# the listing — hence `requires_specs_from_value` and not `requires_specs`. `ls`
-# is a read-only lister; `add` and `rm` are where a malformed entry stays fatal.
+# the listing — hence `requires_specs_from_value_into` and not `requires_specs`.
+# `ls` is a read-only lister; `add` and `rm` are where a malformed entry stays
+# fatal.
 _requires_cell() {
-  local raw="$1" state entry out=""
+  local raw="$1" spec state entry out=""
   if [ -n "$raw" ]; then
-    while IFS=$'\t' read -r state entry; do
+    requires_specs_from_value_into "$raw"
+    for spec in ${REQUIRES_SPECS[@]+"${REQUIRES_SPECS[@]}"}; do
+      state="${spec%%$'\t'*}"
+      entry="${spec#*$'\t'}"
       [ -n "$out" ] && out+=", "
       if [ "$state" = ok ]; then
         out+="$entry"
       else
         out+="$C_DIM$entry$C_RESET"
       fi
-    done < <(requires_specs_from_value "$raw")
+    done
   fi
   if [ -n "$out" ]; then
-    printf '%s' "$out"
+    ROW+="$out"
   else
-    printf '%s—%s' "$C_DIM" "$C_RESET"
+    ROW+="$C_DIM—$C_RESET"
   fi
 }
 
@@ -103,105 +125,180 @@ KIND_RANK_CLAUDEMD=3
 KIND_RANK_STATUSLINE=4
 KIND_RANK_HOOK=5
 
+# ---------- the managed CLAUDE.md, read once ----------
+# claude-md artifacts do not live in a directory of their own on the installed
+# side: they are sections of one CLAUDE.md. `claudemd_is_installed` and
+# `claudemd_installed_version` each answer for one name with a grep (and a grep
+# plus a sed plus a head), and this listing needs both answers for every
+# claude-md feature as well as the list of sections already present. So it reads
+# that file once, in bash, and answers all three questions from what it found.
+CLAUDEMD_BODY=""
+CLAUDEMD_NAMES=()
+declare -A CLAUDEMD_VERSION=()
+
+scan_claudemd() {
+  local target line prefix rest name after remainder ver
+  claudemd_target_path_var target
+  CLAUDEMD_BODY=""
+  CLAUDEMD_NAMES=()
+  [ -f "$target" ] || return 0
+  CLAUDEMD_BODY="$(<"$target")"
+
+  while IFS= read -r line; do
+    case "$line" in
+      *"<!-- chosko-llm:"*":begin"*) ;;
+      *) continue ;;
+    esac
+
+    # Both parses below mirror one `sed` script each, for the shape
+    # `inject_section` writes: ONE marker per line. They are not full `sed`
+    # equivalents — where a single line carries two markers and the first is
+    # malformed, `sed` re-anchors on the second and these do not. Both old and
+    # new output are meaningless on that input, so the divergence is recorded
+    # rather than chased.
+    #
+    # The name, mirroring `sed 's/<!-- chosko-llm:\([^:]*\):begin.*/\1/'`: any
+    # text before the marker is kept, the name is what follows it up to
+    # `:begin`, and a line the pattern cannot match passes through whole.
+    prefix="${line%%<!-- chosko-llm:*}"
+    rest="${line#*<!-- chosko-llm:}"
+    name="${rest%%:begin*}"
+    if [ "$name" = "$rest" ] || [ "${name%%:*}" != "$name" ]; then
+      name="$line"
+    else
+      name="$prefix$name"
+    fi
+
+    # The version, mirroring `sed 's/.*:begin v\([^ ]*\) -->.*/\1/'` — greedy,
+    # so the LAST `:begin v` on the line — piped through `head -1`, hence
+    # first-occurrence-wins below.
+    ver="$line"
+    after="${line##*:begin v}"
+    if [ "$after" != "$line" ]; then
+      remainder="${after#"${after%% *}"}"
+      case "$remainder" in " -->"*) ver="${after%% *}" ;; esac
+    fi
+
+    if [ -z "${CLAUDEMD_VERSION[$name]+set}" ]; then
+      CLAUDEMD_VERSION["$name"]="$ver"
+      CLAUDEMD_NAMES+=("$name")
+    fi
+  done <<< "$CLAUDEMD_BODY"
+}
+
+# claudemd_scan_is_installed <name>
+# The scanned form of claudemd_is_installed, matching its fixed-string test
+# against the body already in memory.
+claudemd_scan_is_installed() {
+  case "$CLAUDEMD_BODY" in
+    *"<!-- chosko-llm:$1:begin"*) return 0 ;;
+  esac
+  return 1
+}
+
 # collect_names <kind>
-# Emits a sorted, deduplicated list of feature names visible in either home.
+# Fills the global array NAMES with the deduplicated feature names of that kind
+# visible in either home. Deduplication is an associative array rather than
+# `sort -u`, and the basenames are parameter expansion rather than `basename`:
+# the final emit sorts every row by name and kind rank, so this function's order
+# never reaches the output, and the two together were ~64 processes per listing.
+NAMES=()
 collect_names() {
   local kind="$1"
+  local -A seen=()
+  local dir f d n
+  NAMES=()
+  _add() { [ -n "${seen[$1]:-}" ] || { seen["$1"]=1; NAMES+=("$1"); }; }
   case "$kind" in
     command)
       for dir in "$CHOSKO_LLM_HOME/commands" "$CLAUDE_HOME/commands"; do
         [ -d "$dir" ] || continue
         for f in "$dir"/*.md; do
           [ -e "$f" ] || continue
-          basename "$f" .md
+          n="${f##*/}"; _add "${n%.md}"
         done
-      done | sort -u
+      done
       ;;
     skill)
       for dir in "$CHOSKO_LLM_HOME/skills" "$CLAUDE_HOME/skills"; do
         [ -d "$dir" ] || continue
         for d in "$dir"/*/; do
           [ -e "$d" ] || continue
-          basename "$d"
+          n="${d%/}"; _add "${n##*/}"
         done
-      done | sort -u
+      done
       ;;
     claude-md)
-      {
-        if [ -d "$CHOSKO_LLM_HOME/claude-md" ]; then
-          for f in "$CHOSKO_LLM_HOME"/claude-md/*.md; do
-            [ -e "$f" ] || continue
-            basename "$f" .md
-          done
-        fi
-        local claudemd_target
-        claudemd_target="$(claudemd_target_path)"
-        if [ -f "$claudemd_target" ]; then
-          grep '<!-- chosko-llm:.*:begin' "$claudemd_target" 2>/dev/null \
-            | sed 's/<!-- chosko-llm:\([^:]*\):begin.*/\1/' || true
-        fi
-      } | sort -u
+      if [ -d "$CHOSKO_LLM_HOME/claude-md" ]; then
+        for f in "$CHOSKO_LLM_HOME"/claude-md/*.md; do
+          [ -e "$f" ] || continue
+          n="${f##*/}"; _add "${n%.md}"
+        done
+      fi
+      for n in ${CLAUDEMD_NAMES[@]+"${CLAUDEMD_NAMES[@]}"}; do
+        _add "$n"
+      done
       ;;
     statusline)
       for dir in "$CHOSKO_LLM_HOME/statusline" "$CLAUDE_HOME/statusline"; do
         [ -d "$dir" ] || continue
         for f in "$dir"/*.sh; do
           [ -e "$f" ] || continue
-          basename "$f" .sh
+          n="${f##*/}"; _add "${n%.sh}"
         done
-      done | sort -u
+      done
       ;;
     hook)
       for dir in "$CHOSKO_LLM_HOME/hooks" "$CLAUDE_HOME/hooks"; do
         [ -d "$dir" ] || continue
         for f in "$dir"/*.sh; do
           [ -e "$f" ] || continue
-          basename "$f" .sh
+          n="${f##*/}"; _add "${n%.sh}"
         done
-      done | sort -u
+      done
       ;;
   esac
+  unset -f _add
 }
 
 # compute_status <kind> <name> <inst_col> <latest_col>
-# Prints "<status_col>\n<status_color>". Extends the base four-value
-# vocabulary (not installed / local only / up-to-date / updatable) with two
-# migration-aware statuses when a replaces: declaration ties this row to its
-# counterpart: "superseded" (installed, no source, but a clone feature
-# claims to replace it) and "migration pending" (in the clone, not
-# installed, but its own replaces: names an installed artifact). The
-# find_replacement / check_migration_pending probes only run on rows that
-# are already local-only / not-installed — never on every row.
+# Sets STATUS_COL and STATUS_COLOR. Extends the base four-value vocabulary (not
+# installed / local only / up-to-date / updatable) with two migration-aware
+# statuses when a replaces: declaration ties this row to its counterpart:
+# "superseded" (installed, no source, but a clone feature claims to replace it)
+# and "migration pending" (in the clone, not installed, but its own replaces:
+# names an installed artifact). The find_replacement / check_migration_pending
+# probes only run on rows that are already local-only / not-installed — never on
+# every row — and both read the one `replaces:` index lib.sh builds on first use.
+STATUS_COL=""
+STATUS_COLOR=""
 compute_status() {
   local kind="$1" name="$2" inst_col="$3" latest_col="$4"
-  local status_col
   if [ "$inst_col" = "—" ]; then
-    status_col="not installed"
+    STATUS_COL="not installed"
   elif [ "$latest_col" = "—" ]; then
-    status_col="local only"
+    STATUS_COL="local only"
   elif [ "$inst_col" = "$latest_col" ]; then
-    status_col="up-to-date"
+    STATUS_COL="up-to-date"
   else
-    status_col="updatable"
+    STATUS_COL="updatable"
   fi
 
-  if [ "$status_col" = "local only" ] && find_replacement "$kind" "$name" >/dev/null; then
-    status_col="superseded"
-  elif [ "$status_col" = "not installed" ] && check_migration_pending "$kind" "$name" >/dev/null; then
-    status_col="migration pending"
+  if [ "$STATUS_COL" = "local only" ] && find_replacement "$kind" "$name" >/dev/null; then
+    STATUS_COL="superseded"
+  elif [ "$STATUS_COL" = "not installed" ] && check_migration_pending "$kind" "$name" >/dev/null; then
+    STATUS_COL="migration pending"
   fi
 
-  local status_color
-  case "$status_col" in
-    "up-to-date")        status_color="$C_GREEN"  ;;
-    "updatable")         status_color="$C_YELLOW" ;;
-    "not installed")     status_color="$C_DIM"    ;;
-    "local only")        status_color="$C_CYAN"   ;;
-    "superseded")         status_color="$C_MAGENTA" ;;
-    "migration pending")  status_color="$C_BLUE"    ;;
-    *)                    status_color=""          ;;
+  case "$STATUS_COL" in
+    "up-to-date")        STATUS_COLOR="$C_GREEN"  ;;
+    "updatable")         STATUS_COLOR="$C_YELLOW" ;;
+    "not installed")     STATUS_COLOR="$C_DIM"    ;;
+    "local only")        STATUS_COLOR="$C_CYAN"   ;;
+    "superseded")         STATUS_COLOR="$C_MAGENTA" ;;
+    "migration pending")  STATUS_COLOR="$C_BLUE"    ;;
+    *)                    STATUS_COLOR=""          ;;
   esac
-  printf '%s\n%s\n' "$status_col" "$status_color"
 }
 
 list_all() {
@@ -210,275 +307,139 @@ list_all() {
   print_header
   local found=0
   local installable=() updatable=() migrating=()
-  # Every pass appends its rendered rows here instead of printing them; one
-  # name-ordered emit at the end replaces the old kind-grouped output.
+  # Every row is buffered here instead of printed; one name-ordered emit at the
+  # end replaces the old kind-grouped output.
   local rows=()
 
-  while IFS= read -r name; do
-    [ -n "$name" ] || continue
-    local inst_file src_file inst_ver src_ver inst_req src_req req_raw inst_col latest_col
-    inst_file="$(inst_command_path "$name")"
-    src_file="$(src_command_path "$name")"
+  scan_claudemd
 
-    inst_req=""
-    if [ -f "$inst_file" ]; then
-      { IFS= read -r inst_ver; IFS= read -r inst_req; } < <(read_frontmatter_fields "$inst_file" version requires)
-      inst_col="${inst_ver:-unversioned}"
-    else
-      inst_col="—"
-    fi
-
-    if [ -f "$src_file" ]; then
-      { IFS= read -r src_ver; IFS= read -r src_req; } < <(read_frontmatter_fields "$src_file" version requires)
-      [ -n "$src_ver" ] && latest_col="$src_ver" || latest_col="—"
-      req_raw="$src_req"
-    else
-      latest_col="—"
-      req_raw="$inst_req"
-    fi
-
-    case "$filter" in
-      installed) [ "$inst_col" = "—" ] && continue ;;
-      available) [ "$latest_col" = "—" ] && continue ;;
-    esac
-
-    local status_col status_color
-    { read -r status_col; read -r status_color; } < <(compute_status command "$name" "$inst_col" "$latest_col")
-
-    case "$status_col" in
-      "not installed")                  installable+=("$name") ;;
-      "updatable")                      updatable+=("$name") ;;
-      "superseded"|"migration pending") migrating+=("$name") ;;
-    esac
-
-    local inst_color latest_color row
-    [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
-    [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
-    row="$(
-      _colored_cell ""              "$name"       ""        30
-      _colored_cell "$C_BLUE"       "command"     "$C_RESET" 8
-      _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
-      _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
-      _colored_cell "$status_color" "$status_col" "$C_RESET" "$STATUS_WIDTH"
-      _requires_cell "$req_raw"
-    )"
-    rows+=("$name"$'\t'"$KIND_RANK_COMMAND"$'\t'"$row")
-    found=1
-  done < <(collect_names command)
-
-  while IFS= read -r name; do
-    [ -n "$name" ] || continue
-    local inst_file src_file inst_ver src_ver inst_req src_req req_raw inst_col latest_col
-    inst_file="$(inst_skill_path "$name")"
-    src_file="$(src_skill_path "$name")"
-
-    inst_req=""
-    if [ -f "$inst_file" ]; then
-      { IFS= read -r inst_ver; IFS= read -r inst_req; } < <(read_frontmatter_fields "$inst_file" version requires)
-      inst_col="${inst_ver:-unversioned}"
-    else
-      inst_col="—"
-    fi
-
-    if [ -f "$src_file" ]; then
-      { IFS= read -r src_ver; IFS= read -r src_req; } < <(read_frontmatter_fields "$src_file" version requires)
-      [ -n "$src_ver" ] && latest_col="$src_ver" || latest_col="—"
-      req_raw="$src_req"
-    else
-      latest_col="—"
-      req_raw="$inst_req"
-    fi
-
-    case "$filter" in
-      installed) [ "$inst_col" = "—" ] && continue ;;
-      available) [ "$latest_col" = "—" ] && continue ;;
-    esac
-
-    local status_col status_color
-    { read -r status_col; read -r status_color; } < <(compute_status skill "$name" "$inst_col" "$latest_col")
-
-    case "$status_col" in
-      "not installed")                  installable+=("$name") ;;
-      "updatable")                      updatable+=("$name") ;;
-      "superseded"|"migration pending") migrating+=("$name") ;;
-    esac
-
-    local inst_color latest_color row
-    [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
-    [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
-    row="$(
-      _colored_cell ""              "$name"       ""        30
-      _colored_cell "$C_MAGENTA"    "skill"       "$C_RESET" 8
-      _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
-      _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
-      _colored_cell "$status_color" "$status_col" "$C_RESET" "$STATUS_WIDTH"
-      _requires_cell "$req_raw"
-    )"
-    rows+=("$name"$'\t'"$KIND_RANK_SKILL"$'\t'"$row")
-    found=1
-  done < <(collect_names skill)
-
-  while IFS= read -r name; do
-    [ -n "$name" ] || continue
-    local src_file inst_ver src_ver src_req req_raw inst_col latest_col
-    src_file="$(src_claudemd_path "$name")"
-
-    if claudemd_is_installed "$name"; then
-      inst_ver="$(claudemd_installed_version "$name" || true)"
-      inst_col="${inst_ver:-unversioned}"
-    else
-      inst_col="—"
-    fi
-
-    # No installed-side fallback here: inject_section strips frontmatter, so an
-    # installed claude-md section carries no `requires:` to read.
-    req_raw=""
-    if [ -f "$src_file" ]; then
-      { IFS= read -r src_ver; IFS= read -r src_req; } < <(read_frontmatter_fields "$src_file" version requires)
-      [ -n "$src_ver" ] && latest_col="$src_ver" || latest_col="—"
-      req_raw="$src_req"
-    else
-      latest_col="—"
-    fi
-
-    case "$filter" in
-      installed) [ "$inst_col" = "—" ] && continue ;;
-      available) [ "$latest_col" = "—" ] && continue ;;
-    esac
-
-    local status_col status_color
-    { read -r status_col; read -r status_color; } < <(compute_status claude-md "$name" "$inst_col" "$latest_col")
-
-    case "$status_col" in
-      "not installed")                  installable+=("$name") ;;
-      "updatable")                      updatable+=("$name") ;;
-      "superseded"|"migration pending") migrating+=("$name") ;;
-    esac
-
-    local inst_color latest_color row
-    [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
-    [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
-    row="$(
-      _colored_cell ""              "$name"       ""        30
-      _colored_cell "$C_CYAN"       "claude-md"   "$C_RESET" 8
-      _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
-      _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
-      _colored_cell "$status_color" "$status_col" "$C_RESET" "$STATUS_WIDTH"
-      _requires_cell "$req_raw"
-    )"
-    rows+=("$name"$'\t'"$KIND_RANK_CLAUDEMD"$'\t'"$row")
-    found=1
-  done < <(collect_names claude-md)
-
-  if ! scope_is_local; then
-  while IFS= read -r name; do
-    [ -n "$name" ] || continue
-    local inst_file src_file inst_ver src_ver inst_req src_req req_raw inst_col latest_col
-    inst_file="$(inst_statusline_path "$name")"
-    src_file="$(src_statusline_path "$name")"
-
-    inst_req=""
-    if [ -f "$inst_file" ]; then
-      { IFS= read -r inst_ver; IFS= read -r inst_req; } < <(read_frontmatter_fields "$inst_file" version requires)
-      inst_col="${inst_ver:-unversioned}"
-    else
-      inst_col="—"
-    fi
-
-    if [ -f "$src_file" ]; then
-      { IFS= read -r src_ver; IFS= read -r src_req; } < <(read_frontmatter_fields "$src_file" version requires)
-      [ -n "$src_ver" ] && latest_col="$src_ver" || latest_col="—"
-      req_raw="$src_req"
-    else
-      latest_col="—"
-      req_raw="$inst_req"
-    fi
-
-    case "$filter" in
-      installed) [ "$inst_col" = "—" ] && continue ;;
-      available) [ "$latest_col" = "—" ] && continue ;;
-    esac
-
-    local status_col status_color
-    { read -r status_col; read -r status_color; } < <(compute_status statusline "$name" "$inst_col" "$latest_col")
-
-    case "$status_col" in
-      "not installed")                  installable+=("$name") ;;
-      "updatable")                      updatable+=("$name") ;;
-      "superseded"|"migration pending") migrating+=("$name") ;;
-    esac
-
-    local inst_color latest_color row
-    [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
-    [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
-    row="$(
-      _colored_cell ""              "$name"       ""        30
-      _colored_cell "$C_GREEN"      "statusline"  "$C_RESET" 8
-      _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
-      _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
-      _colored_cell "$status_color" "$status_col" "$C_RESET" "$STATUS_WIDTH"
-      _requires_cell "$req_raw"
-    )"
-    rows+=("$name"$'\t'"$KIND_RANK_STATUSLINE"$'\t'"$row")
-    found=1
-  done < <(collect_names statusline)
-  fi
-
-  # Mirror of the statusline pass: hooks are local-only, so they are listed in
-  # local scope and omitted entirely in global scope.
+  # The kinds this scope lists, in the order the passes used to run. statusline
+  # is global-only — a status bar belongs to a terminal, not a repo. hook is its
+  # mirror image, local-only, since a hook only fires if it is committed to the
+  # repository it governs.
+  local kinds=(command skill claude-md)
   if scope_is_local; then
-  while IFS= read -r name; do
-    [ -n "$name" ] || continue
-    local inst_file src_file inst_ver src_ver inst_req src_req req_raw inst_col latest_col
-    inst_file="$(inst_hook_path "$name")"
-    src_file="$(src_hook_path "$name")"
+    kinds+=(hook)
+  else
+    kinds+=(statusline)
+  fi
+
+  # Pass 1 — enumerate the rows, and with them every frontmatter file the
+  # listing will need to read.
+  local r_kind=() r_name=() r_inst=() r_src=() files=()
+  local kind name inst_file src_file
+  for kind in "${kinds[@]}"; do
+    collect_names "$kind"
+    for name in ${NAMES[@]+"${NAMES[@]}"}; do
+      [ -n "$name" ] || continue
+      # `-f` decides whether the file counts — an existing file with no
+      # `version` still renders `unversioned`, not `—`. `-r` separately decides
+      # whether it is handed to awk, which aborts the whole batch on a file it
+      # cannot open and would take every later row's values with it. An existing
+      # but unreadable file therefore degrades exactly its own row, which is
+      # what one awk per file did.
+      inst_file=""
+      # A claude-md artifact has no installed file: it is a section of the
+      # CLAUDE.md scan_claudemd already read.
+      if [ "$kind" != claude-md ]; then
+        feature_path_var inst_file "$CLAUDE_HOME" "$kind" "$name"
+        if [ -f "$inst_file" ]; then
+          if [ -r "$inst_file" ]; then files+=("$inst_file"); fi
+        else
+          inst_file=""
+        fi
+      fi
+      feature_path_var src_file "$CHOSKO_LLM_HOME" "$kind" "$name"
+      if [ -f "$src_file" ]; then
+        if [ -r "$src_file" ]; then files+=("$src_file"); fi
+      else
+        src_file=""
+      fi
+      r_kind+=("$kind"); r_name+=("$name")
+      r_inst+=("$inst_file"); r_src+=("$src_file")
+    done
+  done
+
+  # Pass 2 — one awk for all of them.
+  local -A VER=() REQ=()
+  if [ ${#files[@]} -gt 0 ]; then
+    local line path rest
+    while IFS= read -r line; do
+      path="${line%%$'\t'*}"
+      rest="${line#*$'\t'}"
+      VER["$path"]="${rest%%$'\t'*}"
+      REQ["$path"]="${rest#*$'\t'}"
+    done < <(read_frontmatter_table "version requires" "${files[@]}")
+  fi
+
+  # Pass 3 — render.
+  local i inst_ver src_ver inst_req src_req req_raw inst_col latest_col
+  local inst_color latest_color rank klabel kcolor
+  for ((i = 0; i < ${#r_kind[@]}; i++)); do
+    kind="${r_kind[i]}"; name="${r_name[i]}"
+    inst_file="${r_inst[i]}"; src_file="${r_src[i]}"
 
     inst_req=""
-    if [ -f "$inst_file" ]; then
-      { IFS= read -r inst_ver; IFS= read -r inst_req; } < <(read_frontmatter_fields "$inst_file" version requires)
+    if [ "$kind" = claude-md ]; then
+      if claudemd_scan_is_installed "$name"; then
+        inst_ver="${CLAUDEMD_VERSION[$name]:-}"
+        inst_col="${inst_ver:-unversioned}"
+      else
+        inst_col="—"
+      fi
+    elif [ -n "$inst_file" ]; then
+      inst_ver="${VER[$inst_file]:-}"
+      inst_req="${REQ[$inst_file]:-}"
       inst_col="${inst_ver:-unversioned}"
     else
       inst_col="—"
     fi
 
-    if [ -f "$src_file" ]; then
-      { IFS= read -r src_ver; IFS= read -r src_req; } < <(read_frontmatter_fields "$src_file" version requires)
+    req_raw=""
+    if [ -n "$src_file" ]; then
+      src_ver="${VER[$src_file]:-}"
+      src_req="${REQ[$src_file]:-}"
       [ -n "$src_ver" ] && latest_col="$src_ver" || latest_col="—"
       req_raw="$src_req"
     else
       latest_col="—"
-      req_raw="$inst_req"
+      # No installed-side fallback for claude-md: inject_section strips
+      # frontmatter, so an installed section carries no `requires:` to read.
+      [ "$kind" = claude-md ] || req_raw="$inst_req"
     fi
 
-    case "$filter" in
-      installed) [ "$inst_col" = "—" ] && continue ;;
-      available) [ "$latest_col" = "—" ] && continue ;;
-    esac
+    if [ "$filter" = installed ] && [ "$inst_col" = "—" ]; then continue; fi
+    if [ "$filter" = available ] && [ "$latest_col" = "—" ]; then continue; fi
 
-    local status_col status_color
-    { read -r status_col; read -r status_color; } < <(compute_status hook "$name" "$inst_col" "$latest_col")
+    compute_status "$kind" "$name" "$inst_col" "$latest_col"
 
-    case "$status_col" in
+    case "$STATUS_COL" in
       "not installed")                  installable+=("$name") ;;
       "updatable")                      updatable+=("$name") ;;
       "superseded"|"migration pending") migrating+=("$name") ;;
     esac
 
-    local inst_color latest_color row
     [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
     [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
-    row="$(
-      _colored_cell ""              "$name"       ""        30
-      _colored_cell "$C_YELLOW"     "hook"        "$C_RESET" 8
-      _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
-      _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
-      _colored_cell "$status_color" "$status_col" "$C_RESET" "$STATUS_WIDTH"
-      _requires_cell "$req_raw"
-    )"
-    rows+=("$name"$'\t'"$KIND_RANK_HOOK"$'\t'"$row")
+
+    case "$kind" in
+      command)    rank=$KIND_RANK_COMMAND    ; klabel="command"    ; kcolor="$C_BLUE"    ;;
+      skill)      rank=$KIND_RANK_SKILL      ; klabel="skill"      ; kcolor="$C_MAGENTA" ;;
+      claude-md)  rank=$KIND_RANK_CLAUDEMD   ; klabel="claude-md"  ; kcolor="$C_CYAN"    ;;
+      statusline) rank=$KIND_RANK_STATUSLINE ; klabel="statusline" ; kcolor="$C_GREEN"   ;;
+      hook)       rank=$KIND_RANK_HOOK       ; klabel="hook"       ; kcolor="$C_YELLOW"  ;;
+    esac
+
+    ROW=""
+    _colored_cell ""              "$name"        ""         30
+    _colored_cell "$kcolor"       "$klabel"      "$C_RESET" 8
+    _colored_cell "$inst_color"   "$inst_col"    "$C_RESET" 14
+    _colored_cell "$latest_color" "$latest_col"  "$C_RESET" 16
+    _colored_cell "$STATUS_COLOR" "$STATUS_COL"  "$C_RESET" "$STATUS_WIDTH"
+    _requires_cell "$req_raw"
+    rows+=("$name"$'\t'"$rank"$'\t'"$ROW")
     found=1
-  done < <(collect_names hook)
-  fi
+  done
 
   # Single name-ordered emit. Field 1 is the feature name, field 2 the kind
   # rank that breaks a tie between two rows sharing one; LC_ALL=C keeps the

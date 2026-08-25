@@ -2,6 +2,26 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.22.5 — 2026-08-25
+
+- `chosko-llm ls` is about 27× faster: 5.4 s down to 0.2 s on a clone of ~34
+  features, measured on Git Bash for Windows with a plain global `ls`.
+- The cause was process count, not any one slow step. The listing spent 217
+  processes — 128 `awk` (two per frontmatter file read), 64 `basename`, and a
+  command substitution or two per row — and a fork plus exec costs ~20 ms there.
+  It now spends 3.
+- Every frontmatter file the listing needs is parsed by a single `awk`; names,
+  paths and `requires:` entries are computed with shell parameter expansion
+  instead of `basename`, `sort -u` and per-row subshells; and the managed
+  `CLAUDE.md` is read once instead of three times per claude-md row.
+- `find_replacement` and `check_migration_pending` — the probes behind the
+  `superseded` and `migration pending` statuses — now read a `replaces:` index
+  built once per process instead of rescanning the whole clone on every call, so
+  a listing where many rows are local-only no longer degrades quadratically.
+  `chosko-llm show` and `chosko-llm update` get the same saving.
+- Output is unchanged, byte for byte, for `ls`, `--installed`, `--available`,
+  `--local`, `--global`, and both piped and interactive stdout.
+
 ## 1.22.4 — 2026-08-25
 
 - `/production-status` now prescribes how section 2 is rendered: a markdown
