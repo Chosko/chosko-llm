@@ -331,7 +331,7 @@ Context:
 ```
 Done: 2026-08-25 — commit a218454 (pushed). skills/runbook-run/SKILL.md (0.1.0, no requires:) with the eight-step loop, six-part prompt assembly, three result cases, relay block, fact propagation, [RUNNING]+[~] resume signal, nested-runbook refusal, depth budget, five arguments, reads-three/writes-two contract; references/runbook-schema.md (store, body schema, markers + Done: line, four statuses, index block, no [SKIP]/no Produces:) and references/subagent-contract.md (pasteable OPERATING RULES with <RUNBOOK>/<N> placeholders + maintainer-only rationale). VERSION 1.9.0→1.10.0. Decisions: the commit-and-push protocol is named without a docs/ path (four steps inline) — deliberate divergence from skills/task-implement's docs/ citation; commit trailers now match the head style (task 139's commit carried Co-Authored-By/Claude-Session; the earlier "trailer-free" note is stale).
 
-## [ ] 28. Add the /runbook-create command (task 141)
+## [x] 28. Add the /runbook-create command (task 141)
 
 Depends on: 27
 
@@ -341,12 +341,14 @@ Context:
 ```prompt
 /task-implement 141
 ```
+Done: 2026-08-25 — commit d8b8a4a (pushed). commands/runbook-create.md (0.1.0, requires: skill:runbook-run) cites runbook-schema.md and restates none of it; flags --commit / --no-push only (--no-commit accepted as a no-op note); commit-and-push protocol inline as four steps, no docs/ path except inside prompt-quality rule 7's own prohibition; "WHAT THIS COMMAND WRITES" ownership table (never a Done: line, never a non-[ ] marker, [PENDING] only, append's [DONE]→[PENDING] flip as sole exception). VERSION 1.10.0→1.11.0. Premises held.
 
 ## [ ] 29. Add the /runbook-list command (task 142)
 
 Depends on: 28
 
-Context: none
+Context:
+- 2026-08-25 (from steps 27–28): VERSION is now 1.11.0. skills/runbook-run (0.1.0) with references/runbook-schema.md (authoritative status vocabulary and index-block shape — cite, never copy) and commands/runbook-create.md (0.1.0) exist; both declare requires: skill:runbook-run in the form `requires: skill:runbook-run` and cite ${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md. No docs/ path in shipped bodies. .claude/RUNBOOKS.md in this repo is a live index (one block, [RUNNING], Steps: N/32) — a real input for verifying the listing, read only. Every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh. Verify with CHOSKO_LLM_HOME=E:/projects/chosko-llm ./bin/chosko-llm ls --available. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 142
