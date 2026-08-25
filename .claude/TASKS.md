@@ -471,7 +471,7 @@ Feature: runbook-suite
 
 ## 143. Add the /runbook-clean command
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/runbook-clean.md, VERSION
 Preconditions: 125, 140

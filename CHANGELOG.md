@@ -2,6 +2,45 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.13.0 — 2026-08-25
+
+- New command **`runbook-clean`** (0.1.0) — the pruning side of the runbook
+  suite. `/runbook-clean` deletes each finished runbook's body file under
+  `.claude/runbooks/` and removes its `.claude/RUNBOOKS.md` index block,
+  including the surrounding `---` rules. Declares `requires: skill:runbook-run`
+  and cites that skill's `references/runbook-schema.md` for the status
+  vocabulary and the index block shape rather than carrying a second copy of
+  either.
+- Removal is an **explicit act, never a consequence of completion** — reaching
+  `[DONE]` deletes nothing on its own. The `Done:` lines are the record of what
+  was decided while the work was being done, and that durability is the point;
+  this command exists because the store is committed and grows without bound.
+- Three stages, exactly `/task-clean`'s: **resolve** (no argument means every
+  `[DONE]` runbook, names mean exactly those), **plan and confirm** (each
+  runbook with its created date, steps done over total, and *both* paths — body
+  file and index block — then "Apply?"), and **remove and commit** (staging
+  exactly the deleted paths and the index by explicit path, never a catch-all).
+- **Only `[DONE]` is eligible, and there is no `--force` and no status
+  argument.** `[PENDING]` is unstarted work, `[RUNNING]` is a run someone is in
+  the middle of, and `[FAILED]` is the record of a halt that still needs a
+  decision — the status most likely to be misread as finished. A user who
+  genuinely wants a `[FAILED]` runbook gone flips its status by hand first, one
+  visible committed edit. Narrower than `/task-clean` on purpose: runbooks have
+  no second terminal status.
+- A **named runbook that is not `[DONE]` is refused by name with its actual
+  status**, never silently skipped — a silent skip reads as a successful
+  removal. An **unknown name aborts the whole run before anything is deleted**,
+  rather than removing the names it did recognise. An **empty plan says so and
+  stops** without asking anything.
+- Commits and pushes by default, with `--no-commit` and `--no-push` to opt
+  out — the cleanup convention rather than the authoring one: a deletion left
+  uncommitted is the change most likely to be lost, and the confirmation gate
+  has already served as the review pass.
+- It touches no runbook it is not deleting, never edits a body file, and
+  corrects no status, `Steps:` count or `Failed at:` line however wrong it
+  looks — reconciliation belongs to `/runbook-run`, which already has the body
+  open.
+
 ## 1.12.0 — 2026-08-25
 
 - New command **`runbook-list`** (0.1.0) — the read side of the runbook suite.
