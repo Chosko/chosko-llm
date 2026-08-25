@@ -1,8 +1,9 @@
 ---
 name: task-review
-version: 0.1.0
+version: 0.2.0
 type: skill
-description: Audit a diff against the acceptance criteria of the task that produced it and report structured findings. Three input forms — no argument reviews the uncommitted working tree, a branch name reviews that branch against the repository's default branch or an explicit base=<ref>, and a PR number or URL reviews that pull request through gh. Every finding passes a confidence gate before it is written: report only what is held at 80% confidence or better, citing a file:line and naming a concrete failure mode, with severities BLOCKING / IMPORTANT / ADVISORY and an unmet acceptance criterion always BLOCKING. The task is resolved from task=<n>, the branch name, the PR title, or the most recently modified .claude/tasks file, and an unresolvable task stops the run rather than degrading into a generic code review. A review that reports no findings is a valid, complete result. Read-only — it edits no source, test, task or status file, runs no mutating command, opens no pull request, and writes at most the opt-in .claude/reviews/<task>-R<round>.md report a manual run asked for.
+description: Audit a diff against the acceptance criteria of the task that produced it and report structured findings. Three input forms — no argument reviews the uncommitted working tree, a branch name reviews that branch against the repository's default branch or an explicit base=<ref>, and a PR number or URL reviews that pull request through gh. Every finding passes a confidence gate before it is written: report only what is held at 80% confidence or better, citing a file:line and naming a concrete failure mode, with severities BLOCKING / IMPORTANT / ADVISORY and an unmet acceptance criterion always BLOCKING. The task is resolved from task=<n>, the branch name, the PR title, or the most recently modified .claude/tasks file, and an unresolvable task stops the run rather than degrading into a generic code review. A review that reports no findings is a valid, complete result. Read-only — it edits no source, test, task or status file, runs no mutating command, opens no pull request, and writes at most the opt-in .claude/reviews/<task>-R<round>.md report a manual run asked for. It also invokes no test command, in any mode, under any budget, under any testing policy and on either invocation path: a green suite is an input its caller hands it, and where the caller reports skip-tests mode it says nothing ran and reports a criterion depending on runtime behaviour as unverifiable rather than re-deriving it. A run spawned by /task-implement --review may carry a budget block naming a read tier (shallow / standard / deep); the skill honours it from task-engine's references/review-budget.md, which is why it declares requires: skill:task-engine — the navigation layer is read in full and never counted at any tier, only distinct source and test files beyond the diff count against the cap, and a cap that actually binds is reported in one line. An invocation with no budget block — a manual run, or a spawn whose effort resolved to same — reads unbounded, exactly as before.
+requires: skill:task-engine
 ---
 
 # /task-review
@@ -53,8 +54,9 @@ never opens a supporting file.
 | Read this file | Exactly when |
 | -------------- | ------------ |
 | `./remote-diffs.md` | The argument (after stripping `task=` and `base=`) is non-empty — it names a branch, a PR number, or a PR URL. |
+| `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/review-budget.md` | The invocation carries a **budget block** naming a read tier. A manual run carries none, and neither does a spawn whose effort resolved to `same`. |
 
-A local-mode run never loads it. Do not read it speculatively.
+A local manual run loads neither. Do not read either speculatively.
 
 ---
 
@@ -65,6 +67,9 @@ This skill uses the shell **only** for read-only inspection: `git diff`,
 `gh api` reads, and `gh --version`. It runs no command that changes a file,
 an index, a ref, a remote, or a pull request. If a step seems to need a
 mutating command, the step is wrong — stop and report instead.
+
+A **test command is not on that list either**, mutating or not: see THE
+READ-ONLY CONTRACT.
 
 ---
 
@@ -126,6 +131,41 @@ individually in the report. Read the body's Decisions and Hints too — a
 criterion often only makes sense with the decision behind it — and read
 whatever the diff touches: the callers, the imports, the tests, the project's
 `CLAUDE.md` and its `.claude/context/` entries for the files in the diff.
+
+---
+
+## THE READ BUDGET
+
+A run spawned by `/task-implement --review` may carry a **budget block** naming
+a read tier — `shallow`, `standard` or `deep`. When it does, read
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/review-budget.md`
+and honour the tier it names. That file is the single authority for what each
+tier permits and **none of its tables is restated here**: read it, rather than
+reconstructing it from the block or from memory.
+
+**No budget block means no budget.** A manual run carries none, and neither
+does a spawn whose effort resolved to `same`. Read unbounded, exactly as this
+skill did before budgets existed. Never assume a tier that was not named.
+
+Two rules hold at every tier, and belong here because this is where the reading
+happens:
+
+- **The navigation layer is read in full and never counted** — `CLAUDE.md` and
+  its chain, `.claude/context/INDEX.md` and the rows for the files in the diff,
+  the task body, and the feature document its `Feature:` line names. Only
+  distinct **source and test files beyond the diff** count against the cap, and
+  re-opening one already counted is free.
+- **A cap that actually binds is reported.** Stop investigating, report the
+  remaining criteria under the gates below exactly as usual, and say in one
+  line that the cap bound and at which tier. A silent cap cannot be retuned.
+
+Under `shallow` that cap is zero, so callers and imports cannot be read at all.
+State that plainly instead of working around it: an unread caller is an honest
+**no** to Pre-Report Gate question 3, and the gate below already demotes or
+drops a finding on that answer. That is the intended behaviour — a cheap review
+is a more conservative one, never a more confident-and-wrong one. **No second
+gate is added for the budget**, and no finding becomes admissible because the
+tier was too narrow to check it.
 
 ---
 
@@ -278,6 +318,21 @@ run explicitly opted into, and mutates nothing at all:
 
 It reads a PR; it never opens one.
 
+**And it runs no tests.** This skill invokes **no test command** — in any mode,
+under any budget, under any testing policy, and on either invocation path. No
+tier relaxes it, because it is a clause of this contract rather than a budget
+setting. `/task-implement` already ran the affected tests and then the full
+suite, and the review loop only starts on a green one, so a passing suite is an
+input the caller hands over, not a fact to re-derive; re-running it pays twice
+for the same answer and is the single largest avoidable cost in a review.
+Reading test **files** as source is a different thing entirely: unchanged, still
+required by Pre-Report Gate question 3, and governed by the budget table.
+
+Where the caller reports **skip-tests** mode, nothing ran. Say so, and report
+any criterion that depends on runtime behaviour as `unverifiable` — the verdict
+the report schema already carries — naming what would settle it. An untested
+runtime is never a reason to run something.
+
 ---
 
 DO NOT:
@@ -295,4 +350,8 @@ DO NOT:
 - Fall back from PR mode to local or branch mode when `gh` is missing.
 - Re-raise a finding an earlier round rejected.
 - Edit anything, or run any mutating git or `gh` command.
+- Run a test command, in any mode, under any budget, or under any testing
+  policy — including to fill the gap a skip-tests run leaves.
+- Admit a finding the tier's own limits prevented you from checking, or read
+  past a cap instead of reporting that it bound.
 - Renumber finding ids between rounds.

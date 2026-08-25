@@ -2,6 +2,32 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.22.0 — 2026-08-25
+
+- `/task-review` now honours the read budget `/task-implement --review` sends
+  it. A spawned run carrying a budget block reads the tier's permissions from
+  `task-engine`'s `references/review-budget.md` and obeys them; the navigation
+  layer (`CLAUDE.md`, `.claude/context/`, the task body, the feature document)
+  is read in full and never counted at any tier, and only distinct source and
+  test files beyond the diff count against the cap. A cap that actually binds
+  is now reported in one line so it can be retuned.
+- Under `shallow`, the reviewer says plainly that it cannot read callers, which
+  answers Pre-Report Gate question 3 with a "no" and lets the existing gate
+  demote or drop the finding — a cheaper review is a more conservative one, and
+  no second gate was added.
+- A manual `/task-review`, and a spawn whose `--review-effort` resolved to
+  `same`, carry no budget block and read unbounded exactly as before. The skill
+  still has no cost-control flags of its own.
+- New contract clause: **`/task-review` invokes no test command**, in any mode,
+  under any budget, under any testing policy and on either invocation path. A
+  green suite is an input its caller hands it. Where the caller reports
+  skip-tests mode it says nothing ran and reports a criterion depending on
+  runtime behaviour as `unverifiable`. Reading test *files* as source is
+  unchanged.
+- **Install change:** `task-review` now declares `requires: skill:task-engine`,
+  so `chosko-llm add skill:task-review` installs `task-engine` first if it is
+  not already present.
+
 ## 1.21.0 — 2026-08-25
 
 - `/task-implement --review` gains two cost controls over the reviewer it

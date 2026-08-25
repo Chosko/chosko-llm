@@ -99,7 +99,7 @@ Feature: task-peer-review
 
 ## 160. Make `/task-review` honour the read budget and never run tests
 
-Status: [IN PROGRESS]
+Status: [DONE]
 Target: claude
 Files: skills/task-review/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 158
