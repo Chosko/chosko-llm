@@ -432,7 +432,7 @@ Feature: repo-local-audits
 
 ## 139. Replace /task-add's ownership notice with a pre-authorisation gate
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-add.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION
 Preconditions: 129

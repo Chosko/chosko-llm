@@ -2,6 +2,32 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.9.0 — 2026-08-25
+
+- `/task-add` (2.2.0) replaces its ownership *notice* with an ownership
+  **pre-authorisation gate**. Previously a drafted task could name a document
+  owned by another pipeline command and the user was merely told; the
+  implementer then met the one-writer-per-artifact rule holding no authority to
+  proceed, and either stalled to ask or edited the document anyway. Now, at the
+  PHASE 3 gate, the command enumerates the specific reconciliations that task
+  needs to make to each owned document and asks for exactly two possible
+  answers — grant pre-authorisation for those points, or drop the file and
+  leave the document to its owner — then writes the grant (a dated,
+  point-scoped `## Decisions` bullet plus the points in `## Acceptance
+  criteria`) or the removal into the task body. Silence is not a grant, an
+  "Approve and write?" that skipped the question is re-asked, and PHASE 4
+  refuses to write a task whose owned document is neither granted nor removed.
+- The gate covers **every task a run drafts** — the documentation task, a
+  free-form task, each part of a split, and any body rewritten during
+  reconciliation — not the documentation task alone.
+- The owner list `/task-add` carries inline grows from four documents to seven,
+  adding `product-roadmap.md` (`/product-roadmap`) and `.claude/PLAN.md`
+  (`/production-plan`); `FEATURES.md` and `TASKS.md` stay excluded because they
+  are split by line and `/task-add` is one of their writers.
+- A grant does not make `/task-add` a writer: it authorises the *implementer*
+  of the task being drafted, so one writer per artifact still holds for the
+  pipeline commands.
+
 ## 1.8.5 — 2026-08-25
 
 - Documentation catch-up for the `shared-phase-engine` work (1.7.0 – 1.8.4).

@@ -1,8 +1,8 @@
 ---
 name: task-add
-version: 2.1.0
+version: 2.2.0
 type: command
-description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit and push. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, appending a final documentation-update task when new tasks were drafted, and setting the feature [PLANNED]. Pass --short for trivial low-ambiguity tasks to skip the deep PHASE 1 investigation and write a minimal Goal-only body (mutually exclusive with feature=), --no-split to always write exactly one task, --no-commit to write the files but skip the commit (and push), or --no-push to commit without pushing.
+description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit and push. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, appending a final documentation-update task when new tasks were drafted, and setting the feature [PLANNED]. Whenever a drafted task names a document owned by another pipeline command, the PHASE 3 gate enumerates the reconciliations that task needs to make to it and asks the user to pre-authorise exactly those points or to drop the file — the grant, or the removal, is written into the task body so the implementer never has to ask. Pass --short for trivial low-ambiguity tasks to skip the deep PHASE 1 investigation and write a minimal Goal-only body (mutually exclusive with feature=), --no-split to always write exactly one task, --no-commit to write the files but skip the commit (and push), or --no-push to commit without pushing.
 requires: skill:task-engine
 ---
 
@@ -491,8 +491,13 @@ Part 1/k — Draft body:
 **When FEATURE is set** and at least one new task was drafted above (single
 or split), also render the documentation task's draft here, last, using the
 next sequential ID after the others. See DOCUMENTATION TASK below for its
-content and the ownership notice that accompanies it. Skip this
-entirely on a reconciliation-only run that drafts zero new tasks.
+content, and OWNERSHIP PRE-AUTHORISATION for the question that accompanies it
+when its Hints name an owned document. Skip this entirely on a
+reconciliation-only run that drafts zero new tasks.
+
+Before the closing prompt, render the ownership question for every drafted task
+whose Hints or `Files:` name an owned document — see OWNERSHIP
+PRE-AUTHORISATION. It is answered in this same exchange, not at a second gate.
 
 End with: **"Approve and write?"**
 
@@ -564,29 +569,113 @@ up to date with this run's other new tasks once they're implemented:
   these actually describe the behavior this run's tasks change. Not a
   fixed list; judge per feature, same as any other task's Hints.
 
-**Ownership notice.** Some of the collateral PHASE 1 surfaces is owned by
-another command in this pipeline: `.claude/domain/features/<slug>.md` (owned
-by `/architect`) and `product-design.md` / `technical-direction.md` /
-`business-model.md` (owned by `/product-design`). Listing one of these in the
-doc task's Hints is **allowed** — a feature that changed its own design
-surface routinely needs its document brought back in line with what shipped,
-and the doc task is the right place to flag that. Judge inclusion on the same
-grounds as any other Hint: does this file actually describe behavior this
-run's tasks change?
+Some of that collateral is owned by another command in this pipeline. Naming
+one of those documents here is allowed but never free: OWNERSHIP
+PRE-AUTHORISATION below governs it, and the documentation task is its worked
+example.
 
-What is not allowed is including one silently. Whenever the drafted Hints
-name an owned document, say so plainly in PHASE 3, naming the file and its
-owner:
+---
 
-> Note: the doc-update task's Hints include
-> `.claude/domain/features/<slug>.md`, which is owned by `/architect` rather
-> than this command — this feature changed its own design surface, so the doc
-> task flags it for review. Say so if you'd rather it stayed out.
+OWNERSHIP PRE-AUTHORISATION
 
-No separate answer is required: the file rides on the PHASE 3 approval like
-every other part of the plan, and is dropped if the user says to. The point
-is that the user never discovers an owned document in a written task without
-having been told.
+Applies to **every task this run drafts** — the documentation task, a single
+free-form task, each part of a split, and any existing body rewritten during
+reconciliation. The failure it prevents is identical in all four cases: an
+implementer holding a document it has no authority to edit, which either stalls
+the run to ask or edits an owned document without asking.
+
+**Detection.** These paths are owned by another command in this pipeline. This
+table is the sole source of ownership — do not try to derive it from a
+project's domain layer, which most projects do not carry:
+
+| Path | Owner |
+| --- | --- |
+| `.claude/domain/features/*.md` | `/architect` |
+| `.claude/domain/product-design.md`, `technical-direction.md`, `business-model.md` | `/product-design` |
+| `.claude/domain/product-roadmap.md` | `/product-roadmap` |
+| `.claude/PLAN.md` | `/production-plan` |
+
+`.claude/FEATURES.md` and `.claude/TASKS.md` are **excluded**: they are split by
+line rather than by file, and this command is itself one of their writers.
+
+Run the check against both the drafted `## Hints` and the summary block's
+`Files:` line, for every task drafted in this run. A path matching a row above
+is a *detected file*, and its task cannot be written until the question below
+has an answer.
+
+**Enumeration.** For each detected file, list the specific reconciliations the
+task needs to make to it — the concrete points at which the implementation
+diverges from, or settles, what the document says — numbered, one line or two
+each. A detected file for which no concrete point can be named is not a Hint at
+all: drop it and ask nothing. "Review this document for drift" is not a point.
+
+**The question.** Ask it at PHASE 3, inside the existing single approval gate,
+never as a second gate. One question per detected file, grouped into a single
+question when several files are involved, across all drafted tasks in one pass.
+Exactly two answers are offered — rendered here for the documentation task, the
+common case:
+
+> Task `<N>` (the documentation task) names
+> `.claude/domain/features/<slug>.md` in its Hints. That document is
+> `/architect`'s, not this command's. It needs these reconciliations with what
+> the tasks above will ship:
+>
+>   1. <point>
+>   2. <point>
+>   3. <point>
+>
+> A. **Grant** — authorise task `<N>`'s implementer to edit that document for
+>    exactly those 3 points and nothing else.
+> B. **Drop** — leave the file out of task `<N>`, and leave the document to
+>    `/architect` on a later run.
+>
+> Which?
+
+**Grant outcome.** Write the grant into the drafted body before PHASE 4. Its
+`## Acceptance criteria` carries the enumerated points:
+
+> - `<path>` is reconciled with what shipped on exactly these `<N>` points —
+>   editing it is authorised for this task, see Decisions:
+>   1. …
+>   2. …
+>   Nothing else in the document changes.
+
+and its `## Decisions` carries:
+
+> - **Editing `<path>` is explicitly authorised for this task (user decision,
+>   `<YYYY-MM-DD>`), for the `<N>` reconciliations listed above and for nothing
+>   else. Do not ask for permission at implementation time — the permission is
+>   already granted.** That document is normally `<owner>`'s, and anything
+>   beyond those points still belongs to `<owner>`. These are factual
+>   reconciliations with shipped behaviour, not redesigns; if one turns out to
+>   need a design decision rather than a wording fix, stop and say so instead of
+>   deciding it here.
+
+`<YYYY-MM-DD>` is the date of this `/task-add` run.
+
+**Decline outcome.** Remove the path from the drafted `## Hints` and from the
+summary block's `Files:` line, and record the decision in `## Decisions`, naming
+the points left unreconciled so a later run of the owner command knows what is
+outstanding:
+
+> - **`<path>` is deliberately left to `<owner>`.** Its drift from what this
+>   task ships — `<point>`, `<point>` — is real but out of scope here; a later
+>   `<owner>` run reconciles it.
+
+**Hard rules.**
+
+- A grant is never written without an explicit user answer. Silence is not a
+  grant, and neither is an approval that did not address the question.
+- PHASE 3's **"Approve and write?"** does not answer this question. If the
+  user approves the plan while the ownership question is still unanswered, the
+  approval is incomplete: re-ask the question and wait, rather than assuming
+  either outcome.
+- PHASE 4 must not write a task in which a detected file is neither granted nor
+  removed. If it would, stop the run and report — write nothing.
+- **A grant does not make this command a writer.** `/task-add` still never
+  edits an owned document itself; the grant authorises the *implementer of the
+  task it drafts*, at implementation time. One writer per artifact holds for
+  the pipeline commands exactly as before.
 
 ---
 
@@ -723,9 +812,10 @@ DO NOT:
 - Change any behavior of the free-form path when `feature=` is absent. The
   feature mode is additive; a plain `/task-add <description>` run must be
   indistinguishable from before.
-- Add an `/architect`-owned or `/product-design`-owned document to the
-  documentation task's Hints without naming it and its owner at the PHASE 3
-  gate (see DOCUMENTATION TASK). Including it is allowed; doing it silently
-  is not.
+- Write any drafted task — documentation task, free-form task, split part, or
+  a body rewritten during reconciliation — that names a document from
+  OWNERSHIP PRE-AUTHORISATION's owner table without a recorded grant or a
+  recorded removal. Including such a document is allowed; leaving it
+  un-adjudicated is not, and silence is not a grant.
 - Draft a documentation task on a reconciliation-only run that creates zero
   new tasks.

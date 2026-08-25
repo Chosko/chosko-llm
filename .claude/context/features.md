@@ -203,10 +203,21 @@ Currently shipped:
   appends one final documentation-update task (`Target: claude`,
   `Preconditions:` listing run's other new task IDs) whose Hints point at
   affected README.md / authoring-guide.md / domain / context-layer docs;
-  skipped on reconciliation-only run. `/architect`-owned and
-  `/product-design`-owned documents MAY appear in that task's Hints, but
-  never silently — file and owner named at PHASE 3 gate, user can strike
-  it. Free-form text alongside slug narrows scope;
+  skipped on reconciliation-only run. Owned documents MAY appear in any
+  drafted task's Hints or `Files:` — doc task, free-form, split part,
+  reconciled body alike — but never silently and never un-adjudicated:
+  detection off command's own four-row owner list
+  (`domain/features/*.md` → `/architect`; `product-design.md` /
+  `technical-direction.md` / `business-model.md` → `/product-design`;
+  `product-roadmap.md` → `/product-roadmap`; `PLAN.md` →
+  `/production-plan`; `FEATURES.md` / `TASKS.md` excluded), specific
+  reconciliations enumerated per file, one question per file inside PHASE
+  3's single gate, answered as grant (dated point-scoped bullet written
+  into body's Decisions, points into Acceptance criteria) or drop (path
+  removed from Hints and `Files:`, remainder noted in Decisions). Silence
+  is not a grant; PHASE 4 refuses a task left un-adjudicated. Grant
+  authorises that task's implementer — `/task-add` still never edits an
+  owned document. Free-form text alongside slug narrows scope;
   feature document read-only to `/task-add` itself. Free-form path unchanged when
   `feature=` absent.
   Documents two product-pipeline additions to backlog schema: optional
