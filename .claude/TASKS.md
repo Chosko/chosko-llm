@@ -481,7 +481,7 @@ Feature: runbook-suite
 
 ## 144. Add the /runbook-suggest skill
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-suggest/SKILL.md, VERSION
 Preconditions: 125, 140, 141

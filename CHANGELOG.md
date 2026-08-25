@@ -2,6 +2,33 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.14.0 — 2026-08-25
+
+- New skill **`runbook-suggest`** (0.1.0) — the last artifact of the runbook
+  suite, and the only one nobody invokes. It addresses the suite's one
+  usability problem: the moment a runbook is worth writing is the moment
+  nobody thinks of it. Declares `requires: command:runbook-create`, so
+  installing it installs the command it proposes.
+- **The description is the trigger.** Claude Code selects a skill from its
+  `description`, so the frontmatter is the entire mechanism — no hook, no
+  `Stop` handler, no event registration — and it carries the trigger
+  conditions and the anti-triggers together, the way `claude-council`'s does.
+- **The threshold**, stated in both the description and the body: suggest only
+  when the follow-ups would be lost with the conversation — three or more
+  actions, or two or more with an ordering constraint, or any action that
+  depends on decisions recorded nowhere on disk. Never for a two-step list of
+  simple prompts. Anti-triggers are named: a single next action, a list of
+  things already done, a checklist this session is about to work through, an
+  enumeration inside an explanation, and a task backlog, which is `/task-add`.
+- **It asks nothing and reads nothing.** One or two lines pointing at
+  `/runbook-create` — new runbook or append — then it stops. It names no
+  runbook, does not open `.claude/RUNBOOKS.md` or any runbook body, writes
+  nothing, and never invokes `/runbook-create` itself; the no-argument form of
+  that command is what asks new-versus-append.
+- Its fire rate is **tuned after observing real sessions** — the accepted
+  method for this artifact rather than an open question. If it proves noisy,
+  the fix is a narrower description, never a suppression flag.
+
 ## 1.13.0 — 2026-08-25
 
 - New command **`runbook-clean`** (0.1.0) — the pruning side of the runbook
