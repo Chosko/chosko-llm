@@ -138,7 +138,7 @@ Context:
 ```
 Done: 2026-08-25 — commit 0c6a5d9 (pushed). .claude/skills/rule-overlap/SKILL.md created (no version:, no VERSION bump, no CHANGELOG entry). Deterministic grep/awk collection of headings + normative lines over commands/*.md, skills/**/*.md, claude-md/*.md; model judges sameness; threshold three or more features (features counted, not occurrences); disagreement ranked first; vendored skills, hooks/, statusline/, docs/, scripts/, bin/, .claude/ excluded; read-only. Verified: surfaces "Never retry, never force-push" at task-add.md:784, task-clean.md:270, task-implement/SKILL.md:532. Premises held.
 
-## [ ] 12. Documentation for repo-local-audits (task 138)
+## [x] 12. Documentation for repo-local-audits (task 138)
 
 Depends on: 11
 
@@ -148,6 +148,7 @@ Context:
 ```prompt
 /task-implement 138
 ```
+Done: 2026-08-25 — commits 7e6ecb7 (task 138) and 4ffab0e (feature repo-local-audits [DONE], pre-approved), both pushed. README (exemption sentence, .claude/skills/ layout row), authoring guide (§ Versioning exemption, new "Repo-local skills are not features" section after § Vendored skills, frontmatter-schema preamble scoped to shipped features; § The changelog rule converse reworded to match CLAUDE.md), .claude/context/features.md overview note, feature document reconciled. VERSION 1.2.2→1.2.3. Premise: Files: omitted CHANGELOG.md (rule postdates the body). Verified cmd-export.sh does carry .claude/skills/.
 
 ## [ ] 13. Turn /task-implement's batch parent into a launcher (task 119)
 
@@ -155,6 +156,7 @@ Depends on: 12
 
 Context:
 - 2026-08-25 (from step 5): skills/task-implement/SKILL.md is at 1.0.0 after task 118 removed the Target: local warning and the dual-LLM lane; skills/task-implement/body-schemas.md carries no frontmatter (the SKILL.md version covers the folder). check-task-parity.sh no longer exists.
+- 2026-08-25 (from steps 6–12): VERSION is now 1.2.3. Every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh (CHANGELOG.md is legitimate collateral even when absent from Files:). Repo-local skills under .claude/skills/ (context-budget, rule-overlap) exist and are exempt from the bump. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 119
