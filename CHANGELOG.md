@@ -2,6 +2,20 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.2.3 — 2026-08-25
+
+- Documentation only. The README and the authoring guide now describe
+  **repo-local skills** — skills under this repo's own `.claude/skills/` that
+  are tooling for building the product rather than part of it: no `version:`,
+  invisible to `ls` / `add` / `update` / `rm`, installed nowhere, and outside
+  the root `VERSION` bump rule.
+- The authoring guide gains a "Repo-local skills are not features" section
+  beside "Vendored skills", including the rule that such a skill's name must
+  never collide with a shipped feature name, and the note that
+  `chosko-llm export` deliberately does carry them along — an export packages a
+  repo's Claude config, and repo-local tooling is part of it.
+- Nothing the CLI installs changed.
+
 ## 1.2.2 — 2026-08-25
 
 - Repo governance only; nothing a user of the CLI receives changes. `CLAUDE.md`

@@ -61,6 +61,13 @@ this repo, and nowhere else. No frontmatter `version:` — the field exists for
 `cmd-add` and `cmd-update`, which will never see these files. `name`, `type`
 and `description` stay, because Claude Code needs them.
 
+**Names are the one thing that can collide.** Both catalogues are visible in a
+session in this repo, so a repo-local skill sharing a name with a shipped
+feature would be ambiguous at invocation. The rule is therefore: a repo-local
+skill name must never collide with a shipped feature name. Both `context-budget`
+and `rule-overlap` were verified free on 2026-08-24. (`/context-budget` is a
+name ECC also uses, which matters only if ECC is ever installed alongside.)
+
 This also establishes the pattern for any future repo-local tooling, which is
 the more durable outcome than either audit.
 
@@ -70,7 +77,11 @@ Adapted from ECC's skill of the same name, cut to this repo's shape.
 
 **Inventory** — walk `commands/*.md`, `skills/*/SKILL.md`, every supporting file
 under `skills/*/`, `claude-md/*.md`, and the `CLAUDE.md` chain. Estimate tokens
-as `words × 1.3` for prose and `chars / 4` for anything code-heavy.
+as `words × 1.3` for prose and `chars / 4` for anything code-heavy. Both stay
+**heuristics**: no tokenizer runs, since adding one means a dependency this repo
+forbids, so the report states in its own words that its figures are estimates
+rather than measurements. An estimate labelled honestly is more useful than a
+precise number this repo cannot produce.
 
 **Thresholds**, taken from ECC and re-anchored to what this repo actually ships:
 
@@ -107,6 +118,27 @@ normative statement (a line containing must, never, always, refuse, or a
 prohibition). This is mechanical: `grep` and `awk`, no model involved, and it
 must be exhaustive because a sampled collection produces confident conclusions
 about material it never saw.
+
+The collection pass is **inline in the skill body**, not a script under
+`.claude/scripts/`: a `find`/`awk` block the skill runs as written. A script
+would be marginally more faithful to "deterministic collection" but adds a file
+kind this repo has no precedent for outside `scripts/`. The script remains the
+escape hatch if the inline block proves unreliable.
+
+**Collection scope excludes three things**, each for a stated reason rather
+than left to inference:
+
+- **The two vendored skills** (`skills/unity-mcp-skill/`,
+  `skills/claude-council/`). They are re-synced from upstream, so a restatement
+  found in one cannot be extracted without breaking the vendoring contract —
+  surfacing it would be noise the reader can never act on.
+- **`hooks/*.sh` and `statusline/*.sh`** — shell scripts, carrying no normative
+  prose to collect.
+- **`.claude/`, `docs/`, `scripts/`, `bin/`** — not shipped feature bodies.
+
+Scope is expressed as a glob over what exists at run time, never a hardcoded
+list of feature names, which would rot the first time a body is added or
+deleted.
 
 **Judge** — the model reads the full collected set and reports statements that
 appear in three or more features with materially the same meaning. Three,
@@ -152,6 +184,14 @@ That last point is a genuine exception to the repo's "bump on every shipped
 change" rule and should be recorded in `CLAUDE.md` when this lands, or the next
 session will bump `VERSION` for a file no user receives.
 
+One softer interaction, recorded so a later reader does not file it as a bug:
+`chosko-llm export` **does** carry both skills. `select_export_files` in
+`scripts/cmd-export.sh` selects `.claude/**/*.md`, and they were deliberately
+not excluded — an export packages a repository's Claude config, and repo-local
+tooling is part of that config. This does not weaken the hard contract above:
+neither appears in `chosko-llm ls --available`, and an exported bundle is not an
+install.
+
 ## Dependencies
 
 None on other features. `/rule-overlap` becomes materially more useful after
@@ -160,16 +200,8 @@ before it — running it first is how the extraction list gets built.
 
 ## Open questions
 
-- **Does `.claude/skills/` collide with the installed global skills?** Both are
-  visible in a session in this repo, so a repo-local skill sharing a name with
-  a shipped one would be ambiguous. Neither name is taken; keeping it that way
-  is a cheap rule, and `/context-budget` is a name ECC also uses, which matters
-  only if ECC is ever installed alongside.
-- **Should the collection step be a script or inline instructions?** A
-  `.claude/scripts/` shell script is more faithful to "deterministic
-  collection", but adds a file kind this repo has no precedent for outside
-  `scripts/`. Inline `grep`/`awk` in the skill body is weaker but simpler.
-  Leaning inline until it proves unreliable.
-- **Is `words × 1.3` accurate enough** for markdown that is mostly prose with
-  embedded code fences? It is a heuristic, and the report should say so rather
-  than presenting estimates as measurements.
+None outstanding. The three this document opened — the name-collision risk of
+`.claude/skills/`, script versus inline collection, and the accuracy of
+`words × 1.3` — were all settled during implementation and are recorded above as
+decisions, under "Where unshipped skills live", `/rule-overlap` and
+`/context-budget` respectively.

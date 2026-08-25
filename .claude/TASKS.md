@@ -422,7 +422,7 @@ Feature: repo-local-audits
 
 ## 138. Update documentation for feature repo-local-audits
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/authoring-guide.md, .claude/context/features.md, .claude/domain/features/repo-local-audits.md, VERSION
 Preconditions: 135, 136, 137

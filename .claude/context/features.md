@@ -33,6 +33,17 @@ Feature kinds, keyed by feature name (kebab-case):
   be committed, and Claude Code snapshots hook config at session start, so
   new wiring needs fresh session.
 
+**Not a kind — `.claude/skills/`.** `skills/<name>/` is shipped: versioned,
+walked by `cmd-ls --available`, installed by `cmd-add`. This repo's OWN
+`.claude/skills/<name>/SKILL.md` is repo-local development tooling — no
+`version:` frontmatter, invisible to every CLI verb (`ls`, `show`, `add`,
+`update`, `rm`), installed nowhere, invocable only while working in this repo.
+Two exist (`context-budget`, `rule-overlap`). Deliberately absent from
+"Currently shipped" below, which lists artifacts the CLI installs; the whole
+point of the location is that these are not. See
+`../domain/features/repo-local-audits.md` and
+`../../docs/authoring-guide.md` § "Repo-local skills are not features".
+
 Currently shipped:
 - `commands/project-setup.md` — interactive first-time project init
   wizard. Two phases: GATHER phase collects every choice upfront (VCS

@@ -32,6 +32,11 @@ are required on every kind; hooks add `event:` (see the `replaces:` section for
 that table). For the two `.sh` kinds the block lives in a bash no-op heredoc
 rather than at the top of the file — see the statusline and hook sections.
 
+This rule governs **shipped features** — the artifacts under `commands/`,
+`skills/`, `claude-md/`, `statusline/` and `hooks/` that the CLI installs. A
+repo-local skill under this repo's own `.claude/skills/` is not a feature and
+carries no `version:` at all; see "Repo-local skills are not features" below.
+
 ```markdown
 ---
 name: refactor-reviewer
@@ -336,6 +341,42 @@ claude-council needs `jq`; the repo's "no new dependencies" rule governs this
 repo's own `scripts/`, so the requirement is stated in the skill's text and in
 the README instead of being rewritten in awk.
 
+## Repo-local skills are not features
+
+A vendored skill is foreign code that ships. A **repo-local** skill is the
+opposite: repo-authored code that does not ship. It lives under this repo's own
+`.claude/skills/<name>/SKILL.md` — the directory Claude Code reads project-level
+skills from — and it is tooling for building the product, not part of it.
+`.claude/skills/context-budget/` and `.claude/skills/rule-overlap/` are the two
+that exist; see
+[`.claude/domain/features/repo-local-audits.md`](../.claude/domain/features/repo-local-audits.md)
+for why.
+
+What that means concretely:
+
+- **No `version:`.** The field exists for `cmd-add` and `cmd-update`, which will
+  never see these files. `name`, `type` and `description` stay, because Claude
+  Code needs them. The frontmatter-schema rule above does not apply here.
+- **Invisible to every CLI verb.** `cmd-ls --available` walks
+  `$CHOSKO_LLM_HOME/skills/`, not a project's `.claude/`, so `ls`, `add`,
+  `update` and `rm` cannot see, install or remove one. There is nothing to
+  exclude and no CLI change was needed to keep them apart.
+- **Never installed.** They are invocable as `/<name>` while working in this
+  repo, and nowhere else.
+- **Root `VERSION` is not bumped** for a change confined to them — see
+  § Versioning below.
+- **Names must not collide with any shipped feature name.** Both are visible in
+  a session in this repo, so a repo-local skill sharing a name with a shipped
+  one would be ambiguous. Check the shipped catalogue before naming a new one.
+
+One interaction is worth recording so a later reader does not file it as a bug:
+`select_export_files` in `scripts/cmd-export.sh` selects `.claude/**/*.md`
+(pruning only `projects/`, `history/`, `todos/`, `tasks/` and `TASKS.md`), so
+`chosko-llm export` **does** carry these skills along. That is deliberate and
+not a gap in the exclusion above: an export packages a repo's Claude config, and
+repo-local tooling is part of that config. `ls --available` is the contract that
+matters — an exported bundle is not an install.
+
 ## State that outlives a session belongs in a project document
 
 A skill whose phases span multiple sessions must keep its state in a
@@ -441,6 +482,14 @@ Always bump after a meaningful edit. `ls` displays the installed and latest
 versions side by side, so a forgotten bump leaves both columns showing the
 same value and users have no signal that there is anything to refresh.
 
+**One exception, narrow: skills under this repo's own `.claude/skills/`.** They
+are repo-local development tooling — no `version:` frontmatter, invisible to
+every CLI verb, installed nowhere — so a change confined to them does not bump
+root `VERSION`, for the same reason CLAUDE.md § Versioning gives: bumping for a
+file no user receives corrupts the meaning of the version `install.sh` reports.
+The rest of `.claude/` — context layer, domain layer, backlog — is unaffected
+and bumps as usual. See "Repo-local skills are not features" above.
+
 ### The changelog rule
 
 **A root `VERSION` bump without a matching `CHANGELOG.md` section is an
@@ -448,11 +497,12 @@ incomplete change.** Writing the entry is part of what the bump *is*, not a
 courtesy someone remembers afterwards.
 
 The rule's converse holds too, and is stated generically: **a change that does
-not bump `VERSION` gets no `CHANGELOG` entry.** Repo-local artifacts that no
-user ever receives — anything under `.claude/` that is not shipped — never
-bump `VERSION` by their own contract, so they never appear in the changelog
-either. This follows from the general rule rather than being a named
-exception, so it covers any future repo-local artifact on the same footing.
+not bump `VERSION` gets no `CHANGELOG` entry.** An artifact exempt from the bump
+by its own contract — today, only the repo-local skills under `.claude/skills/`
+described above — therefore never appears in the changelog either. This follows
+from the general rule rather than being a named exception, so it covers any
+future exempt artifact on the same footing. Everything else under `.claude/`
+bumps as usual and is entered as usual.
 
 The per-feature `version:` field in a command's or skill's frontmatter is not
 covered by any of this. `CHANGELOG.md` records root `VERSION` only; a feature

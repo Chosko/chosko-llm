@@ -764,7 +764,7 @@ cd chosko-llm
 
 Every feature requires YAML frontmatter (`name`, `version`, `type`, `description`). `add` and `update` refuse to install a file missing a `version` field.
 
-**Versioning.** There are two version axes. The per-feature `version:` frontmatter versions a single command or skill (and gates `add` / `update`). The root `VERSION` file is the repo-level stamp that `install.sh` reports — bump it on every shipped change: patch for fixes and docs, minor for a new feature, major for a breaking CLI change. A feature change bumps both.
+**Versioning.** There are two version axes. The per-feature `version:` frontmatter versions a single command or skill (and gates `add` / `update`). The root `VERSION` file is the repo-level stamp that `install.sh` reports — bump it on every shipped change: patch for fixes and docs, minor for a new feature, major for a breaking CLI change. A feature change bumps both. One narrow exception: the repo-local skills under this repo's own `.claude/skills/` are unversioned development tooling installed nowhere, so a change confined to them bumps neither axis — bumping for a file no user receives would corrupt the meaning of the version `install.sh` reports.
 
 A `VERSION` bump without a matching `CHANGELOG.md` section is an incomplete change; conversely, a change that does not bump `VERSION` gets no changelog entry. Run [`./scripts/check-changelog.sh`](scripts/check-changelog.sh) after bumping — it is silent when the top section matches `VERSION`, has at least one bullet, and the version headers are strictly descending semver, and fails naming the first violation otherwise.
 
@@ -787,6 +787,7 @@ A `VERSION` bump without a matching `CHANGELOG.md` section is an incomplete chan
 | `hooks/<name>.sh`            | A hook-event script feature, installed to a project's `.claude/hooks/` (local-only). |
 | `.claude/context/`           | Navigation context layer (`INDEX.md` + per-source files) for this repo.  |
 | `.claude/domain/`            | Domain workflow docs (task, context, refactor) referenced by `CLAUDE.md`. |
+| `.claude/skills/`            | Repo-local audit skills used to develop this repo (`/context-budget`, `/rule-overlap`). Unversioned, never installed — not features. |
 | `.claude/TASKS.md` / `.claude/tasks/` | This repo's own task backlog and per-task body files.           |
 | `docs/authoring-guide.md`    | How to write a new feature of any kind.                                  |
 | `docs/cli-help.txt`          | Help text rendered by `chosko-llm help`.                                 |
