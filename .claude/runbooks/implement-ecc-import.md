@@ -271,7 +271,7 @@ Context:
 ```
 Done: 2026-08-25 — commit a33470b (pushed). commands/task-clean.md 0.7.0→0.8.0 with requires: skill:task-engine, 296→228 lines; cites resolution.md, status.md, stale.md, commit.md (not tree.md/targets.md — no dirty-tree protocol, no delegation). commit.md's /task-clean per-consumer note proved complete — task 126's extraction needed no fix. Dry-run plan identical before/after (44 removals, 10 Preconditions rewrites, 10 Tasks: rewrites). VERSION 1.8.1→1.8.2. Premises: 228 lines not <150 (plan template + PHASE 2 protected verbatim); Files: omitted CHANGELOG.md.
 
-## [ ] 23. Migrate /task-add onto the task-engine (task 129)
+## [x] 23. Migrate /task-add onto the task-engine (task 129)
 
 Depends on: 22
 
@@ -281,12 +281,14 @@ Context:
 ```prompt
 /task-implement 129
 ```
+Done: 2026-08-25 — commit d123a45 (pushed). commands/task-add.md 2.0.0→2.1.0 with requires: skill:task-engine; cites resolution.md, status.md, targets.md, stale.md, commit.md (not tree.md). INDEX FILE FORMAT, manual-interventions authoring rules + Unity example, and RECONCILIATION's four-way table are cited not copied (they live verbatim in the engine, whose headers name /task-add as source). commit.md's /task-add note was complete. Every DO NOT bullet kept. VERSION 1.8.2→1.8.3. Premises: body is 731 lines not <400 (remaining content is /task-add-unique); the prescribed before/after throwaway /task-add run cannot execute unattended (Approve-and-write gate), replaced by phase-by-phase textual walk plus scratch-CLAUDE_HOME install check.
 
 ## [ ] 24. Migrate /task-implement onto the task-engine (task 130)
 
 Depends on: 23
 
-Context: none
+Context:
+- 2026-08-25 (from steps 13–23): VERSION is now 1.8.3. skills/task-implement/SKILL.md is 1.2.0 with eight supporting files (delegated-runs.md = launcher, review-rounds.md = --review loop, body-schemas.md has no frontmatter). /task-list 0.6.0, /task-clean 0.8.0, /task-add 2.1.0 are migrated: each declares requires: skill:task-engine and cites ${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/<file>.md; consumer-unique content stays verbatim, engine-owned rules appear zero times; line-count targets were missed on every migration and treated as targets, not criteria. commit.md's per-consumer notes have been complete for every consumer so far and already carry the --review clause for /task-implement; tree.md exists for the dirty-tree protocol. Known stale text in references/targets.md (/task-list note saying `local` is "awaiting its migration") — task 127 removed it; correct that note if you edit the engine (bump task-engine's version: accordingly), otherwise flag it for task 131. Real before/after runs that hit approval gates cannot execute unattended — use a textual walk plus a scratch-CLAUDE_HOME install check. Every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 130
