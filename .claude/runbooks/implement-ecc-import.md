@@ -53,7 +53,7 @@ Context:
 ```
 Done: 2026-08-25 — commits 58192e4 (task 149) and e79f583 (feature version-changelog marked [DONE] in FEATURES.md, user-approved), both pushed. README (upgrade readout, versioning rule + guard pointer, repo-layout rows), docs/cli-help.txt, .claude/context/shared-lib.md (new Version and Changelog readout sections), .claude/context/cmd-upgrade.md, .claude/context/INDEX.md (CHANGELOG.md canonical doc, Last updated 2026-08-25). VERSION 0.63.0→0.63.1. Premises: README line hints off by a few lines; shared-lib.md had no existing version section (created one). Feature version-changelog fully shipped.
 
-## [ ] 5. Delete the dead dual-LLM lane (task 118)
+## [x] 5. Delete the dead dual-LLM lane (task 118)
 
 Depends on: 4
 
@@ -64,12 +64,14 @@ Context:
 ```prompt
 /task-implement 118
 ```
+Done: 2026-08-25 — commit dc4f951 (pushed). 36 files, +156/−1681. Deleted scripts/cmd-task-impl.sh, scripts/lib-task-external.sh, scripts/check-task-parity.sh, commands/task-enrich.md, .claude/context/cmd-task-impl.md, .claude/context/lib-task-external.md, .claude/external/{implement,tests}-prompt.md; task-impl subcommand removed from bin/chosko-llm, help, cli-help.txt; /task-add --enrich and enriched-body schema gone; Target: keeps exactly claude / claude+human / human; /task-setup reduced to TASKS.md + tasks/ + two wrappers (# CHOSKO_TASK_IMPL_STUB kept). VERSION 0.63.1→1.0.0; frontmatter: task-add 2.0.0, task-setup 2.0.0, task-implement 1.0.0 (skills/task-implement/SKILL.md), patch bumps on domain-setup, project-setup, unity-mcp-setup, architect. Extra decisions: design-process.md and technical-direction.md CI-guard examples repointed at check-changelog.sh; context INDEX Conventions marker now says eleven files. Premises: body said VERSION 0.62.0→1.0.0, actual start 0.63.1; skills/task-implement/body-schemas.md has no frontmatter (bump went on SKILL.md).
 
 ## [ ] 6. Add the /session-save command (task 132)
 
 Depends on: 5
 
-Context: none
+Context:
+- 2026-08-25 (from step 5): VERSION is now 1.0.0; skills/task-implement/SKILL.md is at 1.0.0, commands/task-add.md and task-setup at 2.0.0. The dual-LLM lane is gone (no cmd-task-impl.sh, lib-task-external.sh, check-task-parity.sh, task-enrich, --enrich, Target: local). Every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 132
@@ -139,7 +141,8 @@ Context: none
 
 Depends on: 12
 
-Context: none
+Context:
+- 2026-08-25 (from step 5): skills/task-implement/SKILL.md is at 1.0.0 after task 118 removed the Target: local warning and the dual-LLM lane; skills/task-implement/body-schemas.md carries no frontmatter (the SKILL.md version covers the folder). check-task-parity.sh no longer exists.
 
 ```prompt
 /task-implement 119
