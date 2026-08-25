@@ -94,7 +94,7 @@ Tasks: none
 
 ## version-changelog — A curated CHANGELOG, enforced at every VERSION bump and replayed on upgrade
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/version-changelog.md
 Source: prompt
 Tasks: 150
