@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 154
+Last task number: 156
 
 ---
 
@@ -46,4 +46,22 @@ Preconditions: none
 Status: [DONE]
 Target: claude
 Files: commands/production-status.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 155. Parse each feature's frontmatter once per `ls` row
+
+Status: [MISSING]
+Target: claude
+Files: scripts/cmd-ls.sh, scripts/lib.sh, VERSION, CHANGELOG.md, .claude/context/cmd-ls.md, .claude/context/shared-lib.md, .claude/context/INDEX.md
+Preconditions: none
+
+---
+
+## 156. Re-sync the domain layer's `/production-status` description with the Next field
+
+Status: [MISSING]
+Target: claude
+Files: .claude/domain/product-workflow.md, .claude/domain/features/plan-readout.md, VERSION, CHANGELOG.md
 Preconditions: none
