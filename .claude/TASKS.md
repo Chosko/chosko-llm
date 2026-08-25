@@ -362,7 +362,7 @@ Feature: shared-phase-engine
 
 ## 132. Add the /session-save command
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/session-save.md, VERSION
 Preconditions: none

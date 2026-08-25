@@ -2,6 +2,25 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.1.0 — 2026-08-25
+
+- New `/session-save` command: writes a per-project handoff file to
+  `.claude/sessions/YYYY-MM-DD-HHMM-<slug>.md` capturing what a conversation
+  knows and nothing else does — what was tried, what failed and why, what was
+  deliberately not tried, which files are half-finished, and the exact next
+  step. Nine sections, every one written (`N/A` where empty), each "what
+  worked" claim carrying its evidence.
+- It shrinks to a one-line pointer when the work already has its own resume
+  artifact — a project-scoped state document carrying a resume marker, such as
+  `/product-design`'s `.claude/domain/design-process.md`. The command detects;
+  skills declare nothing.
+- Every save writes a new file, never updates one in place. When the
+  conversation itself resumed from a session file, that file is deleted once
+  the new snapshot is written, so two snapshots of the same work never coexist.
+- It does not commit, does not push, offers no `--commit`, and does not touch
+  `.gitignore`; it prints the path it wrote and a one-line note that the file
+  is untracked. No `chosko-llm` subcommand reads what it writes.
+
 ## 1.0.0 — 2026-08-25
 
 **Breaking.** The local-model implementation lane is removed. It drove a local
