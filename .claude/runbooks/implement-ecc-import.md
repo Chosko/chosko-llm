@@ -343,7 +343,7 @@ Context:
 ```
 Done: 2026-08-25 — commit d8b8a4a (pushed). commands/runbook-create.md (0.1.0, requires: skill:runbook-run) cites runbook-schema.md and restates none of it; flags --commit / --no-push only (--no-commit accepted as a no-op note); commit-and-push protocol inline as four steps, no docs/ path except inside prompt-quality rule 7's own prohibition; "WHAT THIS COMMAND WRITES" ownership table (never a Done: line, never a non-[ ] marker, [PENDING] only, append's [DONE]→[PENDING] flip as sole exception). VERSION 1.10.0→1.11.0. Premises held.
 
-## [ ] 29. Add the /runbook-list command (task 142)
+## [x] 29. Add the /runbook-list command (task 142)
 
 Depends on: 28
 
@@ -353,12 +353,14 @@ Context:
 ```prompt
 /task-implement 142
 ```
+Done: 2026-08-25 — commit 68a56e3 (pushed). commands/runbook-list.md (0.1.0, requires: skill:runbook-run) cites runbook-schema.md and restates nothing; never opens a body; listing in index order (do not reorder); column padding from widest value; unknown-status error names valid statuses from the schema file; filtered summary `1 runbook shown (filter: FAILED).`; File: parsed not printed; output in one fenced block. VERSION 1.11.0→1.12.0. Premises held.
 
 ## [ ] 30. Add the /runbook-clean command (task 143)
 
 Depends on: 29
 
-Context: none
+Context:
+- 2026-08-25 (from steps 27–29): VERSION is now 1.12.0. skills/runbook-run (0.1.0), commands/runbook-create.md (0.1.0), commands/runbook-list.md (0.1.0) exist; the two commands declare `requires: skill:runbook-run` and cite ${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md, restating nothing. runbook-create takes --commit / --no-push (authoring register, default commits nothing); runbook-list is read-only. No docs/ path in shipped bodies; commit-and-push protocol stated inline as four steps when needed. .claude/RUNBOOKS.md and .claude/runbooks/implement-ecc-import.md are the live runbook being executed — read only, and never a pruning candidate while [RUNNING]. Every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh. Verify with CHOSKO_LLM_HOME=E:/projects/chosko-llm ./bin/chosko-llm ls --available. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 143
