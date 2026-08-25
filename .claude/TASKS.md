@@ -402,7 +402,7 @@ Feature: repo-local-audits
 
 ## 136. Add the repo-local /context-budget audit skill
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: .claude/skills/context-budget/SKILL.md
 Preconditions: 135
