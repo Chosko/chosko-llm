@@ -199,7 +199,7 @@ Context:
 ```
 Done: 2026-08-25 — commit b48056a (pushed). skills/task-iterate/SKILL.md (0.1.0, no supporting file): mandatory fix/defer/reject triage table before the first edit, three input forms, three finding sources (caller output / .claude/reviews/<task>-R<n>.md highest round / PR threads), PR-mode replies, caller-dependent commit asymmetry, three-part return (triage summary, sticky rejection ledger, unresolved-BLOCKING yes/no). Flags: task=, base=, --no-commit, --no-push only. VERSION 1.4.0→1.5.0 (body predicted 1.2.0→1.3.0).
 
-## [ ] 17. Add the --review / --rounds loop to /task-implement (task 123)
+## [x] 17. Add the --review / --rounds loop to /task-implement (task 123)
 
 Depends on: 16
 
@@ -209,12 +209,14 @@ Context:
 ```prompt
 /task-implement 123
 ```
+Done: 2026-08-25 — commit a4cb5d8 (pushed). New skills/task-implement/review-rounds.md (read only with --review: availability gate for task-review + task-iterate, placement after Step 5 / before Step 6 on the uncommitted tree, six-part reviewer spawn prompt, async-return rule, iterate in-session with mandatory do-not-commit assertion, N=1 vs N≥2 loop control, BLOCKING-only continuation, sticky rejections, cap-hit handling). SKILL.md 1.1.0→1.2.0 (--review / --rounds N parsing with two error messages, new section between Steps 5 and 6, Step 7 one-commit clause, five DO NOT bullets). delegated-runs.md: REVIEW/ROUNDS in the resolved-flag list + "Review rounds inside a delegated task" section (parent's four-field return unchanged). VERSION 1.5.0→1.6.0 (body predicted 1.3.0→1.4.0). Depth: launcher→implementor→reviewer verified; under an orchestrator it is one deeper, unprobed, no fallback added.
 
 ## [ ] 18. Documentation for task-peer-review (task 124)
 
 Depends on: 17
 
-Context: none
+Context:
+- 2026-08-25 (from steps 15–17): VERSION is now 1.6.0. Shipped: skills/task-review (0.1.0, SKILL.md + remote-diffs.md), skills/task-iterate (0.1.0, no supporting file), skills/task-implement 1.2.0 with EIGHT supporting files now (review-rounds.md added). --rounds requires --review; error strings are `--rounds requires --review.` and `--rounds needs a positive integer.`. Review file is opt-in at .claude/reviews/<task>-R<round>.md. Verify listings with CHOSKO_LLM_HOME=E:/projects/chosko-llm ./bin/chosko-llm ls --available. Every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh; the body's predicted VERSION numbers are stale. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 124
