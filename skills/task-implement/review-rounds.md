@@ -29,6 +29,15 @@ review and run as if `--review` had not been passed: a run that reports it
 implemented a task is a different claim from a run that reports it
 implemented and reviewed one.
 
+**This gate is deliberately a runtime check, not a `requires:` declaration.**
+`requires:` is unconditional and resolved at install time; `--review` is
+opt-in and off by default. Declaring `requires: skill:task-review,
+skill:task-iterate` in SKILL.md's frontmatter would force every
+`/task-implement` user to install two skills most of them never invoke, and
+would change install behaviour. A gate is the right mechanism for an optional
+dependency — do not "finish the job" by moving it to the frontmatter, which
+carries only the unconditional `requires: skill:task-engine`.
+
 ## Where the loop sits
 
 After Step 5 (the full test suite) and **before** Step 6 (the terminal
@@ -176,9 +185,10 @@ later round's spawn prompt, whole.
   corrected tree is left uncommitted along with the rest of the run's work.
 - **`--no-push`.** No interaction — the task commits as usual, including the
   fixes, and is not pushed.
-- **Exactly one commit per task, always.** The review's fixes are part of the
-  task's own commit. Never make a second commit for them, and never let
-  `/task-iterate` commit inside a round.
+- **Commit count.** Unchanged by this loop. How many commits a reviewed task
+  produces, and why `/task-iterate` commits nothing inside a round, are
+  `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`'s
+  `/task-implement` note.
 - **Batch runs.** `--review` and `--rounds N` ride through to each
   implementor agent as part of the run's resolved flags; the implementor
   spawns its own reviewer. See `./delegated-runs.md`.

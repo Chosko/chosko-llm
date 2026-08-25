@@ -2,6 +2,26 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.8.4 — 2026-08-25
+
+- `/task-implement` (1.3.0) is the last of the four consumers to move onto
+  `task-engine`, and the suite's duplication is now gone: its backlog
+  resolution and selectors are a reference to
+  `skills/task-engine/references/resolution.md`, its implementable- and
+  terminal-status rules to `status.md`, its `Target:` handling and delegation
+  guard to `targets.md`, its `STALE TASKS` protocol to `stale.md`, its
+  dirty-tree check to `tree.md`, and `PRE-FLIGHT` step 5 plus `Step 7` to
+  `commit.md`. It declares `requires: skill:task-engine`, so
+  `chosko-llm add skill:task-implement` installs the engine first.
+- The skill's own `dirty-tree.md` supporting file is deleted — `tree.md` was
+  extracted from it and now holds the protocol once. `chosko-llm update`
+  removes the stale copy from an existing install.
+- Behaviour is unchanged — same usage header and examples, same flags
+  (`--no-commit`, `--no-push`, `-y`, `--agents` / `--no-agents`, `--review`,
+  `--rounds N`), same pre-flight order, same seven-step per-task workflow and
+  review loop, same one commit and one push per task, same delegation
+  contract, and the same end-of-run feature-completion proposal.
+
 ## 1.8.3 — 2026-08-25
 
 - `/task-add` (2.1.0) now consumes `task-engine`, the largest migration in the

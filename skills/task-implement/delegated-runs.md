@@ -33,27 +33,16 @@ spawn the next agent until the previous one's result is in hand.
 
 ## What stays in the parent
 
-Not every task can be delegated. The parent implements these itself, in
-the list's original order, exactly as an ordinary in-context run would:
+Not every task can be delegated. Which ones may never be, why, and the
+announcement that names the split before the first task starts are the
+delegation guard in
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/targets.md`
+§ *The delegation guard*.
 
-- **`claude+human` and `human` tasks.** `./human-in-loop.md` requires the
-  implementer to pause at each checkpoint, explain the manual step in a
-  turn that ends with no tool call, and wait for the user's free-text
-  confirmation. A subagent cannot hold that conversation with the user.
-- **`[STALE]` tasks requested explicitly by number.** SKILL.md's STALE
-  TASKS protocol asks the user to choose implement-anyway or stop; that
-  question is the parent's, and a task the user chooses to implement then
-  runs in-context.
-
-So a delegated run is usually mixed. Before the first task starts, say so
-plainly — name the IDs and why:
-
-> Delegating tasks 20, 22 to fresh agents (one at a time). Tasks 21, 23
-> run here in this conversation: 21 is `claude+human` and 23 is `[STALE]`,
-> and both need you present.
-
-Never delegate silently and never let the user discover the split from the
-output.
+The parent implements those tasks itself, in the list's original order,
+exactly as an ordinary in-context run would — `./human-in-loop.md` for a
+`claude+human` / `human` one, SKILL.md's STALE TASKS protocol for an
+explicitly requested `[STALE]` one.
 
 ## What the parent never reads
 
@@ -100,8 +89,9 @@ It carries four things:
      TEST RUNNER and does not re-ask the no-test-suite A/B question;
    - the dirty-tree decision (DIRTY_FOLD / DIRTY_FOLD_UNTRACKED) already
      made in PRE-FLIGHT, plus the note that a tree dirtied by this run's own
-     earlier tasks is expected, so the agent must not re-run
-     `./dirty-tree.md`'s prompt protocol;
+     earlier tasks is expected, so the agent must not re-run the prompt
+     protocol in
+     `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/tree.md`;
    - the notice that it runs non-interactively: it cannot ask the user
      anything, and if it hits something that genuinely needs a human
      decision it must stop and report that rather than guess or wait.

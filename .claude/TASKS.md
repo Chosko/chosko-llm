@@ -342,7 +342,7 @@ Feature: shared-phase-engine
 
 ## 130. Migrate /task-implement onto the task-engine
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-implement/SKILL.md, skills/task-implement/dirty-tree.md, skills/task-implement/body-schemas.md, skills/task-implement/delegated-runs.md, skills/task-implement/review-rounds.md, VERSION
 Preconditions: 118, 119, 123, 125, 126, 129
