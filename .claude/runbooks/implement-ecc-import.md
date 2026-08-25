@@ -175,7 +175,7 @@ Context:
 ```
 Done: 2026-08-25 — commits 4d2c8e5 (task 120) and db2e456 (feature task-implement-launcher [DONE], pre-approved), both pushed. .claude/context/features.md task-implement entry carries the launcher contract ("seven supporting files" corrected); .claude/domain/task-workflow.md "Delegated runs" updated; feature document's two authorised reconciliations applied, two open-question bullets resolved (grep reliability, next resolution path); the dirty-tree open question was left as-is though shipped behaviour settles it. .claude/context/INDEX.md not edited (Last updated already 2026-08-25). VERSION 1.3.0→1.3.1. Premises held.
 
-## [ ] 15. Add the /task-review skill (task 121)
+## [x] 15. Add the /task-review skill (task 121)
 
 Depends on: 14
 
@@ -185,12 +185,14 @@ Context:
 ```prompt
 /task-implement 121
 ```
+Done: 2026-08-25 — commit c75baa4 (pushed). skills/task-review/SKILL.md (0.1.0) + remote-diffs.md: task=/base= args, local mode inline, four-signal task resolution, four review gates (80% confidence floor, Pre-Report Gate, BLOCKING-requires-proof, zero-findings valid), three severity tiers, R<round>-<n> finding schema, per-criterion + overall verdicts, spawned-vs-manual output (opt-in .claude/reviews/<task>-R<round>.md), sticky rejections, read-only, no fan-out, no PR creation; SHELLING OUT constraint (read-only git/gh only). VERSION 1.3.1→1.4.0. Premise: body predicted 1.1.0→1.2.0.
 
 ## [ ] 16. Add the /task-iterate skill (task 122)
 
 Depends on: 15
 
-Context: none
+Context:
+- 2026-08-25 (from step 15): VERSION is now 1.4.0. skills/task-review/SKILL.md (0.1.0) landed with the R<round>-<n> finding schema, three severity tiers (unmet criterion always BLOCKING), per-criterion and overall verdicts, and the opt-in review file at .claude/reviews/<task>-R<round>.md — read it for the exact shapes /task-iterate must consume. Every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh (CHANGELOG.md is legitimate collateral even when absent from Files:); the body's predicted VERSION numbers are stale, follow the rule not the numbers. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 122
