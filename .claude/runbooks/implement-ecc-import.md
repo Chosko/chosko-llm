@@ -235,7 +235,7 @@ Context:
 ```
 Done: 2026-08-25 — commit 7a74267 (pushed). lib.sh: `requires` added to parse_frontmatter's allowlist; new requires_specs <file> (comma-split, validated via parse_replaces_spec, dies on malformed — call via command substitution, not process substitution; whitespace around commas AND around the kind colon squeezed). cmd-add.sh: install_requires resolves one level deep via add_one recursion, pre-copy validations hoisted ahead of the per-kind case; --all untouched. cmd-rm.sh: --force plus dependents scan that refuses removal naming every dependent (self-reference excluded). Authoring guide requires: section, cli-help.txt. VERSION 1.6.1→1.7.0. No shipped feature declares requires: yet. Confirmed: feature document's "parse_frontmatter needs no change" claim is wrong (allowlist at lib.sh:191) — task 131 reconciles it.
 
-## [ ] 20. Create the task-engine skill by verbatim extraction (task 126)
+## [x] 20. Create the task-engine skill by verbatim extraction (task 126)
 
 Depends on: 19
 
@@ -245,12 +245,14 @@ Context:
 ```prompt
 /task-implement 126
 ```
+Done: 2026-08-25 — commit b15c297 (pushed). skills/task-engine/SKILL.md (0.1.0, no requires:, not user-invocable) + references/{resolution,status,targets,stale,tree,commit}.md, each opening with its extraction sources and closing with Per-consumer notes. VERSION 1.7.0→1.8.0. Decisions: commit.md keeps the literal citation "docs/authoring-guide.md's commit-and-push protocol" (verbatim from current bodies, with a note it is a citation not a runtime read; four push steps inline); commit.md already carries task 123's --review clause as a /task-implement-only note; targets.md lists three values and records commands/task-list.md:170's dead `local` residue for task 127 to fix. Environment: the INSTALLED ~/.claude copy of /task-implement is 0.18.0 (pre-118, still mentions Target: local) — subagents execute that stale copy; all extraction was done from repo sources.
 
 ## [ ] 21. Migrate /task-list onto the task-engine (task 127)
 
 Depends on: 20
 
-Context: none
+Context:
+- 2026-08-25 (from step 20): VERSION is now 1.8.0. skills/task-engine/ exists (0.1.0): SKILL.md is a reference-file map only; rules live in references/resolution.md, status.md, targets.md, stale.md, tree.md, commit.md, each with a Per-consumer notes section. targets.md records that commands/task-list.md:170 still says "Targets `claude` and `local` get no marker" — dead post-118 residue to remove during this migration. `requires: skill:task-engine` is the field to declare (task 125 made it live). Every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh; the body's predicted VERSION numbers are stale. Verify listings with CHOSKO_LLM_HOME=E:/projects/chosko-llm ./bin/chosko-llm ls --available. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 127
