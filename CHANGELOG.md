@@ -2,6 +2,13 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.19.2 — 2026-08-25
+
+- Documentation only: the domain layer described `/production-status` as it
+  stood before 1.19.0. It now records the Next field as section 2's last
+  field, section 4 echoing that value rather than deriving its own, and the
+  zero-task rollup splitting on the feature's status. No behaviour change.
+
 ## 1.19.1 — 2026-08-25
 
 - `chosko-llm ls` is fast again. Adding the REQUIRES column had left it about

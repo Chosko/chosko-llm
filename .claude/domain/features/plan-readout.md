@@ -51,11 +51,13 @@ reporter with no conversation and no supporting files, exactly the register
 1. The active milestone: slug, title, `Goal:` and `Exit criteria:` echoed
    from the roadmap.
 2. Its features in plan order, each with its `FEATURES.md` status, its task
-   rollup from `TASKS.md`, and its readiness.
+   rollup from `TASKS.md`, and a **Next** field — the one concrete action the
+   feature needs, rather than a restatement of its readiness.
 3. The **ready set** — features whose dependencies are all finished, never
    one that's itself `[DONE]` already.
 4. The single recommended next feature: the first ready feature in plan
-   order (so, from the same set — never `[DONE]`).
+   order (so, from the same set — never `[DONE]`), carrying the same **Next**
+   value section 2 gave it — echoed, never derived a second time here.
 5. **Blocked** features, each named with what blocks it, so a blocked list is
    actionable rather than a dead end.
 6. **Coverage gaps** — roadmap slices with no architected features, which is
@@ -64,10 +66,19 @@ reporter with no conversation and no supporting files, exactly the register
 7. **Unplanned features** — `FEATURES.md` slugs absent from `PLAN.md`.
 8. Remaining milestones, one line each.
 
+**The zero-task rollup splits on the feature's status.** A feature with no
+tasks renders `-` when it is `[DONE]` or `[PLANNED]` — a feature only reaches
+either state after `/task-add feature=<slug>` has run, so zero tasks there
+means the completed ones were pruned, not that planning never happened.
+`no tasks yet`, with its `/task-add feature=<slug>` gloss, is kept for `[NEW]`
+and `[ITERATED]`, where it is the true signal that planning has not run.
+
 **Two arguments**, settled at implementation. `--task-ids` switches the task
 rollup from counts per status to naming each task ID — counts keep a
 milestone's feature list scannable, which is the command's whole register, and
-the flag recovers precision without a second command. `milestone=<slug>`
+the flag recovers precision without a second command. The zero-task split above
+holds under it unchanged: a `[DONE]`/`[PLANNED]` feature renders `-` there too,
+never an empty ID list. `milestone=<slug>`
 scopes sections 1–5 to a named milestone rather than the active one, and an
 unknown slug is the report's only stop besides a missing `PLAN.md`, listing
 the available slugs exactly as `/task-add feature=<slug>` does. The split
@@ -83,7 +94,10 @@ pointing at it originates from a feature that is `[DONE]` in `FEATURES.md`,
 or `[PLANNED]` with all of its tasks `[DONE]` or `[SKIP]`. A feature with no
 dependencies is ready. Everything else is blocked, named with its blocker.
 Derived on every read, never stored — which also means it can never be wrong
-about a task someone just finished.
+about a task someone just finished. How it is derived is untouched by the Next
+field: readiness is still what sections 3, 4 and 5 are built from, and one of
+the three inputs the Next value is derived from. Only section 2's presentation
+of it changed — from displaying readiness to displaying the action it implies.
 
 **The staleness signal is structural, not temporal.** Rather than comparing
 `Last reconciled:` against file modification times — which needs state this

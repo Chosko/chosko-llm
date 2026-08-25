@@ -61,7 +61,7 @@ Preconditions: none
 
 ## 156. Re-sync the domain layer's `/production-status` description with the Next field
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: .claude/domain/product-workflow.md, .claude/domain/features/plan-readout.md, VERSION, CHANGELOG.md
 Preconditions: none
