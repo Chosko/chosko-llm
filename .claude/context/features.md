@@ -768,8 +768,9 @@ Currently shipped:
   and `.claude/domain/product-roadmap.md`, all read-only. Eight output
   sections in fixed order: the milestone (slug, title, `Status:`, plus `Goal:`
   and `Exit criteria:` echoed verbatim from the roadmap); its features in plan
-  order with `FEATURES.md` status, task rollup and a **Next** field; the ready
-  set;
+  order as a five-column markdown table (`#`, `Feature`, `Status`, `Tasks`,
+  `Next`) — the rendering is prescribed in the body, not left to the agent;
+  the ready set;
   the ONE recommended next feature (first ready in plan order); blocked
   features each named with what blocks it and why; coverage gaps (milestones
   with `Features: none`, plus `product-design.md` sections no `Covers:` names);
@@ -786,8 +787,8 @@ Currently shipped:
   `[PLANNED]` with all tasks `[DONE]`/`[SKIP]`; no edges → ready; else
   blocked. An edge
   slug resolving to no feature FAILS OPEN — reported as a plan inconsistency,
-  feature treated as ready. Section 2's last field is NOT readiness but the
-  **Next** field, derived from status + rollup + readiness and exactly one of
+  feature treated as ready. Section 2's last column is NOT readiness but
+  **Next**, derived from status + rollup + readiness and exactly one of
   `-` (`[DONE]`), `/task-add feature=<slug>` (`[NEW]`/`[ITERATED]`), `flip to
   [DONE] in FEATURES.md` (`[PLANNED]`, nothing left but `[DONE]`/`[SKIP]`
   tasks, zero-task case included), `/task-implement <N>` (`[PLANNED]`, work

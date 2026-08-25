@@ -1,8 +1,8 @@
 ---
 name: production-status
-version: 0.2.0
+version: 0.2.1
 type: command
-description: Report what to build next by joining PLAN.md, FEATURES.md and TASKS.md — the active milestone with its roadmap goal and exit criteria, its features in plan order with their task rollup and a Next column naming the one concrete action each needs, the ready set, the single recommended next feature, blocked features named with their blocker, coverage gaps, features missing from the plan, and the remaining milestones. Readiness, the Next action and coverage are derived on every read. A [DONE] feature is reported plainly, never as ready, blocked, or recommended — it still satisfies dependency edges pointing at it. Read-only — writes nothing, runs no shell, and never opens a file under .claude/tasks/.
+description: Report what to build next by joining PLAN.md, FEATURES.md and TASKS.md — the active milestone with its roadmap goal and exit criteria, its features in plan order as a five-column markdown table whose Next column names the one concrete action each needs, the ready set, the single recommended next feature, blocked features named with their blocker, coverage gaps, features missing from the plan, and the remaining milestones. Readiness, the Next action and coverage are derived on every read. A [DONE] feature is reported plainly, never as ready, blocked, or recommended — it still satisfies dependency edges pointing at it. Read-only — writes nothing, runs no shell, and never opens a file under .claude/tasks/.
 ---
 
 # /production-status
@@ -189,25 +189,30 @@ OUTPUT — eight sections, in this order
 is no roadmap or the roadmap has no block with that slug — do not invent
 them, and do not warn twice.
 
-**2. Its features, in plan order.** One line each, in the milestone's
-`Features:` order, since that order is the priority:
+**2. Its features, in plan order.** Render this section as a **markdown
+table**, one row per feature, in the milestone's `Features:` order, since
+that order is the priority. The columns are `#`, `Feature`, `Status`,
+`Tasks`, `Next`, in that order and under those headings — not a bullet list,
+not a numbered list, not a padded plain-text block:
 
-```
-1. <slug>            [PLANNED]   4 tasks — DONE: 2, MISSING: 2    /task-implement 43
-2. <slug>            [NEW]       no tasks yet                     /task-add feature=<slug>
-3. <slug>            [DONE]      5 tasks — DONE: 5                -
-4. <slug>            [PLANNED]   3 tasks — DONE: 1, MISSING: 2    blocked by <slug>
-5. <slug>            [PLANNED]   -                                flip to [DONE] in FEATURES.md
-```
+| # | Feature | Status | Tasks | Next |
+| --- | --- | --- | --- | --- |
+| 1 | `<slug>` | `[PLANNED]` | 4 tasks — DONE: 2, MISSING: 2 | `/task-implement 43` |
+| 2 | `<slug>` | `[NEW]` | no tasks yet | `/task-add feature=<slug>` |
+| 3 | `<slug>` | `[DONE]` | 5 tasks — DONE: 5 | - |
+| 4 | `<slug>` | `[PLANNED]` | 3 tasks — DONE: 1, MISSING: 2 | blocked by `<slug>` |
+| 5 | `<slug>` | `[PLANNED]` | - | flip to `[DONE]` in `FEATURES.md` |
 
-Each carries its `FEATURES.md` status, its task rollup, and its **Next**
-field — the one concrete action to take on it, per **The Next field** under
-READINESS above, which is the authority on which of its five values a row
-gets. A `[DONE]` row still ends with `-` rather than with nothing: a
-finished feature has no next action, and no readiness is computed for it
-either. A slug in `Features:` with no `FEATURES.md` entry is reported as a
-plan inconsistency on its own line and carries no status, rollup or Next
-field.
+Each row carries its `FEATURES.md` status, its task rollup, and its **Next**
+value — the one concrete action to take on the feature, per **The Next
+field** under READINESS above, which is the authority on which of its five
+values a row gets. A `[DONE]` row still carries `-` in `Next` rather than an
+empty cell: a finished feature has no next action, and no readiness is
+computed for it either. A slug in `Features:` with no `FEATURES.md` entry
+keeps its row and its plan position, carries `-` in `Status`, `Tasks` and
+`Next`, and is named as a plan inconsistency in one line under the table.
+Under `--task-ids` the `Tasks` column holds the ID list instead of the
+counts; the table is otherwise unchanged.
 `Features: none` → say the milestone has no features and that `/architect`
 has not run its `Covers:` slices yet.
 
@@ -275,11 +280,11 @@ these degrades and carries on:
 | No `.claude/PLAN.md` | Say the project has no plan and point at `/production-plan`. Stop there — there is nothing to join. Do NOT create the file. |
 | No `.claude/FEATURES.md` | Say so, report the plan's structure (milestones, order, edges) with no feature statuses or rollups, and point at `/domain-setup` + `/architect`. |
 | No roadmap | Omit `Goal:` and `Exit criteria:` and the design-section half of section 6. Report everything else normally. One line, no warning ceremony. |
-| No `.claude/TASKS.md` | Features report with no task rollup, and every feature with satisfied dependencies is ready. Section 2 omits the Next field on `[PLANNED]` features, whose next action cannot be derived without task statuses; every other status keeps its value. |
+| No `.claude/TASKS.md` | Features report with no task rollup, and every feature with satisfied dependencies is ready. Section 2's table keeps all five columns, with an empty `Tasks` cell on every row and an empty `Next` cell on `[PLANNED]` features, whose next action cannot be derived without task statuses; every other status keeps its `Next` value. |
 | No `[ACTIVE]` milestone | Report the first `[PLANNED]` one and say none is active. |
 | More than one `[ACTIVE]` | Report the first in plan order, name both, call it a plan inconsistency. |
 | Dependency edge naming an unknown slug | Report the inconsistency and treat the dependent feature as ready. Fail open. |
-| A `Features:` slug with no `FEATURES.md` entry | Report the inconsistency, keep it in the plan order, no status or rollup. |
+| A `Features:` slug with no `FEATURES.md` entry | Report the inconsistency, keep its row in the plan order, `-` in `Status`, `Tasks` and `Next`. |
 | `PLAN.md` present but with no milestones | Report `Unscheduled` and sections 6–8 only, and say no milestone is planned. |
 
 The only stop other than "no `PLAN.md`" is an unknown `milestone=<slug>`.

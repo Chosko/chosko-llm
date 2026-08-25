@@ -50,10 +50,14 @@ reporter with no conversation and no supporting files, exactly the register
 
 1. The active milestone: slug, title, `Goal:` and `Exit criteria:` echoed
    from the roadmap.
-2. Its features in plan order, each with its `FEATURES.md` status, its task
-   rollup from `TASKS.md`, and a **Next** field — the one concrete action the
-   feature needs, rather than a restatement of its readiness. The field is not
-   unconditional: with no `TASKS.md` it is omitted on `[PLANNED]` features,
+2. Its features in plan order, as a markdown table with columns `#`,
+   `Feature`, `Status`, `Tasks`, `Next` — one row per feature, carrying its
+   `FEATURES.md` status, its task rollup from `TASKS.md`, and a **Next**
+   value: the one concrete action the feature needs, rather than a
+   restatement of its readiness. The rendering is prescribed because an
+   under-specified one gets improvised differently on every run. The Next
+   value is not
+   unconditional: with no `TASKS.md` its cell is empty on `[PLANNED]` features,
    whose next action cannot be derived without task statuses, while every
    other status keeps its value. That is the failure contract below
    degrading — a field reported less — and never a further value to derive in

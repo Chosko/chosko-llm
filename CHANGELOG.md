@@ -2,6 +2,21 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.22.4 — 2026-08-25
+
+- `/production-status` now prescribes how section 2 is rendered: a markdown
+  table with the columns `#`, `Feature`, `Status`, `Tasks` and `Next`. The
+  command only ever showed a padded plain-text example, so the reporting agent
+  improvised the shape — most recently a flat numbered list — and the report
+  looked different from run to run.
+- The two failure-contract rows that touch section 2 now say what the table
+  does instead of what a line does: a `Features:` slug with no `FEATURES.md`
+  entry keeps its row with `-` in `Status`, `Tasks` and `Next`, and with no
+  `.claude/TASKS.md` the table keeps all five columns with an empty `Tasks`
+  cell everywhere and an empty `Next` cell on `[PLANNED]` features.
+- No change to what is reported: every status, rollup, readiness and Next value
+  is derived exactly as before.
+
 ## 1.22.3 — 2026-08-25
 
 - `/task-implement`'s SHARED RULES section now lists `review-budget.md` as the
