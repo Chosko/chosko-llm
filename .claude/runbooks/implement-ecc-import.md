@@ -223,7 +223,7 @@ Context:
 ```
 Done: 2026-08-25 — commits 9f921bf (task 124) and ee98445 (feature task-peer-review [DONE], pre-approved), both pushed. README (/task-review, /task-iterate bullets; --review [--rounds N]; one-commit-per-task invariant), authoring guide commit groups, .claude/context/features.md (two new entries, task-implement entry with eight supporting files), .claude/domain/task-workflow.md new "## Review loop" section, feature document's four authorised reconciliations. VERSION 1.6.0→1.6.1. .claude/context/INDEX.md untouched (Last updated already current). Premises held.
 
-## [ ] 19. Add the `requires:` frontmatter field (task 125)
+## [x] 19. Add the `requires:` frontmatter field (task 125)
 
 Depends on: 18
 
@@ -233,12 +233,14 @@ Context:
 ```prompt
 /task-implement 125
 ```
+Done: 2026-08-25 — commit 7a74267 (pushed). lib.sh: `requires` added to parse_frontmatter's allowlist; new requires_specs <file> (comma-split, validated via parse_replaces_spec, dies on malformed — call via command substitution, not process substitution; whitespace around commas AND around the kind colon squeezed). cmd-add.sh: install_requires resolves one level deep via add_one recursion, pre-copy validations hoisted ahead of the per-kind case; --all untouched. cmd-rm.sh: --force plus dependents scan that refuses removal naming every dependent (self-reference excluded). Authoring guide requires: section, cli-help.txt. VERSION 1.6.1→1.7.0. No shipped feature declares requires: yet. Confirmed: feature document's "parse_frontmatter needs no change" claim is wrong (allowlist at lib.sh:191) — task 131 reconciles it.
 
 ## [ ] 20. Create the task-engine skill by verbatim extraction (task 126)
 
 Depends on: 19
 
-Context: none
+Context:
+- 2026-08-25 (from steps 13–19): VERSION is now 1.7.0. skills/task-implement/SKILL.md is 1.2.0 with eight supporting files (delegated-runs.md carries the launcher; review-rounds.md the --review loop). `requires:` frontmatter is live: a comma-separated list of kind-prefixed specs (command:<n>, skill:<n>, …), resolved one level deep by cmd-add, guarded by cmd-rm's dependents scan; the shared-phase-engine feature document's claim that parse_frontmatter needed no change was wrong (task 131 reconciles it). Every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh; the body's predicted VERSION numbers are stale, follow the rule. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 126
