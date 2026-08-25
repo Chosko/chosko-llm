@@ -283,7 +283,7 @@ Context:
 ```
 Done: 2026-08-25 — commit d123a45 (pushed). commands/task-add.md 2.0.0→2.1.0 with requires: skill:task-engine; cites resolution.md, status.md, targets.md, stale.md, commit.md (not tree.md). INDEX FILE FORMAT, manual-interventions authoring rules + Unity example, and RECONCILIATION's four-way table are cited not copied (they live verbatim in the engine, whose headers name /task-add as source). commit.md's /task-add note was complete. Every DO NOT bullet kept. VERSION 1.8.2→1.8.3. Premises: body is 731 lines not <400 (remaining content is /task-add-unique); the prescribed before/after throwaway /task-add run cannot execute unattended (Approve-and-write gate), replaced by phase-by-phase textual walk plus scratch-CLAUDE_HOME install check.
 
-## [ ] 24. Migrate /task-implement onto the task-engine (task 130)
+## [x] 24. Migrate /task-implement onto the task-engine (task 130)
 
 Depends on: 23
 
@@ -293,12 +293,14 @@ Context:
 ```prompt
 /task-implement 130
 ```
+Done: 2026-08-25 — commit c8ed527 (pushed). skills/task-implement/SKILL.md 1.2.0→1.3.0 with requires: skill:task-engine, cites all six references, new "SHARED RULES (the task-engine)" section; skills/task-implement/dirty-tree.md DELETED (tree.md is its verbatim extraction) — seven supporting files remain; delegated-runs.md cites targets.md § The delegation guard; review-rounds.md points at commit.md and records why the --review availability gate is a runtime check, not requires:. VERSION 1.8.3→1.8.4. Scratch install verified: task-engine installed first; `chosko-llm rm skill:task-engine` refuses naming skill:task-implement. Premise: body is 709 lines not <350. Still open for task 131: references/targets.md's /task-list note ("awaiting its migration") is wrong since task 127.
 
 ## [ ] 25. Documentation for shared-phase-engine (task 131)
 
 Depends on: 24
 
-Context: none
+Context:
+- 2026-08-25 (from steps 19–24): VERSION is now 1.8.4. All four consumers are migrated: /task-list 0.6.0, /task-clean 0.8.0, /task-add 2.1.0, skills/task-implement 1.3.0 (now SEVEN supporting files — dirty-tree.md was deleted, tree.md replaced it). skills/task-engine is 0.1.0 with references/{resolution,status,targets,stale,tree,commit}.md. Two reconciliations the feature document needs beyond its own list: (1) the claim that parse_frontmatter needed no change is wrong — task 125 added `requires` to lib.sh's key allowlist; (2) every migration missed its line-count target (task-list 229, task-clean 228, task-add 731, task-implement 709) because consumer-unique content is protected verbatim — record targets as targets. Stale engine text to fix: references/targets.md's /task-list per-consumer note says the `local` mention is "dead text awaiting its migration" — task 127 removed it; correcting that note bumps task-engine's version: (patch). requires: is declared by all four consumers; cmd-rm refuses to remove task-engine while any dependent is installed. Every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 131
