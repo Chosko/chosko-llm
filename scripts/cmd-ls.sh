@@ -45,6 +45,15 @@ _colored_cell() {
   printf '%s%s%s%*s%s' "$color" "$text" "$reset" "$pad" "" "$sep"
 }
 
+# Kind rank — the tie-break when two rows share a feature name, so a
+# superseded / migration pending pair stays adjacent and in the order the
+# migration reads (the artifact being replaced first, its replacement next).
+KIND_RANK_COMMAND=1
+KIND_RANK_SKILL=2
+KIND_RANK_CLAUDEMD=3
+KIND_RANK_STATUSLINE=4
+KIND_RANK_HOOK=5
+
 # collect_names <kind>
 # Emits a sorted, deduplicated list of feature names visible in either home.
 collect_names() {
@@ -152,6 +161,9 @@ list_all() {
   print_header
   local found=0
   local installable=() updatable=() migrating=()
+  # Every pass appends its rendered rows here instead of printing them; one
+  # name-ordered emit at the end replaces the old kind-grouped output.
+  local rows=()
 
   while IFS= read -r name; do
     [ -n "$name" ] || continue
@@ -187,14 +199,17 @@ list_all() {
       "superseded"|"migration pending") migrating+=("$name") ;;
     esac
 
-    local inst_color latest_color
+    local inst_color latest_color row
     [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
     [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
-    _colored_cell ""              "$name"       ""        30
-    _colored_cell "$C_BLUE"       "command"     "$C_RESET" 8
-    _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
-    _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
-    printf '%s%s%s\n' "$status_color" "$status_col" "$C_RESET"
+    row="$(
+      _colored_cell ""              "$name"       ""        30
+      _colored_cell "$C_BLUE"       "command"     "$C_RESET" 8
+      _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
+      _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
+      printf '%s%s%s' "$status_color" "$status_col" "$C_RESET"
+    )"
+    rows+=("$name"$'\t'"$KIND_RANK_COMMAND"$'\t'"$row")
     found=1
   done < <(collect_names command)
 
@@ -232,14 +247,17 @@ list_all() {
       "superseded"|"migration pending") migrating+=("$name") ;;
     esac
 
-    local inst_color latest_color
+    local inst_color latest_color row
     [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
     [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
-    _colored_cell ""              "$name"       ""        30
-    _colored_cell "$C_MAGENTA"    "skill"       "$C_RESET" 8
-    _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
-    _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
-    printf '%s%s%s\n' "$status_color" "$status_col" "$C_RESET"
+    row="$(
+      _colored_cell ""              "$name"       ""        30
+      _colored_cell "$C_MAGENTA"    "skill"       "$C_RESET" 8
+      _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
+      _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
+      printf '%s%s%s' "$status_color" "$status_col" "$C_RESET"
+    )"
+    rows+=("$name"$'\t'"$KIND_RANK_SKILL"$'\t'"$row")
     found=1
   done < <(collect_names skill)
 
@@ -276,14 +294,17 @@ list_all() {
       "superseded"|"migration pending") migrating+=("$name") ;;
     esac
 
-    local inst_color latest_color
+    local inst_color latest_color row
     [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
     [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
-    _colored_cell ""              "$name"       ""        30
-    _colored_cell "$C_CYAN"       "claude-md"   "$C_RESET" 8
-    _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
-    _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
-    printf '%s%s%s\n' "$status_color" "$status_col" "$C_RESET"
+    row="$(
+      _colored_cell ""              "$name"       ""        30
+      _colored_cell "$C_CYAN"       "claude-md"   "$C_RESET" 8
+      _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
+      _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
+      printf '%s%s%s' "$status_color" "$status_col" "$C_RESET"
+    )"
+    rows+=("$name"$'\t'"$KIND_RANK_CLAUDEMD"$'\t'"$row")
     found=1
   done < <(collect_names claude-md)
 
@@ -322,14 +343,17 @@ list_all() {
       "superseded"|"migration pending") migrating+=("$name") ;;
     esac
 
-    local inst_color latest_color
+    local inst_color latest_color row
     [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
     [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
-    _colored_cell ""              "$name"       ""        30
-    _colored_cell "$C_GREEN"      "statusline"  "$C_RESET" 8
-    _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
-    _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
-    printf '%s%s%s\n' "$status_color" "$status_col" "$C_RESET"
+    row="$(
+      _colored_cell ""              "$name"       ""        30
+      _colored_cell "$C_GREEN"      "statusline"  "$C_RESET" 8
+      _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
+      _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
+      printf '%s%s%s' "$status_color" "$status_col" "$C_RESET"
+    )"
+    rows+=("$name"$'\t'"$KIND_RANK_STATUSLINE"$'\t'"$row")
     found=1
   done < <(collect_names statusline)
   fi
@@ -371,19 +395,31 @@ list_all() {
       "superseded"|"migration pending") migrating+=("$name") ;;
     esac
 
-    local inst_color latest_color
+    local inst_color latest_color row
     [ "$inst_col" = "—" ]    && inst_color="$C_DIM"   || inst_color=""
     [ "$latest_col" = "—" ]  && latest_color="$C_DIM" || latest_color=""
-    _colored_cell ""              "$name"       ""        30
-    _colored_cell "$C_YELLOW"     "hook"        "$C_RESET" 8
-    _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
-    _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
-    printf '%s%s%s\n' "$status_color" "$status_col" "$C_RESET"
+    row="$(
+      _colored_cell ""              "$name"       ""        30
+      _colored_cell "$C_YELLOW"     "hook"        "$C_RESET" 8
+      _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
+      _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
+      printf '%s%s%s' "$status_color" "$status_col" "$C_RESET"
+    )"
+    rows+=("$name"$'\t'"$KIND_RANK_HOOK"$'\t'"$row")
     found=1
   done < <(collect_names hook)
   fi
 
-  [ $found -eq 1 ] || log_info "No features found."
+  # Single name-ordered emit. Field 1 is the feature name, field 2 the kind
+  # rank that breaks a tie between two rows sharing one; LC_ALL=C keeps the
+  # order byte-deterministic whatever collation the caller's locale would use.
+  if [ $found -eq 1 ]; then
+    printf '%s\n' "${rows[@]}" \
+      | LC_ALL=C sort -t $'\t' -k1,1 -k2,2n \
+      | cut -f3-
+  else
+    log_info "No features found."
+  fi
 
   # Actionable suggestions, gated to an interactive stdout so piped/redirected
   # output stays a clean table. Counts reflect the filtered, displayed rows.

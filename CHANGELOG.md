@@ -2,6 +2,19 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.17.0 — 2026-08-25
+
+- `chosko-llm ls` now prints one table ordered by feature name instead of five
+  kind-grouped blocks, so finding a feature no longer means knowing its kind
+  first — the KIND column already says which kind a row is.
+- Two rows sharing a name stay adjacent and in migration order (command,
+  skill, claude-md, statusline, hook), so a `superseded` / `migration pending`
+  pair still reads as a pair. The order is byte-deterministic whatever your
+  locale is.
+- Columns, colours, statuses, the `Home:` line, the `--installed` /
+  `--available` / `--local` / `--global` filters and the footer hints are
+  unchanged.
+
 ## 1.16.0 — 2026-08-25
 
 - New `claude-md:git-commit-style` artifact. Install it with `chosko-llm add

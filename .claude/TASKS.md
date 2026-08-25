@@ -34,7 +34,7 @@ Preconditions: 153
 
 ## 153. Order `ls` output by feature name instead of by kind
 
-Status: [IN PROGRESS]
+Status: [DONE]
 Target: claude
 Files: scripts/cmd-ls.sh, docs/cli-help.txt, VERSION, CHANGELOG.md, .claude/context/cmd-ls.md, .claude/context/INDEX.md
 Preconditions: none

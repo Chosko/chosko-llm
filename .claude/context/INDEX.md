@@ -20,7 +20,7 @@ Canonical project docs live outside this folder, stay authoritative:
 | --- | --- |
 | [cli-entry.md](./cli-entry.md) | Bootstrap (`install.sh`/`uninstall.sh`), `bin/chosko-llm` proxy dispatch subcommands, daily auto-upgrade hook. |
 | [shared-lib.md](./shared-lib.md) | `scripts/lib.sh` — logging, colors, frontmatter, path resolution, claude-md sections, statusline prompt, `requires:` dependency helpers, auto-upgrade state, validation. Sourced by every subcommand. |
-| [cmd-ls.md](./cmd-ls.md) | `scripts/cmd-ls.sh` — list features w/ installed/latest versions; `--installed` / `--available` filters; TTY footer hints. |
+| [cmd-ls.md](./cmd-ls.md) | `scripts/cmd-ls.sh` — list features w/ installed/latest versions, one name-ordered table; `--installed` / `--available` filters; TTY footer hints. |
 | [cmd-show.md](./cmd-show.md) | `scripts/cmd-show.sh` — inspect one feature (versions, status, description, body/diff); handle local-only. |
 | [cmd-add.md](./cmd-add.md) | `scripts/cmd-add.sh` — install feature (command/skill/claude-md/statusline/hook, or `--all`) into `$CLAUDE_HOME`; refuse if already installed; install anything the source declares in `requires:` first. |
 | [cmd-rm.md](./cmd-rm.md) | `scripts/cmd-rm.sh` — uninstall feature (command/skill/claude-md/statusline/hook) from `$CLAUDE_HOME`; dependents guard + `--force`. |

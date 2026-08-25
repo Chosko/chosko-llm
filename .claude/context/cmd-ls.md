@@ -21,7 +21,10 @@ Output: `Home: <scope_label>` line, blank line, then text table, header
 `updatable` / `not installed` / `local only` / `superseded` / `migration
 pending` — the last two flag a feature mid kind-migration (task 104).
 Missing values render `—`. Installed file w/ no `version` frontmatter
-shows `unversioned`. On interactive terminal, suggestions block follows
+shows `unversioned`. Rows print as one sequence ordered ascending by
+feature name, not grouped by kind (task 153); two rows sharing a name break
+the tie on kind rank — command, skill, claude-md, statusline, hook. On
+interactive terminal, suggestions block follows
 table (install / update / migrate hints, plus always-present `show`
 inspect hint); suppressed when stdout piped or redirected.
 
@@ -40,11 +43,20 @@ wrapped in `if scope_is_local`, so `ls --global` omits hooks. The claude-md pass
 
 ## Internal patterns
 
-- **Four-pass listing**: commands, then skills, then claude-md artifacts,
-  then statusline scripts. Names within each pass sorted + deduped across
-  two homes (managed clone + `$CLAUDE_HOME`). claude-md "installed" state
-  detected by managed section markers in `$CLAUDE_HOME/CLAUDE.md`, not file;
-  statusline plain file check like commands/skills.
+- **Five passes, one name-ordered emit (task 153)**: passes still run
+  commands, skills, claude-md artifacts, statusline scripts, hooks — each
+  with its own filter + scope gate — but a pass no longer prints. It renders
+  its row into a string and appends `<name>\t<kind rank>\t<line>` to a single
+  `rows` array; after the last pass one `LC_ALL=C sort -t $'\t' -k1,1 -k2,2n
+  | cut -f3-` emits the whole table in name order. `LC_ALL=C` is what makes
+  the order byte-deterministic regardless of the caller's locale collation;
+  the rank constants `KIND_RANK_*` are the same-name tie-break. Rendering
+  into a string keeps `_colored_cell`'s visible-length padding intact, since
+  the escape codes ride inside field 3 untouched. Names within each pass
+  sorted + deduped across two homes (managed clone + `$CLAUDE_HOME`).
+  claude-md "installed" state detected by managed section markers in
+  `$CLAUDE_HOME/CLAUDE.md`, not file; statusline plain file check like
+  commands/skills.
 - **No version comparison.** `cmd-ls` only prints two version strings
   side by side; no `[new]` / `[upgradable]` markers.
 - **Filenames are the truth.** File named `foo.md` w/ frontmatter
@@ -58,10 +70,11 @@ wrapped in `if scope_is_local`, so `ls --global` omits hooks. The claude-md pass
   migrate hint when any row is `superseded`/`migration pending` (or
   `Everything is up to date.` when none of the three apply), ALWAYS ends
   w/ `Run 'chosko-llm show <feature>' to inspect a feature.` Installable +
-  updatable + migrating names accumulated from filtered rows during four
-  listing passes — counts reflect what actually shown.
-- **Kind-migration statuses (task 104).** `compute_status` (shared by all
-  four passes) extends the base four-value vocabulary with `superseded`
+  updatable + migrating names accumulated from filtered rows during the
+  listing passes — counts reflect what actually shown, and are unaffected by
+  the emit-order sort, which reorders only the buffered rows.
+- **Kind-migration statuses (task 104).** `compute_status` (shared by every
+  pass) extends the base four-value vocabulary with `superseded`
   (a `local only` row whose installed artifact is claimed by some clone
   feature's `replaces:`, per `lib.sh::find_replacement`) and `migration
   pending` (a `not installed` row whose own `replaces:` names a currently
@@ -92,6 +105,9 @@ wrapped in `if scope_is_local`, so `ls --global` omits hooks. The claude-md pass
 
 - Changing column layout, filter flags, output formatting →
   `scripts/cmd-ls.sh`.
+- Changing row order, or the kind rank that breaks a same-name tie → the
+  `rows` buffer, the `KIND_RANK_*` constants, and the final sort in
+  `list_all` in `cmd-ls.sh`.
 - Changing how names deduped across two homes → `collect_names`
   function in `cmd-ls.sh`.
 - Changing scope behavior (home line, statusline omission, claude-md
