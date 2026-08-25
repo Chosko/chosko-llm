@@ -211,7 +211,7 @@ Context:
 ```
 Done: 2026-08-25 — commit a4cb5d8 (pushed). New skills/task-implement/review-rounds.md (read only with --review: availability gate for task-review + task-iterate, placement after Step 5 / before Step 6 on the uncommitted tree, six-part reviewer spawn prompt, async-return rule, iterate in-session with mandatory do-not-commit assertion, N=1 vs N≥2 loop control, BLOCKING-only continuation, sticky rejections, cap-hit handling). SKILL.md 1.1.0→1.2.0 (--review / --rounds N parsing with two error messages, new section between Steps 5 and 6, Step 7 one-commit clause, five DO NOT bullets). delegated-runs.md: REVIEW/ROUNDS in the resolved-flag list + "Review rounds inside a delegated task" section (parent's four-field return unchanged). VERSION 1.5.0→1.6.0 (body predicted 1.3.0→1.4.0). Depth: launcher→implementor→reviewer verified; under an orchestrator it is one deeper, unprobed, no fallback added.
 
-## [ ] 18. Documentation for task-peer-review (task 124)
+## [x] 18. Documentation for task-peer-review (task 124)
 
 Depends on: 17
 
@@ -221,12 +221,14 @@ Context:
 ```prompt
 /task-implement 124
 ```
+Done: 2026-08-25 — commits 9f921bf (task 124) and ee98445 (feature task-peer-review [DONE], pre-approved), both pushed. README (/task-review, /task-iterate bullets; --review [--rounds N]; one-commit-per-task invariant), authoring guide commit groups, .claude/context/features.md (two new entries, task-implement entry with eight supporting files), .claude/domain/task-workflow.md new "## Review loop" section, feature document's four authorised reconciliations. VERSION 1.6.0→1.6.1. .claude/context/INDEX.md untouched (Last updated already current). Premises held.
 
 ## [ ] 19. Add the `requires:` frontmatter field (task 125)
 
 Depends on: 18
 
-Context: none
+Context:
+- 2026-08-25 (from steps 1–18): VERSION is now 1.6.1. Features [DONE] so far: version-changelog, session-continuity, repo-local-audits, task-implement-launcher, task-peer-review. Frontmatter fields currently parsed by lib.sh's parse_frontmatter are gated on a key allowlist (a finding from the hand-run that preceded this runbook) — verify the allowlist before assuming `requires:` will be emitted. Repo-local .claude/skills/ (context-budget, rule-overlap) carry no version: and must stay invisible to CLI verbs. Every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh; the body's predicted VERSION numbers are stale, follow the rule. Verify listings with CHOSKO_LLM_HOME=E:/projects/chosko-llm ./bin/chosko-llm ls --available. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 125
