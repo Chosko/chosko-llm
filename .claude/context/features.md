@@ -204,7 +204,7 @@ Currently shipped:
   leaves uncommitted.
 - `skills/task-implement/` — implements backlog tasks end-to-end with
   tests-first sequence. `SKILL.md` carries common path (clean
-  tree, known test runner, numbered `target: claude` task); seven
+  tree, known test runner, numbered `target: claude` task); eight
   supporting files read only when their branch fires —
   `dirty-tree.md` (non-empty `git status`), `test-runner.md` (runner must
   be inferred; mirrors task-setup's table), `no-test-suite.md`,
@@ -212,7 +212,9 @@ Currently shipped:
   checkpoints — read only when current human-in-loop task's project
   declares `Unity MCP for /task-implement:` marker AND
   `mcp__UnityMCP__*` tools connected this session), `body-schemas.md`
-  (non-current body schema), and `delegated-runs.md` (2+-task run user delegated to subagents).
+  (non-current body schema), `delegated-runs.md` (2+-task run user delegated to subagents),
+  and `review-rounds.md` (`--review` passed; read once after argument
+  parsing, before the first task, never otherwise).
   Reads each task's body file from `.claude/tasks/<N>.md` only when
   needed, treats it as primary context source — only fans out to
   CLAUDE.md and context layer when body doesn't cover what's
@@ -266,6 +268,108 @@ Currently shipped:
   proposes flipping each candidate's `FEATURES.md` `Status:` from
   `[PLANNED]` to `[DONE]` — user decides per feature, one commit covers
   every flip approved.
+  `--review` (with optional `--rounds N`, default 1) runs a review/iterate
+  loop per task. Availability gate first: both `task-review` and
+  `task-iterate` must be present in the session or the run stops BEFORE any
+  `[IN PROGRESS]` flip — never silently skipped, since "implemented" and
+  "implemented and reviewed" are different claims. `--rounds` without
+  `--review` errors (`--rounds requires --review.`); a non-positive integer
+  errors (`--rounds needs a positive integer.`). Loop sits after Step 5 and
+  **before Step 6**, on the uncommitted tree — before, not between 6 and 7,
+  so a halt on unresolved findings leaves the task `[IN PROGRESS]` rather
+  than `[DONE]`-and-halted. Each round spawns `/task-review` as a
+  **subagent** (`subagent_type: general-purpose`) — fresh context is the
+  mechanism, not an optimizable detail — with a six-item prompt (repo path,
+  `task=<n>`, this round's diff scope, round number, prior rejection ledger
+  from round 2 on, and the statement that it was spawned by
+  `/task-implement --review` so it writes nothing to disk). That spawn
+  returns **asynchronously**: the call yields an agent id and the findings
+  arrive later as a separate notification, so the round waits for them and
+  Steps 6/7 are unreachable until the final round's result has actually
+  arrived — treating the call's return value as the findings would commit
+  unreviewed work while reporting it reviewed. `/task-iterate` then runs in
+  **this** session (its edits must land in the tree Step 7 commits), told
+  explicitly it is inside a round and must not commit. Loop continues only
+  while `BLOCKING` findings remain unresolved and only up to `ROUNDS`; later
+  rounds re-review only the hunks the last iterate changed; rejections are
+  sticky across rounds. Unresolved `BLOCKING` after the last round stops the
+  whole run per FAILURE HANDLING (tree uncommitted, task `[IN PROGRESS]`, no
+  next task). Exactly one commit per task either way — the fixes ride in the
+  task's own commit, never a second one. In a delegated run REVIEW/ROUNDS
+  ride through the fixed-size hand-off prompt and each implementor spawns
+  its own reviewer (launcher → implementor → reviewer); the four-field
+  return contract is unchanged and no finding travels up to the parent.
+- `skills/task-review/` — audits a diff against the acceptance criteria of
+  the task that produced it and reports structured findings. Exists beside
+  Claude Code's built-in `/code-review` because of that one difference:
+  generic review asks *is this good code*, this asks *does this satisfy task
+  N's criteria*; where the two overlap it defers to the built-in rather than
+  reimplementing it. Three input forms resolved from the argument after
+  stripping `task=<n>` and `base=<ref>`: empty → local (`git diff HEAD`), a
+  branch name → branch (`git diff <base>...<branch>`, three dots), a bare
+  integer or GitHub PR URL → pr (`gh pr diff <N>`). One supporting file,
+  `remote-diffs.md`, read ON DEMAND — only when that remaining input is
+  non-empty; a local run never opens it. Task resolved first-hit-wins from
+  `task=<n>`, a number in the branch name, the PR title, then the most
+  recently modified `.claude/tasks/*.md` (weakest signal, so the report says
+  which and why); **no resolution stops the run** rather than degrading into
+  a generic code review. Three gates before any finding is written:
+  ≥80% confidence, the four-question Pre-Report Gate (exact line; concrete
+  failure mode; callers/imports/tests read; severity defensible — any "no"
+  or "unsure" demotes or drops), and BLOCKING-requires-proof (snippet,
+  scenario, why existing guards miss it; missing one ⇒ demote).
+  **Zero findings is a valid, complete review** — stated explicitly, because
+  a reviewer under implicit pressure to justify itself invents findings.
+  Exactly three severities — `BLOCKING` (bugs, data loss, security, or an
+  unmet acceptance criterion), `IMPORTANT`, `ADVISORY` (reported once, never
+  re-reviewed); an unmet criterion is ALWAYS blocking. Findings carry stable
+  `R<round>-<n>` ids, never renumbered, since that is how a rejection stays
+  rejected across rounds; the report also carries a per-criterion verdict
+  (`met` / `not met` / `unverifiable`) and one overall line, and the two
+  halves must agree. Output destination branches on invocation: spawned by
+  `/task-implement --review` → structured return, nothing on disk; invoked
+  manually → asks once whether to also write
+  `.claude/reviews/<task>-R<round>.md`, chat-only being the default on
+  silence or EOF. No `--rounds` flag — the loop belongs to
+  `/task-implement`. Read-only contract: no edit to any source/test/task/
+  status/feature file, no `git add`/`commit`/`checkout`/`stash`/`push`, no
+  `gh` write, no PR opened, and no subagents of its own (one reviewer, one
+  pass — a dimension-reviewer fan-out is the token cost this repo exists to
+  avoid).
+- `skills/task-iterate/` — triages findings it did NOT produce, applies what
+  survives, records why the rest did not. Same three input forms and same
+  `task=` / `base=` parsing as `/task-review`, plus `--no-commit` /
+  `--no-push`; fixes always land in the working tree in front of it (branch
+  mode assumes that branch is checked out and stops rather than switching).
+  **No supporting files** — everything including PR mode is in `SKILL.md`,
+  and it never reads a file from another skill's folder, since each skill
+  installs as a self-contained folder. Findings come from exactly ONE of
+  three sources, in order: passed in by the caller (the `--review` path),
+  a `.claude/reviews/<task>-R<n>.md` file (highest round; ambiguity asks),
+  or PR review comments via `gh` (one thread = one finding; already-resolved
+  threads are prior context, not findings). **Never invents a finding**, not
+  as a bonus or an "also noticed" — a skill that both finds and fixes grades
+  its own work. Triage is mandatory and explicit: every finding gets exactly
+  one of `fix`, `defer` (needs a follow-up task number or a one-line note of
+  what the task would be) or `reject` (needs an arguable one-line reason),
+  and **the whole verdict table is written out before the first edit** —
+  triage decided while editing is triage rationalised by the edit. A
+  BLOCKING finding naming an unmet acceptance criterion cannot be deferred;
+  a finding arguing against the task body's Decisions is a `reject` with the
+  decision as the reason. A `fix` discovered to be wrong once in the file
+  flips to `reject` with what was found, reported as a changed verdict. In
+  PR mode it replies on each thread and resolves the `fix`ed and `defer`red
+  ones while **leaving rejected threads open** for the human. Committing is
+  **caller-dependent and the caller asserts the mode, never inferred**:
+  standalone it follows the repo's pull/commit/re-sync/push protocol; inside
+  a `/task-implement --review` round it commits and pushes nothing, leaving
+  the tree for that run's Step 7 so the task keeps exactly one commit. That
+  asymmetry is load-bearing and flagged as such in the body against a future
+  editor "fixing" it. Returns three things: the triage summary, the sticky
+  rejection ledger for the next round, and an explicit yes/no on unresolved
+  `BLOCKING` findings — the field `/task-implement`'s loop reads to decide
+  whether another round is warranted. Never opens a pull request, in any
+  mode.
 - `skills/product-design/` — designs product top-down with user, writes
   result into domain layer: `design-process.md` (state
   file), `product-design.md`, `technical-direction.md`, and — only when
@@ -728,9 +832,12 @@ its state in versioned project document.
 - **Supporting files are read on demand.** A skill folder's non-`SKILL.md`
   files exist so the common path stays cheap: `SKILL.md` names the branch
   and the file to read when it fires, and nothing else reads them.
-  `skills/task-implement/` (seven), `skills/product-design/` (four),
-  `skills/architect/` (three), `skills/context-build/nested.md` and
-  `skills/context-update/nested.md` (one each) all follow this. Whole
+  `skills/task-implement/` (eight), `skills/product-design/` (four),
+  `skills/architect/` (three), `skills/task-review/remote-diffs.md`,
+  `skills/context-build/nested.md` and
+  `skills/context-update/nested.md` (one each) all follow this.
+  `skills/task-iterate/` has none, and says so in its body so nobody goes
+  looking for one. Whole
   folder is copied on install regardless — the saving is tokens per run,
   not bytes on disk.
 - **No state file.** Versions live in frontmatter; what's installed is

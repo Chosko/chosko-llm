@@ -2,6 +2,31 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.6.1 — 2026-08-25
+
+- Documentation catch-up for the `task-peer-review` feature shipped in 1.4.0–1.6.0.
+  No shipped feature's behaviour changes.
+- `README.md`'s `task-*` section now lists `/task-review` and `/task-iterate`,
+  mentions `--review [--rounds N]` on `/task-implement`, and spells out the
+  commit rule: `/task-iterate` commits and pushes standalone but commits nothing
+  inside a `/task-implement --review` round, so a reviewed task still produces
+  exactly one commit.
+- `docs/authoring-guide.md`'s commit-and-push convention adds `/task-iterate` to
+  the auto-committing group with that caller-dependent departure named, and
+  records that `/task-review` belongs to neither group because it never commits
+  anything.
+- The navigation layers catch up too: `.claude/context/features.md` gains
+  entries for `skills/task-review/` and `skills/task-iterate/` and describes
+  `/task-implement`'s `--review` loop and its eighth supporting file, and
+  `.claude/domain/task-workflow.md` gains a review-loop section covering the
+  fresh-context reviewer, mandatory triage, sticky rejections, the severity gate
+  and round bound, and the one-commit-per-task invariant.
+- `.claude/domain/features/task-peer-review.md` is reconciled with what shipped:
+  the branch-mode base and the `--rounds`-on-`/task-review` open questions are
+  closed, the read-only contract is stated so it no longer conflicts with the
+  opt-in `.claude/reviews/` report, and the loop is recorded as running before
+  `/task-implement`'s status flip rather than after it.
+
 ## 1.6.0 — 2026-08-25
 
 - `/task-implement` gains `--review` and `--rounds N` (`skills/task-implement`

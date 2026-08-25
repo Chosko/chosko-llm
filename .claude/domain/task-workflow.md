@@ -208,7 +208,29 @@ Agents **sequential, never parallel** — every task in run shares one working t
 
 Delegation partial by design. `claude+human` and `human` tasks, and `[STALE]` tasks requested explicitly by number, stay in parent conversation: all three depend on question put to user — manual checkpoint's confirmation, or stale implement-anyway/stop choice — subagent can't hold that conversation. Mixed run states which tasks go where before starting. Each delegated agent still owns its task's status flips, its single commit, its single push, so one-commit / one-push-per-task invariant holds regardless of where task ran.
 
+`--review` / `--rounds N` propagate to each implementor as part of run's resolved flags, and **each implementor spawns its own reviewer** — launcher → implementor → reviewer, one level deeper than the launcher alone. Parent passes flags through and nothing else changes there: it still sees only the four returned fields (task number, terminal status, commit hash, one-line failure reason on failure), never a finding, never a triage verdict. Implementor's reviewer returns asynchronously like any other agent, so implementor must not commit before its own reviewer's result has arrived — a commit on the strength of a spawn call's return value is unreviewed work reported as reviewed.
+
 Protocol details live in `skills/task-implement/delegated-runs.md`, read only when delegation active.
+
+## Review loop (`/task-review` + `/task-iterate`)
+
+Two skills, one division of labour: `/task-review` audits a diff against acceptance criteria of task that produced it and reports findings; `/task-iterate` triages those findings, applies what survives, records why rest did not. Neither does other's job — reviewer never edits, iterator never finds. Skill that both finds and fixes grades its own work.
+
+Both take same three input forms — no argument (uncommitted tree), branch name (against repo's default branch, `base=<ref>` overrides), PR number or URL (through `gh`) — and both resolve task same way: `task=<n>`, then number in branch name, then PR title, then most recently modified `.claude/tasks/*.md`. Unresolvable task **stops** either skill; reviewing a diff against nothing in particular is what Claude Code's built-in `/code-review` already does, and checking against the task's criteria is this pair's only reason to exist beside it.
+
+**Reviewer must be fresh context.** Under `/task-implement --review` the review runs as a subagent, and that's mechanism not detail: reviewer that watched code being written holds author's reasoning and rationalises what it finds. Iterate runs in main session instead, because its edits have to land in tree the run commits.
+
+**Gates before a finding is written**: ≥80% confidence, four-question Pre-Report Gate (exact line, concrete failure mode, callers/imports/tests read, defensible severity), and proof for anything BLOCKING. Zero findings is valid, complete review — stated in skill body, because reviewer under implicit pressure to justify its invocation produces findings to justify it. Three severities only; unmet acceptance criterion always BLOCKING.
+
+**Mandatory triage is auditable replacement for a silent judgement.** "Fix what's worth fixing" is normally decided in someone's head, leaving no record of what was dismissed. Every finding therefore gets exactly one written verdict — `fix`, `defer` (with follow-up task number, or line saying what that task would be), `reject` (with reason that could be argued with) — and whole table written **before** first edit. Triage decided while editing is triage rationalised by edit already made.
+
+**Sticky rejections.** Finding rejected in round *k* travels into round *k+1* as binding context and may not be re-raised there — only escalated, on evidence earlier round did not have. Without this the loop ping-pongs between stubborn reviewer and compliant iterator, and no round counter substitutes for it: bound stops the argument, doesn't settle it. In PR mode the rejection replies left on open threads are same ledger.
+
+**Severity gate and round bound.** `--rounds N` defaults to 1 (one review, one iterate, stop). N ≥ 2 continues only while `BLOCKING` findings remain unresolved, and stops at N regardless; `IMPORTANT` and `ADVISORY` reported in round that found them, never re-raised. Rounds after first re-review only hunks last iterate changed. Unresolved BLOCKING after last round stops whole run: tree left uncommitted, task left `[IN PROGRESS]`. That's why loop sits **before** Step 6, not between Steps 6 and 7 — flipping `[DONE]` first and halting after would leave backlog claiming work never accepted.
+
+**Invariant: `/task-iterate` does not commit inside `/task-implement --review`.** Standalone it commits and pushes like every other auto-committing feature; inside a round it commits nothing and leaves corrected tree for that run's Step 7. So a reviewed task still produces **exactly one commit**. Were iterate to commit there, a task would land an implementation commit plus separate fix commit for corrections no human reviewed separately — two commits for one task, second describing the first. Asymmetry is deliberate and load-bearing; do not make the two paths agree. Mode is asserted by caller and **never inferred** — not from dirty tree, not from findings having been passed in, not from round number — because an inference that gets it wrong fails silently, a commit that should not exist looking exactly like one that should.
+
+See [`./features/task-peer-review.md`](./features/task-peer-review.md) for feature design behind this.
 
 ## `[DONE]` feature-completion proposal
 
@@ -226,5 +248,6 @@ This is the only write `/task-implement` makes to `FEATURES.md`, and the only st
 
 - [`../../CLAUDE.md`](../../CLAUDE.md) — hard rules (authoring, versioning, copy-not-symlink, no new deps).
 - [`./product-workflow.md`](./product-workflow.md) — product pipeline upstream of this backlog: `FEATURES.md`, feature status machine, writers of `Feature:` and `[STALE]`.
+- [`./features/task-peer-review.md`](./features/task-peer-review.md) — feature design behind the review loop: the three input forms, the gates, mandatory triage, sticky rejections, and the `--review` / `--rounds` integration.
 - [`../context/features.md`](../context/features.md) — shipped artifacts including every `task-*` command and skill.
-- `commands/task-setup.md`, `commands/task-add.md`, `commands/task-clean.md`, `commands/task-list.md`, `skills/task-implement/SKILL.md` — command and skill implementations.
+- `commands/task-setup.md`, `commands/task-add.md`, `commands/task-clean.md`, `commands/task-list.md`, `skills/task-implement/SKILL.md`, `skills/task-review/SKILL.md`, `skills/task-iterate/SKILL.md` — command and skill implementations.

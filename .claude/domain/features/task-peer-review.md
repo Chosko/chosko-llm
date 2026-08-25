@@ -179,8 +179,15 @@ Step 5  Full test suite
         run /task-iterate in this session          (no commit)
         repeat while blocking findings and rounds remain
         ── loop ends, tree corrected, still uncommitted ──
+Step 6  Terminal status flip
 Step 7  Commit and push                            (one commit, includes fixes)
 ```
+
+The loop sits **before Step 6**, not between Steps 6 and 7. When it ends with
+unresolved `BLOCKING` findings the run halts, and a halted run leaves the task
+`[IN PROGRESS]` — which is what `/task-implement`'s failure handling already
+specifies. Flipping to `[DONE]` first and halting afterwards would leave the
+backlog claiming work that was never accepted.
 
 The review runs as a **subagent** because fresh context is the mechanism, not a
 detail — a reviewer that watched the code being written will rationalise it.
@@ -237,8 +244,13 @@ Both skills need full frontmatter, `version: 0.1.0`. Root `VERSION` minor bump.
 
 Hard contracts:
 
-- `/task-review` writes nothing to the working tree and runs no command that
-  mutates. Read-only, always.
+- `/task-review` mutates nothing: no edit to a source file, test file, task
+  body, `TASKS.md` status or `FEATURES.md` entry, and no `git` or `gh` command
+  that changes a file, an index, a ref, a remote or a pull request. The one
+  exception is the report itself — a manual run may opt into
+  `.claude/reviews/<task>-R<round>.md`, and a run spawned by
+  `/task-implement --review` writes nothing at all. That file is a transient
+  artifact the user owns and deletes; nothing reads it back automatically.
 - `/task-iterate` never invents findings; it only triages what it was given.
 - Neither skill opens a PR.
 - Under `--review`, exactly one commit per task.
@@ -259,14 +271,20 @@ Hard contracts:
   and can spawn a child that runs and returns; probed directly on 2026-08-24.
   Batch `--review` ships. The async-return constraint this surfaced is recorded
   in the architecture section above and is binding on the implementor's body.
-- **What counts as "the base" in branch mode.** `master` is the project default
-  but a stacked branch wants its parent. Proposal: default to the repo's default
-  branch, allow `base=<ref>`.
+- ~~**What counts as "the base" in branch mode.**~~ **Resolved**, as proposed
+  and as shipped: branch mode defaults to the repository's own default branch
+  (`git symbolic-ref refs/remotes/origin/HEAD`, falling back to
+  `git remote show origin`, then to whichever of `master` / `main` exists —
+  both or neither stops and asks), and `base=<ref>` overrides it. An override
+  that does not resolve stops the run rather than silently falling through to
+  the default.
 - **Acceptance criteria are prose.** Task bodies write them as bullets, not as
   a structured, individually-addressable list. Per-criterion verdicts therefore
   depend on the reviewer parsing prose consistently. Tightening the task schema
   would fix this properly and is out of scope here — noted as a candidate
   follow-up.
-- **Does `--rounds` belong on `/task-review` too?** As specified it is a
-  `/task-implement` flag. A manual `/task-review` produces one report and the
-  user decides. Leaving it that way unless the manual loop proves annoying.
+- ~~**Does `--rounds` belong on `/task-review` too?**~~ **Decided: no**, and
+  shipped that way. It is a `/task-implement` flag; `/task-review` has none. A
+  manual review produces one report and the user decides what to do with it —
+  the loop belongs to the run that owns the tree and the commit. Revisit only
+  if the manual loop proves annoying in practice.

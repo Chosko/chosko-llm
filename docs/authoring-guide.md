@@ -610,8 +610,24 @@ flag so the user can override the default commit behaviour. The split is about
   for review. They accept **`--commit`** to commit what they wrote at the
   end.
 - **Auto-committing commands.** `/task-add`, `/task-clean`,
-  `/task-implement`, and `/context-update` commit automatically. They accept
-  **`--no-commit`** to write their changes but skip the commit.
+  `/task-implement`, `/task-iterate`, and `/context-update` commit
+  automatically. They accept **`--no-commit`** to write their changes but skip
+  the commit.
+
+`/task-review` belongs to neither group: it never commits anything, because it
+never changes anything. It is read-only by contract — no edit to a source file,
+a task body or a status line, no mutating `git` or `gh` command — so it has
+neither `--commit` nor `--no-commit`, and the one file it may write (the opt-in
+`.claude/reviews/<task>-R<round>.md` report a manual run asked for) is a
+transient artifact the user owns, not output to be committed.
+
+`/task-iterate` sits in the auto-committing group but has one caller-dependent
+departure, spelled out here so it is not mistaken for a bug: invoked standalone
+it commits and pushes like every other member of the group, and invoked inside a
+`/task-implement --review` round it commits nothing, leaving the corrected tree
+for that run's own commit. The reason is `/task-implement`'s one-commit-per-task
+contract — a fix commit alongside the implementation commit would be two commits
+for one task. It never infers which mode it is in; the caller asserts it.
 
 When adding a new command that writes files, follow the same rules:
 

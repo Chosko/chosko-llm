@@ -607,14 +607,24 @@ tasks. The core idea is to spend more focus in planning and writing down tasks, 
 - `/task-add` — plan a task and write it down. This is the real strength of this workflow: invoke the command with a very short description, let Claude Code investigate and expand it, in a conversational way. Claude will ask every question needed to fill the gaps, then it will write everything down for further implementation. It may propose splitting the description into several tasks when that gives better units (independent deliverables, or one task that's too large) — pass `--no-split` to always get exactly one task.
 - `/task-add feature=<slug>` — plan from an `/architect` feature document instead of a description. The document is the input, so you don't re-explain the work in prose; a feature usually becomes several tasks. Run it again after re-architecting and it *reconciles* rather than duplicating: each existing task is either left alone, updated in place, or skipped with a reason and replaced — and `[DONE]` tasks are never touched. When the run drafts any new task, it appends one more at the end to update the affected documentation once the others land. You approve the whole plan, reconciliation included, in one pass.
 - `/task-list` — show what's pending. On a project with a `.claude/PLAN.md` it groups the backlog **by milestone in plan order**, resolving each task's `Feature:` slug through the plan, and flags any task whose feature is blocked with `⚠ blocked by <slug>` alongside the existing markers; tasks with no feature, or one the plan doesn't list, fall under a trailing `Unplanned` heading. With no plan, the output is exactly what it has always been — no grouping, no flags, and no message about the missing plan.
-- `/task-implement` — build a task end-to-end, test-first, one commit (and push) each. When a feature-derived task finishes the last task for its feature, proposes — once, at the end of the run — flipping that feature to `[DONE]` in `FEATURES.md`; you decide.
+- `/task-implement` — build a task end-to-end, test-first, one commit (and push) each. Pass `--review [--rounds N]` to have each task reviewed before it's committed: after the tests and before the status flip, the run spawns `/task-review` in a fresh subagent, waits for its findings, and runs `/task-iterate` in the session to triage and apply them — the fixes ride in the task's own single commit. When a feature-derived task finishes the last task for its feature, proposes — once, at the end of the run — flipping that feature to `[DONE]` in `FEATURES.md`; you decide.
+- `/task-review` — audit a diff against the acceptance criteria of the task that produced it. Three input forms: no argument reviews the uncommitted tree, a branch name reviews that branch against the repo's default branch (`base=<ref>` overrides), a PR number or URL reviews that pull request through `gh`. It reports only findings it holds at 80% confidence or better, each citing a `file:line` and a concrete failure mode, at `BLOCKING` / `IMPORTANT` / `ADVISORY` — an unmet acceptance criterion is always blocking, and finding nothing is a valid, complete review. Read-only: it never edits, never commits, and never opens a PR.
+- `/task-iterate` — triage the findings `/task-review` produced, apply the ones that survive, and record why the rest didn't. Every finding gets exactly one of `fix`, `defer` or `reject`, written out in full before the first edit — that table is the point of the skill, and its rejections travel into the next review round as binding context so a rejected finding can't simply be re-raised. It never invents a finding of its own.
 - `/task-clean` — prune finished tasks.
 
-`/task-add`, `/task-clean`, and `/task-implement` commit automatically and
-then push, once per task for `/task-implement` (pass `--no-commit` to skip
-both, or `--no-push` to commit without pushing). `/task-setup` only commits
-under `--commit`, at which point it pushes too (`--commit --no-push` commits
-without pushing).
+`/task-add`, `/task-clean`, `/task-implement`, and `/task-iterate` commit
+automatically and then push, once per task for `/task-implement` (pass
+`--no-commit` to skip both, or `--no-push` to commit without pushing).
+`/task-review` commits nothing at all — it is read-only by contract.
+`/task-setup` only commits under `--commit`, at which point it pushes too
+(`--commit --no-push` commits without pushing).
+
+`/task-iterate` is the one exception to that, and deliberately so: run
+standalone it commits and pushes like the rest, but run *inside*
+`/task-implement --review` it commits nothing and leaves the corrected tree
+for that run's own commit step. Otherwise a reviewed task would land an
+implementation commit plus a separate fix commit for work nobody reviewed
+separately — so a task stays at exactly one commit, reviewed or not.
 
 Tasks can be **human-in-the-loop**: when part of the work only a human can
 perform in an external tool (a Unity editor step, a cloud console, hardware),
