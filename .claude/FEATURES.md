@@ -76,7 +76,7 @@ Tasks: 125, 126, 127, 128, 129, 130, 131
 
 ## repo-local-audits — Unshipped audits for building this product, not part of it
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/repo-local-audits.md
 Source: prompt
 Tasks: 135, 136, 137, 138
