@@ -40,7 +40,7 @@ Context:
 ```
 Done: 2026-08-25 — commit 2b28518 (pushed). lib.sh gained raw_version, src_changelog_path, print_changelog_range <old> <new> (return 0 = printed, 1 = nothing printed; single buffered awk pass; internal exit codes 10/11/12; cyan accent); resolve_version refactored onto raw_version; cmd-upgrade.sh prints the range after git pull and dumps git log --oneline only when the printer returns non-zero. VERSION 0.62.4→0.63.0. Premise correction: resolve_version is no longer byte-for-byte identical in one degenerate case — an empty/whitespace-only VERSION file now yields "unknown (sha)" instead of " (sha)"; accepted as the more correct answer. Verified against a throwaway clone in the scratchpad, never the real ~/.chosko-llm.
 
-## [ ] 4. Documentation for version-changelog (task 149)
+## [x] 4. Documentation for version-changelog (task 149)
 
 Depends on: 3
 
@@ -51,6 +51,7 @@ Context:
 ```prompt
 /task-implement 149
 ```
+Done: 2026-08-25 — commits 58192e4 (task 149) and e79f583 (feature version-changelog marked [DONE] in FEATURES.md, user-approved), both pushed. README (upgrade readout, versioning rule + guard pointer, repo-layout rows), docs/cli-help.txt, .claude/context/shared-lib.md (new Version and Changelog readout sections), .claude/context/cmd-upgrade.md, .claude/context/INDEX.md (CHANGELOG.md canonical doc, Last updated 2026-08-25). VERSION 0.63.0→0.63.1. Premises: README line hints off by a few lines; shared-lib.md had no existing version section (created one). Feature version-changelog fully shipped.
 
 ## [ ] 5. Delete the dead dual-LLM lane (task 118)
 
@@ -58,6 +59,7 @@ Depends on: 4
 
 Context:
 - 2026-08-25 (from step 2): scripts/check-task-parity.sh is already red on this branch before any deletion — it reports [PLANNED], [NEW], [ITERATED] as unknown status tags on the prompt side. Not a regression to fix; relevant only if the task expects a green baseline.
+- 2026-08-25 (from step 4): VERSION is now 0.63.1; every VERSION bump from here on writes its CHANGELOG.md section and runs scripts/check-changelog.sh. Subagents so far have used the repo's trailer-free commit style. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator step marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 118
