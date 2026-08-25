@@ -10,13 +10,18 @@ CLI:
 - `chosko-llm rm <feature>` — `<feature>` = `<name>`, `command:<name>`,
   `skill:<name>`, `claude-md:<name>`, `statusline:<name>`, or `hook:<name>`.
 - `chosko-llm rm <feature> --local` / `--global` — scope, see below.
+- `chosko-llm rm <feature> --force` — remove despite dependents, see below.
+  Stripped from the arg list the same way `resolve_scope` strips
+  `--local`/`--global`, so it may appear anywhere and never reaches the spec.
 - `-h` / `--help` — usage, exit 0.
 
 Exit codes:
 - 0 success.
 - 1 (via `die`) if: no arg, `<name>` ambiguous (more than one of
   command/skill/claude-md/statusline installed) without prefix, nothing
-  matching installed, or the resolved kind is `statusline` with `--local`.
+  matching installed, the resolved kind is `statusline` with `--local`, or an
+  installed feature still declares this one in `requires:` and `--force` was
+  not passed.
 
 Side effects:
 - Commands: `rm -f` on `.md` file.
@@ -41,6 +46,29 @@ behavior. Right after `resolve_installed` determines `kind`,
 `scope_supports_kind "$kind"` gates the removal — `die`s naming statusline
 global-only if it fails, before any filesystem check.
 
+**Dependents guard (`requires:`, task 125).** Runs after the scope gate and
+before any deletion. Scans the whole installed set for anything declaring
+`<kind>:<name>` in `requires:` (`requires_specs` per candidate, exact-line
+`grep -qxF` against the spec being removed); a feature naming itself is
+skipped, or it would block its own removal forever. Non-empty result → `die`
+naming every dependent and pointing at `--force`. With `--force` → same names,
+as a `log_warn` about what is about to break, then the removal proceeds. A
+malformed `requires:` in any scanned file aborts the whole `rm` (`die` via
+command substitution) rather than deleting on a declaration nobody could read.
+
+**Scan asymmetry — installed frontmatter, except claude-md.** Commands, skills,
+statusline and hooks are scanned from `$CLAUDE_HOME`. claude-md is scanned from
+the MANAGED CLONE (`$CHOSKO_LLM_HOME/claude-md/*.md`, filtered by
+`claudemd_is_installed`) because `inject_section` strips frontmatter — an
+installed claude-md section carries no `requires:` to read at all, so the
+clone's copy of the same name is the only surviving declaration. Not an
+oversight; flagged as such in the source.
+
+**`uninstall.sh` is unaffected.** It never calls `cmd-rm` — it walks the
+managed-clone listing and `rm -rf`s installed artifacts itself, so no
+dependents guard applies. Correct: a bulk teardown removing everything has no
+dependent left to break.
+
 ## Internal patterns
 
 - **Resolution local, not via `resolve_feature`.** `cmd-rm.sh` parses
@@ -62,8 +90,8 @@ global-only if it fails, before any filesystem check.
 
 - [shared-lib.md](./shared-lib.md) — uses `inst_command_path`,
   `inst_skill_path` / `inst_skill_dir`, `claudemd_is_installed` /
-  `remove_section`, scope helpers `resolve_scope` / `scope_supports_kind` /
-  `claudemd_target_path`.
+  `remove_section`, `requires_specs` (dependents guard), scope helpers
+  `resolve_scope` / `scope_supports_kind` / `claudemd_target_path`.
 - [cmd-add.md](./cmd-add.md) — inverse op.
 - [cli-entry.md](./cli-entry.md) — `uninstall.sh` does bulk variant of this
   against managed-clone listing.
@@ -76,3 +104,7 @@ global-only if it fails, before any filesystem check.
   do bulk ops) → `cmd-rm.sh`.
 - Changing scope behavior (statusline refusal) → `resolve_scope` call and
   `scope_supports_kind` check in `cmd-rm.sh`.
+- Changing the dependents guard (which kinds are scanned, where each is read
+  from, self-reference handling, `--force` semantics) → the `dependents guard`
+  block and `record_if_dependent` in `cmd-rm.sh`, plus `requires_specs` in
+  `lib.sh`.

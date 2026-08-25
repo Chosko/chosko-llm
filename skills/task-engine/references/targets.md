@@ -117,11 +117,10 @@ per task and no body read can be justified by it.
 - **`/task-list`** — reads `Target:` for one marker only: if the task's
   target is `claude+human` or `human`, append `⚠ <target>` after the title
   (before any deps annotation) so human-in-the-loop tasks are visible at a
-  glance. Target `claude` gets no marker. Its own copy of that rule still
-  names a fourth value, `local`, alongside `claude` as unmarked; that value
-  was removed from the system when the dual-LLM lane was deleted, so it is
-  deliberately not carried here and `/task-list`'s mention of it is dead
-  text awaiting its migration.
+  glance. Target `claude` gets no marker. Its pre-migration copy of that rule
+  also named a fourth value, `local`; that value was removed from the system
+  when the dual-LLM lane was deleted, so it is deliberately not carried here,
+  and `/task-list`'s mention of it went with the migration.
 - **`/task-clean`** — does not read `Target:` at all.
 - **`/task-implement`** — the only consumer that acts on a target. It reads
   its supporting `human-in-loop.md` for a `claude+human` / `human` task,

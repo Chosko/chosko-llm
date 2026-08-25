@@ -2,6 +2,30 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.8.5 — 2026-08-25
+
+- Documentation catch-up for the `shared-phase-engine` work (1.7.0 – 1.8.4).
+  `README.md` now describes what `add` does with `requires:` and what `rm`
+  refuses without `--force`, lists `requires:` among the optional frontmatter
+  keys, and says that installing any `task-*` feature installs
+  `skill:task-engine` too.
+- `docs/authoring-guide.md`'s "Keeping the two `council-gate.md` copies in
+  step" rule is **qualified, not lifted**: a shared file is safe when it lives
+  in its own installable skill that every dependent declares in `requires:`
+  (`skills/task-engine/` is the worked example), and the council gate is still
+  the exception because it must keep working when `claude-council` is
+  *absent* — an optional dependency, which `requires:` cannot express. The
+  "Authoring a skill" section now covers the non-invocable reference-library
+  shape and the `description`-says-so convention that keeps it out of skill
+  suggestions.
+- `skills/task-engine` (0.1.1) — `references/targets.md` no longer describes
+  `/task-list`'s dead `local` target mention as "awaiting its migration"; that
+  migration landed in 1.8.1. Text only; no rule changed.
+- This repo's own `.claude/context/` and `.claude/domain/` layers are brought
+  in line with what shipped, and the `shared-phase-engine` feature document is
+  reconciled with it — including the line-count targets the migration missed
+  and why they were the wrong measure.
+
 ## 1.8.4 — 2026-08-25
 
 - `/task-implement` (1.3.0) is the last of the four consumers to move onto

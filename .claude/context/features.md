@@ -148,6 +148,34 @@ Currently shipped:
   artifacts, never overwrite a non-stub wrapper. **Authoring command —
   leaves scaffolding uncommitted for user review by default;
   `--commit` opts in to committing exactly paths run wrote.**
+- `skills/task-engine/` — reference library the `task-*` suite reads;
+  **not user-invocable**, takes no arguments, runs nothing, produces no
+  output. Exists because a rule stated in four bodies is four things to
+  update and three chances to forget. `SKILL.md` is a MAP, not a rule
+  holder — it says which reference file owns what and repeats the
+  not-invocable statement for an agent that opened the file without
+  reading frontmatter; the `description` says the same thing in the words
+  skill selection matches on, which is what keeps it out of suggestions.
+  Six files under `references/`, one authority each:
+  `resolution.md` (`.claude/TASKS.md` schema and parsing, the `all` /
+  `next` / explicit-list selectors, body-file location, the
+  `/task-setup`-has-run gate), `status.md` (the eight-value status
+  vocabulary, which statuses are terminal, which implementable, legal
+  transitions), `targets.md` (`Target:` values, the `## Manual
+  interventions` pairing rule, the delegation guard, per-consumer notes),
+  `stale.md` (`[STALE]` detection, who writes and clears it, the
+  implement-anyway/stop protocol, reconciliation classification),
+  `tree.md` (the dirty-tree prompt protocol, four options, `DIRTY_FOLD` /
+  `DIRTY_FOLD_UNTRACKED` and the Step-7 fold), `commit.md` (pull-at-start,
+  per-task commit and push, `--no-commit` / `--no-push` gating). A
+  consumer cites the file by
+  `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/<f>.md`
+  and states only its own deviations. Installed like any other skill
+  (`cp -R` of the folder), which is exactly why the engine had to be a
+  skill and not a command — see
+  `../domain/features/shared-phase-engine.md`. Its four consumers declare
+  `requires: skill:task-engine`, so `add` pulls it in and `rm` refuses to
+  take it away while any of them is installed.
 - `commands/task-add.md` — plans and appends new task conversationally:
   writes summary block to `.claude/TASKS.md` and thin body file at
   `.claude/tasks/<N>.md`. Default body schema (target: claude) contains
@@ -186,6 +214,12 @@ Currently shipped:
   only; absent, not `none`, on free-form ones) and `[STALE]` status
   (set by `/architect`, never by `/task-add`; resolved by
   `/task-add feature=<slug>` reconciliation).
+  Declares `requires: skill:task-engine` and is the largest consumer of it:
+  PHASE 0's setup check and the index-file format reference
+  `references/resolution.md`, the status-tag block `status.md`, target values
+  and manual interventions `targets.md`, the `[STALE]` and
+  reconciliation-classification rules `stale.md`, and PHASE 5 `commit.md`.
+  What survives inline is what is unique to authoring.
 - `commands/task-clean.md` — prunes terminal-status tasks. Terminal means
   `[DONE]` and `[SKIP]` and nothing else — `[STALE]` is live work awaiting
   reconciliation and never pruned by default (naming it explicitly
@@ -201,12 +235,23 @@ Currently shipped:
   cleaned stays `[PLANNED]`, since `[PLANNED]` → `[NEW]` illegal. After
   applying, commits changes automatically (`.claude/TASKS.md` + deleted
   body files + `.claude/FEATURES.md` when changed); `--no-commit`
-  leaves uncommitted.
+  leaves uncommitted. Declares `requires: skill:task-engine` — first
+  *writing* consumer of it: backlog parsing references
+  `references/resolution.md`, the prune-set vocabulary `status.md`, the
+  `[STALE]` warning `stale.md`, and the commit/push gating `commit.md`.
 - `skills/task-implement/` — implements backlog tasks end-to-end with
   tests-first sequence. `SKILL.md` carries common path (clean
-  tree, known test runner, numbered `target: claude` task); eight
+  tree, known test runner, numbered `target: claude` task); last of the four
+  to move onto `task-engine`, and declares `requires: skill:task-engine` —
+  backlog resolution and selectors reference
+  `references/resolution.md`, implementable/terminal statuses `status.md`,
+  `Target:` handling and the delegation guard `targets.md`, the STALE
+  protocol `stale.md`, the dirty-tree check `tree.md`, and PRE-FLIGHT step 5
+  plus Step 7 `commit.md`. Its own `dirty-tree.md` supporting file was
+  DELETED in that migration (`tree.md` was extracted from it and now holds
+  the protocol once), leaving seven
   supporting files read only when their branch fires —
-  `dirty-tree.md` (non-empty `git status`), `test-runner.md` (runner must
+  `test-runner.md` (runner must
   be inferred; mirrors task-setup's table), `no-test-suite.md`,
   `human-in-loop.md`, `unity-mcp-checkpoints.md` (Unity-MCP-driven
   checkpoints — read only when current human-in-loop task's project
@@ -688,7 +733,10 @@ Currently shipped:
   groups; summary line unchanged. NO `PLAN.md` → byte-for-byte the old output,
   a silent no-op with no warning and no pointer at `/production-plan`. Reads
   `.claude/TASKS.md`, plus `PLAN.md` and `FEATURES.md` when a plan exists;
-  never opens body files, feature docs or the roadmap.
+  never opens body files, feature docs or the roadmap. First consumer of
+  `task-engine` and declares `requires: skill:task-engine`: backlog
+  resolution references `references/resolution.md` and the status vocabulary
+  `status.md`, leaving only the rendering rules inline.
 - `commands/session-save.md` — writes per-project handoff file so an in-flight
   conversation's state survive end of that conversation. Command not skill:
   single pass, no phases, no supporting files — same register `/task-list` and
@@ -803,17 +851,28 @@ version: <semver>           # required; install refuses without it
 type: command | skill | claude-md | statusline | hook
 description: <one line>
 replaces: command:<name>     # OPTIONAL, only on a kind change; see below
+requires: skill:<name>       # OPTIONAL, any kind; comma-separated; see below
 event: PreToolUse            # hook kind ONLY; required there
 matcher: AskUserQuestion     # hook kind ONLY; optional, narrows event to one tool
 ---
 ```
 
-`replaces:` is the optional fifth key from the kind-migration path: set it when
+`replaces:` is an optional key from the kind-migration path: set it when
 a feature changes kind (`commands/<n>.md` rewritten as `skills/<n>/SKILL.md`),
 so `add`/`update`/`update --all` remove the superseded artifact from
 `$CLAUDE_HOME` instead of leaving two definitions of one slash command. Live
 examples: `skills/context-build/SKILL.md` and `skills/context-update/SKILL.md`.
 Drop the key once the migration has propagated.
+
+`requires:` is the other optional key, valid on every kind: a comma-separated
+list of kind-prefixed specs naming features whose files this one reads at run
+time. `add` installs them first, `rm` refuses to remove one while a dependent
+is installed (`--force` overrides). One level deep, unversioned,
+non-transitive. Live examples: `commands/task-add.md`,
+`commands/task-list.md`, `commands/task-clean.md` and
+`skills/task-implement/SKILL.md`, all declaring `requires: skill:task-engine`.
+Unlike `replaces:`, it is permanent — the dependency does not "propagate" and
+the key is dropped only when the reference is.
 
 See `../../docs/authoring-guide.md` for canonical spec, including
 semver bump rules, commit-control convention, three places task
@@ -832,7 +891,7 @@ its state in versioned project document.
 - **Supporting files are read on demand.** A skill folder's non-`SKILL.md`
   files exist so the common path stays cheap: `SKILL.md` names the branch
   and the file to read when it fires, and nothing else reads them.
-  `skills/task-implement/` (eight), `skills/product-design/` (four),
+  `skills/task-implement/` (seven), `skills/product-design/` (four),
   `skills/architect/` (three), `skills/task-review/remote-diffs.md`,
   `skills/context-build/nested.md` and
   `skills/context-update/nested.md` (one each) all follow this.
@@ -840,6 +899,15 @@ its state in versioned project document.
   looking for one. Whole
   folder is copied on install regardless — the saving is tokens per run,
   not bytes on disk.
+- **`skills/task-engine/references/` is the other thing entirely.** Those
+  files are read by OTHER features, not by their own `SKILL.md`, which is why
+  the skill needs `requires:` and a plain supporting file does not. A skill's
+  own supporting file is private to it and needs no declaration; a file
+  another feature reads is a cross-feature dependency and must be declared, or
+  it installs into a dangling path. See
+  `../../docs/authoring-guide.md` § "Keeping the two `council-gate.md` copies
+  in step" for the case where this does NOT apply (an optional dependency,
+  which `requires:` cannot express).
 - **No state file.** Versions live in frontmatter; what's installed is
   whatever exists under `$CLAUDE_HOME`. See `../../CLAUDE.md` hard rules.
 

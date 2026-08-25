@@ -41,7 +41,10 @@ chosko-llm --version           # print the installed version (also: -v, version)
 chosko-llm add <feature>       # install a feature into ~/.claude/
 chosko-llm add <f1> <f2> ...   # install several features in one call (best-effort: one bad name doesn't block the rest)
 chosko-llm rm <feature>        # remove an installed feature
+chosko-llm rm <feature> --force  # remove it even when something installed still requires it
 ```
+
+Some features read a file out of another feature, and say so in their frontmatter (`requires:`). `add` installs those requirements first, one level deep, naming each as it goes — so `chosko-llm add command:task-add` also installs `skill:task-engine`. A requirement that can't be installed aborts that feature before anything is copied for it; the other names in the same call still run. `rm` is the mirror: it refuses to remove a feature that an installed feature still declares in `requires:`, naming every dependent, unless you pass `--force` (which removes it anyway and warns about what you just broke). `add --all` needs neither, since it installs everything.
 
 ### Keeping up to date
 
@@ -612,6 +615,16 @@ tasks. The core idea is to spend more focus in planning and writing down tasks, 
 - `/task-iterate` — triage the findings `/task-review` produced, apply the ones that survive, and record why the rest didn't. Every finding gets exactly one of `fix`, `defer` or `reject`, written out in full before the first edit — that table is the point of the skill, and its rejections travel into the next review round as binding context so a rejected finding can't simply be re-raised. It never invents a finding of its own.
 - `/task-clean` — prune finished tasks.
 
+The rules these features share — how a task is resolved from `TASKS.md`, what
+each status means, what `Target:` gates, how `[STALE]` is handled, the
+dirty-tree prompt, and how commits and pushes are gated — live once, in the
+`task-engine` skill, and each feature references them instead of restating
+them. `task-engine` is not a command you invoke; it is a reference library the
+others read while they run. `/task-add`, `/task-list`, `/task-clean` and
+`/task-implement` all declare `requires: skill:task-engine`, so installing any
+one of them installs the engine too, and `chosko-llm rm skill:task-engine`
+refuses while any of them is still installed.
+
 `/task-add`, `/task-clean`, `/task-implement`, and `/task-iterate` commit
 automatically and then push, once per task for `/task-implement` (pass
 `--no-commit` to skip both, or `--no-push` to commit without pushing).
@@ -772,7 +785,7 @@ cd chosko-llm
 - New command → single `.md` file under `commands/`. See [docs/authoring-guide.md](docs/authoring-guide.md#commands).
 - New skill → folder with a `SKILL.md` under `skills/`. See [docs/authoring-guide.md](docs/authoring-guide.md#skills).
 
-Every feature requires YAML frontmatter (`name`, `version`, `type`, `description`). `add` and `update` refuse to install a file missing a `version` field.
+Every feature requires YAML frontmatter (`name`, `version`, `type`, `description`). `add` and `update` refuse to install a file missing a `version` field. Three keys are optional: `replaces: <kind>:<name>` on a feature that changed kind, `requires: <kind>:<name>[, …]` on a feature whose body reads a file inside another installed feature, and the hook-only `event:` (required there) / `matcher:` pair.
 
 **Versioning.** There are two version axes. The per-feature `version:` frontmatter versions a single command or skill (and gates `add` / `update`). The root `VERSION` file is the repo-level stamp that `install.sh` reports — bump it on every shipped change: patch for fixes and docs, minor for a new feature, major for a breaking CLI change. A feature change bumps both. One narrow exception: the repo-local skills under this repo's own `.claude/skills/` are unversioned development tooling installed nowhere, so a change confined to them bumps neither axis — bumping for a file no user receives would corrupt the meaning of the version `install.sh` reports.
 

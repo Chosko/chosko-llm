@@ -9,14 +9,20 @@ carries a small CLI change with it.
 
 ## Purpose
 
-`commands/task-add.md` is 879 lines. `skills/task-implement/SKILL.md` is 708.
-`task-clean` is 295, `task-list` 240, `task-enrich` 184. Much of that bulk is
-the same material stated five times: how a task is resolved from `TASKS.md`,
-what the status vocabulary means, how `Target:` gates delegation, what `[STALE]`
-means and how it is detected, what the dirty-tree protocol is, how commits and
-pushes are gated by `--no-commit` / `--no-push`.
+Four features carry the backlog's rules. When the extraction began,
+`commands/task-add.md` was 834 lines, `skills/task-implement/SKILL.md` 773
+(plus an 88-line `dirty-tree.md` beside it), `task-clean` 295 and `task-list`
+240. Much of that bulk is the same material stated four times: how a task is
+resolved from `TASKS.md`, what the status vocabulary means, how `Target:`
+gates delegation, what `[STALE]` means and how it is detected, what the
+dirty-tree protocol is, how commits and pushes are gated by `--no-commit` /
+`--no-push`.
 
-Five copies of a rule is five things to update when the rule changes, and four
+(An earlier draft of this document counted `task-enrich` as a fifth consumer.
+It was deleted with the dual-LLM lane before the extraction started, so the
+suite this feature restructures is four features, not five.)
+
+Four copies of a rule is four things to update when the rule changes, and three
 opportunities to forget. It is also, at these sizes, a direct context cost every
 time one of them loads.
 
@@ -29,7 +35,7 @@ actual phases, gates, or TDD assumptions applies here.
 
 In scope: extracting the shared material into an engine, deciding where the
 engine lives so it can be referenced at runtime, the `requires:` frontmatter
-field and the `cmd-add` / `cmd-update` change that makes cross-feature
+field and the `cmd-add` / `cmd-rm` change that makes cross-feature
 references safe, and the order the suite is migrated in.
 
 Deliberately out:
@@ -96,10 +102,29 @@ Task resolution follows
 This command additionally skips tasks whose status is terminal.
 ```
 
-Rough targets, to be confirmed as the extraction proceeds: `task-add` from 879
-lines to under 400, `task-implement` from 708 to under 350, the three smaller
-commands to under 150 each. The measure of success is not the line count but
-that a rule appears once.
+What the migration actually achieved, against the rough targets this document
+set before it started:
+
+| Feature | Before | After | Target | Met |
+| --- | --- | --- | --- | --- |
+| `task-add` | 834 | 731 | under 400 | no |
+| `task-implement` | 773 + 88 (`dirty-tree.md`) | 708 | under 350 | no |
+| `task-clean` | 295 | 228 | under 150 | no |
+| `task-list` | 240 | 229 | under 150 | no |
+
+Every target was missed, and the targets were the wrong measure. They were set
+by dividing the total by the number of consumers, which assumes the bulk is
+shared; it is not. What each body carries that no other body carries — a
+`/task-add` phase script, `/task-implement`'s seven-step workflow and review
+loop, `/task-list`'s rendering rules — is protected verbatim by the
+behaviour-preservation contract at the top of this document, and it turned out
+to be most of the length. The engine is 909 lines (848 across six reference
+files, 61 in `SKILL.md`) and the duplication it absorbed is gone; treat the
+figures above as a record of that, not as targets that were nearly hit.
+
+The measure of success is not the line count but that a rule appears once, and
+by that measure the extraction succeeded. Read the numbers as evidence about
+where the bulk actually was.
 
 ### The `requires:` field
 
@@ -115,9 +140,14 @@ requires: skill:task-engine
 ```
 
 Comma-separated for more than one. `parse_frontmatter` splits on the first
-colon and returns whatever keys it finds, so it needs no change at all — the
-value `skill:task-engine` survives that split intact and `read_frontmatter_field`
-retrieves it.
+colon, so the **value** needs no special handling — `skill:task-engine`
+survives that split intact and `read_frontmatter_field` retrieves it. The
+**key** did cost one edit: the parser emits only keys on an explicit
+allowlist, so `requires` had to be added to that condition beside `name`,
+`version`, `type`, `description`, `replaces`, `event` and `matcher`. One more
+clause in one awk condition; no parser rewrite. (An earlier draft of this
+document said it needed no change at all, which was wrong in exactly that
+one way: a key absent from the allowlist is silently dropped.)
 
 The CLI change is confined to two scripts:
 
@@ -191,21 +221,35 @@ Hard contracts:
 - The dual-LLM lane deletion touches the same file and should go first, so the
   extraction does not carry dead material into the engine.
 
+## Resolved during implementation
+
+- **Does `cmd-add --all` need dependency handling? No, and it never will.**
+  `--all` installs every feature in the managed clone, so every declared
+  requirement is satisfied incidentally. The ordering worry was unfounded for
+  the reason suspected: a feature resolves its requirement's path when an
+  agent *runs* it, not when it is installed, so copy order within the run
+  cannot matter. `cmd-add.sh` carries a comment above the `--all` branch
+  saying so, to stop a later reader from adding resolution there.
+
 ## Open questions
 
-- **Does `cmd-add --all` need dependency handling?** It installs everything, so
-  every dependency is satisfied incidentally. Ordering could still matter if a
-  consumer is copied before its engine; probably harmless since resolution
-  happens at run time, not install time, but worth a deliberate decision.
 - **Should `requires:` be validated at authoring time?** A typo produces a
   dependency that cannot be resolved, caught only on install. A cheap lint pass
   would catch it earlier. Related to the repo-local validation work in
-  [repo-local-audits](./repo-local-audits.md).
+  [repo-local-audits](./repo-local-audits.md). Still open — the implementation
+  hardened the install-time path instead (a `requires:` entry with no kind
+  prefix is a hard `die`, not a silent skip), which narrows the blast radius
+  without moving the check earlier.
 - **Is `task-engine` the right granularity?** One engine for the whole suite may
   prove too coarse — `resolution.md` and `commit.md` are useful to features
   outside `task-*`, and a future `refactor-*` migration might want them without
   taking `stale.md`. Splitting later is cheap; starting split is speculative.
-- **Does a non-invocable skill confuse the harness?** `task-engine` is a skill
-  that should never be suggested. Its `description` can say so, but whether that
-  is enough to keep it out of skill selection needs checking against real
-  behaviour before the suite depends on it.
+  Still open; nothing in the migration decided it either way.
+- **Does a non-invocable skill confuse the harness?** Still open, and now
+  explicitly unverified. The mitigation shipped as designed — `task-engine`'s
+  `description` opens by saying it is not a skill to invoke or suggest, and the
+  body repeats it for an agent that opens the file without reading frontmatter
+  — but no observation of real skill-selection behaviour has been made, because
+  the engine has not yet been installed on a machine where that could be
+  watched. Treat "the description is enough" as an assumption the suite already
+  depends on, not as a finding.

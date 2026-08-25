@@ -352,7 +352,7 @@ Feature: shared-phase-engine
 
 ## 131. Update documentation for feature shared-phase-engine
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/authoring-guide.md, .claude/context/shared-lib.md, .claude/context/cmd-add.md, .claude/context/cmd-rm.md, .claude/context/features.md, .claude/context/INDEX.md, .claude/domain/task-workflow.md, .claude/domain/features/shared-phase-engine.md, VERSION
 Preconditions: 125, 126, 127, 128, 129, 130

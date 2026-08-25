@@ -2,6 +2,63 @@
 
 Source of truth for task backlog schema and implementation model. Read when touching any `task-*` command/skill or changing body schema.
 
+## One authority per rule (`task-engine`)
+
+Everything below this section is a *rule* — schema, vocabulary, protocol —
+and every rule has exactly one home. That home is `skills/task-engine/`, a
+shipped skill that is a reference library and not a command: no arguments,
+no behaviour, nothing to invoke. Six files under `references/`, one authority
+each:
+
+| File | Owns |
+| --- | --- |
+| `resolution.md` | `.claude/TASKS.md` parsing, body-file location, the `all` / `next` / explicit-list selectors, the `/task-setup`-has-run gate. |
+| `status.md` | Status vocabulary, which values are terminal, which implementable, legal transitions. |
+| `targets.md` | `Target:` values, the `## Manual interventions` pairing rule, the delegation guard. |
+| `stale.md` | `[STALE]`: who writes it, who clears it, the implement-anyway/stop protocol, reconciliation classification. |
+| `tree.md` | The dirty-tree prompt protocol and the Step-7 fold. |
+| `commit.md` | Pull-at-start, commit and push per task, `--no-commit` / `--no-push` gating. |
+
+A consumer cites the file by path and then **states only its own
+deviations** — `/task-clean`'s prune set is `status.md`'s terminal statuses
+plus its own refusal to prune `[STALE]`; `/task-list`'s markers are its own,
+the vocabulary they key off is not. That is the whole discipline: if a
+statement is true of two `task-*` features, it belongs in the engine, and a
+consumer restating it has created a second copy to forget.
+
+Four features consume it: `/task-add`, `/task-list`, `/task-clean`,
+`/task-implement`. `/task-review` and `/task-iterate` do not — they operate on
+diffs and findings, not on the backlog's schema.
+
+**Why a skill and not a command.** `cmd-add` installs a skill by `cp -R` of
+the whole folder, so supporting files ride along; a command is a single `.md`
+file and can carry nothing. A reference library therefore has exactly one
+shippable shape. The consumers read it at
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/<file>.md` —
+never `~/.claude`, never a `docs/` path, since neither survives installation.
+
+**Why `requires:` had to exist first.** A body reading a file inside another
+installed feature breaks when that feature is absent, and the failure surfaces
+as an agent following a dangling path mid-run rather than as anything the CLI
+said. All four consumers declare `requires: skill:task-engine`; `chosko-llm
+add` installs the engine before the dependent, and `chosko-llm rm
+skill:task-engine` refuses while any dependent is installed.
+
+`requires:` is **flat, one level deep and non-transitive by design** — no
+version ranges, no solver, no lockfile, no cycle detection. That is not a
+first cut awaiting a real resolver: the moment a dependency needs one it has
+outgrown this repo's no-state-file rules, and the correct response is to
+restructure the dependency, not to build the solver.
+
+The one thing `requires:` cannot express is an **optional** dependency — a
+feature that must keep working when the other is absent. That is why the two
+`council-gate.md` copies stay duplicated; see
+[docs/authoring-guide.md](../../docs/authoring-guide.md) § "Keeping the two
+`council-gate.md` copies in step".
+
+Design rationale and the migration's actual outcome:
+[`./features/shared-phase-engine.md`](./features/shared-phase-engine.md).
+
 ## Roles
 
 - **Author** — Claude Code, via `/task-add`. Plans task conversationally, captures decisions, identifies files, writes body. Full repo access.
@@ -249,5 +306,7 @@ This is the only write `/task-implement` makes to `FEATURES.md`, and the only st
 - [`../../CLAUDE.md`](../../CLAUDE.md) — hard rules (authoring, versioning, copy-not-symlink, no new deps).
 - [`./product-workflow.md`](./product-workflow.md) — product pipeline upstream of this backlog: `FEATURES.md`, feature status machine, writers of `Feature:` and `[STALE]`.
 - [`./features/task-peer-review.md`](./features/task-peer-review.md) — feature design behind the review loop: the three input forms, the gates, mandatory triage, sticky rejections, and the `--review` / `--rounds` integration.
-- [`../context/features.md`](../context/features.md) — shipped artifacts including every `task-*` command and skill.
-- `commands/task-setup.md`, `commands/task-add.md`, `commands/task-clean.md`, `commands/task-list.md`, `skills/task-implement/SKILL.md`, `skills/task-review/SKILL.md`, `skills/task-iterate/SKILL.md` — command and skill implementations.
+- [`./features/shared-phase-engine.md`](./features/shared-phase-engine.md) — feature design behind `task-engine` and `requires:`: why the engine had to be a skill, what the CLI change is, the migration order, and what the extraction actually achieved.
+- [`../../docs/authoring-guide.md`](../../docs/authoring-guide.md) — the `requires:` frontmatter contract, and the council-gate exception that `requires:` cannot cover.
+- [`../context/features.md`](../context/features.md) — shipped artifacts including every `task-*` command and skill, plus `skills/task-engine/`.
+- `commands/task-setup.md`, `commands/task-add.md`, `commands/task-clean.md`, `commands/task-list.md`, `skills/task-implement/SKILL.md`, `skills/task-engine/SKILL.md` + `skills/task-engine/references/*.md`, `skills/task-review/SKILL.md`, `skills/task-iterate/SKILL.md` — command and skill implementations.

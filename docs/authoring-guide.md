@@ -203,6 +203,24 @@ a mismatch will break `update --all`.
    recursively when the skill is installed.
 4. The folder name **must** match the `name` frontmatter field.
 
+A skill does not have to be something the user invokes. Because a skill folder
+is the only feature kind that can ship more than one file, it is also the way
+to publish a **reference library** — files other features read by path while
+they run, reached through `requires:` (see "`requires:` — the optional
+dependency field" above) rather than through a slash command. `skills/task-engine/` is the example: its `references/*.md` files hold
+the rules the `task-*` suite shares, its `SKILL.md` is a map of which file owns
+which rule rather than a rule holder itself, and it takes no arguments, runs
+nothing and produces no output.
+
+Say so in the `description`, and say it in the words the harness reads — the
+description is what skill selection matches on, so a library that does not
+announce itself as one gets suggested to users who have no use for it.
+`task-engine`'s reads, in part: *"NOT a skill the user invokes and never a
+skill to suggest — it takes no arguments, runs nothing, and produces no
+output"*, followed by the names of the features that do read it. Repeat the
+same statement in the body's opening lines, for the agent that opens the file
+without having read the frontmatter.
+
 ## <a id="statusline"></a>Authoring a statusline
 
 1. Create `statusline/<name>.sh`, a directly executable/sourceable bash
@@ -337,6 +355,25 @@ and nothing outside that folder travels with it. A shared file at, say,
 every machine that installed the skill — the worst possible failure, because
 it works for the author and breaks for everyone else. Two folders, two
 copies, one obligation to keep them aligned.
+
+**That rule is now conditional, and the condition is `requires:`.** A shared
+file outside the reading feature's own folder is safe when it lives in a
+skill of its own and every dependent declares that skill in `requires:`,
+because `cmd-add` then installs the dependency with the dependent and
+`cmd-rm` refuses to take it away. `skills/task-engine/` is the worked
+example: `references/resolution.md` and its five siblings are read by
+`/task-add`, `/task-list`, `/task-clean` and `/task-implement`, none of which
+carries a copy, and all four declare `requires: skill:task-engine`. A shared
+file parked in a folder nobody declares — `skills/_shared/` — is still the
+broken version, because nothing installs it.
+
+The council gate does not qualify, and the reason is the whole distinction.
+`requires:` expresses **mandatory** dependencies only: it makes a feature
+impossible to install without the thing it reads. The gate's contract is the
+opposite — it must keep working when `claude-council` is **absent**, no-oping
+quietly on machines that never installed it. That is an optional dependency,
+which `requires:` cannot express, so the gate file has to travel inside the
+folder that reads it. Two folders, two copies, one obligation.
 
 Now that `skills/claude-council/` exists in this repo, a second version of the
 same bad idea is available: parking the one shared copy *there*, next to the

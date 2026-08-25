@@ -102,10 +102,15 @@ changes nothing.
   claude-md-consuming subcommand is scope-aware for free.
 
 ### Frontmatter
-- `parse_frontmatter <file>` — emits `key=value` lines for five recognized keys:
-  `name`, `version`, `type`, `description`, `replaces`. Reads only first
-  `--- ... ---` block. Quotes stripped. Unknown keys silently dropped.
-  `replaces` optional (kind migration, below); other four required in practice.
+- `parse_frontmatter <file>` — emits `key=value` lines for eight recognized keys:
+  `name`, `version`, `type`, `description`, `replaces`, `requires`, `event`,
+  `matcher`. Reads only first `--- ... ---` block. Quotes stripped. Unknown keys
+  silently dropped. First four required in practice; `replaces` optional (kind
+  migration, below), `requires` optional on every kind (dependencies, below),
+  `event`/`matcher` read for hook kind only and ignored elsewhere.
+  Split is on the FIRST colon, so a kind-prefixed value like
+  `skill:task-engine` survives it intact — that's why `requires` cost an
+  allowlist entry and nothing more.
 - `read_frontmatter_field <file> <field>` — prints one field's value, empty if absent.
 
 ### Path resolution
@@ -257,6 +262,24 @@ fact rides same `git pull` as rename.
   installed` row as `migration pending`, and by `cmd-show`'s ambiguous-name
   `die` to name the pending migration in its error.
 
+### Dependencies (`requires:`)
+Optional frontmatter key on any kind, naming features this one reads a file
+out of. Flat, one level deep, unversioned, non-transitive — a declaration,
+never a graph. `cmd-add` installs what a feature names before installing it;
+`cmd-rm` refuses to remove a feature something installed still requires.
+- `requires_specs <file>` → one kind-prefixed spec per line, one per
+  comma-separated entry of `requires:`. Whitespace around commas and around
+  the kind colon squeezed out first, empty entries dropped. Each entry
+  validated through `parse_replaces_spec` — deliberately the SAME kind-prefix
+  parser `replaces:` uses, not a second one. Prints nothing, returns 0, when
+  the key is absent or empty.
+  **`die`s on an entry with no kind prefix** rather than skipping it silently:
+  the key exists to catch a dangling reference at install time, and a typo
+  that parsed to nothing would defeat that. So call it through a command
+  substitution (`specs="$(requires_specs "$f")" || exit 1`), NEVER a process
+  substitution — there the `die` would kill only the subshell and leave the
+  caller running.
+
 ### Validation
 - `require_versioned_source <file>` — `die`s if file missing or its
   frontmatter missing non-empty `version` or `name`. Called by
@@ -275,9 +298,17 @@ Helpers over gitignored key=value file `$CHOSKO_LLM_HOME/.auto-upgrade-state`
 
 ## Internal patterns
 
-- **Frontmatter parsing awk-only.** Adding sixth field means changing
-  awk regex in `parse_frontmatter` (the fifth, `replaces`, already cost that
-  edit). No yq/jq/python — see `../../CLAUDE.md` hard rules.
+- **Frontmatter parsing awk-only.** Adding a field means one more `key == "…"`
+  clause in `parse_frontmatter`'s awk condition — `replaces`, then `event` /
+  `matcher`, then `requires` each cost exactly that edit and nothing else,
+  because the generic first-colon split already handles any value. Cheap, but
+  never free: the allowlist is the only place a key becomes visible, so a new
+  field that is not added there is silently dropped. No yq/jq/python — see
+  `../../CLAUDE.md` hard rules.
+- **`parse_replaces_spec` parses two keys, not one.** `requires:` reuses it
+  for every entry rather than growing a second kind-prefix parser, so
+  `replaces: skill:x` and `requires: skill:x` can never disagree about what a
+  spec means. Its name predates the second caller.
 - **Migration is declarative, not a map.** `replaces:` lives on the feature
   that supersedes the old one, so no rename map / migration script / state
   file outside the filesystem. `--all` resolves migration from the *stale*
@@ -311,7 +342,14 @@ Helpers over gitignored key=value file `$CHOSKO_LLM_HOME/.auto-upgrade-state`
 
 ## When to read the source
 
-- Adding/renaming frontmatter field → `parse_frontmatter` in `lib.sh`.
+- Adding/renaming frontmatter field → `parse_frontmatter` in `lib.sh` (the
+  `key == "…"` allowlist inside its awk block).
+- Changing what `requires:` accepts, how entries are split/trimmed, or whether
+  a malformed entry dies rather than being skipped → `requires_specs` in
+  `lib.sh`, plus `parse_replaces_spec` which validates each entry. The
+  install-time and removal-time behaviour built on it lives in `cmd-add.sh`
+  (`install_requires`) and `cmd-rm.sh` (the dependents guard) — see
+  [cmd-add.md](./cmd-add.md) and [cmd-rm.md](./cmd-rm.md).
 - Changing how feature names resolve to source paths or how `command:` /
   `skill:` prefixes parsed → `resolve_feature` in `lib.sh`.
 - Changing what makes source file installable → `require_versioned_source`
