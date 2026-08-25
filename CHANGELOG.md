@@ -2,6 +2,20 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.22.3 — 2026-08-25
+
+- `/task-implement`'s SHARED RULES section now lists `review-budget.md` as the
+  seventh `task-engine` authority it consumes, alongside the six it already
+  named. It was already citing that file as the authority for `--review-model`
+  and `--review-effort` a few lines earlier.
+- `/task-review` no longer tells a reviewer to read the callers, the imports and
+  the tests before introducing the read budget that caps them. The instruction
+  now defers to THE READ BUDGET, and says the navigation layer is uncapped while
+  those reads are — zero of them under `shallow`.
+- The authoring guide's worked example for `requires:` is back in step with the
+  code it describes: `task-engine` ships seven reference files, and five
+  features declare the dependency now that `/task-review` is among them.
+
 ## 1.22.2 — 2026-08-25
 
 - The domain layer no longer describes `/production-status`'s Next field as an

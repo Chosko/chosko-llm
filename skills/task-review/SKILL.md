@@ -1,6 +1,6 @@
 ---
 name: task-review
-version: 0.2.0
+version: 0.2.1
 type: skill
 description: Audit a diff against the acceptance criteria of the task that produced it and report structured findings. Three input forms — no argument reviews the uncommitted working tree, a branch name reviews that branch against the repository's default branch or an explicit base=<ref>, and a PR number or URL reviews that pull request through gh. Every finding passes a confidence gate before it is written: report only what is held at 80% confidence or better, citing a file:line and naming a concrete failure mode, with severities BLOCKING / IMPORTANT / ADVISORY and an unmet acceptance criterion always BLOCKING. The task is resolved from task=<n>, the branch name, the PR title, or the most recently modified .claude/tasks file, and an unresolvable task stops the run rather than degrading into a generic code review. A review that reports no findings is a valid, complete result. Read-only — it edits no source, test, task or status file, runs no mutating command, opens no pull request, and writes at most the opt-in .claude/reviews/<task>-R<round>.md report a manual run asked for. It also invokes no test command, in any mode, under any budget, under any testing policy and on either invocation path: a green suite is an input its caller hands it, and where the caller reports skip-tests mode it says nothing ran and reports a criterion depending on runtime behaviour as unverifiable rather than re-deriving it. A run spawned by /task-implement --review may carry a budget block naming a read tier (shallow / standard / deep); the skill honours it from task-engine's references/review-budget.md, which is why it declares requires: skill:task-engine — the navigation layer is read in full and never counted at any tier, only distinct source and test files beyond the diff count against the cap, and a cap that actually binds is reported in one line. An invocation with no budget block — a manual run, or a spawn whose effort resolved to same — reads unbounded, exactly as before.
 requires: skill:task-engine
@@ -128,9 +128,11 @@ without one would ship the weaker product under the stronger name.
 Read the resolved body at `.claude/tasks/<n>.md` and extract its
 **Acceptance criteria** section. Each bullet is one criterion, addressed
 individually in the report. Read the body's Decisions and Hints too — a
-criterion often only makes sense with the decision behind it — and read
-whatever the diff touches: the callers, the imports, the tests, the project's
-`CLAUDE.md` and its `.claude/context/` entries for the files in the diff.
+criterion often only makes sense with the decision behind it — and, subject to
+THE READ BUDGET below, whatever the diff touches: the callers, the imports,
+the tests, the project's `CLAUDE.md` and its `.claude/context/` entries for
+the files in the diff. The navigation layer in that list is never capped; the
+callers, imports and tests are, and under `shallow` the cap on them is zero.
 
 ---
 

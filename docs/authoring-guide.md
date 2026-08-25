@@ -377,9 +377,10 @@ file outside the reading feature's own folder is safe when it lives in a
 skill of its own and every dependent declares that skill in `requires:`,
 because `cmd-add` then installs the dependency with the dependent and
 `cmd-rm` refuses to take it away. `skills/task-engine/` is the worked
-example: `references/resolution.md` and its five siblings are read by
-`/task-add`, `/task-list`, `/task-clean` and `/task-implement`, none of which
-carries a copy, and all four declare `requires: skill:task-engine`. A shared
+example: `references/resolution.md` and its six siblings are read by
+`/task-add`, `/task-list`, `/task-clean`, `/task-implement` and
+`/task-review`, none of which carries a copy, and all five declare
+`requires: skill:task-engine`. A shared
 file parked in a folder nobody declares — `skills/_shared/` — is still the
 broken version, because nothing installs it.
 
