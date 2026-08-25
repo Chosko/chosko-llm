@@ -78,7 +78,7 @@ Context:
 ```
 Done: 2026-08-25 — commit 722c4fd (pushed). commands/session-save.md at 0.1.0: writes .claude/sessions/YYYY-MM-DD-HHMM-<slug>.md, shared header (Work:/Running:), full form (nine sections) and pointer form (Resume from:), known-artifact table with the single /product-design → .claude/domain/design-process.md row (task body removed the /task-implement row; body is authority over the feature document), supersession delete, no commit/push, exactly one shell call (clock read for HHMM). VERSION 1.0.0→1.1.0. Premises held.
 
-## [ ] 7. Add the /session-resume command (task 133)
+## [x] 7. Add the /session-resume command (task 133)
 
 Depends on: 6
 
@@ -88,12 +88,14 @@ Context:
 ```prompt
 /task-implement 133
 ```
+Done: 2026-08-25 — commit 890c3ef (pushed). commands/session-resume.md at 0.1.0: three argument forms (none / YYYY-MM-DD / path), candidacy by Work: line, pointer form followed via Resume from:, 14-day staleness flag, fixed-shape briefing ending with the deletion handover sentence, read-only (at most one clock read). VERSION 1.1.0→1.2.0. Decisions: CHANGELOG.md edited though not in Files: (rule landed after the body); unrecognized argument falls back to newest candidate, explicit missing path stops. Disclosure: the agent amended an unpushed commit (eb4af56) to fix a mangled subject line — no hook skipped, no force push. Note: ./bin/chosko-llm ls --available reads the managed clone unless CHOSKO_LLM_HOME points at the working tree.
 
 ## [ ] 8. Documentation for session-continuity (task 134)
 
 Depends on: 7
 
-Context: none
+Context:
+- 2026-08-25 (from steps 6–7): VERSION is now 1.2.0. commands/session-save.md and commands/session-resume.md both at 0.1.0. Known-artifact table has ONE row (/product-design → .claude/domain/design-process.md) per task 132's Decisions — the feature document lists two; the body is authority. /session-resume takes no task-number selector; deletion handover is a closing sentence naming the resumed file. Verify with CHOSKO_LLM_HOME=E:/projects/chosko-llm ./bin/chosko-llm ls --available (without the override it reads the managed clone). The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 134
