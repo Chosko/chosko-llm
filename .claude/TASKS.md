@@ -451,7 +451,7 @@ Feature: runbook-suite
 
 ## 141. Add the /runbook-create command
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/runbook-create.md, VERSION
 Preconditions: 125, 140

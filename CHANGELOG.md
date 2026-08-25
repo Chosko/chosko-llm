@@ -2,6 +2,48 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.11.0 — 2026-08-25
+
+- New command **`runbook-create`** (0.1.0) — the authoring side of the runbook
+  suite. `/runbook-create` harvests the material for a runbook while the
+  conversation that produced it is still open, and writes
+  `.claude/runbooks/<name>.md` plus its `.claude/RUNBOOKS.md` index block.
+  Declares `requires: skill:runbook-run` and cites that skill's
+  `references/runbook-schema.md` for the artifact rather than carrying a
+  second copy of it.
+- Two axes. Target: `/runbook-create <name>` for a new runbook (a single
+  kebab-case token is a name, anything longer is a description),
+  `--append <name>` to add steps to an existing one, `--append` with no name
+  for the runbook the session is currently running, and no arguments at all,
+  which asks new-versus-append and lists the runbooks with non-`[DONE]` ones
+  first. Source: the conversation's **most recent** enumerated follow-up list
+  by default, or a batched five-question interview when a free-form
+  description is given.
+- Nine prompt-quality rules are stated in the body in full and enforced
+  against every step before the file is written — self-contained; names the
+  document to read first or carries the evidence inline; carries every
+  decision that exists nowhere on disk and nothing that already does (so the
+  correct prompt for an authored task is the one-line `/task-implement <n>`);
+  states its sequencing and why; states what must not be re-proposed; uses a
+  real slash command in its real argument form; references no path missing at
+  run time; produces one deliverable; and never invokes `/runbook-run`. A step
+  failing a rule is fixed before the write and the fix is named in the
+  confirmation report, never applied silently.
+- The confirmation gate shows the proposed **shape** only — target, step
+  titles, the sequencing line, dependencies and any rule-8 splits — never the
+  full prompts. `Context:` is written as `none` at authoring time; corrections
+  and learned facts are the run's field. Appends continue the numbering,
+  extend the `Sequencing:` line rather than replacing it, never edit a line
+  above the append point, flip a `[DONE]` runbook back to `[PENDING]`, leave a
+  `[FAILED]` one `[FAILED]`, and are allowed on a `[RUNNING]` runbook only
+  from the session running it.
+- `.claude/runbooks/` and `.claude/RUNBOOKS.md` are created on first use,
+  silently and idempotently — no setup step, and `/task-setup` and
+  `/project-setup` are untouched. A colliding name is refused with a suggested
+  alternative rather than disambiguated. Authoring-command convention: output
+  is left uncommitted for one review pass by default; `--commit` opts in and
+  `--commit --no-push` commits without pushing.
+
 ## 1.10.0 — 2026-08-25
 
 - New skill **`runbook-run`** (0.1.0) — the first artifact of the runbook
