@@ -204,7 +204,7 @@ Currently shipped:
   leaves uncommitted.
 - `skills/task-implement/` — implements backlog tasks end-to-end with
   tests-first sequence. `SKILL.md` carries common path (clean
-  tree, known test runner, numbered `target: claude` task); six
+  tree, known test runner, numbered `target: claude` task); seven
   supporting files read only when their branch fires —
   `dirty-tree.md` (non-empty `git status`), `test-runner.md` (runner must
   be inferred; mirrors task-setup's table), `no-test-suite.md`,
@@ -244,7 +244,20 @@ Currently shipped:
   task's status flips, commit, push, while `claude+human` / `human` /
   explicitly requested `[STALE]` tasks stay in parent conversation
   since need user present. `--agents` / `--no-agents`
-  pre-answer prompt; single-task runs never see it. Commits each task
+  pre-answer prompt; single-task runs never see it. On such run parent
+  is **launcher**, not orchestrator: evaluates delegation guard
+  (`Target:`, `Status:`, `Feature:`) from `TASKS.md` summary blocks
+  PRE-FLIGHT step 2 already read, so never opens `.claude/tasks/<N>.md`
+  for delegated task on any path; hands every agent same fixed-size
+  prompt — task number + repo's absolute path + run's resolved flags
+  (open list, not closed set: NO_COMMIT/NO_PUSH/AUTO_CONFIRM, resolved
+  testing mode w/ concrete test command, DIRTY_FOLD /
+  DIRTY_FOLD_UNTRACKED, non-interactivity notice) + instruction to read
+  body, CLAUDE.md, context layer itself; keeps exactly four values per
+  return (task number, terminal status, commit hash or nothing-committed,
+  one-line failure reason only on failure). Prompt O(1) in batch size and
+  in task size, so parent's context no longer grows with batch. Tasks
+  parent keeps still get body read in Step 1, unchanged. Commits each task
   separately; `--no-commit` runs full sequence but skips
   per-task commits, leaving every task's changes uncommitted. When a
   `Feature:`-tagged task lands `[DONE]` and leaves every task for that

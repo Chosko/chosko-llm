@@ -2,6 +2,21 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.3.1 — 2026-08-25
+
+- Documentation only. This repo's own navigation layers now describe the
+  `/task-implement` launcher shipped in 1.3.0: the context layer's
+  `task-implement` entry and the domain layer's "Delegated runs" section both
+  state that the parent evaluates the delegation guard from the `TASKS.md`
+  summary blocks alone, opens no task body for a delegated task, hands every
+  agent the same fixed-size prompt, and keeps only the four values each agent
+  returns.
+- The `task-implement-launcher` feature document is reconciled with what
+  shipped on two points: the three guard fields come from the `TASKS.md`
+  summary block rather than being greped out of the task body, and `[STALE]`
+  needs no `FEATURES.md` join because it is a `TASKS.md` status.
+- Nothing the CLI installs changed.
+
 ## 1.3.0 — 2026-08-25
 
 - `/task-implement`'s batch parent is now a **launcher**. On a delegated run

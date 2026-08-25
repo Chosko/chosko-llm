@@ -242,7 +242,7 @@ Feature: task-implement-launcher
 
 ## 120. Update documentation for feature task-implement-launcher
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: .claude/context/features.md, .claude/context/INDEX.md, .claude/domain/task-workflow.md, .claude/domain/features/task-implement-launcher.md, VERSION
 Preconditions: 119

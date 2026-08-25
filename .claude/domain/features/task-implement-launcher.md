@@ -45,23 +45,25 @@ Deliberately out:
 Resolution first, unchanged: `TASKS.md` supplies the candidate list for `all`,
 `next`, or an explicit set of numbers, along with each task's status.
 
-Then, per candidate, the parent greps exactly three fields out of the task body
-and reads nothing else:
+Then, per candidate, the parent needs exactly three fields — and every one of
+them is already in the summary block `TASKS.md` gave it, so it reads nothing
+further:
 
 | Field | Needed for |
 |---|---|
 | `Target:` | the delegation guard — `human` / `claude+human` stay in the parent |
-| `Status:` | eligibility; skip anything already terminal |
-| `Feature:` | `[STALE]` detection, joined against `FEATURES.md` |
+| `Status:` | eligibility; skip anything already terminal, and `[STALE]` detection |
+| `Feature:` | the end-of-run feature-completion check |
 
-`Feature:` alone is not enough for staleness — the parent must also read
-`FEATURES.md` to learn whether that feature was re-architected after the task
-was authored. That is one file for the whole run, not one per task, so it does
-not scale with batch size.
+`[STALE]` is a `TASKS.md` status, written there by `/architect`, so staleness is
+read straight off the same summary block — no join against `FEATURES.md` is
+needed for it. `FEATURES.md` is still read once per run, for the
+feature-completion proposal this feature does not change. That is one file for
+the whole run, not one per task, so it does not scale with batch size.
 
-**The parent never opens a task body.** Three greps and one `FEATURES.md` read
-are the entire budget. Anything the parent later discovers it needs, it does not
-get; it belongs in the agent.
+**The parent never opens a task body.** One `TASKS.md` read and one
+`FEATURES.md` read are the entire budget. Anything the parent later discovers it
+needs, it does not get; it belongs in the agent.
 
 ### The hand-off prompt
 
@@ -151,10 +153,10 @@ Hard contracts:
   the dirty-tree prompt once for the run. That answer is a flag and travels in
   the flag list, so this is probably already handled — worth confirming during
   implementation rather than assuming.
-- **Grep reliability on the three fields.** `Target:`, `Status:` and `Feature:`
-  are line-anchored today in every task file examined, so a `grep -m1 '^Target:'`
-  is sound. If a task body ever puts one inside a fenced block the grep would
-  read the wrong line; a cheap guard is to stop the grep at the first `##`
-  heading, since all three fields sit in the preamble.
-- **The `next` resolution path** reads `TASKS.md` only, and already does. Worth
-  confirming it does not currently peek at bodies to break ties.
+- **Grep reliability on the three fields — resolved, and moot.** The parent
+  greps no body at all: `Target:`, `Status:` and `Feature:` all appear in the
+  task's `TASKS.md` summary block, which PRE-FLIGHT already reads once for the
+  whole run. No fenced block in a task body can mislead a read that never
+  happens.
+- **The `next` resolution path — confirmed.** It reads `TASKS.md` only and does
+  not peek at bodies to break ties, so nothing had to change for it.
