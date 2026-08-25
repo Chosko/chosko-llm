@@ -2,6 +2,32 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.12.0 — 2026-08-25
+
+- New command **`runbook-list`** (0.1.0) — the read side of the runbook suite.
+  `/runbook-list` makes one pass over `.claude/RUNBOOKS.md` and prints every
+  runbook as a single line: status, name, `<done>/<total>` steps, creation date
+  and source. Declares `requires: skill:runbook-run` and cites that skill's
+  `references/runbook-schema.md` for the status vocabulary and the index block
+  shape rather than carrying a second copy of either.
+- A `[FAILED]` runbook gets a `↳ failed at step <n> — <reason>` continuation
+  line under it, so the one thing a reader of a halted runbook needs is in the
+  listing rather than behind a file open. The listing closes with a summary
+  counting the runbooks by status.
+- **It never opens a file under `.claude/runbooks/`** — everything printed comes
+  from the index, which is why the index carries derived fields at all. That is
+  `/task-list`'s discipline of never opening a task body, and it keeps the cost
+  flat in the number of runbooks rather than in their size.
+- The optional status argument is matched without brackets and
+  case-insensitively, as `/task-list`'s filter already is. An unknown status
+  names the valid ones instead of printing nothing — a silent empty result is
+  indistinguishable from having no matching runbooks. A missing or empty index
+  is not an error either: one line saying no runbooks exist and naming
+  `/runbook-create`.
+- The listing writes nothing, runs no shell command, and corrects no status
+  however wrong it looks. Reconciliation belongs to `/runbook-run`, which
+  already has the body open.
+
 ## 1.11.0 — 2026-08-25
 
 - New command **`runbook-create`** (0.1.0) — the authoring side of the runbook

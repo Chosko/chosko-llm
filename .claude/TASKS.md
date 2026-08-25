@@ -461,7 +461,7 @@ Feature: runbook-suite
 
 ## 142. Add the /runbook-list command
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/runbook-list.md, VERSION
 Preconditions: 125, 140
