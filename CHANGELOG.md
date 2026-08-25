@@ -2,6 +2,16 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.2.1 — 2026-08-25
+
+- Documentation only. The README gains a section on `/session-save` and
+  `/session-resume` — the per-project store, the full and pointer file forms,
+  the `Work:` line, the fact that resuming briefs you and then stops, and how
+  old handoffs get pruned.
+- The authoring guide's "State that outlives a session belongs in a project
+  document" section now notes that `/session-save`'s known-artifact table
+  recognizes exactly the class of document it defines.
+
 ## 1.2.0 — 2026-08-25
 
 - New `/session-resume` command, the read half of `/session-save`: it loads one

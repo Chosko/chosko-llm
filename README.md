@@ -643,6 +643,69 @@ whether you want it to drive Unity or pause for you to do the steps
 manually, and steps MCP genuinely can't perform stay manual. When the
 server isn't connected, the standard manual protocol above runs unchanged.
 
+### Hand off a conversation — `/session-save` and `/session-resume`
+
+A conversation ends and its context dies with it. The backlog records *what*
+was done and `.claude/context/` records *where things are*; neither records the
+middle — what was tried and failed, what was deliberately not tried, which
+files are half-finished, and what the exact next step was. That knowledge is
+otherwise re-derived from scratch every time a session ends mid-flight, at full
+token cost and with no guarantee the re-derivation matches.
+
+- `/session-save` — write what this conversation knows into
+  `.claude/sessions/YYYY-MM-DD-HHMM-<slug>.md`. Pass a slug to override the
+  generated one.
+- `/session-resume` — brief the current conversation from one of those files,
+  then stop.
+
+The store is **per-project**, not global: session files sit beside the
+project's other `.claude/` artifacts rather than mixing every project into one
+bucket under your home directory. Nothing in the CLI reads them — no
+`chosko-llm` subcommand walks `.claude/sessions/`, and nothing derives from
+what's written there. They are context for a human or an agent, never input to
+tooling.
+
+A save takes one of **two forms**. The full form is nine sections — what we're
+building, what worked and the evidence for it, what didn't work and why, what
+hasn't been tried, the state of each file, decisions with their reasons,
+blockers, the exact next step, and environment notes — and *every* section is
+written even when it's empty, `N/A` rather than silence, because a skipped
+section is indistinguishable from an overlooked one. The pointer form is
+written instead when the work already has its own resume artifact — a
+project-scoped state document carrying a current-stage marker, such as
+`/product-design`'s `.claude/domain/design-process.md`. Then the session file
+is a header block and one sentence saying where the state actually lives: two
+accounts of the same state that can disagree is worse than one.
+
+Both forms carry a **`Work:` line**, the one typed link from the session to the
+document the work belongs to: `task <n>`, `feature <slug>`, `document <path>`,
+or `none`. `none` is a first-class value, not a failure — a debugging session
+that touched no backlog document is exactly what it's for, and inventing a link
+there would make the link untrustworthy everywhere else.
+
+`/session-resume` takes the newest file, the newest from a date you name, or a
+path. It flags a handoff older than 14 days as stale and names any path the
+file mentions that no longer exists — both *before* the briefing, not after —
+then reports what was being built, what must not be retried, and the exact next
+step verbatim, **and stops**. It starts no work, edits no file, and takes no
+step of the plan it just described, not even the obvious one. The value is
+entirely in the stopping: you asked to be told where things stood, not to have
+the next step taken for you while you were reading.
+
+Old handoffs are pruned by **finishing the work**, not by a flag.
+`/session-resume` closes by naming the file it resumed from and handing over
+its deletion: delete it once the `Work:` it describes is finished, deletion
+being part of finishing rather than cleanup afterwards. If the session ends
+first, the next `/session-save` in a conversation that resumed from a file
+writes its new snapshot and deletes the one it superseded, so two snapshots of
+the same work never coexist. A file that was never resumed is never deleted
+automatically — the stale flag is the only signal it will ever get. There is no
+`--prune`.
+
+Neither command commits. `/session-save` writes the file, reports the path, and
+notes in one line that it's untracked; whether a handoff belongs in the repo's
+history is your call.
+
 ### Survive a cloud session — `hook:remote-session-protocol`
 
 In a Claude Code cloud session, a question asked with the `AskUserQuestion`

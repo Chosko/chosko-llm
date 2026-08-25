@@ -378,6 +378,16 @@ moves no marker, and applies the same end-of-round deletion before it ends.
 Without it, post-completion changes have no defined shape and accumulate in
 the state document.
 
+`/session-save` recognizes **exactly this class of document**. Its
+known-artifact table maps the skill in flight to a resume artifact, and a row
+qualifies only when that artifact is a project-scoped state document carrying a
+resume marker — which is what this section defines. A skill that follows the
+rule above therefore gets a pointer-form session file deferring to its own
+state document; one that doesn't gets the full nine-section handoff instead. A
+static instruction file shipped inside the installed skill folder is not a
+resume artifact — it holds no state, and its path is relative to the skill
+folder rather than to the project — so it never earns a row.
+
 ## A question the user picks an answer from needs parallel arms
 
 When a skill asks the user to choose, the answer is often rendered as

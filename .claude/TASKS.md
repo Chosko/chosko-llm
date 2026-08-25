@@ -382,7 +382,7 @@ Feature: session-continuity
 
 ## 134. Update documentation for feature session-continuity
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, .claude/context/features.md, .claude/domain/features/session-continuity.md, docs/authoring-guide.md, VERSION
 Preconditions: 132, 133

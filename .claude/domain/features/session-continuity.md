@@ -45,8 +45,8 @@ Deliberately out:
   file points at it and says nothing else. Two accounts of the same state that
   can disagree is worse than one.
 - **Committing.** `/session-save` writes the file and reports its path. It does
-  not commit, does not push, and offers no `--commit`. See open questions on
-  whether the directory should be gitignored by default.
+  not commit, does not push, and offers no `--commit`. Nor does it touch
+  `.gitignore` — see [The store](#the-store).
 - **Cross-machine or cross-project handoff.** A session file is readable by
   anyone given the path, but nothing in the feature moves it anywhere.
 
@@ -70,6 +70,15 @@ finds an old session. The timestamp prefix sorts chronologically and prevents
 same-day collisions without a hash. Markdown, not `.tmp`: the file is a
 document, and the extension should say so.
 
+**The store is not gitignored, and neither command touches `.gitignore`.**
+Session files are personal working state and will usually be noise in a diff,
+which argues for ignoring the directory in `/task-setup` or `/project-setup`.
+Against it: a session file is exactly the thing you would want to hand a
+colleague, and silently ignoring it makes that harder. The tie goes to leaving
+the decision with the user — `/session-save` prints a one-line note that the
+file is untracked, and whether a handoff belongs in the repo's history is
+theirs to settle per project.
+
 ### Two file forms
 
 `/session-save` picks the form by detecting whether the work in flight already
@@ -82,9 +91,9 @@ loses one degrades to the full form on its own.
 ```markdown
 # Session: 2026-08-24 14:32
 
-Work: task 118
-Running: /task-implement
-Resume from: ./delegated-runs.md
+Work: document .claude/domain/product-design.md
+Running: /product-design
+Resume from: .claude/domain/design-process.md
 
 Read that file. It holds the state; this one only says where it is.
 ```
@@ -93,7 +102,9 @@ No narrative, no file table, no decisions. Anything more would be a second
 account of state the artifact already owns.
 
 **Full form** — written when no artifact is found, which is the generic case.
-Nine sections, in this order, adapted from ECC's schema:
+An **optional one-paragraph preamble** may sit between the header block and
+section 1, framing the handoff; the nine sections follow, in this order,
+adapted from ECC's schema:
 
 1. **What we are building** — the goal in the session's own terms.
 2. **What worked (with evidence)** — each claim carries the command output,
@@ -119,20 +130,41 @@ information.
 
 ### Artifact detection
 
+A **resume artifact** is a *project-scoped state document carrying a resume
+marker* — a current-stage, phase, or next-step line a later session reads to
+know where the last one stopped. Both properties are required: it lives inside
+the user's project rather than inside an installed skill folder, and its marker
+is rewritten as the work progresses. This is exactly the class of document
+[docs/authoring-guide.md](../../../docs/authoring-guide.md) § "State that
+outlives a session belongs in a project document" defines.
+
 `/session-save` resolves the artifact in two steps, in order:
 
 1. **Known-artifact table**, carried in the command body — a small explicit map
-   from skill to artifact path. Today: `/task-implement` → `./delegated-runs.md`
-   (present only on a delegated run); `/product-design` →
-   `.claude/domain/design-process.md` (its current-stage marker is a resume
-   point). The table is short by design and grows only when a skill actually
-   ships a resume artifact.
+   from skill to artifact path. Today it has one row: `/product-design` →
+   `.claude/domain/design-process.md`, whose current-stage marker is a resume
+   point. The table is short by design and grows only when a skill actually
+   ships a document meeting the definition above.
 2. **Recency check** — if no table entry matches, look for a file written this
-   session that carries a resume marker (a current-stage, phase, or
-   next-step line). If found, offer the pointer form; if the user declines,
-   write the full form.
+   session that carries a resume marker. If found, offer the pointer form; if
+   the user declines, write the full form.
 
 No artifact found, or no skill running: full form.
+
+`/task-implement` deliberately has **no row**, and the design originally gave
+it one pointing at `./delegated-runs.md`. That was wrong twice over:
+`skills/task-implement/delegated-runs.md` is a static shipped instruction file
+holding no session state, and its path is relative to the installed skill
+folder rather than to the project. A pointer form built on it would have
+discarded the whole handoff and left behind a link to a file that says nothing
+about this session. `/task-implement`'s state is a half-finished working tree
+plus what was tried — it writes no resume marker anywhere, so its sessions take
+the full form.
+
+The `Running:` line the table keys off is **inferred from the conversation**,
+not read from state — the command has no reliable way to interrogate what skill
+is in flight, and reading state to find out would be a second source of truth.
+When the inference is unclear it asks the user once, which is cheap and honest.
 
 ### The `Work:` line
 
@@ -148,16 +180,47 @@ forms:
 
 `none` is a first-class value, not a failure. A debugging session that touched
 no backlog document is exactly the case the generic form exists for, and
-inventing a link for it would make the link untrustworthy everywhere else.
+inventing a link for it would make the link untrustworthy everywhere else. It
+may carry a short trailing explanation after an em dash — `none — cross-feature
+architecture session, five features authored` — which keeps an anchorless
+session legible without inventing an anchor for it.
 
 ### Resolution in `/session-resume`
 
 | Argument | Behaviour |
 |---|---|
-| *(none)* | newest file in `.claude/sessions/` |
-| `YYYY-MM-DD` | newest file from that date |
+| *(none)* | newest candidate in `.claude/sessions/` |
+| `YYYY-MM-DD` | newest candidate from that date |
 | a path | read that file directly |
-| a task number | newest file whose `Work:` line names that task |
+
+Three forms, not four. A **task-number selector** — newest file whose `Work:`
+line names a given task — was designed in and dropped: `/task-implement` runs
+are the least likely sessions to be paused, being much shorter than the
+product-design and architect sessions this feature exists for, so a selector
+scoped to them is too specific for the actual usage. `Work:` keeps `task <n>`
+as a value; only the lookup by it goes.
+
+**Only a file carrying a `Work:` line is a candidate.** The store holds
+companion documents too — a hand-written notes file, a scratch plan dropped
+beside the real thing — which the original design assumed it did not, and
+without the check one of those would be selected as "the newest file" and
+briefed from as though it were a handoff. `Work:` is mandatory in both forms
+`/session-save` writes, which makes it the cheapest reliable discriminator. A
+non-candidate is skipped silently: the directory is allowed to hold other
+things. A path given explicitly is read as given, with no candidacy check.
+
+Two files can share an identical `YYYY-MM-DD-HHMM` prefix, so "newest" is
+ambiguous on the prefix alone; ties break deterministically on the **full
+filename**, descending. The picked file is named on the first line of output,
+which is what makes a wrong tie-break correctable — the user re-runs with an
+explicit path.
+
+On a **pointer-form** file, `/session-resume` follows the `Resume from:` path
+and briefs from the artifact, using the session file only for its header block.
+When that path no longer resolves it says so on its own line and briefs from
+the pointer file's header alone, calling the briefing thin. The file it resumed
+*from* is always the session file, never the artifact: the artifact belongs to
+the skill that maintains it and is never named for deletion.
 
 After reading, `/session-resume` emits a fixed briefing — what was being built,
 what must not be retried, the exact next step — and then **stops and waits**.
@@ -167,6 +230,31 @@ unrequested action is the failure mode that makes handoff tooling untrustworthy.
 Two edge cases are handled explicitly: a file older than 14 days is flagged as
 stale before the briefing, and a file referencing paths that no longer exist
 names each missing path rather than briefing as if they were there.
+
+### Pruning
+
+Old session files are pruned by finishing the work, not by a flag. The
+mechanism has three parts, split across both commands:
+
+1. **`/session-resume` hands over the deletion.** Its briefing ends by naming
+   the file it resumed from and telling the resumed session to delete that file
+   once the `Work:` it describes is finished — deletion being part of
+   finishing, not cleanup afterwards. This is an *instruction, not an action*,
+   which is what keeps `/session-resume` strictly read-only, and stating the
+   path explicitly is also what lets `/session-save` find it later.
+2. **`/session-save` supersedes.** If the session ends before the work does,
+   the file stays. The next `/session-save` in a conversation that resumed from
+   a file writes its new snapshot and then deletes the file it resumed from, as
+   superseded — so two snapshots of the same work never coexist. The path comes
+   from the conversation, never from guessing at the directory; when it cannot
+   be told, nothing is deleted.
+3. **An unresumed file is never auto-deleted.** Nothing searches the directory
+   for stale candidates. The >14-day flag `/session-resume` raises before a
+   briefing is the only signal such a file will ever get.
+
+There is no `--prune` flag. The directory can still grow if handoffs are
+written and never resumed, which is the accepted cost of never deleting a file
+the user did not demonstrably finish with.
 
 ## Data and state
 
@@ -183,7 +271,7 @@ Nothing derives from session files. `/task-list`, `/production-status` and every
 /session-save                      write a session file for the current session
 /session-save <slug>               override the generated slug
 /session-resume                    load the newest session file
-/session-resume <date|path|task>   load a specific one
+/session-resume <date|path>        load a specific one
 ```
 
 Both commands need `name`, `version`, `type`, `description` frontmatter per
@@ -202,16 +290,10 @@ domain layer.
 
 ## Open questions
 
-- **Gitignore by default?** Session files are personal working state and will
-  usually be noise in a diff, which argues for adding `.claude/sessions/` to
-  `.gitignore` in `/task-setup` or `/project-setup`. Against: a session file is
-  exactly what you would want to hand a colleague, and silently ignoring it
-  makes that harder. Leaning: do not touch `.gitignore`; `/session-save` prints
-  a one-line note that the file is untracked and leaves the decision open.
-- **Pruning.** Nothing deletes old session files. At the observed cadence this
-  directory grows without bound. A `--prune` flag or an age warning in
-  `/session-resume` may be worth adding later; deliberately not in this slice.
-- **Does `/session-save` know what skill is running?** The known-artifact table
-  assumes the command can tell. In practice it infers from the conversation
-  rather than reading state. If that proves unreliable, the fallback is to ask
-  the user once, which is cheap and honest.
+None outstanding. The three this document opened — whether the store should be
+gitignored by default, how old files are pruned, and whether `/session-save`
+can tell what skill is running — are all resolved above, under
+[The store](#the-store), [Pruning](#pruning) and
+[Artifact detection](#artifact-detection) respectively. The heading stays so
+its emptiness is stated rather than inferred, the same honesty rule the
+feature's own full form applies to an empty section.
