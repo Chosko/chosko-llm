@@ -187,7 +187,7 @@ Context:
 ```
 Done: 2026-08-25 — commit c75baa4 (pushed). skills/task-review/SKILL.md (0.1.0) + remote-diffs.md: task=/base= args, local mode inline, four-signal task resolution, four review gates (80% confidence floor, Pre-Report Gate, BLOCKING-requires-proof, zero-findings valid), three severity tiers, R<round>-<n> finding schema, per-criterion + overall verdicts, spawned-vs-manual output (opt-in .claude/reviews/<task>-R<round>.md), sticky rejections, read-only, no fan-out, no PR creation; SHELLING OUT constraint (read-only git/gh only). VERSION 1.3.1→1.4.0. Premise: body predicted 1.1.0→1.2.0.
 
-## [ ] 16. Add the /task-iterate skill (task 122)
+## [x] 16. Add the /task-iterate skill (task 122)
 
 Depends on: 15
 
@@ -197,12 +197,14 @@ Context:
 ```prompt
 /task-implement 122
 ```
+Done: 2026-08-25 — commit b48056a (pushed). skills/task-iterate/SKILL.md (0.1.0, no supporting file): mandatory fix/defer/reject triage table before the first edit, three input forms, three finding sources (caller output / .claude/reviews/<task>-R<n>.md highest round / PR threads), PR-mode replies, caller-dependent commit asymmetry, three-part return (triage summary, sticky rejection ledger, unresolved-BLOCKING yes/no). Flags: task=, base=, --no-commit, --no-push only. VERSION 1.4.0→1.5.0 (body predicted 1.2.0→1.3.0).
 
 ## [ ] 17. Add the --review / --rounds loop to /task-implement (task 123)
 
 Depends on: 16
 
-Context: none
+Context:
+- 2026-08-25 (from steps 13–16): VERSION is now 1.5.0; skills/task-implement/SKILL.md is 1.1.0 (launcher from task 119: fixed four-part prompt frame in delegated-runs.md, four-value return contract). skills/task-review (0.1.0: R<round>-<n> findings, three tiers, per-criterion + overall verdicts, opt-in .claude/reviews/<task>-R<round>.md) and skills/task-iterate (0.1.0: fix/defer/reject triage, three-part return with explicit unresolved-BLOCKING yes/no, flags task= base= --no-commit --no-push, caller asserts never infers) exist — read both for the exact contracts the --review loop drives. Depth note from the runbook-suite design: /task-implement --review spawning implementor then reviewer under an orchestrator is past verified nesting depth; state it, do not block on it. Every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh; the body's predicted VERSION numbers are stale, follow the rule. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 123
