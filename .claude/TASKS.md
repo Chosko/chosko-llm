@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 152
+Last task number: 153
 
 ---
 
@@ -28,4 +28,13 @@ Preconditions: none
 Status: [MISSING]
 Target: claude
 Files: scripts/cmd-ls.sh, scripts/lib.sh, docs/cli-help.txt, VERSION, CHANGELOG.md, .claude/context/cmd-ls.md, .claude/context/shared-lib.md, .claude/context/INDEX.md
+Preconditions: 153
+
+---
+
+## 153. Order `ls` output by feature name instead of by kind
+
+Status: [MISSING]
+Target: claude
+Files: scripts/cmd-ls.sh, docs/cli-help.txt, VERSION, CHANGELOG.md, .claude/context/cmd-ls.md, .claude/context/INDEX.md
 Preconditions: none
