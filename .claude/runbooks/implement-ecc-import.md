@@ -367,7 +367,7 @@ Context:
 ```
 Done: 2026-08-25 — commit 623d73d (pushed). commands/runbook-clean.md (0.1.0, requires: skill:runbook-run): three stages with the third split into Remove / Commit and push; commit-and-push protocol inline (four steps, no docs/ path); a refused name (e.g. [RUNNING]) is reported and skipped, an unknown name aborts before any deletion; missing body file is noted, its index block still removed; empty index left as its title line; explicit DO NOT: no cross-store reference rewriting. VERSION 1.12.0→1.13.0. Premises held.
 
-## [ ] 31. Add the /runbook-suggest skill (task 144)
+## [x] 31. Add the /runbook-suggest skill (task 144)
 
 Depends on: 30
 
@@ -377,12 +377,14 @@ Context:
 ```prompt
 /task-implement 144
 ```
+Done: 2026-08-25 — commit c7fa52e (pushed). skills/runbook-suggest/SKILL.md (0.1.0, requires: command:runbook-create, 37-line body): the description is the mechanism (no hook, no Stop handler), threshold (3+ actions, or 2+ with ordering, or any action depending on off-disk decisions), five anti-triggers, generic one-or-two-line suggestion naming no runbook and no --append (per the task body's recorded overrule of the feature document — task 145 corrects the document), asks/reads/writes nothing, fire rate tuned by narrowing the description never a flag. No install path named. Apostrophe dropped from description: lib.sh's parse_frontmatter does not unescape YAML '' inside single quotes. VERSION 1.13.0→1.14.0.
 
 ## [ ] 32. Documentation for runbook-suite (task 145)
 
 Depends on: 31
 
-Context: none
+Context:
+- 2026-08-25 (from steps 27–31): VERSION is now 1.14.0. All five runbook-suite artifacts exist at 0.1.0: skills/runbook-run (SKILL.md + references/runbook-schema.md + references/subagent-contract.md), commands/runbook-create.md, commands/runbook-list.md, commands/runbook-clean.md (each requires: skill:runbook-run), skills/runbook-suggest (requires: command:runbook-create). Reconciliations the feature document needs beyond its own list: (a) /runbook-suggest's suggestion is generic — names no runbook and no --append <name> (task 144's body overruled the document); (b) shipped bodies name the commit-and-push protocol inline (four steps) with no docs/ path — the document's Hard contracts already say so; (c) lib.sh's parse_frontmatter does not unescape YAML '' inside single-quoted scalars, so descriptions avoid apostrophes; (d) this runbook (.claude/runbooks/implement-ecc-import.md + .claude/RUNBOOKS.md) was executed by hand as the orchestrator — the [~] marker was never committed, Done: lines and dated Context: bullets were written per the design, and a user decision was folded into later step prompts as a standing Context: bullet — usable as observed evidence for the design's claims. /task-implement --review under an orchestrator remains unprobed. Every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh. Verify with CHOSKO_LLM_HOME=E:/projects/chosko-llm ./bin/chosko-llm ls --available. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it. Feature runbook-suite will be complete after this task — the pre-approved [DONE] flip applies.
 
 ```prompt
 /task-implement 145
