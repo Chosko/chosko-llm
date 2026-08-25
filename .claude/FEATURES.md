@@ -58,7 +58,7 @@ Tasks: 121, 122, 123, 124
 
 ## task-implement-launcher — The batch parent stops orchestrating and becomes a launcher
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/task-implement-launcher.md
 Source: prompt
 Tasks: 119, 120
