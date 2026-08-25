@@ -540,7 +540,8 @@ default; `--commit` commits and pushes what the run wrote (`--commit
 
 Reports what to build next by joining `PLAN.md`, `FEATURES.md` and `TASKS.md`
 — the active milestone with its roadmap goal and exit criteria, its features
-in plan order with their task rollup and readiness, the ready set, the single
+in plan order with their task rollup and a Next column naming the one concrete
+action each needs, the ready set, the single
 recommended next feature, blocked features named with their blocker, coverage
 gaps, features missing from the plan, and the remaining milestones. It writes
 nothing.

@@ -703,12 +703,16 @@ Currently shipped:
   and `.claude/domain/product-roadmap.md`, all read-only. Eight output
   sections in fixed order: the milestone (slug, title, `Status:`, plus `Goal:`
   and `Exit criteria:` echoed verbatim from the roadmap); its features in plan
-  order with `FEATURES.md` status, task rollup and readiness; the ready set;
+  order with `FEATURES.md` status, task rollup and a **Next** field; the ready
+  set;
   the ONE recommended next feature (first ready in plan order); blocked
   features each named with what blocks it and why; coverage gaps (milestones
   with `Features: none`, plus `product-design.md` sections no `Covers:` names);
   unplanned features (`FEATURES.md` slugs missing from the plan, plus
-  `Unscheduled`); remaining milestones one line each. A `[DONE]` feature has
+  `Unscheduled`); remaining milestones one line each. Section 4 ECHOES the
+  recommended feature's section-2 Next value rather than recomputing a next
+  step from the rollup — one action rule per report, so the recommendation
+  cannot contradict the row above it. A `[DONE]` feature has
   no readiness of its own computed — reported plainly, never in the ready
   set, the blocked list, or the recommendation, though it still satisfies
   edges dependents point at it. READINESS otherwise is the only computation
@@ -717,8 +721,18 @@ Currently shipped:
   `[PLANNED]` with all tasks `[DONE]`/`[SKIP]`; no edges → ready; else
   blocked. An edge
   slug resolving to no feature FAILS OPEN — reported as a plan inconsistency,
-  feature treated as ready. Task rollup is counts per status by default,
-  `--task-ids` names each ID; `milestone=<slug>` scopes sections 1–5 and an
+  feature treated as ready. Section 2's last field is NOT readiness but the
+  **Next** field, derived from status + rollup + readiness and exactly one of
+  `-` (`[DONE]`), `/task-add feature=<slug>` (`[NEW]`/`[ITERATED]`), `flip to
+  [DONE] in FEATURES.md` (`[PLANNED]`, nothing left but `[DONE]`/`[SKIP]`
+  tasks, zero-task case included), `/task-implement <N>` (`[PLANNED]`, work
+  left, not blocked, lowest such N) or `blocked by <slug>` — blockedness
+  suppresses ONLY `/task-implement`, since planning and a bookkeeping flip are
+  never blocked by a dependency. Task rollup is counts per status by default,
+  `--task-ids` names each ID; zero tasks renders `-` on a `[DONE]`/`[PLANNED]`
+  feature (those states are post-`/task-add`, so zero means `/task-clean`
+  pruned) and `no tasks yet` only on `[NEW]`/`[ITERATED]`, in both rollup
+  modes; `milestone=<slug>` scopes sections 1–5 and an
   unknown slug stops listing available slugs (matching `/task-add
   feature=<slug>`). Staleness is STRUCTURAL, never temporal — names slugs
   missing from `PLAN.md`, never compares `Last reconciled:` against dates or

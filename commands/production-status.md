@@ -1,8 +1,8 @@
 ---
 name: production-status
-version: 0.1.2
+version: 0.2.0
 type: command
-description: Report what to build next by joining PLAN.md, FEATURES.md and TASKS.md — the active milestone with its roadmap goal and exit criteria, its features in plan order with their task rollup and readiness, the ready set, the single recommended next feature, blocked features named with their blocker, coverage gaps, features missing from the plan, and the remaining milestones. Readiness and coverage are derived on every read. A [DONE] feature is reported plainly, never as ready, blocked, or recommended — it still satisfies dependency edges pointing at it. Read-only — writes nothing, runs no shell, and never opens a file under .claude/tasks/.
+description: Report what to build next by joining PLAN.md, FEATURES.md and TASKS.md — the active milestone with its roadmap goal and exit criteria, its features in plan order with their task rollup and a Next column naming the one concrete action each needs, the ready set, the single recommended next feature, blocked features named with their blocker, coverage gaps, features missing from the plan, and the remaining milestones. Readiness, the Next action and coverage are derived on every read. A [DONE] feature is reported plainly, never as ready, blocked, or recommended — it still satisfies dependency edges pointing at it. Read-only — writes nothing, runs no shell, and never opens a file under .claude/tasks/.
 ---
 
 # /production-status
@@ -136,9 +136,48 @@ looked up in `TASKS.md`:
 - Default: counts per status, e.g. `4 tasks — DONE: 2, MISSING: 1, STALE: 1`.
 - With `--task-ids`: name each task ID with its status instead, e.g.
   `tasks: 41 [DONE], 42 [DONE], 43 [MISSING], 44 [STALE]`.
-- `Tasks: none` → `no tasks yet` — and that is the signal that
-  `/task-add feature=<slug>` has not run.
 - A task ID that resolves to no entry in `TASKS.md` is ignored, not an error.
+- **Zero tasks** — `Tasks: none`, or a `Tasks:` line whose every ID was
+  ignored by the rule above — splits on the feature's `FEATURES.md` status:
+  - `[DONE]` or `[PLANNED]` → `-`. A feature only reaches either of those
+    states after `/task-add feature=<slug>` has run, so zero tasks there
+    means `/task-clean` pruned the completed ones, not that planning never
+    happened. Saying `no tasks yet` on such a feature is simply false.
+  - any other status (`[NEW]`, `[ITERATED]`) → `no tasks yet` — and that,
+    and only that, is the signal that `/task-add feature=<slug>` has not
+    run.
+
+  Both halves apply under `--task-ids` unchanged: a `[DONE]`/`[PLANNED]`
+  feature with zero tasks renders `-` there too, never an empty ID list.
+
+**The Next field** is section 2's last field, derived per feature from its
+`FEATURES.md` status, its task rollup and its readiness. It names the one
+concrete action to take on the feature rather than restating readiness, and
+is exactly one of:
+
+- `-` — the feature is `[DONE]`. Nothing is computed for it, readiness
+  included; there is no next action on a finished feature.
+- `/task-add feature=<slug>` — the feature is `[NEW]` or `[ITERATED]`.
+  Printed even when the feature is blocked: planning is never blocked by a
+  dependency, and re-planning through `/task-add` is exactly what an
+  `[ITERATED]` feature needs.
+- `flip to [DONE] in FEATURES.md` — the feature is `[PLANNED]` and has no
+  task that is not `[DONE]` or `[SKIP]`, the zero-task case included. It is
+  a suggestion for the user to make that edit by hand; this command writes
+  nothing. Printed even when the feature is blocked — there is no work left
+  for a dependency to block.
+- `/task-implement <N>` — the feature is `[PLANNED]`, has at least one task
+  that is not `[DONE]`/`[SKIP]`, and is **not** blocked. `<N>` is the
+  lowest-numbered such task.
+- `blocked by <slug>[, <slug>]` — the case immediately above, but the
+  feature **is** blocked, naming every unsatisfied dependency. This is the
+  only status where blockedness suppresses the action, because
+  `/task-implement` is the only suggested action a dependency can actually
+  block.
+
+Readiness itself is untouched by this field: still derived on every read,
+still never stored, and still what sections 3, 4 and 5 are built from. Only
+section 2's presentation of it changes.
 
 ---
 
@@ -154,16 +193,21 @@ them, and do not warn twice.
 `Features:` order, since that order is the priority:
 
 ```
-1. <slug>            [PLANNED]   4 tasks — DONE: 2, MISSING: 2    ready
-2. <slug>            [NEW]       no tasks yet                     blocked by <slug>
-3. <slug>            [DONE]      5 tasks — DONE: 5
+1. <slug>            [PLANNED]   4 tasks — DONE: 2, MISSING: 2    /task-implement 43
+2. <slug>            [NEW]       no tasks yet                     /task-add feature=<slug>
+3. <slug>            [DONE]      5 tasks — DONE: 5                -
+4. <slug>            [PLANNED]   3 tasks — DONE: 1, MISSING: 2    blocked by <slug>
+5. <slug>            [PLANNED]   -                                flip to [DONE] in FEATURES.md
 ```
 
-Each carries its `FEATURES.md` status, its task rollup, and its readiness —
-except a `[DONE]` row, which ends after the rollup: no `ready`, no `blocked
-by`, nothing computed, because a finished feature has no readiness to
-report. A slug in `Features:` with no `FEATURES.md` entry is reported as a
-plan inconsistency on its own line and carries no status or rollup.
+Each carries its `FEATURES.md` status, its task rollup, and its **Next**
+field — the one concrete action to take on it, per **The Next field** under
+READINESS above, which is the authority on which of its five values a row
+gets. A `[DONE]` row still ends with `-` rather than with nothing: a
+finished feature has no next action, and no readiness is computed for it
+either. A slug in `Features:` with no `FEATURES.md` entry is reported as a
+plan inconsistency on its own line and carries no status, rollup or Next
+field.
 `Features: none` → say the milestone has no features and that `/architect`
 has not run its `Covers:` slices yet.
 
@@ -177,11 +221,13 @@ propose `[SHIPPED]`.
 
 **4. The recommended next feature** — the **first ready feature in plan
 order** from the set in section 3 (so never a `[DONE]` one), exactly one,
-named on its own with its task rollup. If it has no tasks yet, say the next
-step is `/task-add feature=<slug>`. If it already has tasks, say the next
-step is `/task-implement`. If section 3 is empty, say there is nothing to
-recommend right now, echoing whichever of the two reasons section 3 gave.
-Nothing is started here.
+named on its own with its task rollup and the same **Next** value section 2
+gave it — echoed, never recomputed here. That value is the next step, and
+the rule under READINESS is the report's only place a next action is
+derived: a second derivation in this section would contradict section 2 on
+the very features this report exists to be right about. If section 3 is
+empty, say there is nothing to recommend right now, echoing whichever of the
+two reasons section 3 gave. Nothing is started here.
 
 **5. Blocked features.** Every blocked feature in this milestone, each with
 every unsatisfied dependency and why it is unsatisfied.
@@ -229,7 +275,7 @@ these degrades and carries on:
 | No `.claude/PLAN.md` | Say the project has no plan and point at `/production-plan`. Stop there — there is nothing to join. Do NOT create the file. |
 | No `.claude/FEATURES.md` | Say so, report the plan's structure (milestones, order, edges) with no feature statuses or rollups, and point at `/domain-setup` + `/architect`. |
 | No roadmap | Omit `Goal:` and `Exit criteria:` and the design-section half of section 6. Report everything else normally. One line, no warning ceremony. |
-| No `.claude/TASKS.md` | Features report with no task rollup, and every feature with satisfied dependencies is ready. |
+| No `.claude/TASKS.md` | Features report with no task rollup, and every feature with satisfied dependencies is ready. Section 2 omits the Next field on `[PLANNED]` features, whose next action cannot be derived without task statuses; every other status keeps its value. |
 | No `[ACTIVE]` milestone | Report the first `[PLANNED]` one and say none is active. |
 | More than one `[ACTIVE]` | Report the first in plan order, name both, call it a plan inconsistency. |
 | Dependency edge naming an unknown slug | Report the inconsistency and treat the dependent feature as ready. Fail open. |
@@ -249,8 +295,10 @@ DO NOT:
 - Open feature documents under `.claude/domain/features/`, or
   `product-design.md` beyond its section headings for section 6's coverage
   check.
-- Store or cache readiness, coverage or a task rollup anywhere. They are
-  derived on every read, deliberately.
+- Store or cache readiness, the Next field, coverage or a task rollup
+  anywhere. They are derived on every read, deliberately.
+- Act on the Next field. `flip to [DONE] in FEATURES.md` is a suggestion for
+  the user to apply by hand; this command never edits `FEATURES.md`.
 - Recommend more than one next feature, rank features by anything other than
   their position in `Features:`, or invent a priority, size, estimate, date
   or percentage. Priority is position in the list.

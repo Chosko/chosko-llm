@@ -2,6 +2,27 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.19.0 — 2026-08-25
+
+- `/production-status` no longer claims `no tasks yet` on a feature whose
+  completed tasks `/task-clean` pruned. A `[DONE]` or `[PLANNED]` feature with
+  zero tasks now renders `-`; `no tasks yet` is kept for `[NEW]` and
+  `[ITERATED]`, where it is actually true. The same split applies under
+  `--task-ids`, which no longer prints an empty ID list.
+- Section 2's last column is now a **Next** column instead of a readiness one:
+  it names the concrete action — `/task-add feature=<slug>`,
+  `/task-implement <N>`, `flip to [DONE] in FEATURES.md`, `blocked by <slug>`,
+  or `-` for a finished feature — rather than a fact about the dependency
+  graph. Blockedness suppresses only `/task-implement`; planning ahead of a
+  dependency and a bookkeeping flip are never blocked.
+- The recommended-next-feature section now echoes that same Next value instead
+  of working out its own next step from the task counts, so the recommendation
+  can no longer disagree with the feature's own row — it used to suggest
+  re-planning a feature whose tasks had merely been pruned.
+- Readiness itself is unchanged — still derived on every read, never stored,
+  and still what the ready set, the recommendation and the blocked list are
+  built from. The command stays read-only and shell-free.
+
 ## 1.18.0 — 2026-08-25
 
 - `chosko-llm ls` gained a sixth column, `REQUIRES`, so a feature's

@@ -43,7 +43,7 @@ Preconditions: none
 
 ## 154. Fix zero-task rollup and replace `/production-status`'s Ready column with a Next column
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/production-status.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION, CHANGELOG.md
 Preconditions: none
