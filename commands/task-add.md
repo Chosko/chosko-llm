@@ -1,8 +1,8 @@
 ---
 name: task-add
-version: 1.0.1
+version: 2.0.0
 type: command
-description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit and push. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, appending a final documentation-update task when new tasks were drafted, and setting the feature [PLANNED]. Pass --enrich to produce a self-contained body for a local LLM in one shot, --short for trivial low-ambiguity tasks to skip the deep PHASE 1 investigation and write a minimal Goal-only body (mutually exclusive with --enrich and feature=), --no-split to always write exactly one task, --no-commit to write the files but skip the commit (and push), or --no-push to commit without pushing.
+description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit and push. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, appending a final documentation-update task when new tasks were drafted, and setting the feature [PLANNED]. Pass --short for trivial low-ambiguity tasks to skip the deep PHASE 1 investigation and write a minimal Goal-only body (mutually exclusive with feature=), --no-split to always write exactly one task, --no-commit to write the files but skip the commit (and push), or --no-push to commit without pushing.
 ---
 
 # /task-add
@@ -14,10 +14,9 @@ description: Plan a new task entry conversationally, confirm with the user, writ
 # units; pass `--no-split` to always get exactly one task. With
 # `feature=<slug>`, plans from a `/architect` feature document instead of a
 # prose description, and reconciles tasks that feature already generated.
-# Usage: /task-add [--enrich] [--short] [--no-split] [--no-commit] [--no-push] <free-form description of the task>
-#        /task-add feature=<slug> [--enrich] [--no-split] [--no-commit] [--no-push] [scope-narrowing text]
+# Usage: /task-add [--short] [--no-split] [--no-commit] [--no-push] <free-form description of the task>
+#        /task-add feature=<slug> [--no-split] [--no-commit] [--no-push] [scope-narrowing text]
 # Example: /task-add fix the URL normalization so two LinkedIn URLs dedupe
-# Example: /task-add --enrich add CSV export command
 # Example: /task-add --short document the current deployment method
 # Example: /task-add --no-split add CSV export and PDF export commands
 # Example: /task-add feature=session-handling
@@ -39,22 +38,17 @@ By default, the body contains: Goal, Acceptance criteria, Decisions (when
 applicable), and Hints. Claude navigates the project at implementation time
 and does not need more.
 
-With `--enrich`, produce a self-contained body for a local LLM implementer
-in one shot — read `commands/task-enrich.md` for the enriched format and
-apply it directly during authoring. Do not write a plain body first and then
-enrich it.
-
 With `--short`, skip the deep PHASE 1 investigation for a trivial,
 low-ambiguity task and write a minimal Goal-only body instead — see the
 ARGUMENT NOTE and SHORT-FORM BODY sections below. `--short` is mutually
-exclusive with `--enrich` and `feature=<slug>`.
+exclusive with `feature=<slug>`.
 
 Never write to any file before the user confirms the draft.
 
 $ARGUMENTS
 
 ARGUMENT NOTE — before PHASE 1, scan $ARGUMENTS for the optional
-`--no-commit` flag (independent of `--enrich`). If present, set
+`--no-commit` flag. If present, set
 NO_COMMIT = true and strip it; the rest is the task description.
 `--commit` and `--no-commit` are mutually exclusive — if both appear, stop
 with: `--commit and --no-commit cannot be combined. Pick one.` When
@@ -66,8 +60,8 @@ and strip it. NO_PUSH only matters when NO_COMMIT is false: it skips the
 pull-at-start / re-sync / push steps of PHASE 5's commit-and-push protocol
 (docs/authoring-guide.md), while still committing as always.
 
-Also scan for the optional `--no-split` flag (independent of `--enrich` and
-`--no-commit`, coexists with both). If present, set NO_SPLIT = true and
+Also scan for the optional `--no-split` flag (independent of `--no-commit`,
+coexists with it). If present, set NO_SPLIT = true and
 strip it; PHASE 1.5 is skipped entirely and exactly one task is always
 written. When NO_SPLIT is false (the default), PHASE 1.5 considers whether
 a split would produce better units.
@@ -83,11 +77,10 @@ NO_SPLIT = true), and the body is written using the SHORT-FORM BODY schema
 below instead of the default one. PHASE 2 still runs — SHORT only removes
 the deep-investigation source of open questions, not ambiguity inherent to
 the user's own description (see PHASE 2 below). `--short` is mutually
-exclusive with `--enrich` and with `feature=<slug>` — both imply exactly
-the deep investigation `--short` exists to skip. If `--short` appears with
-either, stop with: `--short cannot be combined with --enrich or
-feature=<slug>. Pick one.` `--short` composes normally with `--no-commit`
-and `--no-push`.
+exclusive with `feature=<slug>` — it implies exactly the deep
+investigation `--short` exists to skip. If `--short` appears with it, stop
+with: `--short cannot be combined with feature=<slug>. Pick one.`
+`--short` composes normally with `--no-commit` and `--no-push`.
 
 Finally, scan for an optional `feature=<slug>` argument. If present, set
 FEATURE = the slug and strip it; it composes with all flags above except
@@ -142,12 +135,6 @@ Probe with the Read tool / Glob. If either is missing, stop:
 > `.claude/tasks/` directory. Then re-run `/task-add`.
 
 Do not proceed to PHASE 1. This rule has no exceptions.
-
-If `--enrich` is present in $ARGUMENTS, also verify that
-`commands/task-enrich.md` exists. If it does not, stop:
-
-> `/task-add --enrich` requires the task-enrich command to be installed.
-> Run `chosko-llm update` or install it manually, then retry.
 
 If all artifacts exist, continue.
 
@@ -231,7 +218,6 @@ TARGET VALUES & MANUAL INTERVENTIONS
 `Target:` (line 2 of the body, mirrored in the summary block) takes one of:
 
 - `claude` — Claude implements end-to-end. **Default.**
-- `local` — enriched body for a local LLM (`--enrich` mode only).
 - `claude+human` — Claude implements, but the work includes steps only a
   human can perform in an external tool (a game-engine editor such as
   Unity, a cloud console, physical hardware). `/task-implement` pauses at
@@ -270,25 +256,6 @@ confirmation and verify the outcome before continuing:
    Do NOT hand-edit the prefab YAML for this. Verify the prefab contains
    the component with its references assigned.
 ```
-
----
-
-PER-TASK BODY FILE FORMAT — `--enrich` mode
-
-Same body as above plus two additional sections at the end, with
-`Target: local` on line 2:
-
-```
-## Context bundle
-<Selective excerpts of relevant code, patterns, and constraints the local
-LLM needs. Include only what is necessary.>
-
-## Implementation steps
-<Step-by-step guidance concrete enough to follow without any external reads.>
-```
-
-In `--enrich` mode, read `commands/task-enrich.md` for the detailed
-format guidance of these two sections.
 
 ---
 
@@ -343,8 +310,8 @@ PHASE 1 — READ (silent)
 the `Files:` line: step 1 below, and step 2 using light Grep/Glob only (no
 Read of CLAUDE.md, `.claude/context/`, or `.claude/domain/` files for
 grounding — the whole point of `--short` is skipping that investigation).
-Steps 3 (Hints) and 5 (`--enrich`, which cannot co-occur with `--short`) do
-not apply, since the short-form body omits `## Hints`. Step 4 (Decisions)
+Step 3 (Hints) does not apply, since the short-form body omits
+`## Hints`. Step 4 (Decisions)
 still applies, but only for non-obvious choices visible from the
 description and the light scan — not from a deep read `--short` skips.
 Step 4b still applies if the light scan or the description itself surfaces
@@ -393,11 +360,6 @@ under `--no-split`) and then PHASE 2.
    the target (`claude+human`, or `human` when nothing is
    agent-executable). If the user's description suggests manual steps but
    you cannot tell which, make it a PHASE 2 question.
-
-5. **`--enrich` mode only:** also read `commands/task-enrich.md`
-   for the enriched body format. Gather additional material for
-   `## Context bundle` (relevant excerpts) and `## Implementation steps`
-   (step-by-step guidance). Be selective — include only what is necessary.
 
 No user-facing output during this phase beyond a single brief sentence
 saying what you're reading.
@@ -511,14 +473,14 @@ Draft summary block:
   ## <N>. <Title>
 
   Status: [MISSING]
-  Target: <claude|local|claude+human|human>
+  Target: <claude|claude+human|human>
   Files: <comma-separated list>
   Preconditions: <preconds or "none">
 
 Draft body:
   # Task <N> — <Title>
 
-  Target: <claude|local|claude+human|human>
+  Target: <claude|claude+human|human>
 
   ## Goal
   …
@@ -534,12 +496,6 @@ Draft body:
 
   ## Hints
   - …
-
-  ## Context bundle         ← --enrich mode only
-  …
-
-  ## Implementation steps   ← --enrich mode only
-  …
 ```
 
 **When SHORT is true** (SPLIT is always none in this mode, per PHASE 1.5),
@@ -564,14 +520,14 @@ Part 1/k — Draft summary block:
   ## <N>. <Title>
 
   Status: [MISSING]
-  Target: <claude|local|claude+human|human>
+  Target: <claude|claude+human|human>
   Files: <comma-separated list>
   Preconditions: <earlier part's ID(s), or "none">
 
 Part 1/k — Draft body:
   # Task <N> — <Title>
 
-  Target: <claude|local|claude+human|human>
+  Target: <claude|claude+human|human>
 
   ## Goal
   …
@@ -845,7 +801,6 @@ DO NOT:
 - Use `--amend`, `--no-verify`, `--no-gpg-sign`, or any hook-skipping flag.
 - Force-push, retry a failed push, branch, tag, or otherwise touch
   shared/visible git state beyond the commit-and-push protocol.
-- In `--enrich` mode, write a plain body first and then enrich it separately.
 - Propose a split for work that's fine as one task — PHASE 1.5 stays quiet
   unless a split genuinely produces better units.
 - Set `Target: claude+human` or `human` without a `## Manual interventions`
@@ -854,7 +809,7 @@ DO NOT:
 - Bundle multiple commits for a split — PHASE 5 makes exactly one commit
   covering all parts.
 - Run PHASE 1.5 at all when `--no-split` or `--short` is passed.
-- Combine `--short` with `--enrich` or `feature=<slug>` — stop with an
+- Combine `--short` with `feature=<slug>` — stop with an
   error instead (see the ARGUMENT NOTE mutual-exclusion rule).
 - Write placeholder `## Acceptance criteria` or `## Hints` sections in a
   `--short` body — omit them entirely.

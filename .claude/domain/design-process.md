@@ -99,6 +99,5 @@ redesign, not a resume.
   needs — and rejected in favour of keeping it simple and deciding when the
   problem actually arrives. Consistent with the standing position that
   nothing changes before the need is demonstrated. The same reasoning
-  covers CI: `check-task-parity.sh` was written by Claude for Claude to
-  invoke, and automating it was declined; what is missing is the written
-  protocol, not the automation.
+  covers CI: the repo's authoring guards are written by Claude for Claude
+  to invoke, and automating them was declined.

@@ -223,7 +223,7 @@ Preconditions: none
 
 ## 118. Delete the dead dual-LLM local-model implementation lane
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/cmd-task-impl.sh, scripts/lib-task-external.sh, scripts/check-task-parity.sh, scripts/cmd-help.sh, bin/chosko-llm, commands/task-enrich.md, commands/task-add.md, commands/task-setup.md, commands/domain-setup.md, commands/project-setup.md, commands/unity-mcp-setup.md, skills/task-implement/SKILL.md, skills/task-implement/body-schemas.md, skills/architect/iterating.md, docs/cli-help.txt, docs/authoring-guide.md, README.md, CLAUDE.md, VERSION, .claude/external/implement-prompt.md, .claude/external/tests-prompt.md, .claude/context/INDEX.md, .claude/context/features.md, .claude/context/cli-entry.md, .claude/context/cmd-help.md, .claude/context/cmd-task-impl.md, .claude/context/lib-task-external.md, .claude/domain/INDEX.md, .claude/domain/task-workflow.md, .claude/domain/product-design.md, .claude/domain/product-workflow.md, .claude/domain/technical-direction.md
 Preconditions: none

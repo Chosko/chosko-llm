@@ -16,7 +16,7 @@ Side effects: print stdout. No filesystem writes.
 
 ## Internal patterns
 
-- **Two sources for help text:** shipped `docs/cli-help.txt` primary source. Inline heredoc minimal fallback, used only when someone deleted/moved that file in managed clone (lists core subcommands incl. `task-impl`). Keep two in rough sync, but `.txt` file canonical, user-visible help.
+- **Two sources for help text:** shipped `docs/cli-help.txt` primary source. Inline heredoc minimal fallback, used only when someone deleted/moved that file in managed clone (lists core subcommands). Keep two in rough sync, but `.txt` file canonical, user-visible help.
 - **`Usage:` headings bolded.** Both paths pipe through
   `_bold_usage_headings` (`sed` wrap `Usage:` in `C_BOLD`/`C_RESET`
   from `lib.sh`), color apply on TTY.

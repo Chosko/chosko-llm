@@ -118,13 +118,10 @@ agents that cannot run `install.sh` still have the commands they need.
   and deliberately unaddressed today: local copies installed with `--local`
   may drift from the global version, and `ls` / `update` have no local
   awareness — both wait on evidence that the drift actually costs
-  something. On the same terms, and with no trigger set: `chosko-llm
-  task-impl` does not honour plan order, and `/task-add feature=<slug>` does
-  not warn when a feature's dependencies are unsatisfied. Both were weighed
-  while designing the planning layer and left out, the first because parsing
-  `PLAN.md` from bash falls to the largest script in the repo under the
-  no-dependencies rule, the second because nothing yet shows the warning
-  would change a decision.
+  something. On the same terms, and with no trigger set: `/task-add
+  feature=<slug>` does not warn when a feature's dependencies are
+  unsatisfied. It was weighed while designing the planning layer and left
+  out, because nothing yet shows the warning would change a decision.
 
 ## High-level features
 
@@ -244,13 +241,10 @@ exactly as it does today when neither document exists.
 
 Turns a designed feature — or a free-form description, which needs no
 design upstream — into implementable work, then into code. `/task-add`
-plans and writes tasks; `/task-enrich` fattens one for a weaker
-implementer; `/task-list` and `/task-clean` keep the backlog readable and
-pruned; `/task-implement` implements, optionally giving each task of a
-multi-task run its own subagent. `chosko-llm task-impl` is the unattended
-path, driving an external local LLM through a fixed sequence with tests and
-a commit around it. A task declares who implements it — Claude, a local
-LLM, or a human performing steps no agent can. Second half of the
+plans and writes tasks; `/task-list` and `/task-clean` keep the backlog
+readable and pruned; `/task-implement` implements, optionally giving each
+task of a multi-task run its own subagent. A task declares who implements
+it — Claude, or a human performing steps no agent can. Second half of the
 idea-to-shipped flow; the seam with the feature above is the feature
 document. Schemas and the implementation model are specified in
 [task-workflow.md](./task-workflow.md).

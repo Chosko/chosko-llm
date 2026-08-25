@@ -21,7 +21,6 @@ Usage:
   chosko-llm update <feature>
   chosko-llm update --all
   chosko-llm upgrade
-  chosko-llm task-impl [OPTIONS] <N> [<N>…]   (run chosko-llm task-impl --help for options)
   chosko-llm help
 EOF
 fi

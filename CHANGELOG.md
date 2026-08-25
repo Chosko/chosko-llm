@@ -2,6 +2,30 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.0.0 — 2026-08-25
+
+**Breaking.** The local-model implementation lane is removed. It drove a local
+LLM (aider + Ollama) through a project's task backlog and was never used in
+274 task authorings across four repositories.
+
+- `chosko-llm task-impl` is gone. The subcommand now exits 2 as an unknown
+  subcommand, and it no longer appears in `chosko-llm help`.
+- `/task-enrich` is no longer shipped, and `/task-add --enrich` is gone with
+  it. `Target:` keeps its three live values — `claude`, `claude+human`,
+  `human` — and the enriched body schema (`## Context bundle` /
+  `## Implementation steps`, `Target: local`) no longer exists.
+- `/task-implement` no longer warns about `Target: local` tasks. Everything
+  else about it is unchanged, including the `claude+human` checkpoint flow,
+  the `human` guided walkthrough and the Unity MCP path.
+- `/task-setup` now creates `.claude/TASKS.md`, `.claude/tasks/` and the two
+  test-dispatch wrappers (`run-affected-tests.sh`, `run-full-tests.sh`) — and
+  nothing else. It no longer writes the two aider prompt templates. Existing
+  `.claude/external/` directories in other projects are untouched and keep
+  working; the wrappers, including the `# CHOSKO_TASK_IMPL_STUB` sentinel,
+  behave exactly as before.
+- `scripts/check-task-parity.sh` is deleted — with the shell orchestrator
+  gone, the task status vocabulary has only one encoding to guard.
+
 ## 0.63.1 — 2026-08-25
 
 - `README.md` documents the upgrade readout, the rule that a `VERSION` bump

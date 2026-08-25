@@ -23,9 +23,6 @@ case "$subcommand" in
   ls|add|rm|update|upgrade|channel|show|uninstall|export)
     exec "$CHOSKO_LLM_HOME/scripts/cmd-${subcommand}.sh" "$@"
     ;;
-  task-impl)
-    exec "$CHOSKO_LLM_HOME/scripts/cmd-task-impl.sh" "$@"
-    ;;
   -v|--version|version)
     if [ -x "$CHOSKO_LLM_HOME/scripts/cmd-version.sh" ]; then
       exec "$CHOSKO_LLM_HOME/scripts/cmd-version.sh" "$@"

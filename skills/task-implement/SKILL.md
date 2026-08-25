@@ -1,8 +1,8 @@
 ---
 name: task-implement
-version: 0.18.0
+version: 1.0.0
 type: skill
-description: Implement one or more tasks from the project's task backlog end-to-end using a tests-first sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Warns (but proceeds) when implementing a target:local task. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits and pushes each task separately; pass --no-commit to skip the per-task commits (and pushes), or --no-push to keep committing without pushing. Supports `next` to implement the first eligible task. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd|skip-tests-unattended` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time. In skip-tests mode, pass `-y` to suppress the per-task "Proceed?" confirmation for that run; the `skip-tests-unattended` marker value makes that the default for every run without needing `-y`. On a run resolving to 2+ tasks, offers to implement each task in a fresh subagent so later tasks don't inherit earlier ones' context — agents run one at a time, never in parallel, and `claude+human` / `human` / explicitly-requested `[STALE]` tasks stay in the parent conversation because they need the user present; pass `--agents` / `--no-agents` to pre-answer. When a `Feature:`-tagged task
+description: Implement one or more tasks from the project's task backlog end-to-end using a tests-first sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits and pushes each task separately; pass --no-commit to skip the per-task commits (and pushes), or --no-push to keep committing without pushing. Supports `next` to implement the first eligible task. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd|skip-tests-unattended` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time. In skip-tests mode, pass `-y` to suppress the per-task "Proceed?" confirmation for that run; the `skip-tests-unattended` marker value makes that the default for every run without needing `-y`. On a run resolving to 2+ tasks, offers to implement each task in a fresh subagent so later tasks don't inherit earlier ones' context — agents run one at a time, never in parallel, and `claude+human` / `human` / explicitly-requested `[STALE]` tasks stay in the parent conversation because they need the user present; pass `--agents` / `--no-agents` to pre-answer. When a `Feature:`-tagged task
 lands `[DONE]` and leaves every task for that feature `[DONE]`/`[SKIP]`,
 records it as a completion candidate and, once at the very end of the run
 (batched across the whole run, never per-task), proposes flipping that
@@ -255,9 +255,8 @@ silence is not approval. On A, proceed through the normal per-task
 workflow unchanged. On B, stop the run without flipping any `Status:`; if
 other tasks were queued behind this one, say which were not started.
 
-This is a deliberate asymmetry with the unattended orchestrator
-(`chosko-llm task-impl`), which refuses a `[STALE]` task outright. A human
-can judge whether a superseded design still applies; a headless LLM cannot.
+The choice is always the user's: a human can judge whether a superseded
+design still applies, and nothing here decides that for them.
 
 ---
 
@@ -394,12 +393,6 @@ implement anyway.
 
 Use the Read tool to open `.claude/tasks/<N>.md` for the current task.
 Hold its contents in mind for the rest of the per-task workflow.
-
-If the body's second line reads `Target: local`, emit this note before
-proceeding (no confirmation prompt — just continue):
-
-> Note: this task was written for a local LLM (Target: local) —
-> implementing with Claude anyway.
 
 If the target is `claude+human` or `human`, read `./human-in-loop.md`
 now and follow it for the rest of this task. For `claude+human`,
@@ -646,10 +639,6 @@ that status, and it never overwrites a status a human already set —
 including a feature a human already marked `[DONE]` by hand, which never
 becomes a candidate in the first place (its `FEATURES.md` status is no
 longer `[PLANNED]`).
-
-`chosko-llm task-impl` (the headless shell orchestrator) never runs this
-check and never touches `FEATURES.md` — there is no human present to
-answer the proposal.
 
 ---
 

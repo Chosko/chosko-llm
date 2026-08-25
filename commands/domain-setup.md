@@ -1,6 +1,6 @@
 ---
 name: domain-setup
-version: 0.2.2
+version: 0.2.3
 type: command
 description: Initialize the project's domain knowledge layer — creates .claude/domain/, .claude/domain/features/, a .claude/domain/INDEX.md that indexes any pre-existing domain docs, the .claude/FEATURES.md feature index, and a CLAUDE.md pointer to the domain index. Idempotent and re-runnable on projects that already have hand-written domain docs. Authoring command — leaves everything uncommitted for review by default; pass --commit to commit (and push) the scaffolding, or --commit --no-push to commit without pushing.
 ---
@@ -20,8 +20,8 @@ description: Initialize the project's domain knowledge layer — creates .claude
 GOAL
 Make the domain layer structural. `.claude/domain/` holds the project's
 product and rules knowledge — what the product is, how its features are
-designed, why the architecture is what it is. It is read by `/task-add` and
-`/task-enrich`, deliberately never written by `/context-build` or
+designed, why the architecture is what it is. It is read by `/task-add`,
+deliberately never written by `/context-build` or
 `/context-update`, and until now created by nothing at all: every project
 that has one grew it by hand, with no index and no entry-point pointer.
 `/product-design` and `/architect` both write into it, so it must exist and

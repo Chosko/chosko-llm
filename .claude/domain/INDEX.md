@@ -16,7 +16,7 @@ CODEBASE STRUCTURE — which file implements what — see
 | [product-design.md](./product-design.md) | The product design itself: what `chosko-llm` is, its target users, key flows, design decisions, and high-level feature set. |
 | [product-workflow.md](./product-workflow.md) | Product pipeline from idea to backlog (`/domain-setup` → `/product-design` → `/architect` → `/task-add`): the documents each command exchanges and the two status vocabularies that keep design and backlog in sync. |
 | [refactor-workflow.md](./refactor-workflow.md) | Philosophy and invariants behind `/refactor-codebase`: behaviour preservation, the plan-first approval gate, the focus concerns, and phase ordering. |
-| [task-workflow.md](./task-workflow.md) | Task backlog schema and the dual-path implementation model: Claude Code authors via `/task-add`, Claude or an external LLM implements. |
+| [task-workflow.md](./task-workflow.md) | Task backlog schema and the implementation model: Claude Code authors via `/task-add`, Claude implements via `/task-implement`, with a human in the loop where the work needs one. |
 | [technical-direction.md](./technical-direction.md) | The product's technical foundations: stack, topology, storage, hosting, protocols, cross-cutting concerns, and open decisions. |
 
 ## Features

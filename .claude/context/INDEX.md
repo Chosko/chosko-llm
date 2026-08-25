@@ -29,8 +29,6 @@ Canonical project docs live outside this folder, stay authoritative:
 | [cmd-channel.md](./cmd-channel.md) | `scripts/cmd-channel.sh` — point managed clone at branch ('channel') to test unmerged work; no-arg show current, `--list` show available, `<branch>` switch + refresh proxy. |
 | [cmd-export.md](./cmd-export.md) | `scripts/cmd-export.sh` — package repo's Claude config into Markdown file or zip via `select_export_files`; output dir from `export_dir_path`. |
 | [cmd-help.md](./cmd-help.md) | `scripts/cmd-help.sh` — print `docs/cli-help.txt` or fallback help. |
-| [cmd-task-impl.md](./cmd-task-impl.md) | `scripts/cmd-task-impl.sh` — external-LLM (aider+Ollama) orchestrator of 7-step task-implement flow for current project. |
-| [lib-task-external.md](./lib-task-external.md) | `scripts/lib-task-external.sh` — project-scoped backlog parse/mutate/guard helpers beneath `cmd-task-impl.sh`. |
 | [features.md](./features.md) | Shipped artifacts under `commands/`, `skills/`, `claude-md/`, `statusline/`, `hooks/`; frontmatter contract incl. optional `replaces:` and the hook-only `event:` / `matcher:`; cross-refs to authoring guide. |
 
 ## Domain
@@ -39,7 +37,7 @@ Product and rules knowledge — what the product is, why it is built this way �
 
 ## Conventions
 
-- `Layout: flat` under the title declares this layer's shape: one index, every context file beside it. Deliberate — thirteen files, no unit seams worth a router. Read the marker, never infer the layout. Restructuring is `/context-convert`'s job, not a hand edit.
+- `Layout: flat` under the title declares this layer's shape: one index, every context file beside it. Deliberate — eleven files, no unit seams worth a router. Read the marker, never infer the layout. Restructuring is `/context-convert`'s job, not a hand edit.
 - Source references use repo-root-relative paths + fully qualified names, e.g. `scripts/lib.sh::resolve_feature`.
 - Cross-references to sibling context files use relative links (`./other.md`).
 - Cross-references to canonical docs use `../../`-prefixed paths.

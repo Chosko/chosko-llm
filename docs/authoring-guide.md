@@ -252,44 +252,6 @@ What *does* belong in a command is a constraint specific to **that** command
 on an existing body file". Put such a line in the section it governs, not in
 a standalone block at the top.
 
-## Keeping `/task-implement` and `task-impl` in step
-
-The 7-step task workflow is encoded twice: as the `/task-implement` prompt
-under `skills/task-implement/`, and as bash in `scripts/cmd-task-impl.sh` +
-`scripts/lib-task-external.sh`. Nothing forces them to agree, so run the
-parity guard whenever you touch **either** artifact:
-
-```sh
-./scripts/check-task-parity.sh
-```
-
-It exits non-zero if a status tag (`[MISSING]`, `[STUBBED]`, `[INCORRECT]`,
-`[PARTIAL]`, `[IN PROGRESS]`, `[DONE]`, `[SKIP]`, `[STALE]`) is unknown to or
-missing from one side, or if the two sides disagree on the eight per-task
-steps. `[SKIP]` and `[STALE]` are deliberately prompt-only in
-`BASH_REQUIRED_TAGS` — the bash side excludes non-eligible tasks by omission.
-
-The guard checks the cheap invariants, not full behavioural parity.
-
-### The status vocabulary lives in three places
-
-Any change to the task status vocabulary must land in all three, in the same
-commit, or the guard fails:
-
-1. The prompt side — `skills/task-implement/` (every canonical tag must
-   appear somewhere in it).
-2. `scripts/check-task-parity.sh` — the `CANONICAL_TAGS` list, and
-   `BASH_REQUIRED_TAGS` only if the orchestrator actually acts on the tag.
-3. `scripts/cmd-task-impl.sh` — the implementable-status allowlist: both the
-   `resolve_all` awk selection and the per-task `case` in `implement_one`.
-
-`[STALE]` (added in v0.15.0) is the worked example. It is canonical, it is
-prompt-only in `BASH_REQUIRED_TAGS`, and the orchestrator refuses it
-explicitly rather than skipping it — so it touches all three places for three
-different reasons. A partial rollout of a status tag fails the guard, which is
-the point: the two encodings of the workflow cannot be allowed to drift
-silently.
-
 ## Keeping the two `council-gate.md` copies in step
 
 The optional claude-council decision gate is encoded twice, as
@@ -581,7 +543,7 @@ flag so the user can override the default commit behaviour. The split is about
 `/architect`) ship as skills, and the rules below apply to them unchanged:
 
 - **Authoring commands (uncommitted by default).** `/context-build`,
-  `/context-convert`, `/task-enrich`, `/refactor-codebase`, `/refactor-tests`,
+  `/context-convert`, `/refactor-codebase`, `/refactor-tests`,
   `/task-setup`, `/domain-setup`, `/unity-mcp-setup`, `/product-design`,
   `/architect`, and
   `/project-setup` write their output and leave it in the working tree
@@ -641,7 +603,7 @@ steps 1, 3, and 4 above while still committing as it does today.
 - For auto-committing commands (`/task-add`, `/task-clean`,
   `/task-implement`, `/context-update`), `--no-commit` implies `--no-push`
   — there is nothing to push.
-- For authoring commands (`/context-build`, `/context-convert`, `/task-enrich`,
+- For authoring commands (`/context-build`, `/context-convert`,
   `/refactor-codebase`, `/refactor-tests`, `/task-setup`, `/domain-setup`,
   `/unity-mcp-setup`, `/product-design`, `/architect`, `/project-setup`),
   which only commit under `--commit`, `--commit --no-push` is a valid

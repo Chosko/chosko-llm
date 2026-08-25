@@ -212,7 +212,7 @@ Re-run diffs plan against current `FEATURES.md` and roadmap, presents everything
 
 Reconciliation never writes anything but `PLAN.md`, never re-derives an ordering the user set, never resets a milestone `Status:`, and adds no second gate. Validation runs on reconciled proposal exactly as on first run: plan valid yesterday can be invalid today because a milestone moved.
 
-Deliberately NOT plan-aware, deferred by the feature's open questions: `/task-add feature=<slug>` does not warn on unsatisfied dependencies, `/task-implement` and `chosko-llm task-impl` do not honour plan order, and no bash script parses `PLAN.md`.
+Deliberately NOT plan-aware, deferred by the feature's open questions: `/task-add feature=<slug>` does not warn on unsatisfied dependencies, `/task-implement` does not honour plan order, and no bash script parses `PLAN.md`.
 
 ## The read stage (`/production-status`)
 
@@ -245,11 +245,8 @@ This line makes reconciliation possible: without it, re-planning run can't tell 
 Task status meaning *design this task generated from has changed*. Set by `/architect` when re-architecting feature task came from.
 
 - **Not terminal.** Stale task: live work awaiting reconciliation, not abandoned. `/task-clean` prunes `[DONE]`, `[SKIP]`; never prunes `[STALE]`.
-- **Not implementable unattended.** `chosko-llm task-impl` refuses `[STALE]` task. External LLM can't judge whether superseded design still applies, implementing against one worse than stopping.
-- **Implementable interactively, on user's say-so.** `/task-implement` warns — names feature, says design changed since task written — then lets user implement anyway or stop. Human can make that call; orchestrator can't. Asymmetry deliberate.
+- **Implementable only on user's say-so.** `/task-implement` warns — names feature, says design changed since task written — then lets user implement anyway or stop. Never picked up silently: `all` and `next` skip stale tasks rather than deciding for the user.
 - **Resolved by reconciliation**, below.
-
-Status vocabulary duplicated in shell: `scripts/check-task-parity.sh` holds canonical tag list, `scripts/cmd-task-impl.sh` holds implementable-status allowlist. Any vocabulary change must land in both, or parity guard fails.
 
 ## Slice-aware resolution (`/architect`)
 

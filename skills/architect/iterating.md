@@ -115,10 +115,7 @@ Worth knowing while explaining the flip to the user:
 
 - **Not terminal.** `/task-clean` never prunes `[STALE]` — it is live work
   awaiting reconciliation, not abandoned work.
-- **Refused unattended.** `chosko-llm task-impl` refuses a `[STALE]` task
-  outright: a headless local LLM cannot judge whether a superseded design
-  still applies.
-- **Allowed interactively.** `/task-implement` warns, names the feature, and
+- **Never picked up silently.** `/task-implement` warns, names the feature, and
   lets the user implement anyway or stop. `all` and `next` skip stale tasks
   rather than deciding for the user.
 - **Cleared by reconciliation.** `/task-add feature=<slug>` updates the body

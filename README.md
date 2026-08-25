@@ -93,17 +93,6 @@ chosko-llm upgrade --enable-auto    # opt back in
 
 These flags only change the preference — they don't perform an upgrade. The opt-in/opt-out state and the last-run date live in a gitignored file in the managed clone (`~/.chosko-llm/.auto-upgrade-state`). Set `CHOSKO_LLM_NO_AUTO_UPGRADE` to skip the automatic run entirely (handy in CI or scripts).
 
-### [Experimental] Implementing tasks with a local LLM
-
-`chosko-llm task-impl` drives a **local** LLM (aider + Ollama, `qwen2.5-coder:14b` by default) through a project's task backlog — the offline counterpart to the `/task-implement` slash command. Run it from the project root once the backlog is initialized (`/task-setup`) and tasks exist:
-
-```sh
-chosko-llm task-impl <N> [<N> ...]   # implement specific tasks, one commit each
-chosko-llm task-impl all             # implement every pending task, in order
-```
-
-It follows the same test-first sequence — write failing tests, implement, watch them pass — and commits (and pushes) each task separately. Pass `--model` / `--retries` / `--map-tokens`, or `--no-push` to keep the per-task commits local, or see `chosko-llm task-impl --help`, to tune the run. See [Workflows](#workflows) for how this fits the rest of the task tooling.
-
 ### Exporting a repo's Claude config
 
 `chosko-llm export` packages a repo's Claude config — `CLAUDE.md`, `AGENTS.md`, `README.md`, and the curated Markdown/JSON/TOML/shell subset of `.claude/` (the shell part covers hooks and the task-setup test runners, which `settings.json` and the backlog wiring reference) — into a single hand-off artifact, useful for sharing a repo's setup outside the working directory:
@@ -236,8 +225,8 @@ worth understanding before you hit it:
    rewrites the feature document, marks those tasks **`[STALE]`**, and sets
    the feature **`[ITERATED]`**.
 4. `[STALE]` means "the design moved; this task needs reconciling". Nothing is
-   deleted. `/task-clean` won't prune it, `chosko-llm task-impl` refuses it,
-   and `/task-implement` warns and lets you decide — `all` and `next` skip it.
+   deleted. `/task-clean` won't prune it, and `/task-implement` warns and lets
+   you decide — `all` and `next` skip it.
 5. `/task-add feature=password-auth` **reconciles**: each stale task is left
    alone, updated in place (back to `[MISSING]`), or skipped with a reason and
    replaced. `[DONE]` tasks are never touched. The feature returns to
@@ -623,9 +612,9 @@ tasks. The core idea is to spend more focus in planning and writing down tasks, 
 
 `/task-add`, `/task-clean`, and `/task-implement` commit automatically and
 then push, once per task for `/task-implement` (pass `--no-commit` to skip
-both, or `--no-push` to commit without pushing). `/task-setup` and
-`/task-enrich` only commit under `--commit`, at which point they push too
-(`--commit --no-push` commits without pushing).
+both, or `--no-push` to commit without pushing). `/task-setup` only commits
+under `--commit`, at which point it pushes too (`--commit --no-push` commits
+without pushing).
 
 Tasks can be **human-in-the-loop**: when part of the work only a human can
 perform in an external tool (a Unity editor step, a cloud console, hardware),
@@ -642,9 +631,7 @@ tasks are flipped to `[STALE]`, meaning the spec may no longer match the
 design. Stale tasks are never pruned by `/task-clean` — they're live work
 awaiting reconciliation, normally by re-running `/task-add feature=<slug>`.
 `/task-implement` warns before starting one and lets you implement it anyway
-or stop; `all` and `next` skip them so a batch run never guesses. The
-`chosko-llm task-impl` CLI refuses them outright, since a local model can't
-judge whether a superseded design still applies.
+or stop; `all` and `next` skip them so a batch run never guesses.
 
 On a Unity project set up with [`/unity-mcp-setup`](#set-up-unity-mcp--unity-mcp-setup),
 those checkpoints can flip around: when the `UnityMCP` server is connected,
@@ -655,14 +642,6 @@ confirm you see it") instead of an instruction. It asks once per task
 whether you want it to drive Unity or pause for you to do the steps
 manually, and steps MCP genuinely can't perform stay manual. When the
 server isn't connected, the standard manual protocol above runs unchanged.
-
-#### [Experimental] Implement with a local model instead of Claude
-
-`/task-enrich` expands a task into a self-contained brief; the `chosko-llm
-task-impl` CLI then drives a **local** LLM (aider + Ollama, e.g.
-`qwen2.5-coder`) through the same 7-step, test-first loop, committing each task
-as it goes. The offline counterpart to `/task-implement` — the backlog runs
-under Claude interactively or a local model in batch.
 
 ### Survive a cloud session — `hook:remote-session-protocol`
 
@@ -736,7 +715,6 @@ A `VERSION` bump without a matching `CHANGELOG.md` section is an incomplete chan
 | `bin/chosko-llm`             | Proxy script copied to `~/bin/chosko-llm` by `install.sh`.               |
 | `bin/chosko-llm.cmd`         | Windows batch shim copied alongside the proxy on Windows.                |
 | `scripts/lib.sh`             | Shared shell helpers (logging, frontmatter, path resolution).            |
-| `scripts/lib-task-external.sh` | Helpers for the external-LLM task workflow.                            |
 | `scripts/cmd-*.sh`           | One file per CLI subcommand. The proxy delegates here.                   |
 | `scripts/check-changelog.sh` | Authoring-time guard: fails when a `VERSION` bump has no matching `CHANGELOG.md` section. Not a subcommand — run it by hand. |
 | `commands/<name>.md`         | A Claude Code command. Frontmatter required.                             |

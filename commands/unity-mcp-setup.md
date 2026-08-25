@@ -1,6 +1,6 @@
 ---
 name: unity-mcp-setup
-version: 0.2.1
+version: 0.2.2
 type: command
 description: Make a Unity project ready for MCP-assisted task implementation. Idempotent and re-runnable — detects the project, installs the Unity-side com.coplaydev.unity-mcp package into Packages/manifest.json if missing, records the project-side fact in versioned artifacts (a terse CLAUDE.md marker plus, when a context layer exists, .claude/context/mcp-tools.md and an INDEX.md row), and registers + verifies the machine-local Claude-side UnityMCP server via claude mcp add / claude mcp list. Configures only what is missing. Authoring command — leaves its versioned artifacts uncommitted for review by default; pass --commit to commit and push them (--commit --no-push to skip the push). The Claude-side registration is machine-local config (in ~/.claude.json), not a repo change, so it happens regardless of the flag.
 ---
@@ -40,7 +40,7 @@ leaves every VERSIONED file it writes — `Packages/manifest.json`,
 `CLAUDE.md`, `.claude/context/mcp-tools.md`, `.claude/context/INDEX.md` —
 UNCOMMITTED in the working tree for you to review and commit in one pass,
 matching the other authoring commands (`/project-setup`, `/context-build`,
-`/task-enrich`, the `/refactor-*` commands). With `--commit` it commits
+the `/refactor-*` commands). With `--commit` it commits
 exactly those written paths in one focused commit, then pushes per
 docs/authoring-guide.md's commit-and-push protocol (`--commit --no-push`
 commits without pushing).

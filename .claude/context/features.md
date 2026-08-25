@@ -59,7 +59,7 @@ Currently shipped:
   logic itself. By default everything, including
   sub-commands' output, left uncommitted for user review and commit
   in one pass — matching other authoring features (`/context-build`,
-  `/context-convert`, `/task-enrich`, `/refactor-*`). With `--commit` it
+  `/context-convert`, `/refactor-*`). With `--commit` it
   commits own artifacts first, then runs sub-commands with `--commit`
   so each commits own output. VCS detection decides whether to inject
   VCS-mapping section (and, under `--commit`, which VCS commits target).
@@ -125,18 +125,23 @@ Currently shipped:
   `/architect`. **Authoring command — leaves scaffolding uncommitted
   by default; `--commit` stages exactly `WRITTEN` paths in one commit.**
 - `commands/task-setup.md` — initializes backlog: `.claude/TASKS.md`
-  stub, `.claude/tasks/` directory, `.claude/external/implement-prompt.md`
-  (static system prompt fed to external LLM via aider). Required
-  before `/task-add`. Idempotent — re-runs only fill missing artifacts,
-  never overwrite edited implement-prompt. **Authoring command —
+  stub, `.claude/tasks/` directory, and the project's **test-dispatch
+  convention** — `.claude/external/run-affected-tests.sh` +
+  `run-full-tests.sh`, thin wrappers inferred from project files giving
+  one stable pair of entry points for the affected and full suites.
+  Nothing in the `task-*` suite invokes them; `/task-implement`
+  resolves its own test command and never reads them. No-test-suite
+  projects get no-op stubs carrying the `# CHOSKO_TASK_IMPL_STUB`
+  sentinel, which is what marks a wrapper as a stub on a re-run.
+  Required before `/task-add`. Idempotent — re-runs only fill missing
+  artifacts, never overwrite a non-stub wrapper. **Authoring command —
   leaves scaffolding uncommitted for user review by default;
   `--commit` opts in to committing exactly paths run wrote.**
 - `commands/task-add.md` — plans and appends new task conversationally:
   writes summary block to `.claude/TASKS.md` and thin body file at
   `.claude/tasks/<N>.md`. Default body schema (target: claude) contains
-  Goal, Acceptance criteria, Decisions (when applicable), Hints. With
-  `--enrich`, produces enriched body (target: local) in one shot by
-  reading `/task-enrich` for format guidance. When work includes steps
+  Goal, Acceptance criteria, Decisions (when applicable), Hints.
+  When work includes steps
   only human can perform in external tool (e.g. Unity editor),
   sets `Target: claude+human` (or `human`) and authors
   `## Manual interventions` checkpoint section — two always go
@@ -221,8 +226,7 @@ Currently shipped:
   `skip-tests-unattended` marker value. On `[STALE]` task
   warns naming originating feature and offers implement-anyway or stop
   (`all` / `next` skip stale tasks, report them, rather than deciding
-  for user) — interactive counterpart to `chosko-llm task-impl`
-  refusing stale task outright. On run resolving to 2+ tasks, offers
+  for user). On run resolving to 2+ tasks, offers
   to implement each task in fresh subagent so later tasks don't inherit
   earlier ones' context; agents spawned one at a time, never
   parallel (shared working tree, branch, `TASKS.md`), each owning own
@@ -237,8 +241,7 @@ Currently shipped:
   the very end of the run (batched across the whole run, never per-task),
   proposes flipping each candidate's `FEATURES.md` `Status:` from
   `[PLANNED]` to `[DONE]` — user decides per feature, one commit covers
-  every flip approved. `chosko-llm task-impl` (headless orchestrator) never
-  runs this check.
+  every flip approved.
 - `skills/product-design/` — designs product top-down with user, writes
   result into domain layer: `design-process.md` (state
   file), `product-design.md`, `technical-direction.md`, and — only when
@@ -558,12 +561,6 @@ Currently shipped:
   a silent no-op with no warning and no pointer at `/production-plan`. Reads
   `.claude/TASKS.md`, plus `PLAN.md` and `FEATURES.md` when a plan exists;
   never opens body files, feature docs or the roadmap.
-- `commands/task-enrich.md` — expands thin (`target: claude`) task body
-  into enriched self-contained body (`target: local`) for local LLM
-  implementer. Appends `## Context bundle` and `## Implementation steps`
-  sections; updates `Target:` to `local`. Refuses human-in-the-loop tasks
-  (`target: claude+human` / `human`). Doesn't commit by default;
-  `--commit` opts in to committing enriched body.
 - `commands/refactor-codebase.md` — behaviour-preserving, plan-first,
   test-gated refactor: extract constants/enums, dedupe, split oversized
   files, clean imports, rename. `scope=` / `focus=` limit work; `--commit`
