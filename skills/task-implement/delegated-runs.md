@@ -9,6 +9,16 @@ conversation leaves task 1's reading, diffs, and test output loaded while
 task 3 works. Delegating each task to its own agent gives every task the
 full window, and the parent keeps only the run-level bookkeeping.
 
+That only works if the parent stays small too. On a delegated run the parent
+is a **launcher**, not an orchestrator: it resolves the task list, evaluates
+the delegation guard from the `TASKS.md` summary blocks it has already read,
+hands every agent the same fixed-size prompt, and records four short values
+per return. It never reads the task it is handing over. A parent that read
+each body to compose an accurate hand-off would spend exactly the context
+the delegation exists to save, and the agent is about to read that body
+properly anyway, from a clean window, with the project's navigation layer in
+front of it.
+
 ## Sequential, never parallel
 
 Spawn ONE agent at a time and wait for it to finish before spawning the
@@ -45,31 +55,95 @@ plainly — name the IDs and why:
 Never delegate silently and never let the user discover the split from the
 output.
 
+## What the parent never reads
+
+**On a delegated run the parent opens no `.claude/tasks/<N>.md` for a
+delegated task, on any path, ever.** Not to compose the prompt, not to check
+what the task touches, not to decide whether it may be delegated, and not
+after the agent returns. The three fields the delegation guard needs —
+`Target:`, `Status:` and `Feature:` — all live in the task's `TASKS.md`
+summary block, which PRE-FLIGHT step 2 already read once for the whole run,
+so the guard costs nothing per task and no body read can be justified by it.
+
+The tasks the parent keeps are the exception that proves the shape: a
+`claude+human`, `human` or explicitly requested `[STALE]` task is not
+delegated, so the parent implements it itself and reads its body in Step 1,
+exactly as an ordinary in-context run does. That path is unchanged. A task
+handed to an agent never gets its body opened here.
+
 ## The agent prompt
 
-The agent starts cold. Everything the parent already resolved must be in
-its prompt, or the agent will re-ask questions the user has answered — or
-worse, stall waiting for an answer nobody sees. Include:
+The prompt is **fixed size** — the same frame every time, with a different
+number in it. It does not describe the task, because the parent has not read
+the task and will not. A fifty-task batch composes this prompt fifty times
+and the parent's context does not grow with the batch.
 
-- The absolute repo path, and an instruction to work in it.
-- The task ID, and that it must implement exactly that one task by
-  following the `/task-implement` skill's per-task workflow (Steps 1–7)
-  for it — its own `[IN PROGRESS]` flip, its own implementation, its own
-  `[DONE]` flip, its own single commit, and its own push.
-- The resolved flags: NO_COMMIT, NO_PUSH, AUTO_CONFIRM.
-- The resolved testing mode — full test mode with the concrete test
-  command, or skip-tests mode — so the agent does not redo RESOLVING THE
-  TEST RUNNER and does not re-ask the no-test-suite A/B question.
-- The dirty-tree decision (DIRTY_FOLD / DIRTY_FOLD_UNTRACKED) already made
-  in PRE-FLIGHT, and that a working tree dirtied by this run's own earlier
-  tasks is expected — the agent must not re-run `./dirty-tree.md`'s prompt
-  protocol.
-- That it is running non-interactively: it cannot ask the user anything.
-  If it hits something that genuinely needs a human decision, it must stop
-  and report that, rather than guess or wait.
-- That it must report back: the final status it wrote, the commit hash (or
-  that nothing was committed under NO_COMMIT), and any surprise worth the
-  user's attention.
+It carries four things:
+
+1. **The task number**, plus the repo's absolute path and the instruction to
+   implement exactly that one task by following the `/task-implement`
+   skill's per-task workflow (Steps 1–7) — its own `[IN PROGRESS]` flip, its
+   own implementation, its own `[DONE]` flip, its own single commit, its own
+   push.
+2. **The run's resolved flags** — every run-level decision PRE-FLIGHT
+   already made, so the agent does not re-resolve them, does not re-ask a
+   question the user has answered, and does not stall waiting for an answer
+   nobody sees. Pass *the run's resolved flags*, whatever they are; this is
+   not a closed list, so any flag `/task-implement` gains later rides
+   through without the prompt growing. Today they are:
+   - NO_COMMIT, NO_PUSH, AUTO_CONFIRM;
+   - the resolved testing mode — full test mode with the concrete test
+     command, or skip-tests mode — so the agent does not redo RESOLVING THE
+     TEST RUNNER and does not re-ask the no-test-suite A/B question;
+   - the dirty-tree decision (DIRTY_FOLD / DIRTY_FOLD_UNTRACKED) already
+     made in PRE-FLIGHT, plus the note that a tree dirtied by this run's own
+     earlier tasks is expected, so the agent must not re-run
+     `./dirty-tree.md`'s prompt protocol;
+   - the notice that it runs non-interactively: it cannot ask the user
+     anything, and if it hits something that genuinely needs a human
+     decision it must stop and report that rather than guess or wait.
+
+   Every one of these is a run-level value, resolved once — so the flag list
+   is O(1) in the size of the batch, exactly like the rest of the prompt.
+3. **The instruction to gather its own context**: read the task body,
+   CLAUDE.md and `.claude/context/` itself, since it has been given none of
+   them. This is not a hardship — the agent has the same project a user
+   typing `/task-implement <n>` by hand would have, and `.claude/context/`
+   is precisely the precomputed answer to "what do I need to read". Handing
+   it a pre-chewed summary instead pays for that layer twice.
+4. **The return contract**, below.
+
+The whole thing reads roughly:
+
+> Implement task `<n>` from the backlog in `<absolute repo path>` by
+> following the `/task-implement` skill's per-task workflow (Steps 1–7) for
+> that one task: flip it `[IN PROGRESS]`, implement it, flip it `[DONE]`,
+> make its single commit and its single push.
+>
+> Resolved flags for this run: `<the run's resolved flag list>`.
+>
+> Read the task body, CLAUDE.md and `.claude/context/` yourself — you have
+> not been given them. You are running non-interactively and cannot ask the
+> user anything; if something genuinely needs a human decision, stop and
+> report it.
+>
+> Report back only: the task number, the terminal status you wrote, the
+> commit hash (or that nothing was committed), and — only if it failed — a
+> one-line reason.
+
+## What the agent returns, and what the parent keeps
+
+The return contract is exactly four things:
+
+1. the task number,
+2. the terminal status it wrote to `.claude/TASKS.md`,
+3. the commit hash — or, under NO_COMMIT, that nothing was committed,
+4. a one-line failure reason, and only when it failed.
+
+The parent accumulates that and nothing else. No diffs, no file lists, no
+narrative, no "surprises worth mentioning" — an agent with something to say
+says it in the failure line, and a task that needs the user's attention is a
+task that stopped. After a fifty-task run the parent holds fifty short rows.
 
 ## Between delegated tasks
 

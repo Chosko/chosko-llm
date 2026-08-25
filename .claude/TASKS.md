@@ -232,7 +232,7 @@ Preconditions: none
 
 ## 119. Turn /task-implement's batch parent into a launcher
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-implement/delegated-runs.md, skills/task-implement/SKILL.md, VERSION
 Preconditions: 118

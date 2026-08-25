@@ -2,6 +2,25 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.3.0 — 2026-08-25
+
+- `/task-implement`'s batch parent is now a **launcher**. On a delegated run
+  (`--agents`, or answering yes to the delegation question) the parent no longer
+  reads the body of a task it is about to hand over — it evaluates the
+  delegation guard from the `Target:`, `Status:` and `Feature:` lines already in
+  the `TASKS.md` summary blocks, and hands every agent the same fixed-size
+  prompt: the task number, the run's resolved flags, and the instruction to read
+  the task body, `CLAUDE.md` and `.claude/context/` for itself.
+- Each agent now returns exactly four things — task number, terminal status,
+  commit hash (or that nothing was committed), and a one-line reason if it
+  failed — and the parent keeps nothing else. A fifty-task run leaves the parent
+  holding fifty short rows instead of fifty task bodies.
+- Observable behaviour is unchanged: no new flag, no altered usage, the same
+  sequential-never-parallel agents, the same tasks kept in the parent
+  (`claude+human`, `human`, explicitly requested `[STALE]`), the same
+  between-agent verification, the same end-of-run feature-completion proposal,
+  and single-task runs untouched. What changed is the parent's token profile.
+
 ## 1.2.3 — 2026-08-25
 
 - Documentation only. The README and the authoring guide now describe
