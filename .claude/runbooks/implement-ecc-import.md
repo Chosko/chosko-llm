@@ -150,7 +150,7 @@ Context:
 ```
 Done: 2026-08-25 — commits 7e6ecb7 (task 138) and 4ffab0e (feature repo-local-audits [DONE], pre-approved), both pushed. README (exemption sentence, .claude/skills/ layout row), authoring guide (§ Versioning exemption, new "Repo-local skills are not features" section after § Vendored skills, frontmatter-schema preamble scoped to shipped features; § The changelog rule converse reworded to match CLAUDE.md), .claude/context/features.md overview note, feature document reconciled. VERSION 1.2.2→1.2.3. Premise: Files: omitted CHANGELOG.md (rule postdates the body). Verified cmd-export.sh does carry .claude/skills/.
 
-## [ ] 13. Turn /task-implement's batch parent into a launcher (task 119)
+## [x] 13. Turn /task-implement's batch parent into a launcher (task 119)
 
 Depends on: 12
 
@@ -161,12 +161,14 @@ Context:
 ```prompt
 /task-implement 119
 ```
+Done: 2026-08-25 — commit 03a1c2e (pushed). skills/task-implement/delegated-runs.md: launcher shape, "What the parent never reads" (parent opens no task body for a delegated task; claude+human / human / requested-[STALE] exception kept), fixed four-part agent prompt frame (task number + repo path, resolved flags, read-it-yourself instruction, return contract of exactly four values). SKILL.md: PRE-FLIGHT step 2/2b, PER-TASK preamble, DO NOT prohibition, description clause; skill 1.0.0→1.1.0. VERSION 1.2.3→1.3.0. Premise: body predicted VERSION 1.0.0→1.1.0; actual 1.2.3→1.3.0.
 
 ## [ ] 14. Documentation for task-implement-launcher (task 120)
 
 Depends on: 13
 
-Context: none
+Context:
+- 2026-08-25 (from step 13): VERSION is now 1.3.0; skills/task-implement/SKILL.md is 1.1.0. The launcher prompt frame carries the repo's absolute path in addition to the task number (deliberate, O(1) in batch size); the return contract is exactly four values. Every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh (CHANGELOG.md is legitimate collateral even when absent from Files:). The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 120
