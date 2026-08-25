@@ -1,8 +1,8 @@
 ---
 name: task-implement
-version: 1.1.0
+version: 1.2.0
 type: skill
-description: Implement one or more tasks from the project's task backlog end-to-end using a tests-first sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits and pushes each task separately; pass --no-commit to skip the per-task commits (and pushes), or --no-push to keep committing without pushing. Supports `next` to implement the first eligible task. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd|skip-tests-unattended` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time. In skip-tests mode, pass `-y` to suppress the per-task "Proceed?" confirmation for that run; the `skip-tests-unattended` marker value makes that the default for every run without needing `-y`. On a run resolving to 2+ tasks, offers to implement each task in a fresh subagent so later tasks don't inherit earlier ones' context — agents run one at a time, never in parallel, and `claude+human` / `human` / explicitly-requested `[STALE]` tasks stay in the parent conversation because they need the user present; pass `--agents` / `--no-agents` to pre-answer. On such a run the parent is a launcher: it evaluates the delegation guard from the `TASKS.md` summary blocks alone, never opens a delegated task's body, hands every agent the same fixed-size prompt carrying only the task number and the run's resolved flags, and keeps only the task number, terminal status, commit hash and one-line failure reason each agent returns — so the parent's context no longer grows with the size of the batch. When a `Feature:`-tagged task
+description: Implement one or more tasks from the project's task backlog end-to-end using a tests-first sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits and pushes each task separately; pass --no-commit to skip the per-task commits (and pushes), or --no-push to keep committing without pushing. Supports `next` to implement the first eligible task. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd|skip-tests-unattended` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time. In skip-tests mode, pass `-y` to suppress the per-task "Proceed?" confirmation for that run; the `skip-tests-unattended` marker value makes that the default for every run without needing `-y`. On a run resolving to 2+ tasks, offers to implement each task in a fresh subagent so later tasks don't inherit earlier ones' context — agents run one at a time, never in parallel, and `claude+human` / `human` / explicitly-requested `[STALE]` tasks stay in the parent conversation because they need the user present; pass `--agents` / `--no-agents` to pre-answer. On such a run the parent is a launcher: it evaluates the delegation guard from the `TASKS.md` summary blocks alone, never opens a delegated task's body, hands every agent the same fixed-size prompt carrying only the task number and the run's resolved flags, and keeps only the task number, terminal status, commit hash and one-line failure reason each agent returns — so the parent's context no longer grows with the size of the batch. Pass `--review` (optionally `--rounds N`, default 1) to have each task reviewed before it is committed: after the full test suite and before the status flip, the run spawns `/task-review` as a subagent so the review happens in a context that did not write the code, waits for its findings, and runs `/task-iterate` in the session to triage and apply them — the fixes ride in the task's own single commit, later rounds re-review only what the last iterate changed and only while `BLOCKING` findings remain, rejected findings may not be re-raised, and unresolved `BLOCKING` findings after the last round stop the run with the tree uncommitted and the task `[IN PROGRESS]`; without the flag nothing about the run changes. When a `Feature:`-tagged task
 lands `[DONE]` and leaves every task for that feature `[DONE]`/`[SKIP]`,
 records it as a completion candidate and, once at the very end of the run
 (batched across the whole run, never per-task), proposes flipping that
@@ -23,6 +23,8 @@ decides, per feature; declined or unnamed slugs stay `[PLANNED]`.
 #        /task-implement <args> -y            (skip-tests mode: no per-task Proceed? prompt)
 #        /task-implement <args> --agents      (2+ tasks: one fresh subagent per task, sequentially)
 #        /task-implement <args> --no-agents   (2+ tasks: run everything in this conversation)
+#        /task-implement <args> --review      (review each task before committing it)
+#        /task-implement <args> --review --rounds N  (up to N review/iterate rounds; default 1)
 # Examples: /task-implement 12
 #           /task-implement 12 13 14
 #           /task-implement all
@@ -31,6 +33,8 @@ decides, per feature; declined or unnamed slugs stay `[PLANNED]`.
 #           /task-implement all --no-push
 #           /task-implement all -y
 #           /task-implement all -y --agents
+#           /task-implement 12 --review
+#           /task-implement 12 --review --rounds 3
 
 GOAL
 For each requested task, in the order given:
@@ -43,6 +47,11 @@ For each requested task, in the order given:
 7. Commit and push — one commit (and push) per task (skipped under
    `--no-commit`, which leaves each task's changes uncommitted in the
    working tree; the push alone is skipped under `--no-push`).
+
+Under `--review`, a review/iterate loop runs between steps 5 and 6, on the
+uncommitted tree, so its fixes ride in the task's own single commit — see
+`./review-rounds.md`. Without the flag there is no loop and nothing else
+about the run changes.
 
 If any step fails and cannot be resolved by fixing the code, stop the entire
 run and report. Do not proceed to subsequent tasks. Do not commit a broken
@@ -74,6 +83,7 @@ tasks. Everything below is loaded only when its branch actually applies.
 | `./unity-mcp-checkpoints.md` | A `claude+human`/`human` task where CLAUDE.md carries the `Unity MCP for /task-implement:` marker AND the `mcp__UnityMCP__*` tools are present this session (read after `./human-in-loop.md`, per its gate). |
 | `./body-schemas.md`  | The task body does NOT match the current schema (Goal / Acceptance criteria / Decisions / Hints). |
 | `./delegated-runs.md` | DELEGATE is true — the resolved list holds 2+ tasks and the user opted into per-task subagents (or passed `--agents`). Never on a single-task run, nor when the user declined. |
+| `./review-rounds.md` | REVIEW is true — the run was invoked with `--review`. Read once, after ARGUMENT PARSING and before the first task. Never on a run without the flag. |
 
 Do not read a supporting file speculatively. If none of the conditions
 above fire, the run never touches one.
@@ -118,6 +128,21 @@ PRE-FLIGHT step 2b's delegation question: `--agents` sets DELEGATE = true,
 asked. With neither flag, DELEGATE is undecided here and step 2b resolves
 it. `--agents` on a run that resolves to fewer than 2 tasks is accepted and
 ignored — the run stays in-context — rather than being an error.
+
+Also scan for the optional `--review` flag and the optional `--rounds N`
+pair, and strip whichever appear:
+
+- `--review` sets REVIEW = true. Default false. When it is true, read
+  `./review-rounds.md` now — before the first task — and follow it for the
+  rest of the run, starting with its availability gate.
+- `--rounds N` sets ROUNDS = N, a positive integer; default 1. `--rounds`
+  without `--review` stops the run with: `--rounds requires --review.` An
+  `N` that is not a positive integer stops too:
+  `--rounds needs a positive integer.`
+
+A run without `--review` is the run it has always been: REVIEW is false,
+`./review-rounds.md` is never opened, no loop runs, nothing new is asked,
+and the output says nothing about reviewing.
 
 After stripping the flag, `$ARGUMENTS` is one of:
 - A whitespace-separated list of task numbers — implement those tasks in
@@ -469,6 +494,23 @@ Run the full test suite. It MUST pass entirely. If unrelated tests fail,
 the change has caused a regression — fix it before continuing. Do not
 commit with red tests.
 
+### Review rounds   [only when REVIEW is true]
+
+If REVIEW is false — the default — there is nothing here; go straight to
+Step 6.
+
+Otherwise run the review/iterate loop from `./review-rounds.md`, which was
+read before the first task, on this task's still-uncommitted tree: spawn
+`/task-review` as a subagent, **wait for its findings to arrive** (the
+Agent call returns an id, not the report), run `/task-iterate` in this
+session telling it not to commit, and repeat while `BLOCKING` findings
+remain and rounds are left, up to ROUNDS. Do not reach Step 6 or Step 7
+until the final round's reviewer result has actually arrived.
+
+Unresolved `BLOCKING` findings after the last round stop the run per
+FAILURE HANDLING: the tree stays uncommitted and this task stays
+`[IN PROGRESS]`.
+
 ### Step 6 — Mark DONE (or other terminal status)
 
 Use the Edit tool to update this task's `Status:` line in
@@ -529,7 +571,10 @@ investigate and fix the underlying issue, then create a NEW commit (do
 not amend).
 
 Each task gets exactly one commit. Never bundle multiple tasks into one
-commit, even when several were requested in the same invocation.
+commit, even when several were requested in the same invocation. Under
+`--review` that count is unchanged: the loop's fixes are already in the
+tree and are staged as part of this task's own commit, never as a second
+one.
 
 On commit success, report the commit hash. Then, unless NO_PUSH is true or
 the project's CLAUDE.md carries a `## VCS` override (non-git), re-sync
@@ -671,6 +716,11 @@ the run without spawning the next agent, and reports which tasks completed
 (with hashes), which failed and what the agent said, and which were never
 started. See `./delegated-runs.md`.
 
+Unresolved `BLOCKING` findings at the end of a `--review` loop are an
+ordinary case of this: the task never reaches Step 6, so its status stays
+`[IN PROGRESS]`, its tree stays uncommitted, and the run stops with the
+findings reported by id. See `./review-rounds.md`.
+
 A Step 7 push failure or pre-push conflict is a distinct case: the task's
 commit already succeeded (status legitimately `[DONE]`, changes committed
 locally) — only the sync/push step failed. Do not revert the commit or
@@ -711,3 +761,13 @@ DO NOT:
 - Flip a `FEATURES.md` `Status:` to `[DONE]` without the user naming that
   slug in response to the proposal, or flip any status other than
   `[PLANNED]` → `[DONE]` there.
+- Make a separate commit for a `--review` round's fixes, or let
+  `/task-iterate` commit or push inside a round. A reviewed task lands
+  exactly one commit, like every other task.
+- Treat the review subagent's Agent call as though it returned the findings,
+  or reach Step 6 or Step 7 before the round's reviewer result has actually
+  arrived. The call returns an id; the report arrives later, separately.
+- Run the review in this session instead of a subagent — fresh context is
+  the mechanism, not a detail.
+- Accept `--rounds` without `--review`, or skip the review silently when
+  either `task-review` or `task-iterate` is unavailable.

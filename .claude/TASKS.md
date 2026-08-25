@@ -272,7 +272,7 @@ Feature: task-peer-review
 
 ## 123. Add the --review / --rounds loop to /task-implement
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-implement/SKILL.md, skills/task-implement/review-rounds.md, skills/task-implement/delegated-runs.md, VERSION
 Preconditions: 118, 119, 121, 122

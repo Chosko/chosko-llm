@@ -92,6 +92,9 @@ It carries four things:
    not a closed list, so any flag `/task-implement` gains later rides
    through without the prompt growing. Today they are:
    - NO_COMMIT, NO_PUSH, AUTO_CONFIRM;
+   - REVIEW and ROUNDS — whether the run was invoked with `--review`, and
+     the round cap. An implementor told REVIEW is true runs the loop from
+     `./review-rounds.md` for its own task (see below);
    - the resolved testing mode — full test mode with the concrete test
      command, or skip-tests mode — so the agent does not redo RESOLVING THE
      TEST RUNNER and does not re-ask the no-test-suite A/B question;
@@ -130,6 +133,30 @@ The whole thing reads roughly:
 > Report back only: the task number, the terminal status you wrote, the
 > commit hash (or that nothing was committed), and — only if it failed — a
 > one-line reason.
+
+## Review rounds inside a delegated task
+
+When REVIEW rides through in the flag list, **each implementor spawns its own
+reviewer** for its own task: launcher → implementor → reviewer. That depth
+was confirmed to work on 2026-08-24 — a general-purpose subagent has the
+`Agent` tool and can spawn a child that runs and returns — so batch
+`--review` needs no fallback and gets none.
+
+Two properties of the single-task loop carry over unchanged, and the
+implementor must honour both:
+
+- the implementor's reviewer also **returns asynchronously** — the Agent call
+  yields an id and the report arrives later as a separate notification;
+- an implementor must therefore **not reach its own Step 7** until its
+  reviewer's result has actually arrived. An implementor that commits on the
+  strength of a spawn call's return value commits unreviewed work and reports
+  it as reviewed.
+
+The parent's side of this is deliberately empty. It passes the flags through
+and **never sees a finding**: no report, no triage table, no rejection ledger
+travels up. The four-field return contract below is unchanged by `--review` —
+a task whose loop ended in unresolved `BLOCKING` findings comes back as a
+failure with its one-line reason, like any other failure, and halts the run.
 
 ## What the agent returns, and what the parent keeps
 

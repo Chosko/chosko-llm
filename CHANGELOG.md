@@ -2,6 +2,40 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.6.0 — 2026-08-25
+
+- `/task-implement` gains `--review` and `--rounds N` (`skills/task-implement`
+  to `version: 1.2.0`), completing the peer-review loop: a task can now be
+  implemented, reviewed by a context that did not write it, and corrected
+  without leaving the run. Default off — a run without `--review` behaves
+  exactly as before, reads no new file and asks nothing new.
+- The loop runs after the full test suite and **before** the terminal status
+  flip, on the uncommitted tree, so the review's fixes ride in the task's own
+  single commit. A reviewed task still produces exactly one commit, and
+  `/task-iterate` is told not to commit inside a round.
+- Each round spawns `/task-review` as a subagent, because fresh context is the
+  mechanism rather than a detail, and runs `/task-iterate` in the session so its
+  edits land in the tree that gets committed. The new
+  `skills/task-implement/review-rounds.md` holds the protocol and is read only
+  when `--review` is passed.
+- `--rounds N` (default 1) bounds the loop, which continues only while
+  `BLOCKING` findings remain unresolved; `IMPORTANT` and `ADVISORY` findings are
+  reported once and never re-raised, later rounds re-review only the hunks the
+  last iterate changed, and a finding rejected in one round may not be
+  re-raised in the next, only escalated on new evidence. `--rounds` without
+  `--review` is an error.
+- Unresolved `BLOCKING` findings after the last round stop the run: the findings
+  are reported by id, the tree is left uncommitted and the task stays
+  `[IN PROGRESS]`. `--review` on a run whose session lacks either the
+  `task-review` or the `task-iterate` skill stops before the first task with the
+  `chosko-llm add skill:task-review skill:task-iterate` remedy, rather than
+  silently skipping the review.
+- In a batch run the flags ride through the launcher's fixed-size hand-off
+  prompt and each implementor spawns its own reviewer. A spawned reviewer
+  returns asynchronously — the call yields an id and the report arrives later —
+  so no implementor may commit before its reviewer's result has arrived, and no
+  finding ever travels up to the parent.
+
 ## 1.5.0 — 2026-08-25
 
 - New skill `task-iterate` (`/task-iterate`), at `version: 0.1.0`. It takes the
