@@ -70,7 +70,7 @@ Preconditions: none
 
 ## 157. Key the iterate guard's status flip on the feature's status, not its `Tasks:` line
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/architect/iterating.md, skills/architect/SKILL.md, .claude/domain/product-workflow.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none

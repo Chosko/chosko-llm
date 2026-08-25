@@ -243,7 +243,10 @@ Currently shipped:
   writer invalidating those IDs fixes them in same run, so
   `/architect`'s iterate guard stays pure reader, never under-reports.
   Feature `Status:` deliberately untouched: feature whose tasks were all
-  cleaned stays `[PLANNED]`, since `[PLANNED]` → `[NEW]` illegal. After
+  cleaned stays `[PLANNED]`, since `[PLANNED]` → `[NEW]` illegal — and that
+  surviving `Status:` is what `/architect`'s iterate guard keys its own flip
+  on, precisely because the pruned `Tasks:` line can no longer tell a cleaned
+  feature from a never-planned one. After
   applying, commits changes automatically (`.claude/TASKS.md` + deleted
   body files + `.claude/FEATURES.md` when changed); `--no-commit`
   leaves uncommitted. Declares `requires: skill:task-engine` — first
@@ -605,7 +608,15 @@ Currently shipped:
   the iterate guard refuses outright while any generated task is
   `[IN PROGRESS]` (no override), else asks, then flips surviving
   non-`[DONE]` tasks to `[STALE]` and feature status to `[ITERATED]` (from
-  `[PLANNED]` or `[DONE]`). That guard also only reason it touches
+  `[PLANNED]` or `[DONE]`). Guard's two halves decided by different fields:
+  task half (list, refuse, ask, `[STALE]` flip) runs only when `Tasks:` IDs
+  actually resolve — `Tasks: none` and IDs resolving to nothing are the same
+  case, neither an error, and skip it with no ask and no `TASKS.md` write;
+  status half always keyed on entry's own `Status:` (`[NEW]` and `[ITERATED]`
+  self-transition, `[PLANNED]`/`[DONE]` → `[ITERATED]`, named in closing
+  report), because `/task-clean` prunes resolved IDs while leaving `Status:`
+  alone, leaving `Tasks: none` unable to tell a cleaned feature from a
+  never-planned one. That guard also only reason it touches
   `.claude/TASKS.md`, writes nothing there but `Status:` lines. Slugs
   stable, never renamed. Never writes `technical-direction.md` — that
   is `/product-design`'s document. **Authoring skill — nothing committed by

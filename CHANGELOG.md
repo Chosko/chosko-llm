@@ -2,6 +2,18 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.19.3 — 2026-08-25
+
+- `/architect`'s iterate guard no longer leaves a cleaned feature stuck at
+  `[DONE]`. It used to read `Tasks: none` as "this feature was never planned"
+  and skip the guard outright — but `/task-clean` prunes finished task IDs and
+  deliberately leaves `Status:` alone, so a completed feature looks exactly
+  like a brand-new one. The status flip is now keyed on the feature's own
+  `Status:`: `[PLANNED]` and `[DONE]` become `[ITERATED]` even with no tasks
+  left, while `[NEW]` and `[ITERATED]` stay put. No prompt is added — with no
+  tasks to invalidate there is nothing to warn about — and the flip is named
+  in the closing report.
+
 ## 1.19.2 — 2026-08-25
 
 - Documentation only: the domain layer described `/production-status` as it

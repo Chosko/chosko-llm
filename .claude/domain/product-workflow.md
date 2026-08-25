@@ -129,7 +129,7 @@ Two self-transitions: common case not error. Re-architecting when no new tasks g
 
 Transitions illegal:
 
-- **`[PLANNED]` or `[DONE]` → `[NEW]`.** Tasks generated from feature. Happened, can't un-happen. Even if every task later removed by `/task-clean`, feature stays `[PLANNED]` (or `[DONE]`) — tasks existed, resolved.
+- **`[PLANNED]` or `[DONE]` → `[NEW]`.** Tasks generated from feature. Happened, can't un-happen. Even if every task later removed by `/task-clean`, feature stays `[PLANNED]` (or `[DONE]`) — tasks existed, resolved. Why iterate guard keys its flip on `Status:`, not `Tasks:` (§ The iterate guard, item 4): after pruning, `Status:` is only field still recording tasks ever existed.
 - **`[NEW]` → `[ITERATED]`.** `[ITERATED]` means backlog drifted from design. No tasks downstream, nothing to drift from.
 - **`[DONE]` → `[PLANNED]`.** `[DONE]` doesn't reopen on its own — reopening happens only by moving through `[ITERATED]` (re-architecting) or by a human editing the file directly. `/task-add feature=<slug>` never targets a `[DONE]` feature: with no `[STALE]`/`[MISSING]` tasks and nothing `[ITERATED]`, there is nothing left for it to reconcile.
 
@@ -273,7 +273,7 @@ Before re-architecting feature already having entry, `/architect` reads its `Tas
 1. **Any `[IN PROGRESS]` task → refuse.** Report task, stop. No override: work actively underway against current design, changing it underneath in-flight implementation corrupts both.
 2. **Any other non-`[DONE]` task → ask.** List tasks w/ statuses and titles, state re-architecting may invalidate them, offer stop or proceed.
 3. **On proceed** — flip every non-`[DONE]` task to `[STALE]`, set feature status to `[ITERATED]` (from `[PLANNED]` or `[DONE]`).
-4. **No tasks at all** (`[NEW]`, or `Tasks: none`) → skip guard entirely.
+4. **No resolvable tasks** (`Tasks: none`, or every listed ID resolving to nothing — same case, neither an error) → skip guard's task half: no list, no ask, no `TASKS.md` write. Status half still runs, keyed on entry's own `Status:`, never `Tasks:` line: `[NEW]` stays `[NEW]`, `[ITERATED]` stays `[ITERATED]`, `[PLANNED]` or `[DONE]` → `[ITERATED]`, named in closing report. `Tasks:` can't discriminate — `/task-clean` prunes resolved IDs, leaves `Status:` alone (§ Transitions, first illegal transition), so cleaned `[PLANNED]`/`[DONE]` feature looks identical to never-planned `[NEW]` one; reading `Tasks: none` as "never planned" would leave it `[DONE]`, forbidding the `[DONE]` → `[ITERATED]` transition and stranding feature `/task-add feature=<slug>` never targets.
 5. **IDs resolving to no task** ignored, not error. `/task-clean` normally prunes them, but hand-edited backlog shouldn't break run.
 
 `[DONE]` tasks never touched. Completed work stands regardless what design does afterwards.

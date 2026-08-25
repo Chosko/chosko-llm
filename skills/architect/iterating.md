@@ -21,18 +21,41 @@ Run this per target feature that already has an entry.
 ### 1. Collect the tasks
 
 Read the entry's `Tasks:` line. It is a comma-separated list of task IDs, or
-`none`.
-
-- `Tasks: none`, or the feature is `[NEW]` → **no tasks exist. Skip the
-  guard entirely** for this feature; its status stays as it is. Continue to
-  PHASE 1.
-- Otherwise, look each ID up in `.claude/TASKS.md` and note its `Status:`
-  and title.
+`none`. Look each ID up in `.claude/TASKS.md` and note its `Status:` and
+title.
 
 **IDs that resolve to no task are ignored, not an error.** `/task-clean`
 normally prunes them from the `Tasks:` line, but a hand-edited backlog must
 not break the run. Mention them in passing if it's tidy to do so; do not
 stop.
+
+**When nothing resolves** — `Tasks: none`, or every listed ID resolving to no
+task, which are the same case and neither of them an error — there is no task
+half of the guard to run. Skip steps 2, 3 and 4.1 for this feature: nothing
+to list, nothing to refuse on, nothing to ask about, and no write to
+`.claude/TASKS.md`. The status half still applies, and it is decided by the
+entry's own `Status:`, never by the `Tasks:` line:
+
+| Entry `Status:` | Result |
+| --- | --- |
+| `[NEW]` | stays `[NEW]` — no tasks ever existed |
+| `[ITERATED]` | stays `[ITERATED]` — already iterated, no-op |
+| `[PLANNED]` | → `[ITERATED]` |
+| `[DONE]` | → `[ITERATED]` |
+
+`Tasks:` cannot be the discriminator here, because `/task-clean` prunes
+`[DONE]` and `[SKIP]` IDs out of that line and deliberately leaves `Status:`
+alone. A cleaned `[PLANNED]` or `[DONE]` feature therefore looks exactly like
+a never-planned `[NEW]` one, and reading `Tasks: none` as "never planned"
+would leave it `[DONE]` where the state machine documents `[DONE]` →
+`[ITERATED]`. That also strands it: `/task-add feature=<slug>` never targets
+a `[DONE]` feature, so the re-architected design would have no route back
+into the backlog.
+
+A flip made on this path takes no ask — the guard's ask exists to warn about
+tasks that are about to be marked `[STALE]`, and there are none. Write it as
+step 4.2 does, name it in PHASE 3's closing report like any other transition,
+then continue to PHASE 1.
 
 ### 2. Refuse on `[IN PROGRESS]`
 
@@ -81,15 +104,19 @@ iteration was never reconciled.
 
 Two writes, both narrow:
 
-1. **In `.claude/TASKS.md`**, flip every non-`[DONE]` task in the list to
-   `[STALE]`. Edit only `Status:` lines. Never create, delete, reorder, or
-   otherwise edit task entries, and never touch a task's body file.
-2. **In `.claude/FEATURES.md`**, set the feature's `Status:` to
-   `[ITERATED]` if it is currently `[PLANNED]` or `[DONE]`. A feature
-   already `[ITERATED]` stays `[ITERATED]`. Re-architecting a `[DONE]`
-   feature is not a special case — it reaches this guard with every one of
-   its tasks already `[DONE]` or `[SKIP]`, so step 3 above only ever has
-   `[SKIP]` tasks to list, if any.
+**4.1 — In `.claude/TASKS.md`**, flip every non-`[DONE]` task in the list to
+`[STALE]`. Edit only `Status:` lines. Never create, delete, reorder, or
+otherwise edit task entries, and never touch a task's body file.
+
+**4.2 — In `.claude/FEATURES.md`**, set the feature's `Status:` to
+`[ITERATED]` if it is currently `[PLANNED]` or `[DONE]`. A feature already
+`[ITERATED]` stays `[ITERATED]`, and a `[NEW]` one stays `[NEW]`. This is the
+same status rule step 1 applies when nothing resolves — the two paths differ
+only in whether 4.1 ran. Re-architecting a `[DONE]` feature is not a special
+case: it reaches this guard with its tasks already `[DONE]` or `[SKIP]` — or,
+once `/task-clean` has pruned those, with no tasks at all, which is the
+common shape and the one step 1 handles — so step 3 above only ever has
+`[SKIP]` tasks to list, if any.
 
 `[DONE]` tasks are never touched. Completed work stands regardless of what
 the design does afterwards; follow-up work is a new task, not a reopened
@@ -108,6 +135,11 @@ ID and title, and give the reconciliation command:
 
 A stale task the user does not know about is the exact failure this guard
 exists to prevent.
+
+The status transition is reported too, on both paths — including the
+no-resolvable-tasks one, where it is the guard's only visible effect
+(`[DONE] → [ITERATED]`, with no stale list beneath it and nothing to
+reconcile yet).
 
 ## What `[STALE]` means downstream
 
