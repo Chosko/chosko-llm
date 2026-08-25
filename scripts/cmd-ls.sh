@@ -16,7 +16,8 @@ case "${1:-}" in
     cat <<EOF
 Usage: chosko-llm ls [--installed | --available] [--local | --global]
 
-  (no flag)     List all known features with installed and latest versions.
+  (no flag)     List all known features with installed and latest versions,
+                status, and the 'requires:' specs each one declares.
   --installed   Show only features that are currently installed.
   --available   Show only features that exist in the managed clone.
   --local       List <cwd>/.claude instead of \$CLAUDE_HOME. Requires
@@ -30,9 +31,15 @@ EOF
   *) die "Unknown flag for ls: $1" ;;
 esac
 
+# STATUS is padded to 18 — one wider than the longest value, "migration
+# pending" — so REQUIRES can be the final, unpadded column: a long list of
+# specs then runs off the right edge instead of shifting anything, and never
+# needs truncating.
+STATUS_WIDTH=18
+
 print_header() {
-  printf '%s%-30s %-8s %-14s %-16s %s%s\n' \
-    "$C_BOLD" "NAME" "KIND" "INSTALLED" "LATEST" "STATUS" "$C_RESET"
+  printf '%s%-30s %-8s %-14s %-16s %-*s %s%s\n' \
+    "$C_BOLD" "NAME" "KIND" "INSTALLED" "LATEST" "$STATUS_WIDTH" "STATUS" "REQUIRES" "$C_RESET"
 }
 
 # Print a colored, right-padded cell. ANSI codes don't count toward field width,
@@ -43,6 +50,47 @@ _colored_cell() {
   local pad=$(( width - ${#text} ))
   [ $pad -lt 0 ] && pad=0
   printf '%s%s%s%*s%s' "$color" "$text" "$reset" "$pad" "" "$sep"
+}
+
+# _requires_cell <src-file> <inst-file>
+# Renders the final, unpadded REQUIRES cell: the feature's kind-prefixed specs
+# exactly as declared, comma-separated, or a dimmed em dash when it declares
+# none.
+#
+# It reads <src-file> when that exists and <inst-file> otherwise — the same
+# bias as the LATEST column: it answers what the feature will require after an
+# `update`, and gives a not-installed row its dependencies before `add`. Both
+# arguments are the paths the calling pass already resolved for its version
+# columns, deliberately: resolving them a second time in here cost a subshell
+# per row on a listing that runs one per feature. The claude-md pass passes an
+# empty <inst-file> — `inject_section` strips frontmatter, so an installed
+# claude-md section carries no `requires:` to fall back to.
+#
+# An entry with no kind prefix is printed raw and dimmed rather than aborting
+# the listing — hence `requires_specs_lenient` and not `requires_specs`. `ls`
+# is a read-only lister; `add` and `rm` are where a malformed entry stays fatal.
+_requires_cell() {
+  local src_file="$1" inst_file="$2" file="" state entry out=""
+  if [ -f "$src_file" ]; then
+    file="$src_file"
+  elif [ -f "$inst_file" ]; then
+    file="$inst_file"
+  fi
+  if [ -n "$file" ]; then
+    while IFS=$'\t' read -r state entry; do
+      [ -n "$out" ] && out+=", "
+      if [ "$state" = ok ]; then
+        out+="$entry"
+      else
+        out+="$C_DIM$entry$C_RESET"
+      fi
+    done < <(requires_specs_lenient "$file")
+  fi
+  if [ -n "$out" ]; then
+    printf '%s' "$out"
+  else
+    printf '%s—%s' "$C_DIM" "$C_RESET"
+  fi
 }
 
 # Kind rank — the tie-break when two rows share a feature name, so a
@@ -207,7 +255,8 @@ list_all() {
       _colored_cell "$C_BLUE"       "command"     "$C_RESET" 8
       _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
       _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
-      printf '%s%s%s' "$status_color" "$status_col" "$C_RESET"
+      _colored_cell "$status_color" "$status_col" "$C_RESET" "$STATUS_WIDTH"
+      _requires_cell "$src_file" "$inst_file"
     )"
     rows+=("$name"$'\t'"$KIND_RANK_COMMAND"$'\t'"$row")
     found=1
@@ -255,7 +304,8 @@ list_all() {
       _colored_cell "$C_MAGENTA"    "skill"       "$C_RESET" 8
       _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
       _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
-      printf '%s%s%s' "$status_color" "$status_col" "$C_RESET"
+      _colored_cell "$status_color" "$status_col" "$C_RESET" "$STATUS_WIDTH"
+      _requires_cell "$src_file" "$inst_file"
     )"
     rows+=("$name"$'\t'"$KIND_RANK_SKILL"$'\t'"$row")
     found=1
@@ -302,7 +352,8 @@ list_all() {
       _colored_cell "$C_CYAN"       "claude-md"   "$C_RESET" 8
       _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
       _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
-      printf '%s%s%s' "$status_color" "$status_col" "$C_RESET"
+      _colored_cell "$status_color" "$status_col" "$C_RESET" "$STATUS_WIDTH"
+      _requires_cell "$src_file" ""
     )"
     rows+=("$name"$'\t'"$KIND_RANK_CLAUDEMD"$'\t'"$row")
     found=1
@@ -351,7 +402,8 @@ list_all() {
       _colored_cell "$C_GREEN"      "statusline"  "$C_RESET" 8
       _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
       _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
-      printf '%s%s%s' "$status_color" "$status_col" "$C_RESET"
+      _colored_cell "$status_color" "$status_col" "$C_RESET" "$STATUS_WIDTH"
+      _requires_cell "$src_file" "$inst_file"
     )"
     rows+=("$name"$'\t'"$KIND_RANK_STATUSLINE"$'\t'"$row")
     found=1
@@ -403,7 +455,8 @@ list_all() {
       _colored_cell "$C_YELLOW"     "hook"        "$C_RESET" 8
       _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
       _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
-      printf '%s%s%s' "$status_color" "$status_col" "$C_RESET"
+      _colored_cell "$status_color" "$status_col" "$C_RESET" "$STATUS_WIDTH"
+      _requires_cell "$src_file" "$inst_file"
     )"
     rows+=("$name"$'\t'"$KIND_RANK_HOOK"$'\t'"$row")
     found=1

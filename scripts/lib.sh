@@ -669,16 +669,41 @@ check_migration_pending() {
 # therefore `die`s — so call it through a command substitution
 # (`specs="$(requires_specs "$f")" || exit 1`), never a process substitution,
 # where the `die` would only kill the subshell and leave the caller running.
+# The raw value is re-read only on the die path, so the happy path parses the
+# frontmatter exactly once — inside the lenient sibling — rather than twice.
 requires_specs() {
+  local file="$1" state entry
+  while IFS=$'\t' read -r state entry; do
+    [ "$state" = ok ] \
+      || die "Malformed 'requires: $(read_frontmatter_field "$file" requires)' in $file — entry '$entry' has no kind prefix (expected command:, skill:, claude-md:, statusline: or hook:)."
+    printf '%s\n' "$entry"
+  done < <(requires_specs_lenient "$file")
+}
+
+# requires_specs_lenient <file>
+# The non-fatal sibling of requires_specs, and the one place the `requires:`
+# value is split and trimmed — requires_specs is a strict filter over this.
+# Prints one TAB-separated line per non-empty entry: "ok<TAB><spec>" for an
+# entry carrying a recognised kind prefix, "bad<TAB><entry>" for one that does
+# not. Prints nothing and returns 0 when the key is absent or empty.
+#
+# It exists for read-only consumers — `ls` renders a REQUIRES column and must
+# not be taken down by one typo in one unrelated feature. Install- and
+# removal-time callers (`cmd-add`, `cmd-rm`) keep using requires_specs and keep
+# dying on a malformed entry: that is where a dangling reference has to be
+# caught. Never route those through this function.
+requires_specs_lenient() {
   local file="$1" raw entry
   raw="$(read_frontmatter_field "$file" requires || true)"
   [ -n "$raw" ] || return 0
   while IFS= read -r entry; do
     entry="$(printf '%s' "$entry" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//; s/[[:space:]]*:[[:space:]]*/:/')"
     [ -n "$entry" ] || continue
-    parse_replaces_spec "$entry" >/dev/null \
-      || die "Malformed 'requires: $raw' in $file — entry '$entry' has no kind prefix (expected command:, skill:, claude-md:, statusline: or hook:)."
-    printf '%s\n' "$entry"
+    if parse_replaces_spec "$entry" >/dev/null; then
+      printf 'ok\t%s\n' "$entry"
+    else
+      printf 'bad\t%s\n' "$entry"
+    fi
   done < <(printf '%s\n' "$raw" | tr ',' '\n')
 }
 

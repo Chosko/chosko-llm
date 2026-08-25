@@ -2,7 +2,7 @@
 
 ## Overview
 
-`scripts/cmd-ls.sh` list features visible in managed clone or `$CLAUDE_HOME`, installed version + latest (managed-clone) version side by side.
+`scripts/cmd-ls.sh` list features visible in managed clone or `$CLAUDE_HOME`, installed version + latest (managed-clone) version side by side, plus each feature's declared `requires:` dependencies.
 
 ## Public API
 
@@ -16,12 +16,15 @@ CLI:
 - Any other flag → `die`.
 
 Output: `Home: <scope_label>` line, blank line, then text table, header
-`NAME KIND INSTALLED LATEST STATUS`. `KIND` is `command`, `skill`,
+`NAME KIND INSTALLED LATEST STATUS REQUIRES`. `KIND` is `command`, `skill`,
 `claude-md`, `statusline`, or `hook`. `STATUS` is one of `up-to-date` /
 `updatable` / `not installed` / `local only` / `superseded` / `migration
-pending` — the last two flag a feature mid kind-migration (task 104).
-Missing values render `—`. Installed file w/ no `version` frontmatter
-shows `unversioned`. Rows print as one sequence ordered ascending by
+pending` — the last two flag a feature mid kind-migration (task 104), and it
+is padded to `STATUS_WIDTH` (18, one wider than `migration pending`) so
+`REQUIRES` can be last and unpadded (task 152). `REQUIRES` is the row's
+comma-separated kind-prefixed specs as declared (`skill:task-engine`), or a
+dimmed `—` when none. Missing values render `—`. Installed file w/ no
+`version` frontmatter shows `unversioned`. Rows print as one sequence ordered ascending by
 feature name, not grouped by kind (task 153); two rows sharing a name break
 the tie on kind rank — command, skill, claude-md, statusline, hook. On
 interactive terminal, suggestions block follows
@@ -57,6 +60,21 @@ wrapped in `if scope_is_local`, so `ls --global` omits hooks. The claude-md pass
   claude-md "installed" state detected by managed section markers in
   `$CLAUDE_HOME/CLAUDE.md`, not file; statusline plain file check like
   commands/skills.
+- **REQUIRES cell is read-only and non-fatal (task 152).** `_requires_cell
+  <src-file> <inst-file>` renders the last column, reading the source when it
+  exists and the installed copy otherwise (the LATEST column's bias: it answers
+  what the feature will require after an `update`, and gives a not-installed
+  row a value before `add`). It is handed the two paths the calling pass
+  already resolved for its version columns rather than re-deriving them —
+  resolving them again inside the helper cost a subshell per row on a listing
+  that runs one per feature. The claude-md pass passes an empty `<inst-file>`:
+  `inject_section` strips frontmatter, so a section in `CLAUDE.md` carries no
+  `requires:` to fall back to. Entries come from
+  `lib.sh::requires_specs_lenient`, NOT `requires_specs`: a malformed entry
+  renders raw + dimmed and the listing continues, because one typo in one
+  unrelated feature must not take down a read-only lister. `cmd-add` /
+  `cmd-rm` keep calling the strict `requires_specs` and keep dying — that is
+  where a dangling reference has to be caught.
 - **No version comparison.** `cmd-ls` only prints two version strings
   side by side; no `[new]` / `[upgradable]` markers.
 - **Filenames are the truth.** File named `foo.md` w/ frontmatter
@@ -105,6 +123,9 @@ wrapped in `if scope_is_local`, so `ls --global` omits hooks. The claude-md pass
 
 - Changing column layout, filter flags, output formatting →
   `scripts/cmd-ls.sh`.
+- Changing what the REQUIRES column shows, which file it reads, or how a
+  malformed entry renders → `_requires_cell` in `cmd-ls.sh` and
+  `requires_specs_lenient` in `lib.sh`.
 - Changing row order, or the kind rank that breaks a same-name tie → the
   `rows` buffer, the `KIND_RANK_*` constants, and the final sort in
   `list_all` in `cmd-ls.sh`.

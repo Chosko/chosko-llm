@@ -25,7 +25,7 @@ Preconditions: none
 
 ## 152. Add a REQUIRES column to `ls`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/cmd-ls.sh, scripts/lib.sh, docs/cli-help.txt, VERSION, CHANGELOG.md, .claude/context/cmd-ls.md, .claude/context/shared-lib.md, .claude/context/INDEX.md
 Preconditions: 153

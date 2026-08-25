@@ -56,7 +56,7 @@ description: One short sentence summarizing the feature.
 | `name`        | kebab-case. MUST match the filename (without `.md`) or the skill folder. |
 | `version`     | Semantic version, e.g. `0.1.0`, `1.2.0`. Required — install will refuse without it. |
 | `type`        | `command` for `commands/*.md`, `skill` for `skills/*/SKILL.md`, `claude-md` for `claude-md/*.md`, `statusline` for `statusline/*.sh`, `hook` for `hooks/*.sh`. |
-| `description` | A single paragraph, no line breaks. For a simple feature, one short sentence is enough. A command or skill with several flags/modes may use a longer, multi-clause description that documents them — that detail is what `chosko-llm show <feature>` and (for skills) Claude Code's own skill-discovery listing surface to the user before they read the body. `chosko-llm ls` does not print `description` at all (see its `NAME KIND INSTALLED LATEST STATUS` columns), so description length never affects that table. |
+| `description` | A single paragraph, no line breaks. For a simple feature, one short sentence is enough. A command or skill with several flags/modes may use a longer, multi-clause description that documents them — that detail is what `chosko-llm show <feature>` and (for skills) Claude Code's own skill-discovery listing surface to the user before they read the body. `chosko-llm ls` does not print `description` at all (see its `NAME KIND INSTALLED LATEST STATUS REQUIRES` columns), so description length never affects that table. |
 
 ### `replaces:` — the optional fifth field
 

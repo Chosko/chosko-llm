@@ -2,6 +2,23 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.18.0 — 2026-08-25
+
+- `chosko-llm ls` gained a sixth column, `REQUIRES`, so a feature's
+  dependencies are readable straight from the listing instead of only from its
+  frontmatter or from `rm`'s refusal. It shows the `requires:` specs exactly as
+  declared (`skill:task-engine`), or a dimmed `—` when the feature declares
+  none.
+- The value is read from the managed clone when the feature is there and from
+  the installed copy otherwise — the same bias as `LATEST` — so a
+  not-installed row already shows what `add` will pull in with it.
+- `STATUS` is now padded and `REQUIRES` is last and unpadded, so a long list of
+  specs never shifts the other columns and is never truncated. Every column,
+  colour, status, filter and footer hint is otherwise unchanged.
+- A `requires:` entry missing its kind prefix no longer aborts `ls`: the row
+  shows the offending entry dimmed and the listing continues. `add` and `rm`
+  still refuse outright — that is where a dangling reference has to be caught.
+
 ## 1.17.0 — 2026-08-25
 
 - `chosko-llm ls` now prints one table ordered by feature name instead of five

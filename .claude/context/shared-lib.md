@@ -325,6 +325,15 @@ never a graph. `cmd-add` installs what a feature names before installing it;
   substitution (`specs="$(requires_specs "$f")" || exit 1`), NEVER a process
   substitution — there the `die` would kill only the subshell and leave the
   caller running.
+- `requires_specs_lenient <file>` (task 152) → the non-fatal sibling, and the
+  ONE place the value is actually split and trimmed; `requires_specs` is a
+  strict filter over it, re-reading the raw value only on its `die` path so the
+  happy path parses the frontmatter once, not twice. Prints `ok<TAB><spec>` per well-formed entry,
+  `bad<TAB><entry>` per entry with no kind prefix, nothing when the key is
+  absent. For read-only consumers only — `cmd-ls`'s REQUIRES column, which
+  must not be taken down by one typo in one unrelated feature. Install- and
+  removal-time callers stay on `requires_specs` and stay fatal; never reroute
+  them here.
 
 ### Validation
 - `require_versioned_source <file>` — `die`s if file missing or its
@@ -391,7 +400,8 @@ Helpers over gitignored key=value file `$CHOSKO_LLM_HOME/.auto-upgrade-state`
 - Adding/renaming frontmatter field → `parse_frontmatter` in `lib.sh` (the
   `key == "…"` allowlist inside its awk block).
 - Changing what `requires:` accepts, how entries are split/trimmed, or whether
-  a malformed entry dies rather than being skipped → `requires_specs` in
+  a malformed entry dies rather than being skipped → `requires_specs_lenient`
+  (the split/trim) and `requires_specs` (the strict filter over it) in
   `lib.sh`, plus `parse_replaces_spec` which validates each entry. The
   install-time and removal-time behaviour built on it lives in `cmd-add.sh`
   (`install_requires`) and `cmd-rm.sh` (the dependents guard) — see
