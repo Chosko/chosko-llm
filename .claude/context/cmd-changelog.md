@@ -44,8 +44,9 @@ Env read: `VISUAL`, `EDITOR`, `PAGER`, `NO_COLOR`, `LINES`.
 - **Renderer shared w/ `upgrade`, gate is not.** Layout comes from
   `_render_changelog_sections` in `lib.sh` — same two-space version indent,
   four-space bullets, blank line between sections and after block, bold version
-  / dim ` — <date>` / accent ASCII `- ` marker. Only difference from
-  `upgrade`'s block is which stream + which colour predicate.
+  / dim ` — <date>` / accent ASCII `- ` marker / bold `**Subject**` span inside
+  the bullet (markers stripped, never literal, when colour is off). Only
+  difference from `upgrade`'s block is which stream + which colour predicate.
 - **Filtered output on stdout, deliberately.** `--since` output is the
   command's product and must pipe into `grep`; `upgrade`'s readout stays on
   stderr because it's commentary on another action. Every diagnostic here

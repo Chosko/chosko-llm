@@ -985,14 +985,41 @@ auto_upgrade_due() {
 
 # ---------- changelog ----------
 
+# _render_bullet_markup <text> <on> <off>
+# Rewrites every **bold** span in <text> to <on>...<off> and leaves the rest
+# alone, putting the result in _BULLET_MARKUP_OUT. With <on>/<off> empty the
+# markers are stripped, so a no-colour stream never prints a literal "**".
+# An unpaired "**" is left exactly as the source wrote it.
+#
+# The result comes back in a variable rather than on stdout because a command
+# substitution forks a subshell per bullet, and this runs once per bullet of
+# every section a range readout prints.
+_render_bullet_markup() {
+  local text="$1" on="$2" off="$3" out='' head span
+  while [ "${text#*\*\*}" != "$text" ]; do
+    head="${text%%\*\**}"
+    text="${text#*\*\*}"
+    if [ "${text#*\*\*}" = "$text" ]; then
+      out="$out$head**$text"
+      text=''
+      break
+    fi
+    span="${text%%\*\**}"
+    text="${text#*\*\*}"
+    out="$out$head$on$span$off"
+  done
+  _BULLET_MARKUP_OUT="$out$text"
+}
+
 # _render_changelog_sections <body> <fd> <color-predicate>
 # The single formatter for CHANGELOG.md sections. Writes <body> — raw section
 # text, headers and bullets — to file descriptor <fd> in the shared layout:
 # two-space version indent, four-space bullet indent, a blank line between
 # sections and one after the block; the version bold, its " — <date>" dim, the
-# bullet's leading ASCII "- " marker in the accent colour and the bullet text
-# default. An unrecognised line inside a section is passed through indented and
-# uncoloured rather than dropped.
+# bullet's leading ASCII "- " marker in the accent colour, the bullet's
+# **Subject** bold and the rest of the bullet text default. An unrecognised
+# line inside a section is passed through indented and uncoloured rather than
+# dropped.
 #
 # <color-predicate> is the NAME of a function returning 0 when colour applies to
 # the stream this block is going to: `_use_color` for stderr, a caller-captured
@@ -1005,7 +1032,7 @@ auto_upgrade_due() {
 # two presentations cannot drift apart. Only the gate differs.
 _render_changelog_sections() {
   local body="$1" fd="$2" color_fn="$3"
-  local line rest version remainder first=1
+  local line rest version remainder first=1 _BULLET_MARKUP_OUT=''
   local bold='' dim='' accent='' reset=''
 
   if "$color_fn"; then
@@ -1026,7 +1053,8 @@ _render_changelog_sections() {
       # already begins with rather than substituting a glyph that can mangle in
       # a legacy codepage console.
       '- '*)
-        printf '    %s- %s%s\n' "$accent" "$reset" "${line#- }" >&"$fd"
+        _render_bullet_markup "${line#- }" "$bold" "$reset"
+        printf '    %s- %s%s\n' "$accent" "$reset" "$_BULLET_MARKUP_OUT" >&"$fd"
         ;;
       '')
         ;;

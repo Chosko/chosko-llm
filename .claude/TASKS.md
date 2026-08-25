@@ -137,7 +137,7 @@ Preconditions: none
 
 ## 164. Rewrite CHANGELOG to terse one-liner bullets and stop bumping VERSION for doc-only changes
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: CLAUDE.md, docs/authoring-guide.md, scripts/lib.sh, CHANGELOG.md, VERSION
 Preconditions: none

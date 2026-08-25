@@ -202,8 +202,14 @@ between them except the colour gate.
   formatter.** Writes raw section text to file descriptor `<fd>` in the shared
   layout: two-space version indent, four-space bullets, blank line between
   sections and one after the block; version bold, ` — <date>` dim, bullet's
-  leading ASCII `- ` marker cyan, bullet text default; unrecognised line inside
-  a section passed through indented and uncoloured rather than dropped.
+  leading ASCII `- ` marker cyan, bullet's `**Subject**` span bold, rest of the
+  bullet text default; unrecognised line inside a section passed through
+  indented and uncoloured rather than dropped.
+  Bold spans go through `_render_bullet_markup <text> <on> <off>`, which returns
+  its result in `_BULLET_MARKUP_OUT` — **not on stdout**: a command substitution
+  would fork a subshell per bullet. With colour off `<on>`/`<off>` are empty, so
+  the markers are **stripped**, never printed literally; an unpaired `**` is
+  left as the source wrote it.
   `<color-predicate>` is the NAME of a function returning 0 when colour applies
   to that stream — `_use_color` for stderr, a caller-captured stdout predicate
   for stdout. **It is a parameter, not read off `<fd>`, on purpose**:
@@ -512,8 +518,9 @@ Helpers over gitignored key=value file `$CHOSKO_LLM_HOME/.auto-upgrade-state`
   `print_changelog_range` in `lib.sh`; the caller's suppression rule lives in
   `cmd-upgrade.sh`.
 - Changing the changelog block's layout or colours → `_render_changelog_sections`
-  in `lib.sh`. **It is shared: a change there moves both `upgrade`'s stderr
-  readout and `changelog --since`'s stdout block.**
+  in `lib.sh` (inline markup: `_render_bullet_markup` beside it). **It is
+  shared: a change there moves both `upgrade`'s stderr readout and
+  `changelog --since`'s stdout block.**
 - Changing which sections `changelog --since` selects, how its value is
   classified, or how a duration resolves to a date → `select_changelog_sections`
   / `changelog_since_kind` / `changelog_duration_to_date` in `lib.sh`. The

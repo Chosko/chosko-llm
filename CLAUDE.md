@@ -42,8 +42,9 @@ No test suite by design. Ships markdown prompts + thin shell wrappers; changes v
 
 ## Versioning
 
-- Bump root `VERSION` file on **every shipped change** — features, CLI behavior, scripts, docs. It's repo-level version `install.sh` reports; if never moves, reported version drifts from reality.
-- Semver bump: **patch** for fixes/doc-only, **minor** for new feature/command/skill, **major** for breaking CLI surface change.
+- Bump root `VERSION` file on **every shipped change** — features, CLI behavior, scripts. It's repo-level version `install.sh` reports; if never moves, reported version drifts from reality.
+- **Project documentation is exempt.** Change confined to `README.md`, `docs/`, `.claude/domain/`, `.claude/context/` or `CLAUDE.md` itself bumps no `VERSION` and gets no `CHANGELOG` entry — nothing user receives behaves differently. Boundary: shipped feature's own body (`commands/*.md`, `skills/*/SKILL.md`, `claude-md/*.md`, `statusline/*.sh`, `hooks/*.sh`) is **not** documentation — it's product, bumps as always even though it's markdown.
+- Semver bump: **patch** for fixes, **minor** for new feature/command/skill, **major** for breaking CLI surface change.
 - Root `VERSION` distinct from per-feature `version:` frontmatter on command/skill (versions that one feature for `cmd-add` / `cmd-update`). Bumping feature frontmatter doesn't replace bumping `VERSION`; feature change bumps both.
 - **`VERSION` bump without matching `CHANGELOG.md` section is incomplete change.** New section goes on top, `## <version> — <YYYY-MM-DD>`, short user-facing bullets. Converse holds too: **change that doesn't bump `VERSION` gets no `CHANGELOG` entry** — artifacts exempt from the bump (next bullet) never get one. Schema + ordering rule in [docs/authoring-guide.md](docs/authoring-guide.md) § Versioning. Run `./scripts/check-changelog.sh` after bumping — silent on success, non-zero when top section doesn't match `VERSION`.
 - **One exception, narrow: skills under this repo's own `.claude/skills/`.** Repo-local development tooling — no `version:` frontmatter, invisible to every CLI verb, installed nowhere. Change confined to them does **not** bump root `VERSION`: bumping for file no user receives corrupts meaning of version `install.sh` reports. Rest of `.claude/` — context layer, domain layer, backlog — unaffected, bumps as usual.

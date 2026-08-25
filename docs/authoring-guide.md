@@ -607,10 +607,26 @@ Use semver. Bump rules:
 | Wording, typos, clarifications that don't change behavior         | patch |
 | New capability inside the same task / additional optional inputs  | minor |
 | Behavior change, removed capability, renamed flags, breaking I/O  | major |
+| Project documentation only — see the exemption below              | none  |
 
 Always bump after a meaningful edit. `ls` displays the installed and latest
 versions side by side, so a forgotten bump leaves both columns showing the
 same value and users have no signal that there is anything to refresh.
+
+**Project documentation does not bump root `VERSION`.** A change confined to
+`README.md`, `docs/`, `.claude/domain/`, `.claude/context/` or `CLAUDE.md`
+itself bumps nothing and gets no changelog entry: no shipped artifact behaves
+differently, so a user who upgrades receives an identical `~/.claude/` and a
+version number that moved for nothing. The version stamp is a signal about
+shipped behaviour, and spending it on internal prose is what makes it stop
+meaning anything.
+
+The boundary is the artifact, not the file extension. **A shipped feature's own
+body — `commands/*.md`, `skills/*/SKILL.md`, `claude-md/*.md`,
+`statusline/*.sh`, `hooks/*.sh` — is not documentation.** It is the product,
+installed verbatim into `~/.claude/`, and a reworded instruction in it changes
+what an agent does. It bumps both axes exactly as before, however prose-like
+the edit looks.
 
 **One exception, narrow: skills under this repo's own `.claude/skills/`.** They
 are repo-local development tooling — no `version:` frontmatter, invisible to
@@ -627,12 +643,11 @@ incomplete change.** Writing the entry is part of what the bump *is*, not a
 courtesy someone remembers afterwards.
 
 The rule's converse holds too, and is stated generically: **a change that does
-not bump `VERSION` gets no `CHANGELOG` entry.** An artifact exempt from the bump
-by its own contract — today, only the repo-local skills under `.claude/skills/`
+not bump `VERSION` gets no `CHANGELOG` entry.** Anything exempt from the bump —
+project documentation, and the repo-local skills under `.claude/skills/`, both
 described above — therefore never appears in the changelog either. This follows
 from the general rule rather than being a named exception, so it covers any
-future exempt artifact on the same footing. Everything else under `.claude/`
-bumps as usual and is entered as usual.
+future exempt artifact on the same footing.
 
 The per-feature `version:` field in a command's or skill's frontmatter is not
 covered by any of this. `CHANGELOG.md` records root `VERSION` only; a feature
@@ -647,18 +662,37 @@ rules — the record never restates them; then one section per version:
 ```
 ## <version> — <YYYY-MM-DD>
 
-- <short bullet>
-- <short bullet>
+- **<Subject>** <terse user-facing clause>
+- **<Subject>** <terse user-facing clause>
 ```
 
 - The date is the commit date of the commit that set that `VERSION` value.
-- Bullets are short and user-facing. Each names the feature, command or script
-  touched and the change a user would notice. No prose paragraphs, no commit
-  shas, no nested lists.
+- **One line per bullet.** A bullet is a bold `**Subject**` followed by a short
+  clause — no colon after the Subject, no second sentence, no prose paragraph,
+  no sub-bullet, no commit sha. This is a "what's new" notice someone reads
+  while upgrading, not a design document; the reasoning belongs in the feature
+  body, the domain layer or the commit that made the change.
+- **The Subject names something the user recognises** — a CLI subcommand
+  (`chosko-llm ls`), a slash command (`/task-implement`), a skill, a script, or
+  a feature kind. Never an internal file, a `.claude/domain/*` or
+  `.claude/context/*` path, or a helper function's name.
+- The `**` markers are not decoration: `_render_changelog_sections` in
+  `scripts/lib.sh` renders the Subject bold in a colour terminal and strips the
+  asterisks when colour is off, so a bullet that starts with anything else
+  reads as an undifferentiated run of text in `chosko-llm upgrade`.
+- **Compress the boring ones.** Several small or uninteresting changes to
+  shipped features become a single bullet naming only the shipped features it
+  touched — never an internal dev doc or a navigation-layer file.
 - **No `Added` / `Changed` / `Fixed` sub-headings.** With a hundred sections of
   two-to-five bullets, sub-headings would roughly triple the file's length and
   force a taxonomy judgement on every bullet, for a signal the bullet already
   carries by naming its artifact.
+
+A section is written only when `VERSION` moves, so the documentation exemption
+above means a section never records a documentation catch-up. Historical
+sections that predate the exemption keep their recorded version — the values
+`install.sh` reported are history and are not rewritten — and carry one neutral
+bullet saying the release changed nothing user-facing.
 
 #### Ordering: descending semver, not chronological
 
