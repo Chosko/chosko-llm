@@ -2,6 +2,17 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.2.2 — 2026-08-25
+
+- Repo governance only; nothing a user of the CLI receives changes. `CLAUDE.md`
+  § Versioning now records one narrow exception to the bump-on-every-shipped-
+  change rule: a change confined to this repo's own `.claude/skills/` —
+  unversioned development tooling, installed nowhere — does not bump root
+  `VERSION`, because bumping for a file no user receives corrupts the meaning of
+  the version `install.sh` reports.
+- The rest of `.claude/` — context layer, domain layer, backlog — is explicitly
+  unaffected and bumps as before.
+
 ## 1.2.1 — 2026-08-25
 
 - Documentation only. The README gains a section on `/session-save` and

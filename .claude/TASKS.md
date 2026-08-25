@@ -392,7 +392,7 @@ Feature: session-continuity
 
 ## 135. Record the `.claude/skills/` exemption to the VERSION bump rule
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: CLAUDE.md, VERSION
 Preconditions: none
