@@ -2,6 +2,34 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.14.1 — 2026-08-25
+
+- Documentation catch-up for the `runbook-suite` feature shipped in 1.10.0–1.14.0.
+  No shipped feature's behaviour changes.
+- `README.md` gains a `runbook-*` section under Claude Code Workflows: what a
+  runbook is (an ordered list of self-contained prompts, each written for a
+  fresh agent that has none of the conversation they came out of), the committed
+  store at `.claude/runbooks/` plus `.claude/RUNBOOKS.md`, the five artifacts,
+  the execution loop with its per-step re-read, the wait for the subagent's
+  actual result and the one-commit-per-step cadence, the question relay and fact
+  propagation, the nine prompt-quality rules, and each command's commit
+  behaviour. It also draws the line against session handoffs and the backlog: a
+  session file is a snapshot of work in flight, a runbook is a plan for work not
+  yet done.
+- `.claude/context/features.md` gains a "Currently shipped" entry for each of
+  the five artifacts, each naming its kind and why, its `requires:` edge and the
+  reason for it, its commit convention, and the hard contracts — the
+  orchestrator writes exactly two files, steps are always sequential, no step is
+  ticked before its subagent's result arrives, no step invokes `/runbook-run`,
+  and no `chosko-llm` subcommand reads `.claude/runbooks/`.
+- `docs/authoring-guide.md` § "State that outlives a session belongs in a
+  project document" records the runbook store as another instance of that rule,
+  with the body as source of truth and the index derived from it.
+- `.claude/domain/features/runbook-suite.md` is reconciled with what shipped:
+  `/runbook-suggest`'s suggestion is generic and names no runbook, the question
+  relay is specified for an orchestrator that is itself a subagent, and the
+  `VERSION` rule is per task rather than one bump for the feature.
+
 ## 1.14.0 — 2026-08-25
 
 - New skill **`runbook-suggest`** (0.1.0) — the last artifact of the runbook

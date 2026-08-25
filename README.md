@@ -729,6 +729,95 @@ Neither command commits. `/session-save` writes the file, reports the path, and
 notes in one line that it's untracked; whether a handoff belongs in the repo's
 history is your call.
 
+### Work through a plan of prompts — the `runbook-*` commands
+
+A design conversation ends with seven follow-up prompts. Run them in one long
+session and step 6 drifts from step 1's framing; save them for later and they
+stop making sense, because each one leaned on a decision made an hour earlier
+and written down nowhere. A **runbook** is that list made durable: an ordered
+set of self-contained prompts, each written to be executed by a *fresh* agent
+that has none of the conversation the prompts came out of.
+
+- `/runbook-create` — author one from the conversation you're in (the default —
+  the decisions, the rejected options and the verified probes are all still in
+  context), or from a free-form description through one batched interview.
+  `--append <name>` adds steps to an existing runbook, including one a run is in
+  the middle of; `--append` with no name targets the runbook this session is
+  running.
+- `/runbook-run <name>` — execute it, one step at a time. `--from N`, `--only N`
+  and `--model <model>` narrow or redirect the run.
+- `/runbook-list` — every runbook as one line: status, name, steps done over
+  total, created date, source.
+- `/runbook-clean` — delete finished runbooks, planning and confirming first.
+- `runbook-suggest` — a skill nobody invokes. It fires on its own description
+  when a conversation produces a list worth capturing, points at
+  `/runbook-create` in one line, and stops.
+
+The store is committed, like the backlog: `.claude/runbooks/<name>.md` per
+runbook, plus a `.claude/RUNBOOKS.md` index mirroring `TASKS.md`'s block shape
+(minus its counter — names are the identifiers). The **body is the source of
+truth**; the index's `Status:` and `Steps: <done>/<total>` are derived from it
+and can be rebuilt by re-reading it. No `chosko-llm` subcommand walks
+`.claude/runbooks/` — runbooks are input to agents, never to tooling.
+
+**The execution loop.** `/runbook-run` re-reads the body at the start of *every*
+step — which is what reconciles a hand-edited body and what makes steps appended
+mid-run get picked up by the run already in progress — selects the first step
+whose dependencies are all done, marks it `[~]`, spawns **one** subagent with a
+fixed prompt (a preamble telling it to orient from `CLAUDE.md`, the companion
+document, the runbook's `## Do not re-propose` section, the step's `Context:`
+bullets, the prompt block verbatim, then the operating rules), and then waits.
+It ticks nothing before that agent's result actually arrives. On `DONE` it
+writes a `Done:` line recording the commit sha, the decisions taken and any
+premise that proved wrong, then commits the runbook and the index — one commit
+per completed step, and the `[~]` marker is never committed, so finding one in
+your tree is the signal that this is the tree an interrupted run left behind.
+
+Three things it deliberately does not do. It **never runs steps in parallel**,
+even where the runbook says they're independent: you get one question stream
+instead of interleaved clarifications from three agents, and two agents writing
+`Done:` lines into one file would race. It **does the work of no step itself** —
+it writes exactly two files, the runbook and the index, and every other change in
+the tree comes from a subagent. And it **doesn't review** what a step did: it
+reads two markers, `QUESTIONS FOR USER` and `DONE`, and takes the report at its
+word. Review is `/task-review`'s job, invoked from inside a step's prompt when
+you want it.
+
+**The question relay** is what keeps you in the loop without keeping you in the
+session. A subagent can't talk to you, so it stops at any question or approval
+gate and ends its turn; the orchestrator renders it as a fixed block — the
+question, the options with what each costs, a recommendation — and relays your
+answer back to the *same* agent, whose context is still intact. It compresses,
+it never answers for you, and at an approval gate the full draft is shown
+unabridged, since a summarized draft can't be approved. When a step's report
+changes a fact a later step relies on, the orchestrator appends a dated bullet
+to that step's `Context:`; the prompt block itself is never edited, so you can
+always see what was originally asked and what was learned since, separately.
+
+**Writing prompts that survive a fresh session** is the hard part, and it's the
+authoring side that enforces it. `/runbook-create` checks nine rules before it
+writes: each step is self-contained, names the document to read first (or
+carries its evidence inline), carries every decision that exists nowhere on disk
+*and nothing that already does*, states its sequencing and why, states what must
+not be re-proposed, uses real slash commands in their real argument form,
+references no path that won't exist at run time (nothing under `docs/`, which is
+never installed), produces one deliverable, and never invokes `/runbook-run` —
+nested runbooks are forbidden at both authoring and spawn time. Rule three is
+why one-line prompts are the expected case rather than a shortcut:
+`/task-implement 134` is complete, because the task body already carries the
+decisions and `/task-implement` reads it.
+
+Commit behaviour follows each command's family: `/runbook-create` is an
+authoring command and leaves the runbook uncommitted for one review pass
+(`--commit`, or `--commit --no-push`), `/runbook-clean` commits and pushes the
+deletion by default (`--no-commit` / `--no-push`), `/runbook-run` commits after
+every step, and `/runbook-list` and `runbook-suggest` write nothing at all.
+
+A runbook is not a [session handoff](#hand-off-a-conversation--session-save-and-session-resume):
+a session file is a snapshot of work in flight, a runbook is a plan for work not
+yet done. It's not a backlog either — a task is a unit of work with acceptance
+criteria, a runbook step is a prompt.
+
 ### Survive a cloud session — `hook:remote-session-protocol`
 
 In a Claude Code cloud session, a question asked with the `AskUserQuestion`

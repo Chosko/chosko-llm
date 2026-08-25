@@ -532,6 +532,16 @@ static instruction file shipped inside the installed skill folder is not a
 resume artifact — it holds no state, and its path is relative to the skill
 folder rather than to the project — so it never earns a row.
 
+The runbook store is another instance of the same rule, for work rather than
+for a skill's phases. `.claude/runbooks/<name>.md` holds an ordered list of
+self-contained prompts and the `Done:` line each one earns when it runs, and
+`.claude/RUNBOOKS.md` indexes them — both committed, both project-scoped,
+neither reachable from conversation history or a `--resume` flag. The split is
+the one this section asks for: **the body is the source of truth** and the
+index is derived, holding nothing that re-reading the body could not rebuild,
+which is why a hand-edited body reconciles itself at the next step rather than
+needing a mechanism. See `.claude/domain/features/runbook-suite.md`.
+
 ## A question the user picks an answer from needs parallel arms
 
 When a skill asks the user to choose, the answer is often rendered as

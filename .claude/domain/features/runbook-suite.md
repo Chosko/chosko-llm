@@ -340,6 +340,15 @@ answers the question — and must say that it is doing so. It may never invent a
 decision on the user's behalf, and it never asks the user to re-state something
 an earlier step already settled.
 
+**The relay in the subagent position.** The depth budget below permits an
+orchestrator that is itself a subagent — that is what allows a runbook to be
+driven from a batch parent — and such an orchestrator cannot address the user
+at all. It behaves identically: it emits the same fixed relay block as its own
+final turn, under a `QUESTIONS FOR USER` heading, for its parent to carry, and
+resumes when the answer comes back. Approval gates carry the full draft
+unabridged there too, since the parent's user is the one approving it. In
+neither position does it answer on the user's behalf.
+
 **Fact propagation.** When a step's report changes a fact a later step relies
 on, the orchestrator appends a dated bullet to that step's `Context:` naming the
 correction. This is the mechanism that made the hand-run version work: step 1
@@ -615,10 +624,12 @@ matters for a skill that by design loads on a guess.
 **It asks nothing.** No `AskUserQuestion`, no gate, no waiting. It is
 auto-triggered, and a question from an auto-triggered skill becomes an
 interruption at exactly the wrong moment. It emits one or two lines suggesting
-`/runbook-create` — mentioning `--append <name>` when `RUNBOOKS.md` lists
-non-`[DONE]` runbooks, and naming the current runbook if one is running — and
-stops. `/runbook-create` invoked with no options is what asks new-versus-append;
-that gate belongs to the command the user chose to run.
+`/runbook-create` — turning the follow-ups into a new runbook, or appending them
+to one that already exists — and stops. The suggestion is **generic**: it reads
+no file, looks at no index, names no runbook, does not say which runbooks exist,
+and does not say whether one is running. `/runbook-create` invoked with no
+options is what asks new-versus-append and lists the choices; that gate belongs
+entirely to the command the user chose to run.
 
 **The trigger is the description.** Claude Code selects a skill from its
 `description`, so the description *is* the mechanism — there is no hook, no
@@ -763,7 +774,10 @@ Hard contracts:
 
 All five artifacts need `name`, `version`, `type`, `description` frontmatter per
 [docs/authoring-guide.md](../../../docs/authoring-guide.md), starting at
-`version: 0.1.0`. Root `VERSION` takes a minor bump.
+`version: 0.1.0`. Root `VERSION` moves **per task, not once for the feature**:
+the suite lands over five shipped-artifact tasks, each taking its own minor bump
+relative to whatever is in place when it lands, plus a patch bump for the
+documentation task that follows them.
 
 ## Dependencies
 

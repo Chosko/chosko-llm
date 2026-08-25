@@ -818,6 +818,120 @@ Currently shipped:
   nothing, stages nothing; no `--prune`, no `--commit`. As with
   `/session-save`, no `chosko-llm` subcommand walks `.claude/sessions/` —
   session files are context for a human or agent, never input to tooling.
+- `skills/runbook-run/` — orchestrator of the runbook asset kind
+  (`.claude/runbooks/<name>.md` bodies + `.claude/RUNBOOKS.md` index; body is
+  source of truth, index's `Status:`/`Steps:` derived and rebuildable from it).
+  **Skill not command** because `cmd-add` copies a skill folder with `cp -R`
+  while a command is one file carrying nothing: it hosts `references/
+  runbook-schema.md` (store, body schema, step markers `[ ]`/`[~]`/`[x]`/`[!]`,
+  the four statuses `[PENDING]`/`[RUNNING]`/`[FAILED]`/`[DONE]`, index block)
+  and `references/subagent-contract.md` (the OPERATING RULES block pasted
+  verbatim into every spawned prompt), both cited by the other three by
+  `${CLAUDE_HOME:-$HOME/.claude}/...` path. No `requires:` — it IS the
+  dependency. Loop: re-read body at start of EVERY step (this is the whole
+  reconciliation mechanism, and what makes mid-run `--append` steps picked up),
+  select first `[ ]`/`[~]`/`[!]` step whose `Depends on:` are all `[x]`, mark
+  `[~]`, spawn ONE subagent, **wait for the result notification** (the single
+  most dangerous point — the spawn's return value is not the result), classify,
+  commit. Three result cases: `QUESTIONS FOR USER` → relay to user, answer back
+  to the SAME subagent, repeat; `DONE` + report → `[x]`, write `Done:` (sha,
+  decisions, wrong premises), propagate facts as dated `Context:` bullets,
+  update `Steps:`, commit; **anything else, incl. ambiguous → `[!]`**, index
+  `[FAILED]` + `Failed at:`, halt. Relay block is fixed text: question, lettered
+  options with costs, a recommendation; at an approval gate the full draft
+  follows **unabridged** — the one place it must not compress. In the subagent
+  position (depth 3, a batch parent driving the runbook) it emits the same block
+  as its own final turn under `QUESTIONS FOR USER`, for its parent to carry.
+  **Commit convention: one commit per completed step**, staging exactly the
+  runbook and the index, then push; `--no-commit`/`--no-push` usual meanings.
+  `[~]` is deliberately NEVER committed — its presence in a tree is the resume
+  signal and the same-tree exception to one-run-per-runbook (`[RUNNING]` in the
+  index blocks a second run otherwise; no lock file, no timestamp, no staleness
+  heuristic). Hard contracts: steps are **always sequential** (never parallel,
+  even when declared independent — one question stream, and two agents would
+  race on `Done:` lines); it **writes exactly two files** and does none of the
+  work itself; **no step is ticked before its subagent's result arrives**; it
+  reads only `CLAUDE.md`, the runbook and the index, and **does not review** a
+  step's diff or commit; **no step invokes `/runbook-run`** (nested runbooks
+  refused at spawn time). `--from N`/`--only N` narrow selection but never
+  weaken `Depends on:`. Depth budget stated plainly in the body: orchestrator +
+  step agent leaves one confirmed level, so a step that itself spawns
+  (`/task-implement --review`) is past verified ground — warned, not refused.
+- `commands/runbook-create.md` — authors a runbook, or appends to one.
+  `requires: skill:runbook-run` — it cites that skill's `runbook-schema.md` for
+  the body/index shape rather than carrying a second copy. Command not skill:
+  one pass with a confirmation gate, no supporting files of its own. Two
+  orthogonal axes — target (`<name>` new / `--append <name>` / bare `--append` =
+  the runbook this session is running, which a step's subagent knows because the
+  spawned prompt names it / no args = ask) and source (the conversation's MOST
+  RECENT enumerated follow-up list, the default; or a free-form description via
+  one batched interview). Append is a flag, not a `/runbook-append` command:
+  interview, prompt rules and gate are identical, only the write target differs.
+  Append rules: numbering continues, existing steps NEVER edited, `Sequencing:`
+  extended not replaced, `[DONE]` → back to `[PENDING]`, `[FAILED]` stays
+  `[FAILED]`, `[RUNNING]` appendable **only from the running session itself**.
+  Enforces nine prompt-quality rules before writing (self-contained; names the
+  document to read first or carries evidence inline; carries every decision that
+  exists nowhere on disk **and nothing that already does** — which is why
+  `/task-implement 134` is a complete one-line prompt; states sequencing and
+  why; states what must not be re-proposed; real slash commands in real argument
+  form; **no path that will not exist at run time, in particular nothing under
+  `docs/`**; one deliverable; never invokes `/runbook-run`), fixing failures and
+  NAMING each fix in the report rather than silently. Gate shows the proposed
+  shape only — never the full prompts, which are a wall of text and are in the
+  file a moment later. `Context:` is authored as `none`: decisions belong INSIDE
+  the fenced prompt, which keeps it pasteable into a fresh session by hand.
+  **Commit convention: authoring** — leaves output uncommitted by default;
+  `--commit` commits + pushes, `--commit --no-push` commits only.
+- `commands/runbook-list.md` — read side. `requires: skill:runbook-run`, for
+  vocabulary rather than parsing: the status set and index block shape are
+  specified once in `runbook-schema.md`. One pass over `.claude/RUNBOOKS.md`,
+  never opens a body under `.claude/runbooks/` — same discipline as
+  `/task-list`'s never opening `.claude/tasks/`, and what keeps cost flat in the
+  number of runbooks rather than their size (it is why the index carries
+  `Steps:` at all). `Failed at:` printed as a continuation line under `[FAILED]`
+  rows only. Optional status filter matched without brackets, case-insensitively
+  (`/task-list`'s convention); unknown status names the four valid ones rather
+  than printing nothing. Missing/empty index is not an error. **Writes nothing**,
+  runs no shell, corrects no status however wrong it looks.
+- `commands/runbook-clean.md` — pruning, `/task-clean`'s exact shape.
+  `requires: skill:runbook-run` for the status vocabulary and block shape. Three
+  stages: resolve (no arg = every `[DONE]`; names = exactly those, and a named
+  non-`[DONE]` runbook is refused BY NAME with its actual status, never silently
+  skipped) → plan and confirm (name, created date, steps done/total, both paths;
+  empty plan says so and stops) → remove and commit (delete body files, remove
+  index blocks incl. surrounding `---` rules, stage exactly those paths). An
+  unknown name aborts the whole run **before anything is deleted**. Only
+  `[DONE]` is eligible — narrower than `/task-clean`, which also takes `[SKIP]`;
+  runbooks have no second terminal status. No `--force`, no status argument
+  widening the set: a `[FAILED]` runbook is flipped by hand first, one visible
+  committed edit. **Commit convention: cleanup** — commits and pushes by
+  default (a deletion left uncommitted is the change most likely to be lost, and
+  the confirm gate already served as the review pass); `--no-commit`/`--no-push`
+  opt out.
+- `skills/runbook-suggest/` — the trigger, and the only artifact nobody invokes.
+  `requires: command:runbook-create` — the one judgment call in the graph: it
+  cites no shared file and needs no schema, but a proposal naming a command that
+  is not installed is exactly what `requires:` exists to stop. It depends on the
+  command alone, not the whole suite. Skill not command **because a command is
+  invoked and this is selected**: Claude Code picks a skill from its
+  `description`, so the frontmatter IS the mechanism — no hook, no `Stop`
+  handler, no event registration. ~30 lines of body, small because it loads on a
+  guess. Threshold, carried in both description and body: suggest only when the
+  follow-ups would be **lost with the conversation** — 3+ actions, or 2+ with an
+  ordering constraint, or any that depends on decisions recorded nowhere on
+  disk; never a two-step list of simple prompts. Anti-triggers named explicitly
+  (single next action, list of things already done, checklist this session will
+  work through, enumeration inside an explanation, backlog tasks = `/task-add`),
+  the way `claude-council`'s description does. **The emitted line is generic**:
+  one or two lines pointing at `/runbook-create` — new or append — naming no
+  runbook, listing none, and not saying whether one is running, because
+  new-versus-append is asked entirely by `/runbook-create`'s no-argument gate.
+  Asks nothing (no gate, no waiting — a question from an auto-fired skill is an
+  interruption at the wrong moment), opens no file (not `RUNBOOKS.md`, not a
+  body), **writes nothing**, and never invokes `/runbook-create` itself. Fire
+  rate is tuned by narrowing the description after observing real sessions —
+  the accepted method, not an open question, and never a suppression flag.
 - `commands/refactor-codebase.md` — behaviour-preserving, plan-first,
   test-gated refactor: extract constants/enums, dedupe, split oversized
   files, clean imports, rename. `scope=` / `focus=` limit work; `--commit`

@@ -491,7 +491,7 @@ Feature: runbook-suite
 
 ## 145. Update documentation for feature runbook-suite
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, .claude/context/features.md, docs/authoring-guide.md, .claude/domain/features/runbook-suite.md, VERSION
 Preconditions: 125, 140, 141, 142, 143, 144
