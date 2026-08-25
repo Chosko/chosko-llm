@@ -942,6 +942,12 @@ Currently shipped:
 - `claude-md/tool-usage-policy.md` — claude-md artifact: global tool-usage
   guidance injected into `$CLAUDE_HOME/CLAUDE.md`. Installed/updated/removed
   via `claude-md:` kind, not as copied file.
+- `claude-md/git-commit-style.md` — claude-md artifact: global commit-message
+  shape — subject, optional body, trailer threshold — injected into
+  `$CLAUDE_HOME/CLAUDE.md`. Read the artifact for the policy itself; commit
+  hygiene (staging, atomicity, push) stays in
+  `skills/task-engine/references/commit.md`. Never restate it in a feature
+  body: `docs/authoring-guide.md` § *Commit message shape is global*.
 - `hooks/remote-session-protocol.sh` — hook artifact (`event: PreToolUse`,
   `matcher: AskUserQuestion`): in a confirmed remote cloud session it DENIES
   the tool and returns the text protocol as `permissionDecisionReason` — one

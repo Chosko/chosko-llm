@@ -341,6 +341,22 @@ What *does* belong in a command is a constraint specific to **that** command
 on an existing body file". Put such a line in the section it governs, not in
 a standalone block at the top.
 
+## Commit message shape is global — do not restate it
+
+Do **not** teach a command or skill what a commit message should look like.
+The `claude-md:git-commit-style` feature is merged into the user's global
+`CLAUDE.md`, so the shape — short imperative subject, optional 2–3 line body,
+`Co-Authored-By` / `Claude-Session` trailers only on commits of 5+ files or
+200+ changed lines — is already in force in every session. A feature body that
+restates it is one more copy to drift.
+
+What a feature *may* still specify is its own prescribed message form — the
+`Task <N>: …`, `Add task <N>: …` and `task-clean: remove tasks …` templates in
+`skills/task-engine/references/commit.md` are exactly that, and the snippet
+defers to them by name. Commit *hygiene* — staging by explicit path, one
+commit per unit of work, the pull → re-sync → push protocol — stays in
+`skills/task-engine/references/commit.md` too; it is not in the snippet.
+
 ## Keeping the two `council-gate.md` copies in step
 
 The optional claude-council decision gate is encoded twice, as

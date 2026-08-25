@@ -2,6 +2,23 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.16.0 — 2026-08-25
+
+- New `claude-md:git-commit-style` artifact. Install it with `chosko-llm add
+  claude-md:git-commit-style` to inject a global commit-message shape policy
+  into your `CLAUDE.md`: a short imperative subject line, an optional body of
+  at most 2–3 lines used only when it says something the subject cannot, and
+  no body at all on a trivial commit.
+- The snippet puts `Co-Authored-By:` and `Claude-Session:` trailers behind a
+  checkable size test — 5 or more files changed, or 200 or more changed lines
+  (`git diff --cached --shortstat`). Below that both trailers are omitted, so
+  small commits stop carrying them.
+- It mandates no `feat:` / `fix:` prefix vocabulary, and yields to local
+  style: a repo's own convention, a command's own prescribed message form, and
+  a repo's own trailer habit all override it.
+- `/task-implement`'s fallback commit template no longer asks for a
+  one-paragraph summary — its body is now optional and capped at 2–3 lines.
+
 ## 1.15.0 — 2026-08-25
 
 - New `chosko-llm changelog` subcommand. With no arguments it opens the managed

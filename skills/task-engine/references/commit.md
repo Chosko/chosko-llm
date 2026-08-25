@@ -141,14 +141,19 @@ push sequence unconditionally — only the commit (checkin) step runs.
   ```
   Task <N>: <task title>
 
-  <one-paragraph summary of what changed>
+  <optional body — at most 2–3 lines, and only when it says something the
+  subject line cannot>
   ```
 
-  In skip-tests mode it appends `(no tests — manual verification pending)`
-  to the body. Staging is by explicit path including the `.claude/TASKS.md`
-  status flip; the per-task body file "is typically NOT modified during
-  implementation — do not include it in the commit unless you genuinely
-  changed it". When DIRTY_FOLD is true it folds instead, per `tree.md`.
+  The body is optional and capped at 2–3 lines; on a small task, omit it
+  entirely rather than restating the diff. In skip-tests mode it appends
+  `(no tests — manual verification pending)`: to the body when there is one,
+  otherwise as the body's only line.
+
+  Staging is by explicit path including the `.claude/TASKS.md` status flip;
+  the per-task body file "is typically NOT modified during implementation —
+  do not include it in the commit unless you genuinely changed it". When
+  DIRTY_FOLD is true it folds instead, per `tree.md`.
   Two departures from the one-commit rule are deliberate and are its own:
   - under `--review`, "the loop's fixes are already in the tree and are
     staged as part of this task's own commit, never as a second one", and

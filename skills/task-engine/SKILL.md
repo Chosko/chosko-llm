@@ -1,6 +1,6 @@
 ---
 name: task-engine
-version: 0.1.1
+version: 0.1.2
 type: skill
 description: Reference library for the task-* features — one authority per rule they share. Six files under references/ own backlog resolution and the TASKS.md schema, the status vocabulary and its transitions, Target: values and the delegation guard, [STALE] handling, the dirty-tree prompt protocol, and commit/push gating with --no-commit / --no-push. NOT a skill the user invokes and never a skill to suggest — it takes no arguments, runs nothing, and produces no output; /task-add, /task-list, /task-clean and /task-implement read its files by path while they run, and only they should ever open it.
 ---

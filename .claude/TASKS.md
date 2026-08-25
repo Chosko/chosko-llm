@@ -16,7 +16,7 @@ Feature: version-changelog
 
 ## 151. Add a `git-commit-style` claude-md snippet and cap task-engine's commit body
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: claude-md/git-commit-style.md, skills/task-engine/references/commit.md, skills/task-engine/SKILL.md, docs/authoring-guide.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION, CHANGELOG.md
 Preconditions: none
