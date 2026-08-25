@@ -259,7 +259,7 @@ Context:
 ```
 Done: 2026-08-25 — commit 8cef4a1 (pushed). commands/task-list.md 0.5.2→0.6.0 with requires: skill:task-engine; LOCATING THE BACKLOG and STATUS TAGS replaced by references to ${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md and status.md (PLAN.md probe kept as /task-list's own; status is a display filter); a third summary-block-parse copy in WORKFLOW step 1 also removed; dead `local` target removed. Output verified byte-identical before/after; cmd-add installs task-engine first. VERSION 1.8.0→1.8.1. Premises: body lands at 229 lines not <150 (the rest is /task-list-unique, protected verbatim); commit message says 227 (off by two, not amended); skills/task-engine/references/targets.md now carries a stale /task-list note ("awaiting its migration") — untouched, to be folded into a later engine edit.
 
-## [ ] 22. Migrate /task-clean onto the task-engine (task 128)
+## [x] 22. Migrate /task-clean onto the task-engine (task 128)
 
 Depends on: 21
 
@@ -269,12 +269,14 @@ Context:
 ```prompt
 /task-implement 128
 ```
+Done: 2026-08-25 — commit a33470b (pushed). commands/task-clean.md 0.7.0→0.8.0 with requires: skill:task-engine, 296→228 lines; cites resolution.md, status.md, stale.md, commit.md (not tree.md/targets.md — no dirty-tree protocol, no delegation). commit.md's /task-clean per-consumer note proved complete — task 126's extraction needed no fix. Dry-run plan identical before/after (44 removals, 10 Preconditions rewrites, 10 Tasks: rewrites). VERSION 1.8.1→1.8.2. Premises: 228 lines not <150 (plan template + PHASE 2 protected verbatim); Files: omitted CHANGELOG.md.
 
 ## [ ] 23. Migrate /task-add onto the task-engine (task 129)
 
 Depends on: 22
 
-Context: none
+Context:
+- 2026-08-25 (from steps 20–22): VERSION is now 1.8.2. /task-list (0.6.0) and /task-clean (0.8.0) are migrated, both with requires: skill:task-engine and citations in the form ${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/<file>.md. Both landed at ~228 lines, not <150 — line counts are targets; the criterion is zero copies of engine-owned rules while consumer-unique content stays verbatim. commit.md's per-consumer notes have so far been complete for each consumer; check /task-add's note before restating anything. Known stale text in references/targets.md (/task-list note saying `local` is "awaiting its migration") — correct it only if this task edits the engine anyway, else leave for task 130/131. Every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh. Verify with CHOSKO_LLM_HOME=E:/projects/chosko-llm ./bin/chosko-llm ls --available. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 129
