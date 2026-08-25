@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 156
+Last task number: 157
 
 ---
 
@@ -52,7 +52,7 @@ Preconditions: none
 
 ## 155. Parse each feature's frontmatter once per `ls` row
 
-Status: [MISSING]
+Status: [IN PROGRESS]
 Target: claude
 Files: scripts/cmd-ls.sh, scripts/lib.sh, VERSION, CHANGELOG.md, .claude/context/cmd-ls.md, .claude/context/shared-lib.md, .claude/context/INDEX.md
 Preconditions: none
@@ -64,4 +64,13 @@ Preconditions: none
 Status: [MISSING]
 Target: claude
 Files: .claude/domain/product-workflow.md, .claude/domain/features/plan-readout.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 157. Key the iterate guard's status flip on the feature's status, not its `Tasks:` line
+
+Status: [MISSING]
+Target: claude
+Files: skills/architect/iterating.md, skills/architect/SKILL.md, .claude/domain/product-workflow.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none
