@@ -102,7 +102,7 @@ Context:
 ```
 Done: 2026-08-25 — commits b5476b1 (task 134) and 2d6e3c7 (feature session-continuity [DONE], pre-approved), both pushed. README gained "Hand off a conversation — /session-save and /session-resume"; .claude/context/features.md gained two shipped entries; authoring guide cross-reference; feature document reconciled (seven authorized items + <date|path> signature; Open questions: none outstanding). VERSION 1.2.0→1.2.1. Premises held; CHANGELOG.md edited as collateral of the bump (not in Files:).
 
-## [ ] 9. Record the .claude/skills/ exemption in CLAUDE.md (task 135)
+## [x] 9. Record the .claude/skills/ exemption in CLAUDE.md (task 135)
 
 Depends on: 8
 
@@ -112,12 +112,14 @@ Context:
 ```prompt
 /task-implement 135
 ```
+Done: 2026-08-25 — commit 66adc0b (pushed). CLAUDE.md § Versioning gained the narrow .claude/skills/ exemption bullet (repo-local dev tooling: no version: frontmatter, invisible to CLI verbs, never bumps VERSION; the rest of .claude/ — context, domain, backlog — bumps as usual). VERSION 1.2.1→1.2.2. Premise correction: the section had four bullets, not three (changelog bullet landed at step 1); its converse clause was surgically reworded to "artifacts exempt from the bump (next bullet) never get one" so it no longer contradicts the exemption. No .claude/skills/ created yet.
 
 ## [ ] 10. Add the repo-local /context-budget audit skill (task 136)
 
 Depends on: 9
 
-Context: none
+Context:
+- 2026-08-25 (from step 9): VERSION is now 1.2.2. CLAUDE.md § Versioning has the .claude/skills/ exemption: a change confined to .claude/skills/ does NOT bump VERSION and gets no CHANGELOG entry; anything else in .claude/ or the repo still bumps. Repo-local skills carry no version: frontmatter and no CLI verb sees them. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 136
