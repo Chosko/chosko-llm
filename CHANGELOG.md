@@ -2,6 +2,46 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.10.0 — 2026-08-25
+
+- New skill **`runbook-run`** (0.1.0) — the first artifact of the runbook
+  suite. A *runbook* is an ordered list of self-contained prompts under
+  `.claude/runbooks/<name>.md`, each written to be executed by a fresh agent
+  that has none of the conversation the prompts came out of.
+  `/runbook-run <name>` walks one top to bottom: it spawns one subagent per
+  step, waits for that subagent's result to actually arrive, relays any
+  question it asks to the user and the answer back to the same subagent,
+  records what the step did in a `Done:` line naming the commit sha, the
+  decisions taken and any premise that proved wrong, and commits the runbook
+  and its `.claude/RUNBOOKS.md` index after every step.
+- Steps run one at a time, never in parallel. The orchestrator reads only
+  `CLAUDE.md`, the runbook and the index, and writes only the runbook and the
+  index — every other change in the tree is made by a subagent, and it never
+  reviews or second-guesses one. It re-reads the body at the start of *every*
+  step, which is what reconciles a hand-edited body and what makes steps
+  appended mid-run visible to the run already in progress.
+- Arguments: `--from N`, `--only N`, `--model <model>`, `--no-commit`,
+  `--no-push`. `--from` and `--only` do not weaken `Depends on:` — a selected
+  step with an unmet dependency stops the run and names it.
+- The skill also ships the two reference files the rest of the suite reads by
+  path. `references/runbook-schema.md` is the single authority for the asset
+  kind — the store, the body schema, the four step markers `[ ] [~] [x] [!]`,
+  the `Done:` line, the four-status vocabulary `[PENDING]` / `[RUNNING]` /
+  `[FAILED]` / `[DONE]` (deliberately distinct from `TASKS.md`'s and
+  `FEATURES.md`'s), and the index block — and records the two deliberate
+  absences, no `[SKIP]` status and no per-step `Produces:` field, with their
+  reasons. `references/subagent-contract.md` holds the OPERATING RULES block
+  as fixed text, pasted verbatim as the last section of every spawned prompt.
+- Nested runbooks are refused at spawn time, and the depth budget is stated
+  plainly: the orchestrator is one level and the step's agent a second,
+  leaving one confirmed level (depth 3 verified 2026-08-24) — a step whose own
+  prompt spawns subagents would need depth 4, which is unprobed and warned
+  about rather than blocked.
+- Nothing under `scripts/` or `bin/` learns about runbooks: they are input to
+  agents, never to tooling, and the filesystem-plus-frontmatter rule is
+  unchanged. `/runbook-create`, `/runbook-list`, `/runbook-clean` and
+  `/runbook-suggest` follow.
+
 ## 1.9.0 — 2026-08-25
 
 - `/task-add` (2.2.0) replaces its ownership *notice* with an ownership

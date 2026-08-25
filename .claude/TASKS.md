@@ -441,7 +441,7 @@ Preconditions: 129
 
 ## 140. Add the /runbook-run skill with the schema and subagent-contract references
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/SKILL.md, skills/runbook-run/references/runbook-schema.md, skills/runbook-run/references/subagent-contract.md, VERSION
 Preconditions: 125
