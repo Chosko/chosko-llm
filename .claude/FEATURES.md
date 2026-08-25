@@ -85,7 +85,7 @@ Tasks: 135, 136, 137, 138
 
 ## runbook-suite — Ordered self-contained prompts, executed by orchestrated subagents
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/runbook-suite.md
 Source: prompt
 Tasks: 140, 141, 142, 143, 144, 145
