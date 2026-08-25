@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 163
+Last task number: 164
 
 ---
 
@@ -131,4 +131,13 @@ Preconditions: none
 Status: [DONE]
 Target: claude
 Files: scripts/cmd-ls.sh, scripts/lib.sh, .claude/context/cmd-ls.md, .claude/context/shared-lib.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 164. Rewrite CHANGELOG to terse one-liner bullets and stop bumping VERSION for doc-only changes
+
+Status: [MISSING]
+Target: claude
+Files: CLAUDE.md, docs/authoring-guide.md, scripts/lib.sh, CHANGELOG.md, VERSION
 Preconditions: none
