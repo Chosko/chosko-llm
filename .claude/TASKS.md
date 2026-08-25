@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 161
+Last task number: 162
 
 ---
 
@@ -99,7 +99,7 @@ Feature: task-peer-review
 
 ## 160. Make `/task-review` honour the read budget and never run tests
 
-Status: [MISSING]
+Status: [IN PROGRESS]
 Target: claude
 Files: skills/task-review/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 158
@@ -114,3 +114,12 @@ Target: claude
 Files: README.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION, CHANGELOG.md
 Preconditions: 158, 159, 160
 Feature: task-peer-review
+
+---
+
+## 162. Record the Next field's omission case in the domain layer
+
+Status: [MISSING]
+Target: claude
+Files: .claude/domain/product-workflow.md, .claude/domain/features/plan-readout.md, VERSION, CHANGELOG.md
+Preconditions: none
