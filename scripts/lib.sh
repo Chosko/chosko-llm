@@ -985,28 +985,55 @@ auto_upgrade_due() {
 
 # ---------- changelog ----------
 
-# _render_bullet_markup <text> <on> <off>
-# Rewrites every **bold** span in <text> to <on>...<off> and leaves the rest
-# alone, putting the result in _BULLET_MARKUP_OUT. With <on>/<off> empty the
-# markers are stripped, so a no-colour stream never prints a literal "**".
-# An unpaired "**" is left exactly as the source wrote it.
+# _render_bullet_markup <text> <bold> <code> <reset>
+# Rewrites the two inline markups a CHANGELOG bullet uses — **bold** and
+# `code` — to <bold>...<reset> and <code>...<reset>, leaving the rest alone and
+# putting the result in _BULLET_MARKUP_OUT. With the colours empty the markers
+# are stripped, so a no-colour stream never prints a literal "**" or backtick
+# that the markup itself put there.
+#
+# The scan is a single left-to-right pass over both delimiters rather than one
+# pass each, which is what keeps a marker quoted inside the other markup intact:
+# in "strips the `**` markers" the backtick opens first, so the "**" it wraps is
+# span text and never reads as a bold delimiter. An unpaired marker of either
+# kind is left exactly as the source wrote it, and a genuinely nested span is
+# not a case the changelog has: whichever marker opens first owns the span, and
+# the inner markers stay literal.
 #
 # The result comes back in a variable rather than on stdout because a command
 # substitution forks a subshell per bullet, and this runs once per bullet of
 # every section a range readout prints.
 _render_bullet_markup() {
-  local text="$1" on="$2" off="$3" out='' head span
-  while [ "${text#*\*\*}" != "$text" ]; do
-    head="${text%%\*\**}"
-    text="${text#*\*\*}"
-    if [ "${text#*\*\*}" = "$text" ]; then
-      out="$out$head**$text"
-      text=''
+  local text="$1" bold="$2" code="$3" reset="$4" out='' head span bi ci
+  while :; do
+    bi=-1; ci=-1
+    [ "${text#*\*\*}" != "$text" ] && { head="${text%%\*\**}"; bi=${#head}; }
+    [ "${text#*\`}"   != "$text" ] && { head="${text%%\`*}";   ci=${#head}; }
+    if [ "$bi" -ge 0 ] && { [ "$ci" -lt 0 ] || [ "$bi" -lt "$ci" ]; }; then
+      head="${text:0:bi}"
+      text="${text:bi+2}"
+      if [ "${text#*\*\*}" = "$text" ]; then
+        out="$out$head**$text"
+        text=''
+        break
+      fi
+      span="${text%%\*\**}"
+      text="${text#*\*\*}"
+      out="$out$head$bold$span$reset"
+    elif [ "$ci" -ge 0 ]; then
+      head="${text:0:ci}"
+      text="${text:ci+1}"
+      if [ "${text#*\`}" = "$text" ]; then
+        out="$out$head\`$text"
+        text=''
+        break
+      fi
+      span="${text%%\`*}"
+      text="${text#*\`}"
+      out="$out$head$code$span$reset"
+    else
       break
     fi
-    span="${text%%\*\**}"
-    text="${text#*\*\*}"
-    out="$out$head$on$span$off"
   done
   _BULLET_MARKUP_OUT="$out$text"
 }
@@ -1015,11 +1042,16 @@ _render_bullet_markup() {
 # The single formatter for CHANGELOG.md sections. Writes <body> — raw section
 # text, headers and bullets — to file descriptor <fd> in the shared layout:
 # two-space version indent, four-space bullet indent, a blank line between
-# sections and one after the block; the version bold, its " — <date>" dim, the
-# bullet's leading ASCII "- " marker in the accent colour, the bullet's
-# **Subject** bold and the rest of the bullet text default. An unrecognised
-# line inside a section is passed through indented and uncoloured rather than
-# dropped.
+# sections and one after the block.
+#
+# The palette follows the one `ls` and `show` already use, so a version number
+# reads the same colour wherever it appears: the version bright green, its
+# " — <date>" dim, the bullet's leading ASCII "- " marker dim, the bullet's
+# **Subject** bright cyan, any `code` span yellow and the prose between them
+# default. The marker is deliberately the quietest thing on the line — it
+# repeats on every bullet, so colour spent on it is colour that stops the
+# subject from standing out. An unrecognised line inside a section is passed
+# through indented and uncoloured rather than dropped.
 #
 # <color-predicate> is the NAME of a function returning 0 when colour applies to
 # the stream this block is going to: `_use_color` for stderr, a caller-captured
@@ -1033,10 +1065,11 @@ _render_bullet_markup() {
 _render_changelog_sections() {
   local body="$1" fd="$2" color_fn="$3"
   local line rest version remainder first=1 _BULLET_MARKUP_OUT=''
-  local bold='' dim='' accent='' reset=''
+  local ver='' dim='' subject='' code='' reset=''
 
   if "$color_fn"; then
-    bold=$'\033[1m'; dim=$'\033[2m'; accent=$'\033[36m'; reset=$'\033[0m'
+    ver=$'\033[1;32m'; dim=$'\033[2m'; subject=$'\033[1;36m'
+    code=$'\033[33m'; reset=$'\033[0m'
   fi
 
   while IFS= read -r line; do
@@ -1047,14 +1080,14 @@ _render_changelog_sections() {
         remainder="${rest#"$version"}"
         [ "$first" -eq 1 ] || printf '\n' >&"$fd"
         first=0
-        printf '  %s%s%s%s%s%s\n' "$bold" "$version" "$reset" "$dim" "$remainder" "$reset" >&"$fd"
+        printf '  %s%s%s%s%s%s\n' "$ver" "$version" "$reset" "$dim" "$remainder" "$reset" >&"$fd"
         ;;
       # The marker stays ASCII: colour the two characters the source bullet
       # already begins with rather than substituting a glyph that can mangle in
       # a legacy codepage console.
       '- '*)
-        _render_bullet_markup "${line#- }" "$bold" "$reset"
-        printf '    %s- %s%s\n' "$accent" "$reset" "$_BULLET_MARKUP_OUT" >&"$fd"
+        _render_bullet_markup "${line#- }" "$subject" "$code" "$reset"
+        printf '    %s- %s%s\n' "$dim" "$reset" "$_BULLET_MARKUP_OUT" >&"$fd"
         ;;
       '')
         ;;

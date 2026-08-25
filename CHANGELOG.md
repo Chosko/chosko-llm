@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.23.2 — 2026-08-25
+
+- **chosko-llm changelog** the readout is repainted in the palette `ls` and `show` already use: versions green, subjects cyan, `code` spans yellow, the bullet marker dim.
+- **chosko-llm upgrade** shares that palette, since both go through the one renderer.
+
 ## 1.23.1 — 2026-08-25
 
 - **chosko-llm upgrade** reloads its helpers after the pull, so a change to the changelog renderer takes effect in the very upgrade that ships it instead of the next one.
