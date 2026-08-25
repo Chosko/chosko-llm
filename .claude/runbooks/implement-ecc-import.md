@@ -114,7 +114,7 @@ Context:
 ```
 Done: 2026-08-25 — commit 66adc0b (pushed). CLAUDE.md § Versioning gained the narrow .claude/skills/ exemption bullet (repo-local dev tooling: no version: frontmatter, invisible to CLI verbs, never bumps VERSION; the rest of .claude/ — context, domain, backlog — bumps as usual). VERSION 1.2.1→1.2.2. Premise correction: the section had four bullets, not three (changelog bullet landed at step 1); its converse clause was surgically reworded to "artifacts exempt from the bump (next bullet) never get one" so it no longer contradicts the exemption. No .claude/skills/ created yet.
 
-## [ ] 10. Add the repo-local /context-budget audit skill (task 136)
+## [x] 10. Add the repo-local /context-budget audit skill (task 136)
 
 Depends on: 9
 
@@ -124,12 +124,14 @@ Context:
 ```prompt
 /task-implement 136
 ```
+Done: 2026-08-25 — commit f7f436b (pushed). .claude/skills/context-budget/SKILL.md created (first repo-local skill; frontmatter name/type/description, no version:), no VERSION bump, no CHANGELOG entry, per the exemption. Decisions: estimated saving = (lines − threshold) × (est. tokens ÷ lines); inventory find carries -size +0c (empty .gitkeep files divide by zero); description: extraction accumulates multi-line YAML plain scalars. Premises: line figures in the body are stale (task-setup now 351 lines, unflagged; production-plan/product-design/product-roadmap/architect now flag; task-add 834, task-implement SKILL 697); first-line-only description count undercounts.
 
 ## [ ] 11. Add the repo-local /rule-overlap audit skill (task 137)
 
 Depends on: 10
 
-Context: none
+Context:
+- 2026-08-25 (from step 10): VERSION is still 1.2.2 (repo-local skills bump nothing). .claude/skills/context-budget/SKILL.md exists — follow its frontmatter shape (name, type, description; no version:, with the one-line reason) and its register. Inventory tip from that skill: `find` needs `-size +0c` because skills/.gitkeep and skills/claude-council/journal/.gitkeep are empty; description: fields are multi-line YAML plain scalars, so accumulate continuation lines. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 137
