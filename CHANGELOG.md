@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.23.1 — 2026-08-25
+
+- **chosko-llm upgrade** reloads its helpers after the pull, so a change to the changelog renderer takes effect in the very upgrade that ships it instead of the next one.
+
 ## 1.23.0 — 2026-08-25
 
 - **chosko-llm changelog** every entry is now one terse line opening with a bold subject naming what changed.

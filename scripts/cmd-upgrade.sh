@@ -40,6 +40,17 @@ log_info "Pulling latest in $CHOSKO_LLM_HOME"
 git -C "$CHOSKO_LLM_HOME" pull --ff-only
 
 after="$(git -C "$CHOSKO_LLM_HOME" rev-parse HEAD)"
+
+# The pull may have rewritten lib.sh, but this shell is still running the
+# function bodies sourced from the pre-pull copy at the top of the file. Reload
+# so everything below — the changelog readout above all — runs the code that was
+# just fetched instead of the code being replaced. Without this, a change to the
+# renderer only takes effect one upgrade after it ships.
+if [ "$before" != "$after" ] && [ -f "$CHOSKO_LLM_HOME/scripts/lib.sh" ]; then
+  # shellcheck source=lib.sh
+  source "$CHOSKO_LLM_HOME/scripts/lib.sh"
+fi
+
 version_after="$(raw_version)"
 
 if [ "$before" = "$after" ]; then
