@@ -372,7 +372,7 @@ Feature: session-continuity
 
 ## 133. Add the /session-resume command
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/session-resume.md, VERSION
 Preconditions: 132

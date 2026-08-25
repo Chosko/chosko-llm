@@ -2,6 +2,25 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.2.0 — 2026-08-25
+
+- New `/session-resume` command, the read half of `/session-save`: it loads one
+  handoff out of `.claude/sessions/` — the newest one, the newest from a date
+  you name, or a path — and briefs the conversation from it. There is no
+  task-number selector.
+- Only files carrying a `Work:` line are candidates, so a companion document
+  sitting in the same directory is never mistaken for a handoff; same-timestamp
+  ties break on the full filename and the file picked is always named, so an
+  explicit path can correct it.
+- The briefing is fixed in shape — what was being built, what must not be
+  retried, and the exact next step, verbatim. A handoff older than 14 days is
+  flagged as stale, and paths it names that no longer exist are listed, both
+  before the briefing rather than after.
+- It then **stops and waits**: it starts no work, edits nothing, deletes
+  nothing and runs no shell command. It closes by naming the file it resumed
+  from and handing its deletion to the resumed session, which is what lets
+  `/session-save` remove the superseded file later.
+
 ## 1.1.0 — 2026-08-25
 
 - New `/session-save` command: writes a per-project handoff file to
