@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 162
+Last task number: 163
 
 ---
 
@@ -122,4 +122,13 @@ Feature: task-peer-review
 Status: [MISSING]
 Target: claude
 Files: .claude/domain/product-workflow.md, .claude/domain/features/plan-readout.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 163. Find and fix what made `ls` slow
+
+Status: [MISSING]
+Target: claude
+Files: scripts/cmd-ls.sh, scripts/lib.sh, .claude/context/cmd-ls.md, .claude/context/shared-lib.md, VERSION, CHANGELOG.md
 Preconditions: none
