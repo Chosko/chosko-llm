@@ -2,6 +2,27 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.8.0 — 2026-08-25
+
+- New shipped skill `task-engine`: a reference library holding one authority per
+  rule the `task-*` features share. Six files under
+  `skills/task-engine/references/` cover backlog resolution and the `TASKS.md`
+  schema (`resolution.md`), the status vocabulary and its transitions
+  (`status.md`), `Target:` values and the delegation guard (`targets.md`),
+  `[STALE]` handling (`stale.md`), the dirty-tree protocol (`tree.md`), and
+  commit/push gating with `--no-commit` / `--no-push` (`commit.md`).
+- It is **not a skill to invoke**: it takes no arguments, runs nothing, and says
+  so in its `description` so it is not offered as a suggestion. Install it with
+  `chosko-llm add skill:task-engine`; features reach it at
+  `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/<file>.md`.
+- Every reference file was extracted verbatim from the current
+  `/task-add`, `/task-list`, `/task-clean` and `/task-implement` bodies, and
+  records where the copies diverged as per-consumer notes rather than merging
+  them into a paraphrase.
+- Nothing consumes it yet — no `task-*` feature changed, no `requires:` was
+  declared, and no behaviour of any command or skill is different in this
+  release.
+
 ## 1.7.0 — 2026-08-25
 
 - New optional frontmatter key `requires:`, valid on every feature kind. It

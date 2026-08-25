@@ -302,7 +302,7 @@ Feature: shared-phase-engine
 
 ## 126. Create the task-engine skill by verbatim extraction
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-engine/SKILL.md, skills/task-engine/references/resolution.md, skills/task-engine/references/status.md, skills/task-engine/references/targets.md, skills/task-engine/references/stale.md, skills/task-engine/references/tree.md, skills/task-engine/references/commit.md, VERSION
 Preconditions: 118, 125
