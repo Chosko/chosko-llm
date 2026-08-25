@@ -247,7 +247,7 @@ Context:
 ```
 Done: 2026-08-25 — commit b15c297 (pushed). skills/task-engine/SKILL.md (0.1.0, no requires:, not user-invocable) + references/{resolution,status,targets,stale,tree,commit}.md, each opening with its extraction sources and closing with Per-consumer notes. VERSION 1.7.0→1.8.0. Decisions: commit.md keeps the literal citation "docs/authoring-guide.md's commit-and-push protocol" (verbatim from current bodies, with a note it is a citation not a runtime read; four push steps inline); commit.md already carries task 123's --review clause as a /task-implement-only note; targets.md lists three values and records commands/task-list.md:170's dead `local` residue for task 127 to fix. Environment: the INSTALLED ~/.claude copy of /task-implement is 0.18.0 (pre-118, still mentions Target: local) — subagents execute that stale copy; all extraction was done from repo sources.
 
-## [ ] 21. Migrate /task-list onto the task-engine (task 127)
+## [x] 21. Migrate /task-list onto the task-engine (task 127)
 
 Depends on: 20
 
@@ -257,12 +257,14 @@ Context:
 ```prompt
 /task-implement 127
 ```
+Done: 2026-08-25 — commit 8cef4a1 (pushed). commands/task-list.md 0.5.2→0.6.0 with requires: skill:task-engine; LOCATING THE BACKLOG and STATUS TAGS replaced by references to ${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md and status.md (PLAN.md probe kept as /task-list's own; status is a display filter); a third summary-block-parse copy in WORKFLOW step 1 also removed; dead `local` target removed. Output verified byte-identical before/after; cmd-add installs task-engine first. VERSION 1.8.0→1.8.1. Premises: body lands at 229 lines not <150 (the rest is /task-list-unique, protected verbatim); commit message says 227 (off by two, not amended); skills/task-engine/references/targets.md now carries a stale /task-list note ("awaiting its migration") — untouched, to be folded into a later engine edit.
 
 ## [ ] 22. Migrate /task-clean onto the task-engine (task 128)
 
 Depends on: 21
 
-Context: none
+Context:
+- 2026-08-25 (from steps 20–21): VERSION is now 1.8.1. skills/task-engine/ (0.1.0) references: resolution.md, status.md, targets.md, stale.md, tree.md, commit.md. /task-list migrated (0.6.0, requires: skill:task-engine, citation form ${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/<file>.md). Known stale text: references/targets.md's /task-list per-consumer note still says the `local` mention is "dead text awaiting its migration" — task 127 removed it; if this task edits targets.md's notes anyway, correct that line (and bump task-engine's version: as the skill's own rule requires); if not, leave it for task 130/131. Line-count targets in the bodies are targets, not criteria — the criterion is zero copies of engine-owned rules. Every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh. Verify with CHOSKO_LLM_HOME=E:/projects/chosko-llm ./bin/chosko-llm ls --available. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 128
