@@ -126,7 +126,7 @@ Context:
 ```
 Done: 2026-08-25 — commit f7f436b (pushed). .claude/skills/context-budget/SKILL.md created (first repo-local skill; frontmatter name/type/description, no version:), no VERSION bump, no CHANGELOG entry, per the exemption. Decisions: estimated saving = (lines − threshold) × (est. tokens ÷ lines); inventory find carries -size +0c (empty .gitkeep files divide by zero); description: extraction accumulates multi-line YAML plain scalars. Premises: line figures in the body are stale (task-setup now 351 lines, unflagged; production-plan/product-design/product-roadmap/architect now flag; task-add 834, task-implement SKILL 697); first-line-only description count undercounts.
 
-## [ ] 11. Add the repo-local /rule-overlap audit skill (task 137)
+## [x] 11. Add the repo-local /rule-overlap audit skill (task 137)
 
 Depends on: 10
 
@@ -136,12 +136,14 @@ Context:
 ```prompt
 /task-implement 137
 ```
+Done: 2026-08-25 — commit 0c6a5d9 (pushed). .claude/skills/rule-overlap/SKILL.md created (no version:, no VERSION bump, no CHANGELOG entry). Deterministic grep/awk collection of headings + normative lines over commands/*.md, skills/**/*.md, claude-md/*.md; model judges sameness; threshold three or more features (features counted, not occurrences); disagreement ranked first; vendored skills, hooks/, statusline/, docs/, scripts/, bin/, .claude/ excluded; read-only. Verified: surfaces "Never retry, never force-push" at task-add.md:784, task-clean.md:270, task-implement/SKILL.md:532. Premises held.
 
 ## [ ] 12. Documentation for repo-local-audits (task 138)
 
 Depends on: 11
 
-Context: none
+Context:
+- 2026-08-25 (from steps 9–11): VERSION is 1.2.2 (task 135 bumped it; 136 and 137 bumped nothing per the exemption). Both repo-local skills exist: .claude/skills/context-budget/SKILL.md and .claude/skills/rule-overlap/SKILL.md, frontmatter name/type/description only. CLAUDE.md § Versioning holds the exemption bullet and a reworded converse clause ("artifacts exempt from the bump (next bullet) never get one"). Task 138's own doc changes DO bump VERSION (README, authoring guide, context/domain layers are not under .claude/skills/). The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 138
