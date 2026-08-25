@@ -2,6 +2,31 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.4.0 — 2026-08-25
+
+- New skill `task-review` (`/task-review`), at `version: 0.1.0`. It audits a
+  diff against the acceptance criteria of the task that produced it — the
+  check Claude Code's built-in `/code-review` cannot make — and reports a
+  verdict per criterion plus findings carrying a stable `R<round>-<n>` id, a
+  severity, a `file:line`, the failure scenario and a suggested fix.
+- `/task-review` takes three input forms: no argument reviews the uncommitted
+  working tree, a branch name reviews that branch against the repository's
+  default branch (or an explicit `base=<ref>`), and a PR number or URL reviews
+  that pull request through `gh`. `task=<n>` pins the task when the branch name
+  or PR title does not name it; without a resolvable task the run stops instead
+  of degrading into a generic code review.
+- The reviewer is gated rather than merely instructed: findings below 80%
+  confidence are not reported, a four-question pre-report gate downgrades or
+  drops anything that cannot cite a line and name a concrete failure mode, a
+  BLOCKING finding must show the snippet, the scenario and why existing guards
+  miss it, and a review with no findings is stated to be a valid result.
+- `/task-review` is read-only. It edits no source, test, task or status file,
+  runs no mutating `git` or `gh` command, and never opens a pull request; the
+  only file it can write is the `.claude/reviews/<task>-R<round>.md` report a
+  manual run explicitly opted into.
+- `gh` is a dependency of PR mode only, and its absence there is a clear error
+  naming it — never a silent fallback to reviewing the working tree.
+
 ## 1.3.1 — 2026-08-25
 
 - Documentation only. This repo's own navigation layers now describe the

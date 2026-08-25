@@ -252,7 +252,7 @@ Feature: task-implement-launcher
 
 ## 121. Add the /task-review skill
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-review/SKILL.md, skills/task-review/remote-diffs.md, VERSION
 Preconditions: 118
