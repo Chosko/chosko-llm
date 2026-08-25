@@ -2,6 +2,30 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.5.0 — 2026-08-25
+
+- New skill `task-iterate` (`/task-iterate`), at `version: 0.1.0`. It takes the
+  findings `/task-review` produced, triages every one of them, applies what
+  survives, and records why the rest did not — it never reviews the diff itself
+  and never adds a finding of its own.
+- Triage is mandatory and written down first: every finding gets exactly one of
+  `fix`, `defer` or `reject`, a `defer` needs a follow-up task number (or a note
+  that one should be authored), a `reject` needs a one-line reason, and the full
+  verdict table is produced before the first edit. A `BLOCKING` finding naming an
+  unmet acceptance criterion cannot be deferred.
+- `/task-iterate` takes the same three input forms as `/task-review` — no
+  argument for the uncommitted working tree, a branch name (with an optional
+  `base=<ref>`), or a PR number or URL through `gh` — and `task=<n>` pins the
+  task. In PR mode it replies on each thread it acted on and resolves those it
+  addressed, leaving rejected threads open for the human.
+- Committing depends on the caller, and the caller asserts it: run standalone it
+  commits and pushes like every other auto-committing feature and accepts
+  `--no-commit` / `--no-push`; run inside a `/task-implement --review` round it
+  commits nothing, so a reviewed task still produces exactly one commit.
+- The run returns a triage summary, a sticky rejection ledger the next round
+  must treat as binding, and an explicit yes/no on whether any `BLOCKING`
+  findings remain unresolved. It never opens a pull request, in any mode.
+
 ## 1.4.0 — 2026-08-25
 
 - New skill `task-review` (`/task-review`), at `version: 0.1.0`. It audits a

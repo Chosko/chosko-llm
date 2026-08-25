@@ -262,7 +262,7 @@ Feature: task-peer-review
 
 ## 122. Add the /task-iterate skill
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-iterate/SKILL.md, VERSION
 Preconditions: 118, 121
