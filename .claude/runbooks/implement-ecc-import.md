@@ -379,7 +379,7 @@ Context:
 ```
 Done: 2026-08-25 — commit c7fa52e (pushed). skills/runbook-suggest/SKILL.md (0.1.0, requires: command:runbook-create, 37-line body): the description is the mechanism (no hook, no Stop handler), threshold (3+ actions, or 2+ with ordering, or any action depending on off-disk decisions), five anti-triggers, generic one-or-two-line suggestion naming no runbook and no --append (per the task body's recorded overrule of the feature document — task 145 corrects the document), asks/reads/writes nothing, fire rate tuned by narrowing the description never a flag. No install path named. Apostrophe dropped from description: lib.sh's parse_frontmatter does not unescape YAML '' inside single quotes. VERSION 1.13.0→1.14.0.
 
-## [ ] 32. Documentation for runbook-suite (task 145)
+## [x] 32. Documentation for runbook-suite (task 145)
 
 Depends on: 31
 
@@ -389,6 +389,7 @@ Context:
 ```prompt
 /task-implement 145
 ```
+Done: 2026-08-25 — commits bf40910 (task 145) and bd24c33 (feature runbook-suite [DONE], pre-approved), both pushed. README gained "Work through a plan of prompts — the runbook-* commands" after the session-handoff section; .claude/context/features.md gained five shipped entries; authoring guide cross-reference; feature document reconciled on its three pre-authorised points (generic suggestion, relay in subagent position, per-task VERSION rule). VERSION 1.14.0→1.14.1. Not acted on (out of scope, flagged): parse_frontmatter's no-unescape of YAML '' inside single-quoted scalars is a shipped-frontmatter concern. All five artifacts list at 0.1.0. Premises held.
 
 ## Do not re-propose
 
