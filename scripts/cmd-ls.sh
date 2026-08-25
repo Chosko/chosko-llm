@@ -52,31 +52,32 @@ _colored_cell() {
   printf '%s%s%s%*s%s' "$color" "$text" "$reset" "$pad" "" "$sep"
 }
 
-# _requires_cell <src-file> <inst-file>
+# _requires_cell <requires-value>
 # Renders the final, unpadded REQUIRES cell: the feature's kind-prefixed specs
 # exactly as declared, comma-separated, or a dimmed em dash when it declares
 # none.
 #
-# It reads <src-file> when that exists and <inst-file> otherwise — the same
-# bias as the LATEST column: it answers what the feature will require after an
-# `update`, and gives a not-installed row its dependencies before `add`. Both
-# arguments are the paths the calling pass already resolved for its version
-# columns, deliberately: resolving them a second time in here cost a subshell
-# per row on a listing that runs one per feature. The claude-md pass passes an
-# empty <inst-file> — `inject_section` strips frontmatter, so an installed
-# claude-md section carries no `requires:` to fall back to.
+# It takes the raw `requires:` value, not a path, because the calling pass has
+# already parsed that file's frontmatter for its version column and can hand the
+# second field over for free — reading the file again in here parsed it twice
+# per row on a listing that runs one row per feature.
+#
+# Which file the value came from is the caller's choice, and every pass makes
+# the same one as the LATEST column: the source file's value when that file
+# exists, the installed file's otherwise. So the cell answers what the feature
+# will require after an `update`, and still gives a not-installed row its
+# dependencies before `add`. A source file that exists but declares nothing
+# renders the em dash rather than falling back — the source is the answer, and
+# it said "none". The claude-md pass has only a source value to offer:
+# `inject_section` strips frontmatter, so an installed claude-md section carries
+# no `requires:` to fall back to.
 #
 # An entry with no kind prefix is printed raw and dimmed rather than aborting
-# the listing — hence `requires_specs_lenient` and not `requires_specs`. `ls`
+# the listing — hence `requires_specs_from_value` and not `requires_specs`. `ls`
 # is a read-only lister; `add` and `rm` are where a malformed entry stays fatal.
 _requires_cell() {
-  local src_file="$1" inst_file="$2" file="" state entry out=""
-  if [ -f "$src_file" ]; then
-    file="$src_file"
-  elif [ -f "$inst_file" ]; then
-    file="$inst_file"
-  fi
-  if [ -n "$file" ]; then
+  local raw="$1" state entry out=""
+  if [ -n "$raw" ]; then
     while IFS=$'\t' read -r state entry; do
       [ -n "$out" ] && out+=", "
       if [ "$state" = ok ]; then
@@ -84,7 +85,7 @@ _requires_cell() {
       else
         out+="$C_DIM$entry$C_RESET"
       fi
-    done < <(requires_specs_lenient "$file")
+    done < <(requires_specs_from_value "$raw")
   fi
   if [ -n "$out" ]; then
     printf '%s' "$out"
@@ -215,22 +216,25 @@ list_all() {
 
   while IFS= read -r name; do
     [ -n "$name" ] || continue
-    local inst_file src_file inst_ver src_ver inst_col latest_col
+    local inst_file src_file inst_ver src_ver inst_req src_req req_raw inst_col latest_col
     inst_file="$(inst_command_path "$name")"
     src_file="$(src_command_path "$name")"
 
+    inst_req=""
     if [ -f "$inst_file" ]; then
-      inst_ver="$(read_frontmatter_field "$inst_file" version || true)"
+      { IFS= read -r inst_ver; IFS= read -r inst_req; } < <(read_frontmatter_fields "$inst_file" version requires)
       inst_col="${inst_ver:-unversioned}"
     else
       inst_col="—"
     fi
 
     if [ -f "$src_file" ]; then
-      src_ver="$(read_frontmatter_field "$src_file" version || true)"
+      { IFS= read -r src_ver; IFS= read -r src_req; } < <(read_frontmatter_fields "$src_file" version requires)
       [ -n "$src_ver" ] && latest_col="$src_ver" || latest_col="—"
+      req_raw="$src_req"
     else
       latest_col="—"
+      req_raw="$inst_req"
     fi
 
     case "$filter" in
@@ -256,7 +260,7 @@ list_all() {
       _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
       _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
       _colored_cell "$status_color" "$status_col" "$C_RESET" "$STATUS_WIDTH"
-      _requires_cell "$src_file" "$inst_file"
+      _requires_cell "$req_raw"
     )"
     rows+=("$name"$'\t'"$KIND_RANK_COMMAND"$'\t'"$row")
     found=1
@@ -264,22 +268,25 @@ list_all() {
 
   while IFS= read -r name; do
     [ -n "$name" ] || continue
-    local inst_file src_file inst_ver src_ver inst_col latest_col
+    local inst_file src_file inst_ver src_ver inst_req src_req req_raw inst_col latest_col
     inst_file="$(inst_skill_path "$name")"
     src_file="$(src_skill_path "$name")"
 
+    inst_req=""
     if [ -f "$inst_file" ]; then
-      inst_ver="$(read_frontmatter_field "$inst_file" version || true)"
+      { IFS= read -r inst_ver; IFS= read -r inst_req; } < <(read_frontmatter_fields "$inst_file" version requires)
       inst_col="${inst_ver:-unversioned}"
     else
       inst_col="—"
     fi
 
     if [ -f "$src_file" ]; then
-      src_ver="$(read_frontmatter_field "$src_file" version || true)"
+      { IFS= read -r src_ver; IFS= read -r src_req; } < <(read_frontmatter_fields "$src_file" version requires)
       [ -n "$src_ver" ] && latest_col="$src_ver" || latest_col="—"
+      req_raw="$src_req"
     else
       latest_col="—"
+      req_raw="$inst_req"
     fi
 
     case "$filter" in
@@ -305,7 +312,7 @@ list_all() {
       _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
       _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
       _colored_cell "$status_color" "$status_col" "$C_RESET" "$STATUS_WIDTH"
-      _requires_cell "$src_file" "$inst_file"
+      _requires_cell "$req_raw"
     )"
     rows+=("$name"$'\t'"$KIND_RANK_SKILL"$'\t'"$row")
     found=1
@@ -313,7 +320,7 @@ list_all() {
 
   while IFS= read -r name; do
     [ -n "$name" ] || continue
-    local src_file inst_ver src_ver inst_col latest_col
+    local src_file inst_ver src_ver src_req req_raw inst_col latest_col
     src_file="$(src_claudemd_path "$name")"
 
     if claudemd_is_installed "$name"; then
@@ -323,9 +330,13 @@ list_all() {
       inst_col="—"
     fi
 
+    # No installed-side fallback here: inject_section strips frontmatter, so an
+    # installed claude-md section carries no `requires:` to read.
+    req_raw=""
     if [ -f "$src_file" ]; then
-      src_ver="$(read_frontmatter_field "$src_file" version || true)"
+      { IFS= read -r src_ver; IFS= read -r src_req; } < <(read_frontmatter_fields "$src_file" version requires)
       [ -n "$src_ver" ] && latest_col="$src_ver" || latest_col="—"
+      req_raw="$src_req"
     else
       latest_col="—"
     fi
@@ -353,7 +364,7 @@ list_all() {
       _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
       _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
       _colored_cell "$status_color" "$status_col" "$C_RESET" "$STATUS_WIDTH"
-      _requires_cell "$src_file" ""
+      _requires_cell "$req_raw"
     )"
     rows+=("$name"$'\t'"$KIND_RANK_CLAUDEMD"$'\t'"$row")
     found=1
@@ -362,22 +373,25 @@ list_all() {
   if ! scope_is_local; then
   while IFS= read -r name; do
     [ -n "$name" ] || continue
-    local inst_file src_file inst_ver src_ver inst_col latest_col
+    local inst_file src_file inst_ver src_ver inst_req src_req req_raw inst_col latest_col
     inst_file="$(inst_statusline_path "$name")"
     src_file="$(src_statusline_path "$name")"
 
+    inst_req=""
     if [ -f "$inst_file" ]; then
-      inst_ver="$(read_frontmatter_field "$inst_file" version || true)"
+      { IFS= read -r inst_ver; IFS= read -r inst_req; } < <(read_frontmatter_fields "$inst_file" version requires)
       inst_col="${inst_ver:-unversioned}"
     else
       inst_col="—"
     fi
 
     if [ -f "$src_file" ]; then
-      src_ver="$(read_frontmatter_field "$src_file" version || true)"
+      { IFS= read -r src_ver; IFS= read -r src_req; } < <(read_frontmatter_fields "$src_file" version requires)
       [ -n "$src_ver" ] && latest_col="$src_ver" || latest_col="—"
+      req_raw="$src_req"
     else
       latest_col="—"
+      req_raw="$inst_req"
     fi
 
     case "$filter" in
@@ -403,7 +417,7 @@ list_all() {
       _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
       _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
       _colored_cell "$status_color" "$status_col" "$C_RESET" "$STATUS_WIDTH"
-      _requires_cell "$src_file" "$inst_file"
+      _requires_cell "$req_raw"
     )"
     rows+=("$name"$'\t'"$KIND_RANK_STATUSLINE"$'\t'"$row")
     found=1
@@ -415,22 +429,25 @@ list_all() {
   if scope_is_local; then
   while IFS= read -r name; do
     [ -n "$name" ] || continue
-    local inst_file src_file inst_ver src_ver inst_col latest_col
+    local inst_file src_file inst_ver src_ver inst_req src_req req_raw inst_col latest_col
     inst_file="$(inst_hook_path "$name")"
     src_file="$(src_hook_path "$name")"
 
+    inst_req=""
     if [ -f "$inst_file" ]; then
-      inst_ver="$(read_frontmatter_field "$inst_file" version || true)"
+      { IFS= read -r inst_ver; IFS= read -r inst_req; } < <(read_frontmatter_fields "$inst_file" version requires)
       inst_col="${inst_ver:-unversioned}"
     else
       inst_col="—"
     fi
 
     if [ -f "$src_file" ]; then
-      src_ver="$(read_frontmatter_field "$src_file" version || true)"
+      { IFS= read -r src_ver; IFS= read -r src_req; } < <(read_frontmatter_fields "$src_file" version requires)
       [ -n "$src_ver" ] && latest_col="$src_ver" || latest_col="—"
+      req_raw="$src_req"
     else
       latest_col="—"
+      req_raw="$inst_req"
     fi
 
     case "$filter" in
@@ -456,7 +473,7 @@ list_all() {
       _colored_cell "$inst_color"   "$inst_col"   "$C_RESET" 14
       _colored_cell "$latest_color" "$latest_col" "$C_RESET" 16
       _colored_cell "$status_color" "$status_col" "$C_RESET" "$STATUS_WIDTH"
-      _requires_cell "$src_file" "$inst_file"
+      _requires_cell "$req_raw"
     )"
     rows+=("$name"$'\t'"$KIND_RANK_HOOK"$'\t'"$row")
     found=1

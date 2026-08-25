@@ -112,6 +112,17 @@ changes nothing.
   `skill:task-engine` survives it intact — that's why `requires` cost an
   allowlist entry and nothing more.
 - `read_frontmatter_field <file> <field>` — prints one field's value, empty if absent.
+- `read_frontmatter_fields <file> <field>…` (task 155) — the parse-once
+  counterpart, for a caller needing two or more fields off the SAME block.
+  Parses once, prints one line per requested field in the order given (empty
+  line for an absent key), so the reader is one `read -r` per field:
+  `{ IFS= read -r ver; IFS= read -r req; } < <(read_frontmatter_fields "$f"
+  version requires)`. Line count always matches field count — `parse_frontmatter`
+  emits one line per key, so no value can carry a newline. Missing file yields
+  empty values, not an error; the caller's own `-f` guard stays the decider.
+  Exists because `cmd-ls` reads `version` + `requires` off every source file it
+  lists, and two `read_frontmatter_field` calls parsed each file twice — a cost
+  paid once per row. One field → keep using `read_frontmatter_field`.
 
 ### Path resolution
 Source paths in managed clone:
@@ -325,15 +336,24 @@ never a graph. `cmd-add` installs what a feature names before installing it;
   substitution (`specs="$(requires_specs "$f")" || exit 1`), NEVER a process
   substitution — there the `die` would kill only the subshell and leave the
   caller running.
-- `requires_specs_lenient <file>` (task 152) → the non-fatal sibling, and the
-  ONE place the value is actually split and trimmed; `requires_specs` is a
-  strict filter over it, re-reading the raw value only on its `die` path so the
-  happy path parses the frontmatter once, not twice. Prints `ok<TAB><spec>` per well-formed entry,
-  `bad<TAB><entry>` per entry with no kind prefix, nothing when the key is
-  absent. For read-only consumers only — `cmd-ls`'s REQUIRES column, which
-  must not be taken down by one typo in one unrelated feature. Install- and
-  removal-time callers stay on `requires_specs` and stay fatal; never reroute
-  them here.
+- `requires_specs_lenient <file>` (task 152) → the non-fatal sibling;
+  `requires_specs` is a strict filter over it, re-reading the raw value only on
+  its `die` path so the happy path parses the frontmatter once, not twice.
+  Reads the `requires:` value and delegates to `requires_specs_from_value`, so
+  it prints `ok<TAB><spec>` per well-formed entry, `bad<TAB><entry>` per entry
+  with no kind prefix, nothing when the key is absent. For read-only consumers
+  only — `cmd-ls`'s REQUIRES column, which must not be taken down by one typo
+  in one unrelated feature. Install- and removal-time callers stay on
+  `requires_specs` and stay fatal; never reroute them here.
+- `requires_specs_from_value <value>` (task 155) → the ONE place the value is
+  actually split and trimmed, taking the raw string instead of a path so a
+  caller that already parsed the file for another field doesn't parse it again
+  — which is what `cmd-ls` does, once per row. Split + both trims happen in a
+  single `awk` rather than a `tr` plus a `sed` per entry: this runs once per
+  listed feature, and a subshell per comma is invisible in a unit test and
+  plainly visible in `ls`. The three substitutions are the old `sed` script in
+  the same order — leading space, trailing space, then the FIRST colon's
+  surroundings, hence `sub` and not `gsub` on the last.
 
 ### Validation
 - `require_versioned_source <file>` — `die`s if file missing or its
@@ -400,8 +420,9 @@ Helpers over gitignored key=value file `$CHOSKO_LLM_HOME/.auto-upgrade-state`
 - Adding/renaming frontmatter field → `parse_frontmatter` in `lib.sh` (the
   `key == "…"` allowlist inside its awk block).
 - Changing what `requires:` accepts, how entries are split/trimmed, or whether
-  a malformed entry dies rather than being skipped → `requires_specs_lenient`
-  (the split/trim) and `requires_specs` (the strict filter over it) in
+  a malformed entry dies rather than being skipped → `requires_specs_from_value`
+  (the split/trim), `requires_specs_lenient` (the file-reading wrapper) and
+  `requires_specs` (the strict filter over it) in
   `lib.sh`, plus `parse_replaces_spec` which validates each entry. The
   install-time and removal-time behaviour built on it lives in `cmd-add.sh`
   (`install_requires`) and `cmd-rm.sh` (the dependents guard) — see

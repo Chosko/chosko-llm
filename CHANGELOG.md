@@ -2,6 +2,14 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.19.1 — 2026-08-25
+
+- `chosko-llm ls` is fast again. Adding the REQUIRES column had left it about
+  30% slower, because every row parsed its source file's frontmatter twice —
+  once for the LATEST version, once for the `requires:` value. Each row now
+  parses any given file at most once and takes both fields out of that one
+  parse. Output is unchanged, byte for byte, under every flag.
+
 ## 1.19.0 — 2026-08-25
 
 - `/production-status` no longer claims `no tasks yet` on a feature whose

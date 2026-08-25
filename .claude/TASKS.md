@@ -52,7 +52,7 @@ Preconditions: none
 
 ## 155. Parse each feature's frontmatter once per `ls` row
 
-Status: [IN PROGRESS]
+Status: [DONE]
 Target: claude
 Files: scripts/cmd-ls.sh, scripts/lib.sh, VERSION, CHANGELOG.md, .claude/context/cmd-ls.md, .claude/context/shared-lib.md, .claude/context/INDEX.md
 Preconditions: none

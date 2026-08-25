@@ -206,6 +206,37 @@ read_frontmatter_field() {
   parse_frontmatter "$file" | awk -F= -v k="$field" '$1 == k { sub(/^[^=]*=/, ""); print; exit }'
 }
 
+# read_frontmatter_fields <file> <field>...
+# The parse-once counterpart to read_frontmatter_field, for a caller that needs
+# two or more fields out of the same frontmatter block. Parses <file> once and
+# prints one line per requested field, in the order given: the field's value, or
+# an empty line when the key is absent.
+#
+# It exists because `ls` reads both `version` and `requires` off every source
+# file it lists, and two read_frontmatter_field calls parse the same file twice —
+# a cost paid once per row on a listing that runs one row per feature. A caller
+# wanting exactly one field should keep using read_frontmatter_field.
+#
+# Read the result with one `read -r` per field, in the same order:
+#
+#   { IFS= read -r ver; IFS= read -r req; } \
+#     < <(read_frontmatter_fields "$f" version requires)
+#
+# The line count always matches the field count: parse_frontmatter emits one
+# key=value line per key, so no value can contain a newline. A missing file
+# yields empty values rather than an error, so the caller's own -f guard stays
+# the thing that decides whether the file counts.
+read_frontmatter_fields() {
+  local file="$1"; shift
+  { parse_frontmatter "$file" || true; } | awk -F= -v fields="$*" '
+    !($1 in val) { val[$1] = substr($0, index($0, "=") + 1) }
+    END {
+      n = split(fields, want, " ")
+      for (i = 1; i <= n; i++) print (want[i] in val) ? val[want[i]] : ""
+    }
+  '
+}
+
 # ---------- feature resolution ----------
 
 # Source paths in the managed clone.
@@ -681,11 +712,12 @@ requires_specs() {
 }
 
 # requires_specs_lenient <file>
-# The non-fatal sibling of requires_specs, and the one place the `requires:`
-# value is split and trimmed — requires_specs is a strict filter over this.
-# Prints one TAB-separated line per non-empty entry: "ok<TAB><spec>" for an
-# entry carrying a recognised kind prefix, "bad<TAB><entry>" for one that does
-# not. Prints nothing and returns 0 when the key is absent or empty.
+# The non-fatal sibling of requires_specs — requires_specs is a strict filter
+# over this. Reads <file>'s `requires:` value and hands it to
+# requires_specs_from_value, so it prints one TAB-separated line per non-empty
+# entry: "ok<TAB><spec>" for an entry carrying a recognised kind prefix,
+# "bad<TAB><entry>" for one that does not. Prints nothing and returns 0 when the
+# key is absent or empty.
 #
 # It exists for read-only consumers — `ls` renders a REQUIRES column and must
 # not be taken down by one typo in one unrelated feature. Install- and
@@ -693,18 +725,45 @@ requires_specs() {
 # dying on a malformed entry: that is where a dangling reference has to be
 # caught. Never route those through this function.
 requires_specs_lenient() {
-  local file="$1" raw entry
+  local file="$1" raw
   raw="$(read_frontmatter_field "$file" requires || true)"
+  requires_specs_from_value "$raw"
+}
+
+# requires_specs_from_value <value>
+# The one place a raw `requires:` value is split and trimmed: whitespace around
+# the commas and around the kind colon is tolerated and empty entries are
+# dropped. Output is requires_specs_lenient's, described above; this is that
+# function with the frontmatter read lifted out.
+#
+# It takes the value rather than a path so a caller that has already parsed the
+# file's frontmatter for another field can classify the specs without parsing it
+# a second time — which is what `ls` does, once per row.
+#
+# The split and both trims happen inside one awk rather than a `tr` plus a `sed`
+# per entry: this runs once per listed feature, and a subshell per comma is the
+# kind of cost that is invisible in a unit test and plainly visible in `ls`. The
+# three substitutions are the sed script that preceded it, in the same order —
+# leading space, trailing space, then the FIRST colon's surroundings, which is
+# why the last one is `sub` and not `gsub`.
+requires_specs_from_value() {
+  local raw="${1:-}" entry
   [ -n "$raw" ] || return 0
   while IFS= read -r entry; do
-    entry="$(printf '%s' "$entry" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//; s/[[:space:]]*:[[:space:]]*/:/')"
-    [ -n "$entry" ] || continue
     if parse_replaces_spec "$entry" >/dev/null; then
       printf 'ok\t%s\n' "$entry"
     else
       printf 'bad\t%s\n' "$entry"
     fi
-  done < <(printf '%s\n' "$raw" | tr ',' '\n')
+  done < <(printf '%s\n' "$raw" | awk -F, '{
+    for (i = 1; i <= NF; i++) {
+      e = $i
+      sub(/^[[:space:]]+/, "", e)
+      sub(/[[:space:]]+$/, "", e)
+      sub(/[[:space:]]*:[[:space:]]*/, ":", e)
+      if (e != "") print e
+    }
+  }')
 }
 
 # ---------- auto-upgrade state ----------

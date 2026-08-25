@@ -61,20 +61,36 @@ wrapped in `if scope_is_local`, so `ls --global` omits hooks. The claude-md pass
   `$CLAUDE_HOME/CLAUDE.md`, not file; statusline plain file check like
   commands/skills.
 - **REQUIRES cell is read-only and non-fatal (task 152).** `_requires_cell
-  <src-file> <inst-file>` renders the last column, reading the source when it
-  exists and the installed copy otherwise (the LATEST column's bias: it answers
-  what the feature will require after an `update`, and gives a not-installed
-  row a value before `add`). It is handed the two paths the calling pass
-  already resolved for its version columns rather than re-deriving them —
-  resolving them again inside the helper cost a subshell per row on a listing
-  that runs one per feature. The claude-md pass passes an empty `<inst-file>`:
-  `inject_section` strips frontmatter, so a section in `CLAUDE.md` carries no
-  `requires:` to fall back to. Entries come from
-  `lib.sh::requires_specs_lenient`, NOT `requires_specs`: a malformed entry
-  renders raw + dimmed and the listing continues, because one typo in one
-  unrelated feature must not take down a read-only lister. `cmd-add` /
-  `cmd-rm` keep calling the strict `requires_specs` and keep dying — that is
-  where a dangling reference has to be caught.
+  <requires-value>` renders the last column. It takes the raw `requires:`
+  VALUE, not a path (task 155): the calling pass already parsed that file's
+  frontmatter for its version column, so it hands the second field over for
+  free. Which file the value came from is the caller's choice, and every pass
+  makes the LATEST column's: the source file's value when that file exists, the
+  installed file's otherwise — so the cell answers what the feature will require
+  after an `update`, and still gives a not-installed row a value before `add`. A
+  source file that exists but declares nothing renders the em dash rather than
+  falling back; the source is the answer and it said "none". The claude-md pass
+  has only a source value to offer: `inject_section` strips frontmatter, so a
+  section in `CLAUDE.md` carries no `requires:` to fall back to. Entries come
+  from `lib.sh::requires_specs_from_value` — the lenient split, NOT
+  `requires_specs`: a malformed entry renders raw + dimmed and the listing
+  continues, because one typo in one unrelated feature must not take down a
+  read-only lister. `cmd-add` / `cmd-rm` keep calling the strict
+  `requires_specs` and keep dying — that is where a dangling reference has to
+  be caught.
+- **Parse each file's frontmatter once per row (task 155).** A pass reads its
+  version column and its REQUIRES value out of ONE
+  `lib.sh::read_frontmatter_fields <file> version requires` per file, not two
+  `read_frontmatter_field` calls — which parsed each source file twice, and cost
+  `ls` about 30% over its pre-152 runtime. Each pass therefore holds four
+  values per row: `inst_ver` / `inst_req` (guarded by `-f "$inst_file"`) and
+  `src_ver` / `src_req` (guarded by `-f "$src_file"`), and picks `req_raw` from
+  the source pair when the source file exists, the installed pair otherwise.
+  The claude-md pass has no installed pair at all — its INSTALLED column comes
+  from `claudemd_installed_version`, and there is no installed frontmatter to
+  fall back to — so its `req_raw` is `src_req` or empty. Out of scope, and
+  still one read each: `find_replacement` / `check_migration_pending`, which
+  run only on rows already computed as `local only` / `not installed`.
 - **No version comparison.** `cmd-ls` only prints two version strings
   side by side; no `[new]` / `[upgradable]` markers.
 - **Filenames are the truth.** File named `foo.md` w/ frontmatter
@@ -111,8 +127,9 @@ wrapped in `if scope_is_local`, so `ls --global` omits hooks. The claude-md pass
 ## Cross-references
 
 - [shared-lib.md](./shared-lib.md) — uses `inst_command_path`,
-  `src_command_path`, skill equivalents, `read_frontmatter_field`, and
-  scope helpers `resolve_scope` / `scope_is_local` / `scope_label` /
+  `src_command_path`, skill equivalents, `read_frontmatter_fields` (the
+  parse-once reader; `cmd-ls` is why it exists), `requires_specs_from_value`,
+  and scope helpers `resolve_scope` / `scope_is_local` / `scope_label` /
   `claudemd_target_path`.
 - [cmd-add.md](./cmd-add.md) / [cmd-update.md](./cmd-update.md) — features
   `ls` shows produced/consumed by these.
@@ -124,8 +141,12 @@ wrapped in `if scope_is_local`, so `ls --global` omits hooks. The claude-md pass
 - Changing column layout, filter flags, output formatting →
   `scripts/cmd-ls.sh`.
 - Changing what the REQUIRES column shows, which file it reads, or how a
-  malformed entry renders → `_requires_cell` in `cmd-ls.sh` and
-  `requires_specs_lenient` in `lib.sh`.
+  malformed entry renders → `_requires_cell` in `cmd-ls.sh` (which file's value
+  reaches it is decided by the `req_raw` assignment in each pass) and
+  `requires_specs_from_value` in `lib.sh`.
+- Changing how many times a row parses a file, or which frontmatter fields a
+  pass needs → the `read_frontmatter_fields` call in each pass of `cmd-ls.sh`
+  and that helper in `lib.sh`.
 - Changing row order, or the kind rank that breaks a same-name tie → the
   `rows` buffer, the `KIND_RANK_*` constants, and the final sort in
   `list_all` in `cmd-ls.sh`.
