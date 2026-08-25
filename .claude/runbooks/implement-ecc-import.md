@@ -163,7 +163,7 @@ Context:
 ```
 Done: 2026-08-25 — commit 03a1c2e (pushed). skills/task-implement/delegated-runs.md: launcher shape, "What the parent never reads" (parent opens no task body for a delegated task; claude+human / human / requested-[STALE] exception kept), fixed four-part agent prompt frame (task number + repo path, resolved flags, read-it-yourself instruction, return contract of exactly four values). SKILL.md: PRE-FLIGHT step 2/2b, PER-TASK preamble, DO NOT prohibition, description clause; skill 1.0.0→1.1.0. VERSION 1.2.3→1.3.0. Premise: body predicted VERSION 1.0.0→1.1.0; actual 1.2.3→1.3.0.
 
-## [ ] 14. Documentation for task-implement-launcher (task 120)
+## [x] 14. Documentation for task-implement-launcher (task 120)
 
 Depends on: 13
 
@@ -173,12 +173,14 @@ Context:
 ```prompt
 /task-implement 120
 ```
+Done: 2026-08-25 — commits 4d2c8e5 (task 120) and db2e456 (feature task-implement-launcher [DONE], pre-approved), both pushed. .claude/context/features.md task-implement entry carries the launcher contract ("seven supporting files" corrected); .claude/domain/task-workflow.md "Delegated runs" updated; feature document's two authorised reconciliations applied, two open-question bullets resolved (grep reliability, next resolution path); the dirty-tree open question was left as-is though shipped behaviour settles it. .claude/context/INDEX.md not edited (Last updated already 2026-08-25). VERSION 1.3.0→1.3.1. Premises held.
 
 ## [ ] 15. Add the /task-review skill (task 121)
 
 Depends on: 14
 
-Context: none
+Context:
+- 2026-08-25 (from steps 13–14): VERSION is now 1.3.1; skills/task-implement/SKILL.md is 1.1.0 with seven supporting files, including delegated-runs.md (launcher shape: fixed four-part prompt frame, four-value return contract). Features version-changelog, session-continuity, repo-local-audits and task-implement-launcher are [DONE]. Every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh (CHANGELOG.md is legitimate collateral even when absent from Files:). The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 121
