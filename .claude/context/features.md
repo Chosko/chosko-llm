@@ -156,7 +156,7 @@ Currently shipped:
   not-invocable statement for an agent that opened the file without
   reading frontmatter; the `description` says the same thing in the words
   skill selection matches on, which is what keeps it out of suggestions.
-  Six files under `references/`, one authority each:
+  Seven files under `references/`, one authority each:
   `resolution.md` (`.claude/TASKS.md` schema and parsing, the `all` /
   `next` / explicit-list selectors, body-file location, the
   `/task-setup`-has-run gate), `status.md` (the eight-value status
@@ -167,14 +167,23 @@ Currently shipped:
   implement-anyway/stop protocol, reconciliation classification),
   `tree.md` (the dirty-tree prompt protocol, four options, `DIRTY_FOLD` /
   `DIRTY_FOLD_UNTRACKED` and the Step-7 fold), `commit.md` (pull-at-start,
-  per-task commit and push, `--no-commit` / `--no-push` gating). A
+  per-task commit and push, `--no-commit` / `--no-push` gating), and
+  `review-budget.md` (review cost controls: the `--review-model` /
+  `--review-effort` values, their `same` / `auto` reserved words, the
+  deterministic three-row `auto` tier table keyed on lines/files/criteria
+  and whether the diff touches a non-`.md` file, the read budget behind the
+  effort axis — navigation layer full and uncounted at every tier, only
+  distinct source/test files beyond the diff counted, `shallow` at zero —
+  the no-test-command-at-any-tier clause, and the cap-bound and
+  resolved-pair reports). A
   consumer cites the file by
   `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/<f>.md`
   and states only its own deviations. Installed like any other skill
   (`cp -R` of the folder), which is exactly why the engine had to be a
   skill and not a command — see
-  `../domain/features/shared-phase-engine.md`. Its four consumers declare
-  `requires: skill:task-engine`, so `add` pulls it in and `rm` refuses to
+  `../domain/features/shared-phase-engine.md`. Its five consumers declare
+  `requires: skill:task-engine` (`task-review` joined when it took the read
+  budget on), so `add` pulls it in and `rm` refuses to
   take it away while any of them is installed.
 - `commands/task-add.md` — plans and appends new task conversationally:
   writes summary block to `.claude/TASKS.md` and thin body file at
@@ -333,15 +342,34 @@ Currently shipped:
   `[IN PROGRESS]` flip — never silently skipped, since "implemented" and
   "implemented and reviewed" are different claims. `--rounds` without
   `--review` errors (`--rounds requires --review.`); a non-positive integer
-  errors (`--rounds needs a positive integer.`). Loop sits after Step 5 and
+  errors (`--rounds needs a positive integer.`).
+  Two cost-control flags steer the spawned reviewer, both defaulting to
+  `auto` and both erroring without `--review` in the same shape `--rounds`
+  uses: `--review-model <name>|same|auto` (`--review-model requires
+  --review.`) and `--review-effort shallow|standard|deep|same|auto`
+  (`--review-effort requires --review.`, plus a value check naming the five
+  legal levels). Model names pass VERBATIM to the Agent tool — no local
+  allow-list, since a hardcoded roster would refuse a model that works.
+  The pair resolves **per task, at the top of each round**, never once per
+  run, from that round's own diff plus the criteria count already in hand,
+  which is what keeps a batch O(1); the two values feed exactly two places —
+  the model decides whether the Agent call carries `model:` (omitted on
+  `same`, so the child inherits), the effort decides whether the spawn
+  prompt carries a budget block (omitted on `same`, so the reviewer reads
+  unbounded). Neither the tier table nor the budget table is restated in the
+  skill: `task-engine`'s `references/review-budget.md` is their single
+  authority and `review-rounds.md` reads it. Loop sits after Step 5 and
   **before Step 6**, on the uncommitted tree — before, not between 6 and 7,
   so a halt on unresolved findings leaves the task `[IN PROGRESS]` rather
   than `[DONE]`-and-halted. Each round spawns `/task-review` as a
   **subagent** (`subagent_type: general-purpose`) — fresh context is the
-  mechanism, not an optimizable detail — with a six-item prompt (repo path,
+  mechanism, not an optimizable detail — with an eight-item prompt (repo path,
   `task=<n>`, this round's diff scope, round number, prior rejection ledger
   from round 2 on, and the statement that it was spawned by
-  `/task-implement --review` so it writes nothing to disk). That spawn
+  `/task-implement --review` so it writes nothing to disk, the test-suite
+  state — green under the resolved policy, or skip-tests and nothing ran,
+  handed in because the reviewer runs no test command itself — and the
+  budget block, omitted entirely when the effort resolved to `same`). That spawn
   returns **asynchronously**: the call yields an agent id and the findings
   arrive later as a separate notification, so the round waits for them and
   Steps 6/7 are unreachable until the final round's result has actually
@@ -355,15 +383,21 @@ Currently shipped:
   whole run per FAILURE HANDLING (tree uncommitted, task `[IN PROGRESS]`, no
   next task). Exactly one commit per task either way — the fixes ride in the
   task's own commit, never a second one. In a delegated run REVIEW/ROUNDS
-  ride through the fixed-size hand-off prompt and each implementor spawns
-  its own reviewer (launcher → implementor → reviewer); the four-field
+  plus REVIEW_MODEL/REVIEW_EFFORT
+  ride through the fixed-size hand-off prompt as two more strings and each
+  implementor spawns
+  its own reviewer, measuring its own diff (launcher → implementor →
+  reviewer; the launcher measures nothing); the four-field
   return contract is unchanged and no finding travels up to the parent.
 - `skills/task-review/` — audits a diff against the acceptance criteria of
   the task that produced it and reports structured findings. Exists beside
   Claude Code's built-in `/code-review` because of that one difference:
   generic review asks *is this good code*, this asks *does this satisfy task
   N's criteria*; where the two overlap it defers to the built-in rather than
-  reimplementing it. Three input forms resolved from the argument after
+  reimplementing it. Declares `requires: skill:task-engine` — the fifth
+  consumer, and the only one that reads the engine for a single file:
+  `references/review-budget.md`, and only when the invocation carried a
+  budget block. Three input forms resolved from the argument after
   stripping `task=<n>` and `base=<ref>`: empty → local (`git diff HEAD`), a
   branch name → branch (`git diff <base>...<branch>`, three dots), a bare
   integer or GitHub PR URL → pr (`gh pr diff <N>`). One supporting file,
@@ -377,6 +411,26 @@ Currently shipped:
   failure mode; callers/imports/tests read; severity defensible — any "no"
   or "unsure" demotes or drops), and BLOCKING-requires-proof (snippet,
   scenario, why existing guards miss it; missing one ⇒ demote).
+  A spawn from `/task-implement --review` may carry a **budget block**
+  naming a read tier (`shallow` / `standard` / `deep`), honoured off
+  `review-budget.md`: navigation layer (CLAUDE.md chain, context INDEX +
+  the diff's rows, task body, feature doc) read in full and NEVER counted at
+  any tier; only distinct source/test files beyond the diff count, and
+  re-opening a counted file is free; a cap that actually BINDS is reported
+  in one line, because a silent cap cannot be retuned. **No budget block
+  means no budget** — a manual run and a spawn whose effort resolved to
+  `same` both read unbounded, and a tier is never assumed unnamed. The
+  budget caps reads, never admissibility: **no fourth gate is added**, and
+  `shallow`'s ban on reading callers simply answers Pre-Report Gate question
+  3 with "no", which the existing gate already demotes or drops — cheaper
+  review, more conservative, never more confident-and-wrong. The skill has
+  no cost-control flags of its own; the axes live on `/task-implement`.
+  Separate contract clause, NOT a budget setting: **it invokes no test
+  command** — any mode, any budget, any testing policy, either invocation
+  path; a green suite is an input the caller hands it (spawn-prompt item 7),
+  and under a skip-tests caller a criterion depending on runtime behaviour
+  is `unverifiable` rather than re-derived. Reading test *files* as source
+  is a different thing, governed by the budget table.
   **Zero findings is a valid, complete review** — stated explicitly, because
   a reviewer under implicit pressure to justify itself invents findings.
   Exactly three severities — `BLOCKING` (bugs, data loss, security, or an

@@ -109,7 +109,7 @@ Feature: task-peer-review
 
 ## 161. Update documentation for feature `task-peer-review`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION, CHANGELOG.md
 Preconditions: 158, 159, 160

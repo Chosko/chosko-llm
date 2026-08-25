@@ -2,6 +2,20 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.22.1 — 2026-08-25
+
+- Documentation catch-up for the review cost controls shipped in 1.21.0 and
+  1.22.0. The README's `/task-implement` entry now names `--review-model` and
+  `--review-effort`, their `auto` defaults, and the fact that `auto` gives a
+  light diff a cheaper Sonnet reviewer on a `shallow` budget while reserving
+  Opus and `deep` for a heavy one.
+- The README's `/task-review` entry now describes the read budget it honours —
+  navigation layer uncounted, only source and test files beyond the diff
+  counted, a cap that binds reported — and states the new never-runs-a-test-
+  command clause. It also records that `/task-review` joined the features
+  declaring `requires: skill:task-engine`.
+- No behaviour change: documentation only.
+
 ## 1.22.0 — 2026-08-25
 
 - `/task-review` now honours the read budget `/task-implement --review` sends
