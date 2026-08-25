@@ -66,6 +66,33 @@ run leaves the task `[IN PROGRESS]` — which is exactly what FAILURE HANDLING
 already specifies. Flipping to `[DONE]` first and halting afterwards would
 leave the backlog claiming work that was never accepted.
 
+## Resolving the reviewer's model and read budget
+
+ARGUMENT PARSING hands this loop two strings, REVIEW_MODEL and REVIEW_EFFORT,
+each a name, `same`, or `auto` — the default for both. Their values, the
+deterministic `auto` tier table behind those defaults, the read budget behind
+the effort axis, and the reporting rules that keep both auditable are
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/review-budget.md`.
+Read it once, here, at the same point this file is read. **It is the single
+authority and neither table is restated here** — resolve against the file, not
+against a remembered copy of it.
+
+Resolve the pair **per task, at the top of each round**, never once for the
+run. `auto` costs no extra read: its four signals are already in hand when the
+loop starts — lines changed and files changed from *the round's own diff*
+(round 1's whole uncommitted diff, a later round's narrower re-review scope),
+the count of acceptance-criteria bullets in the task body read in Step 1, and
+whether that diff touches any non-`.md` file. Measure the diff, never the
+repository.
+
+A value that is not `auto` is taken as given: `same` carries the meaning
+`review-budget.md` gives it on each axis, and any other model name is used
+verbatim without being checked against a list.
+
+The two resolved values feed exactly two places, both below: the model decides
+whether the Agent call carries `model:`, and the effort decides whether the
+spawn prompt carries a budget block.
+
 ## The review runs as a subagent, and that is the mechanism
 
 Each round spawns `/task-review` with the Agent tool, `subagent_type:
@@ -76,7 +103,7 @@ window and will rationalise what it finds; a reviewer handed only the diff
 and the task body has to read the code as written. Running the review in
 this session would produce a report that agrees with the implementation.
 
-The spawn prompt carries exactly six things:
+The spawn prompt carries exactly eight things:
 
 1. the repository's absolute path;
 2. the task number, so `/task-review` is invoked with `task=<n>` and does
@@ -88,7 +115,23 @@ The spawn prompt carries exactly six things:
 5. from round 2 on, the previous rounds' **rejection ledger**, verbatim as
    `/task-iterate` returned it;
 6. the statement that it was spawned by `/task-implement --review`, so it
-   returns its structured report to the caller and writes nothing to disk.
+   returns its structured report to the caller and writes nothing to disk;
+7. **the test-suite state** — that the full suite is green under the
+   project's resolved testing policy, or that the run is in skip-tests mode
+   and nothing ran. The reviewer runs no test command under any budget, so
+   this is an input it is handed rather than a fact it re-derives; in
+   skip-tests mode it is also what tells the reviewer to report a criterion
+   that depends on runtime behaviour as `unverifiable` rather than treating
+   the gap as a reason to run something;
+8. **the budget block** — the resolved effort level and the reads that level
+   permits, as `review-budget.md` states them. **Omitted entirely when the
+   effort resolved to `same`**: no block, no mention of budgets, and the
+   reviewer reads unbounded exactly as it did before this flag existed.
+
+The **Agent call** carries `model:` set to the resolved model — the one place
+REVIEW_MODEL is consumed. **Unless it resolved to `same`, in which case
+`model:` is omitted from the call** and the child inherits the implementer's
+model, as before. `subagent_type: "general-purpose"` is unchanged either way.
 
 ## The spawned reviewer returns asynchronously — this is binding
 
@@ -166,6 +209,22 @@ and a compliant iterator, and **no round counter substitutes for it**: a
 bound stops the argument, it does not settle it. Pass the ledger into every
 later round's spawn prompt, whole.
 
+## Reporting the resolved pair
+
+Report the pair **once per task**, alongside the round summary, in the shape
+`review-budget.md` documents:
+
+```
+Review: sonnet / standard (auto — 210 lines, 4 files, code)
+```
+
+The parenthetical carries the evidence for whichever axis resolved from
+`auto` — the measurements that picked the tier — so `auto` is auditable
+rather than magic. An axis the user pinned is reported as the value they
+gave, with no invented justification behind it. One line, once, whatever the
+round count; the per-finding detail still belongs to `/task-iterate`'s
+output.
+
 ## When the loop ends
 
 - **No unresolved `BLOCKING` findings.** Continue to Step 6 normally. Report
@@ -189,6 +248,8 @@ later round's spawn prompt, whole.
   produces, and why `/task-iterate` commits nothing inside a round, are
   `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`'s
   `/task-implement` note.
-- **Batch runs.** `--review` and `--rounds N` ride through to each
-  implementor agent as part of the run's resolved flags; the implementor
-  spawns its own reviewer. See `./delegated-runs.md`.
+- **Batch runs.** `--review`, `--rounds N`, `--review-model` and
+  `--review-effort` ride through to each implementor agent as part of the
+  run's resolved flags; the implementor spawns its own reviewer and resolves
+  the pair from its own task's diff. The parent passes two strings and
+  measures nothing. See `./delegated-runs.md`.

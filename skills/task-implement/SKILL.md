@@ -1,8 +1,8 @@
 ---
 name: task-implement
-version: 1.3.0
+version: 1.4.0
 type: skill
-description: Implement one or more tasks from the project's task backlog end-to-end using a tests-first sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits and pushes each task separately; pass --no-commit to skip the per-task commits (and pushes), or --no-push to keep committing without pushing. Supports `next` to implement the first eligible task. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd|skip-tests-unattended` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time. In skip-tests mode, pass `-y` to suppress the per-task "Proceed?" confirmation for that run; the `skip-tests-unattended` marker value makes that the default for every run without needing `-y`. On a run resolving to 2+ tasks, offers to implement each task in a fresh subagent so later tasks don't inherit earlier ones' context — agents run one at a time, never in parallel, and `claude+human` / `human` / explicitly-requested `[STALE]` tasks stay in the parent conversation because they need the user present; pass `--agents` / `--no-agents` to pre-answer. On such a run the parent is a launcher: it evaluates the delegation guard from the `TASKS.md` summary blocks alone, never opens a delegated task's body, hands every agent the same fixed-size prompt carrying only the task number and the run's resolved flags, and keeps only the task number, terminal status, commit hash and one-line failure reason each agent returns — so the parent's context no longer grows with the size of the batch. Pass `--review` (optionally `--rounds N`, default 1) to have each task reviewed before it is committed: after the full test suite and before the status flip, the run spawns `/task-review` as a subagent so the review happens in a context that did not write the code, waits for its findings, and runs `/task-iterate` in the session to triage and apply them — the fixes ride in the task's own single commit, later rounds re-review only what the last iterate changed and only while `BLOCKING` findings remain, rejected findings may not be re-raised, and unresolved `BLOCKING` findings after the last round stop the run with the tree uncommitted and the task `[IN PROGRESS]`; without the flag nothing about the run changes. When a `Feature:`-tagged task
+description: Implement one or more tasks from the project's task backlog end-to-end using a tests-first sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits and pushes each task separately; pass --no-commit to skip the per-task commits (and pushes), or --no-push to keep committing without pushing. Supports `next` to implement the first eligible task. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd|skip-tests-unattended` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time. In skip-tests mode, pass `-y` to suppress the per-task "Proceed?" confirmation for that run; the `skip-tests-unattended` marker value makes that the default for every run without needing `-y`. On a run resolving to 2+ tasks, offers to implement each task in a fresh subagent so later tasks don't inherit earlier ones' context — agents run one at a time, never in parallel, and `claude+human` / `human` / explicitly-requested `[STALE]` tasks stay in the parent conversation because they need the user present; pass `--agents` / `--no-agents` to pre-answer. On such a run the parent is a launcher: it evaluates the delegation guard from the `TASKS.md` summary blocks alone, never opens a delegated task's body, hands every agent the same fixed-size prompt carrying only the task number and the run's resolved flags, and keeps only the task number, terminal status, commit hash and one-line failure reason each agent returns — so the parent's context no longer grows with the size of the batch. Pass `--review` (optionally `--rounds N`, default 1) to have each task reviewed before it is committed: after the full test suite and before the status flip, the run spawns `/task-review` as a subagent so the review happens in a context that did not write the code, waits for its findings, and runs `/task-iterate` in the session to triage and apply them — the fixes ride in the task's own single commit, later rounds re-review only what the last iterate changed and only while `BLOCKING` findings remain, rejected findings may not be re-raised, and unresolved `BLOCKING` findings after the last round stop the run with the tree uncommitted and the task `[IN PROGRESS]`; without the flag nothing about the run changes. The spawned reviewer's cost is steerable with `--review-model <name>|same|auto` and `--review-effort shallow|standard|deep|same|auto` (both default `auto`, both require `--review`): `auto` picks the model and the read budget deterministically per task from that task's own diff, so an ordinary task gets a Sonnet reviewer and only a heavy one gets Opus, while `same` on either axis restores the inherit-the-implementer behaviour. When a `Feature:`-tagged task
 lands `[DONE]` and leaves every task for that feature `[DONE]`/`[SKIP]`,
 records it as a completion candidate and, once at the very end of the run
 (batched across the whole run, never per-task), proposes flipping that
@@ -26,6 +26,8 @@ requires: skill:task-engine
 #        /task-implement <args> --no-agents   (2+ tasks: run everything in this conversation)
 #        /task-implement <args> --review      (review each task before committing it)
 #        /task-implement <args> --review --rounds N  (up to N review/iterate rounds; default 1)
+#        /task-implement <args> --review --review-model <name>|same|auto   (reviewer's model; default auto)
+#        /task-implement <args> --review --review-effort shallow|standard|deep|same|auto  (reviewer's read budget; default auto)
 # Examples: /task-implement 12
 #           /task-implement 12 13 14
 #           /task-implement all
@@ -36,6 +38,9 @@ requires: skill:task-engine
 #           /task-implement all -y --agents
 #           /task-implement 12 --review
 #           /task-implement 12 --review --rounds 3
+#           /task-implement 12 --review --review-model sonnet
+#           /task-implement 12 --review --review-model same
+#           /task-implement all --review --review-effort shallow
 
 GOAL
 For each requested task, in the order given:
@@ -153,8 +158,27 @@ pair, and strip whichever appear:
   without `--review` stops the run with: `--rounds requires --review.` An
   `N` that is not a positive integer stops too:
   `--rounds needs a positive integer.`
+- `--review-model <name>` sets REVIEW_MODEL; default `auto`. Its value is a
+  model name or one of the two reserved words `same` and `auto`. **Any name
+  is accepted verbatim** — there is no local allow-list, per the protocol
+  file below, so a name this skill does not recognise is passed through to
+  the Agent tool rather than refused here. `--review-model` without
+  `--review` stops the run with: `--review-model requires --review.`
+- `--review-effort <level>` sets REVIEW_EFFORT; default `auto`. Legal values
+  are exactly `shallow`, `standard`, `deep`, `same` and `auto`. Any other
+  value stops the run with: `--review-effort must be one of: shallow,
+  standard, deep, same, auto.` `--review-effort` without `--review` stops
+  the run with: `--review-effort requires --review.`
+
+Both `--review-*` flags are strings here and nothing more: what their values
+mean, how `auto` resolves, and what each effort level permits the reviewer to
+read are
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/review-budget.md`,
+which `./review-rounds.md` reads when REVIEW is true. Parsing does not
+resolve them and this file does not restate that protocol.
 
 A run without `--review` is the run it has always been: REVIEW is false,
+REVIEW_MODEL and REVIEW_EFFORT are never resolved and never used,
 `./review-rounds.md` is never opened, no loop runs, nothing new is asked,
 and the output says nothing about reviewing.
 
@@ -704,5 +728,16 @@ DO NOT:
   arrived. The call returns an id; the report arrives later, separately.
 - Run the review in this session instead of a subagent — fresh context is
   the mechanism, not a detail.
-- Accept `--rounds` without `--review`, or skip the review silently when
-  either `task-review` or `task-iterate` is unavailable.
+- Accept `--rounds`, `--review-model` or `--review-effort` without
+  `--review`, or skip the review silently when either `task-review` or
+  `task-iterate` is unavailable.
+- Refuse a `--review-model` value because this skill does not recognise it.
+  There is no local allow-list: names pass verbatim to the Agent tool, which
+  rejects a typo better than a hardcoded list that would refuse a model that
+  works — `review-budget.md` § *Model names are not validated locally*.
+- Resolve `auto` once for the whole run, or from anything but the round's own
+  diff and the task body already read in Step 1 — resolution is per task, and
+  that is what keeps a batch O(1) in the parent.
+- Restate the `auto` tier table or the read-budget table anywhere in this
+  skill. `review-budget.md` is their single authority; a second copy is a
+  copy that will drift.

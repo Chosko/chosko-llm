@@ -84,6 +84,13 @@ It carries four things:
    - REVIEW and ROUNDS — whether the run was invoked with `--review`, and
      the round cap. An implementor told REVIEW is true runs the loop from
      `./review-rounds.md` for its own task (see below);
+   - REVIEW_MODEL and REVIEW_EFFORT — the `--review-model` and
+     `--review-effort` values as the run resolved them, `auto` by default.
+     They ride through as **two strings**: the parent resolves nothing and
+     measures nothing, because `auto` resolves per task from each task's own
+     diff, inside that implementor's own loop. A fifty-task batch therefore
+     costs the parent two strings, not fifty measurements — the same O(1)
+     property the rest of this prompt has;
    - the resolved testing mode — full test mode with the concrete test
      command, or skip-tests mode — so the agent does not redo RESOLVING THE
      TEST RUNNER and does not re-ask the no-test-suite A/B question;
@@ -141,6 +148,12 @@ implementor must honour both:
   reviewer's result has actually arrived. An implementor that commits on the
   strength of a spawn call's return value commits unreviewed work and reports
   it as reviewed.
+
+The cost-control flags need no structural change here. REVIEW_MODEL and
+REVIEW_EFFORT are run-level strings in the flag list above, and each
+implementor resolves `auto` against its own task's diff — so the launcher
+neither sizes a diff nor picks a model, and it still opens no task body to do
+either.
 
 The parent's side of this is deliberately empty. It passes the flags through
 and **never sees a finding**: no report, no triage table, no rejection ledger

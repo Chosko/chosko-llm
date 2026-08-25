@@ -2,6 +2,31 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.21.0 — 2026-08-25
+
+- `/task-implement --review` gains two cost controls over the reviewer it
+  spawns: `--review-model <name>|same|auto` and
+  `--review-effort shallow|standard|deep|same|auto`, both defaulting to
+  `auto` and both requiring `--review` (like `--rounds`). `auto` resolves
+  deterministically per task from that task's own diff — lines, files,
+  acceptance-criteria count, and whether anything outside `.md` changed —
+  against the tier table in `task-engine`'s `references/review-budget.md`,
+  and the resolved pair is reported once per task, e.g.
+  `Review: sonnet / standard (auto — 210 lines, 4 files, code)`.
+- **Behaviour change to an existing flag:** `--review` used to spawn a
+  reviewer with no `model:`, so it inherited the implementer's — an Opus
+  implementer spawned an Opus reviewer for every task in a batch. With
+  `auto` as the new default, `--review` now spawns a **Sonnet** reviewer on
+  an ordinary task and reserves Opus for a heavy diff. Pass
+  `--review-model same` to restore the old inherit-the-implementer
+  behaviour; `--review-effort same` likewise drops the read budget and lets
+  the reviewer read unbounded as before.
+- Model names are not validated locally — any name passes verbatim to the
+  Agent tool, so a new model works the day it ships.
+- In a batch run both flags ride the launcher's fixed-size hand-off as two
+  strings; the parent measures nothing and still never opens a task body.
+- A run without `--review` is unchanged in every respect.
+
 ## 1.20.0 — 2026-08-25
 
 - `task-engine` gains a seventh reference file, `references/review-budget.md`,

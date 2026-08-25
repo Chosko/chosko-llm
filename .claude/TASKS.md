@@ -89,7 +89,7 @@ Feature: task-peer-review
 
 ## 159. Add `--review-model` and `--review-effort` to `/task-implement`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-implement/SKILL.md, skills/task-implement/review-rounds.md, skills/task-implement/delegated-runs.md, VERSION, CHANGELOG.md
 Preconditions: 158
