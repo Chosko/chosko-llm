@@ -66,7 +66,7 @@ Context:
 ```
 Done: 2026-08-25 — commit dc4f951 (pushed). 36 files, +156/−1681. Deleted scripts/cmd-task-impl.sh, scripts/lib-task-external.sh, scripts/check-task-parity.sh, commands/task-enrich.md, .claude/context/cmd-task-impl.md, .claude/context/lib-task-external.md, .claude/external/{implement,tests}-prompt.md; task-impl subcommand removed from bin/chosko-llm, help, cli-help.txt; /task-add --enrich and enriched-body schema gone; Target: keeps exactly claude / claude+human / human; /task-setup reduced to TASKS.md + tasks/ + two wrappers (# CHOSKO_TASK_IMPL_STUB kept). VERSION 0.63.1→1.0.0; frontmatter: task-add 2.0.0, task-setup 2.0.0, task-implement 1.0.0 (skills/task-implement/SKILL.md), patch bumps on domain-setup, project-setup, unity-mcp-setup, architect. Extra decisions: design-process.md and technical-direction.md CI-guard examples repointed at check-changelog.sh; context INDEX Conventions marker now says eleven files. Premises: body said VERSION 0.62.0→1.0.0, actual start 0.63.1; skills/task-implement/body-schemas.md has no frontmatter (bump went on SKILL.md).
 
-## [ ] 6. Add the /session-save command (task 132)
+## [x] 6. Add the /session-save command (task 132)
 
 Depends on: 5
 
@@ -76,12 +76,14 @@ Context:
 ```prompt
 /task-implement 132
 ```
+Done: 2026-08-25 — commit 722c4fd (pushed). commands/session-save.md at 0.1.0: writes .claude/sessions/YYYY-MM-DD-HHMM-<slug>.md, shared header (Work:/Running:), full form (nine sections) and pointer form (Resume from:), known-artifact table with the single /product-design → .claude/domain/design-process.md row (task body removed the /task-implement row; body is authority over the feature document), supersession delete, no commit/push, exactly one shell call (clock read for HHMM). VERSION 1.0.0→1.1.0. Premises held.
 
 ## [ ] 7. Add the /session-resume command (task 133)
 
 Depends on: 6
 
-Context: none
+Context:
+- 2026-08-25 (from step 6): VERSION is now 1.1.0. commands/session-save.md (0.1.0) landed with: shared header block (`# Session: …`, `Work:` four-value table with `none` first-class, `Running:`), full form = optional preamble + nine sections in the feature document's order, pointer form = header + `Resume from:` + one sentence; known-artifact table has ONE row (/product-design → .claude/domain/design-process.md) per task 132's Decisions; the command makes exactly one shell call (clock read). Read that file for the exact header shape /session-resume must parse. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 133
