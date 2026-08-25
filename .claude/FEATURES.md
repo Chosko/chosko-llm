@@ -7,7 +7,7 @@
 Status: [DONE]
 Doc: .claude/domain/features/product-roadmap.md
 Source: product-design.md § Roadmap and planning
-Tasks: 106, 107
+Tasks: none
 
 ---
 
@@ -16,7 +16,7 @@ Tasks: 106, 107
 Status: [DONE]
 Doc: .claude/domain/features/slice-aware-architecture.md
 Source: product-design.md § Roadmap and planning
-Tasks: 108, 109, 110
+Tasks: none
 
 ---
 
@@ -25,7 +25,7 @@ Tasks: 108, 109, 110
 Status: [DONE]
 Doc: .claude/domain/features/production-plan.md
 Source: product-design.md § Roadmap and planning
-Tasks: 111, 112
+Tasks: none
 
 ---
 
@@ -34,7 +34,7 @@ Tasks: 111, 112
 Status: [DONE]
 Doc: .claude/domain/features/plan-readout.md
 Source: product-design.md § Roadmap and planning
-Tasks: 113, 114, 115
+Tasks: none
 
 ---
 
@@ -43,7 +43,7 @@ Tasks: 113, 114, 115
 Status: [DONE]
 Doc: .claude/domain/features/session-continuity.md
 Source: prompt
-Tasks: 132, 133, 134
+Tasks: none
 
 ---
 
@@ -52,7 +52,7 @@ Tasks: 132, 133, 134
 Status: [DONE]
 Doc: .claude/domain/features/task-peer-review.md
 Source: prompt
-Tasks: 121, 122, 123, 124
+Tasks: none
 
 ---
 
@@ -61,7 +61,7 @@ Tasks: 121, 122, 123, 124
 Status: [DONE]
 Doc: .claude/domain/features/task-implement-launcher.md
 Source: prompt
-Tasks: 119, 120
+Tasks: none
 
 ---
 
@@ -70,7 +70,7 @@ Tasks: 119, 120
 Status: [DONE]
 Doc: .claude/domain/features/shared-phase-engine.md
 Source: prompt
-Tasks: 125, 126, 127, 128, 129, 130, 131
+Tasks: none
 
 ---
 
@@ -79,7 +79,7 @@ Tasks: 125, 126, 127, 128, 129, 130, 131
 Status: [DONE]
 Doc: .claude/domain/features/repo-local-audits.md
 Source: prompt
-Tasks: 135, 136, 137, 138
+Tasks: none
 
 ---
 
@@ -88,7 +88,7 @@ Tasks: 135, 136, 137, 138
 Status: [DONE]
 Doc: .claude/domain/features/runbook-suite.md
 Source: prompt
-Tasks: 140, 141, 142, 143, 144, 145
+Tasks: none
 
 ---
 
@@ -97,6 +97,6 @@ Tasks: 140, 141, 142, 143, 144, 145
 Status: [DONE]
 Doc: .claude/domain/features/version-changelog.md
 Source: prompt
-Tasks: 146, 147, 148, 149
+Tasks: none
 
 ---
