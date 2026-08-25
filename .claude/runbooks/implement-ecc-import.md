@@ -90,7 +90,7 @@ Context:
 ```
 Done: 2026-08-25 — commit 890c3ef (pushed). commands/session-resume.md at 0.1.0: three argument forms (none / YYYY-MM-DD / path), candidacy by Work: line, pointer form followed via Resume from:, 14-day staleness flag, fixed-shape briefing ending with the deletion handover sentence, read-only (at most one clock read). VERSION 1.1.0→1.2.0. Decisions: CHANGELOG.md edited though not in Files: (rule landed after the body); unrecognized argument falls back to newest candidate, explicit missing path stops. Disclosure: the agent amended an unpushed commit (eb4af56) to fix a mangled subject line — no hook skipped, no force push. Note: ./bin/chosko-llm ls --available reads the managed clone unless CHOSKO_LLM_HOME points at the working tree.
 
-## [ ] 8. Documentation for session-continuity (task 134)
+## [x] 8. Documentation for session-continuity (task 134)
 
 Depends on: 7
 
@@ -100,12 +100,14 @@ Context:
 ```prompt
 /task-implement 134
 ```
+Done: 2026-08-25 — commits b5476b1 (task 134) and 2d6e3c7 (feature session-continuity [DONE], pre-approved), both pushed. README gained "Hand off a conversation — /session-save and /session-resume"; .claude/context/features.md gained two shipped entries; authoring guide cross-reference; feature document reconciled (seven authorized items + <date|path> signature; Open questions: none outstanding). VERSION 1.2.0→1.2.1. Premises held; CHANGELOG.md edited as collateral of the bump (not in Files:).
 
 ## [ ] 9. Record the .claude/skills/ exemption in CLAUDE.md (task 135)
 
 Depends on: 8
 
-Context: none
+Context:
+- 2026-08-25 (from steps 1–8): VERSION is now 1.2.1; every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh (CHANGELOG.md is legitimate collateral even when absent from Files:). CLAUDE.md § Versioning already carries the changelog rule and its converse (a change that does not bump VERSION gets no entry — repo-local .claude/ artifacts never bump VERSION); the exemption task 135 records must sit consistently beside that bullet. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 135
