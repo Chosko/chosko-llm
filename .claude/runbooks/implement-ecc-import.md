@@ -307,7 +307,7 @@ Context:
 ```
 Done: 2026-08-25 — commits 47d7f6c (task 131) and 3c2d48e (feature shared-phase-engine [DONE], pre-approved), both pushed. README, authoring guide (council-gate rule qualified with skills/task-engine/ as the worked example; non-invocable reference-library skill shape), context layer (shared-lib.md, cmd-add.md, cmd-rm.md, features.md, INDEX.md), domain (task-workflow.md one-authority-per-rule section; feature document reconciled). skills/task-engine/references/targets.md stale /task-list note fixed, task-engine 0.1.0→0.1.1 (deliberate departure from the body's no-shipped-body criterion, on this runbook's instruction). VERSION 1.8.4→1.8.5. Premise corrections: parse_frontmatter allowlist has EIGHT keys (name, version, type, description, replaces, requires, event, matcher), not six; task-implement is 708 lines not 709; the open question about a non-invocable skill surfacing in skill selection was never observed — left open and marked explicitly unverified (task-engine has never been installed on this machine); features.md's task-implement entry corrected to seven supporting files.
 
-## [ ] 26. Replace /task-add's ownership notice with a pre-authorisation gate (task 139)
+## [x] 26. Replace /task-add's ownership notice with a pre-authorisation gate (task 139)
 
 Depends on: 25
 
@@ -317,12 +317,14 @@ Context:
 ```prompt
 /task-implement 139
 ```
+Done: 2026-08-25 — commit 8ff9265 (pushed). commands/task-add.md 2.1.0→2.2.0 (731→821 lines): ownership notice removed, new top-level OWNERSHIP PRE-AUTHORISATION section (owner table grown to seven documents incl. product-roadmap.md → /product-roadmap and .claude/PLAN.md → /production-plan; one question per owned file rendered before Approve-and-write; grant = acceptance-criteria marker + dated point-scoped Decisions bullet; silence is not a grant). product-workflow.md, task-workflow.md, context features.md updated. VERSION 1.8.5→1.9.0 (body predicted from 1.0.0). Premises held; task carries no Feature: line.
 
 ## [ ] 27. Add the /runbook-run skill with its two references (task 140)
 
 Depends on: 26
 
-Context: none
+Context:
+- 2026-08-25 (from steps 1–26): VERSION is now 1.9.0. Six features are [DONE] (version-changelog, session-continuity, repo-local-audits, task-implement-launcher, task-peer-review, shared-phase-engine) and task 139 landed. `requires:` is live (task 125): comma-separated kind-prefixed specs, resolved one level deep by cmd-add, guarded by cmd-rm's dependents scan with --force; the runbook-suite graph declares command:runbook-create/list/clean → skill:runbook-run and skill:runbook-suggest → command:runbook-create. Non-invocable reference-library skills follow skills/task-engine/ (0.1.1) as the worked example; the authoring guide documents that shape. The /session-save known-artifact table has ONE row (/product-design) — a shipped instruction file never earns a row. This very runbook (.claude/runbooks/implement-ecc-import.md, index .claude/RUNBOOKS.md) is being executed by hand per the feature document's orchestrator section; its body and Done: lines are live evidence for the schema — read, never edit. The nesting-depth facts in the feature document stand: orchestrator + step agent + one more confirmed level; /task-implement --review under an orchestrator is unprobed. Every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh; the body's predicted VERSION numbers are stale. Verify with CHOSKO_LLM_HOME=E:/projects/chosko-llm ./bin/chosko-llm ls --available. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 140
