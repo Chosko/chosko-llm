@@ -27,7 +27,11 @@ concrete failure mode or it is dropped**.
 
 In scope: the two commands, their three input forms, the finding schema, the
 triage contract, the sticky-rejection rule, the `--review` / `--rounds`
-integration in `/task-implement`, and how the loop behaves in a batch run.
+integration in `/task-implement`, how the loop behaves in a batch run, and the
+cost controls over the spawned reviewer — the `--review-model` /
+`--review-effort` flags, the deterministic `auto` resolution behind their
+defaults, the read budget that backs the effort axis, and the rule that the
+reviewer never re-runs the tests the implementer already ran.
 
 Deliberately out:
 
@@ -46,6 +50,22 @@ Deliberately out:
   findings are reported and dropped; unresolved blocking findings after the
   last round stop the loop and hand back to the user, uncommitted.
 - **Reviewing anything but a diff.** No whole-file audits, no repo sweeps.
+- **A reasoning-effort knob.** `--review-effort` caps what the reviewer
+  *reads*, not how hard it thinks. The Agent tool exposes `model` and nothing
+  else; reasoning effort comes from an agent definition, which is an asset
+  kind this repo does not ship. Said plainly here rather than implied away by
+  a flag name — see *Review cost controls* below.
+- **Cost controls on a manual review.** `--review-model` and
+  `--review-effort` are `/task-implement` flags. A hand-typed `/task-review`
+  runs in the user's own session, on the model they chose; a flag that
+  re-specified it would be specifying the session they are already sitting
+  in. Same reasoning that settled `--rounds`.
+- **Cost controls on `/task-iterate`.** It runs in the session that holds the
+  tree, never as a subagent, so there is no spawn to parameterise.
+- **A runbook-level review setting.** A runbook step is free text and already
+  carries whatever flags its author typed; the runbook's own `Model:` header
+  governs the step agent, not the reviewer that agent spawns. The runbook
+  suite needs no schema change for this.
 
 ## Architecture
 
@@ -73,6 +93,17 @@ explicit `task=<n>`, from the branch name, from the PR title, or from the most
 recently modified `.claude/tasks/*.md` — reads its body, and pulls out the
 acceptance criteria. This is the differentiator; without it the skill has no
 reason to exist alongside `/code-review`.
+
+**Tests are never run.** `/task-review` invokes no test command, in any
+mode. `/task-implement`'s tests-first sequence already ran the affected tests
+and then the full suite, and the review loop only starts on a green one — so
+a passing suite is an input the reviewer is handed, not a fact it re-derives.
+Re-running it pays twice for the same answer and is the single largest
+avoidable cost in a review. Reading test *files* as source is unchanged and
+still required by the Pre-Report Gate. Where the project runs in skip-tests
+mode nothing ran, the reviewer is told so, and a criterion that depends on
+runtime behaviour is reported `unverifiable` — a verdict the report schema
+already carries — rather than becoming a reason to run something.
 
 **The review gates**, adopted from ECC's `code-reviewer`:
 
@@ -165,10 +196,110 @@ ledger.
 iterate changed, not the whole diff. Re-reviewing untouched code re-finds
 advisory noise already dismissed.
 
+### Review cost controls
+
+A reviewer spawned with no `model:` inherits the parent. An Opus implementer
+therefore spawns an Opus reviewer, at whatever effort the parent is running,
+for every task in a batch — the loop's dominant cost, and one nothing in the
+original design let the user see, let alone choose.
+
+Two flags on `/task-implement`, each taking a name or one of two reserved
+words:
+
+```
+--review-model  <name> | same | auto        default auto
+--review-effort shallow | standard | deep | same | auto    default auto
+```
+
+`same` means *the implementer's*: on model it omits `model:` from the Agent
+call so the child inherits the parent — the original behaviour, now
+nameable rather than merely default; on effort it omits the budget block, so
+the reviewer reads unbounded as it always did. Both flags require `--review`
+and stop the run without it, in the shape `--rounds` already uses.
+
+Model names pass **verbatim** to the Agent tool. There is no local allow-list:
+the model roster changes faster than this repo ships, and a hardcoded list
+would refuse a model that works, which is a worse failure than the tool's own
+rejection of a typo. `/runbook-run --model` already behaves this way.
+
+**The protocol lives in `task-engine`**, at
+`skills/task-engine/references/review-budget.md` — the tier table, the budget
+table, and the resolution rules, stated once. `/task-implement`'s
+`review-rounds.md` reads it to resolve and pass; `/task-review` reads it to
+honour. Neither restates it. This is the shared-phase-engine rule applied to
+a rule with two consumers, and it is why `/task-review` gains
+`requires: skill:task-engine`, which it does not carry today.
+
+**`auto` is deterministic, not a judgement.** It resolves from four signals
+the implementer already holds when the loop starts, costing no extra read:
+lines changed and files changed from the round's own diff, the count of
+acceptance-criteria bullets from the task body read in Step 1, and whether
+the diff touches any non-`.md` file — the executable-surface test that
+separates a prompt edit from a code change. First matching row wins:
+
+| Tier | Fires when | model | budget |
+| --- | --- | --- | --- |
+| heavy | executable **and** (>= 400 lines, or >= 8 files, or >= 12 criteria) | `opus` | `deep` |
+| light | not executable **and** < 150 lines **and** <= 3 files | `sonnet` | `shallow` |
+| standard | everything else | `sonnet` | `standard` |
+
+`auto` never selects `haiku`. Per-criterion verdicts are judgement work, and a
+reviewer that misses a finding costs more than one that costs more. `haiku`
+remains valid when named explicitly.
+
+Resolution happens **per task, not per run** — each task's own diff decides —
+which is what keeps a batch O(1): the parent passes two strings through and
+each implementor measures its own work.
+
+**The budget is a table of permissions, not an adjective.** Two classes of
+read, treated differently:
+
+The **navigation layer is never counted and is permitted in full at every
+tier**: `CLAUDE.md` and its chain, `.claude/context/INDEX.md` and the rows for
+the files in the diff, the task body, and the feature document named by the
+task's `Feature:` line. Those reads exist precisely to make source reads
+unnecessary; metering them would push a capped reviewer past the index and
+into source, which is the expensive path. Charging for the cheap answer to
+"what do I need to read" inverts the incentive the context layer was built to
+create.
+
+**Source and test files beyond the diff are counted** — distinct files, not
+reads; re-opening a counted file is free.
+
+| | shallow | standard | deep |
+| --- | --- | --- | --- |
+| Navigation layer | full, uncounted | full, uncounted | full, uncounted |
+| Source/test files beyond the diff | 0 | 15 | unbounded |
+| Whole-file reads | no — hunks plus 40 lines of context | yes | yes |
+| Callers and imports of changed symbols | no | direct only | transitive |
+| Tests covering the diff | only those in the diff | yes | yes |
+| Per-criterion verdicts | from the diff alone; the rest `unverifiable` | full | full |
+| Test command | never | never | never |
+
+shallow sits at zero because that is its whole identity, and the consequence
+is the design's load-bearing property: **a reviewer forbidden to read callers
+answers "no" to Pre-Report Gate question 3, which the gate already says
+demotes the finding one severity or drops it.** A cheap review therefore
+becomes automatically more *conservative*, never more confident-and-wrong.
+The budget rides the gate that already exists rather than adding a second
+one, and no finding gets cheaper to assert by spending less to check it.
+
+15 is a ceiling against a repo sweep, not a working budget — it is set not to
+bind on an ordinary task. Because that is a guess, **a cap that actually binds
+must be reported**: the reviewer stops investigating, reports the remaining
+criteria under the gate as usual, and says in one line that the cap bound. A
+silent cap cannot be retuned; a loud one produces the evidence to retune it
+within a few runs.
+
+The resolved pair is reported once per task alongside the round summary —
+`Review: sonnet / standard (auto — 210 lines, 4 files, code)` — so `auto` is
+auditable rather than magic.
+
 ### Integration with `/task-implement`
 
-New flag `--review [--rounds N]`. Default off; a run without it behaves exactly
-as today. Placement in the existing step sequence:
+New flag `--review [--rounds N]`, plus `--review-model` and `--review-effort`
+from *Review cost controls* above. Default off; a run without `--review`
+behaves exactly as today. Placement in the existing step sequence:
 
 ```
 Step 3  Implement
@@ -194,9 +325,20 @@ detail — a reviewer that watched the code being written will rationalise it.
 The iterate runs in the **main session** because it edits, and its edits must
 land in the tree Step 7 commits.
 
+The spawn prompt carries two more things than it originally did, for eight in
+total: the **test-suite state** — green under the project's resolved testing
+policy, or skip-tests so nothing ran — and the **budget block**, omitted
+entirely when the effort resolved to `same`. The Agent call carries `model:`
+unless the model resolved to `same`, in which case it is omitted and the child
+inherits, as before.
+
 **In batch mode**, `--review` propagates to each implementor subagent, which
 spawns its own reviewer. The parent launcher passes the flag through and never
-sees a finding.
+sees a finding. The two cost-control flags ride the same path with no
+structural change: the launcher's hand-off already declares its resolved-flag
+list open-ended, and because `auto` resolves per task from each task's own
+diff, the parent passes two strings and measures nothing. The launcher still
+never opens a task body.
 
 This nests subagents one level deeper than the skill does today —
 launcher → implementor → reviewer. **That depth was verified empirically before
@@ -238,9 +380,14 @@ becomes a task through the existing `/task-add`, not through a side channel.
 
 /task-implement <args> --review               review each task after implementing
 /task-implement <args> --review --rounds 3    up to 3 review/iterate rounds
+/task-implement <args> --review --review-model sonnet    pin the reviewer's model
+/task-implement <args> --review --review-model same      inherit the implementer's
+/task-implement <args> --review --review-effort shallow  pin the read budget
 ```
 
 Both skills need full frontmatter, `version: 0.1.0`. Root `VERSION` minor bump.
+The cost-control change is a further minor on `task-review`, `task-implement`
+and `task-engine`, with `/task-review` gaining `requires: skill:task-engine`.
 
 Hard contracts:
 
@@ -254,6 +401,15 @@ Hard contracts:
 - `/task-iterate` never invents findings; it only triages what it was given.
 - Neither skill opens a PR.
 - Under `--review`, exactly one commit per task.
+- **`/task-review` never invokes a test command**, under any budget, any
+  testing policy and either invocation path. This is part of its read-only
+  contract, not a budget setting, and no tier relaxes it.
+- The budget caps source and test reads only. **No tier ever caps or forbids
+  the navigation layer**, and no finding is admissible that a tier's own
+  limits prevented the reviewer from checking — the Pre-Report Gate resolves
+  that, unchanged.
+- `--review-model` and `--review-effort` require `--review`, exactly as
+  `--rounds` does.
 
 ## Dependencies
 
@@ -263,6 +419,12 @@ Hard contracts:
   but the batch propagation path is cleanest once the launcher change lands,
   because the flag is then part of a fixed-size handoff rather than an
   already-large one.
+- **[shared-phase-engine](./shared-phase-engine.md)** — `task-engine` holds
+  the review-budget protocol, so `/task-review` declares
+  `requires: skill:task-engine` and installing it now pulls the engine in.
+  `/task-implement` already declares it. Acceptable because `--review`'s
+  availability gate already demands both skills be present; noted because it
+  is a real change to what installing `task-review` alone does.
 - Claude Code's built-in `/code-review`, referenced rather than reimplemented.
 
 ## Open questions
@@ -278,6 +440,17 @@ Hard contracts:
   both or neither stops and asks), and `base=<ref>` overrides it. An override
   that does not resolve stops the run rather than silently falling through to
   the default.
+- **The `auto` tier thresholds are unvalidated.** 400 lines, 8 files, 12
+  criteria, 150 lines, 3 files — defensible, and guesses. They live in one
+  table in one file and are cheap to retune, but they decide real spend from
+  the first run. The bound-cap report is the instrument for retuning the file
+  cap; the tier boundaries have no equivalent signal yet, and getting one may
+  be worth a follow-up.
+- **`auto` as the default changes the behaviour of a shipped flag.** A run
+  passing `--review` today gets an Opus reviewer; afterwards it gets Sonnet
+  unless the diff is heavy. That is the point of the change, and it is still a
+  behaviour change to an existing flag — it belongs in the `CHANGELOG` bullet
+  in those words, and `--review-model same` is the documented way back.
 - **Acceptance criteria are prose.** Task bodies write them as bullets, not as
   a structured, individually-addressable list. Per-criterion verdicts therefore
   depend on the reviewer parsing prose consistently. Tightening the task schema
