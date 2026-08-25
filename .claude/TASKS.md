@@ -332,7 +332,7 @@ Feature: shared-phase-engine
 
 ## 129. Migrate /task-add onto the task-engine
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-add.md, VERSION
 Preconditions: 125, 126, 128

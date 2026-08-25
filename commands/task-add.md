@@ -1,8 +1,9 @@
 ---
 name: task-add
-version: 2.0.0
+version: 2.1.0
 type: command
 description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit and push. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, appending a final documentation-update task when new tasks were drafted, and setting the feature [PLANNED]. Pass --short for trivial low-ambiguity tasks to skip the deep PHASE 1 investigation and write a minimal Goal-only body (mutually exclusive with feature=), --no-split to always write exactly one task, --no-commit to write the files but skip the commit (and push), or --no-push to commit without pushing.
+requires: skill:task-engine
 ---
 
 # /task-add
@@ -47,18 +48,12 @@ Never write to any file before the user confirms the draft.
 
 $ARGUMENTS
 
-ARGUMENT NOTE — before PHASE 1, scan $ARGUMENTS for the optional
-`--no-commit` flag. If present, set
-NO_COMMIT = true and strip it; the rest is the task description.
-`--commit` and `--no-commit` are mutually exclusive — if both appear, stop
-with: `--commit and --no-commit cannot be combined. Pick one.` When
-NO_COMMIT is false (the default), PHASE 5 auto-commits as before.
-`--no-commit` implies no push — nothing was committed to push.
-
-Also scan for the optional `--no-push` flag. If present, set NO_PUSH = true
-and strip it. NO_PUSH only matters when NO_COMMIT is false: it skips the
-pull-at-start / re-sync / push steps of PHASE 5's commit-and-push protocol
-(docs/authoring-guide.md), while still committing as always.
+ARGUMENT NOTE — the `--no-commit` and `--no-push` flags, and everything they
+gate, are
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`.
+Scan `$ARGUMENTS` for them before PHASE 1 and strip whichever appear; what
+is left, after the flags below are stripped too, is the task description.
+Here NO_COMMIT false — the default — means PHASE 5 auto-commits as before.
 
 Also scan for the optional `--no-split` flag (independent of `--no-commit`,
 coexists with it). If present, set NO_SPLIT = true and
@@ -123,60 +118,36 @@ Do this immediately after PHASE 0's setup check, before PHASE 1.
 
 PHASE 0 — SETUP CHECK (must pass before anything else)
 
-Before reading anything else, verify the backlog has been initialized.
-The required artifacts are:
-1. `.claude/TASKS.md` — the index file.
-2. `.claude/tasks/` — the per-task body directory.
+Backlog resolution follows
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`,
+whose `/task-add` note carries every way this command departs from it: the
+two-artifact probe this phase makes rather than the index-only check the
+other three make, the wording of its not-initialised stop, and that the only
+things it resolves from the index are the next task ID and — on a
+`feature=<slug>` run — the tasks that feature already generated.
 
-Probe with the Read tool / Glob. If either is missing, stop:
+Do not proceed to PHASE 1 until that probe passes. This rule has no
+exceptions.
 
-> The task backlog hasn't been initialized in this project. Run
-> `/task-setup` first — it creates `.claude/TASKS.md` and the
-> `.claude/tasks/` directory. Then re-run `/task-add`.
-
-Do not proceed to PHASE 1. This rule has no exceptions.
-
-If all artifacts exist, continue.
-
-Unless NO_COMMIT is true (nothing will be committed this run) or the
-project's CLAUDE.md carries a `## VCS` override (non-git, no push step
-exists), pull at start per docs/authoring-guide.md's commit-and-push
-protocol: run `git pull` on the current branch. A conflict stops the run
-here — report the conflict output and tell the user to resolve manually and
-re-run. Otherwise continue to PHASE 1.
+If all artifacts exist, pull at start per `commit.md`, then continue to
+PHASE 1.
 
 ---
 
 INDEX FILE FORMAT (`.claude/TASKS.md`)
 
-```
-# Tasks
+The index file's shape — the header, the `---` separators, the summary-block
+schema, which fields a block holds and which of them is optional, and why
+`Last task number` only ever increases — is
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`
+§ *Index file format*. Emit exactly that shape.
 
-Last task number: <N>
-
----
-
-## <N>. <Title>
-
-Status: [MISSING]
-Target: claude
-Files: <comma-separated list>
-Preconditions: <comma-separated task numbers, or "none">
-Feature: <slug>          ← optional; only on feature-derived tasks
-
----
-```
-
-The summary block holds: number, title, Status, Target, Files,
-Preconditions, and — only when the task was generated from a feature
-document — `Feature:`. Nothing else. Description and decisions live in the
-body.
-
-`Feature:` carries the slug of the feature the task came from. It is
-present ONLY on feature-derived tasks and is absent entirely on free-form
-ones — do not write `Feature: none`. Like `Status:` and `Preconditions:`,
-it is backlog metadata, so it lives in the summary block and never in the
-body file.
+This command is the writer of new summary blocks and the only thing that
+advances `Last task number`. Everything it writes into a block is fixed by
+the phases below: `Status:` from `status.md`, `Target:` from `targets.md`,
+`Files:` and `Preconditions:` from PHASE 1, and `Feature:` only on a
+`feature=<slug>` run. Description and decisions never go here — they live in
+the body.
 
 ---
 
@@ -215,47 +186,21 @@ edit targets, test files, documentation, collateral files. Write
 
 TARGET VALUES & MANUAL INTERVENTIONS
 
-`Target:` (line 2 of the body, mirrored in the summary block) takes one of:
+The three `Target:` values, what each means at implementation time, the rule
+that `claude+human` / `human` and a `## Manual interventions` section always
+go together, and that section's shape — the ⚠ warning line, the numbered
+checkpoints each anchored to a trigger point and ending in a verifiable
+outcome, and the worked Unity example — are
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/targets.md`.
+Its `/task-add` note carries this command's half: it is the **only** writer
+of `Target:`, `claude` is its default, and it sets `claude+human` or `human`
+only alongside that section — never one without the other.
 
-- `claude` — Claude implements end-to-end. **Default.**
-- `claude+human` — Claude implements, but the work includes steps only a
-  human can perform in an external tool (a game-engine editor such as
-  Unity, a cloud console, physical hardware). `/task-implement` pauses at
-  each declared checkpoint, walks the user through it, and verifies the
-  outcome before continuing.
-- `human` — the task is executed entirely by the user; `/task-implement`
-  runs it as a guided walkthrough.
-
-During PHASE 1/2, when the description or the codebase reveals that part
-of the work cannot be executed by an agent (editor-only operations, GUI
-wizards, hardware), set `Target: claude+human` (or `human` when nothing
-is agent-executable) and author a `## Manual interventions` section,
-placed between `## Decisions` and `## Hints`. Consistency is enforced
-both ways: targets `claude+human`/`human` REQUIRE the section, and the
-section requires one of those targets — never write one without the other.
-
-The section opens with a ⚠ warning line, then numbered checkpoints. Each
-checkpoint is anchored to a trigger point ("After X: …"), describes the
-manual step, and ends with an outcome the implementer can verify itself.
-Worked example (Unity):
-
-```
-## Manual interventions
-
-⚠ REQUIRES MANUAL INTERVENTION — pause implementation at these points and
-walk the user through them in the Unity editor; wait for their
-confirmation and verify the outcome before continuing:
-
-1. After the `.inputactions` file is written: select it in the Project
-   window, tick **Generate C# Class** in the importer, Apply. Verify the
-   generated `.cs` file appears and the project compiles.
-2. After `InputManager.cs` compiles: open
-   `Assets/_Project/Prefabs/Controllers.prefab`, add the `InputManager`
-   component to an appropriate GameObject, and assign any serialized
-   references (e.g. the actions asset if referenced via inspector).
-   Do NOT hand-edit the prefab YAML for this. Verify the prefab contains
-   the component with its references assigned.
-```
+Authoring that pair is this command's job, and it happens in PHASE 1/2, when
+the description or the codebase reveals that part of the work cannot be
+executed by an agent (editor-only operations, GUI wizards, hardware). The
+section goes between `## Decisions` and `## Hints`, as the body schema above
+shows.
 
 ---
 
@@ -284,23 +229,22 @@ resolves those details at execution time instead.
 
 STATUS TAGS (the only allowed values, recorded in TASKS.md)
 
-- `[MISSING]` — behavior not implemented at all. **Default for new tasks.**
-- `[STUBBED]` — placeholder/TODO exists but no real implementation.
-- `[INCORRECT]` — implemented but diverges from the spec.
-- `[PARTIAL]` — implemented in part; some sub-requirements still missing.
-- `[IN PROGRESS]` — agent is currently working on it. (Not set by this command.)
-- `[DONE]` — implementation has landed. (Not set by this command.)
-- `[SKIP]` — explicitly deferred or abandoned.
-- `[STALE]` — the feature document this task was generated from has since
-  been re-architected, so the task may no longer match the design. Set by
-  `/architect` when it re-architects the originating feature; resolved by
-  `/task-add feature=<slug>` reconciliation, which either updates the body
-  in place (flipping the task back to `[MISSING]`) or marks it `[SKIP]` and
-  drafts a replacement. **Never set by this command when creating a task.**
-  Not terminal — a stale task is live work awaiting reconciliation.
+The status vocabulary — the eight tags and what each means, which are
+terminal, and the legal transitions — is
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/status.md`. Its
+`/task-add` note carries what this command does with them.
 
-A new task is `[MISSING]` unless the user's description clearly indicates
-a different pre-implementation state.
+Here a status is only ever something written onto a task this command
+creates or reconciles — never a display filter, never a prune set, never a
+task selector. A new task is `[MISSING]` unless the user's description
+clearly indicates a different pre-implementation state. This command never
+sets `[IN PROGRESS]` or `[DONE]`; during reconciliation it may write
+`[SKIP]` on a superseded task, or flip a `[STALE]` one back to `[MISSING]`.
+
+What `[STALE]` means, who sets it and who clears it, is
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/stale.md`. This
+command is its clearer and never its writer: `/architect` sets the tag, and
+only a `feature=<slug>` reconciliation here resolves it.
 
 ---
 
@@ -561,31 +505,18 @@ not approval.
 RECONCILIATION (only when FEATURE is set and its `Tasks:` line is non-`none`)
 
 A re-planning run must not append blindly — that reliably produces
-overlapping work. Classify EVERY existing task read in PHASE 1b, and
-present the classification in PHASE 3 with a one-line reason each:
+overlapping work.
 
-| Situation | Action |
-| --- | --- |
-| Still valid under the new design | Left untouched. No edit at all. |
-| Needs minor change, and is `[STALE]` or `[MISSING]` | Body updated in place. A `[STALE]` task flips back to `[MISSING]`. |
-| Substantially invalidated | Marked `[SKIP]` with a reason, and a replacement task drafted. |
-| `[DONE]` | Never modified, skipped, or reopened. |
+The four-way classification itself, the standing preference for
+update-in-place over skip-and-replace, and the rule that `[DONE]` is
+untouchable are
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/stale.md`
+§ *Clearing it*. This command is the only feature that applies them.
 
-**Prefer update-in-place.** Whenever the task's goal survives the design
-change, rewriting the body is cheaper than skip-and-replace: nothing has
-been implemented yet, and the backlog stays free of dead `[SKIP]` entries
-that future readers have to interpret. Reserve skip-and-replace for tasks
-whose goal no longer survives at all.
-
-Which of the two applies is a judgment call about how much of the task
-remains — the criteria above are the criteria; there is no mechanical rule
-and no line count. State the reason for each call so the user can overrule
-it in the same approval.
-
-**`[DONE]` is untouchable.** Completed work stands regardless of what the
-design did afterwards. If the new design needs more from an area a `[DONE]`
-task covered, that is a NEW task, not a reopened one. Never flip a `[DONE]`
-task to `[SKIP]`, `[STALE]`, `[MISSING]`, or anything else.
+What is this command's own is when and how they are applied: classify EVERY
+existing task read in PHASE 1b — not a sample, not the `[STALE]` ones only —
+and present the classification in PHASE 3 with a one-line reason each, so the
+user can overrule any call inside the same approval.
 
 Render it like this:
 
@@ -734,80 +665,45 @@ Continue to PHASE 5.
 
 PHASE 5 — COMMIT AND PUSH
 
-This is the only phase that shells out: the pull-at-start / commit /
-re-sync / push sequence below. No other phase runs a shell command, and
-under `--no-commit` this phase runs none of it.
+Commit and push gating — the flags, pull-at-start, staging by explicit path,
+one commit per unit of work, the push protocol, and what to do when a commit
+or a push fails — is
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`. Its
+`/task-add` note carries this command's own specifics: the three
+commit-message forms — single task, split, feature — one commit each, exactly
+which paths PHASE 4 leaves to stage in each case, and that PHASE 5 is the only
+phase here that shells out.
 
-If NO_COMMIT is true, skip committing (and pushing) entirely: the files
-PHASE 4 wrote (one task's two files, or all of a split's files) are left
-uncommitted in the working tree. Report the task ID(s), all paths, and a
-reminder that nothing was committed — the user should commit when ready.
-Do not run any git command. Then stop.
-
-Otherwise (the default): PHASE 0 already pulled at start. Commit as below,
-then — unless NO_PUSH is true, or the project's CLAUDE.md carries a `## VCS`
-override (non-git) — re-sync (`git pull` again) and push per
-docs/authoring-guide.md's commit-and-push protocol. A pre-push conflict
-aborts the merge, leaves the local commit intact, and reports that the
-commit exists locally but needs a manual sync + push.
-
-1. Single-task case — run:
-   ```
-   git add -- .claude/TASKS.md .claude/tasks/<N>.md
-   git commit -m "Add task <N>: <title>"
-   ```
-
-   Split case — stage every file PHASE 4 wrote and make ONE commit
-   covering every task ID created:
-   ```
-   git add -- .claude/TASKS.md .claude/tasks/<N>.md .claude/tasks/<N+1>.md ...
-   git commit -m "Add tasks <N>-<N+k-1>: <short summary of the split>"
-   ```
-
-   Feature case — additionally stage `.claude/FEATURES.md`, plus the body
-   file of every existing task the reconciliation rewrote:
-   ```
-   git add -- .claude/TASKS.md .claude/FEATURES.md .claude/tasks/<N>.md ...
-   git commit -m "Plan feature <slug>: tasks <N>-<M>"
-   ```
-   The backlog change and the feature entry only make sense together, so
-   they belong in one commit. Explicit paths only, as always.
-
-2. On commit success, report the commit hash (`git rev-parse --short HEAD`).
-   Then, unless NO_PUSH is true or the non-git VCS exemption applies,
-   re-sync (`git pull`) and `git push` per the protocol.
-
-3. On commit failure: surface the exact output. Do NOT retry, amend, or use
-   `--no-verify`. Files remain staged but uncommitted; tell the user.
-
-4. On push failure (rejected, no upstream, no remote) or a pre-push
-   conflict: surface the exact output. Never retry, never force-push. The
-   commit exists locally; tell the user it needs a manual sync + push.
-
-PHASE 5 stages ONLY the files PHASE 4 wrote (the single task's two files,
-or every file from the split). Never use `git add -A`, `git add .`, or
-`git add -u`.
+No other phase runs a shell command, and under `--no-commit` this phase runs
+none of it: the files PHASE 4 wrote stay uncommitted, reported with their task
+ID(s) and paths. Once PHASE 4 completes the commit happens automatically —
+PHASE 3's **"Approve and write?"** was the run's only gate, and no further
+prompt is asked here.
 
 ---
 
 DO NOT:
 - Write to any file before PHASE 4.
-- Renumber existing tasks.
+- Renumber existing tasks — `resolution.md` § *Index file format* is why IDs
+  are stable and `Last task number` only ever increases.
 - Update any other task's `Preconditions:` line.
-- Auto-create `.claude/TASKS.md` or `.claude/tasks/` if missing.
+- Auto-create `.claude/TASKS.md` or `.claude/tasks/` if missing —
+  `resolution.md` § *When the backlog is not initialised* is the rule, and
+  PHASE 0's stop is the whole response.
 - Change the status of any existing task.
 - Implement the task. This command only creates the entry.
-- Use `git add -A`, `git add .`, or `git add -u` in PHASE 5.
-- Use `--amend`, `--no-verify`, `--no-gpg-sign`, or any hook-skipping flag.
+- Use `git add -A`, `git add .`, or `git add -u` in PHASE 5, or any of the
+  hook-skipping and history-rewriting flags — `commit.md` § *Staging* and
+  § *One commit per unit of work* forbid both.
 - Force-push, retry a failed push, branch, tag, or otherwise touch
-  shared/visible git state beyond the commit-and-push protocol.
+  shared/visible git state beyond `commit.md` § *The push protocol*.
 - Propose a split for work that's fine as one task — PHASE 1.5 stays quiet
   unless a split genuinely produces better units.
 - Set `Target: claude+human` or `human` without a `## Manual interventions`
-  section, or write that section under any other target — the two always
-  go together.
-- Bundle multiple commits for a split — PHASE 5 makes exactly one commit
-  covering all parts.
+  section, or write that section under any other target — `targets.md` makes
+  the two go together.
+- Bundle multiple commits for a split — `commit.md`'s `/task-add` note is one
+  commit covering every task ID created.
 - Run PHASE 1.5 at all when `--no-split` or `--short` is passed.
 - Combine `--short` with `feature=<slug>` — stop with an
   error instead (see the ARGUMENT NOTE mutual-exclusion rule).
@@ -819,10 +715,11 @@ DO NOT:
   They are read-only here; `/architect` owns them.
 - Write `Doc:` or `Source:` in a `.claude/FEATURES.md` entry. This command
   writes `Tasks:` and `Status:` only.
-- Modify, skip, reopen, or re-status a `[DONE]` task during reconciliation.
-  Follow-up work is a new task.
+- Modify, skip, reopen, or re-status a `[DONE]` task during reconciliation —
+  `stale.md` § *Clearing it* is why follow-up work is a new task instead.
 - Add a `Feature:` line to a task that did not come from that feature, or
-  write `Feature: none` on a free-form task — its absence is the signal.
+  write `Feature: none` on a free-form task — `resolution.md` § *Index file
+  format* is why its absence is the signal.
 - Change any behavior of the free-form path when `feature=` is absent. The
   feature mode is additive; a plain `/task-add <description>` run must be
   indistinguishable from before.

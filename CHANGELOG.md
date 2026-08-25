@@ -2,6 +2,20 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.8.3 — 2026-08-25
+
+- `/task-add` (2.1.0) now consumes `task-engine`, the largest migration in the
+  suite: its `PHASE 0` setup check and `INDEX FILE FORMAT` are references to
+  `skills/task-engine/references/resolution.md`, its `STATUS TAGS` block to
+  `status.md`, `TARGET VALUES & MANUAL INTERVENTIONS` to `targets.md`, the
+  `[STALE]` and reconciliation-classification rules to `stale.md`, and
+  `PHASE 5` to `commit.md`. It declares `requires: skill:task-engine`, so
+  `chosko-llm add command:task-add` installs the engine first.
+- Behaviour is unchanged — same usage header and examples, same flags and
+  mutual exclusions, same eight-phase flow and its single `Approve and write?`
+  gate, same drafts, same written artifacts, same commit message forms, and the
+  same two-field `.claude/FEATURES.md` write.
+
 ## 1.8.2 — 2026-08-25
 
 - `/task-clean` (0.8.0) now consumes `task-engine` too, and is the first
