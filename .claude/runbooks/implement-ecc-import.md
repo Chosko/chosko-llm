@@ -319,7 +319,7 @@ Context:
 ```
 Done: 2026-08-25 — commit 8ff9265 (pushed). commands/task-add.md 2.1.0→2.2.0 (731→821 lines): ownership notice removed, new top-level OWNERSHIP PRE-AUTHORISATION section (owner table grown to seven documents incl. product-roadmap.md → /product-roadmap and .claude/PLAN.md → /production-plan; one question per owned file rendered before Approve-and-write; grant = acceptance-criteria marker + dated point-scoped Decisions bullet; silence is not a grant). product-workflow.md, task-workflow.md, context features.md updated. VERSION 1.8.5→1.9.0 (body predicted from 1.0.0). Premises held; task carries no Feature: line.
 
-## [ ] 27. Add the /runbook-run skill with its two references (task 140)
+## [x] 27. Add the /runbook-run skill with its two references (task 140)
 
 Depends on: 26
 
@@ -329,12 +329,14 @@ Context:
 ```prompt
 /task-implement 140
 ```
+Done: 2026-08-25 — commit a218454 (pushed). skills/runbook-run/SKILL.md (0.1.0, no requires:) with the eight-step loop, six-part prompt assembly, three result cases, relay block, fact propagation, [RUNNING]+[~] resume signal, nested-runbook refusal, depth budget, five arguments, reads-three/writes-two contract; references/runbook-schema.md (store, body schema, markers + Done: line, four statuses, index block, no [SKIP]/no Produces:) and references/subagent-contract.md (pasteable OPERATING RULES with <RUNBOOK>/<N> placeholders + maintainer-only rationale). VERSION 1.9.0→1.10.0. Decisions: the commit-and-push protocol is named without a docs/ path (four steps inline) — deliberate divergence from skills/task-implement's docs/ citation; commit trailers now match the head style (task 139's commit carried Co-Authored-By/Claude-Session; the earlier "trailer-free" note is stale).
 
 ## [ ] 28. Add the /runbook-create command (task 141)
 
 Depends on: 27
 
-Context: none
+Context:
+- 2026-08-25 (from step 27): VERSION is now 1.10.0. skills/runbook-run/ exists (0.1.0): SKILL.md plus references/runbook-schema.md (the authoritative body + index schema; cite it, never copy it) and references/subagent-contract.md. Declare `requires: skill:runbook-run` and cite ${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md. Name the commit-and-push protocol without any docs/ path (four steps inline: pull at start, commit, pre-push re-sync, push) — the criterion that no docs/ path appears in shipped bodies wins. `requires:` is live (task 125). This runbook and .claude/RUNBOOKS.md are live examples of the schema — read only. Every VERSION bump writes its CHANGELOG.md section and runs scripts/check-changelog.sh; the body's predicted VERSION numbers are stale. Verify with CHOSKO_LLM_HOME=E:/projects/chosko-llm ./bin/chosko-llm ls --available. The working tree will show .claude/runbooks/implement-ecc-import.md modified (orchestrator marker) — proceed past the dirty-tree gate without staging it.
 
 ```prompt
 /task-implement 141
