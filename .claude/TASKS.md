@@ -322,7 +322,7 @@ Feature: shared-phase-engine
 
 ## 128. Migrate /task-clean onto the task-engine
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-clean.md, VERSION
 Preconditions: 125, 126, 127

@@ -2,6 +2,20 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.8.2 — 2026-08-25
+
+- `/task-clean` (0.8.0) now consumes `task-engine` too, and is the first
+  *writing* feature to do so: its `--no-commit` / `--no-push` gating and push
+  protocol are a reference to `skills/task-engine/references/commit.md`, its
+  backlog parsing a reference to `resolution.md`, its prune-set vocabulary to
+  `status.md`, and its `[STALE]` warning to `stale.md`. It declares
+  `requires: skill:task-engine`, so `chosko-llm add command:task-clean`
+  installs the engine first.
+- Behaviour is unchanged — same usage lines and examples, same plan-and-confirm
+  gate and plan layout, same commit message, same `--no-commit` / `--no-push`
+  semantics, and the same `.claude/FEATURES.md` `Tasks:` pruning that leaves
+  feature statuses alone.
+
 ## 1.8.1 — 2026-08-25
 
 - `/task-list` (0.6.0) is the first feature to consume `task-engine`: its

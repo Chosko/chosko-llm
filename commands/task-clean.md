@@ -1,8 +1,9 @@
 ---
 name: task-clean
-version: 0.7.0
+version: 0.8.0
 type: command
 description: Prune tasks in a terminal status — remove summary blocks from TASKS.md and delete their per-task body files. Terminal means [DONE] and [SKIP] only; [STALE] is live work awaiting reconciliation and is never pruned by default. Also drops the pruned IDs from any .claude/FEATURES.md Tasks: line (leaving feature statuses alone), so /architect's iterate guard never reads a dead ID. Task IDs are stable; survivors are NEVER renumbered. Automatically commits and pushes the removals; pass --no-commit to leave them uncommitted, or --no-push to commit without pushing.
+requires: skill:task-engine
 ---
 
 # /task-clean
@@ -32,75 +33,56 @@ renumber.
 
 $ARGUMENTS
 
-ARGUMENT NOTE — before PHASE 1, scan $ARGUMENTS for the optional
-`--no-commit` flag. If present, set NO_COMMIT = true and strip it; the rest
-is the status set (or empty for the default). `--commit` and `--no-commit`
-are mutually exclusive — if both appear, stop with:
-`--commit and --no-commit cannot be combined. Pick one.` When NO_COMMIT is
-false (the default), PHASE 3 auto-commits and pushes as before. NO_COMMIT
-true implies no push — nothing was committed to push.
-
-Also scan for the optional `--no-push` flag; if present, set NO_PUSH = true
-and strip it. NO_PUSH only matters when NO_COMMIT is false: it skips the
-pull-at-start / re-sync / push steps of the commit-and-push protocol
-(docs/authoring-guide.md) while still committing as always.
+ARGUMENT NOTE — the `--no-commit` and `--no-push` flags, and everything they
+gate, are
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`.
+Scan `$ARGUMENTS` for them before PHASE 1 and strip whichever appear; what
+is left is this command's own argument — a status set, or empty for the
+default.
 
 ---
 
 LOCATING THE BACKLOG
 
-The backlog lives at `.claude/TASKS.md` with per-task body files at
-`.claude/tasks/<N>.md`. If `.claude/TASKS.md` does not exist, tell the
-user "No backlog file found — run /task-setup to initialize it." and
-stop. Do NOT create anything.
+Backlog resolution follows
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`,
+whose `/task-clean` note carries every way this command departs from it: the
+wording of the not-initialised stop, the fields it parses out of each summary
+block, and the single reason it opens a body file — probing that the file
+exists before planning its deletion.
 
-Unless NO_COMMIT is true or the project's CLAUDE.md carries a `## VCS`
-override (non-git), pull at start per the commit-and-push protocol: run
-`git pull` on the current branch before PHASE 1 begins. A conflict stops
-the run here — report the conflict output and tell the user to resolve
-manually and re-run.
+Pull at start, before PHASE 1 begins, per `commit.md`.
 
 ---
 
 WHICH STATUSES COUNT AS "TERMINAL"
 
-Default (when `$ARGUMENTS` is empty): `[DONE]` and `[SKIP]`. These are
-the two statuses that indicate the task no longer needs work. That set is
-exhaustive — no other status is terminal, and in particular `[STALE]` is
-NOT. Do not add to it.
+The status vocabulary, which of the tags are terminal, and how a status
+argument is accepted are
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/status.md`. Its
+`/task-clean` note carries what this command does with them.
 
-If `$ARGUMENTS` lists one or more status tags (case-insensitive,
-brackets optional), use that explicit set instead. Accept any of the
-canonical statuses (`[MISSING]`, `[STUBBED]`, `[INCORRECT]`,
-`[PARTIAL]`, `[IN PROGRESS]`, `[DONE]`, `[SKIP]`, `[STALE]`) but warn if
-the user is asking to prune a non-terminal status:
+Here a status is a prune set — never a display filter, never a task selector
+— and this command writes no status anywhere: it removes whole summary
+blocks. With no argument the prune set is the terminal pair, `[DONE]` and
+`[SKIP]`. An explicit set replaces that default rather than adding to it; any
+canonical status may be named, and when a named one is non-terminal, carry
+`status.md`'s warning for it into the plan.
 
-- `[IN PROGRESS]` — currently being worked on. Pruning is almost
-  certainly a mistake. Confirm twice, the second time with the specific
-  tasks listed.
-- `[MISSING]`, `[STUBBED]`, `[INCORRECT]`, `[PARTIAL]` — these mean work
-  still remains. Pruning them throws away the spec. If the user really
-  wants to discard a task, this is the right command for it, but flag
-  the unusual choice in the plan.
-- `[STALE]` — the task's originating feature was re-architected, so its
-  spec may no longer match the design. This is live work awaiting
-  reconciliation, not abandoned work: the normal resolution is
-  `/task-add feature=<slug>`, which updates or replaces the task. Never
-  prune it by default. If the user names `[STALE]` explicitly, say all
-  of that in the plan and confirm before applying.
-
-If the user passes a tag that isn't one of the canonical statuses, list
-the valid options and stop.
+`[STALE]` is never in the default set. What it means, and why it is live work
+awaiting reconciliation rather than abandoned work, are
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/stale.md`; when
+the user names it explicitly, say all of that in the plan and confirm before
+applying.
 
 ---
 
 PHASE 1 — REPORT (no file writes, no deletions)
 
-1. Use the Read tool to open `.claude/TASKS.md`. Parse:
-   - The `Last task number: N` header value (informational — it does
-     not change).
-   - Each summary block: number, title, status, `Files:`,
-     `Preconditions:`.
+1. Read `.claude/TASKS.md` and parse it as `resolution.md` § *Parsing the
+   index* describes. `/task-clean` uses each summary block's number, title,
+   status, `Files:` and `Preconditions:`, and reads the `Last task number: N`
+   header value for information only — it does not change.
 
 2. Identify the tasks whose status matches the prune set. If there are
    none, tell the user "No tasks to prune." and stop.
@@ -177,9 +159,8 @@ PHASE 2 — APPLY (only after explicit approval)
    (skip files the plan flagged as already missing). On Windows the
    tool harness is bash-aware via the Bash tool.
 
-4. Do NOT touch the `Last task number:` line. It tracks the highest ID
-   ever assigned, not the highest currently present, and only ever
-   increases.
+4. Do NOT touch the `Last task number:` line — `resolution.md` § *Index file
+   format* is why it only ever increases.
 
 4b. If `.claude/FEATURES.md` exists, use the Edit tool to drop each pruned
    ID from every `Tasks:` line that references it, per the plan. A line left
@@ -216,59 +197,19 @@ After the report, continue to PHASE 3.
 
 PHASE 3 — COMMIT AND PUSH
 
-Apart from deleting the per-task body files in PHASE 2 (`rm
-.claude/tasks/<N>.md`), this is the only phase that shells out: the
-commit-and-push sequence below (pull-at-start already ran before PHASE 1).
-Under `--no-commit` the body-file deletion is the command's only shell use.
+Commit and push gating — the flags, pull-at-start, staging, one commit per
+prune, the push protocol, and what to do when a commit or a push fails — is
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`. Its
+`/task-clean` note carries this command's own specifics: the commit message
+form, the exact path list PHASE 2 leaves to stage and when
+`.claude/FEATURES.md` joins it, and that PHASE 3 is its only shell use apart
+from the `rm` in PHASE 2. Once PHASE 2 completes successfully the commit
+happens automatically — PHASE 1's **"Apply?"** was the run's only gate, and
+no further prompt is asked here.
 
-If NO_COMMIT is true, skip committing (and pushing) entirely: the
-`.claude/TASKS.md` edits, the `.claude/FEATURES.md` edits, and the
-body-file deletions from PHASE 2 are left uncommitted in the working tree.
-Report what was changed (blocks removed, body files deleted,
-`Preconditions:` lines rewritten, feature `Tasks:` lines rewritten) and
-remind the user that nothing was committed — they should commit when
-ready. Do not run any git command. Then stop.
-
-Otherwise (the default), after PHASE 2 completes successfully, commit the
-changes automatically — no further prompt is needed. Then, unless NO_PUSH
-is true or the non-git VCS exemption applies, re-sync (`git pull`) and push
-per docs/authoring-guide.md's commit-and-push protocol.
-
-1. Run exactly:
-
-   ```
-   git add -- .claude/TASKS.md .claude/tasks/<N>.md .claude/tasks/<M>.md …
-   git commit -m "task-clean: remove tasks <N>[, <M>, …]"
-   ```
-
-   Stage `.claude/TASKS.md` (modified) plus each deleted body file path
-   (body files pruned in PHASE 2). Staging a deleted file via
-   `git add -- path` works identically to staging a modified one — git
-   records the deletion when the file no longer exists on disk. When PHASE
-   2 step 4b rewrote any feature `Tasks:` line, add `.claude/FEATURES.md` to
-   the same `git add --` path list; the two changes only make sense together.
-   When it changed nothing (or the file does not exist), leave it out.
-
-   PHASE 3 stages ONLY the files PHASE 2 touched. It must not run
-   `git add -A`, `git add .`, `git add -u`, or anything that could pull
-   in unrelated dirty files from the working tree.
-
-   Commit message format: `task-clean: remove tasks <N>[, <M>, …]`
-   where `<N>`, `<M>`, … are the pruned task IDs in ascending order.
-
-2. On commit success, report the resulting commit hash to the user:
-   `git rev-parse --short HEAD`. Then, unless NO_PUSH is true or the
-   non-git VCS exemption applies, re-sync and push per the protocol.
-
-3. On commit failure (e.g. pre-commit hook rejects the commit): surface the
-   exact failure output to the user. Do NOT retry, do NOT amend, do
-   NOT use `--no-verify` or any hook-skipping flag. The files remain
-   in whatever state git left them (typically staged but uncommitted);
-   tell the user that and let them decide.
-
-4. On push failure (rejected, no upstream, no remote) or a pre-push
-   conflict: surface the exact output. Never retry, never force-push. The
-   commit exists locally; tell the user it needs a manual sync + push.
+Under `--no-commit` that `rm` is the command's only shell use: report what
+was changed — blocks removed, body files deleted, `Preconditions:` lines
+rewritten, feature `Tasks:` lines rewritten — and stop.
 
 DO NOT:
 - Write to any file during PHASE 1.
@@ -278,18 +219,10 @@ DO NOT:
 - Decrement the `Last task number:` counter, even if you just removed
   the task with the highest ID.
 - Touch tasks whose status is not in the prune set.
-- Add `[STALE]` to the default prune set, or treat it as terminal
-  anywhere. Terminal is `[DONE]` and `[SKIP]`, and only those two.
+- Add `[STALE]` to the default prune set.
 - Change task content other than `Preconditions:` lines on survivors.
 - Change a feature's `Status:` in `.claude/FEATURES.md`, or any field other
   than `Tasks:`. A feature whose tasks were all pruned stays `[PLANNED]`;
   `[PLANNED]` → `[NEW]` is illegal. `Doc:` and `Source:` belong to
   `/architect`.
 - Error out when `.claude/FEATURES.md` is absent — skip that step silently.
-- Use `git add -A`, `git add .`, or `git add -u` in PHASE 3 — only the
-  files touched by PHASE 2 may be staged.
-- Use `--amend`, `--no-verify`, `--no-gpg-sign`, or any other
-  hook-skipping or commit-rewriting flag. If a pre-commit hook fails,
-  surface it and let the user fix it.
-- Force-push, retry a failed push, branch, tag, or otherwise touch
-  shared/visible git state beyond the commit-and-push protocol.
