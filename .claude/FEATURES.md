@@ -40,7 +40,7 @@ Tasks: 113, 114, 115
 
 ## session-continuity — Per-project session handoff, linked to the work it belongs to
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/session-continuity.md
 Source: prompt
 Tasks: 132, 133, 134
