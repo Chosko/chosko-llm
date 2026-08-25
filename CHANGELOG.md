@@ -2,6 +2,18 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.8.1 — 2026-08-25
+
+- `/task-list` (0.6.0) is the first feature to consume `task-engine`: its
+  backlog-resolution and status-vocabulary rules are now references to
+  `skills/task-engine/references/resolution.md` and `status.md` instead of its
+  own copies, and it declares `requires: skill:task-engine`, so
+  `chosko-llm add command:task-list` installs the engine first.
+- Its output is unchanged — same usage lines, same status filter, same flat and
+  milestone-grouped rendering, and it still opens no file under `.claude/tasks/`.
+- Dropped a dead mention of a `local` task target from its marker rules; that
+  value was removed from the system when the dual-LLM lane was deleted.
+
 ## 1.8.0 — 2026-08-25
 
 - New shipped skill `task-engine`: a reference library holding one authority per

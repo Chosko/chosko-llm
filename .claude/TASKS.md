@@ -312,7 +312,7 @@ Feature: shared-phase-engine
 
 ## 127. Migrate /task-list onto the task-engine
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-list.md, VERSION
 Preconditions: 125, 126
