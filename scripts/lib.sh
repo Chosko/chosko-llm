@@ -738,9 +738,44 @@ apply_replaces() {
 # with it. It maps only the managed clone, which no command mutates while it
 # runs. The installed side — which add / rm / update do mutate — is deliberately
 # NOT cached; artifact_is_installed still asks the filesystem every time.
+# macOS ships bash 3.2, which has no associative arrays, so each map is a pair
+# of parallel indexed arrays probed by the two _replaces_*_var lookups below —
+# still pure-bash, still zero processes per probe.
 _REPLACES_INDEX_BUILT=0
-declare -A _REPLACES_BY_FILE=()    # clone source path -> its `replaces:` value
-declare -A _REPLACES_CLAIMED_BY=() # "<old-kind>:<old-name>" -> "<kind>:<name>"
+_REPLACES_FILES=()  # clone source paths...
+_REPLACES_SPECS=()  # ...and each one's `replaces:` value, same index
+_REPLACES_OLDS=()   # "<old-kind>:<old-name>" keys...
+_REPLACES_OWNERS=() # ...and the "<kind>:<name>" first claiming each, same index
+
+# _replaces_spec_var <outvar> <path>
+# <path>'s `replaces:` value from the index; empty <outvar> and return 1 when
+# the index never saw the path.
+_replaces_spec_var() {
+  local i
+  printf -v "$1" '%s' ''
+  for ((i = 0; i < ${#_REPLACES_FILES[@]}; i++)); do
+    if [ "${_REPLACES_FILES[i]}" = "$2" ]; then
+      printf -v "$1" '%s' "${_REPLACES_SPECS[i]}"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# _replaces_claimant_var <outvar> <old-kind>:<old-name>
+# The "<kind>:<name>" claiming the given key; empty <outvar> and return 1 when
+# nothing claims it.
+_replaces_claimant_var() {
+  local i
+  printf -v "$1" '%s' ''
+  for ((i = 0; i < ${#_REPLACES_OLDS[@]}; i++)); do
+    if [ "${_REPLACES_OLDS[i]}" = "$2" ]; then
+      printf -v "$1" '%s' "${_REPLACES_OWNERS[i]}"
+      return 0
+    fi
+  done
+  return 1
+}
 
 _build_replaces_index() {
   [ "$_REPLACES_INDEX_BUILT" -eq 1 ] && return 0
@@ -775,18 +810,21 @@ _build_replaces_index() {
   done
   [ ${#files[@]} -gt 0 ] || return 0
 
-  local line path spec i
+  local line path spec i claimant
   while IFS= read -r line; do
     path="${line%%$'\t'*}"
     spec="${line#*$'\t'}"
     [ "$spec" = "$line" ] && spec=""
-    _REPLACES_BY_FILE["$path"]="$spec"
+    _REPLACES_FILES+=("$path")
+    _REPLACES_SPECS+=("$spec")
   done < <(read_frontmatter_table replaces "${files[@]}")
 
   for ((i = 0; i < ${#files[@]}; i++)); do
-    spec="${_REPLACES_BY_FILE[${files[i]}]:-}"
+    _replaces_spec_var spec "${files[i]}" || continue
     [ -n "$spec" ] || continue
-    [ -n "${_REPLACES_CLAIMED_BY[$spec]:-}" ] || _REPLACES_CLAIMED_BY["$spec"]="${owners[i]}"
+    _replaces_claimant_var claimant "$spec" && continue
+    _REPLACES_OLDS+=("$spec")
+    _REPLACES_OWNERS+=("${owners[i]}")
   done
 }
 
@@ -796,8 +834,8 @@ _build_replaces_index() {
 # nothing and returns 1 when no feature claims it.
 find_replacement() {
   _build_replaces_index
-  local hit="${_REPLACES_CLAIMED_BY["$1:$2"]:-}"
-  [ -n "$hit" ] || return 1
+  local hit
+  _replaces_claimant_var hit "$1:$2" || return 1
   printf '%s\n%s\n' "${hit%%:*}" "${hit#*:}"
 }
 
@@ -813,7 +851,7 @@ check_migration_pending() {
   local kind="$1" name="$2" src spec old_kind old_name
   feature_path_var src "$CHOSKO_LLM_HOME" "$kind" "$name" || return 1
   _build_replaces_index
-  spec="${_REPLACES_BY_FILE[$src]:-}"
+  _replaces_spec_var spec "$src" || return 1
   [ -n "$spec" ] || return 1
   split_kind_spec old_kind old_name "$spec" || return 1
   [ -n "$old_kind" ] && [ -n "$old_name" ] || return 1

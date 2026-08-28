@@ -117,7 +117,8 @@ resolve_show_feature() {
 if ! resolved_out="$(resolve_show_feature "$feature")"; then
   exit 1
 fi
-mapfile -t resolved <<< "$resolved_out"
+resolved=()
+while IFS= read -r line; do resolved+=("$line"); done <<< "$resolved_out"
 kind="${resolved[0]}"
 name="${resolved[1]}"
 

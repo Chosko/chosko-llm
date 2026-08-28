@@ -301,7 +301,8 @@ fi
 update_one_spec() {
   local spec="$1"
   (
-    mapfile -t resolved < <(resolve_feature "$spec")
+    resolved=()
+    while IFS= read -r line; do resolved+=("$line"); done < <(resolve_feature "$spec")
     kind="${resolved[0]:-}"
     name="${resolved[1]:-}"
     [ -n "$kind" ] && [ -n "$name" ] || exit 1
