@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.23.3 — 2026-08-28
+
+- **macOS** the CLI now runs on the stock bash 3.2: associative arrays and `mapfile` — which broke `update`, `add`, `show` and `ls` with `declare: -A: invalid option` — are replaced with portable equivalents, and the em dash `ls` prints for an empty cell no longer trips bash 3.2's variable parsing.
+
 ## 1.23.2 — 2026-08-25
 
 - **chosko-llm changelog** the readout is repainted in the palette `ls` and `show` already use: versions green, subjects cyan, `code` spans yellow, the bullet marker dim.

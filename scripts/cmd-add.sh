@@ -181,7 +181,7 @@ fi
 # requirement gets the same scope, the same `scope_supports_kind` rule and the
 # same `scope_violation_message` wording as anything else installed here.
 install_requires() {
-  local kind="$1" name="$2" src specs spec parsed dep_kind dep_name
+  local kind="$1" name="$2" src specs spec parsed dep_kind dep_name part
   src="$(src_path_for_kind "$kind" "$name")" || return 0
   # requires_specs `die`s on a malformed entry; command substitution keeps that
   # exit status visible so the dependent aborts too.
@@ -189,7 +189,8 @@ install_requires() {
   [ -n "$specs" ] || return 0
   while IFS= read -r spec; do
     [ -n "$spec" ] || continue
-    mapfile -t parsed < <(parse_replaces_spec "$spec")
+    parsed=()
+    while IFS= read -r part; do parsed+=("$part"); done < <(parse_replaces_spec "$spec")
     dep_kind="${parsed[0]:-}"
     dep_name="${parsed[1]:-}"
     if artifact_is_installed "$dep_kind" "$dep_name"; then
@@ -209,7 +210,8 @@ install_requires() {
 add_one() {
   local spec="$1"
   (
-    mapfile -t resolved < <(resolve_feature "$spec")
+    resolved=()
+    while IFS= read -r line; do resolved+=("$line"); done < <(resolve_feature "$spec")
     kind="${resolved[0]:-}"
     name="${resolved[1]:-}"
     [ -n "$kind" ] && [ -n "$name" ] || exit 1
