@@ -155,7 +155,7 @@ Preconditions: none
 
 ## 166. Add `/runbook-describe`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/runbook-describe.md, skills/runbook-run/references/runbook-schema.md, commands/runbook-create.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: 165

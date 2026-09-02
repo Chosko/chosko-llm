@@ -1,8 +1,8 @@
 ---
 name: runbook-create
-version: 0.2.0
+version: 0.3.0
 type: command
-description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md, plus its .claude/RUNBOOKS.md index block — or append steps to one that already exists, including one a run is in the middle of. Assigns each new runbook the next id from the index's Last runbook number: counter, which every other runbook- command then accepts in place of the name. Two axes: where the steps go (a new runbook, --append <name|id>, --append with no name for the runbook this session is running, or no arguments at all, which asks) and where the material comes from (the current conversation's most recent follow-up list, the default; or a free-form description gathered through one batched interview). Enforces nine prompt-quality rules against every step before writing — self-contained, names the document to read first, carries every decision that exists nowhere on disk and nothing that already does, states its sequencing and what must not be re-proposed, uses real slash commands, references no path missing at run time, produces one deliverable, and never invokes /runbook-run — fixing failures and naming each fix in the confirmation report. The gate shows the proposed shape only, never the full prompts. Authoring command — leaves the runbook uncommitted for one review pass by default; pass --commit to commit and push it, or --commit --no-push to commit without pushing.
+description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md, plus its .claude/RUNBOOKS.md index block — or append steps to one that already exists, including one a run is in the middle of. Assigns each new runbook the next id from the index's Last runbook number: counter, which every other runbook- command then accepts in place of the name. Authors each step's optional Needs: line (agent / agent+human / human, absent meaning agent) so a reader can see before starting which steps need a person, and calls those steps out at the confirmation gate. Two axes: where the steps go (a new runbook, --append <name|id>, --append with no name for the runbook this session is running, or no arguments at all, which asks) and where the material comes from (the current conversation's most recent follow-up list, the default; or a free-form description gathered through one batched interview). Enforces nine prompt-quality rules against every step before writing — self-contained, names the document to read first, carries every decision that exists nowhere on disk and nothing that already does, states its sequencing and what must not be re-proposed, uses real slash commands, references no path missing at run time, produces one deliverable, and never invokes /runbook-run — fixing failures and naming each fix in the confirmation report. The gate shows the proposed shape only, never the full prompts. Authoring command — leaves the runbook uncommitted for one review pass by default; pass --commit to commit and push it, or --commit --no-push to commit without pushing.
 requires: skill:runbook-run
 ---
 
@@ -84,6 +84,7 @@ which is what makes appending safe while a run is in progress:
 | the header, `Sequencing:`, `Companion:` | yes | — |
 | a step's title and its ```prompt``` block | yes | — |
 | `Depends on:` | yes | — |
+| `Needs:` | yes | — |
 | `## Do not re-propose` | yes | — |
 | the step marker | `[ ]` only | `[~]`, `[x]`, `[!]` |
 | `Context:` | `none` only, at authoring time | a run's dated correction bullets |
@@ -185,7 +186,12 @@ Then harvest, from the conversation and not from the files:
 - every decision that was settled here and written to no file,
 - every option that was assessed and rejected, with its reason,
 - every probe whose result is now a fact,
-- the ordering constraints, and **why** each one exists.
+- the ordering constraints, and **why** each one exists,
+- **which actions in the list need a person** rather than an agent. A
+  conversation that produced the follow-ups usually said so in passing ("then
+  you flip it in the editor"); that is a step's `Needs:` line. Where the
+  conversation is silent, the step is `agent` — do not interrogate the user
+  for it in this mode, which exists precisely to avoid an interview.
 
 The rejected options are the `## Do not re-propose` section. The
 step-specific ones go in the step's own prompt instead.
@@ -209,9 +215,15 @@ so the whole interview can be settled in a sentence:
    material and the optional `## Do not re-propose` section. It is the
    question this mode exists to ask, because unlike conversation mode there is
    nothing else to harvest it from.
+6. **Does any step need a person?** Which of them cannot be executed by an
+   agent alone — an editor-only operation, a GUI wizard, hardware — and whether
+   the step is partly manual or wholly so. The answer is each step's `Needs:`
+   line per `runbook-schema.md` § *A step*; recommend `agent` for every step,
+   which is the common case, so a runbook of ordinary agent work is confirmed
+   with one word.
 
-A sixth question — **the model** — is asked **only when the default `opus` is
-not wanted**. Do not ask it routinely.
+A seventh question — **the model** — is asked **only when the default `opus`
+is not wanted**. Do not ask it routinely.
 
 ---
 
@@ -308,7 +320,7 @@ Companion:  <path, or none>
 
 Steps:
   1. <title>                      depends on: none
-  2. <title>                      depends on: 1
+  2. <title>                      depends on: 1     needs: agent+human
   3. <title>                      depends on: 1
 
 Fixes applied:
@@ -322,6 +334,12 @@ Do not re-propose: <n> items
 ```
 
 End with a single explicit prompt: **"Approve and write?"**
+
+A step whose `Needs:` is `agent` prints no `needs:` annotation — the default
+is silent. A step that is **not** `agent` always prints one, and the plan says
+in one line beneath the list that the run will need someone present at those
+steps. That is the one thing about the shape a user cannot infer from the
+titles, and it decides whether they can start the run and walk away.
 
 **Only the shape.** Full prompts are deliberately not shown back: they are a
 wall of text that gets skimmed, and they are in the file a moment later,

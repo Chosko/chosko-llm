@@ -2,6 +2,12 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.25.0 — 2026-09-02
+
+- **/runbook-describe** a new command printing one runbook in depth — header, status, and every step with its marker, dependencies, `Done:` line and whether it needs a person.
+- **runbook steps** gain an optional `Needs:` line (`agent` / `agent+human` / `human`, absent meaning `agent`), authored by `/runbook-create` and called out at its confirmation gate.
+- **/runbook-describe** prints an authored `Needs:` as written, and for a step lacking one may infer from the prompt block — always labelled `(inferred)`, never written back.
+
 ## 1.24.0 — 2026-09-02
 
 - **runbooks** every runbook now carries a numeric id beside its name; `.claude/RUNBOOKS.md` gains a `Last runbook number:` counter, exactly as the task backlog has.

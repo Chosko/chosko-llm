@@ -905,8 +905,9 @@ Currently shipped:
   **Skill not command** because `cmd-add` copies a skill folder with `cp -R`
   while a command is one file carrying nothing: it hosts `references/
   runbook-schema.md` (store, body schema, step markers `[ ]`/`[~]`/`[x]`/`[!]`,
-  the four statuses `[PENDING]`/`[RUNNING]`/`[FAILED]`/`[DONE]`, index block +
-  its `Last runbook number:` counter and per-runbook **id**)
+  the four statuses `[PENDING]`/`[RUNNING]`/`[FAILED]`/`[DONE]`, the optional
+  per-step `Needs:` field, index block + its `Last runbook number:` counter and
+  per-runbook **id**)
   and `references/subagent-contract.md` (the OPERATING RULES block pasted
   verbatim into every spawned prompt), both cited by the other three by
   `${CLAUDE_HOME:-$HOME/.claude}/...` path. No `requires:` — it IS the
@@ -953,8 +954,12 @@ Currently shipped:
   `requires: skill:runbook-run` — it cites that skill's `runbook-schema.md` for
   the body/index shape rather than carrying a second copy. **The only assigner
   of ids**: a new runbook takes `Last runbook number: + 1` (never `max()`) and
-  advances the counter in the same write; an append assigns nothing. Command
-  not skill:
+  advances the counter in the same write; an append assigns nothing. Also the
+  only writer of a step's `Needs:` line (`agent` / `agent+human` / `human`,
+  absent meaning `agent`) — a seventh from-scratch interview question, harvested
+  in passing in conversation mode, and called out at the gate because whether
+  the run can be left unattended is the one thing the titles cannot say.
+  Command not skill:
   one pass with a confirmation gate, no supporting files of its own. Two
   orthogonal axes — target (`<name>` new / `--append <name>` / bare `--append` =
   the runbook this session is running, which a step's subagent knows because the
@@ -993,6 +998,26 @@ Currently shipped:
   (`/task-list`'s convention); unknown status names the four valid ones rather
   than printing nothing. Missing/empty index is not an error. **Writes nothing**,
   runs no shell, corrects no status however wrong it looks.
+- `commands/runbook-describe.md` — the deep read side, and the deliberate pair
+  to `/runbook-list`. `requires: skill:runbook-run` for the schema. Takes one
+  runbook by **name or id** and prints it in four parts: the index heading line
+  (id, name, status, progress, title; `Failed at:` continuation for `[FAILED]`),
+  the body header (`Created:`/`Source:`/`Model:`/`Sequencing:`/`Companion:`,
+  `Sequencing:` never summarised), every step (marker as the body carries it,
+  `depends on:` always, `needs:` only when not plain `agent`, `Done:` rendered
+  not summarised for `[x]` and `[!]` alike, `Context:` bullets), then the
+  `## Do not re-propose` item count and a by-marker summary. **The one
+  read-only runbook command allowed to open a body, and it opens exactly one**
+  — never a walk of `.claude/runbooks/` — which is precisely the trade
+  `/runbook-list` refuses; a `--verbose` on the listing would have destroyed the
+  property that listing is built around, which is why this is its own command.
+  **Prompt blocks are NOT printed** (the largest thing in the body; this is not
+  a slow `cat`). `Needs:` is authoritative where authored; for a step lacking
+  one it MAY infer from the prompt block, always rendered `(inferred)`, only
+  where the prompt names the manual act, and **never written anywhere** — the
+  note points at `/runbook-create --append` instead. Writes nothing, runs no
+  shell, corrects no status however wrong the index looks against the body it
+  just read.
 - `commands/runbook-clean.md` — pruning, `/task-clean`'s exact shape.
   `requires: skill:runbook-run` for the status vocabulary and block shape. Three
   stages: resolve (no arg = every `[DONE]`; names **or ids** = exactly those,

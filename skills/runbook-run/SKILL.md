@@ -1,8 +1,8 @@
 ---
 name: runbook-run
-version: 0.2.0
+version: 0.3.0
 type: skill
-description: Execute a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md — by walking it top to bottom, spawning one fresh subagent per step, relaying that subagent's questions to the user and the user's answers back to the same subagent, recording what each step actually did in a Done: line, and committing the runbook and its .claude/RUNBOOKS.md index after every step. Steps run one at a time, never in parallel. The orchestrator reads only CLAUDE.md, the runbook and the index, and writes only the runbook and the index — every other change in the tree is made by a subagent, and it never reviews or second-guesses one. Usage: /runbook-run <name|id> — a bare all-digits argument is the numeric id the index assigns each runbook, anything else its kebab-case name — with --from N to begin selection at step N, --only N to run exactly one step, --model <model> to override the runbook's header model for this run, and --no-commit / --no-push with their usual meanings. Also carries, in references/, the two files the rest of the runbook suite reads by path: runbook-schema.md (the asset kind — store, body schema, step markers, status vocabulary, the index block with its id and Last runbook number: counter, and the backfill an index written before ids gets from the first command that writes it) and subagent-contract.md (the OPERATING RULES block pasted verbatim into every spawned prompt).
+description: Execute a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md — by walking it top to bottom, spawning one fresh subagent per step, relaying that subagent's questions to the user and the user's answers back to the same subagent, recording what each step actually did in a Done: line, and committing the runbook and its .claude/RUNBOOKS.md index after every step. Steps run one at a time, never in parallel. The orchestrator reads only CLAUDE.md, the runbook and the index, and writes only the runbook and the index — every other change in the tree is made by a subagent, and it never reviews or second-guesses one. Usage: /runbook-run <name|id> — a bare all-digits argument is the numeric id the index assigns each runbook, anything else its kebab-case name — with --from N to begin selection at step N, --only N to run exactly one step, --model <model> to override the runbook's header model for this run, and --no-commit / --no-push with their usual meanings. Also carries, in references/, the two files the rest of the runbook suite reads by path: runbook-schema.md (the asset kind — store, body schema, step markers, status vocabulary, the optional per-step Needs: field, the index block with its id and Last runbook number: counter, and the backfill an index written before ids gets from the first command that writes it) and subagent-contract.md (the OPERATING RULES block pasted verbatim into every spawned prompt).
 ---
 
 # /runbook-run
@@ -409,8 +409,8 @@ commit (checkin) step runs.
 - Tick a step before its subagent's result has arrived.
 - Run two steps at once, or two runs of one runbook at once.
 - Edit a step's fenced prompt block. Ever. Corrections go to `Context:`.
-- Edit the header, `Sequencing:`, `Companion:`, a step title, or a
-  `Depends on:` line — those are `/runbook-create`'s, by line.
+- Edit the header, `Sequencing:`, `Companion:`, a step title, a
+  `Depends on:` or a `Needs:` line — those are `/runbook-create`'s, by line.
 - Do a step's work yourself, patch a file a subagent should have patched, or
   fix up a subagent's commit.
 - Review, re-test or second-guess a subagent's work. Review is

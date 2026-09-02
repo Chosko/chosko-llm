@@ -66,6 +66,8 @@ Companion: .claude/sessions/2026-08-24-1430-ecc-import-architecture.md
 
 Depends on: none
 
+Needs: agent
+
 Context: none
 
 ```prompt
@@ -76,6 +78,8 @@ decision that exists nowhere on disk, may open with a slash command>
 ## [ ] 2. <title>
 
 Depends on: 1
+
+Needs: agent+human
 
 Context: none
 
@@ -112,6 +116,24 @@ Under the heading, in this order:
   records the real constraint. It never causes anything to run in parallel:
   steps are sequential, always. It exists so a deadlock is detectable and so
   `--only` and `--from` have something to check against.
+- **`Needs:`** — optional. Whether executing this step requires a person, and
+  in what measure. Exactly three values, deliberately the same vocabulary as a
+  task's `Target:` in `.claude/TASKS.md` so the two stores read alike:
+
+  | Value | Meaning |
+  | --- | --- |
+  | `agent` | The step's subagent can execute it start to finish. **The default when the line is absent.** |
+  | `agent+human` | Mostly agent work, but part of it needs a person — an editor-only operation, a GUI wizard, hardware. |
+  | `human` | Nothing in it is agent-executable; the step is a walkthrough. |
+
+  It is **authored**, by `/runbook-create`, at the moment the author still
+  knows. It is descriptive, not enforcing: nothing gates on it, and a run does
+  not refuse a step because of it. Its job is to let a reader see, before
+  starting, which steps mean the run cannot be left unattended — the one thing
+  a `Depends on:` graph cannot tell them.
+
+  An absent `Needs:` means `agent`, and it is the common case. A runbook whose
+  every step is agent work carries no `Needs:` lines at all.
 - **`Context:`** — `none` at authoring time in the common case, and the run's
   field thereafter: corrections, failure notes, and facts learned by earlier
   steps, each as a dated bullet. The decisions a prompt needs belong *inside*
