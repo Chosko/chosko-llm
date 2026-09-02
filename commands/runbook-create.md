@@ -84,7 +84,7 @@ which is what makes appending safe while a run is in progress:
 | the header, `Sequencing:`, `Companion:` | yes | — |
 | a step's title and its ```prompt``` block | yes | — |
 | `Depends on:` | yes | — |
-| `Needs:` | yes | — |
+| `Needs:` | `agent+human` and `human` only | `agent`, which is the default and is never written |
 | `## Do not re-propose` | yes | — |
 | the step marker | `[ ]` only | `[~]`, `[x]`, `[!]` |
 | `Context:` | `none` only, at authoring time | a run's dated correction bullets |
@@ -190,8 +190,9 @@ Then harvest, from the conversation and not from the files:
 - **which actions in the list need a person** rather than an agent. A
   conversation that produced the follow-ups usually said so in passing ("then
   you flip it in the editor"); that is a step's `Needs:` line. Where the
-  conversation is silent, the step is `agent` — do not interrogate the user
-  for it in this mode, which exists precisely to avoid an interview.
+  conversation is silent, the step is `agent` and gets no line — do not
+  interrogate the user for it in this mode, which exists precisely to avoid an
+  interview.
 
 The rejected options are the `## Do not re-propose` section. The
 step-specific ones go in the step's own prompt instead.
@@ -220,7 +221,8 @@ so the whole interview can be settled in a sentence:
    the step is partly manual or wholly so. The answer is each step's `Needs:`
    line per `runbook-schema.md` § *A step*; recommend `agent` for every step,
    which is the common case, so a runbook of ordinary agent work is confirmed
-   with one word.
+   with one word. **An `agent` step gets no `Needs:` line at all** — the value
+   is the default and the schema says it is never written.
 
 A seventh question — **the model** — is asked **only when the default `opus`
 is not wanted**. Do not ask it routinely.

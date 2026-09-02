@@ -184,7 +184,11 @@ WORKFLOW
 THE `Needs:` ANNOTATION
 
 A step's `Needs:` line, where the author wrote one, is **authoritative**.
-Print it as the body carries it, with whatever the author wrote after it.
+Print it as the body carries it, with whatever the author wrote after it —
+**unless the authored value is `agent`**, which prints nothing, exactly as an
+absent line does. `runbook-schema.md` says `Needs: agent` is never written, so
+finding one means a hand-edited body; it is still authoritative, and the
+default is still silent.
 
 A step with **no** `Needs:` line means `agent` per `runbook-schema.md`, and in
 the ordinary case that is the whole story: print nothing, because the default

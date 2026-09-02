@@ -66,8 +66,6 @@ Companion: .claude/sessions/2026-08-24-1430-ecc-import-architecture.md
 
 Depends on: none
 
-Needs: agent
-
 Context: none
 
 ```prompt
@@ -79,7 +77,7 @@ decision that exists nowhere on disk, may open with a slash command>
 
 Depends on: 1
 
-Needs: agent+human
+Needs: agent+human          ← optional; omitted entirely on an `agent` step
 
 Context: none
 
@@ -133,7 +131,10 @@ Under the heading, in this order:
   a `Depends on:` graph cannot tell them.
 
   An absent `Needs:` means `agent`, and it is the common case. A runbook whose
-  every step is agent work carries no `Needs:` lines at all.
+  every step is agent work carries no `Needs:` lines at all — **`Needs: agent`
+  is never written**, which is why the template above shows the line only on
+  the step that needs it. A reader who sees no `Needs:` on a step has been told
+  it is `agent`, not that the author forgot.
 - **`Context:`** — `none` at authoring time in the common case, and the run's
   field thereafter: corrections, failure notes, and facts learned by earlier
   steps, each as a dated bullet. The decisions a prompt needs belong *inside*
