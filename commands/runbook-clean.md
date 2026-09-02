@@ -1,8 +1,8 @@
 ---
 name: runbook-clean
-version: 0.1.0
+version: 0.2.0
 type: command
-description: Prune finished runbooks — delete each body file under .claude/runbooks/ and remove its .claude/RUNBOOKS.md index block, including the surrounding --- rules. With no argument the plan is every [DONE] runbook; with names, exactly those. Only [DONE] is eligible — [PENDING] is unstarted work, [RUNNING] is a run someone is in the middle of, and [FAILED] is a halt that still needs a decision — and there is no --force and no status argument widening the set. A named runbook that is not [DONE] is refused by name with its actual status, an unknown name aborts the whole run before anything is deleted, and an empty plan says so and stops without asking. Always plans and confirms before writing. Automatically commits and pushes the removals; pass --no-commit to leave them uncommitted, or --no-push to commit without pushing.
+description: Prune finished runbooks — delete each body file under .claude/runbooks/ and remove its .claude/RUNBOOKS.md index block, including the surrounding --- rules. With no argument the plan is every [DONE] runbook; with names or ids, exactly those — a bare all-digits argument is an id, anything else a name. Survivors are never renumbered and the counter never moves down, so a pruned id is never handed out again. Only [DONE] is eligible — [PENDING] is unstarted work, [RUNNING] is a run someone is in the middle of, and [FAILED] is a halt that still needs a decision — and there is no --force and no status argument widening the set. A named runbook that is not [DONE] is refused by name with its actual status, an unknown name aborts the whole run before anything is deleted, and an empty plan says so and stops without asking. Always plans and confirms before writing. Automatically commits and pushes the removals; pass --no-commit to leave them uncommitted, or --no-push to commit without pushing.
 requires: skill:runbook-run
 ---
 
@@ -98,23 +98,25 @@ STAGE 1 — RESOLVE (no file writes, no deletions)
    is **not an error** — tell the user "No runbooks in this project." and
    stop. Do not create it and do not suggest a setup command.
 
-2. Parse every block per `runbook-schema.md` § *The index block*: the name and
-   one-line title from the heading, then `Status:`, `File:`, `Created:`,
-   `Source:` and `Steps:`. `/runbook-clean` is the one runbook command that
+2. Parse every block per `runbook-schema.md` § *The index block*: the id, the
+   name and the one-line title from the heading, then `Status:`, `File:`,
+   `Created:`, `Source:` and `Steps:`. `/runbook-clean` is the one runbook command that
    needs `File:` — it is the path to delete.
 
 3. Resolve the set:
 
    - **No argument** — every runbook whose status is `[DONE]`. Nothing else.
-   - **Names given** — exactly those runbooks, in the order the user named
-     them. The set is never widened past what was asked for.
+   - **Names or ids given** — exactly those runbooks, in the order the user
+     named them. Each argument is resolved by `runbook-schema.md` § *The
+     store*'s one rule: a bare all-digits argument is an id, anything else a
+     name. The set is never widened past what was asked for.
 
-4. **An unknown name aborts the whole run**, before anything is deleted. Say
-   which name is not in the index, list the names that are, and stop — do not
-   remove the names that were recognised. A partial deletion from a mistyped
-   list is the worst outcome available here, and it is silent: the user sees a
-   success report naming fewer runbooks than they typed and has no reason to
-   re-read it.
+4. **An unknown name or id aborts the whole run**, before anything is deleted.
+   Say which argument is not in the index, list the runbooks that are, and stop
+   — do not remove the ones that were recognised. A partial deletion from a
+   mistyped list is the worst outcome available here, and it is silent: the
+   user sees a success report naming fewer runbooks than they typed and has no
+   reason to re-read it.
 
 5. **A named runbook that is not `[DONE]` is refused by name, with its actual
    status** — never silently skipped. The user asked for it explicitly, and a
@@ -150,21 +152,23 @@ PLAN — runbook-clean
 Index file: .claude/RUNBOOKS.md
 
 Runbooks to remove (2):
-  ecc-import-landing    [DONE]  7/7   created 2026-08-24
+  1. ecc-import-landing    [DONE]  7/7   created 2026-08-24
       body file:   .claude/runbooks/ecc-import-landing.md
       index block: .claude/RUNBOOKS.md
-  context-layer-refresh [DONE]  3/3   created 2026-08-26
+  5. context-layer-refresh [DONE]  3/3   created 2026-08-26
       body file:   .claude/runbooks/context-layer-refresh.md
       index block: .claude/RUNBOOKS.md
 
 Refused (1):
-  cli-dependency-field  [FAILED] — only [DONE] is eligible
+  2. cli-dependency-field  [FAILED] — only [DONE] is eligible
 
 Nothing else in .claude/runbooks/ is touched.
 ```
 
-- Take the name, status, `Steps:` and `Created:` values from the index
-  verbatim. `Steps:` is printed as the index carries it.
+- Take the id, name, status, `Steps:` and `Created:` values from the index
+  verbatim. `Steps:` is printed as the index carries it. Printing the id as
+  well as the name is what lets a user check that the runbook they typed a
+  number for is the one about to be deleted.
 - Probe each body path with the Read tool before listing it. A body file that
   is unexpectedly missing is **noted in the plan** — `(body file: … —
   MISSING)` — and does not error out; its index block is still removed, which
@@ -193,24 +197,31 @@ STAGE 3 — REMOVE AND COMMIT (only after explicit approval)
    without them leaves a doubled rule behind, and the file slowly fills with
    separators fencing nothing.
 
-   Preserve everything else: the title line, the blank lines between surviving
-   blocks, and the order of the survivors. An index with every block removed
-   is left as its title line and nothing else — do not delete the file.
+   Preserve everything else: the title line, the `Last runbook number:`
+   counter, the blank lines between surviving blocks, and the order of the
+   survivors. An index with every block removed is left as its title line and
+   its counter, and nothing else — do not delete the file.
 
-3. **Touch no runbook this command is not deleting.** No status is corrected,
+3. **Never renumber, and never move the counter down.** A survivor keeps the
+   id it has and `Last runbook number:` is left exactly where it is, so a
+   pruned id is never handed to a later runbook —
+   `runbook-schema.md` § *The index block* is the authority, and it is the same
+   rule that keeps task ids stable across a `/task-clean`.
+
+4. **Touch no runbook this command is not deleting.** No status is corrected,
    no `Steps:` count recomputed, no `Failed at:` line rewritten, however wrong
    any of them looks. Reconciliation belongs to `/runbook-run`, which re-reads
    the body every step.
 
-4. **Never edit a body file.** The only thing this command does to a body is
+5. **Never edit a body file.** The only thing this command does to a body is
    delete it whole.
 
-5. Report:
-   - Each runbook removed, by name, with its status and steps.
+6. Report:
+   - Each runbook removed, by id and name, with its status and steps.
    - The body files deleted, and any that were already missing.
    - The index blocks removed.
-   - Each name refused and why, repeated from the plan so the closing report
-     is complete on its own.
+   - Each runbook refused and why, repeated from the plan so the closing
+     report is complete on its own.
    - The number of runbooks remaining in the index.
 
 ### Commit and push
@@ -264,12 +275,17 @@ DO NOT:
   flips its status by hand first.
 - Skip a named non-`[DONE]` runbook silently. Refuse it by name, with its
   actual status.
-- Delete anything at all when a name is unknown. Abort the whole run first.
+- Delete anything at all when a name or id is unknown. Abort the whole run
+  first.
+- Renumber a surviving runbook, lower `Last runbook number:`, or otherwise make
+  a pruned id available again — `runbook-schema.md` § *The index block*.
 - Ask for confirmation on an empty plan. Say it is empty and stop.
 - Remove an index block without its surrounding `---` rules.
 - Edit a runbook body file, for any reason.
 - Change a `Status:`, `Steps:`, `Created:`, `Source:` or `Failed at:` line on a
   surviving runbook, however wrong it looks. That is `/runbook-run`'s to fix.
+- Delete the index's title line or its `Last runbook number:` counter when the
+  last block goes.
 - Delete `.claude/RUNBOOKS.md` or `.claude/runbooks/` when the last runbook
   goes. An empty index is its title line; the directory stays.
 - Restate the status vocabulary or the index block's shape in this body. They

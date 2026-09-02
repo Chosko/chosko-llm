@@ -2,6 +2,13 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.24.0 — 2026-09-02
+
+- **runbooks** every runbook now carries a numeric id beside its name; `.claude/RUNBOOKS.md` gains a `Last runbook number:` counter, exactly as the task backlog has.
+- **/runbook-run, /runbook-create --append, /runbook-clean** take that id anywhere they take a name — a bare all-digits argument is an id, anything else a name.
+- **/runbook-list** prints the id and the runbook's one-line title as new columns, still without ever opening a body.
+- **runbook index** an index written before ids is backfilled in place by the first command that writes it; ids are never renumbered and a pruned one is never reused.
+
 ## 1.23.2 — 2026-08-25
 
 - **chosko-llm changelog** the readout is repainted in the palette `ls` and `show` already use: versions green, subjects cyan, `code` spans yellow, the bullet marker dim.

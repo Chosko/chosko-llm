@@ -1,8 +1,8 @@
 ---
 name: runbook-run
-version: 0.1.0
+version: 0.2.0
 type: skill
-description: Execute a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md — by walking it top to bottom, spawning one fresh subagent per step, relaying that subagent's questions to the user and the user's answers back to the same subagent, recording what each step actually did in a Done: line, and committing the runbook and its .claude/RUNBOOKS.md index after every step. Steps run one at a time, never in parallel. The orchestrator reads only CLAUDE.md, the runbook and the index, and writes only the runbook and the index — every other change in the tree is made by a subagent, and it never reviews or second-guesses one. Usage: /runbook-run <name>, with --from N to begin selection at step N, --only N to run exactly one step, --model <model> to override the runbook's header model for this run, and --no-commit / --no-push with their usual meanings. Also carries, in references/, the two files the rest of the runbook suite reads by path: runbook-schema.md (the asset kind — store, body schema, step markers, status vocabulary, index block) and subagent-contract.md (the OPERATING RULES block pasted verbatim into every spawned prompt).
+description: Execute a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md — by walking it top to bottom, spawning one fresh subagent per step, relaying that subagent's questions to the user and the user's answers back to the same subagent, recording what each step actually did in a Done: line, and committing the runbook and its .claude/RUNBOOKS.md index after every step. Steps run one at a time, never in parallel. The orchestrator reads only CLAUDE.md, the runbook and the index, and writes only the runbook and the index — every other change in the tree is made by a subagent, and it never reviews or second-guesses one. Usage: /runbook-run <name|id> — a bare all-digits argument is the numeric id the index assigns each runbook, anything else its kebab-case name — with --from N to begin selection at step N, --only N to run exactly one step, --model <model> to override the runbook's header model for this run, and --no-commit / --no-push with their usual meanings. Also carries, in references/, the two files the rest of the runbook suite reads by path: runbook-schema.md (the asset kind — store, body schema, step markers, status vocabulary, the index block with its id and Last runbook number: counter, and the backfill an index written before ids gets from the first command that writes it) and subagent-contract.md (the OPERATING RULES block pasted verbatim into every spawned prompt).
 ---
 
 # /runbook-run
@@ -62,7 +62,7 @@ invoked, when it is wanted, from inside a step's own prompt.
 
 | Argument | Effect |
 | --- | --- |
-| `<name>` | The runbook to run. Required. Kebab-case; it is the identifier. |
+| `<name>` \| `<id>` | The runbook to run. Required. A kebab-case name, or the numeric id the index assigns it — a bare all-digits argument is an id, anything else a name, per `runbook-schema.md` § *The store*. |
 | `--from N` | Begin selection at step N — steps before N are not considered. |
 | `--only N` | Run exactly step N, then stop. |
 | `--model <model>` | Override the runbook header's `Model:` for **this whole run**. There is no per-step model. |
@@ -92,11 +92,21 @@ restated here — a second copy is the copy that drifts.
 
 ### 1. Resolve
 
-Read the runbook's block in `.claude/RUNBOOKS.md` and the body at
-`.claude/runbooks/<name>.md`.
+Resolve the argument to a runbook per `runbook-schema.md` § *The store* — a
+bare all-digits argument is an id, anything else a name — then read that
+runbook's block in `.claude/RUNBOOKS.md` and the body at
+`.claude/runbooks/<name>.md`. The name resolved from an id is what the rest of
+the run uses: reports, relay blocks and the spawned prompt all name the
+runbook, never its id.
 
-- **Unknown name** — report the available runbooks (from the index) and stop.
-  Never guess at a near match.
+If the index predates ids, backfill it per `runbook-schema.md`
+§ *Backfilling an index written before ids* before resolving. This skill writes
+the index every step, so it is one of the three commands that performs the
+backfill rather than working around it.
+
+- **Unknown name or id** — report the available runbooks (from the index) and
+  stop. Never guess at a near match, and never fall back from an id that
+  matched nothing to a name that looks similar.
 - **`[DONE]` runbook, with no `--only` / `--from`** — say so and stop. Doing
   nothing quietly is indistinguishable from a bug.
 - **`[RUNNING]` runbook** — see ONE RUN PER RUNBOOK below. Usually this stops

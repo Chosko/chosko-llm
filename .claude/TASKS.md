@@ -146,7 +146,7 @@ Preconditions: none
 
 ## 165. Give runbooks incremental IDs and show them in `/runbook-list`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/references/runbook-schema.md, skills/runbook-run/SKILL.md, commands/runbook-create.md, commands/runbook-clean.md, commands/runbook-list.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none

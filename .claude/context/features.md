@@ -900,15 +900,27 @@ Currently shipped:
   session files are context for a human or agent, never input to tooling.
 - `skills/runbook-run/` — orchestrator of the runbook asset kind
   (`.claude/runbooks/<name>.md` bodies + `.claude/RUNBOOKS.md` index; body is
-  source of truth, index's `Status:`/`Steps:` derived and rebuildable from it).
+  source of truth, index's `Status:`/`Steps:` derived and rebuildable from it —
+  the id and its counter are the one exception, assigned rather than derived).
   **Skill not command** because `cmd-add` copies a skill folder with `cp -R`
   while a command is one file carrying nothing: it hosts `references/
   runbook-schema.md` (store, body schema, step markers `[ ]`/`[~]`/`[x]`/`[!]`,
-  the four statuses `[PENDING]`/`[RUNNING]`/`[FAILED]`/`[DONE]`, index block)
+  the four statuses `[PENDING]`/`[RUNNING]`/`[FAILED]`/`[DONE]`, index block +
+  its `Last runbook number:` counter and per-runbook **id**)
   and `references/subagent-contract.md` (the OPERATING RULES block pasted
   verbatim into every spawned prompt), both cited by the other three by
   `${CLAUDE_HOME:-$HOME/.claude}/...` path. No `requires:` — it IS the
-  dependency. Loop: re-read body at start of EVERY step (this is the whole
+  dependency. **Ids**: every runbook carries one beside its kebab-case name,
+  and every command taking a name takes an id in its place — **a bare
+  all-digits argument is an id, anything else a name**, unambiguous because a
+  kebab-case name is never all digits. The id is an alias, never the identity:
+  the body file stays `.claude/runbooks/<name>.md` and messages name the
+  runbook. `Last runbook number:` only ever increases; survivors are never
+  renumbered and a pruned id is never reused (`TASKS.md`'s rule, same reason —
+  `max()` would hand a deleted runbook's id to the next one). An index written
+  before ids is backfilled in place by the first command that **writes** it
+  (`/runbook-create`, `/runbook-clean`, `/runbook-run`); a read-only command
+  never does. Loop: re-read body at start of EVERY step (this is the whole
   reconciliation mechanism, and what makes mid-run `--append` steps picked up),
   select first `[ ]`/`[~]`/`[!]` step whose `Depends on:` are all `[x]`, mark
   `[~]`, spawn ONE subagent, **wait for the result notification** (the single
@@ -939,7 +951,10 @@ Currently shipped:
   (`/task-implement --review`) is past verified ground — warned, not refused.
 - `commands/runbook-create.md` — authors a runbook, or appends to one.
   `requires: skill:runbook-run` — it cites that skill's `runbook-schema.md` for
-  the body/index shape rather than carrying a second copy. Command not skill:
+  the body/index shape rather than carrying a second copy. **The only assigner
+  of ids**: a new runbook takes `Last runbook number: + 1` (never `max()`) and
+  advances the counter in the same write; an append assigns nothing. Command
+  not skill:
   one pass with a confirmation gate, no supporting files of its own. Two
   orthogonal axes — target (`<name>` new / `--append <name>` / bare `--append` =
   the runbook this session is running, which a step's subagent knows because the
@@ -969,16 +984,21 @@ Currently shipped:
   never opens a body under `.claude/runbooks/` — same discipline as
   `/task-list`'s never opening `.claude/tasks/`, and what keeps cost flat in the
   number of runbooks rather than their size (it is why the index carries
-  `Steps:` at all). `Failed at:` printed as a continuation line under `[FAILED]`
-  rows only. Optional status filter matched without brackets, case-insensitively
+  `Steps:` at all). Prints `<id>. [STATUS] <name> <done>/<total> <created>
+  <source> <title>` — the id leads so it can be typed at any other
+  runbook command, the one-line title closes so the listing is answerable
+  without opening anything; an id-less block prints `-` and is **left alone**,
+  the backfill belonging to a command that writes the index. `Failed at:`
+  printed as a continuation line under `[FAILED]` rows only. Optional status filter matched without brackets, case-insensitively
   (`/task-list`'s convention); unknown status names the four valid ones rather
   than printing nothing. Missing/empty index is not an error. **Writes nothing**,
   runs no shell, corrects no status however wrong it looks.
 - `commands/runbook-clean.md` — pruning, `/task-clean`'s exact shape.
   `requires: skill:runbook-run` for the status vocabulary and block shape. Three
-  stages: resolve (no arg = every `[DONE]`; names = exactly those, and a named
-  non-`[DONE]` runbook is refused BY NAME with its actual status, never silently
-  skipped) → plan and confirm (name, created date, steps done/total, both paths;
+  stages: resolve (no arg = every `[DONE]`; names **or ids** = exactly those,
+  and a named non-`[DONE]` runbook is refused BY NAME with its actual status,
+  never silently skipped; survivors are never renumbered and the counter never
+  moves down) → plan and confirm (name, created date, steps done/total, both paths;
   empty plan says so and stops) → remove and commit (delete body files, remove
   index blocks incl. surrounding `---` rules, stage exactly those paths). An
   unknown name aborts the whole run **before anything is deleted**. Only

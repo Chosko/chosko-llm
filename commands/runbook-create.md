@@ -1,8 +1,8 @@
 ---
 name: runbook-create
-version: 0.1.0
+version: 0.2.0
 type: command
-description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md, plus its .claude/RUNBOOKS.md index block — or append steps to one that already exists, including one a run is in the middle of. Two axes: where the steps go (a new runbook, --append <name>, --append with no name for the runbook this session is running, or no arguments at all, which asks) and where the material comes from (the current conversation's most recent follow-up list, the default; or a free-form description gathered through one batched interview). Enforces nine prompt-quality rules against every step before writing — self-contained, names the document to read first, carries every decision that exists nowhere on disk and nothing that already does, states its sequencing and what must not be re-proposed, uses real slash commands, references no path missing at run time, produces one deliverable, and never invokes /runbook-run — fixing failures and naming each fix in the confirmation report. The gate shows the proposed shape only, never the full prompts. Authoring command — leaves the runbook uncommitted for one review pass by default; pass --commit to commit and push it, or --commit --no-push to commit without pushing.
+description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md, plus its .claude/RUNBOOKS.md index block — or append steps to one that already exists, including one a run is in the middle of. Assigns each new runbook the next id from the index's Last runbook number: counter, which every other runbook- command then accepts in place of the name. Two axes: where the steps go (a new runbook, --append <name|id>, --append with no name for the runbook this session is running, or no arguments at all, which asks) and where the material comes from (the current conversation's most recent follow-up list, the default; or a free-form description gathered through one batched interview). Enforces nine prompt-quality rules against every step before writing — self-contained, names the document to read first, carries every decision that exists nowhere on disk and nothing that already does, states its sequencing and what must not be re-proposed, uses real slash commands, references no path missing at run time, produces one deliverable, and never invokes /runbook-run — fixing failures and naming each fix in the confirmation report. The gate shows the proposed shape only, never the full prompts. Authoring command — leaves the runbook uncommitted for one review pass by default; pass --commit to commit and push it, or --commit --no-push to commit without pushing.
 requires: skill:runbook-run
 ---
 
@@ -103,9 +103,12 @@ PHASE 1 — RESOLVE THE TARGET
 
 Four forms, resolved in this order.
 
-1. **`/runbook-create --append <name>`** — append to that runbook. An unknown
-   name is an error listing the names that do exist, so a typo is corrected
-   without going to look.
+1. **`/runbook-create --append <name|id>`** — append to that runbook. The
+   argument may be the runbook's kebab-case name or the numeric id the index
+   assigns it, resolved by `runbook-schema.md` § *The store*'s one rule: a bare
+   all-digits argument is an id, anything else a name. An unknown name or id is
+   an error listing the runbooks that do exist, so a typo is corrected without
+   going to look.
 
 2. **`/runbook-create --append`, no name** — append to the runbook **this
    session is currently running**. An orchestrator session knows which one
@@ -124,12 +127,15 @@ Four forms, resolved in this order.
    > A. **New** — give it a name.
    > B. **Append** — to which?
    >
-   >   1. implement-ecc-import   [RUNNING]   27/32   ← this session
-   >   2. context-layer-refresh  [PENDING]    0/3
-   >   3. ecc-import-landing     [DONE]       7/7
+   >   3. implement-ecc-import   [RUNNING]   27/32   ← this session
+   >   5. context-layer-refresh  [PENDING]    0/3
+   >   1. ecc-import-landing     [DONE]       7/7
 
    List the runbooks from `.claude/RUNBOOKS.md` with **non-`[DONE]` ones
-   first** and **the currently running one first of all**. **This is the only
+   first** and **the currently running one first of all**. The number on each
+   line is the runbook's **id**, not its position in the list — so an answer
+   naming a number selects the same runbook however the list is ordered, and
+   the same number works on any later command line. **This is the only
    place new-versus-append is asked**, and it is asked here because this is
    the command the user chose to run — an auto-triggered suggestion must not
    ask it.
@@ -139,13 +145,21 @@ Four forms, resolved in this order.
 runbook is referred to by name for the length of its execution, and two
 similar names are a real hazard. Say which name is taken, what its status is,
 suggest one alternative, and offer `--append <name>` as the other option.
-Names of removed runbooks are not reserved.
+Names of removed runbooks are not reserved. Their **ids** are the opposite:
+`runbook-schema.md` § *The index block* is why a pruned id is never handed out
+again, so a collision is only ever possible on a name.
 
 **First use is silent and idempotent.** If `.claude/runbooks/` or
 `.claude/RUNBOOKS.md` does not exist, create it at write time — the index as
-its title line and nothing else. There is no counter, because names are the
-identifiers. Say nothing about having done it; a project needs no setup step
-for runbooks, and neither `/task-setup` nor `/project-setup` gains one.
+its title line and its `Last runbook number: 0` counter, and nothing else. Say
+nothing about having done it; a project needs no setup step for runbooks, and
+neither `/task-setup` nor `/project-setup` gains one.
+
+**An index written before ids** — one with no counter line, or blocks whose
+headings carry no id — is backfilled here, per `runbook-schema.md`
+§ *Backfilling an index written before ids*, before this run assigns anything.
+This command writes the index, so it performs the backfill rather than working
+around it.
 
 ---
 
@@ -282,8 +296,9 @@ PHASE 4 — CONFIRM (the gate)
 Before writing anything, report the proposed **shape** and stop for approval:
 
 ```
-PLAN — runbook <name>            (or: append to runbook <name>)
+PLAN — runbook <name>            (or: append to runbook <id>. <name>)
 
+Id:    <the id this runbook will be assigned>   (new runbooks only)
 File:  .claude/runbooks/<name>.md
 Index: .claude/RUNBOOKS.md
 
@@ -327,9 +342,19 @@ Two cases.
 ### New runbook
 
 1. Create `.claude/runbooks/` and `.claude/RUNBOOKS.md` if either is missing —
-   silently, idempotently, the index as its title line and nothing else.
+   silently, idempotently, the index as its title line and its counter at `0`.
+   Backfill an index written before ids, per PHASE 1's rule, before step 2.
 2. Write `.claude/runbooks/<name>.md`: the header, then each step in order.
-3. Append the index block with `Status: [PENDING]` and `Steps: 0/<total>`.
+3. Append the index block with `Status: [PENDING]` and `Steps: 0/<total>`,
+   under a heading carrying the runbook's **new id**, its name and its
+   one-line title.
+4. Advance `Last runbook number:` to that id, **in the same write** as step 3.
+
+The new id is `Last runbook number: + 1` — never `max()` over the blocks
+present, which would reuse a pruned runbook's id. This command is the only
+thing that assigns an id or advances the counter, exactly as `/task-add` is
+for `.claude/TASKS.md`; an append assigns nothing, because the runbook it
+appends to already has one.
 
 Every step marker is `[ ]`. There are no `Done:` lines — an authored runbook
 has none at all.
@@ -371,6 +396,9 @@ All of these apply to every append, and to the `--append` half of PHASE 5:
   re-read; there is nothing to notify.
 - **The index `Steps: <done>/<total>` is updated** — the total grows, the done
   count is untouched.
+- **The runbook's id and the counter are untouched.** An append adds steps to a
+  runbook that already has an id; nothing is assigned and
+  `Last runbook number:` does not move.
 
 ---
 
@@ -436,6 +464,12 @@ DO NOT:
 - Disambiguate a colliding name automatically. Refuse it, suggest one
   alternative, and offer `--append`.
 - Reserve the names of removed runbooks.
+- Derive a new id with `max()` over the blocks present, reuse a pruned
+  runbook's id, renumber an existing runbook, or advance
+  `Last runbook number:` on an append — `runbook-schema.md`
+  § *The index block* is the authority for all four.
+- Treat the id as the runbook's identity. It is an alias for the command line;
+  the name still names the body file and every message about the runbook.
 - Ask new-versus-append anywhere except the no-argument form of PHASE 1.
 - Add a runbook step to `/task-setup` or `/project-setup`, or require any
   setup before a runbook can be created.
