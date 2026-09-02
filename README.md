@@ -766,10 +766,20 @@ that has none of the conversation the prompts came out of.
   `--append <name>` adds steps to an existing runbook, including one a run is in
   the middle of; `--append` with no name targets the runbook this session is
   running.
+
+  Every command above that takes a runbook name takes its **id** instead — a
+  bare number, as with tasks. A kebab-case name is never all digits, so the two
+  can't be confused: `/runbook-run 3` and `/runbook-run ecc-import-landing` are
+  the same command.
 - `/runbook-run <name>` — execute it, one step at a time. `--from N`, `--only N`
-  and `--model <model>` narrow or redirect the run.
-- `/runbook-list` — every runbook as one line: status, name, steps done over
-  total, created date, source.
+  and `--model <model>` narrow or redirect the run; `--relay-spawns` forces the
+  spawn relay described below.
+- `/runbook-list` — every runbook as one line: id, status, name, steps done over
+  total, created date, source, and its one-line title.
+- `/runbook-describe <name|id>` — one runbook in depth: the header, and every
+  step with its marker, dependencies, whether it needs a person, and the `Done:`
+  line a run wrote for it. The one read-only runbook command that opens a body,
+  and it opens exactly one.
 - `/runbook-clean` — delete finished runbooks, planning and confirming first.
 - `runbook-suggest` — a skill nobody invokes. It fires on its own description
   when a conversation produces a list worth capturing, points at
@@ -777,9 +787,12 @@ that has none of the conversation the prompts came out of.
 
 The store is committed, like the backlog: `.claude/runbooks/<name>.md` per
 runbook, plus a `.claude/RUNBOOKS.md` index mirroring `TASKS.md`'s block shape
-(minus its counter — names are the identifiers). The **body is the source of
-truth**; the index's `Status:` and `Steps: <done>/<total>` are derived from it
-and can be rebuilt by re-reading it. No `chosko-llm` subcommand walks
+and its `Last runbook number:` counter. The **body is the source of truth**;
+the index's `Status:` and `Steps: <done>/<total>` are derived from it and can be
+rebuilt by re-reading it. The id is the one thing that isn't — it's assigned, it
+only ever increases, and a pruned one is never reused, so a number you wrote
+down last month still means the runbook you meant. The name stays canonical
+throughout: it names the file, and it's what every message calls the runbook. No `chosko-llm` subcommand walks
 `.claude/runbooks/` — runbooks are input to agents, never to tooling.
 
 **The execution loop.** `/runbook-run` re-reads the body at the start of *every*
@@ -795,14 +808,29 @@ premise that proved wrong, then commits the runbook and the index — one commit
 per completed step, and the `[~]` marker is never committed, so finding one in
 your tree is the signal that this is the tree an interrupted run left behind.
 
+**When a step needs a subagent of its own.** In some environments — cloud
+sessions among them — a subagent can't spawn a subagent, which breaks any step
+whose prompt invokes something that wants a child agent, like
+`/task-implement --review --rounds 2`. Rather than let that agent review its own
+diff or drop the reviewer silently, the contract tells it to write the child's
+prompt to a temp file and end its turn with `SPAWN REQUEST`. The orchestrator
+spawns that child **at its own level** — sideways rather than down, which is why
+it works — waits for it, and tells the caller its result is ready. It forwards
+the two paths and opens neither file, so the child's output never enters the
+orchestrator's context. Detection sits with the subagent, because only the agent
+that needs the tool can tell whether it has it. Where you already know the
+environment is flat, `--relay-spawns` skips the discovery.
+
 Three things it deliberately does not do. It **never runs steps in parallel**,
 even where the runbook says they're independent: you get one question stream
 instead of interleaved clarifications from three agents, and two agents writing
-`Done:` lines into one file would race. It **does the work of no step itself** —
+`Done:` lines into one file would race. (A relayed child is the one exception,
+and a narrow one — its caller is suspended the whole time it runs, so only one
+agent is ever working.) It **does the work of no step itself** —
 it writes exactly two files, the runbook and the index, and every other change in
 the tree comes from a subagent. And it **doesn't review** what a step did: it
-reads two markers, `QUESTIONS FOR USER` and `DONE`, and takes the report at its
-word. Review is `/task-review`'s job, invoked from inside a step's prompt when
+reads three markers — `QUESTIONS FOR USER`, `SPAWN REQUEST` and `DONE` — and
+takes the report at its word. Review is `/task-review`'s job, invoked from inside a step's prompt when
 you want it.
 
 **The question relay** is what keeps you in the loop without keeping you in the
@@ -817,14 +845,19 @@ to that step's `Context:`; the prompt block itself is never edited, so you can
 always see what was originally asked and what was learned since, separately.
 
 **Writing prompts that survive a fresh session** is the hard part, and it's the
-authoring side that enforces it. `/runbook-create` checks nine rules before it
+authoring side that enforces it. `/runbook-create` checks ten rules before it
 writes: each step is self-contained, names the document to read first (or
 carries its evidence inline), carries every decision that exists nowhere on disk
 *and nothing that already does*, states its sequencing and why, states what must
 not be re-proposed, uses real slash commands in their real argument form,
 references no path that won't exist at run time (nothing under `docs/`, which is
 never installed), produces one deliverable, and never invokes `/runbook-run` —
-nested runbooks are forbidden at both authoring and spawn time. Rule three is
+nested runbooks are forbidden at both authoring and spawn time. The tenth
+prefers two steps to one that would need a nested spawn: implement, then review,
+each spawned by the orchestrator directly. That one's a preference rather than a
+rejection, since a skill that spawns internally can't be split by an author who
+doesn't know it will — which is the case the spawn relay covers at run time.
+Rule three is
 why one-line prompts are the expected case rather than a shortcut:
 `/task-implement 134` is complete, because the task body already carries the
 decisions and `/task-implement` reads it.

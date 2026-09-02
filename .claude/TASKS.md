@@ -173,7 +173,7 @@ Preconditions: none
 
 ## 168. Reconcile the runbook suite's documentation with IDs, describe and the spawn relay
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: .claude/domain/features/runbook-suite.md, README.md
 Preconditions: 165, 166, 167

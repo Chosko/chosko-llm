@@ -58,7 +58,11 @@ Deliberately out:
 - **The orchestrator doing any of the work itself.** It edits exactly two files
   — the runbook and the index. Every other change in the tree is made by a
   subagent. An orchestrator that starts patching things is one that has lost
-  track of what it delegated.
+  track of what it delegated. The spawn relay does not widen this: the
+  orchestrator spawns a child on a caller's behalf, but it reads neither the
+  request file nor the result file, so no part of that work passes through it.
+  Reading a child's report would be both the token cost the relay exists to
+  avoid and one step from reviewing work it delegated.
 - **Coupling to any upstream skill.** Nothing here knows about `/architect`,
   `/product-design` or `/product-roadmap`, and none of them reference this
   suite. A runbook is a list of prompts; where the prompts came from is
@@ -87,27 +91,28 @@ Built on the repo's existing shape per [product-design.md](../product-design.md)
 shipped commands and skill folders under `commands/` and `skills/`, installed by
 copy into `$CLAUDE_HOME`.
 
-### The five shipped artifacts
+### The six shipped artifacts
 
 | Artifact | Kind | Job |
 |---|---|---|
 | `skills/runbook-run/` | skill | the orchestrator, plus the two shared reference files |
 | `commands/runbook-create.md` | command | authors a runbook, or appends steps to one |
 | `commands/runbook-list.md` | command | read-only listing with status and progress |
+| `commands/runbook-describe.md` | command | read-only deep read of **one** runbook, body included |
 | `commands/runbook-clean.md` | command | plan-and-confirm removal of `[DONE]` runbooks |
 | `skills/runbook-suggest/` | skill | auto-triggering one-line suggestion, asks nothing |
 
-Five separate features in the shipped catalogue, each with its own frontmatter
+Six separate features in the shipped catalogue, each with its own frontmatter
 and `version:`, exactly like every other feature in this repo — not one skill
 with verbs. They are one *production* feature because they share an artifact and
 are useless apart; `/task-add` splits them into at least one task per artifact
 plus documentation.
 
-**Ship order: `runbook-run` first**, then `runbook-create`, then `runbook-list`
-and `runbook-clean` in either order, then `runbook-suggest` last. The order is
-forced by the dependency graph below: three artifacts cite files that live
-inside the runbook-run skill folder, and `runbook-suggest` proposes a command
-that must exist.
+**Ship order: `runbook-run` first**, then `runbook-create`, then `runbook-list`,
+`runbook-describe` and `runbook-clean` in any order, then `runbook-suggest`
+last. The order is forced by the dependency graph below: four artifacts cite
+files that live inside the runbook-run skill folder, and `runbook-suggest`
+proposes a command that must exist.
 
 ### Why the shared files live in a skill
 
@@ -153,6 +158,21 @@ deliberate opposite of the open question hanging over `.claude/sessions/` —
 because the work is executed across machines and cloud sessions and the `Done:`
 lines are the record of what happened.
 
+Beside the name, each runbook carries a numeric **id**, and the index carries a
+`Last runbook number:` counter to assign them from. This reverses the original
+decision recorded here — that names were the only identifiers, exactly as in
+`FEATURES.md` — and the reversal is narrow: the id is a **command-line alias**,
+not the identity. The body file is still `.claude/runbooks/<name>.md`, messages
+still name the runbook, and nothing is renamed. What it buys is that a runbook
+can be referred to by a number rather than a kebab-case string, the way a task
+already can. Every command taking a name takes an id in its place, on one
+unambiguous rule: **a bare all-digits argument is an id, anything else a name**
+— a kebab-case name can never be all digits, so no argument is ever both.
+
+Making the id *primary* was considered and rejected: it would break every
+existing invocation form, the `--append <name>` resolution and the
+name-collision rule, and buy nothing the alias does not.
+
 ### The body schema
 
 ````markdown
@@ -165,6 +185,8 @@ Companion: .claude/sessions/2026-08-24-1430-ecc-import-architecture.md
 ## [ ] 1. <title>
 
 Depends on: none
+
+Needs: agent
 
 Context: none
 
@@ -210,6 +232,16 @@ sha, the decisions taken while executing, and any premise in the step that
 turned out to be wrong — the three things the hand-run version recorded and the
 three that were re-read most often.
 
+A step carries an optional **`Needs:`** field — `agent` (the default, and
+absent in the common case), `agent+human`, or `human` — saying whether
+executing it requires a person. The vocabulary is deliberately the task suite's
+`Target:`, so the two stores read alike. It is authored by `/runbook-create`,
+at the moment the author still knows, and it is descriptive rather than
+enforcing: nothing gates on it and no run refuses a step because of it. Its job
+is to let a reader see, before starting, which steps mean the run cannot be
+left unattended — the one thing a `Depends on:` graph cannot tell them, and the
+reason `/runbook-create`'s confirmation gate calls those steps out.
+
 A step carries no `Produces:` field declaring whether it ends in a commit or a
 report. It was considered, for classifying an ambiguous result more
 confidently; it is not adopted, because the classification rule below is
@@ -233,14 +265,17 @@ deleted before the run, not carried as a tombstone.
 
 ### The index block
 
-`.claude/RUNBOOKS.md` mirrors `.claude/TASKS.md`'s block shape, minus its
-counter — names are the identifiers, so there is nothing to count, exactly as in
-`FEATURES.md`:
+`.claude/RUNBOOKS.md` mirrors `.claude/TASKS.md`'s block shape **and its
+counter**:
 
 ```
+# Runbooks
+
+Last runbook number: 7
+
 ---
 
-## <name> — <one-line title>
+## 3. <name> — <one-line title>
 
 Status: [PENDING]
 File: .claude/runbooks/<name>.md
@@ -251,11 +286,28 @@ Steps: 0/7
 ---
 ```
 
-`Steps:` is `<done>/<total>`, where done counts `[x]` only. A fifth line,
-`Failed at: step <n> — <reason>`, is present only while the status is
-`[FAILED]`, and is removed when a re-run clears it. The index is a summary: it
-holds nothing that is not derivable from the body, so a hand-edited body is
-reconciled by re-reading it, and `/runbook-list` never has to open a body.
+`Steps:` is `<done>/<total>`, where done counts `[x]` only. A line
+`Failed at: step <n> — <reason>` is present only while the status is
+`[FAILED]`, and is removed when a re-run clears it.
+
+`Last runbook number:` tracks the highest id ever assigned, only ever
+increases, and is stored rather than derived with `max()` — `TASKS.md`'s rule,
+for `TASKS.md`'s reason: a derived counter hands a pruned runbook's id to the
+next one, and every reference written down before the prune then points at the
+wrong runbook. Survivors of a prune are never renumbered. `/runbook-create` is
+the only assigner and the only thing that advances the counter; an append
+assigns nothing.
+
+The index is a summary: with one exception it holds nothing that is not
+derivable from the body, so a hand-edited body is reconciled by re-reading it,
+and `/runbook-list` never has to open a body. The exception is the id and its
+counter, which are assigned rather than derived and therefore live only there.
+
+An index written before ids — no counter line, no ids in the headings — is
+backfilled in place by the first command that **writes** it: `/runbook-create`,
+`/runbook-clean` or `/runbook-run`. A read-only command never does;
+`/runbook-list` renders an id-less block with `-` and leaves it, which is the
+same rule that stops it correcting a `Steps:` count it thinks is wrong.
 
 ---
 
@@ -374,13 +426,53 @@ spawn time, so a hand-written runbook cannot smuggle one in either. The reason
 is the depth budget: the orchestrator occupies one level and the step's agent a
 second, and a nested orchestrator would leave nothing for the work.
 
-**Depth budget.** With the orchestrator at one level and the step's agent at a
-second, one confirmed level remains for anything that agent spawns (nesting to
-depth 3 was verified 2026-08-24). A step whose prompt itself spawns subagents —
-`/task-implement --review`, which wants an implementor and then a reviewer —
-would need depth 4, which has not been probed. This is not a blocker and nothing
-refuses it; the runbook-run body states it plainly so an author who writes such
-a step knows they are past verified ground.
+**Depth budget, and the spawn relay that mostly retires it.** With the
+orchestrator at one level and the step's agent at a second, whether anything
+that agent spawns has a level to occupy depends on the environment: nesting to
+depth 3 was verified locally on 2026-08-24, a cloud subagent cannot spawn at
+all, and depth 4 has never been probed anywhere. That limit is what breaks a
+step whose prompt itself wants a subagent — `/task-implement --review --rounds
+2`, which wants an implementor and then a reviewer.
+
+The **spawn relay** answers it without needing another level. Where a step's
+agent finds it cannot spawn, it writes the child's prompt to a file under
+`$TMPDIR` and ends its turn with the literal `SPAWN REQUEST`, naming a prompt
+path, a result path and a model. The orchestrator spawns that child **at its own
+nesting level** — sideways, not down, which is the whole mechanism — waits for
+it, and replies to the suspended caller that the result file is ready. It
+**opens neither file**: it forwards paths, which is what keeps the child's
+output out of its context, and is the same discipline as the question relay's
+*compresses, does not answer*.
+
+Four decisions inside it are worth naming:
+
+- **Detection belongs to the subagent, not the orchestrator.** Only the agent
+  that needs the tool can observe whether it has it; an orchestrator-side probe
+  measures the orchestrator's environment and costs a spawn per run to do it.
+  `--relay-spawns` forces the mode where the environment is already known flat,
+  but it enables nothing — without it the subagent's own detection is the
+  trigger, and a run where nesting works behaves exactly as before.
+- **Relay files live under `$TMPDIR`, never in the repository**, so no scratch
+  file can reach a commit and no `.gitignore` entry is needed. They are
+  transient message-passing, not state, which is what keeps the repo's
+  no-state-files rule intact.
+- **A child's own `SPAWN REQUEST` is served identically**, so a logical call
+  chain of any depth stays flat. A cap of eight relay rounds per step turns a
+  loop into a `[!]` failure rather than an unbounded run nobody is watching.
+- **A failed relay is a step failure, never a silent degrade.** An agent that
+  quietly does the reviewer's work in the implementer's context destroys the
+  fresh context that was the reviewer's entire point and produces a `Done:`
+  line that lies — the one outcome this suite is built to prevent.
+
+Authoring has a cheaper answer where it applies, and `/runbook-create` now
+prefers it: a step that would need a nested spawn is usually better written as
+two steps, each spawned by the orchestrator directly. That is a preference
+rather than rule 9's rejection, because a skill that spawns internally cannot be
+split by an author who does not know it will — which is exactly the case the
+relay covers at run time.
+
+The relay does not lift the ban on nested runbooks: that one is refused for the
+orchestration it duplicates, not for the depth it costs.
 
 ---
 
@@ -535,8 +627,8 @@ are cheapest to fix before the first step runs.
 
 ### `/runbook-list` — the read side
 
-One pass: read `.claude/RUNBOOKS.md`, parse each block's five fields, apply an
-optional status filter, print. It never opens a body file — everything printed
+One pass: read `.claude/RUNBOOKS.md`, parse each block's heading and its
+fields, apply an optional status filter, print. It never opens a body file — everything printed
 comes from the index, which is why the index carries `Steps:` at all. This is
 `/task-list`'s discipline of never opening a file under `.claude/tasks/`, and it
 keeps the cost flat in the number of runbooks rather than in their size.
@@ -545,13 +637,19 @@ A missing or empty index is not an error: one line saying no runbooks exist and
 naming `/runbook-create`.
 
 ```
-  [DONE]     ecc-import-landing      7/7   2026-08-24  /architect run
-  [FAILED]   cli-dependency-field    2/5   2026-08-25  manual
-             ↳ failed at step 3 — the managed clone was on the wrong channel
-  [PENDING]  context-layer-refresh   0/3   2026-08-26  /product-design run
+  1. [DONE]     ecc-import-landing      7/7   2026-08-24  /architect run       Land the ECC import architecture
+  2. [FAILED]   cli-dependency-field    2/5   2026-08-25  manual               Add a requires: field to the CLI
+     ↳ failed at step 3 — the managed clone was on the wrong channel
+  5. [PENDING]  context-layer-refresh   0/3   2026-08-26  /product-design run  Rebuild the context layer
 
   3 runbooks: 1 done, 1 failed, 1 pending.
 ```
+
+The **id** leads the line so it can be typed at any other runbook command, and
+the **one-line title** closes it — the field that makes a listing answerable
+without opening anything, since a name is an identifier and not a description.
+A block written before ids prints `-` in that column and is left alone; the
+backfill belongs to a command that writes the index, and this one does not.
 
 The `Failed at:` continuation is printed only for `[FAILED]` runbooks and is why
 the field is carried in the index: the one thing a reader of a halted runbook
@@ -565,6 +663,53 @@ indistinguishable from having no matching runbooks.
 
 The listing writes nothing, runs no shell, and corrects no status however wrong
 it looks. Reconciliation belongs to the command that already has the body open.
+
+---
+
+### `/runbook-describe` — the deep read side
+
+`/runbook-list` answers *which runbooks exist and how far did they get* for all
+of them at index cost. `/runbook-describe` answers *what is actually in this
+one* for one of them, and pays a body read to do it. The two are a deliberate
+pair: a `--verbose` flag on the listing would have destroyed the never-open-a-
+body property the listing is built around, which is the whole reason this is a
+separate command rather than a flag.
+
+It takes one runbook by name or id and prints four parts: the index heading line
+(id, name, status, progress, title, plus the `Failed at:` continuation for a
+`[FAILED]` runbook), the body header with `Sequencing:` in full and never
+summarised, every step, and a by-marker summary.
+
+A step renders as its marker — as the body carries it, so the shape of the run
+reads down the left margin — its number and title, then `depends on:` always
+(`none` included, so a reader never wonders whether the line was missing), then
+`needs:` only where the step is not plain `agent`, then its `Done:` line where a
+run wrote one and its `Context:` bullets where it has any. The `Done:` line is
+**rendered, not summarised**: the sha, the decisions and the wrong premises are
+the three things it records and all three are why someone opened this.
+
+The ```prompt``` blocks are **not** printed. They are the largest thing in the
+body, and reproducing every one of them would make this a slow way to `cat` the
+file. The command exists to make opening that file an informed decision, not to
+replace it.
+
+The read is bounded to **exactly one body** — the runbook asked about, never a
+walk of `.claude/runbooks/` — which is what makes "allowed to read it in full"
+safe to grant at all. Beyond that it behaves exactly like `/runbook-list`: it
+writes nothing, runs no shell, and corrects no status, count or marker however
+wrong the index looks against the body it has just read. It is the one command
+positioned to notice such an inconsistency, and reporting one in prose is fine;
+editing it is `/runbook-run`'s, which re-reads the body every step.
+
+On the `Needs:` field it does one thing the other commands do not. An authored
+value is printed as authoritative. For a step with **no** `Needs:` line — a
+hand-written runbook, or one authored before the field existed — it may read
+the prompt block and print an inferred value, always labelled `(inferred)`,
+only where the prompt names the manual act rather than merely feeling like it
+might involve one, and **never written anywhere**. The note points at
+`/runbook-create --append` instead. That inference is the one place in the suite
+where a guess is rendered at all, which is why it carries a label, a high bar
+and no write.
 
 ---
 
@@ -678,7 +823,7 @@ safe with two writers:
 |---|---|---|
 | the header, `Sequencing:`, `Companion:` | `/runbook-create` | `/runbook-run` |
 | a step's title and its ```prompt``` block | `/runbook-create` | `/runbook-run` |
-| `Depends on:` | `/runbook-create` | `/runbook-run` |
+| `Depends on:` and `Needs:` | `/runbook-create` | `/runbook-run` |
 | the step marker, `Done:`, `Context:` appendices | `/runbook-run` | `/runbook-create` |
 | `## Do not re-propose` | `/runbook-create` | `/runbook-run` |
 
@@ -703,31 +848,38 @@ it.
 /runbook-create                          ask: new runbook, or append to which
 /runbook-create <name>                   new runbook, material from the conversation
 /runbook-create <free-form description>  new runbook, material from the interview
-/runbook-create --append <name>          append steps to that runbook
+/runbook-create --append <name|id>       append steps to that runbook
 /runbook-create --append                 append to the runbook this session is running
 /runbook-create <args> --commit [--no-push]
 
-/runbook-run <name>                      run from the first selectable step
+/runbook-run <name|id>                   run from the first selectable step
 /runbook-run <name> --from N             begin selection at step N
 /runbook-run <name> --only N             run exactly step N, then stop
 /runbook-run <name> --model sonnet       override the header model for this run
 /runbook-run <name> --no-commit          write the bookkeeping, commit nothing
 /runbook-run <name> --no-push            commit as usual, skip the push
+/runbook-run <name> --relay-spawns       force the spawn relay for this run
 
 /runbook-list [<STATUS>]
-/runbook-clean [<name> ...] [--no-commit] [--no-push]
+/runbook-describe <name|id>              print one runbook in depth, body included
+/runbook-clean [<name|id> ...] [--no-commit] [--no-push]
 ```
+
+Every command above that takes `<name>` takes `<id>` in its place, on the one
+rule under *The store*: a bare all-digits argument is an id, anything else a
+name.
 
 `--from` and `--only` do not weaken dependencies: a selected step whose
 `Depends on:` are not all `[x]` stops the run with the unmet dependency named. A
 user who completed that work elsewhere marks it `[x]` by hand, which is a
 visible, committed act rather than a silent flag.
 
-The three result cases:
+The four result cases:
 
 | Result | Action |
 |---|---|
 | `QUESTIONS FOR USER` | relay, collect the answer, send it to the same subagent, repeat |
+| `SPAWN REQUEST` | spawn the child at the orchestrator's own level, wait, tell the same subagent its result file is ready |
 | `DONE` + report | mark `[x]`, write `Done:`, propagate facts, update `Steps:`, commit, continue |
 | anything else, or a report of failure | mark `[!]`, write `Done:` with the reason, set the index to `[FAILED]` with `Failed at:`, halt, report |
 
@@ -743,6 +895,8 @@ The `requires:` graph, using the field from
 # commands/runbook-create.md
 requires: skill:runbook-run
 # commands/runbook-list.md
+requires: skill:runbook-run
+# commands/runbook-describe.md
 requires: skill:runbook-run
 # commands/runbook-clean.md
 requires: skill:runbook-run
@@ -760,11 +914,18 @@ alone and does not pull the whole suite in.
 `runbook-list`'s edge is about vocabulary rather than parsing: the status set and
 the index block shape are specified once, in `references/runbook-schema.md`, and
 a listing carrying its own copy is the second copy that drifts.
+`runbook-describe`'s edge is the same one and then some — it parses the body as
+well as the index, so it needs the markers, the `Needs:` values and the `Done:`
+line too.
 
 Hard contracts:
 
-- Steps are sequential. Always.
-- The orchestrator writes exactly two files.
+- Steps are sequential. Always. The spawn relay is the one stated exception to
+  *never two subagents at once*, and a narrow one: the caller is suspended for
+  the whole time its child runs, so one agent is working at any moment. It does
+  not licence spawning a child while its caller is still working, or two
+  children at once.
+- The orchestrator writes exactly two files, and reads neither half of a relay.
 - A prompt block is never edited by a run.
 - No step is ticked before its subagent's result has actually arrived.
 - Never two concurrent runs of one runbook.
