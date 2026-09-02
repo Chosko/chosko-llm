@@ -160,8 +160,9 @@ Spawn **one** subagent with fresh context, the assembled prompt (see THE
 SPAWNED PROMPT), and the model from the runbook header — or from `--model`,
 which overrides it for the whole run.
 
-One at a time. Never two. Steps are sequential always, even where the runbook
-declares them independent: the user gets one question stream rather than
+One at a time. Never two — see THE SPAWN RELAY for the one exception, a
+relayed child running while its caller is suspended. Steps are sequential
+always, even where the runbook declares them independent: the user gets one question stream rather than
 interleaved clarifications from three agents, and two agents writing `Done:`
 lines into the same runbook race on the same file.
 
@@ -214,6 +215,14 @@ agent reads:
    step, never a whole layer. Name the runbook and the step number this agent
    is executing; that is what lets a step's subagent call
    `/runbook-create --append` with no name argument.
+
+   **Under `--relay-spawns`, and only then, the preamble also carries one
+   sentence**: do not spawn a subagent even if you can — route every child
+   through the relay, exactly as OPERATING RULES describes for an agent that
+   cannot spawn. This is the flag's only effect on the assembly, and it lives
+   here because part 6 is fixed text: its relay rule fires on *cannot spawn*,
+   which is precisely not this case, and editing it per run would break the
+   one property that makes it a contract.
 2. **Background.** The `Companion:` document named in the runbook header, if
    there is one. Offer it as background to read if needed, not as required
    reading.
@@ -328,16 +337,37 @@ On a `SPAWN REQUEST` result, read only the marker and the three lines under it
 
 1. **Spawn one child subagent**, with the model the request names (or the run's
    model where it says `same`), and a prompt that says: read the file at
-   `<prompt path>`, do exactly what it asks, and write your report to
-   `<result path>`. Add the OPERATING RULES block, as for any spawn — a child
-   is a subagent like any other and is bound by the same contract.
+   `<prompt path>`, do exactly what it asks, write your **full** report to
+   `<result path>`, and then end your turn with the usual marker and one line
+   — no more — saying the file is written. Add the OPERATING RULES block, as
+   for any spawn: a child is a subagent like any other and is bound by the same
+   contract, `DONE` and all.
+
+   That split is what makes step 3 possible without reading anything. The
+   **file** carries the report, for the caller; the child's **returned turn**
+   carries only the marker, for you. Classifying on a marker is not reading a
+   report.
 2. **Wait for the child's result**, exactly as for a step's own agent. The
    spawn call returns an id, not the result.
-3. **Reply to the same caller subagent** — the one that is suspended awaiting
+3. **Classify the child's returned turn exactly as a step's own agent's**, by
+   THE FOUR RESULT CASES — on its marker alone, never on the result file. Only
+   a `DONE` child reaches step 4.
+   - `QUESTIONS FOR USER` or `SPAWN REQUEST` — handle them for the child, as
+     *What is preserved* below says, then come back here.
+   - **Anything else, or a report of failure** — the step has failed. Mark it
+     `[!]`, write a `Done:` line opening with the reason and naming which
+     relayed child failed, set the index to `[FAILED]` with `Failed at:`, halt
+     and report. Do **not** tell the caller its child is finished: a caller
+     told that reads an absent or failure-noting file, finishes its step, and
+     the runbook gets a `Done:` line for work that never happened — the one
+     outcome this suite exists to prevent.
+4. **Reply to the same caller subagent** — the one that is suspended awaiting
    this — with one line: the child is finished, and its report is at
    `<result path>`. The caller reads the file and continues.
 
-**Open neither file.** Not the prompt, not the result, not "just to check".
+**Open neither file.** Not the prompt, not the result, not "just to check" —
+classification runs on the child's returned marker, which is why it never needs
+to.
 Forwarding paths is what keeps this cheap: the whole point of routing a child's
 work through a file is that its content never passes through the orchestrator's
 context. This is the same discipline as the question relay's *compresses, does
@@ -360,6 +390,9 @@ report is one step from reviewing it.
 - **Flat fan-out.** A `SPAWN REQUEST` from a *child* is handled identically —
   the orchestrator spawns that grandchild at its own level too. Nothing nests,
   however deep the logical call chain goes.
+- **Failure.** A child that fails fails the step, per protocol step 3. The
+  relay extends a step's reach; it does not give it a second chance, and it
+  never converts a child's failure into a caller's success.
 
 ### The cap
 
@@ -372,16 +405,20 @@ alternative to a cap is an unbounded run nobody is watching.
 ### The files
 
 Relay files live under the OS temp directory, **never inside the repository**.
-The subagent chooses the paths and names them per runbook, step and round; the
-orchestrator takes them as given and does not relocate them. Nothing about them
+The subagent contract dictates their names —
+`<runbook>-step<n>-round<r>-prompt.md` and `-result.md` — so two runs sharing a
+`$TMPDIR` cannot collide; the orchestrator takes the paths the request gives it
+and does not relocate or rename them. Nothing about them
 is committed — the staging rule under COMMIT CADENCE is unchanged and exact:
 the runbook and the index, by explicit path, and nothing else. They are
 transient message-passing, not state, and they are gone with the session.
 
 ### `--relay-spawns`
 
-Passing it forces the relay for the whole run: the spawned prompt tells every
-step's agent not to spawn at all and to route every child through the relay.
+Passing it forces the relay for the whole run: the **preamble** of every
+spawned prompt — part 1 of THE SPAWNED PROMPT, which is where the flag's one
+sentence goes — tells that step's agent not to spawn at all and to route every
+child through the relay. The OPERATING RULES block is untouched by it.
 Use it where the environment is already known to be flat. **Without it nothing
 is lost** — the subagent's own detection is the trigger, and a run in an
 environment where nesting works behaves exactly as it always did. The flag

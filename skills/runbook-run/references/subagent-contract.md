@@ -37,11 +37,14 @@ OPERATING RULES
 - If the work needs a subagent and you CANNOT spawn one, do not do that
   subagent's work yourself in this context and do not silently drop it. Write
   the prompt you would have given it to a file under the OS temp directory
-  ($TMPDIR, never inside the repository), pick a second path there for its
-  result, and end your turn with the literal line `SPAWN REQUEST` followed by
-  three lines: `prompt: <path>`, `result: <path>`, `model: <model or "same">`.
-  The orchestrator will spawn it for you and reply when the result file has
-  been written; read it and continue. Ask for one child at a time.
+  ($TMPDIR, never inside the repository), named
+  `<RUNBOOK>-step<N>-round<r>-prompt.md`, where <r> is 1 for your first such
+  request in this step and increments with each one. Its result file is the
+  same name ending `-result.md`. Then end your turn with the literal line
+  `SPAWN REQUEST` followed by three lines: `prompt: <path>`, `result: <path>`,
+  `model: <model or "same">`. The orchestrator will spawn it for you and reply
+  when the result file has been written; read it and continue. Ask for one
+  child at a time.
 - Never edit .claude/runbooks/<RUNBOOK>.md or .claude/RUNBOOKS.md.
 - You are executing step <N> of runbook <RUNBOOK>.
 - When finished, end your turn with the literal line `DONE` followed by a
@@ -90,7 +93,12 @@ contract, and is never sent to a subagent.
   orchestrator's environment and costs a spawn per run to do it. The paths go
   under `$TMPDIR` so no scratch file can ever land in a commit, and "one child
   at a time" keeps the relay sequential, exactly like the question relay it is
-  modelled on.
+  modelled on. **The file names are dictated rather than left to the agent**
+  because two runs of different runbooks share one `$TMPDIR`, and two agents
+  each reaching for the obvious name would hand one runbook's child the other's
+  prompt — a collision the orchestrator cannot detect, since it never opens
+  either file. `<RUNBOOK>` and `<N>` are already substituted here, so naming
+  them costs no third placeholder.
 - **`DONE` plus the three-part report.** `DONE` is the literal marker the
   orchestrator classifies on; the sha, the decisions and the wrong premises are
   exactly what the `Done:` line records and what fact propagation feeds into
