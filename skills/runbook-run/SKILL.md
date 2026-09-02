@@ -1,22 +1,23 @@
 ---
 name: runbook-run
-version: 0.1.0
+version: 0.4.0
 type: skill
-description: Execute a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md — by walking it top to bottom, spawning one fresh subagent per step, relaying that subagent's questions to the user and the user's answers back to the same subagent, recording what each step actually did in a Done: line, and committing the runbook and its .claude/RUNBOOKS.md index after every step. Steps run one at a time, never in parallel. The orchestrator reads only CLAUDE.md, the runbook and the index, and writes only the runbook and the index — every other change in the tree is made by a subagent, and it never reviews or second-guesses one. Usage: /runbook-run <name>, with --from N to begin selection at step N, --only N to run exactly one step, --model <model> to override the runbook's header model for this run, and --no-commit / --no-push with their usual meanings. Also carries, in references/, the two files the rest of the runbook suite reads by path: runbook-schema.md (the asset kind — store, body schema, step markers, status vocabulary, index block) and subagent-contract.md (the OPERATING RULES block pasted verbatim into every spawned prompt).
+description: Execute a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md — by walking it top to bottom, spawning one fresh subagent per step, relaying that subagent's questions to the user and the user's answers back to the same subagent, recording what each step actually did in a Done: line, and committing the runbook and its .claude/RUNBOOKS.md index after every step. Steps run one at a time, never in parallel. The orchestrator reads only CLAUDE.md, the runbook and the index, and writes only the runbook and the index — every other change in the tree is made by a subagent, and it never reviews or second-guesses one. Usage: /runbook-run <name|id> — a bare all-digits argument is the numeric id the index assigns each runbook, anything else its kebab-case name — with --from N to begin selection at step N, --only N to run exactly one step, --model <model> to override the runbook's header model for this run, --relay-spawns to force the spawn relay for a whole run, and --no-commit / --no-push with their usual meanings. Where a subagent cannot spawn a subagent — cloud sessions among them — a step's agent ends its turn with SPAWN REQUEST naming a prompt file and a result file under the OS temp dir; the orchestrator spawns that child at its own nesting level, waits for it, and tells the caller the result is ready, without ever opening either file. Also carries, in references/, the two files the rest of the runbook suite reads by path: runbook-schema.md (the asset kind — store, body schema, step markers, status vocabulary, the optional per-step Needs: field, the index block with its id and Last runbook number: counter, and the backfill an index written before ids gets from the first command that writes it) and subagent-contract.md (the OPERATING RULES block pasted verbatim into every spawned prompt).
 ---
 
 # /runbook-run
 # Global skill: execute a runbook, one step at a time, each in a fresh
 # subagent. Relays questions to the user, records what each step did, and
 # commits after every step.
-# Usage: /runbook-run <name>
-#        /runbook-run <name> --from N        (begin selection at step N)
-#        /runbook-run <name> --only N        (run exactly step N, then stop)
-#        /runbook-run <name> --model sonnet  (override the header model)
-#        /runbook-run <name> --no-commit     (write the bookkeeping, commit nothing)
-#        /runbook-run <name> --no-push       (commit as usual, skip the push)
+# Usage: /runbook-run <name|id>
+#        /runbook-run <name|id> --from N        (begin selection at step N)
+#        /runbook-run <name|id> --only N        (run exactly step N, then stop)
+#        /runbook-run <name|id> --model sonnet  (override the header model)
+#        /runbook-run <name|id> --relay-spawns  (force the spawn relay for this run)
+#        /runbook-run <name|id> --no-commit     (write the bookkeeping, commit nothing)
+#        /runbook-run <name|id> --no-push       (commit as usual, skip the push)
 # Examples: /runbook-run implement-ecc-import
-#           /runbook-run implement-ecc-import --from 12
+#           /runbook-run 3 --from 12
 #           /runbook-run implement-ecc-import --only 4 --model sonnet
 
 GOAL
@@ -51,8 +52,8 @@ change in the tree is made by a subagent. This is a hard contract: an
 orchestrator that starts patching things is one that has lost track of what it
 delegated.
 
-**It does not review.** It reads two markers — `QUESTIONS FOR USER` and
-`DONE` — and classifies on them. It does not re-test, re-read a subagent's
+**It does not review.** It reads three markers — `QUESTIONS FOR USER`,
+`SPAWN REQUEST` and `DONE` — and classifies on them. It does not re-test, re-read a subagent's
 diff, or second-guess its commit. Review is `/task-review`'s job and is
 invoked, when it is wanted, from inside a step's own prompt.
 
@@ -62,10 +63,11 @@ invoked, when it is wanted, from inside a step's own prompt.
 
 | Argument | Effect |
 | --- | --- |
-| `<name>` | The runbook to run. Required. Kebab-case; it is the identifier. |
+| `<name>` \| `<id>` | The runbook to run. Required. A kebab-case name, or the numeric id the index assigns it — a bare all-digits argument is an id, anything else a name, per `runbook-schema.md` § *The store*. |
 | `--from N` | Begin selection at step N — steps before N are not considered. |
 | `--only N` | Run exactly step N, then stop. |
 | `--model <model>` | Override the runbook header's `Model:` for **this whole run**. There is no per-step model. |
+| `--relay-spawns` | Force the spawn relay for the whole run, for an environment already known to be flat. Without it the relay still works — the step's own subagent triggers it when it finds it cannot spawn. See THE SPAWN RELAY. |
 | `--no-commit` | Do the work and write the bookkeeping, but commit nothing. Implies `--no-push`. |
 | `--no-push` | Commit each step as usual, skip the push. |
 
@@ -92,11 +94,21 @@ restated here — a second copy is the copy that drifts.
 
 ### 1. Resolve
 
-Read the runbook's block in `.claude/RUNBOOKS.md` and the body at
-`.claude/runbooks/<name>.md`.
+Resolve the argument to a runbook per `runbook-schema.md` § *The store* — a
+bare all-digits argument is an id, anything else a name — then read that
+runbook's block in `.claude/RUNBOOKS.md` and the body at
+`.claude/runbooks/<name>.md`. The name resolved from an id is what the rest of
+the run uses: reports, relay blocks and the spawned prompt all name the
+runbook, never its id.
 
-- **Unknown name** — report the available runbooks (from the index) and stop.
-  Never guess at a near match.
+If the index predates ids, backfill it per `runbook-schema.md`
+§ *Backfilling an index written before ids* before resolving. This skill writes
+the index every step, so it is one of the three commands that performs the
+backfill rather than working around it.
+
+- **Unknown name or id** — report the available runbooks (from the index) and
+  stop. Never guess at a near match, and never fall back from an id that
+  matched nothing to a name that looks similar.
 - **`[DONE]` runbook, with no `--only` / `--from`** — say so and stop. Doing
   nothing quietly is indistinguishable from a bug.
 - **`[RUNNING]` runbook** — see ONE RUN PER RUNBOOK below. Usually this stops
@@ -148,8 +160,9 @@ Spawn **one** subagent with fresh context, the assembled prompt (see THE
 SPAWNED PROMPT), and the model from the runbook header — or from `--model`,
 which overrides it for the whole run.
 
-One at a time. Never two. Steps are sequential always, even where the runbook
-declares them independent: the user gets one question stream rather than
+One at a time. Never two — see THE SPAWN RELAY for the one exception, a
+relayed child running while its caller is suspended. Steps are sequential
+always, even where the runbook declares them independent: the user gets one question stream rather than
 interleaved clarifications from three agents, and two agents writing `Done:`
 lines into the same runbook race on the same file.
 
@@ -176,7 +189,7 @@ before its subagent's result has actually arrived.**
 
 ### 7. Handle the result
 
-Three cases, and only three — see THE THREE RESULT CASES below.
+Four cases, and only four — see THE FOUR RESULT CASES below.
 
 ### 8. Commit and loop
 
@@ -202,6 +215,14 @@ agent reads:
    step, never a whole layer. Name the runbook and the step number this agent
    is executing; that is what lets a step's subagent call
    `/runbook-create --append` with no name argument.
+
+   **Under `--relay-spawns`, and only then, the preamble also carries one
+   sentence**: do not spawn a subagent even if you can — route every child
+   through the relay, exactly as OPERATING RULES describes for an agent that
+   cannot spawn. This is the flag's only effect on the assembly, and it lives
+   here because part 6 is fixed text: its relay rule fires on *cannot spawn*,
+   which is precisely not this case, and editing it per run would break the
+   one property that makes it a contract.
 2. **Background.** The `Companion:` document named in the runbook header, if
    there is one. Offer it as background to read if needed, not as required
    reading.
@@ -220,11 +241,12 @@ agent reads:
 
 ---
 
-## THE THREE RESULT CASES
+## THE FOUR RESULT CASES
 
 | Result | Action |
 | --- | --- |
 | `QUESTIONS FOR USER` | Relay to the user, collect the answer, send it to the **same** subagent, repeat. |
+| `SPAWN REQUEST` | Spawn the child it asks for, and reply to the **same** subagent when the child is finished. See THE SPAWN RELAY. |
 | `DONE` + report | Mark `[x]`, write the `Done:` line, propagate facts, update `Steps:`, commit, continue. |
 | Anything else, or a report of failure | Mark `[!]`, write a `Done:` line opening with the reason, set the index to `[FAILED]` with `Failed at: step <n> — <reason>`, halt, report. |
 
@@ -290,6 +312,120 @@ never answers on the user's behalf in either position.
 
 ---
 
+## THE SPAWN RELAY
+
+**The orchestrator forwards; it does not read.**
+
+In some environments — cloud sessions among them — a subagent cannot spawn a
+subagent. A step whose prompt invokes something that wants a child agent
+(`/task-implement --review --rounds 2` is the case this exists for) then has
+nowhere to put it. The subagent contract tells the step's agent what to do
+instead: write the child's prompt to a file under `$TMPDIR`, and end its turn
+with `SPAWN REQUEST`. This section is the other half.
+
+### Why it works
+
+The child is spawned **by the orchestrator**, so it sits at the same nesting
+level as the caller rather than one below it. That is the whole mechanism: a
+level the caller cannot reach downward, the orchestrator reaches sideways. It
+needs no extra depth and works identically wherever the run is driven from.
+
+### The protocol
+
+On a `SPAWN REQUEST` result, read only the marker and the three lines under it
+— `prompt:`, `result:` and `model:`. Then:
+
+1. **Spawn one child subagent**, with the model the request names (or the run's
+   model where it says `same`), and a prompt that says: read the file at
+   `<prompt path>`, do exactly what it asks, write your **full** report to
+   `<result path>`, and then end your turn with the usual marker and one line
+   — no more — saying the file is written. Add the OPERATING RULES block, as
+   for any spawn: a child is a subagent like any other and is bound by the same
+   contract, `DONE` and all.
+
+   That split is what makes step 3 possible without reading anything. The
+   **file** carries the report, for the caller; the child's **returned turn**
+   carries only the marker, for you. Classifying on a marker is not reading a
+   report.
+2. **Wait for the child's result**, exactly as for a step's own agent. The
+   spawn call returns an id, not the result.
+3. **Classify the child's returned turn exactly as a step's own agent's**, by
+   THE FOUR RESULT CASES — on its marker alone, never on the result file. Only
+   a `DONE` child reaches step 4.
+   - `QUESTIONS FOR USER` or `SPAWN REQUEST` — handle them for the child, as
+     *What is preserved* below says, then come back here.
+   - **Anything else, or a report of failure** — the step has failed. Mark it
+     `[!]`, write a `Done:` line opening with the reason and naming which
+     relayed child failed, set the index to `[FAILED]` with `Failed at:`, halt
+     and report. Do **not** tell the caller its child is finished: a caller
+     told that reads an absent or failure-noting file, finishes its step, and
+     the runbook gets a `Done:` line for work that never happened — the one
+     outcome this suite exists to prevent.
+4. **Reply to the same caller subagent** — the one that is suspended awaiting
+   this — with one line: the child is finished, and its report is at
+   `<result path>`. The caller reads the file and continues.
+
+**Open neither file.** Not the prompt, not the result, not "just to check" —
+classification runs on the child's returned marker, which is why it never needs
+to.
+Forwarding paths is what keeps this cheap: the whole point of routing a child's
+work through a file is that its content never passes through the orchestrator's
+context. This is the same discipline as the question relay's *compresses, does
+not answer* — here it is *forwards, does not read*. It is also what keeps the
+orchestrator out of work it delegated: an orchestrator that reads a child's
+report is one step from reviewing it.
+
+### What is preserved
+
+- **Sequencing.** The caller is suspended for the entire time the child runs,
+  exactly as it is during a `QUESTIONS FOR USER` relay, so only one agent is
+  doing work at any moment. This is the one stated exception to *one subagent
+  at a time, never two* — two exist, one of them idle — and it is not a wider
+  licence: never spawn a child while the caller is still working, and never
+  two children at once.
+- **The question relay.** A child's own `QUESTIONS FOR USER` is relayed to the
+  user exactly as a caller's is, in the same fixed block, and the answer goes
+  back to the **child**. Say which agent is asking when a child is the one
+  asking.
+- **Flat fan-out.** A `SPAWN REQUEST` from a *child* is handled identically —
+  the orchestrator spawns that grandchild at its own level too. Nothing nests,
+  however deep the logical call chain goes.
+- **Failure.** A child that fails fails the step, per protocol step 3. The
+  relay extends a step's reach; it does not give it a second chance, and it
+  never converts a child's failure into a caller's success.
+
+### The cap
+
+**Eight relay rounds per step.** A round is one `SPAWN REQUEST` served. On the
+ninth, stop: mark the step `[!]`, write a `Done:` line saying the relay cap was
+reached and naming how many children ran, set the index to `[FAILED]` with
+`Failed at:`, and halt. A step that wants a ninth child is looping, and the
+alternative to a cap is an unbounded run nobody is watching.
+
+### The files
+
+Relay files live under the OS temp directory, **never inside the repository**.
+The subagent contract dictates their names —
+`<runbook>-step<n>-round<r>-prompt.md` and `-result.md` — so two runs sharing a
+`$TMPDIR` cannot collide; the orchestrator takes the paths the request gives it
+and does not relocate or rename them. Nothing about them
+is committed — the staging rule under COMMIT CADENCE is unchanged and exact:
+the runbook and the index, by explicit path, and nothing else. They are
+transient message-passing, not state, and they are gone with the session.
+
+### `--relay-spawns`
+
+Passing it forces the relay for the whole run: the **preamble** of every
+spawned prompt — part 1 of THE SPAWNED PROMPT, which is where the flag's one
+sentence goes — tells that step's agent not to spawn at all and to route every
+child through the relay. The OPERATING RULES block is untouched by it.
+Use it where the environment is already known to be flat. **Without it nothing
+is lost** — the subagent's own detection is the trigger, and a run in an
+environment where nesting works behaves exactly as it always did. The flag
+saves an agent discovering the limit for itself; it does not enable the relay.
+
+---
+
 ## FACT PROPAGATION
 
 When a step's report changes a fact a later step relies on, append a **dated
@@ -338,20 +474,37 @@ Stated plainly, because an author needs to know where verified ground ends:
 
 - The orchestrator occupies **one** nesting level.
 - The step's agent occupies a **second**.
-- **One confirmed level remains** for anything that agent itself spawns
-  (nesting to depth 3 verified 2026-08-24).
+- Whether anything the step's agent spawns has a level to occupy **depends on
+  the environment**. Nesting to depth 3 was verified locally on 2026-08-24; in
+  a cloud session a subagent cannot spawn at all, and depth 4 has never been
+  probed anywhere.
 
-A step whose prompt itself spawns subagents — `/task-implement --review`, for
-instance, which wants an implementor and then a reviewer — would need depth 4,
-which has **not** been probed. Nothing here refuses it. This is a warning, not
-a gate: an author who writes such a step should know they are past verified
-ground.
+**The spawn relay is the answer to all of that, and it makes the depth
+question mostly moot.** A step whose prompt itself wants a subagent —
+`/task-implement --review`, which wants an implementor and then a reviewer —
+does not need a third level: its agent routes the child through THE SPAWN
+RELAY and the orchestrator spawns it sideways, at the orchestrator's own
+level. Nothing nests, however deep the logical call chain goes, so no author
+has to know which environment their runbook will run in.
+
+What remains true, and is why this section still exists:
+
+- The relay only fires when the step's agent **notices** it cannot spawn, or
+  when `--relay-spawns` forces it. Where nesting works, a step's agent nests as
+  it always did — that path is unchanged, and depth 3 remains the verified
+  bound on it.
+- An agent that nests to depth 3 and then wants a fourth level is past verified
+  ground, and its own contract tells it what to do there: request the relay
+  rather than improvise.
 
 Depth 3 also means the orchestrator may itself be a subagent, which is what
-allows a runbook to be driven from a batch parent — see the relay's
-subagent-position rule above.
+allows a runbook to be driven from a batch parent — see the question relay's
+subagent-position rule above. The spawn relay works from that position too:
+the orchestrator spawns the child at its own level either way.
 
-Nested runbooks are the one case that *is* refused; see step 5.
+Nested runbooks are the one case that *is* refused; see step 5. The relay does
+not change that — a runbook inside a runbook is refused for the orchestration
+it duplicates, not for the depth it costs.
 
 ---
 
@@ -394,13 +547,22 @@ commit (checkin) step runs.
 
 ## DO NOT
 
-- Treat a spawn call's return value as the step's result. It is an id. Wait
-  for the notification.
+- Treat a spawn call's return value as the step's result — or a relayed
+  child's. It is an id. Wait for the notification.
 - Tick a step before its subagent's result has arrived.
-- Run two steps at once, or two runs of one runbook at once.
+- Run two steps at once, or two runs of one runbook at once. A relayed child
+  running while its caller is suspended is the one stated exception, and it
+  does not extend to spawning a child while its caller is still working, or to
+  two children at once.
+- Open a relay request or result file, relocate one, or stage one. The
+  orchestrator forwards paths; reading them is the cost the relay exists to
+  avoid, and it is the first step toward reviewing work it delegated.
+- Answer a `SPAWN REQUEST` by doing the child's work, by telling the caller to
+  do it inline, or by declining it. Spawn the child.
+- Let a step exceed eight relay rounds. The ninth is a failure, not a spawn.
 - Edit a step's fenced prompt block. Ever. Corrections go to `Context:`.
-- Edit the header, `Sequencing:`, `Companion:`, a step title, or a
-  `Depends on:` line — those are `/runbook-create`'s, by line.
+- Edit the header, `Sequencing:`, `Companion:`, a step title, a
+  `Depends on:` or a `Needs:` line — those are `/runbook-create`'s, by line.
 - Do a step's work yourself, patch a file a subagent should have patched, or
   fix up a subagent's commit.
 - Review, re-test or second-guess a subagent's work. Review is

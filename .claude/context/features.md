@@ -900,24 +900,60 @@ Currently shipped:
   session files are context for a human or agent, never input to tooling.
 - `skills/runbook-run/` — orchestrator of the runbook asset kind
   (`.claude/runbooks/<name>.md` bodies + `.claude/RUNBOOKS.md` index; body is
-  source of truth, index's `Status:`/`Steps:` derived and rebuildable from it).
+  source of truth, index's `Status:`/`Steps:` derived and rebuildable from it —
+  the id and its counter are the one exception, assigned rather than derived).
   **Skill not command** because `cmd-add` copies a skill folder with `cp -R`
   while a command is one file carrying nothing: it hosts `references/
   runbook-schema.md` (store, body schema, step markers `[ ]`/`[~]`/`[x]`/`[!]`,
-  the four statuses `[PENDING]`/`[RUNNING]`/`[FAILED]`/`[DONE]`, index block)
+  the four statuses `[PENDING]`/`[RUNNING]`/`[FAILED]`/`[DONE]`, the optional
+  per-step `Needs:` field, index block + its `Last runbook number:` counter and
+  per-runbook **id**)
   and `references/subagent-contract.md` (the OPERATING RULES block pasted
-  verbatim into every spawned prompt), both cited by the other three by
+  verbatim into every spawned prompt — two placeholders, `<RUNBOOK>` and `<N>`,
+  and it now carries the `SPAWN REQUEST` rule), both cited by the other three by
   `${CLAUDE_HOME:-$HOME/.claude}/...` path. No `requires:` — it IS the
-  dependency. Loop: re-read body at start of EVERY step (this is the whole
+  dependency. **Ids**: every runbook carries one beside its kebab-case name,
+  and every command taking a name takes an id in its place — **a bare
+  all-digits argument is an id, anything else a name**, unambiguous because a
+  kebab-case name is never all digits. The id is an alias, never the identity:
+  the body file stays `.claude/runbooks/<name>.md` and messages name the
+  runbook. `Last runbook number:` only ever increases; survivors are never
+  renumbered and a pruned id is never reused (`TASKS.md`'s rule, same reason —
+  `max()` would hand a deleted runbook's id to the next one). An index written
+  before ids is backfilled in place by the first command that **writes** it
+  (`/runbook-create`, `/runbook-clean`, `/runbook-run`); a read-only command
+  never does. Loop: re-read body at start of EVERY step (this is the whole
   reconciliation mechanism, and what makes mid-run `--append` steps picked up),
   select first `[ ]`/`[~]`/`[!]` step whose `Depends on:` are all `[x]`, mark
   `[~]`, spawn ONE subagent, **wait for the result notification** (the single
   most dangerous point — the spawn's return value is not the result), classify,
-  commit. Three result cases: `QUESTIONS FOR USER` → relay to user, answer back
-  to the SAME subagent, repeat; `DONE` + report → `[x]`, write `Done:` (sha,
+  commit. **Four** result cases: `QUESTIONS FOR USER` → relay to user, answer back
+  to the SAME subagent, repeat; `SPAWN REQUEST` → the spawn relay, below; `DONE` + report → `[x]`, write `Done:` (sha,
   decisions, wrong premises), propagate facts as dated `Context:` bullets,
   update `Steps:`, commit; **anything else, incl. ambiguous → `[!]`**, index
-  `[FAILED]` + `Failed at:`, halt. Relay block is fixed text: question, lettered
+  `[FAILED]` + `Failed at:`, halt. **Spawn relay** (`--relay-spawns` forces it;
+  otherwise the step's own agent triggers it): where a subagent cannot spawn a
+  subagent — cloud sessions — the step's agent writes the child's prompt to a
+  `$TMPDIR` file, **never inside the repo**, and ends its turn with
+  `SPAWN REQUEST` naming a prompt path, a result path and a model. The
+  orchestrator spawns that child **at its own nesting level** — sideways, not
+  down, which is the whole mechanism — waits, then tells the same suspended
+  caller the result file is ready. It **opens neither file**: forwards, does not
+  read, the same discipline as *compresses, does not answer*, and what keeps the
+  child's output out of its context. Detection is the SUBAGENT's, not the
+  orchestrator's — only the agent needing the tool can tell whether it has it,
+  and a probe would measure the wrong environment. The caller stays suspended
+  throughout, so one agent works at a time — the one stated exception to *never
+  two subagents*; a child's own `SPAWN REQUEST` is served identically, so
+  fan-out stays flat; cap of **8 relay rounds per step**, the ninth is a `[!]`
+  failure. A child that fails **fails the step** — never reported to its caller
+  as finished, which would buy a `Done:` line for work that never happened.
+  Classification runs on the child's returned marker, never on the result file,
+  which is what squares it with *opens neither file*. File names are **dictated
+  by the contract** (`<runbook>-step<n>-round<r>-prompt.md` / `-result.md`), not
+  left to the agent: two runs share one `$TMPDIR` and the orchestrator, never
+  opening either file, could not detect a collision. Relay files are never
+  staged. Question-relay block is fixed text: question, lettered
   options with costs, a recommendation; at an approval gate the full draft
   follows **unabridged** — the one place it must not compress. In the subagent
   position (depth 3, a batch parent driving the runbook) it emits the same block
@@ -935,11 +971,20 @@ Currently shipped:
   step's diff or commit; **no step invokes `/runbook-run`** (nested runbooks
   refused at spawn time). `--from N`/`--only N` narrow selection but never
   weaken `Depends on:`. Depth budget stated plainly in the body: orchestrator +
-  step agent leaves one confirmed level, so a step that itself spawns
-  (`/task-implement --review`) is past verified ground — warned, not refused.
+  step agent leaves one confirmed level **where nesting works at all** (depth 3
+  verified locally 2026-08-24; a cloud subagent cannot spawn, and depth 4 was
+  never probed anywhere) — and the spawn relay is why that mostly no longer
+  matters: a step wanting its own subagent needs no third level.
 - `commands/runbook-create.md` — authors a runbook, or appends to one.
   `requires: skill:runbook-run` — it cites that skill's `runbook-schema.md` for
-  the body/index shape rather than carrying a second copy. Command not skill:
+  the body/index shape rather than carrying a second copy. **The only assigner
+  of ids**: a new runbook takes `Last runbook number: + 1` (never `max()`) and
+  advances the counter in the same write; an append assigns nothing. Also the
+  only writer of a step's `Needs:` line (`agent` / `agent+human` / `human`,
+  absent meaning `agent`) — a seventh from-scratch interview question, harvested
+  in passing in conversation mode, and called out at the gate because whether
+  the run can be left unattended is the one thing the titles cannot say.
+  Command not skill:
   one pass with a confirmation gate, no supporting files of its own. Two
   orthogonal axes — target (`<name>` new / `--append <name>` / bare `--append` =
   the runbook this session is running, which a step's subagent knows because the
@@ -950,14 +995,17 @@ Currently shipped:
   Append rules: numbering continues, existing steps NEVER edited, `Sequencing:`
   extended not replaced, `[DONE]` → back to `[PENDING]`, `[FAILED]` stays
   `[FAILED]`, `[RUNNING]` appendable **only from the running session itself**.
-  Enforces nine prompt-quality rules before writing (self-contained; names the
+  Enforces ten prompt-quality rules before writing (self-contained; names the
   document to read first or carries evidence inline; carries every decision that
   exists nowhere on disk **and nothing that already does** — which is why
   `/task-implement 134` is a complete one-line prompt; states sequencing and
   why; states what must not be re-proposed; real slash commands in real argument
   form; **no path that will not exist at run time, in particular nothing under
-  `docs/`**; one deliverable; never invokes `/runbook-run`), fixing failures and
-  NAMING each fix in the report rather than silently. Gate shows the proposed
+  `docs/`**; one deliverable; never invokes `/runbook-run`; **rule 10** prefers
+  two steps to one needing a nested spawn — a preference, not rule 9's
+  rejection, because a skill that spawns internally cannot be split by an author
+  who does not know it will, which is the case the spawn relay covers at run
+  time), fixing failures and NAMING each fix in the report rather than silently. Gate shows the proposed
   shape only — never the full prompts, which are a wall of text and are in the
   file a moment later. `Context:` is authored as `none`: decisions belong INSIDE
   the fenced prompt, which keeps it pasteable into a fresh session by hand.
@@ -969,16 +1017,41 @@ Currently shipped:
   never opens a body under `.claude/runbooks/` — same discipline as
   `/task-list`'s never opening `.claude/tasks/`, and what keeps cost flat in the
   number of runbooks rather than their size (it is why the index carries
-  `Steps:` at all). `Failed at:` printed as a continuation line under `[FAILED]`
-  rows only. Optional status filter matched without brackets, case-insensitively
+  `Steps:` at all). Prints `<id>. [STATUS] <name> <done>/<total> <created>
+  <source> <title>` — the id leads so it can be typed at any other
+  runbook command, the one-line title closes so the listing is answerable
+  without opening anything; an id-less block prints `-` and is **left alone**,
+  the backfill belonging to a command that writes the index. `Failed at:`
+  printed as a continuation line under `[FAILED]` rows only. Optional status filter matched without brackets, case-insensitively
   (`/task-list`'s convention); unknown status names the four valid ones rather
   than printing nothing. Missing/empty index is not an error. **Writes nothing**,
   runs no shell, corrects no status however wrong it looks.
+- `commands/runbook-describe.md` — the deep read side, and the deliberate pair
+  to `/runbook-list`. `requires: skill:runbook-run` for the schema. Takes one
+  runbook by **name or id** and prints it in four parts: the index heading line
+  (id, name, status, progress, title; `Failed at:` continuation for `[FAILED]`),
+  the body header (`Created:`/`Source:`/`Model:`/`Sequencing:`/`Companion:`,
+  `Sequencing:` never summarised), every step (marker as the body carries it,
+  `depends on:` always, `needs:` only when not plain `agent`, `Done:` rendered
+  not summarised for `[x]` and `[!]` alike, `Context:` bullets), then the
+  `## Do not re-propose` item count and a by-marker summary. **The one
+  read-only runbook command allowed to open a body, and it opens exactly one**
+  — never a walk of `.claude/runbooks/` — which is precisely the trade
+  `/runbook-list` refuses; a `--verbose` on the listing would have destroyed the
+  property that listing is built around, which is why this is its own command.
+  **Prompt blocks are NOT printed** (the largest thing in the body; this is not
+  a slow `cat`). `Needs:` is authoritative where authored; for a step lacking
+  one it MAY infer from the prompt block, always rendered `(inferred)`, only
+  where the prompt names the manual act, and **never written anywhere** — the
+  note points at `/runbook-create --append` instead. Writes nothing, runs no
+  shell, corrects no status however wrong the index looks against the body it
+  just read.
 - `commands/runbook-clean.md` — pruning, `/task-clean`'s exact shape.
   `requires: skill:runbook-run` for the status vocabulary and block shape. Three
-  stages: resolve (no arg = every `[DONE]`; names = exactly those, and a named
-  non-`[DONE]` runbook is refused BY NAME with its actual status, never silently
-  skipped) → plan and confirm (name, created date, steps done/total, both paths;
+  stages: resolve (no arg = every `[DONE]`; names **or ids** = exactly those,
+  and a named non-`[DONE]` runbook is refused BY NAME with its actual status,
+  never silently skipped; survivors are never renumbered and the counter never
+  moves down) → plan and confirm (name, created date, steps done/total, both paths;
   empty plan says so and stops) → remove and commit (delete body files, remove
   index blocks incl. surrounding `---` rules, stage exactly those paths). An
   unknown name aborts the whole run **before anything is deleted**. Only

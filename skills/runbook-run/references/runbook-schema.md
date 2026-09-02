@@ -22,15 +22,28 @@ Both are **committed**. The work a runbook drives is executed across machines
 and cloud sessions, and the `Done:` lines are the record of what actually
 happened — they are re-read far more often than anyone expects.
 
-`<name>` is kebab-case and **is** the identifier: it is what `/runbook-run`,
-`/runbook-create --append` and `/runbook-clean` take as their argument, and
-what appears in the index heading. There is no counter and no numeric id —
-names are the identifiers, exactly as in `.claude/FEATURES.md`.
+`<name>` is kebab-case and **is** the identifier: it is what names the body
+file, what appears in the index heading, and what every message about a
+runbook calls it.
+
+Beside the name, every runbook carries a numeric **id** — a shorthand for
+referring to it on a command line, the way a task id works in
+`.claude/TASKS.md`. The id is an **alias, never a replacement**: the body file
+stays `.claude/runbooks/<name>.md`, a rename is still a rename, and errors and
+reports name the runbook by name. Every command that takes a name —
+`/runbook-run`, `/runbook-create --append`, `/runbook-clean` — takes an id in
+its place, resolved by one rule:
+
+> **A bare all-digits argument is an id. Anything else is a name.**
+
+That is unambiguous rather than heuristic: a kebab-case name can never be all
+digits, so no argument is ever both. An id that matches no runbook is reported
+exactly as an unknown name is — by listing the runbooks that do exist.
 
 Both paths are created **on first use**, silently and idempotently, by
 whichever feature first needs to write one. A project needs no setup step for
 runbooks; nothing has to be initialised in advance. A freshly created index is
-its title line and nothing else.
+its title line and its counter at `0`, and nothing else.
 
 A name already present is refused with a suggested alternative rather than
 disambiguated automatically — a runbook is referred to by name for the length
@@ -63,6 +76,8 @@ decision that exists nowhere on disk, may open with a slash command>
 ## [ ] 2. <title>
 
 Depends on: 1
+
+Needs: agent+human          ← optional; omitted entirely on an `agent` step
 
 Context: none
 
@@ -99,6 +114,27 @@ Under the heading, in this order:
   records the real constraint. It never causes anything to run in parallel:
   steps are sequential, always. It exists so a deadlock is detectable and so
   `--only` and `--from` have something to check against.
+- **`Needs:`** — optional. Whether executing this step requires a person, and
+  in what measure. Exactly three values, deliberately the same vocabulary as a
+  task's `Target:` in `.claude/TASKS.md` so the two stores read alike:
+
+  | Value | Meaning |
+  | --- | --- |
+  | `agent` | The step's subagent can execute it start to finish. **The default when the line is absent.** |
+  | `agent+human` | Mostly agent work, but part of it needs a person — an editor-only operation, a GUI wizard, hardware. |
+  | `human` | Nothing in it is agent-executable; the step is a walkthrough. |
+
+  It is **authored**, by `/runbook-create`, at the moment the author still
+  knows. It is descriptive, not enforcing: nothing gates on it, and a run does
+  not refuse a step because of it. Its job is to let a reader see, before
+  starting, which steps mean the run cannot be left unattended — the one thing
+  a `Depends on:` graph cannot tell them.
+
+  An absent `Needs:` means `agent`, and it is the common case. A runbook whose
+  every step is agent work carries no `Needs:` lines at all — **`Needs: agent`
+  is never written**, which is why the template above shows the line only on
+  the step that needs it. A reader who sees no `Needs:` on a step has been told
+  it is `agent`, not that the author forgot.
 - **`Context:`** — `none` at authoring time in the common case, and the run's
   field thereafter: corrections, failure notes, and facts learned by earlier
   steps, each as a dated bullet. The decisions a prompt needs belong *inside*
@@ -170,13 +206,17 @@ indistinguishable from having no matching runbooks.
 
 ## The index block
 
-`.claude/RUNBOOKS.md` mirrors `.claude/TASKS.md`'s block shape, minus its
-counter:
+`.claude/RUNBOOKS.md` mirrors `.claude/TASKS.md`'s block shape **and its
+counter**:
 
 ```
+# Runbooks
+
+Last runbook number: 7
+
 ---
 
-## <name> — <one-line title>
+## 3. <name> — <one-line title>
 
 Status: [PENDING]
 File: .claude/runbooks/<name>.md
@@ -187,17 +227,41 @@ Steps: 0/7
 ---
 ```
 
+- The heading carries the **id, the name and the one-line title**, in that
+  order. The id is the only part of the heading that is not the runbook's own
+  wording.
+- `Last runbook number: <N>` tracks the **highest id ever assigned**, not the
+  highest currently present, and **only ever increases**. Ids are stable: a
+  survivor of a prune is never renumbered and a pruned id is never reused.
+  This is `TASKS.md`'s rule verbatim and holds for the same reason — a counter
+  derived with `max()` hands a deleted runbook's id to the next one, and every
+  reference written down before the prune then points at the wrong runbook.
 - `Steps:` is `<done>/<total>`, where **done counts `[x]` only**. `[~]` and
   `[!]` are not done.
-- A fifth line, `Failed at: step <n> — <reason>`, is present **only** while the
-  status is `[FAILED]`, and is removed when a re-run clears it. It is carried
-  in the index because the one thing a reader of a halted runbook needs is why
-  it halted, and making them open the body for a single sentence is the
-  friction that stops the listing being used.
+- A line `Failed at: step <n> — <reason>` is present **only** while the status
+  is `[FAILED]`, and is removed when a re-run clears it. It is carried in the
+  index because the one thing a reader of a halted runbook needs is why it
+  halted, and making them open the body for a single sentence is the friction
+  that stops the listing being used.
 
-**The index is a summary.** It holds nothing that is not derivable from the
-body. That is what makes a hand-edited body safe — re-reading it reconciles the
-index — and what lets a listing render without ever opening a body file.
+**The index is a summary.** With one exception it holds nothing that is not
+derivable from the body: that is what makes a hand-edited body safe —
+re-reading it reconciles the index — and what lets a listing render without
+ever opening a body file. The exception is the id and its counter, which are
+assigned, not derived, and therefore live only here.
+
+### Backfilling an index written before ids
+
+An index with no `Last runbook number:` line, or blocks whose headings carry no
+id, is upgraded **in place by the first command that writes to it** —
+`/runbook-create`, `/runbook-clean` or `/runbook-run`. Assign ids in the order
+the blocks already appear, set the counter to the highest assigned, and change
+nothing else in the file.
+
+**A read-only command never performs it.** `/runbook-list` renders an id-less
+block with `-` in its id column and moves on. Correcting the index belongs to a
+command that already has it open for writing — the same rule that stops the
+listing correcting a `Steps:` count it thinks is wrong.
 
 ---
 
