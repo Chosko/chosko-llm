@@ -946,7 +946,14 @@ Currently shipped:
   throughout, so one agent works at a time — the one stated exception to *never
   two subagents*; a child's own `SPAWN REQUEST` is served identically, so
   fan-out stays flat; cap of **8 relay rounds per step**, the ninth is a `[!]`
-  failure. Relay files are never staged. Question-relay block is fixed text: question, lettered
+  failure. A child that fails **fails the step** — never reported to its caller
+  as finished, which would buy a `Done:` line for work that never happened.
+  Classification runs on the child's returned marker, never on the result file,
+  which is what squares it with *opens neither file*. File names are **dictated
+  by the contract** (`<runbook>-step<n>-round<r>-prompt.md` / `-result.md`), not
+  left to the agent: two runs share one `$TMPDIR` and the orchestrator, never
+  opening either file, could not detect a collision. Relay files are never
+  staged. Question-relay block is fixed text: question, lettered
   options with costs, a recommendation; at an approval gate the full draft
   follows **unabridged** — the one place it must not compress. In the subagent
   position (depth 3, a batch parent driving the runbook) it emits the same block
