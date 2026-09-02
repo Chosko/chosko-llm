@@ -9,14 +9,15 @@ description: Execute a runbook — an ordered list of self-contained prompts und
 # Global skill: execute a runbook, one step at a time, each in a fresh
 # subagent. Relays questions to the user, records what each step did, and
 # commits after every step.
-# Usage: /runbook-run <name>
-#        /runbook-run <name> --from N        (begin selection at step N)
-#        /runbook-run <name> --only N        (run exactly step N, then stop)
-#        /runbook-run <name> --model sonnet  (override the header model)
-#        /runbook-run <name> --no-commit     (write the bookkeeping, commit nothing)
-#        /runbook-run <name> --no-push       (commit as usual, skip the push)
+# Usage: /runbook-run <name|id>
+#        /runbook-run <name|id> --from N        (begin selection at step N)
+#        /runbook-run <name|id> --only N        (run exactly step N, then stop)
+#        /runbook-run <name|id> --model sonnet  (override the header model)
+#        /runbook-run <name|id> --relay-spawns  (force the spawn relay for this run)
+#        /runbook-run <name|id> --no-commit     (write the bookkeeping, commit nothing)
+#        /runbook-run <name|id> --no-push       (commit as usual, skip the push)
 # Examples: /runbook-run implement-ecc-import
-#           /runbook-run implement-ecc-import --from 12
+#           /runbook-run 3 --from 12
 #           /runbook-run implement-ecc-import --only 4 --model sonnet
 
 GOAL

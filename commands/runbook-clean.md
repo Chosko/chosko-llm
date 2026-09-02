@@ -13,11 +13,12 @@ requires: skill:runbook-run
 # `.claude/RUNBOOKS.md`. Always reports the plan and asks for explicit
 # confirmation before writing or deleting anything.
 # Usage: /runbook-clean
-#        /runbook-clean <name> [<name> ...]
-#        /runbook-clean [<name> ...] --no-commit   (delete, skip the commit and push)
-#        /runbook-clean [<name> ...] --no-push     (commit as usual, skip the push)
+#        /runbook-clean <name|id> [<name|id> ...]
+#        /runbook-clean [<name|id> ...] --no-commit   (delete, skip the commit and push)
+#        /runbook-clean [<name|id> ...] --no-push     (commit as usual, skip the push)
 # Examples: /runbook-clean
 #           /runbook-clean ecc-import-landing
+#           /runbook-clean 1 5
 #           /runbook-clean ecc-import-landing context-layer-refresh
 #           /runbook-clean --no-commit
 
@@ -41,8 +42,8 @@ $ARGUMENTS
 ARGUMENT NOTE
 
 Scan `$ARGUMENTS` and strip the flags below before STAGE 1 resolves anything;
-what is left is this command's own argument — a list of runbook names, or
-empty for the default.
+what is left is this command's own argument — a list of runbook names or ids,
+or empty for the default.
 
 | Flag | Effect |
 | --- | --- |
@@ -97,6 +98,18 @@ STAGE 1 — RESOLVE (no file writes, no deletions)
 1. Read `.claude/RUNBOOKS.md`. If it does not exist, or holds no blocks, that
    is **not an error** — tell the user "No runbooks in this project." and
    stop. Do not create it and do not suggest a setup command.
+
+1b. **An index written before ids** — one with no `Last runbook number:` line,
+   or blocks whose headings carry no id — is **backfilled by this command**,
+   per `runbook-schema.md` § *Backfilling an index written before ids*. Work
+   the ids out here, in order, so the plan can print them; **write them in
+   STAGE 3**, with the deletions, under the same **"Apply?"**. Say in the plan
+   that the backfill will land.
+
+   It is written only on a run that reaches STAGE 3. An empty plan stops at
+   step 6 below without writing anything, backfill included — the schema gives
+   the backfill to the first command that *writes* the index, and a run that
+   deletes nothing never does.
 
 2. Parse every block per `runbook-schema.md` § *The index block*: the id, the
    name and the one-line title from the heading, then `Status:`, `File:`,
@@ -165,8 +178,9 @@ Refused (1):
 Nothing else in .claude/runbooks/ is touched.
 ```
 
-- Take the id, name, status, `Steps:` and `Created:` values from the index
-  verbatim. `Steps:` is printed as the index carries it. Printing the id as
+- Take the name, status, `Steps:` and `Created:` values from the index
+  verbatim. The id likewise, except where step 1b assigned it — say so on the
+  line when it did, so a reader knows the number is new. `Steps:` is printed as the index carries it. Printing the id as
   well as the name is what lets a user check that the runbook they typed a
   number for is the one about to be deleted.
 - Probe each body path with the Read tool before listing it. A body file that
@@ -202,16 +216,16 @@ STAGE 3 — REMOVE AND COMMIT (only after explicit approval)
    survivors. An index with every block removed is left as its title line and
    its counter, and nothing else — do not delete the file.
 
-3. **Never renumber, and never move the counter down.** A survivor keeps the
-   id it has and `Last runbook number:` is left exactly where it is, so a
-   pruned id is never handed to a later runbook —
-   `runbook-schema.md` § *The index block* is the authority, and it is the same
-   rule that keeps task ids stable across a `/task-clean`.
+3. **Never renumber, and never move the counter down** —
+   `runbook-schema.md` § *The index block*.
 
-4. **Touch no runbook this command is not deleting.** No status is corrected,
-   no `Steps:` count recomputed, no `Failed at:` line rewritten, however wrong
-   any of them looks. Reconciliation belongs to `/runbook-run`, which re-reads
-   the body every step.
+4. **Correct no derived field on a runbook this command is not deleting.** No
+   status, no `Steps:` count, no `Failed at:` line, however wrong any of them
+   looks. Reconciliation belongs to `/runbook-run`, which re-reads the body
+   every step. This does **not** bar the backfill STAGE 1 step 1b worked out —
+   assigning an id to a survivor of an index that predates ids is the one edit
+   this command makes to a runbook it is not deleting, and it is required
+   rather than permitted. Write those ids here, with the deletions.
 
 5. **Never edit a body file.** The only thing this command does to a body is
    delete it whole.

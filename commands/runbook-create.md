@@ -15,7 +15,7 @@ requires: skill:runbook-run
 # Usage: /runbook-create
 #        /runbook-create <name>
 #        /runbook-create <free-form description of the work>
-#        /runbook-create --append <name>
+#        /runbook-create --append <name|id>
 #        /runbook-create --append
 #        /runbook-create <args> --commit            (commit and push what this run wrote)
 #        /runbook-create <args> --commit --no-push  (commit locally, skip the push)
@@ -377,19 +377,20 @@ Two cases.
 ### New runbook
 
 1. Create `.claude/runbooks/` and `.claude/RUNBOOKS.md` if either is missing —
-   silently, idempotently, the index as its title line and its counter at `0`.
-   Backfill an index written before ids, per PHASE 1's rule, before step 2.
+   silently, idempotently, in the shape `runbook-schema.md` § *The store*
+   gives a freshly created index. Backfill an index written before ids, per
+   PHASE 1's rule, before step 2.
 2. Write `.claude/runbooks/<name>.md`: the header, then each step in order.
-3. Append the index block with `Status: [PENDING]` and `Steps: 0/<total>`,
-   under a heading carrying the runbook's **new id**, its name and its
-   one-line title.
-4. Advance `Last runbook number:` to that id, **in the same write** as step 3.
+3. Append the index block with `Status: [PENDING]` and `Steps: 0/<total>`, in
+   the heading and field shape `runbook-schema.md` § *The index block* gives.
+4. Take the new id from `Last runbook number: + 1` and advance the counter to
+   it, **in the same write** as step 3.
 
-The new id is `Last runbook number: + 1` — never `max()` over the blocks
-present, which would reuse a pruned runbook's id. This command is the only
-thing that assigns an id or advances the counter, exactly as `/task-add` is
-for `.claude/TASKS.md`; an append assigns nothing, because the runbook it
-appends to already has one.
+What is this command's own is the *when*: it is the only thing that assigns an
+id or advances the counter, exactly as `/task-add` is for `.claude/TASKS.md`,
+and an append assigns nothing because the runbook it appends to already has
+one. The id's shape and the reason it is taken from the counter rather than
+from `max()` are the schema's, cited and not copied.
 
 Every step marker is `[ ]`. There are no `Done:` lines — an authored runbook
 has none at all.
