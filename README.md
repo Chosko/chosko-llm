@@ -866,7 +866,8 @@ Commit behaviour follows each command's family: `/runbook-create` is an
 authoring command and leaves the runbook uncommitted for one review pass
 (`--commit`, or `--commit --no-push`), `/runbook-clean` commits and pushes the
 deletion by default (`--no-commit` / `--no-push`), `/runbook-run` commits after
-every step, and `/runbook-list` and `runbook-suggest` write nothing at all.
+every step, and `/runbook-list`, `/runbook-describe` and `runbook-suggest` write
+nothing at all.
 
 A runbook is not a [session handoff](#hand-off-a-conversation--session-save-and-session-resume):
 a session file is a snapshot of work in flight, a runbook is a plan for work not

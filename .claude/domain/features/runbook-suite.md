@@ -1,6 +1,6 @@
 # Runbooks
 
-A new asset kind and the five shipped artifacts that author, execute, read and
+A new asset kind and the six shipped artifacts that author, execute, read and
 prune it. A **runbook** is an ordered list of self-contained prompts, each
 written to be executed by a fresh agent that has none of the conversation the
 prompts came out of. `/runbook-run` walks one top to bottom, spawning one
@@ -337,7 +337,7 @@ same rule that stops it correcting a `Steps:` count it thinks is wrong.
    it does. This is the single most dangerous point in the whole feature: a body
    that treats the spawn's return value as the result will tick a step that
    never ran and commit the lie.
-7. **Handle the result** — the three cases under Interfaces and contracts.
+7. **Handle the result** — the four cases under Interfaces and contracts.
 8. **Commit** the runbook and the index, then loop to 2. When no `[ ]` steps
    remain, set the index to `[DONE]` and report.
 
@@ -601,8 +601,8 @@ by hand if `/runbook-run` is unavailable or the user simply prefers to drive it.
 earlier steps.
 
 **First use and naming.** `.claude/runbooks/` and `.claude/RUNBOOKS.md` are
-created on first use, the index with its title and nothing else — no counter,
-because names are the identifiers. Creation is silent and idempotent; a project
+created on first use, the index with its title line and `Last runbook number:
+0` and nothing else. Creation is silent and idempotent; a project
 needs no setup step and `/task-setup` and `/project-setup` are untouched. A name
 already present is refused with a suggested alternative rather than
 disambiguated automatically, since a runbook is referred to by name for the
@@ -628,8 +628,9 @@ are cheapest to fix before the first step runs.
 ### `/runbook-list` — the read side
 
 One pass: read `.claude/RUNBOOKS.md`, parse each block's heading and its
-fields, apply an optional status filter, print. It never opens a body file — everything printed
-comes from the index, which is why the index carries `Steps:` at all. This is
+fields, apply an optional status filter, print. It never opens a body file —
+everything printed comes from the index, which is why the index carries
+`Steps:` at all. This is
 `/task-list`'s discipline of never opening a file under `.claude/tasks/`, and it
 keeps the cost flat in the number of runbooks rather than in their size.
 
@@ -933,10 +934,10 @@ Hard contracts:
 - Shipped bodies reference `${CLAUDE_HOME:-...}` paths, never `~/.claude`, and
   never any path under `docs/`.
 
-All five artifacts need `name`, `version`, `type`, `description` frontmatter per
+All six artifacts need `name`, `version`, `type`, `description` frontmatter per
 [docs/authoring-guide.md](../../../docs/authoring-guide.md), starting at
 `version: 0.1.0`. Root `VERSION` moves **per task, not once for the feature**:
-the suite lands over five shipped-artifact tasks, each taking its own minor bump
+the suite lands over six shipped-artifact tasks, each taking its own minor bump
 relative to whatever is in place when it lands, plus a patch bump for the
 documentation task that follows them.
 
@@ -944,13 +945,16 @@ documentation task that follows them.
 
 - **Task 125** — the `requires:` frontmatter field and its install-time
   resolution, from [shared-phase-engine](./shared-phase-engine.md). **Every task
-  derived from this feature preconditions on it.** Four of the five artifacts
+  derived from this feature preconditions on it.** Five of the six artifacts
   declare `requires:`, and without the field they can be installed with their
   dependency absent — a command citing a schema file that is not there, or a
   skill proposing a command that does not exist.
 - **Internal ship order**, forced by that graph: `runbook-run` first (it is the
   dependency and ships the two reference files), then `runbook-create`, then
-  `runbook-list` and `runbook-clean`, then `runbook-suggest` last.
+  `runbook-list`, `runbook-describe` and `runbook-clean`, then
+  `runbook-suggest` last. This is the same order stated under *The six shipped
+  artifacts*; it is repeated here because this is the section that carries the
+  dependency graph forcing it.
 - Subagent spawning, with results arriving asynchronously and nesting confirmed
   to depth 3 (verified 2026-08-24). Depth 3 means the orchestrator may itself be
   a subagent, which is what allows a runbook to be driven from a batch parent.
