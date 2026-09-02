@@ -164,7 +164,7 @@ Preconditions: 165
 
 ## 167. Relay a subagent's spawns through the orchestrator when nesting is unavailable
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/references/subagent-contract.md, skills/runbook-run/SKILL.md, commands/runbook-create.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none

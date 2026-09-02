@@ -1,8 +1,8 @@
 ---
 name: runbook-create
-version: 0.3.0
+version: 0.4.0
 type: command
-description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md, plus its .claude/RUNBOOKS.md index block — or append steps to one that already exists, including one a run is in the middle of. Assigns each new runbook the next id from the index's Last runbook number: counter, which every other runbook- command then accepts in place of the name. Authors each step's optional Needs: line (agent / agent+human / human, absent meaning agent) so a reader can see before starting which steps need a person, and calls those steps out at the confirmation gate. Two axes: where the steps go (a new runbook, --append <name|id>, --append with no name for the runbook this session is running, or no arguments at all, which asks) and where the material comes from (the current conversation's most recent follow-up list, the default; or a free-form description gathered through one batched interview). Enforces nine prompt-quality rules against every step before writing — self-contained, names the document to read first, carries every decision that exists nowhere on disk and nothing that already does, states its sequencing and what must not be re-proposed, uses real slash commands, references no path missing at run time, produces one deliverable, and never invokes /runbook-run — fixing failures and naming each fix in the confirmation report. The gate shows the proposed shape only, never the full prompts. Authoring command — leaves the runbook uncommitted for one review pass by default; pass --commit to commit and push it, or --commit --no-push to commit without pushing.
+description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md, plus its .claude/RUNBOOKS.md index block — or append steps to one that already exists, including one a run is in the middle of. Assigns each new runbook the next id from the index's Last runbook number: counter, which every other runbook- command then accepts in place of the name. Authors each step's optional Needs: line (agent / agent+human / human, absent meaning agent) so a reader can see before starting which steps need a person, and calls those steps out at the confirmation gate. Two axes: where the steps go (a new runbook, --append <name|id>, --append with no name for the runbook this session is running, or no arguments at all, which asks) and where the material comes from (the current conversation's most recent follow-up list, the default; or a free-form description gathered through one batched interview). Enforces ten prompt-quality rules against every step before writing — self-contained, names the document to read first, carries every decision that exists nowhere on disk and nothing that already does, states its sequencing and what must not be re-proposed, uses real slash commands, references no path missing at run time, produces one deliverable, never invokes /runbook-run, and prefers two steps to one that would need a nested spawn — fixing failures and naming each fix in the confirmation report. The gate shows the proposed shape only, never the full prompts. Authoring command — leaves the runbook uncommitted for one review pass by default; pass --commit to commit and push it, or --commit --no-push to commit without pushing.
 requires: skill:runbook-run
 ---
 
@@ -69,7 +69,7 @@ gives. **Nothing about the artifact is restated here** — a second copy is the
 copy that drifts.
 
 What is this command's own is everything below: how the target is resolved,
-where the material comes from, the nine rules every prompt must pass, the
+where the material comes from, the ten rules every prompt must pass, the
 confirmation gate, and the append rules.
 
 ---
@@ -229,12 +229,12 @@ is not wanted**. Do not ask it routinely.
 
 THE PROMPT-QUALITY RULES
 
-Nine rules. Apply every one of them to every step before the file is written.
+Ten rules. Apply every one of them to every step before the file is written.
 They are stated here in full because approximating them produces prompts that
 read as complete and are not.
 
 1. **Self-contained.** An agent with no history of this conversation can
-   execute it. This is the rule the other eight serve. Self-contained means
+   execute it. This is the rule the other nine serve. Self-contained means
    *complete given what the invoked command reads*, **not exhaustive**: a
    prompt that invokes a skill which reads its own inputs from disk is
    complete as the bare invocation.
@@ -280,11 +280,28 @@ read as complete and are not.
    the work. Reject such a step by name, with that reason, and propose the
    alternative — the steps inline, or a separate runbook run afterwards.
 
+10. **Prefer two steps to a step that needs a nested spawn.** A step whose
+    prompt invokes something that wants its own subagent — `/task-implement
+    --review --rounds 2`, which wants an implementor and then a reviewer — is
+    usually better authored as two steps: implement, then review. Each is
+    spawned by the orchestrator directly, the review still gets the fresh
+    context that is its whole point, and the runbook gains an honest marker
+    for each half instead of one marker covering both.
+
+    This is a **preference, not a rejection** like rule 9, and the reason is
+    that it does not always apply: a skill that spawns internally, without the
+    author knowing it will, cannot be split by an author who does not know.
+    `/runbook-run`'s spawn relay covers that case at run time — the step's
+    agent asks the orchestrator to spawn the child on its behalf. So splitting
+    is the better shape where it is available, and the relay is the fallback
+    where it is not. Where a step is left un-split deliberately, say so in the
+    confirmation report; do not split it silently.
+
 ---
 
 PHASE 3 — ENFORCE THE RULES
 
-Check every step against all nine. **A step that fails a rule is fixed before
+Check every step against all ten. **A step that fails a rule is fixed before
 the file is written, and the fix is named in the confirmation report rather
 than applied silently.** The user is the only one who knows whether a missing
 decision was an omission or a deliberate delegation, and a silent fix takes
@@ -469,6 +486,9 @@ DO NOT:
 - Fix a rule failure silently. Every fix is named in the report.
 - Accept a step whose prompt invokes `/runbook-run`. Rule 9 is enforced here,
   not deferred to spawn time.
+- Split a step under rule 10 silently, or treat that rule as a rejection.
+  It is a preference: name the split, or name the reason a step was left
+  whole, in the confirmation report.
 - Write a `Done:` line, a step marker other than `[ ]`, or an index `Status:`
   other than `[PENDING]` — the sole exception being the `[DONE]` → `[PENDING]`
   flip an append forces.

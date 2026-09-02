@@ -11,6 +11,11 @@ Two placeholders, and nothing else, is substituted:
 - `<RUNBOOK>` — the runbook's name, e.g. `implement-ecc-import`.
 - `<N>` — the step number being executed.
 
+The relay rule below names no path of its own: the subagent chooses one under
+the OS temp directory and reports it. That is deliberate — a third placeholder
+would be a path the orchestrator has to invent before it knows whether the
+relay will be used at all.
+
 It goes **last** in the assembled prompt, after the step's own fenced prompt
 block, so the operating rules are the final thing the agent reads.
 
@@ -29,6 +34,14 @@ OPERATING RULES
   sent back to you in this same conversation; then continue.
 - Follow the invoked skill's default commit behaviour. Add no flag the user did
   not type.
+- If the work needs a subagent and you CANNOT spawn one, do not do that
+  subagent's work yourself in this context and do not silently drop it. Write
+  the prompt you would have given it to a file under the OS temp directory
+  ($TMPDIR, never inside the repository), pick a second path there for its
+  result, and end your turn with the literal line `SPAWN REQUEST` followed by
+  three lines: `prompt: <path>`, `result: <path>`, `model: <model or "same">`.
+  The orchestrator will spawn it for you and reply when the result file has
+  been written; read it and continue. Ask for one child at a time.
 - Never edit .claude/runbooks/<RUNBOOK>.md or .claude/RUNBOOKS.md.
 - You are executing step <N> of runbook <RUNBOOK>.
 - When finished, end your turn with the literal line `DONE` followed by a
@@ -64,6 +77,20 @@ contract, and is never sent to a subagent.
 - **Naming the runbook and step.** It orients the agent, it makes its report
   attributable, and it is what lets a step's subagent call
   `/runbook-create --append` with no name argument.
+- **`SPAWN REQUEST`.** In some environments — cloud sessions among them — a
+  subagent cannot spawn a subagent, so a step whose prompt invokes something
+  that wants a child agent (`/task-implement --review --rounds 2`) has nowhere
+  to put it. The two things an agent does instead are both bad: doing the
+  child's work inline destroys the fresh context that was the entire reason for
+  a child (an implementer reviewing its own diff is not a review), and dropping
+  it silently produces a `DONE` report for work that did not happen. So the
+  rule names a third option and makes it the required one. **Detection lives
+  here rather than in the orchestrator** because only the agent that needs the
+  tool can tell whether it has it; an orchestrator-side probe measures the
+  orchestrator's environment and costs a spawn per run to do it. The paths go
+  under `$TMPDIR` so no scratch file can ever land in a commit, and "one child
+  at a time" keeps the relay sequential, exactly like the question relay it is
+  modelled on.
 - **`DONE` plus the three-part report.** `DONE` is the literal marker the
   orchestrator classifies on; the sha, the decisions and the wrong premises are
   exactly what the `Done:` line records and what fact propagation feeds into

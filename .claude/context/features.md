@@ -909,7 +909,8 @@ Currently shipped:
   per-step `Needs:` field, index block + its `Last runbook number:` counter and
   per-runbook **id**)
   and `references/subagent-contract.md` (the OPERATING RULES block pasted
-  verbatim into every spawned prompt), both cited by the other three by
+  verbatim into every spawned prompt — two placeholders, `<RUNBOOK>` and `<N>`,
+  and it now carries the `SPAWN REQUEST` rule), both cited by the other three by
   `${CLAUDE_HOME:-$HOME/.claude}/...` path. No `requires:` — it IS the
   dependency. **Ids**: every runbook carries one beside its kebab-case name,
   and every command taking a name takes an id in its place — **a bare
@@ -926,11 +927,26 @@ Currently shipped:
   select first `[ ]`/`[~]`/`[!]` step whose `Depends on:` are all `[x]`, mark
   `[~]`, spawn ONE subagent, **wait for the result notification** (the single
   most dangerous point — the spawn's return value is not the result), classify,
-  commit. Three result cases: `QUESTIONS FOR USER` → relay to user, answer back
-  to the SAME subagent, repeat; `DONE` + report → `[x]`, write `Done:` (sha,
+  commit. **Four** result cases: `QUESTIONS FOR USER` → relay to user, answer back
+  to the SAME subagent, repeat; `SPAWN REQUEST` → the spawn relay, below; `DONE` + report → `[x]`, write `Done:` (sha,
   decisions, wrong premises), propagate facts as dated `Context:` bullets,
   update `Steps:`, commit; **anything else, incl. ambiguous → `[!]`**, index
-  `[FAILED]` + `Failed at:`, halt. Relay block is fixed text: question, lettered
+  `[FAILED]` + `Failed at:`, halt. **Spawn relay** (`--relay-spawns` forces it;
+  otherwise the step's own agent triggers it): where a subagent cannot spawn a
+  subagent — cloud sessions — the step's agent writes the child's prompt to a
+  `$TMPDIR` file, **never inside the repo**, and ends its turn with
+  `SPAWN REQUEST` naming a prompt path, a result path and a model. The
+  orchestrator spawns that child **at its own nesting level** — sideways, not
+  down, which is the whole mechanism — waits, then tells the same suspended
+  caller the result file is ready. It **opens neither file**: forwards, does not
+  read, the same discipline as *compresses, does not answer*, and what keeps the
+  child's output out of its context. Detection is the SUBAGENT's, not the
+  orchestrator's — only the agent needing the tool can tell whether it has it,
+  and a probe would measure the wrong environment. The caller stays suspended
+  throughout, so one agent works at a time — the one stated exception to *never
+  two subagents*; a child's own `SPAWN REQUEST` is served identically, so
+  fan-out stays flat; cap of **8 relay rounds per step**, the ninth is a `[!]`
+  failure. Relay files are never staged. Question-relay block is fixed text: question, lettered
   options with costs, a recommendation; at an approval gate the full draft
   follows **unabridged** — the one place it must not compress. In the subagent
   position (depth 3, a batch parent driving the runbook) it emits the same block
@@ -948,8 +964,10 @@ Currently shipped:
   step's diff or commit; **no step invokes `/runbook-run`** (nested runbooks
   refused at spawn time). `--from N`/`--only N` narrow selection but never
   weaken `Depends on:`. Depth budget stated plainly in the body: orchestrator +
-  step agent leaves one confirmed level, so a step that itself spawns
-  (`/task-implement --review`) is past verified ground — warned, not refused.
+  step agent leaves one confirmed level **where nesting works at all** (depth 3
+  verified locally 2026-08-24; a cloud subagent cannot spawn, and depth 4 was
+  never probed anywhere) — and the spawn relay is why that mostly no longer
+  matters: a step wanting its own subagent needs no third level.
 - `commands/runbook-create.md` — authors a runbook, or appends to one.
   `requires: skill:runbook-run` — it cites that skill's `runbook-schema.md` for
   the body/index shape rather than carrying a second copy. **The only assigner
@@ -970,14 +988,17 @@ Currently shipped:
   Append rules: numbering continues, existing steps NEVER edited, `Sequencing:`
   extended not replaced, `[DONE]` → back to `[PENDING]`, `[FAILED]` stays
   `[FAILED]`, `[RUNNING]` appendable **only from the running session itself**.
-  Enforces nine prompt-quality rules before writing (self-contained; names the
+  Enforces ten prompt-quality rules before writing (self-contained; names the
   document to read first or carries evidence inline; carries every decision that
   exists nowhere on disk **and nothing that already does** — which is why
   `/task-implement 134` is a complete one-line prompt; states sequencing and
   why; states what must not be re-proposed; real slash commands in real argument
   form; **no path that will not exist at run time, in particular nothing under
-  `docs/`**; one deliverable; never invokes `/runbook-run`), fixing failures and
-  NAMING each fix in the report rather than silently. Gate shows the proposed
+  `docs/`**; one deliverable; never invokes `/runbook-run`; **rule 10** prefers
+  two steps to one needing a nested spawn — a preference, not rule 9's
+  rejection, because a skill that spawns internally cannot be split by an author
+  who does not know it will, which is the case the spawn relay covers at run
+  time), fixing failures and NAMING each fix in the report rather than silently. Gate shows the proposed
   shape only — never the full prompts, which are a wall of text and are in the
   file a moment later. `Context:` is authored as `none`: decisions belong INSIDE
   the fenced prompt, which keeps it pasteable into a fresh session by hand.
