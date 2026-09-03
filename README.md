@@ -771,9 +771,12 @@ that has none of the conversation the prompts came out of.
   bare number, as with tasks. A kebab-case name is never all digits, so the two
   can't be confused: `/runbook-run 3` and `/runbook-run ecc-import-landing` are
   the same command.
-- `/runbook-run <name>` — execute it, one step at a time. `--from N`, `--only N`
-  and `--model <model>` narrow or redirect the run; `--relay-spawns` forces the
-  spawn relay described below.
+- `/runbook-run <name>` — execute it, one step at a time. `--from N`, `--to N`
+  (they compose: `--from X --to Y` runs that range, inclusive), `--only N` and
+  `--model <model>` narrow or redirect the run; `--relay-spawns` forces the
+  spawn relay described below. A run that stops at its `--to` bound leaves the
+  runbook `[PENDING]`, never `[DONE]` — a bounded run leaves work behind by
+  design.
 - `/runbook-list` — every runbook as one line: id, status, name, steps done over
   total, created date, source, and its one-line title.
 - `/runbook-describe <name|id>` — one runbook in depth: the header, and every
