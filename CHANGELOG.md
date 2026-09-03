@@ -2,6 +2,13 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.27.0 — 2026-09-03
+
+- **/runbook-run** gains `--to N`, stopping the run after step N. It composes with `--from`, so `--from X --to Y` runs that range of steps inclusive.
+- **/runbook-run** `--only N` is now exactly `--from N --to N` — one selection model rather than three, with the shorthand kept for the common case.
+- **/runbook-run** a run that stops at its `--to` bound leaves the runbook `[PENDING]`, never `[DONE]`, and reports which steps remain outside the range.
+- **/runbook-run** neither bound weakens a `Depends on:`; naming `--only` beside a bound, or a `--to` below a `--from`, is an error that runs nothing.
+
 ## 1.26.0 — 2026-09-02
 
 - **/runbook-run** gains a spawn relay for environments where a subagent cannot spawn a subagent, such as cloud sessions: a step's agent asks with `SPAWN REQUEST` and the orchestrator spawns the child at its own level, so nothing has to nest.

@@ -113,7 +113,7 @@ Under the heading, in this order:
 - **`Depends on:`** — a comma-separated list of step numbers, or `none`. It
   records the real constraint. It never causes anything to run in parallel:
   steps are sequential, always. It exists so a deadlock is detectable and so
-  `--only` and `--from` have something to check against.
+  `--from`, `--to` and `--only` have something to check against.
 - **`Needs:`** — optional. Whether executing this step requires a person, and
   in what measure. Exactly three values, deliberately the same vocabulary as a
   task's `Target:` in `.claude/TASKS.md` so the two stores read alike:

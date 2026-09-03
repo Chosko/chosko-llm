@@ -1,8 +1,8 @@
 ---
 name: runbook-run
-version: 0.4.0
+version: 0.5.0
 type: skill
-description: Execute a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md — by walking it top to bottom, spawning one fresh subagent per step, relaying that subagent's questions to the user and the user's answers back to the same subagent, recording what each step actually did in a Done: line, and committing the runbook and its .claude/RUNBOOKS.md index after every step. Steps run one at a time, never in parallel. The orchestrator reads only CLAUDE.md, the runbook and the index, and writes only the runbook and the index — every other change in the tree is made by a subagent, and it never reviews or second-guesses one. Usage: /runbook-run <name|id> — a bare all-digits argument is the numeric id the index assigns each runbook, anything else its kebab-case name — with --from N to begin selection at step N, --only N to run exactly one step, --model <model> to override the runbook's header model for this run, --relay-spawns to force the spawn relay for a whole run, and --no-commit / --no-push with their usual meanings. Where a subagent cannot spawn a subagent — cloud sessions among them — a step's agent ends its turn with SPAWN REQUEST naming a prompt file and a result file under the OS temp dir; the orchestrator spawns that child at its own nesting level, waits for it, and tells the caller the result is ready, without ever opening either file. Also carries, in references/, the two files the rest of the runbook suite reads by path: runbook-schema.md (the asset kind — store, body schema, step markers, status vocabulary, the optional per-step Needs: field, the index block with its id and Last runbook number: counter, and the backfill an index written before ids gets from the first command that writes it) and subagent-contract.md (the OPERATING RULES block pasted verbatim into every spawned prompt).
+description: Execute a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md — by walking it top to bottom, spawning one fresh subagent per step, relaying that subagent's questions to the user and the user's answers back to the same subagent, recording what each step actually did in a Done: line, and committing the runbook and its .claude/RUNBOOKS.md index after every step. Steps run one at a time, never in parallel. The orchestrator reads only CLAUDE.md, the runbook and the index, and writes only the runbook and the index — every other change in the tree is made by a subagent, and it never reviews or second-guesses one. Usage: /runbook-run <name|id> — a bare all-digits argument is the numeric id the index assigns each runbook, anything else its kebab-case name — with --from N to begin selection at step N, --to N to stop after step N (the two compose into --from X --to Y, an inclusive range), --only N to run exactly one step, --model <model> to override the runbook's header model for this run, --relay-spawns to force the spawn relay for a whole run, and --no-commit / --no-push with their usual meanings. Where a subagent cannot spawn a subagent — cloud sessions among them — a step's agent ends its turn with SPAWN REQUEST naming a prompt file and a result file under the OS temp dir; the orchestrator spawns that child at its own nesting level, waits for it, and tells the caller the result is ready, without ever opening either file. Also carries, in references/, the two files the rest of the runbook suite reads by path: runbook-schema.md (the asset kind — store, body schema, step markers, status vocabulary, the optional per-step Needs: field, the index block with its id and Last runbook number: counter, and the backfill an index written before ids gets from the first command that writes it) and subagent-contract.md (the OPERATING RULES block pasted verbatim into every spawned prompt).
 ---
 
 # /runbook-run
@@ -11,6 +11,8 @@ description: Execute a runbook — an ordered list of self-contained prompts und
 # commits after every step.
 # Usage: /runbook-run <name|id>
 #        /runbook-run <name|id> --from N        (begin selection at step N)
+#        /runbook-run <name|id> --to N          (stop after step N)
+#        /runbook-run <name|id> --from X --to Y (run steps X through Y inclusive)
 #        /runbook-run <name|id> --only N        (run exactly step N, then stop)
 #        /runbook-run <name|id> --model sonnet  (override the header model)
 #        /runbook-run <name|id> --relay-spawns  (force the spawn relay for this run)
@@ -18,6 +20,7 @@ description: Execute a runbook — an ordered list of self-contained prompts und
 #        /runbook-run <name|id> --no-push       (commit as usual, skip the push)
 # Examples: /runbook-run implement-ecc-import
 #           /runbook-run 3 --from 12
+#           /runbook-run 3 --from 4 --to 9
 #           /runbook-run implement-ecc-import --only 4 --model sonnet
 
 GOAL
@@ -65,18 +68,38 @@ invoked, when it is wanted, from inside a step's own prompt.
 | --- | --- |
 | `<name>` \| `<id>` | The runbook to run. Required. A kebab-case name, or the numeric id the index assigns it — a bare all-digits argument is an id, anything else a name, per `runbook-schema.md` § *The store*. |
 | `--from N` | Begin selection at step N — steps before N are not considered. |
-| `--only N` | Run exactly step N, then stop. |
+| `--to N` | Stop after step N — steps after N are not considered. Inclusive: step N itself runs. |
+| `--only N` | Run exactly step N, then stop. Exactly equivalent to `--from N --to N`. |
 | `--model <model>` | Override the runbook header's `Model:` for **this whole run**. There is no per-step model. |
 | `--relay-spawns` | Force the spawn relay for the whole run, for an environment already known to be flat. Without it the relay still works — the step's own subagent triggers it when it finds it cannot spawn. See THE SPAWN RELAY. |
 | `--no-commit` | Do the work and write the bookkeeping, but commit nothing. Implies `--no-push`. |
 | `--no-push` | Commit each step as usual, skip the push. |
 
-`--from` and `--only` **do not weaken dependencies.** A step selected by
-either whose `Depends on:` are not all `[x]` stops the run, naming the unmet
-dependency. The remedy is not a flag: the user marks that step `[x]` by hand,
-which is a visible, committed act rather than a silent override.
+`--from` and `--to` compose: `--from X --to Y` runs steps X through Y
+inclusive and stops. Either bound stands alone — `--from X` with no `--to` runs
+to the end, `--to Y` with no `--from` starts wherever selection normally would.
+There is one selection model, not three: `--only N` **is** `--from N --to N`,
+and everything said about the bounds below holds for it unchanged.
 
-`--from` and `--only` together are an error — name both and stop.
+`--from`, `--to` and `--only` **do not weaken dependencies.** A step selected by
+any of them whose `Depends on:` are not all `[x]` stops the run, naming the
+unmet dependency. The remedy is not a flag: the user marks that step `[x]` by
+hand, which is a visible, committed act rather than a silent override.
+
+Two argument errors — name the problem and stop, having run nothing:
+
+- `--only` together with `--from` or `--to`. It is already both of them.
+- `--to Y` below `--from X`. An empty range is a typo, not a request.
+
+A bound past the last step is **not** an error. Steps are appended mid-run by
+`/runbook-create --append`, and step 2 re-reads the body every step, so
+`--to 20` on a runbook that has ten steps today is a legitimate way to say
+"through step 20, however many exist by then".
+
+A bound that selects nothing — every step in range is already `[x]` — is not an
+error either, but it is never silent: say which range was asked for and that
+nothing in it remained, and stop. Doing nothing quietly is indistinguishable
+from a bug.
 
 ---
 
@@ -109,8 +132,8 @@ backfill rather than working around it.
 - **Unknown name or id** — report the available runbooks (from the index) and
   stop. Never guess at a near match, and never fall back from an id that
   matched nothing to a name that looks similar.
-- **`[DONE]` runbook, with no `--only` / `--from`** — say so and stop. Doing
-  nothing quietly is indistinguishable from a bug.
+- **`[DONE]` runbook, with no `--only` / `--from` / `--to`** — say so and stop.
+  Doing nothing quietly is indistinguishable from a bug.
 - **`[RUNNING]` runbook** — see ONE RUN PER RUNBOOK below. Usually this stops
   the run.
 - **`[FAILED]` runbook** — proceed. The failed step is re-runnable and its
@@ -134,7 +157,12 @@ There is no separate reconciliation mechanism because this one is free.
 
 The first step whose marker is `[ ]`, `[~]` or `[!]`, and whose every
 `Depends on:` step is `[x]`. Under `--from N`, skip steps numbered below N.
-Under `--only N`, consider only step N.
+Under `--to N`, skip steps numbered above N. Under `--only N`, consider only
+step N — which is those two rules with the same N, not a third rule.
+
+The bounds are re-applied against the body step 2 just re-read, every step, not
+resolved once into a fixed list. A step appended mid-run inside the range is
+therefore run, and one appended outside it is not.
 
 - A **`[~]`** step is one a previous run was interrupted in. Report it as such
   and re-run it.
@@ -145,6 +173,9 @@ Under `--only N`, consider only step N.
   and stop. Do not pick one anyway.
 - If **no steps remain** — every step is `[x]` — go to step 8's completion
   branch.
+- If steps remain but **none of them is in range**, the bounded run is over:
+  go to step 8's `--to` branch, not the completion branch and not the deadlock
+  branch. Nothing is blocked; the range simply ran out.
 
 ### 4. Mark
 
@@ -198,9 +229,15 @@ and re-read the body.
 
 When no `[ ]` steps remain — every step is `[x]` — set the index `Status:` to
 `[DONE]`, commit, and report: the runbook name, the number of steps, and a
-one-line-per-step summary of what each `Done:` line records. Under `--only`,
-stop after that single step instead of looping, and set the index back to
-`[PENDING]` unless every step is now `[x]`.
+one-line-per-step summary of what each `Done:` line records.
+
+**Reaching a `--to` bound is not completion.** When the selected step was the
+last one in range, stop there instead of looping, and set the index back to
+`[PENDING]` unless every step in the *whole* runbook is now `[x]` — a bounded
+run leaves work behind by design, and marking that `[DONE]` would be a lie. The
+report says the same thing: which range ran, a line per step as above, and which
+steps remain outside it. `--only N` stops this way too; it is the bound `--to N`
+doing it.
 
 ---
 
@@ -572,6 +609,9 @@ commit (checkin) step runs.
 - Compress a draft at an approval gate.
 - Classify an ambiguous report as success.
 - Spawn a step whose prompt invokes `/runbook-run`.
-- Weaken a `Depends on:` because `--from` or `--only` was passed.
+- Weaken a `Depends on:` because `--from`, `--to` or `--only` was passed.
+- Run a step outside `--from` / `--to`, or mark a runbook `[DONE]` because a
+  bounded run reached its `--to`. Steps outside the range are untouched work,
+  not finished work.
 - Stage anything but the runbook and the index.
 - Open `.claude/context/`, `.claude/domain/`, or a source file.

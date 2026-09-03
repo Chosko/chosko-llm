@@ -54,7 +54,8 @@ Deliberately out:
   one question stream rather than interleaved clarifications from three agents,
   and two agents writing `Done:` lines into the same runbook race on the same
   file. Independence is recorded in `Depends on:` because it documents the real
-  constraint and permits `--only`, not because anything runs at once.
+  constraint and permits the selection bounds (`--from` / `--to` / `--only`),
+  not because anything runs at once.
 - **The orchestrator doing any of the work itself.** It edits exactly two files
   — the runbook and the index. Every other change in the tree is made by a
   subagent. An orchestrator that starts patching things is one that has lost
@@ -316,17 +317,21 @@ same rule that stops it correcting a `Steps:` count it thinks is wrong.
 **The execution loop.**
 
 1. **Resolve.** Read the index block and the body. An unknown name reports the
-   available ones. A `[DONE]` runbook with no `--only`/`--from` says so and
-   stops rather than doing nothing quietly.
+   available ones. A `[DONE]` runbook with no `--only`/`--from`/`--to` says so
+   and stops rather than doing nothing quietly.
 2. **Re-read the body.** At the start of *every* step, not once per run. This
    is deliberate and does two jobs: it reconciles a body edited by hand between
    steps, and it is what makes steps appended mid-run by `/runbook-create
    --append` picked up by the run already in progress. There is no separate
    reconciliation mechanism because this one is free.
-3. **Select.** The first step whose marker is `[ ]`, `[~]` or `[!]` and whose
-   every `Depends on:` step is `[x]`. A `[~]` step is one a previous run was
-   interrupted in; it is reported as such and re-run. A `[!]` step is re-run
-   with its failure already recorded in `Context:` by the run that failed. If
+3. **Select.** The first step whose marker is `[ ]`, `[~]` or `[!]`, whose
+   every `Depends on:` step is `[x]`, and which lies within the run's selection
+   bounds — `--from N` skips steps below N, `--to N` skips steps above N, and
+   the bounds are re-applied against the body just re-read rather than resolved
+   once into a fixed list, so a step appended mid-run inside the range is run.
+   A `[~]` step is one a previous run was interrupted in; it is reported as
+   such and re-run. A `[!]` step is re-run with its failure already recorded in
+   `Context:` by the run that failed. If
    steps remain but none are selectable, that is a dependency deadlock: report
    the blocked steps and their unmet dependencies, and stop.
 4. **Mark.** Set the step to `[~]` and the index status to `[RUNNING]`.
@@ -855,6 +860,8 @@ it.
 
 /runbook-run <name|id>                   run from the first selectable step
 /runbook-run <name> --from N             begin selection at step N
+/runbook-run <name> --to N               stop after step N (inclusive)
+/runbook-run <name> --from X --to Y      run steps X through Y, then stop
 /runbook-run <name> --only N             run exactly step N, then stop
 /runbook-run <name> --model sonnet       override the header model for this run
 /runbook-run <name> --no-commit          write the bookkeeping, commit nothing
@@ -870,10 +877,18 @@ Every command above that takes `<name>` takes `<id>` in its place, on the one
 rule under *The store*: a bare all-digits argument is an id, anything else a
 name.
 
-`--from` and `--only` do not weaken dependencies: a selected step whose
+`--from`, `--to` and `--only` do not weaken dependencies: a selected step whose
 `Depends on:` are not all `[x]` stops the run with the unmet dependency named. A
 user who completed that work elsewhere marks it `[x]` by hand, which is a
 visible, committed act rather than a silent flag.
+
+There is one selection model, not three: `--only N` **is** `--from N --to N`,
+and is kept only as the shorthand for the common case. Naming `--only` beside
+either bound is an error, as is a `--to` below a `--from`; a bound past the last
+step is not, because steps are appended mid-run and the bounds are re-applied
+every step. Reaching a `--to` bound is not completion — the index goes back to
+`[PENDING]` unless the whole runbook is `[x]`, because a bounded run leaves work
+behind by design and `[DONE]` would be a lie.
 
 The four result cases:
 

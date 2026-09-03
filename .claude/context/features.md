@@ -969,8 +969,14 @@ Currently shipped:
   work itself; **no step is ticked before its subagent's result arrives**; it
   reads only `CLAUDE.md`, the runbook and the index, and **does not review** a
   step's diff or commit; **no step invokes `/runbook-run`** (nested runbooks
-  refused at spawn time). `--from N`/`--only N` narrow selection but never
-  weaken `Depends on:`. Depth budget stated plainly in the body: orchestrator +
+  refused at spawn time). `--from N`/`--to N`/`--only N` narrow selection but
+  never weaken `Depends on:` — one model, not three (`--only N` **is**
+  `--from N --to N`; naming `--only` beside either bound is an error, as is a
+  `--to` below a `--from`). Bounds are re-applied against the body re-read each
+  step, so a step appended mid-run inside the range runs and a bound past the
+  last step is not an error. Reaching a `--to` bound is **not** completion: the
+  index goes back to `[PENDING]` unless the whole runbook is `[x]`. Depth
+  budget stated plainly in the body: orchestrator +
   step agent leaves one confirmed level **where nesting works at all** (depth 3
   verified locally 2026-08-24; a cloud subagent cannot spawn, and depth 4 was
   never probed anywhere) — and the spawn relay is why that mostly no longer
