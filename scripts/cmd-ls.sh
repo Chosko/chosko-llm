@@ -112,7 +112,8 @@ _requires_cell() {
   if [ -n "$out" ]; then
     ROW+="$out"
   else
-    ROW+="$C_DIM—$C_RESET"
+    # Braces required: bash 3.2 folds the multibyte em dash into the name.
+    ROW+="${C_DIM}—${C_RESET}"
   fi
 }
 
@@ -134,13 +135,47 @@ KIND_RANK_HOOK=5
 # that file once, in bash, and answers all three questions from what it found.
 CLAUDEMD_BODY=""
 CLAUDEMD_NAMES=()
-declare -A CLAUDEMD_VERSION=()
+CLAUDEMD_VERSIONS=() # same index as CLAUDEMD_NAMES — macOS bash 3.2 has no associative arrays
+
+# claudemd_version_var <outvar> <name>
+# The section version the scan recorded for <name>; empty <outvar> and return 1
+# when the scan never saw that name. printf -v keeps the per-row path fork-free.
+claudemd_version_var() {
+  local i
+  printf -v "$1" '%s' ''
+  for ((i = 0; i < ${#CLAUDEMD_NAMES[@]}; i++)); do
+    if [ "${CLAUDEMD_NAMES[i]}" = "$2" ]; then
+      printf -v "$1" '%s' "${CLAUDEMD_VERSIONS[i]}"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# fm_vars <ver-outvar> <req-outvar> <path>
+# The version/requires pair pass 2 recorded for <path>; both outvars empty and
+# return 1 when the scan never saw it. Reads the caller's FM_FILES / FM_VERS /
+# FM_REQS parallel arrays through bash's dynamic scoping.
+fm_vars() {
+  local i
+  printf -v "$1" '%s' ''
+  printf -v "$2" '%s' ''
+  for ((i = 0; i < ${#FM_FILES[@]}; i++)); do
+    if [ "${FM_FILES[i]}" = "$3" ]; then
+      printf -v "$1" '%s' "${FM_VERS[i]}"
+      printf -v "$2" '%s' "${FM_REQS[i]}"
+      return 0
+    fi
+  done
+  return 1
+}
 
 scan_claudemd() {
-  local target line prefix rest name after remainder ver
+  local target line prefix rest name after remainder ver seen
   claudemd_target_path_var target
   CLAUDEMD_BODY=""
   CLAUDEMD_NAMES=()
+  CLAUDEMD_VERSIONS=()
   [ -f "$target" ] || return 0
   CLAUDEMD_BODY="$(<"$target")"
 
@@ -179,9 +214,9 @@ scan_claudemd() {
       case "$remainder" in " -->"*) ver="${after%% *}" ;; esac
     fi
 
-    if [ -z "${CLAUDEMD_VERSION[$name]+set}" ]; then
-      CLAUDEMD_VERSION["$name"]="$ver"
+    if ! claudemd_version_var seen "$name"; then
       CLAUDEMD_NAMES+=("$name")
+      CLAUDEMD_VERSIONS+=("$ver")
     fi
   done <<< "$CLAUDEMD_BODY"
 }
@@ -198,17 +233,23 @@ claudemd_scan_is_installed() {
 
 # collect_names <kind>
 # Fills the global array NAMES with the deduplicated feature names of that kind
-# visible in either home. Deduplication is an associative array rather than
-# `sort -u`, and the basenames are parameter expansion rather than `basename`:
-# the final emit sorts every row by name and kind rank, so this function's order
-# never reaches the output, and the two together were ~64 processes per listing.
+# visible in either home. Deduplication is a pure-bash membership scan rather
+# than `sort -u` (macOS bash 3.2 has no associative arrays), and the basenames
+# are parameter expansion rather than `basename`: the final emit sorts every
+# row by name and kind rank, so this function's order never reaches the output,
+# and staying in-process was worth ~64 processes per listing.
 NAMES=()
 collect_names() {
   local kind="$1"
-  local -A seen=()
   local dir f d n
   NAMES=()
-  _add() { [ -n "${seen[$1]:-}" ] || { seen["$1"]=1; NAMES+=("$1"); }; }
+  _add() {
+    local __n
+    for __n in ${NAMES[@]+"${NAMES[@]}"}; do
+      [ "$__n" = "$1" ] && return 0
+    done
+    NAMES+=("$1")
+  }
   case "$kind" in
     command)
       for dir in "$CHOSKO_LLM_HOME/commands" "$CLAUDE_HOME/commands"; do
@@ -360,15 +401,17 @@ list_all() {
     done
   done
 
-  # Pass 2 — one awk for all of them.
-  local -A VER=() REQ=()
+  # Pass 2 — one awk for all of them. Parallel arrays probed by fm_vars —
+  # macOS bash 3.2 has no associative arrays.
+  local FM_FILES=() FM_VERS=() FM_REQS=()
   if [ ${#files[@]} -gt 0 ]; then
     local line path rest
     while IFS= read -r line; do
       path="${line%%$'\t'*}"
       rest="${line#*$'\t'}"
-      VER["$path"]="${rest%%$'\t'*}"
-      REQ["$path"]="${rest#*$'\t'}"
+      FM_FILES+=("$path")
+      FM_VERS+=("${rest%%$'\t'*}")
+      FM_REQS+=("${rest#*$'\t'}")
     done < <(read_frontmatter_table "version requires" "${files[@]}")
   fi
 
@@ -382,14 +425,13 @@ list_all() {
     inst_req=""
     if [ "$kind" = claude-md ]; then
       if claudemd_scan_is_installed "$name"; then
-        inst_ver="${CLAUDEMD_VERSION[$name]:-}"
+        claudemd_version_var inst_ver "$name" || true
         inst_col="${inst_ver:-unversioned}"
       else
         inst_col="—"
       fi
     elif [ -n "$inst_file" ]; then
-      inst_ver="${VER[$inst_file]:-}"
-      inst_req="${REQ[$inst_file]:-}"
+      fm_vars inst_ver inst_req "$inst_file" || true
       inst_col="${inst_ver:-unversioned}"
     else
       inst_col="—"
@@ -397,8 +439,7 @@ list_all() {
 
     req_raw=""
     if [ -n "$src_file" ]; then
-      src_ver="${VER[$src_file]:-}"
-      src_req="${REQ[$src_file]:-}"
+      fm_vars src_ver src_req "$src_file" || true
       [ -n "$src_ver" ] && latest_col="$src_ver" || latest_col="—"
       req_raw="$src_req"
     else
