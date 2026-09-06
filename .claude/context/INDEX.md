@@ -9,6 +9,7 @@ Nav layer for `chosko-llm`. Read this first, then files relevant to task. Open s
 Canonical project docs live outside this folder, stay authoritative:
 - `../../CLAUDE.md` — hard rules, authoring entry-point.
 - `../../README.md` — user-facing overview.
+- `../../docs/reference.md` — complete feature + CLI reference the README links into.
 - `../../docs/authoring-guide.md` — frontmatter/versioning truth.
 - `../../docs/cli-help.txt` — CLI help text shipped to users.
 - `../../CHANGELOG.md` — user-facing changes per root `VERSION`, newest first;
