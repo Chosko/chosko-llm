@@ -1,8 +1,7 @@
 # chosko-llm
 
-A document-driven workflow for building software with Claude Code: design,
-plan, build and review, with every decision written into the repo. Plus the
-CLI that installs it on any machine.
+An opinionated, document-driven workflow for building software with Claude
+Code, and the CLI that installs it anywhere.
 
 Claude Code is very good at the next step and forgetful about everything
 before it. This repo is a set of **commands and skills** that give a project
