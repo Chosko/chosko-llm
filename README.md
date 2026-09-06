@@ -65,6 +65,100 @@ Two realistic starting points:
   description), or skip design entirely and use plain `/task-add
   <description>`. The free-form path is unchanged by any of the pipeline.
 
+## What it leaves in your repo
+
+Every stage writes into the project's own `.claude/` directory, beside a
+root `CLAUDE.md` that points at it. Nothing lives in your home directory
+except the installed features themselves. A fully set-up project looks like
+this; every entry is optional and appears only when its stage has run.
+
+```
+CLAUDE.md                        # entry point every session reads first: pointers to the
+                                 # layers below, testing policy, VCS notes
+.claude/
+├── context/                     # NAVIGATION — where things are in the code
+│   ├── INDEX.md                 #   one row per context file; `Layout: flat|nested`
+│   └── <area>.md                #   six-section summary of one source area
+├── domain/                      # KNOWLEDGE — what the product is and why
+│   ├── INDEX.md                 #   index of the documents below
+│   ├── product-design.md        #   what it is, for whom, key flows, decisions, high-level features
+│   ├── technical-direction.md   #   stack, topology, data, hosting for the whole product
+│   ├── business-model.md        #   optional
+│   ├── design-process.md        #   /product-design's resume state
+│   ├── product-roadmap.md       #   ordered milestones + the scope slices they take on
+│   └── features/<slug>.md       #   one low-level feature document per architected feature
+├── FEATURES.md                  # WORK — index of architected features: status, source, tasks
+├── PLAN.md                      #   which feature in which milestone, in what order, after what
+├── TASKS.md                     #   index of tasks: status, target, files, preconditions, feature
+├── tasks/<n>.md                 #   one task body each: goal, acceptance criteria, hints
+├── external/                    #   run-affected-tests.sh, run-full-tests.sh — the test dispatch
+├── RUNBOOKS.md + runbooks/      #   ordered prompt lists for work not yet done
+├── sessions/                    #   handoff snapshots of work in flight
+└── hooks/ + settings.json       #   local hooks (e.g. remote-session-protocol), committed
+```
+
+Three kinds of document, three jobs:
+
+- **Navigation** (`CLAUDE.md`, `.claude/context/`) answers *where is what*.
+  Built from the code by `/context-build`, refreshed by `/context-update`,
+  read at the start of every session so Claude opens only the files it
+  needs. It describes the code; it never decides anything.
+- **Knowledge** (`.claude/domain/`) answers *what is this and why*. Written
+  by the design stage (`/product-design`, `/product-roadmap`, `/architect`)
+  through interviews with you, read by everything downstream. It changes
+  when the product changes, not when the code does.
+- **Work** (`FEATURES.md`, `PLAN.md`, `TASKS.md` and their bodies, runbooks,
+  sessions) answers *what is done, what is next*. Written and updated by the
+  planning and build commands as work moves. These are the only documents
+  with status.
+
+### The production hierarchy
+
+The design and work documents form one chain from the broadest statement of
+intent to the smallest unit of work. Each level is many-to-one with the
+level above, and each link is a named field in the document, so the whole
+chain can be walked in either direction by reading files.
+
+```
+product-design.md               a section per HIGH-LEVEL FEATURE, from the user's side
+  │                             ("Authentication", "Billing")
+  │  product-roadmap.md         MILESTONES in order, each with `Covers:` slices saying
+  │  ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈       which share of a section it takes on ("email+password only")
+  ▼
+features/<slug>.md              one LOW-LEVEL FEATURE per architectural decision;
+  indexed in FEATURES.md        `Source: product-design.md § Authentication (m1-mvp)`
+  │                             links it up to its section and, if sliced, its milestone
+  │  PLAN.md                    orders the low-level features inside each milestone and
+  │  ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈       records the dependency edges between them
+  ▼
+tasks/<n>.md                    one TASK per unit of work, small enough for one sitting;
+  indexed in TASKS.md           `Feature: <slug>` links it up, and the feature's
+                                `Tasks: 31, 32, 33` entry in FEATURES.md links down
+```
+
+The two documents drawn to the side, the roadmap and the plan, don't hold
+features or tasks of their own. They *arrange* the level they sit beside:
+the roadmap decides how a high-level feature is split across releases (a
+business call), the plan decides in what order the resulting low-level
+features get built (an engineering call). Both are optional; without them
+`/architect` designs whole sections and `PLAN.md` is simply absent.
+
+Each level has its own status vocabulary, and they mean different things:
+
+| Level | Lives in | Statuses | Means |
+| --- | --- | --- | --- |
+| High-level feature | `product-design.md` | none | intent; never tracked |
+| Milestone (roadmap) | `product-roadmap.md` | none | intent; never tracked |
+| Milestone (plan) | `PLAN.md` | `[PLANNED]` `[ACTIVE]` `[SHIPPED]` | delivery; at most one active, shipped never reopens |
+| Low-level feature | `FEATURES.md` | `[NEW]` `[ITERATED]` `[PLANNED]` `[DONE]` | whether the **backlog matches the design**; `[DONE]` also means every task finished |
+| Task | `TASKS.md` | `[MISSING]` `[STUBBED]` `[INCORRECT]` `[PARTIAL]` `[IN PROGRESS]` `[DONE]` `[SKIP]` `[STALE]` | whether the **work** is done; the first four are the implementable states, `[STALE]` means the design moved underneath it |
+
+`[ITERATED]` is the one state that demands action (re-plan the feature's
+tasks); `[DONE]` on a feature and `[SHIPPED]` on a milestone are the ones a
+human always confirms. `/production-status` reads across all three work
+indexes and tells you what to build next; `/task-list` groups the backlog by
+milestone through the same links.
+
 ## 1. Set up a project
 
 **`/project-setup`** is the one-pass wizard: it seeds `CLAUDE.md` from
@@ -144,11 +238,8 @@ on a feature that already has tasks and it checks them first: if any is
 `[IN PROGRESS]` it refuses outright; otherwise it asks, rewrites the
 document, marks the unfinished tasks `[STALE]` and the feature `[ITERATED]`.
 Nothing is deleted. `/task-add feature=<slug>` then reconciles each stale
-task, and `[DONE]` tasks are never touched. Three vocabularies are at work:
-a **feature** status says whether the backlog matches the design, a **task**
-status says whether the work is done, a **milestone** status in `PLAN.md`
-says whether it shipped. `[ITERATED]` is the one state that demands action;
-`[DONE]` is the one a human always confirms.
+task, and `[DONE]` tasks are never touched. What each status means at each
+level is in [the production hierarchy](#the-production-hierarchy) above.
 
 All four are authoring features: uncommitted by default, `--commit` to
 commit and push. [Details →](docs/reference.md#3-designing-the-product)
