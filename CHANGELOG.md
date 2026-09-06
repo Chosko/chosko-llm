@@ -2,6 +2,33 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.27.0 — 2026-09-03
+
+- **/runbook-run** gains `--to N`, stopping the run after step N. It composes with `--from`, so `--from X --to Y` runs that range of steps inclusive.
+- **/runbook-run** `--only N` is now exactly `--from N --to N` — one selection model rather than three, with the shorthand kept for the common case.
+- **/runbook-run** a run that stops at its `--to` bound leaves the runbook `[PENDING]`, never `[DONE]`, and reports which steps remain outside the range.
+- **/runbook-run** neither bound weakens a `Depends on:`; naming `--only` beside a bound, or a `--to` below a `--from`, is an error that runs nothing.
+
+## 1.26.0 — 2026-09-02
+
+- **/runbook-run** gains a spawn relay for environments where a subagent cannot spawn a subagent, such as cloud sessions: a step's agent asks with `SPAWN REQUEST` and the orchestrator spawns the child at its own level, so nothing has to nest.
+- **/runbook-run** forwards the child's prompt and result by path and never opens either file, keeping the child's output out of the orchestrator's context; `--relay-spawns` forces the mode where the environment is already known to be flat.
+- **runbook subagent contract** tells a step's agent to route a child through the relay rather than doing its work inline or dropping it silently.
+- **/runbook-create** gains a tenth prompt-quality rule preferring two steps to one that would need a nested spawn.
+
+## 1.25.0 — 2026-09-02
+
+- **/runbook-describe** a new command printing one runbook in depth — header, status, and every step with its marker, dependencies, `Done:` line and whether it needs a person.
+- **runbook steps** gain an optional `Needs:` line (`agent` / `agent+human` / `human`, absent meaning `agent`), authored by `/runbook-create` and called out at its confirmation gate.
+- **/runbook-describe** prints an authored `Needs:` as written, and for a step lacking one may infer from the prompt block — always labelled `(inferred)`, never written back.
+
+## 1.24.0 — 2026-09-02
+
+- **runbooks** every runbook now carries a numeric id beside its name; `.claude/RUNBOOKS.md` gains a `Last runbook number:` counter, exactly as the task backlog has.
+- **/runbook-run, /runbook-create --append, /runbook-clean** take that id anywhere they take a name — a bare all-digits argument is an id, anything else a name.
+- **/runbook-list** prints the id and the runbook's one-line title as new columns, still without ever opening a body.
+- **runbook index** an index written before ids is backfilled in place by the first command that writes it; ids are never renumbered and a pruned one is never reused.
+
 ## 1.23.3 — 2026-08-28
 
 - **macOS** the CLI now runs on the stock bash 3.2: associative arrays and `mapfile` — which broke `update`, `add`, `show` and `ls` with `declare: -A: invalid option` — are replaced with portable equivalents, and the em dash `ls` prints for an empty cell no longer trips bash 3.2's variable parsing.

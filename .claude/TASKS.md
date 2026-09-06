@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 164
+Last task number: 168
 
 ---
 
@@ -141,3 +141,39 @@ Status: [DONE]
 Target: claude
 Files: CLAUDE.md, docs/authoring-guide.md, scripts/lib.sh, CHANGELOG.md, VERSION
 Preconditions: none
+
+---
+
+## 165. Give runbooks incremental IDs and show them in `/runbook-list`
+
+Status: [DONE]
+Target: claude
+Files: skills/runbook-run/references/runbook-schema.md, skills/runbook-run/SKILL.md, commands/runbook-create.md, commands/runbook-clean.md, commands/runbook-list.md, .claude/context/features.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 166. Add `/runbook-describe`
+
+Status: [DONE]
+Target: claude
+Files: commands/runbook-describe.md, skills/runbook-run/references/runbook-schema.md, commands/runbook-create.md, .claude/context/features.md, VERSION, CHANGELOG.md
+Preconditions: 165
+
+---
+
+## 167. Relay a subagent's spawns through the orchestrator when nesting is unavailable
+
+Status: [DONE]
+Target: claude
+Files: skills/runbook-run/references/subagent-contract.md, skills/runbook-run/SKILL.md, commands/runbook-create.md, .claude/context/features.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 168. Reconcile the runbook suite's documentation with IDs, describe and the spawn relay
+
+Status: [DONE]
+Target: claude
+Files: .claude/domain/features/runbook-suite.md, README.md
+Preconditions: 165, 166, 167

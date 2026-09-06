@@ -1,14 +1,15 @@
 ---
 name: runbook-list
-version: 0.1.0
+version: 0.2.0
 type: command
-description: Print the project's runbooks as a compact listing — status, name, steps done over total, creation date and source — one line each, with the halt reason printed as a continuation line under any failed runbook and a trailing summary counting the runbooks by status. Takes an optional status filter, matched without brackets and case-insensitively; an unknown status names the valid ones rather than printing nothing. A missing or empty index is not an error. Read-only — reads .claude/RUNBOOKS.md and nothing else, never opens a file under .claude/runbooks/, runs no shell command, and corrects no status however wrong it looks.
+description: Print the project's runbooks as a compact listing — id, status, name, steps done over total, creation date, source and the runbook's one-line title — one line each, with the halt reason printed as a continuation line under any failed runbook and a trailing summary counting the runbooks by status. The id is the shorthand every other runbook- command accepts in place of a name; a block written before ids prints `-` in that column and is left alone, since backfilling belongs to a command that writes the index. Takes an optional status filter, matched without brackets and case-insensitively; an unknown status names the valid ones rather than printing nothing. A missing or empty index is not an error. Read-only — reads .claude/RUNBOOKS.md and nothing else, never opens a file under .claude/runbooks/, runs no shell command, and corrects no status however wrong it looks.
 requires: skill:runbook-run
 ---
 
 # /runbook-list
-# Global command: print the project's runbooks as a compact listing,
-# optionally filtered by status. Read-only — never modifies any file. Reads
+# Global command: print the project's runbooks as a compact listing — id,
+# status, name, progress, provenance and one-line title — optionally filtered
+# by status. Read-only — never modifies any file. Reads
 # `.claude/RUNBOOKS.md`, and nothing else; the runbook bodies under
 # `.claude/runbooks/` are NOT opened by this command.
 # Usage: /runbook-list
@@ -18,9 +19,9 @@ requires: skill:runbook-run
 #           /runbook-list FAILED
 
 GOAL
-Give the user a quick, scannable view of every runbook in the project: what
-it is, how far it got, when it was authored, where it came from, and — when
-it halted — why. This is a diagnostic / orientation command. It must not
+Give the user a quick, scannable view of every runbook in the project: how to
+refer to it, what it is, how far it got, when it was authored, where it came
+from, and — when it halted — why. This is a diagnostic / orientation command. It must not
 write, edit, or commit anything.
 
 One pass: read `.claude/RUNBOOKS.md`, parse each block, apply the optional
@@ -85,10 +86,10 @@ WORKFLOW
    `.claude/runbooks/` being absent.
 
 2. Parse every block in the file, in the order they appear, per
-   `runbook-schema.md` § *The index block*: the runbook's name and one-line
-   title from the heading, then `Status:`, `Created:`, `Source:`, `Steps:`,
-   and the `Failed at:` line where one is present. `File:` is parsed but not
-   printed — the listing prints the name, which is the identifier.
+   `runbook-schema.md` § *The index block*: the runbook's id, name and
+   one-line title from the heading, then `Status:`, `Created:`, `Source:`,
+   `Steps:`, and the `Failed at:` line where one is present. `File:` is parsed
+   but not printed — the listing prints the name, which names the body file.
 
 3. Apply the filter from THE STATUS FILTER above, if one was given.
 
@@ -97,12 +98,19 @@ WORKFLOW
    runbook, in index order:
 
    ```
-   [STATUS]  <name>  <done>/<total>  <created>  <source>
+   <id>. [STATUS]  <name>  <done>/<total>  <created>  <source>  <title>
    ```
 
-   - Pad the status column so the names align, and the name column so the
-     step counts align. Take the padding from the widest value actually
-     present, not from a hardcoded width.
+   - Pad every column so the next one aligns. Take the padding from the widest
+     value actually present, not from a hardcoded width.
+   - The **id** leads the line, right-aligned within its column and followed
+     by a `.`, so it reads as an identifier rather than a count. A block with
+     no id yet prints `-` in that column — the backfill belongs to a command
+     that writes the index, and this one does not (see DO NOT).
+   - The **one-line title** closes the line. It is the short description of
+     what the runbook is for, and it is the field that makes a listing
+     answerable without opening anything — the name alone is an identifier,
+     not a description.
    - `Steps:` is printed **verbatim** as the index carries it.
    - For a `[FAILED]` runbook, and **only** for a `[FAILED]` runbook, print
      the halt reason as a continuation line indented under the status
@@ -139,10 +147,10 @@ WORKFLOW
 The whole rendered shape, for reference:
 
 ```
-  [DONE]     ecc-import-landing      7/7   2026-08-24  /architect run
-  [FAILED]   cli-dependency-field    2/5   2026-08-25  manual
-             ↳ failed at step 3 — the managed clone was on the wrong channel
-  [PENDING]  context-layer-refresh   0/3   2026-08-26  /product-design run
+  1. [DONE]     ecc-import-landing      7/7   2026-08-24  /architect run       Land the ECC import architecture
+  2. [FAILED]   cli-dependency-field    2/5   2026-08-25  manual               Add a requires: field to the CLI
+     ↳ failed at step 3 — the managed clone was on the wrong channel
+  5. [PENDING]  context-layer-refresh   0/3   2026-08-26  /product-design run  Rebuild the context layer
 
   3 runbooks: 1 done, 1 failed, 1 pending.
 ```
@@ -154,6 +162,10 @@ DO NOT:
   `/runbook-run`; this command is purely an index reader.
 - Write, edit, create or commit anything, and run no shell command of any
   kind, including `git`.
+- Assign an id, write a `Last runbook number:` counter, or backfill an index
+  that predates ids — `runbook-schema.md` § *Backfilling an index written
+  before ids* gives that to the three commands that write the index, and this
+  is not one of them. An id-less block prints `-` and is left alone.
 - Correct a status, a `Steps:` count or a `Failed at:` line, however wrong
   it looks against the rest of the index. Reconciliation belongs to the
   command that already has the body open — `/runbook-run` re-reads the body
@@ -166,7 +178,8 @@ DO NOT:
 - Print the `↳` continuation for anything other than a `[FAILED]` runbook.
 - Print a runbook's `File:` path, its step titles, its prompts, or any
   `Done:` line. None of those are in the index, and reaching for them means
-  opening a body.
+  opening a body. The one-line title from the heading is not one of these —
+  it is in the index, and printing it costs nothing.
 - Treat a missing or empty `.claude/RUNBOOKS.md` as an error, create it, or
   suggest running a setup command — runbooks need no setup step.
 - Suggest next actions, recommend which runbook to resume, or comment on how

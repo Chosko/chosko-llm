@@ -1,8 +1,8 @@
 ---
 name: runbook-create
-version: 0.1.0
+version: 0.4.0
 type: command
-description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md, plus its .claude/RUNBOOKS.md index block — or append steps to one that already exists, including one a run is in the middle of. Two axes: where the steps go (a new runbook, --append <name>, --append with no name for the runbook this session is running, or no arguments at all, which asks) and where the material comes from (the current conversation's most recent follow-up list, the default; or a free-form description gathered through one batched interview). Enforces nine prompt-quality rules against every step before writing — self-contained, names the document to read first, carries every decision that exists nowhere on disk and nothing that already does, states its sequencing and what must not be re-proposed, uses real slash commands, references no path missing at run time, produces one deliverable, and never invokes /runbook-run — fixing failures and naming each fix in the confirmation report. The gate shows the proposed shape only, never the full prompts. Authoring command — leaves the runbook uncommitted for one review pass by default; pass --commit to commit and push it, or --commit --no-push to commit without pushing.
+description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md, plus its .claude/RUNBOOKS.md index block — or append steps to one that already exists, including one a run is in the middle of. Assigns each new runbook the next id from the index's Last runbook number: counter, which every other runbook- command then accepts in place of the name. Authors each step's optional Needs: line (agent / agent+human / human, absent meaning agent) so a reader can see before starting which steps need a person, and calls those steps out at the confirmation gate. Two axes: where the steps go (a new runbook, --append <name|id>, --append with no name for the runbook this session is running, or no arguments at all, which asks) and where the material comes from (the current conversation's most recent follow-up list, the default; or a free-form description gathered through one batched interview). Enforces ten prompt-quality rules against every step before writing — self-contained, names the document to read first, carries every decision that exists nowhere on disk and nothing that already does, states its sequencing and what must not be re-proposed, uses real slash commands, references no path missing at run time, produces one deliverable, never invokes /runbook-run, and prefers two steps to one that would need a nested spawn — fixing failures and naming each fix in the confirmation report. The gate shows the proposed shape only, never the full prompts. Authoring command — leaves the runbook uncommitted for one review pass by default; pass --commit to commit and push it, or --commit --no-push to commit without pushing.
 requires: skill:runbook-run
 ---
 
@@ -15,7 +15,7 @@ requires: skill:runbook-run
 # Usage: /runbook-create
 #        /runbook-create <name>
 #        /runbook-create <free-form description of the work>
-#        /runbook-create --append <name>
+#        /runbook-create --append <name|id>
 #        /runbook-create --append
 #        /runbook-create <args> --commit            (commit and push what this run wrote)
 #        /runbook-create <args> --commit --no-push  (commit locally, skip the push)
@@ -69,7 +69,7 @@ gives. **Nothing about the artifact is restated here** — a second copy is the
 copy that drifts.
 
 What is this command's own is everything below: how the target is resolved,
-where the material comes from, the nine rules every prompt must pass, the
+where the material comes from, the ten rules every prompt must pass, the
 confirmation gate, and the append rules.
 
 ---
@@ -84,6 +84,7 @@ which is what makes appending safe while a run is in progress:
 | the header, `Sequencing:`, `Companion:` | yes | — |
 | a step's title and its ```prompt``` block | yes | — |
 | `Depends on:` | yes | — |
+| `Needs:` | `agent+human` and `human` only | `agent`, which is the default and is never written |
 | `## Do not re-propose` | yes | — |
 | the step marker | `[ ]` only | `[~]`, `[x]`, `[!]` |
 | `Context:` | `none` only, at authoring time | a run's dated correction bullets |
@@ -103,9 +104,12 @@ PHASE 1 — RESOLVE THE TARGET
 
 Four forms, resolved in this order.
 
-1. **`/runbook-create --append <name>`** — append to that runbook. An unknown
-   name is an error listing the names that do exist, so a typo is corrected
-   without going to look.
+1. **`/runbook-create --append <name|id>`** — append to that runbook. The
+   argument may be the runbook's kebab-case name or the numeric id the index
+   assigns it, resolved by `runbook-schema.md` § *The store*'s one rule: a bare
+   all-digits argument is an id, anything else a name. An unknown name or id is
+   an error listing the runbooks that do exist, so a typo is corrected without
+   going to look.
 
 2. **`/runbook-create --append`, no name** — append to the runbook **this
    session is currently running**. An orchestrator session knows which one
@@ -124,12 +128,15 @@ Four forms, resolved in this order.
    > A. **New** — give it a name.
    > B. **Append** — to which?
    >
-   >   1. implement-ecc-import   [RUNNING]   27/32   ← this session
-   >   2. context-layer-refresh  [PENDING]    0/3
-   >   3. ecc-import-landing     [DONE]       7/7
+   >   3. implement-ecc-import   [RUNNING]   27/32   ← this session
+   >   5. context-layer-refresh  [PENDING]    0/3
+   >   1. ecc-import-landing     [DONE]       7/7
 
    List the runbooks from `.claude/RUNBOOKS.md` with **non-`[DONE]` ones
-   first** and **the currently running one first of all**. **This is the only
+   first** and **the currently running one first of all**. The number on each
+   line is the runbook's **id**, not its position in the list — so an answer
+   naming a number selects the same runbook however the list is ordered, and
+   the same number works on any later command line. **This is the only
    place new-versus-append is asked**, and it is asked here because this is
    the command the user chose to run — an auto-triggered suggestion must not
    ask it.
@@ -139,13 +146,21 @@ Four forms, resolved in this order.
 runbook is referred to by name for the length of its execution, and two
 similar names are a real hazard. Say which name is taken, what its status is,
 suggest one alternative, and offer `--append <name>` as the other option.
-Names of removed runbooks are not reserved.
+Names of removed runbooks are not reserved. Their **ids** are the opposite:
+`runbook-schema.md` § *The index block* is why a pruned id is never handed out
+again, so a collision is only ever possible on a name.
 
 **First use is silent and idempotent.** If `.claude/runbooks/` or
 `.claude/RUNBOOKS.md` does not exist, create it at write time — the index as
-its title line and nothing else. There is no counter, because names are the
-identifiers. Say nothing about having done it; a project needs no setup step
-for runbooks, and neither `/task-setup` nor `/project-setup` gains one.
+its title line and its `Last runbook number: 0` counter, and nothing else. Say
+nothing about having done it; a project needs no setup step for runbooks, and
+neither `/task-setup` nor `/project-setup` gains one.
+
+**An index written before ids** — one with no counter line, or blocks whose
+headings carry no id — is backfilled here, per `runbook-schema.md`
+§ *Backfilling an index written before ids*, before this run assigns anything.
+This command writes the index, so it performs the backfill rather than working
+around it.
 
 ---
 
@@ -171,7 +186,13 @@ Then harvest, from the conversation and not from the files:
 - every decision that was settled here and written to no file,
 - every option that was assessed and rejected, with its reason,
 - every probe whose result is now a fact,
-- the ordering constraints, and **why** each one exists.
+- the ordering constraints, and **why** each one exists,
+- **which actions in the list need a person** rather than an agent. A
+  conversation that produced the follow-ups usually said so in passing ("then
+  you flip it in the editor"); that is a step's `Needs:` line. Where the
+  conversation is silent, the step is `agent` and gets no line — do not
+  interrogate the user for it in this mode, which exists precisely to avoid an
+  interview.
 
 The rejected options are the `## Do not re-propose` section. The
 step-specific ones go in the step's own prompt instead.
@@ -195,20 +216,27 @@ so the whole interview can be settled in a sentence:
    material and the optional `## Do not re-propose` section. It is the
    question this mode exists to ask, because unlike conversation mode there is
    nothing else to harvest it from.
+6. **Does any step need a person?** Which of them cannot be executed by an
+   agent alone — an editor-only operation, a GUI wizard, hardware — and whether
+   the step is partly manual or wholly so. The answer is each step's `Needs:`
+   line per `runbook-schema.md` § *A step*; recommend `agent` for every step,
+   which is the common case, so a runbook of ordinary agent work is confirmed
+   with one word. **An `agent` step gets no `Needs:` line at all** — the value
+   is the default and the schema says it is never written.
 
-A sixth question — **the model** — is asked **only when the default `opus` is
-not wanted**. Do not ask it routinely.
+A seventh question — **the model** — is asked **only when the default `opus`
+is not wanted**. Do not ask it routinely.
 
 ---
 
 THE PROMPT-QUALITY RULES
 
-Nine rules. Apply every one of them to every step before the file is written.
+Ten rules. Apply every one of them to every step before the file is written.
 They are stated here in full because approximating them produces prompts that
 read as complete and are not.
 
 1. **Self-contained.** An agent with no history of this conversation can
-   execute it. This is the rule the other eight serve. Self-contained means
+   execute it. This is the rule the other nine serve. Self-contained means
    *complete given what the invoked command reads*, **not exhaustive**: a
    prompt that invokes a skill which reads its own inputs from disk is
    complete as the bare invocation.
@@ -254,11 +282,28 @@ read as complete and are not.
    the work. Reject such a step by name, with that reason, and propose the
    alternative — the steps inline, or a separate runbook run afterwards.
 
+10. **Prefer two steps to a step that needs a nested spawn.** A step whose
+    prompt invokes something that wants its own subagent — `/task-implement
+    --review --rounds 2`, which wants an implementor and then a reviewer — is
+    usually better authored as two steps: implement, then review. Each is
+    spawned by the orchestrator directly, the review still gets the fresh
+    context that is its whole point, and the runbook gains an honest marker
+    for each half instead of one marker covering both.
+
+    This is a **preference, not a rejection** like rule 9, and the reason is
+    that it does not always apply: a skill that spawns internally, without the
+    author knowing it will, cannot be split by an author who does not know.
+    `/runbook-run`'s spawn relay covers that case at run time — the step's
+    agent asks the orchestrator to spawn the child on its behalf. So splitting
+    is the better shape where it is available, and the relay is the fallback
+    where it is not. Where a step is left un-split deliberately, say so in the
+    confirmation report; do not split it silently.
+
 ---
 
 PHASE 3 — ENFORCE THE RULES
 
-Check every step against all nine. **A step that fails a rule is fixed before
+Check every step against all ten. **A step that fails a rule is fixed before
 the file is written, and the fix is named in the confirmation report rather
 than applied silently.** The user is the only one who knows whether a missing
 decision was an omission or a deliberate delegation, and a silent fix takes
@@ -282,8 +327,9 @@ PHASE 4 — CONFIRM (the gate)
 Before writing anything, report the proposed **shape** and stop for approval:
 
 ```
-PLAN — runbook <name>            (or: append to runbook <name>)
+PLAN — runbook <name>            (or: append to runbook <id>. <name>)
 
+Id:    <the id this runbook will be assigned>   (new runbooks only)
 File:  .claude/runbooks/<name>.md
 Index: .claude/RUNBOOKS.md
 
@@ -293,7 +339,7 @@ Companion:  <path, or none>
 
 Steps:
   1. <title>                      depends on: none
-  2. <title>                      depends on: 1
+  2. <title>                      depends on: 1     needs: agent+human
   3. <title>                      depends on: 1
 
 Fixes applied:
@@ -307,6 +353,12 @@ Do not re-propose: <n> items
 ```
 
 End with a single explicit prompt: **"Approve and write?"**
+
+A step whose `Needs:` is `agent` prints no `needs:` annotation — the default
+is silent. A step that is **not** `agent` always prints one, and the plan says
+in one line beneath the list that the run will need someone present at those
+steps. That is the one thing about the shape a user cannot infer from the
+titles, and it decides whether they can start the run and walk away.
 
 **Only the shape.** Full prompts are deliberately not shown back: they are a
 wall of text that gets skimmed, and they are in the file a moment later,
@@ -327,9 +379,20 @@ Two cases.
 ### New runbook
 
 1. Create `.claude/runbooks/` and `.claude/RUNBOOKS.md` if either is missing —
-   silently, idempotently, the index as its title line and nothing else.
+   silently, idempotently, in the shape `runbook-schema.md` § *The store*
+   gives a freshly created index. Backfill an index written before ids, per
+   PHASE 1's rule, before step 2.
 2. Write `.claude/runbooks/<name>.md`: the header, then each step in order.
-3. Append the index block with `Status: [PENDING]` and `Steps: 0/<total>`.
+3. Append the index block with `Status: [PENDING]` and `Steps: 0/<total>`, in
+   the heading and field shape `runbook-schema.md` § *The index block* gives.
+4. Take the new id from `Last runbook number: + 1` and advance the counter to
+   it, **in the same write** as step 3.
+
+What is this command's own is the *when*: it is the only thing that assigns an
+id or advances the counter, exactly as `/task-add` is for `.claude/TASKS.md`,
+and an append assigns nothing because the runbook it appends to already has
+one. The id's shape and the reason it is taken from the counter rather than
+from `max()` are the schema's, cited and not copied.
 
 Every step marker is `[ ]`. There are no `Done:` lines — an authored runbook
 has none at all.
@@ -371,6 +434,9 @@ All of these apply to every append, and to the `--append` half of PHASE 5:
   re-read; there is nothing to notify.
 - **The index `Steps: <done>/<total>` is updated** — the total grows, the done
   count is untouched.
+- **The runbook's id and the counter are untouched.** An append adds steps to a
+  runbook that already has an id; nothing is assigned and
+  `Last runbook number:` does not move.
 
 ---
 
@@ -423,6 +489,9 @@ DO NOT:
 - Fix a rule failure silently. Every fix is named in the report.
 - Accept a step whose prompt invokes `/runbook-run`. Rule 9 is enforced here,
   not deferred to spawn time.
+- Split a step under rule 10 silently, or treat that rule as a rejection.
+  It is a preference: name the split, or name the reason a step was left
+  whole, in the confirmation report.
 - Write a `Done:` line, a step marker other than `[ ]`, or an index `Status:`
   other than `[PENDING]` — the sole exception being the `[DONE]` → `[PENDING]`
   flip an append forces.
@@ -436,6 +505,12 @@ DO NOT:
 - Disambiguate a colliding name automatically. Refuse it, suggest one
   alternative, and offer `--append`.
 - Reserve the names of removed runbooks.
+- Derive a new id with `max()` over the blocks present, reuse a pruned
+  runbook's id, renumber an existing runbook, or advance
+  `Last runbook number:` on an append — `runbook-schema.md`
+  § *The index block* is the authority for all four.
+- Treat the id as the runbook's identity. It is an alias for the command line;
+  the name still names the body file and every message about the runbook.
 - Ask new-versus-append anywhere except the no-argument form of PHASE 1.
 - Add a runbook step to `/task-setup` or `/project-setup`, or require any
   setup before a runbook can be created.
