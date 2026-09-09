@@ -100,3 +100,48 @@ Source: prompt
 Tasks: 150
 
 ---
+
+## backlog-ordering — Selection honours `Preconditions:`; tasks and runbook steps can be inserted, not only appended
+
+Status: [NEW]
+Doc: .claude/domain/features/backlog-ordering.md
+Source: prompt
+Tasks: none
+
+---
+
+## pipeline-engine — Shared probes, index graph, routing table and the `/pipeline-check` lint
+
+Status: [NEW]
+Doc: .claude/domain/features/pipeline-engine.md
+Source: prompt
+Tasks: none
+
+---
+
+## owner-amend-arms — Standalone amend files per artifact owner, with a precision iterate guard for `/architect`
+
+Status: [NEW]
+Doc: .claude/domain/features/owner-amend-arms.md
+Source: prompt
+Tasks: none
+
+---
+
+## pipeline-revision — `/pipeline-patch` and `/pipeline-revise`: change planned work at proportional cost, through its owners
+
+Status: [NEW]
+Doc: .claude/domain/features/pipeline-revision.md
+Source: prompt
+Tasks: none
+
+---
+
+## pipeline-suggest — One-line auto-triggered pointer from a free-form request to the pipeline command that fits
+
+Status: [NEW]
+Doc: .claude/domain/features/pipeline-suggest.md
+Source: prompt
+Tasks: none
+
+---

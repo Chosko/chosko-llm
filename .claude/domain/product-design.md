@@ -125,8 +125,8 @@ agents that cannot run `install.sh` still have the commands they need.
 
 ## High-level features
 
-Eleven features, listed in the order the product is experienced: the four
-that distribute configuration to a machine, then the seven that author it.
+Twelve features, listed in the order the product is experienced: the four
+that distribute configuration to a machine, then the eight that author it.
 Where a feature's mechanism is already specified in a workflow document, this
 section names the experience and points there rather than restating it.
 
@@ -248,6 +248,36 @@ it — Claude, or a human performing steps no agent can. Second half of the
 idea-to-shipped flow; the seam with the feature above is the feature
 document. Schemas and the implementation model are specified in
 [task-workflow.md](./task-workflow.md).
+
+### Pipeline revision
+
+Makes changing already-planned work a legitimate request rather than a costly
+exception. Once a feature is architected, its tasks written and a plan
+ordered, a change to any of them today means re-running each owning command
+in turn and carrying the sequence by hand; a step forgotten stays silent until
+an implementer builds against a stale task. The feature answers at three
+costs. `/pipeline-check` reads every index and reports the inconsistencies
+between them, each with the command that fixes it, so drift is visible before
+production. `/pipeline-patch` makes a change that touches one artifact owner
+by loading that owner's small amend file, and refuses anything larger.
+`/pipeline-revise` takes the larger change: it walks the impact in both
+directions, verifies against the indexes and the affected bodies, proposes a
+plan behind one gate, and then runs the owning commands in order or, at the
+user's choice, writes them as a runbook. A one-line auto-triggered suggester
+points a free-form request at whichever of these, or of the pipeline's other
+commands, fits it. Underneath, the backlog and the runbook store gain
+insertion — a task or a step added late lands where it belongs, and the
+selectors honour the `Preconditions:` they always recorded.
+
+Serves the director, who describes a change once and pays in proportion to
+its size, and Claude as the operator that no longer improvises the follow-up
+sequence. Every write still goes through the artifact's single owner; the new
+surfaces own nothing. A first-time pass through the pipeline remains cheaper
+than a revision, by design. Mechanism and schemas are specified in
+[product-workflow.md](./product-workflow.md) once the feature lands; the
+low-level design is in the five feature documents indexed under
+`backlog-ordering`, `pipeline-engine`, `owner-amend-arms`,
+`pipeline-revision` and `pipeline-suggest`.
 
 ### Navigation context layer
 
