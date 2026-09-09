@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 168
+Last task number: 174
 
 ---
 
@@ -177,3 +177,63 @@ Status: [DONE]
 Target: claude
 Files: .claude/domain/features/runbook-suite.md, README.md
 Preconditions: 165, 166, 167
+
+---
+
+## 169. Make `next` and `all` honour `Preconditions:`
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-engine/references/resolution.md, skills/task-engine/SKILL.md, skills/task-implement/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: none
+Feature: backlog-ordering
+
+---
+
+## 170. Derive `/production-status`'s Next task by the same precondition rule
+
+Status: [MISSING]
+Target: claude
+Files: commands/production-status.md, VERSION, CHANGELOG.md
+Preconditions: 169
+Feature: backlog-ordering
+
+---
+
+## 171. Add `--before` and `--after` placement flags to `/task-add`
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-add.md, VERSION, CHANGELOG.md
+Preconditions: 169
+Feature: backlog-ordering
+
+---
+
+## 172. Add `feature=<slug> --single` and the orphan-task prompt to `/task-add`
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-add.md, VERSION, CHANGELOG.md
+Preconditions: 171
+Feature: backlog-ordering
+
+---
+
+## 173. Add positional `--before` / `--after` to `/runbook-create --append`
+
+Status: [MISSING]
+Target: claude
+Files: commands/runbook-create.md, skills/runbook-run/references/runbook-schema.md, skills/runbook-run/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: none
+Feature: backlog-ordering
+
+---
+
+## 174. Update documentation for feature `backlog-ordering`
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/reference.md, .claude/domain/task-workflow.md, .claude/domain/product-workflow.md, .claude/domain/features/runbook-suite.md, .claude/domain/features/backlog-ordering.md, .claude/context/features.md, .claude/context/INDEX.md
+Preconditions: 169, 170, 171, 172, 173
+Feature: backlog-ordering

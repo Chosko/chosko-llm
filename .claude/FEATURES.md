@@ -103,10 +103,10 @@ Tasks: 150
 
 ## backlog-ordering — Selection honours `Preconditions:`; tasks and runbook steps can be inserted, not only appended
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/backlog-ordering.md
 Source: prompt
-Tasks: none
+Tasks: 169, 170, 171, 172, 173, 174
 
 ---
 
