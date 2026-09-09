@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 181
+Last task number: 186
 
 ---
 
@@ -307,3 +307,53 @@ Target: claude
 Files: README.md, docs/reference.md, docs/authoring-guide.md, CLAUDE.md, .claude/domain/product-workflow.md, .claude/domain/features/pipeline-engine.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 175, 176, 177, 178, 179, 180
 Feature: pipeline-engine
+
+---
+
+## 182. Add the `/architect amend` arm
+
+Status: [MISSING]
+Target: claude
+Files: skills/architect/amend.md, skills/architect/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: none
+Feature: owner-amend-arms
+
+---
+
+## 183. Add the single-task amend reference to `task-engine`
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-engine/references/amend.md, skills/task-engine/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: none
+Feature: owner-amend-arms
+
+---
+
+## 184. Add the single-step amend reference to `runbook-run`
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/references/step-amend.md, skills/runbook-run/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: 173
+Feature: owner-amend-arms
+
+---
+
+## 185. Record each owner's amend entry in the pipeline routing table
+
+Status: [MISSING]
+Target: claude
+Files: skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
+Preconditions: 177, 182, 183, 184
+Feature: owner-amend-arms
+
+---
+
+## 186. Update documentation for feature `owner-amend-arms`
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/reference.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/domain/features/runbook-suite.md, .claude/domain/features/owner-amend-arms.md, .claude/context/features.md, .claude/context/INDEX.md
+Preconditions: 182, 183, 184, 185
+Feature: owner-amend-arms

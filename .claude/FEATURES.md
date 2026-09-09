@@ -121,10 +121,10 @@ Tasks: 175, 176, 177, 178, 179, 180, 181
 
 ## owner-amend-arms — Standalone amend files per artifact owner, with a precision iterate guard for `/architect`
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/owner-amend-arms.md
 Source: prompt
-Tasks: none
+Tasks: 182, 183, 184, 185, 186
 
 ---
 
