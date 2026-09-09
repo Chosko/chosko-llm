@@ -10,6 +10,6 @@ Status: [RUNNING]
 File: .claude/runbooks/pipeline-revision-planning.md
 Created: 2026-09-09
 Source: /architect run
-Steps: 1/5
+Steps: 1/7
 
 ---

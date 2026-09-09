@@ -1,7 +1,7 @@
 # Runbook: pipeline-revision-planning
 
 Created: 2026-09-09 · Source: /architect run · Model: opus
-Sequencing: 1–5 in build order — each later feature's tasks carry Preconditions: on tasks the earlier steps created, so those tasks must exist in TASKS.md first; 1 and 2 are independent of each other but run in order for one question stream.
+Sequencing: 1–5 in build order — each later feature's tasks carry Preconditions: on tasks the earlier steps created, so those tasks must exist in TASKS.md first; 1 and 2 are independent of each other but run in order for one question stream. 6–7 land the task-archive feature and wire it into the pipeline-engine lint task: 6 follows 2 because 7 needs both features' task ids, and 7 is bookkeeping on ids 2 and 6 created.
 
 ## [x] 1. Plan tasks for backlog-ordering
 
@@ -20,7 +20,7 @@ propose creating either document here to exercise it.
 
 Done: commit cda77e3 (pushed) — tasks 169–174 written, TASKS.md counter 168→174, FEATURES.md backlog-ordering → [PLANNED] with Tasks: 169, 170, 171, 172, 173, 174. Decisions: 6-task split accepted (169 next/all honour Preconditions:, 170 production-status Next rule, 171 --before/--after on task-add, 172 feature=<slug> --single + orphan prompt, 173 positional --before/--after on runbook-create --append, 174 docs); `all` resolves once up front by simulating repeated `next`; feature doc open question 2 answered at planning time (task-implement BETWEEN TASKS re-read is the re-evaluation point, no new read); backlog-ordering.md read-only in 169–173 Hints; task 174 carries dated grants to edit runbook-suite.md (3 points) and backlog-ordering.md (2 points) only; 174 takes no VERSION bump and no CHANGELOG entry; VERSION minor on 169/171/172/173, patch on 170. Premises corrected: plan-readout.md has nothing to reconcile, product-workflow.md does carry the "lowest-numbered" wording; task-add DO NOT list forbids editing other tasks Preconditions: which --before requires (171 narrows it); the foot-of-file invariant is stated twice in runbook-create and twice in runbook-suite.md (enumerated in 173 and 174). Prompt premise about no PLAN.md/product-roadmap.md held.
 
-## [ ] 2. Plan tasks for pipeline-engine
+## [~] 2. Plan tasks for pipeline-engine
 
 Depends on: none
 
@@ -76,6 +76,59 @@ table points at /pipeline-patch and /pipeline-revise, so put the task ids
 that create those two surfaces on the new tasks' Preconditions: lines.
 ```
 
+## [ ] 6. Plan tasks for task-archive
+
+Depends on: 2
+
+Context: none
+
+```prompt
+/task-add feature=task-archive
+
+Read .claude/domain/features/task-archive.md first; it is the primary
+source. Decisions already settled there, do not re-open: /task-clean is
+rewritten as skills/task-clean/SKILL.md with `replaces: command:task-clean`
+and `requires: skill:task-engine`; the --backfill procedure goes in a
+supporting file backfill.md read only when the flag is passed, never in
+SKILL.md; the archive resolution rule (an id referenced but absent from
+TASKS.md is archived and terminal; no command probes the folder or opens a
+file in it unless the user names a task and asks) has its single home in
+skills/task-engine/references/resolution.md, and every consumer cites that
+path and states only its deviation; the prune path no longer opens
+FEATURES.md; /production-status renders absent ids as `archived: N`.
+
+Expected seams, one task each unless the split check says otherwise: the
+resolution.md rule; the command-to-skill migration with the archive move
+and the frozen header; backfill.md; the consumer edits (/task-add
+reconciliation keeps absent ids on Tasks:, /task-implement <N> stops on an
+absent id naming the archive path, /task-review and /task-iterate exclude
+archive/ from the most-recent-body fallback, /architect iterating.md
+rationale, /production-status rollup); the documentation task. The
+resolution.md task must precede every other task of the feature on
+Preconditions:. This repository has no PLAN.md by design; do not propose
+one.
+```
+
+## [ ] 7. Wire the archive rule into the pipeline-engine lint task
+
+Depends on: 2, 6
+
+Context: none
+
+```prompt
+Bookkeeping edit on .claude/TASKS.md, no slash command fits. Read the file.
+Find the pipeline-engine task that implements the lint catalogue (written
+by runbook step 2) and the task-archive task that adds the archive rule to
+skills/task-engine/references/resolution.md (written by step 6). Add the
+resolution.md task's id to the lint task's Preconditions: line, keeping
+the ids already there. Edit only that one line, nothing else in the file.
+Commit as "Task <lint id>: precondition on task <resolution id>" and push.
+Reason: the lint task cites resolution.md's archive rule by path, and the
+finding "a feature's Tasks: id absent from TASKS.md" was dropped from the
+catalogue because that state now means archived, so the rule must exist
+before the lint is implemented.
+```
+
 ## Do not re-propose
 
 - A separate `/amend` command — folded into `pipeline-revise`; the reviser's
@@ -93,3 +146,12 @@ that create those two surfaces on the new tasks' Preconditions: lines.
   `Done:` lines are the provenance.
 - Offering a runbook for fewer than four owner steps, or writing one without
   the user's explicit choice — rejected.
+- A `/task-list archived` filter or any read surface over the task archive —
+  rejected; it would bend the no-read rule the feature exists to keep.
+- A Glob probe of `.claude/tasks/archive/` in any command — rejected; an id
+  absent from `TASKS.md` is assumed archived, never checked.
+- Keeping the `--backfill` procedure inside `skills/task-clean/SKILL.md` —
+  rejected; it is read on demand from `backfill.md` so the ordinary prune
+  pays nothing for it.
+- A purge path for the archive — an open question in task-archive.md, not
+  scope.
