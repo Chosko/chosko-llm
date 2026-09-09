@@ -145,3 +145,12 @@ Source: prompt
 Tasks: none
 
 ---
+
+## task-archive — `/task-clean` archives pruned bodies instead of deleting them; features keep every id
+
+Status: [NEW]
+Doc: .claude/domain/features/task-archive.md
+Source: product-design.md § Task backlog
+Tasks: none
+
+---

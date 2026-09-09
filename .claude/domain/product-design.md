@@ -242,7 +242,9 @@ exactly as it does today when neither document exists.
 Turns a designed feature — or a free-form description, which needs no
 design upstream — into implementable work, then into code. `/task-add`
 plans and writes tasks; `/task-list` and `/task-clean` keep the backlog
-readable and pruned; `/task-implement` implements, optionally giving each
+readable and pruned — a pruned task is archived under `.claude/tasks/`,
+retained indefinitely, still counted by its feature, and read only when
+the user asks; `/task-implement` implements, optionally giving each
 task of a multi-task run its own subagent. A task declares who implements
 it — Claude, or a human performing steps no agent can. Second half of the
 idea-to-shipped flow; the seam with the feature above is the feature
