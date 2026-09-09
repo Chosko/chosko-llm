@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 174
+Last task number: 181
 
 ---
 
@@ -237,3 +237,73 @@ Target: claude
 Files: README.md, docs/reference.md, .claude/domain/task-workflow.md, .claude/domain/product-workflow.md, .claude/domain/features/runbook-suite.md, .claude/domain/features/backlog-ordering.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 169, 170, 171, 172, 173
 Feature: backlog-ordering
+
+---
+
+## 175. Add the `pipeline-engine` skill and its probe reference
+
+Status: [MISSING]
+Target: claude
+Files: skills/pipeline-engine/SKILL.md, skills/pipeline-engine/references/probes.md, VERSION, CHANGELOG.md
+Preconditions: none
+Feature: pipeline-engine
+
+---
+
+## 176. Write the pipeline index-graph reference
+
+Status: [MISSING]
+Target: claude
+Files: skills/pipeline-engine/references/graph.md, skills/pipeline-engine/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: 175
+Feature: pipeline-engine
+
+---
+
+## 177. Write the pipeline routing table
+
+Status: [MISSING]
+Target: claude
+Files: skills/pipeline-engine/references/routing.md, skills/pipeline-engine/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: 175
+Feature: pipeline-engine
+
+---
+
+## 178. Write the lint finding catalogue
+
+Status: [MISSING]
+Target: claude
+Files: skills/pipeline-engine/references/lint.md, skills/pipeline-engine/SKILL.md, .claude/domain/features/pipeline-engine.md, VERSION, CHANGELOG.md
+Preconditions: 175, 176, 177
+Feature: pipeline-engine
+
+---
+
+## 179. Add the `/pipeline-check` command
+
+Status: [MISSING]
+Target: claude
+Files: commands/pipeline-check.md, VERSION, CHANGELOG.md
+Preconditions: 175, 176, 178
+Feature: pipeline-engine
+
+---
+
+## 180. Add the repo-local routing check
+
+Status: [MISSING]
+Target: claude
+Files: scripts/check-routing.sh, VERSION, CHANGELOG.md
+Preconditions: 177
+Feature: pipeline-engine
+
+---
+
+## 181. Update documentation for feature `pipeline-engine`
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/reference.md, docs/authoring-guide.md, CLAUDE.md, .claude/domain/product-workflow.md, .claude/domain/features/pipeline-engine.md, .claude/context/features.md, .claude/context/INDEX.md
+Preconditions: 175, 176, 177, 178, 179, 180
+Feature: pipeline-engine

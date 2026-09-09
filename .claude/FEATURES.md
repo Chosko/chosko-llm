@@ -112,10 +112,10 @@ Tasks: 169, 170, 171, 172, 173, 174
 
 ## pipeline-engine — Shared probes, index graph, routing table and the `/pipeline-check` lint
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/pipeline-engine.md
 Source: prompt
-Tasks: none
+Tasks: 175, 176, 177, 178, 179, 180, 181
 
 ---
 
