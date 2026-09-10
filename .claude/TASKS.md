@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 186
+Last task number: 193
 
 ---
 
@@ -357,3 +357,73 @@ Target: claude
 Files: README.md, docs/reference.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/domain/features/runbook-suite.md, .claude/domain/features/owner-amend-arms.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 182, 183, 184, 185
 Feature: owner-amend-arms
+
+---
+
+## 187. Add the `pipeline-revise` skill body and its branch classifier
+
+Status: [MISSING]
+Target: claude
+Files: skills/pipeline-revise/SKILL.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
+Preconditions: 176, 177, 178, 179
+Feature: pipeline-revision
+
+---
+
+## 188. Write the `pipeline-revise` amend branch
+
+Status: [MISSING]
+Target: claude
+Files: skills/pipeline-revise/amend.md, skills/pipeline-revise/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: 182, 183, 184, 187
+Feature: pipeline-revision
+
+---
+
+## 189. Write the `pipeline-revise` insert branch
+
+Status: [MISSING]
+Target: claude
+Files: skills/pipeline-revise/insert.md, skills/pipeline-revise/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: 171, 172, 173, 182, 187
+Feature: pipeline-revision
+
+---
+
+## 190. Write the `pipeline-revise` delete branch
+
+Status: [MISSING]
+Target: claude
+Files: skills/pipeline-revise/delete.md, skills/pipeline-revise/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: 183, 184, 187
+Feature: pipeline-revision
+
+---
+
+## 191. Write the `pipeline-revise` reorder branch
+
+Status: [MISSING]
+Target: claude
+Files: skills/pipeline-revise/reorder.md, skills/pipeline-revise/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: 189, 190
+Feature: pipeline-revision
+
+---
+
+## 192. Add the `/pipeline-patch` command
+
+Status: [MISSING]
+Target: claude
+Files: commands/pipeline-patch.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
+Preconditions: 176, 177, 179, 182, 183, 184, 187
+Feature: pipeline-revision
+
+---
+
+## 193. Update documentation for feature `pipeline-revision`
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/reference.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/domain/features/pipeline-revision.md, .claude/context/features.md, .claude/context/INDEX.md
+Preconditions: 187, 188, 189, 190, 191, 192
+Feature: pipeline-revision
