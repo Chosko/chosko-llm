@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 193
+Last task number: 195
 
 ---
 
@@ -427,3 +427,23 @@ Target: claude
 Files: README.md, docs/reference.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/domain/features/pipeline-revision.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 187, 188, 189, 190, 191, 192
 Feature: pipeline-revision
+
+---
+
+## 194. Add the `pipeline-suggest` skill
+
+Status: [MISSING]
+Target: claude
+Files: skills/pipeline-suggest/SKILL.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
+Preconditions: 177, 179, 187, 192
+Feature: pipeline-suggest
+
+---
+
+## 195. Update documentation for feature `pipeline-suggest`
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/reference.md, .claude/domain/product-workflow.md, .claude/domain/features/pipeline-suggest.md, .claude/context/features.md, .claude/context/INDEX.md
+Preconditions: 193, 194
+Feature: pipeline-suggest

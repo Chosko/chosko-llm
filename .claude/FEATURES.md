@@ -139,10 +139,10 @@ Tasks: 187, 188, 189, 190, 191, 192, 193
 
 ## pipeline-suggest — One-line auto-triggered pointer from a free-form request to the pipeline command that fits
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/pipeline-suggest.md
 Source: prompt
-Tasks: none
+Tasks: 194, 195
 
 ---
 
