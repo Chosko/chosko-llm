@@ -51,7 +51,7 @@ ids on the new tasks' Preconditions: lines rather than by prose.
 
 Done: commit 05850cd (pushed) — tasks 182–186 written, TASKS.md counter 181→186, FEATURES.md owner-amend-arms → [PLANNED] with Tasks: 182, 183, 184, 185, 186; no reconciliation (Tasks: was none). Tasks: 182 /architect amend arm (skills/architect/amend.md + SKILL wiring, Preconditions: none), 183 single-task amend reference skills/task-engine/references/amend.md (none), 184 single-step amend reference skills/runbook-run/references/step-amend.md (173), 185 record each owner amend entry in pipeline routing table (177, 182, 183, 184), 186 docs (182–185). Decisions: three arm tasks + one bookkeeping + one docs, routing entries kept out of the arms so no pipeline-engine block on them; nothing depends on 179 — /pipeline-check deliberately kept out of the arms; struck runbook step = [x] with Done: line opening "struck — <reason>" and no commit sha ([!] rejected: halts the run, drives index to [FAILED]); free-form /architect amend change naming no sections is refused; Files:-coarseness question left open on purpose; task 186 carries dated grant (2026-09-09) on runbook-suite.md (3 points) and owner-amend-arms.md (3 points), pipeline-engine.md and backlog-ordering.md excluded; no unshipped command named in shipped content (183 widens task-engine "only these five may open it" sentence generically); 186 no VERSION bump, 182–185 bump both. Premises corrected: feature doc says a struck step reuses existing marker vocabulary but none of the four markers means skipped, so [x] is overloaded with a Done: reason; feature doc Dependencies omits task-workflow.md § One authority per rule whose counts go stale with an eighth task-engine reference (folded into 186); task-engine SKILL.md "only they should ever open it" sentence breaks by design (183 handles); /architect arm writing product-design.md is not a breach of "never writes another owner line" since the full skill already does (recorded on 182).
 
-## [ ] 4. Plan tasks for pipeline-revision
+## [x] 4. Plan tasks for pipeline-revision
 
 Depends on: 1, 2, 3
 
@@ -69,11 +69,14 @@ as a dependency, sequence across features by putting the relevant earlier
 task ids on the new tasks' Preconditions: lines rather than by prose.
 ```
 
+Done: commit c7ff8b5 (pushed) — tasks 187–193 written, TASKS.md counter 186→193, FEATURES.md pipeline-revision → [PLANNED] with Tasks: 187, 188, 189, 190, 191, 192, 193 (Doc:/Source: untouched). Tasks: 187 skills/pipeline-revise/SKILL.md + routing row (Preconditions: 176, 177, 178, 179), 188 amend.md (182, 183, 184, 187), 189 insert.md (171, 172, 173, 182, 187), 190 delete.md (183, 184, 187), 191 reorder.md (189, 190), 192 commands/pipeline-patch.md + routing row (176, 177, 179, 182, 183, 184, 187), 193 docs (187–192). Decisions (one question round): reorder branch ships now, closing /pipeline-patch's "reorder of existing entries" refuse path (user chose A over deferring); reviser ships before patcher because the patcher's refuse line names /pipeline-revise and shipped content never names an unshipped command; each surface adds its own routing.md row in its own task so check-routing.sh (task 180) never fails in between; branch files sit flat beside SKILL.md (architect pattern), not under references/; /pipeline-patch takes [--commit] [--no-push] forwarded to the arm it executes; amend branch owner sequence is upstream-first (/product-design → /architect amend → task bodies → runbook steps); task 193 carries dated grant (user chose A) to edit pipeline-revision.md on exactly 3 points (shipped paths replace abstract naming, patcher flags, reorder open question settled), open questions 1 and 3 left open; 193 no VERSION bump, 187–192 bump. Premises corrected: feature doc Interfaces omits commit flags on /pipeline-patch, inconsistent with every arm it executes (reconciled via 193); doc's Architecture (four branches) and Open questions (reorder may defer) contradicted each other, resolved for four. CONTEXT ids 169–186 all resolved in TASKS.md as stated.
+
 ## [ ] 5. Plan tasks for pipeline-suggest
 
 Depends on: 4
 
-Context: none
+Context:
+- 2026-09-10 (from step 4): pipeline-revision tasks are 187–193 (187 skills/pipeline-revise/SKILL.md + routing row, 188 amend.md, 189 insert.md, 190 delete.md, 191 reorder.md, 192 commands/pipeline-patch.md + routing row, 193 docs). /pipeline-revise is created by task 187 (its branches by 188–191); /pipeline-patch by task 192. Use these ids on Preconditions: lines.
 
 ```prompt
 /task-add feature=pipeline-suggest
