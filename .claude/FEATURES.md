@@ -148,9 +148,9 @@ Tasks: 194, 195
 
 ## task-archive — `/task-clean` archives pruned bodies instead of deleting them; features keep every id
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/task-archive.md
 Source: product-design.md § Task backlog
-Tasks: none
+Tasks: 196, 197, 198, 199, 200, 201
 
 ---

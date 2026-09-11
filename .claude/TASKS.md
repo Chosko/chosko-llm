@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 195
+Last task number: 201
 
 ---
 
@@ -447,3 +447,63 @@ Target: claude
 Files: README.md, docs/reference.md, .claude/domain/product-workflow.md, .claude/domain/features/pipeline-suggest.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 193, 194
 Feature: pipeline-suggest
+
+---
+
+## 196. Put the archive rule and the archived-file form in `resolution.md`
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-engine/references/resolution.md, skills/task-engine/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: none
+Feature: task-archive
+
+---
+
+## 197. Rewrite `/task-clean` as a skill that archives instead of deleting
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-clean/SKILL.md, commands/task-clean.md, skills/task-engine/references/commit.md, claude-md/git-commit-style.md, VERSION, CHANGELOG.md
+Preconditions: 196
+Feature: task-archive
+
+---
+
+## 198. Add `/task-clean --backfill` and its supporting file
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-clean/backfill.md, skills/task-clean/SKILL.md, skills/task-engine/references/commit.md, VERSION, CHANGELOG.md
+Preconditions: 197
+Feature: task-archive
+
+---
+
+## 199. State the archive deviation in every id reader
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-add.md, skills/task-implement/SKILL.md, skills/task-review/SKILL.md, skills/task-iterate/SKILL.md, skills/architect/SKILL.md, skills/architect/iterating.md, VERSION, CHANGELOG.md
+Preconditions: 196
+Feature: task-archive
+
+---
+
+## 200. Report archived ids in `/production-status`'s task rollup
+
+Status: [MISSING]
+Target: claude
+Files: commands/production-status.md, VERSION, CHANGELOG.md
+Preconditions: 196
+Feature: task-archive
+
+---
+
+## 201. Update documentation for feature `task-archive`
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/reference.md, docs/authoring-guide.md, .claude/domain/task-workflow.md, .claude/domain/product-workflow.md, .claude/domain/features/task-archive.md, .claude/context/features.md, .claude/context/INDEX.md
+Preconditions: 196, 197, 198, 199, 200
+Feature: task-archive
