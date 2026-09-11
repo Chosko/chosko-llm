@@ -96,7 +96,7 @@ Feature: pipeline-revision
 
 ## 194. Add the `pipeline-suggest` skill
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/pipeline-suggest/SKILL.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
 Preconditions: 175, 187

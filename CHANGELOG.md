@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.34.0 — 2026-09-11
+
+- **pipeline-suggest** (new skill) answers a free-form request to build, change, fix, remove or sequence work with one line naming the pipeline command that fits it — `/architect`, `/task-add`, `/pipeline-patch`, `/pipeline-revise` and the rest — then stops. Claude Code selects it from its description; it asks nothing, writes nothing, only checks whether `.claude/FEATURES.md` or `.claude/TASKS.md` exists, and says nothing on a project with neither.
+- **pipeline-engine** the routing table gains a row for `pipeline-suggest`.
+
 ## 1.33.0 — 2026-09-11
 
 - **/pipeline-revise** (new skill) changes, inserts into, removes from or reorders already-planned work — a feature document, a task or a runbook step — by walking the change's impact from an anchor and running each owner's own amend step in order.
