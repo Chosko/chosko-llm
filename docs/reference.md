@@ -862,13 +862,49 @@ grouping, no flags, and no message about the missing plan.
 
 ### `/task-clean`
 
-Prune tasks in a terminal status: `[DONE]` and `[SKIP]` only. Removes their
-summary blocks from `TASKS.md` and deletes their body files. Commits and
-pushes by default (`--no-commit` / `--no-push`).
+Clear finished tasks out of the backlog without losing them. By default it
+takes the terminal statuses, `[DONE]` and `[SKIP]` only; name statuses to
+prune those instead (`[STALE]` is never in the default set, and naming a
+non-terminal status is flagged in the plan). Each task's summary block leaves
+`TASKS.md` and its body **moves** to `.claude/tasks/archive/<N>.md` — a
+`git mv`, so history follows the file — under a frozen header: an `Archived:`
+date plus the `Status:`, `Files:`, `Preconditions:` and (when it had one)
+`Feature:` lines its summary block carried at that moment. No body is
+deleted, no id is renumbered or reused, and survivors' `Preconditions:` drop
+the archived ids, since an archived precondition is a satisfied one. It shows
+the plan, naming each destination, and asks before writing anything; a
+destination that already exists is refused rather than overwritten.
+
+A prune never touches `.claude/FEATURES.md`. A feature keeps every task id it
+ever generated on its `Tasks:` line, so `Tasks: none` means the feature was
+never planned. An id that a feature, a precondition or anything else names
+but `TASKS.md` no longer holds is archived and terminal.
+
+**Nothing lists or reads the archive.** No command traverses
+`.claude/tasks/archive/`, so it costs a session nothing; an archived task is
+read only when you name it and ask to see it. `/task-implement <N>` on an
+archived id stops and names the path instead of opening it, and
+`/production-status` counts such ids as `archived: N` from their absence
+alone.
+
+**`--backfill`** recovers what earlier `/task-clean` runs deleted, for a
+project that pruned before the archive existed. It finds every task body git
+history records as deleted, restores each from the deleting commit's parent
+into the archive under the same frozen header (dated to the deletion), and
+puts each id back on its feature's `Tasks:` line — the one `FEATURES.md`
+write the skill makes. It can't be combined with a status set, plans and asks
+the same way, says there is nothing to recover on a second run, and stops on
+a project whose version control isn't git.
+
+Commits and pushes by default (`--no-commit` / `--no-push`), as
+`task-clean: archive tasks <N>, …` (or `task-clean: backfill <N> archived
+tasks`). It is a skill now (`skill:task-clean`); installing or updating it
+retires the old command copy.
 
 ### `task-engine`
 
 The rules the task features share (how a task is resolved from `TASKS.md`,
+where an archived task lives and what an id missing from `TASKS.md` means,
 what each status means, what `Target:` gates, how `[STALE]` is handled, the
 dirty-tree prompt, how commits and pushes are gated, and the review cost
 controls behind `--review-model` / `--review-effort`) live once, in the
@@ -930,7 +966,7 @@ the other.
 Tasks generated from a feature document carry a `Feature: <slug>` line and
 can go **stale**: if the feature is re-architected afterwards, its unfinished
 tasks are flipped to `[STALE]`, meaning the spec may no longer match the
-design. Stale tasks are never pruned by `/task-clean`; they're live work
+design. A default `/task-clean` never archives a stale task; they're live work
 awaiting reconciliation, normally by re-running `/task-add feature=<slug>`.
 `/task-implement` warns before starting one and lets you implement it anyway
 or stop; `all` and `next` skip them so a batch run never guesses.

@@ -351,7 +351,7 @@ The `claude-md:git-commit-style` feature is merged into the user's global
 restates it is one more copy to drift.
 
 What a feature *may* still specify is its own prescribed message form — the
-`Task <N>: …`, `Add task <N>: …` and `task-clean: remove tasks …` templates in
+`Task <N>: …`, `Add task <N>: …` and `task-clean: archive tasks …` templates in
 `skills/task-engine/references/commit.md` are exactly that, and the snippet
 defers to them by name. Commit *hygiene* — staging by explicit path, one
 commit per unit of work, the pull → re-sync → push protocol — stays in

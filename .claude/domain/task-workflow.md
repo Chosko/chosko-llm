@@ -12,7 +12,7 @@ authority each:
 
 | File | Owns |
 | --- | --- |
-| `resolution.md` | `.claude/TASKS.md` parsing, body-file location, the `all` / `next` / explicit-list selectors and the eligibility clause the batch two honour, the `/task-setup`-has-run gate. |
+| `resolution.md` | `.claude/TASKS.md` parsing, body-file location, the task archive (`.claude/tasks/archive/<N>.md`, the frozen-header form, and the archived-and-terminal rule every id reader cites), the `all` / `next` / explicit-list selectors and the eligibility clause the batch two honour, the `/task-setup`-has-run gate. |
 | `status.md` | Status vocabulary, which values are terminal, which implementable, legal transitions. |
 | `targets.md` | `Target:` values, the `## Manual interventions` pairing rule, the delegation guard. |
 | `stale.md` | `[STALE]`: who writes it, who clears it, the implement-anyway/stop protocol, reconciliation classification. |
@@ -29,9 +29,15 @@ statement is true of two `task-*` features, it belongs in the engine, and a
 consumer restating it has created a second copy to forget.
 
 Five features consume it: `/task-add`, `/task-list`, `/task-clean`,
-`/task-implement`, and `/task-review` — the last for `review-budget.md` alone,
-when a `--review` spawn hands it a budget block. `/task-iterate` does not — it
-operates on diffs and findings, not on the backlog's schema.
+`/task-implement`, and `/task-review` — the last for two things only:
+`review-budget.md`, when a `--review` spawn hands it a budget block, and
+`resolution.md` § *The archive*, which keeps its weakest task-resolution
+fallback out of `.claude/tasks/archive/`. `/task-iterate` does not — it
+operates on diffs and findings, not on the backlog's schema, and states its
+one-line archive exclusion inline. `/architect` and `/production-status` name
+§ *The archive* as the rule's home without consuming the engine: neither
+declares `requires: skill:task-engine`, and each states inline the one
+consequence it needs — an id absent from `TASKS.md` is terminal.
 
 `amend.md` is the one file no `task-*` feature reads. It was authored in the
 engine, since no consumer ever carried a copy, and it is read by path by
@@ -190,7 +196,7 @@ Two things order backlog, and selectors read both: **appearance order** in `TASK
 
 `[MISSING]`, `[STUBBED]`, `[INCORRECT]`, `[PARTIAL]`, `[IN PROGRESS]`, `[DONE]`, `[SKIP]`, `[STALE]`.
 
-`[DONE]` and `[SKIP]` only terminal statuses — only two `/task-clean` prunes by default. Vocabulary lives in the prompt layer alone; no shell script encodes it.
+`[DONE]` and `[SKIP]` only terminal statuses — only two `/task-clean` archives by default. Vocabulary lives in the prompt layer alone; no shell script encodes it.
 
 ## `Feature:` — origin link
 
@@ -206,11 +212,21 @@ Reconciliation depends on it — without line, re-planning run can't tell which 
 
 `[STALE]` means feature document task generated from has been re-architected since task written, so spec may no longer match design. `/architect` sets it; `/task-add feature=<slug>` reconciliation clears it (updating body in place, flipping back to `[MISSING]`, or marking task `[SKIP]` and drafting replacement).
 
-- **Not terminal.** Live work awaiting reconciliation, not abandoned work. `/task-clean` never prunes it.
+- **Not terminal.** Live work awaiting reconciliation, not abandoned work. `/task-clean` never archives it by default.
 - **Never set by `/task-add` at authoring time.** New task has no design drift to record.
 - **Never picked up silently.** `/task-implement` warns — naming feature, saying design changed — lets user implement anyway or stop; `all` and `next` skip stale tasks rather than deciding for user. Only a human can judge whether superseded design still applies, so the choice is always put to them.
 
 See [`./product-workflow.md`](./product-workflow.md) for feature side of this contract: `FEATURES.md` schema, feature status machine, iterate guard that writes `[STALE]`, reconciliation protocol resolving it.
+
+## The archive (`/task-clean`)
+
+Task leaving backlog is **archived, not deleted**. `/task-clean` removes summary block from `TASKS.md` and `git mv`s body to `.claude/tasks/archive/<N>.md` — a rename, so history follows the file — then writes frozen header under its title: `Archived:` date plus `Status:`, `Files:`, `Preconditions:`, `Feature:` (when present) as summary block had them at that moment. Nothing else derived or added; header never updated. Folder append-only, archiving run its only writer. Survivors' `Preconditions:` still drop archived ids — archived precondition is satisfied one, no reader should resolve into archive to know a task is ready. Non-terminal set named explicitly archives same way; frozen `Status:` records task pruned live. **Prune never opens `FEATURES.md`**: feature keeps every id it ever generated on `Tasks:`, so `Tasks: none` again means never planned.
+
+**The rule** lives in `resolution.md` § *The archive*, cited by every id reader: id referenced anywhere but absent from `TASKS.md` is archived and terminal; no command probes the folder, opens an archived file, or reports on its contents, except when user names a task and asks to read it. Absence is whole signal — no reader checks file is there, so hand-deleted body and archived one look the same until someone asks to read it, and the missing file says so itself. Folder no command traverses costs session same as no folder. Readers state only deviations: `/task-implement <N>` on absent id stops naming the archive path, opens it only on explicit ask, never re-implements; `/task-add feature=<slug>` leaves absent ids unclassified and keeps them when rewriting `Tasks:`; `/task-review` / `/task-iterate` exclude archive from weakest task-resolution fallback; `/production-status` counts them `archived: N` in its rollup; `/architect`'s iterate guard unchanged. `/task-list`, `/task-setup`, session commands and CLI change nothing — no listing of the archive exists anywhere, by design.
+
+**Why a skill.** `/task-clean` was a command; now `skills/task-clean/SKILL.md` w/ `replaces: command:task-clean`, so `add`/`update` retire the command copy. Migration exists for one reason: `--backfill`'s procedure sits in supporting file `backfill.md`, read only when flag present, and a command is one file that can carry nothing beside it — same reasoning that made `task-engine` a skill. `--backfill` recovers bodies earlier runs deleted: git history's deletions under `.claude/tasks/`, body from deleting commit's parent, header from that parent's `TASKS.md` block, `Archived:` dated to the deletion, and each id put back on its feature's `Tasks:` line — the one `FEATURES.md` write left in `/task-clean`, on that path only. Exclusive w/ status set, same plan-and-Apply gate, git only.
+
+Design: [`./features/task-archive.md`](./features/task-archive.md).
 
 ## Changing a planned task (`/pipeline-patch`, `/pipeline-revise`)
 
@@ -221,7 +237,7 @@ Live task changed after planning goes through `task-engine`'s `references/amend.
 
 What the arm allows is `amend.md`'s, not restated here: refuses `[IN PROGRESS]`, `[DONE]`, `[SKIP]`; a change to what the feature promises goes to `/architect amend`; a dropped `Preconditions:` edge is named in the dependent's `## Decisions`. Neither surface writes a line itself — every line the arm writes is still `/task-add`'s, per `pipeline-engine`'s routing table. See [product-workflow.md § Revision](./product-workflow.md#revision-pipeline-patch-pipeline-revise).
 
-**Removing a live task is `[SKIP]` with a reason, never deletion.** Arm writes `Status: [SKIP]` + dated reason in `## Decisions`; summary block and body stay. Successors' edges on it dropped through the same arm, each naming the deletion. Physical removal stays `/task-clean`'s explicit act over terminal statuses — `[SKIP]` is what makes a task eligible for it.
+**Removing a live task is `[SKIP]` with a reason, never deletion.** Arm writes `Status: [SKIP]` + dated reason in `## Decisions`; summary block and body stay. Successors' edges on it dropped through the same arm, each naming the deletion. Taking a task out of the backlog stays `/task-clean`'s explicit act over terminal statuses — and even that archives rather than deletes (§ The archive); `[SKIP]` is what makes a task eligible for it.
 
 **Moving** a task is skip-and-insert (`/pipeline-revise`'s reorder branch): old task `[SKIP]` w/ `reordered — replaced by task <K>, <before|after> task <M>`, replacement inserted at the new place under a new id through `/task-add --before`/`--after`. Ids never renumbered, blocks never moved. **Inserting** is `/task-add feature=<slug> --single --before|--after <N>` (§ Backlog order), the scope written into the feature doc first by `/architect amend` when it's new. `[DONE]` tasks never touched by any of it — follow-up is a new task.
 
@@ -346,6 +362,7 @@ This is the only write `/task-implement` makes to `FEATURES.md`, and the only st
 - [`./features/task-peer-review.md`](./features/task-peer-review.md) — feature design behind the review loop: the three input forms, the gates, mandatory triage, sticky rejections, and the `--review` / `--rounds` integration.
 - [`./features/shared-phase-engine.md`](./features/shared-phase-engine.md) — feature design behind `task-engine` and `requires:`: why the engine had to be a skill, what the CLI change is, the migration order, and what the extraction actually achieved.
 - [`./features/pipeline-revision.md`](./features/pipeline-revision.md) — feature design behind `/pipeline-patch` and `/pipeline-revise`, the surfaces that drive `amend.md`.
+- [`./features/task-archive.md`](./features/task-archive.md) — feature design behind the task archive: the archived-file form, the archived-and-terminal rule, `/task-clean` as a skill, and `--backfill`.
 - [`../../docs/authoring-guide.md`](../../docs/authoring-guide.md) — the `requires:` frontmatter contract, and the council-gate exception that `requires:` cannot cover.
 - [`../context/features.md`](../context/features.md) — shipped artifacts including every `task-*` command and skill, plus `skills/task-engine/`.
-- `commands/task-setup.md`, `commands/task-add.md`, `commands/task-clean.md`, `commands/task-list.md`, `skills/task-implement/SKILL.md`, `skills/task-engine/SKILL.md` + `skills/task-engine/references/*.md`, `skills/task-review/SKILL.md`, `skills/task-iterate/SKILL.md` — command and skill implementations.
+- `commands/task-setup.md`, `commands/task-add.md`, `skills/task-clean/SKILL.md` + `skills/task-clean/backfill.md`, `commands/task-list.md`, `skills/task-implement/SKILL.md`, `skills/task-engine/SKILL.md` + `skills/task-engine/references/*.md`, `skills/task-review/SKILL.md`, `skills/task-iterate/SKILL.md` — command and skill implementations.

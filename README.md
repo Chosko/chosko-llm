@@ -346,8 +346,9 @@ cost is tiered automatically from the size of the diff; `--rounds N` loops
 it.
 
 Around them, **`/task-list`** shows the backlog (grouped by milestone when a
-plan exists, with blocked features flagged) and **`/task-clean`** prunes
-finished tasks. The rules they all share live once, in the **`task-engine`**
+plan exists, with blocked features flagged) and **`/task-clean`** archives
+finished tasks out of it, moving each body under `.claude/tasks/archive/`
+rather than deleting it. The rules they all share live once, in the **`task-engine`**
 skill, which installs automatically alongside the commands that read it.
 
 The build commands commit and push by default (`--no-commit`, `--no-push`).

@@ -167,7 +167,11 @@ Currently shipped:
   keeps one resolution report and one delegation count; implementable tasks
   left blocked, a precondition cycle included, named by id in the report;
   a task named by number never blocked; body-file location, the
-  `/task-setup`-has-run gate), `status.md` (the eight-value status
+  `/task-setup`-has-run gate, and § *The archive* —
+  `.claude/tasks/archive/<N>.md`, the frozen-header form, and the
+  archived-and-terminal rule every id reader cites: an id referenced but
+  absent from `TASKS.md` is archived, and nothing probes the folder or opens
+  an archived file unless the user names a task and asks), `status.md` (the eight-value status
   vocabulary, which statuses are terminal, which implementable, legal
   transitions), `targets.md` (`Target:` values, the `## Manual
   interventions` pairing rule, the delegation guard, per-consumer notes),
@@ -275,28 +279,52 @@ Currently shipped:
   and manual interventions `targets.md`, the `[STALE]` and
   reconciliation-classification rules `stale.md`, and PHASE 5 `commit.md`.
   What survives inline is what is unique to authoring.
-- `commands/task-clean.md` — prunes terminal-status tasks. Terminal means
+- `skills/task-clean/` — archives terminal-status tasks. Was
+  `commands/task-clean.md`; rewritten as a skill by feature `task-archive`
+  and carries `replaces: command:task-clean`, so `add` / `update` retire an
+  installed command copy. The migration exists for one reason: `--backfill`'s
+  procedure sits in supporting file `backfill.md`, read ON DEMAND only when
+  the flag is present, so an ordinary prune never pays its tokens — a
+  command is one file and can carry nothing beside it. Terminal means
   `[DONE]` and `[SKIP]` and nothing else — `[STALE]` is live work awaiting
-  reconciliation and never pruned by default (naming it explicitly
-  warns and confirms). Removes summary
-  blocks AND deletes matching body files. Never renumbers — task IDs
-  stable across project's lifetime; `Last task number`
-  counter never decreases. Also drops every pruned ID from any
-  `.claude/FEATURES.md` `Tasks:` line (line left empty becomes
-  `Tasks: none`), silently skipped when project has no feature index —
-  writer invalidating those IDs fixes them in same run, so
-  `/architect`'s iterate guard stays pure reader, never under-reports.
-  Feature `Status:` deliberately untouched: feature whose tasks were all
-  cleaned stays `[PLANNED]`, since `[PLANNED]` → `[NEW]` illegal — and that
-  surviving `Status:` is what `/architect`'s iterate guard keys its own flip
-  on, precisely because the pruned `Tasks:` line can no longer tell a cleaned
-  feature from a never-planned one. After
-  applying, commits changes automatically (`.claude/TASKS.md` + deleted
-  body files + `.claude/FEATURES.md` when changed); `--no-commit`
-  leaves uncommitted. Declares `requires: skill:task-engine` — first
-  *writing* consumer of it: backlog parsing references
-  `references/resolution.md`, the prune-set vocabulary `status.md`, the
-  `[STALE]` warning `stale.md`, and the commit/push gating `commit.md`.
+  reconciliation and never pruned by default (naming it explicitly warns
+  and confirms); a non-terminal status named explicitly archives the same
+  way, its frozen `Status:` recording that it was pruned live. Removes
+  summary blocks and MOVES each body to `.claude/tasks/archive/<N>.md`
+  (`mkdir -p` + `git mv`, so history follows the file; plain `mv` for an
+  untracked body), then writes a frozen header under its title — `Archived:`
+  date plus the summary block's `Status:` / `Files:` / `Preconditions:` /
+  `Feature:` as they stood. No body is ever deleted. PHASE 1 probes source
+  and destination by exact-path Glob, never a folder listing: a missing
+  source is noted and its block still leaves; an existing destination is
+  refused (task stays in the backlog), never overwritten. Survivors'
+  `Preconditions:` drop archived ids — an archived precondition is a
+  satisfied one. Never renumbers — task IDs stable across project's
+  lifetime; `Last task number` counter never decreases. **The
+  `FEATURES.md` write is gone:** a prune never opens `.claude/FEATURES.md`,
+  so a feature keeps every id it generated on `Tasks:` and `Tasks: none`
+  means never planned; an id there with no summary block is archived and
+  terminal. `--backfill` (exclusive with a status set, git only — a `## VCS`
+  override stops it — same **"Apply?"** gate) recovers bodies earlier runs
+  deleted: `git log --diff-filter=D` under `.claude/tasks/`, latest deletion
+  per path, ids live or already archived dropped; body from the deleting
+  commit's parent, header from that parent's `TASKS.md` block, `Archived:`
+  the deletion date (no block → hand deletion, `Archived:` alone, flagged);
+  each id put back on its feature's `Tasks:` line at its ascending position
+  — the skill's only `FEATURES.md` write, on that path alone; a vanished
+  slug reported, not written. Never writes `TASKS.md` under `--backfill`; a
+  second run reports nothing to recover. Commits automatically:
+  `task-clean: archive tasks <N>, …` staging `.claude/TASKS.md` + each
+  `.claude/tasks/archive/<N>.md` (`git mv` already staged both halves of the
+  rename); backfill `task-clean: backfill <N> archived tasks`, adding
+  `.claude/FEATURES.md` when a line was restored. `--no-commit` leaves them
+  uncommitted, the move still made. Declares `requires: skill:task-engine` —
+  first *writing* consumer of it: backlog parsing and the archive form and
+  rule reference `references/resolution.md` (§ *The archive*; its
+  `/task-clean` note makes the skill the archive's only writer and its one
+  exception to the read prohibition — a per-destination existence check),
+  the prune-set vocabulary `status.md`, the `[STALE]` warning `stale.md`,
+  and the commit/push gating `commit.md`.
 - `skills/task-implement/` — implements backlog tasks end-to-end with
   tests-first sequence. `SKILL.md` carries common path (clean
   tree, known test runner, numbered `target: claude` task); last of the four
@@ -718,9 +746,14 @@ Currently shipped:
   case, neither an error, and skip it with no ask and no `TASKS.md` write;
   status half always keyed on entry's own `Status:` (`[NEW]` and `[ITERATED]`
   self-transition, `[PLANNED]`/`[DONE]` → `[ITERATED]`, named in closing
-  report), because `/task-clean` prunes resolved IDs while leaving `Status:`
-  alone, leaving `Tasks: none` unable to tell a cleaned feature from a
-  never-planned one. That guard and `amend.md`'s precision guard are the
+  report). An ID absent from `TASKS.md` is archived and terminal
+  (`resolution.md` § *The archive*), so it has nothing to refuse on, ask
+  about or mark `[STALE]`; `/task-clean` now archives and leaves `Tasks:`
+  intact, so a cleaned feature lands in the nothing-resolves case with its
+  IDs kept. `Status:` still decides because on a backlog cleaned before task
+  archiving `/task-clean` dropped resolved IDs and left `Status:` alone,
+  leaving `Tasks: none` there unable to tell a cleaned feature from a
+  never-planned one — the special case is kept for those. That guard and `amend.md`'s precision guard are the
   only reasons it touches `.claude/TASKS.md`; both write nothing there but
   `Status:` lines. Slugs
   stable, never renamed. Never writes `technical-direction.md` — that
@@ -835,15 +868,16 @@ Currently shipped:
   edges dependents point at it. READINESS otherwise is the only computation
   and is derived every read, never stored: ready when every edge
   pointing at the feature comes from a feature `[DONE]` in `FEATURES.md`, or
-  `[PLANNED]` with all tasks `[DONE]`/`[SKIP]`; no edges → ready; else
+  `[PLANNED]` with all tasks `[DONE]`/`[SKIP]` or archived; no edges → ready; else
   blocked. An edge
   slug resolving to no feature FAILS OPEN — reported as a plan inconsistency,
   feature treated as ready. Section 2's last column is NOT readiness but
   **Next**, derived from status + rollup + readiness and exactly one of
   `-` (`[DONE]`), `/task-add feature=<slug>` (`[NEW]`/`[ITERATED]`), `flip to
-  [DONE] in FEATURES.md` (`[PLANNED]`, nothing left but `[DONE]`/`[SKIP]`
-  tasks, zero-task case included), `/task-implement <N>` (`[PLANNED]`, work
-  left, not blocked — N the first open task in `TASKS.md` appearance order
+  [DONE] in FEATURES.md` (`[PLANNED]`, nothing left but `[DONE]`/`[SKIP]`/
+  archived tasks, an all-archived `Tasks:` line and the zero-task case
+  included), `/task-implement <N>` (`[PLANNED]`, work
+  left, not blocked — N the first open task, never an archived id, in `TASKS.md` appearance order
   whose `Preconditions:` are all `[DONE]`/`[SKIP]`, unresolvable ids
   ignored: `task-engine`'s eligibility clause stated inline, fed by the
   summary blocks already read, so no new read and still never a body),
@@ -852,9 +886,16 @@ Currently shipped:
   precondition; names the first such task's unmet ids) — blockedness
   suppresses ONLY `/task-implement`, since planning and a bookkeeping flip are
   never blocked by a dependency. Task rollup is counts per status by default,
-  `--task-ids` names each ID; zero tasks renders `-` on a `[DONE]`/`[PLANNED]`
-  feature (those states are post-`/task-add`, so zero means `/task-clean`
-  pruned) and `no tasks yet` only on `[NEW]`/`[ITERATED]`, in both rollup
+  `--task-ids` names each ID; an ID absent from `TASKS.md` is archived and
+  terminal (`resolution.md` § *The archive*, named as the rule's home, never
+  opened) and is REPORTED, not ignored — `archived: N` joins the same rollup
+  line and its total (`[archived]` per ID under `--task-ids`), lowercase
+  because it is not a status, counted from absence alone with nothing probed
+  under `.claude/tasks/archive/`. Zero tasks is a literal `Tasks: none` only
+  (an all-archived line renders `archived: N`): `-` on a `[DONE]`/`[PLANNED]`
+  feature (those states are post-`/task-add`, so `none` there means a
+  backlog cleaned before task archiving, when `/task-clean` dropped IDs from
+  the line) and `no tasks yet` only on `[NEW]`/`[ITERATED]`, in both rollup
   modes; `milestone=<slug>` scopes sections 1–5 and an
   unknown slug stops listing available slugs (matching `/task-add
   feature=<slug>`). Staleness is STRUCTURAL, never temporal — names slugs
@@ -863,7 +904,8 @@ Currently shipped:
   goal/exit criteria, no `TASKS.md` drops rollups, no `[ACTIVE]` reports the
   first `[PLANNED]`); the only stops are a missing `PLAN.md` and an unknown
   `milestone=`. Writes nothing, runs NO shell command of any kind, never opens
-  a file under `.claude/tasks/`, and never starts the work it recommends.
+  a file under `.claude/tasks/` (the archive included), and never starts the
+  work it recommends.
 - `skills/pipeline-engine/` — second non-invocable reference library,
   beside `task-engine` and deliberately NOT merged with it (open question in
   `../domain/features/pipeline-engine.md`). Same pattern: no arguments, runs
@@ -1315,7 +1357,8 @@ Currently shipped:
   note points at `/runbook-create --append` instead. Writes nothing, runs no
   shell, corrects no status however wrong the index looks against the body it
   just read.
-- `commands/runbook-clean.md` — pruning, `/task-clean`'s exact shape.
+- `commands/runbook-clean.md` — pruning, `/task-clean`'s plan-and-confirm
+  shape, except that it deletes: runbooks have no archive.
   `requires: skill:runbook-run` for the status vocabulary and block shape. Three
   stages: resolve (no arg = every `[DONE]`; names **or ids** = exactly those,
   and a named non-`[DONE]` runbook is refused BY NAME with its actual status,
@@ -1415,7 +1458,8 @@ matcher: AskUserQuestion     # hook kind ONLY; optional, narrows event to one to
 a feature changes kind (`commands/<n>.md` rewritten as `skills/<n>/SKILL.md`),
 so `add`/`update`/`update --all` remove the superseded artifact from
 `$CLAUDE_HOME` instead of leaving two definitions of one slash command. Live
-examples: `skills/context-build/SKILL.md` and `skills/context-update/SKILL.md`.
+examples: `skills/context-build/SKILL.md`, `skills/context-update/SKILL.md` and
+`skills/task-clean/SKILL.md`.
 Drop the key once the migration has propagated.
 
 `requires:` is the other optional key, valid on every kind: a comma-separated
@@ -1423,7 +1467,7 @@ list of kind-prefixed specs naming features whose files this one reads at run
 time. `add` installs them first, `rm` refuses to remove one while a dependent
 is installed (`--force` overrides). One level deep, unversioned,
 non-transitive. Live examples: `commands/task-add.md`,
-`commands/task-list.md`, `commands/task-clean.md` and
+`commands/task-list.md`, `skills/task-clean/SKILL.md` and
 `skills/task-implement/SKILL.md`, all declaring `requires: skill:task-engine`;
 and `commands/pipeline-check.md`, declaring `requires: skill:pipeline-engine` —
 the second engine, built on the same non-invocable-skill pattern.

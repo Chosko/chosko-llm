@@ -136,7 +136,7 @@ Feature: task-archive
 
 ## 201. Update documentation for feature `task-archive`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, docs/authoring-guide.md, .claude/domain/task-workflow.md, .claude/domain/product-workflow.md, .claude/domain/features/task-archive.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 196, 199

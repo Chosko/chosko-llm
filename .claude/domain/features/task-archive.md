@@ -210,11 +210,13 @@ file is absent is told the file is not there, with no guess at why. Under
 - **[shared-phase-engine](./shared-phase-engine.md)** — `resolution.md`
   as the single home of the rule, and the consumers-cite-and-deviate
   discipline.
-- **[pipeline-engine](./pipeline-engine.md)** — its lint catalogue lists
-  "a feature's `Tasks:` id absent from `TASKS.md`" as a finding. Under
-  this feature that state is normal, not drift, and the finding must be
-  dropped or redefined before `/task-add feature=pipeline-engine` runs;
-  that feature is `[NEW]` and its document needs the amendment.
+- **[pipeline-engine](./pipeline-engine.md)** — `[PLANNED]`, with tasks
+  175 and 181. Its lint catalogue was drafted with "a feature's `Tasks:` id
+  absent from `TASKS.md`" as a finding; under this feature that state is
+  normal, not drift, and task 175 dropped the finding at authoring time,
+  recording it in `lint.md` as a deliberate absence. Task 175 also states,
+  in `probes.md`, `graph.md`, `lint.md` and `/pipeline-check`, that nothing
+  probes `.claude/tasks/archive/`.
 - **[backlog-ordering](./backlog-ordering.md)** — states that an id
   resolving to nothing is ignored; consistent with the rule here, no
   change needed.
@@ -223,10 +225,12 @@ file is absent is told the file is not there, with no guess at why. Under
 - The kind-migration path (`replaces:`) in `cmd-add` / `cmd-update`,
   already shipped; no CLI change.
 - Documentation to update when this lands: `README.md`,
-  `docs/reference.md`, `.claude/domain/task-workflow.md`,
+  `docs/reference.md`, `docs/authoring-guide.md` (the `task-clean:`
+  commit-message form), `.claude/domain/task-workflow.md`,
   `.claude/domain/product-workflow.md` (the illegal-transition rationale
   and the who-writes-what row for `/task-clean`),
-  `.claude/context/features.md` (the command-to-skill migration).
+  `.claude/context/features.md` (the command-to-skill migration),
+  `.claude/context/INDEX.md` (its `Last updated:` anchor).
 
 ## Open questions
 
