@@ -2,6 +2,13 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.31.0 — 2026-09-11
+
+- **/pipeline-check** (new command) reports structural drift across `FEATURES.md`, `TASKS.md`, `PLAN.md` and `RUNBOOKS.md`: an unknown feature slug, a precondition never assigned or pointing at a `[SKIP]` task, a precondition cycle, an `[ITERATED]` feature, a `[STALE]` task, a feature missing from the plan or a plan line naming an unknown one, a finished runbook still `[PENDING]`, and a `[PLANNED]` feature whose work has all resolved. Each finding carries an `ERROR` or `WARNING` severity and the one command that fixes it; a clean project prints one line.
+- **/pipeline-check** `feature=<slug>` scopes the report to one feature and the tasks and plan lines that name it. The command is read-only, never refuses over a missing index, and never reports an archived task as drift.
+- **pipeline-engine** (new skill, installed with `/pipeline-check`) is the shared reference for the pipeline as a whole: the one-line project probe, how the indexes point at each other, a routing table of what every pipeline feature consumes, produces and owns, and the drift catalogue. It is never invoked directly.
+- **scripts/check-routing.sh** (repo-local) checks that every routing-table row names a shipped feature and that every feature reading the engine has a row.
+
 ## 1.30.0 — 2026-09-11
 
 - **/task-clean** is now a skill (`skill:task-clean`) rather than a command; `chosko-llm add` / `update` of the skill retires an installed command copy.

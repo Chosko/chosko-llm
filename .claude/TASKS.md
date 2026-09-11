@@ -36,7 +36,7 @@ Feature: backlog-ordering
 
 ## 175. Ship the `pipeline-engine` skill, the `/pipeline-check` command and the repo-local routing check
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/pipeline-engine/SKILL.md, skills/pipeline-engine/references/probes.md, skills/pipeline-engine/references/graph.md, skills/pipeline-engine/references/routing.md, skills/pipeline-engine/references/lint.md, commands/pipeline-check.md, scripts/check-routing.sh, .claude/domain/features/pipeline-engine.md, VERSION, CHANGELOG.md
 Preconditions: 196

@@ -75,7 +75,9 @@ never a `docs/` path.
   and `Feature:` between the feature index and the backlog; `PLAN.md`'s
   milestone lists and its edge list; runbook steps that name task ids or
   feature slugs. This is the impact walk's only input. Reading a body is a
-  consumer's decision and is never required to traverse the graph.
+  consumer's decision and is never required to traverse the graph. A `Tasks:`
+  id with no `TASKS.md` block resolves as archived and terminal, per
+  [task-archive](./task-archive.md).
 - **Routing** — one row per pipeline command or skill: what it consumes, what
   it produces, which artifact lines it owns, its preconditions, its argument
   shape. Owner-of is the column [pipeline-revision](./pipeline-revision.md)
@@ -88,8 +90,7 @@ never a `docs/` path.
 
 The initial catalogue, all derivable from indexes alone:
 
-- a task's `Feature:` slug absent from `FEATURES.md`; a feature's `Tasks:` id
-  absent from `TASKS.md`;
+- a task's `Feature:` slug absent from `FEATURES.md`;
 - a task with no `Feature:` line on a project whose `FEATURES.md` exists;
 - a `Preconditions:` id that is unknown, or names a `[SKIP]` task; a
   precondition cycle;
