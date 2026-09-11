@@ -126,7 +126,7 @@ Feature: task-archive
 
 ## 199. State the archive deviation in every id reader, including `/production-status`'s rollup
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-add.md, skills/task-implement/SKILL.md, skills/task-review/SKILL.md, skills/task-iterate/SKILL.md, skills/architect/SKILL.md, skills/architect/iterating.md, commands/production-status.md, VERSION, CHANGELOG.md
 Preconditions: 169, 196

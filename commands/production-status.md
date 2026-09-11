@@ -1,8 +1,8 @@
 ---
 name: production-status
-version: 0.3.0
+version: 0.3.1
 type: command
-description: Report what to build next by joining PLAN.md, FEATURES.md and TASKS.md — the active milestone with its roadmap goal and exit criteria, its features in plan order as a five-column markdown table whose Next column names the one concrete action each needs, the ready set, the single recommended next feature, blocked features named with their blocker, coverage gaps, features missing from the plan, and the remaining milestones. Readiness, the Next action and coverage are derived on every read. A [DONE] feature is reported plainly, never as ready, blocked, or recommended — it still satisfies dependency edges pointing at it. Read-only — writes nothing, runs no shell, and never opens a file under .claude/tasks/.
+description: Report what to build next by joining PLAN.md, FEATURES.md and TASKS.md — the active milestone with its roadmap goal and exit criteria, its features in plan order as a five-column markdown table whose Next column names the one concrete action each needs, the ready set, the single recommended next feature, blocked features named with their blocker, coverage gaps, features missing from the plan, and the remaining milestones. Readiness, the Next action and coverage are derived on every read. A [DONE] feature is reported plainly, never as ready, blocked, or recommended — it still satisfies dependency edges pointing at it. A task ID a feature names but TASKS.md no longer holds is counted as archived, from its absence alone. Read-only — writes nothing, runs no shell, and never opens a file under .claude/tasks/.
 ---
 
 # /production-status
@@ -55,7 +55,8 @@ READING THE INPUTS
 This command performs no writes and needs no shell at all. Do NOT run `git`,
 `ls`, `grep`, or any other command. Do NOT open any file under
 `.claude/tasks/` — `TASKS.md` carries everything needed, exactly as in
-`/task-list`.
+`/task-list`. `.claude/tasks/archive/` is no exception: an archived task is
+known by its absence from `TASKS.md`, never by looking.
 
 Read these four files, all **read-only**:
 
@@ -63,7 +64,7 @@ Read these four files, all **read-only**:
 | --- | --- |
 | `.claude/PLAN.md` | Milestone membership, order, `Status:`, and the flat `## Dependencies` edge list. |
 | `.claude/FEATURES.md` | Per-feature `Status:` and `Tasks:` IDs. |
-| `.claude/TASKS.md` | Per-task `Status:` and `Preconditions:`, for the rollup, the readiness rule and the Next field. |
+| `.claude/TASKS.md` | Per-task `Status:` and `Preconditions:`, for the rollup, the readiness rule and the Next field — and, by an ID's absence, which of a feature's tasks are archived. |
 | `.claude/domain/product-roadmap.md` | `Goal:` and `Exit criteria:`, echoed for the reported milestone. |
 
 **`PLAN.md`'s schema**, which this command parses and never rewrites:
@@ -112,10 +113,11 @@ recommended next feature (4). It still satisfies any dependency edge a
 
 For every feature that is NOT `[DONE]`: it is **ready** when **every**
 dependency edge pointing at it originates from a feature that is `[DONE]`
-in `FEATURES.md`, or `[PLANNED]` **and** has all of its tasks `[DONE]` or
-`[SKIP]` in `TASKS.md` — a `[DONE]` feature already carries that same
-guarantee, just recorded on `FEATURES.md` instead of rolled up from
-`TASKS.md` each time.
+in `FEATURES.md`, or `[PLANNED]` **and** has all of its tasks `[DONE]`,
+`[SKIP]` or archived in `TASKS.md` — a `[DONE]` feature already carries that
+same guarantee, just recorded on `FEATURES.md` instead of rolled up from
+`TASKS.md` each time. An archived ID (see the rollup below) is terminal, so
+it counts as resolved here, exactly as `[DONE]` and `[SKIP]` do.
 
 - A feature with no dependency edges is ready.
 - Everything else is **blocked**, and is always named together with what
@@ -134,15 +136,30 @@ guarantee, just recorded on `FEATURES.md` instead of rolled up from
 looked up in `TASKS.md`:
 
 - Default: counts per status, e.g. `4 tasks — DONE: 2, MISSING: 1, STALE: 1`.
+  IDs absent from `TASKS.md` add one more value to the same line,
+  `archived: N`, and count toward its total:
+  `6 tasks — DONE: 2, MISSING: 1, archived: 3`.
 - With `--task-ids`: name each task ID with its status instead, e.g.
-  `tasks: 41 [DONE], 42 [DONE], 43 [MISSING], 44 [STALE]`.
-- A task ID that resolves to no entry in `TASKS.md` is ignored, not an error.
-- **Zero tasks** — `Tasks: none`, or a `Tasks:` line whose every ID was
-  ignored by the rule above — splits on the feature's `FEATURES.md` status:
+  `tasks: 41 [DONE], 42 [DONE], 43 [MISSING], 44 [STALE]`. An absent ID is
+  named with `[archived]`: `tasks: 41 [archived], 42 [DONE], 43 [MISSING]`.
+- A task ID that resolves to no entry in `TASKS.md` is archived and
+  terminal, per `task-engine`'s `references/resolution.md` § *The archive*
+  — named as the rule's home, not as a file this command opens. This
+  command's deviation is that it *reports* such an ID rather than ignoring
+  it, from its absence alone: nothing here probes `.claude/tasks/archive/`
+  or opens a file in it. `archived` is not a status — it is none of the
+  eight tags, no `Status:` field ever holds it, and it is written in
+  lowercase so it never reads as one.
+- **Zero tasks** — a literal `Tasks: none`, and only that — splits on the
+  feature's `FEATURES.md` status. A `Tasks:` line whose every ID is absent
+  is not a zero-task case: it renders `archived: N` (or its `[archived]`
+  IDs) like any other rollup.
   - `[DONE]` or `[PLANNED]` → `-`. A feature only reaches either of those
-    states after `/task-add feature=<slug>` has run, so zero tasks there
-    means `/task-clean` pruned the completed ones, not that planning never
-    happened. Saying `no tasks yet` on such a feature is simply false.
+    states after `/task-add feature=<slug>` has run, so `Tasks: none` there
+    means the backlog was cleaned before task archiving, when `/task-clean`
+    dropped completed IDs from the line instead of archiving them — not
+    that planning never happened. Saying `no tasks yet` on such a feature
+    is simply false.
   - any other status (`[NEW]`, `[ITERATED]`) → `no tasks yet` — and that,
     and only that, is the signal that `/task-add feature=<slug>` has not
     run.
@@ -153,7 +170,12 @@ looked up in `TASKS.md`:
 **The Next field** is section 2's last field, derived per feature from its
 `FEATURES.md` status, its task rollup and its readiness. It names the one
 concrete action to take on the feature rather than restating readiness, and
-is exactly one of:
+is exactly one of the six values below.
+
+An archived ID is terminal, so it counts as resolved throughout: wherever a
+value below speaks of a task that is not `[DONE]`/`[SKIP]`, an archived one
+is never meant. It never keeps a feature from `flip to [DONE] in
+FEATURES.md`, and it is never the `<N>` in `/task-implement <N>`.
 
 - `-` — the feature is `[DONE]`. Nothing is computed for it, readiness
   included; there is no next action on a finished feature.
@@ -162,17 +184,19 @@ is exactly one of:
   dependency, and re-planning through `/task-add` is exactly what an
   `[ITERATED]` feature needs.
 - `flip to [DONE] in FEATURES.md` — the feature is `[PLANNED]` and has no
-  task that is not `[DONE]` or `[SKIP]`, the zero-task case included. It is
-  a suggestion for the user to make that edit by hand; this command writes
-  nothing. Printed even when the feature is blocked — there is no work left
-  for a dependency to block.
+  task that is not `[DONE]`, `[SKIP]` or archived — an all-archived
+  `Tasks:` line and the zero-task case included. It is a suggestion for the
+  user to make that edit by hand; this command writes nothing. Printed even
+  when the feature is blocked — there is no work left for a dependency to
+  block.
 - `/task-implement <N>` — the feature is `[PLANNED]`, has at least one task
   that is not `[DONE]`/`[SKIP]`, is **not** blocked, and at least one such
-  task has its preconditions satisfied. `<N>` is the first such task, in
-  appearance order in `TASKS.md`, whose `Preconditions:` are
-  all `[DONE]` or `[SKIP]`; a precondition id resolving to no task is
-  ignored. That is the precondition half of the eligibility clause whose
-  authority is `task-engine`'s `references/resolution.md` § *Selectors* —
+  task has its preconditions satisfied. `<N>` is the feature's first task,
+  in appearance order in `TASKS.md`, that is not `[DONE]`, `[SKIP]` or
+  archived and whose `Preconditions:` are all `[DONE]` or `[SKIP]`; a
+  precondition id resolving to no task is ignored. That is the precondition
+  half of the eligibility clause whose authority is `task-engine`'s
+  `references/resolution.md` § *Selectors* —
   named here as the rule's home, not as a file this command opens. The part
   this field needs is fully stated in this bullet, and `Preconditions:`
   comes from the summary blocks already read, so the Next field adds no
@@ -314,7 +338,9 @@ DO NOT:
   cached answer, no `PLAN.md` fix for an inconsistency this run reported.
   `/production-plan` is the only writer in this layer.
 - Run any shell command of any kind, including `git`.
-- Open any file under `.claude/tasks/`. `TASKS.md` carries everything needed.
+- Open any file under `.claude/tasks/`, the archive included. `TASKS.md`
+  carries everything needed; an archived task is counted from its absence
+  there.
 - Open feature documents under `.claude/domain/features/`, or
   `product-design.md` beyond its section headings for section 6's coverage
   check.

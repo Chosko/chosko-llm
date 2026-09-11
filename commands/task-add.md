@@ -1,6 +1,6 @@
 ---
 name: task-add
-version: 2.3.0
+version: 2.3.1
 type: command
 description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit and push. Pass --before <N> or --after <N> to write the new task at that position in TASKS.md together with the Preconditions: edge the position implies — no existing id moves. Pass feature=<slug> --single to attach exactly one task to a [PLANNED] feature without reconciling or re-planning it; on a project with FEATURES.md, a free-form run asks at its existing approval gate whether the task belongs to a feature. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, appending a final documentation-update task when new tasks were drafted, and setting the feature [PLANNED]. Whenever a drafted task names a document owned by another pipeline command, the PHASE 3 gate enumerates the reconciliations that task needs to make to it and asks the user to pre-authorise exactly those points or to drop the file — the grant, or the removal, is written into the task body so the implementer never has to ask. Pass --short for trivial low-ambiguity tasks to skip the deep PHASE 1 investigation and write a minimal Goal-only body (mutually exclusive with feature= and --single), --no-split to always write exactly one task, --no-commit to write the files but skip the commit (and push), or --no-push to commit without pushing.
 requires: skill:task-engine
@@ -330,8 +330,10 @@ under `--no-split`) and then PHASE 2.
    read each listed task's TASKS.md summary block AND its
    `.claude/tasks/<N>.md` body. You
    cannot classify a task you have not read, and PHASE 3 must classify
-   every one of them. IDs that resolve to no task are ignored, not an
-   error — `/task-clean` normally prunes them.
+   every one of them. An ID with no summary block is archived and
+   terminal, per `resolution.md` § *The archive*: reconciliation leaves it
+   unclassified, reads no body for it, and does not treat it as an error.
+   PHASE 4 keeps it on the `Tasks:` line.
 
    Any free-form text alongside `feature=<slug>` narrows the scope: it
    selects which parts of the document this run plans, or adds a
@@ -947,8 +949,9 @@ Feature case (FEATURE is set) — in addition to the above:
 
 4. Update the feature's entry in `.claude/FEATURES.md`, writing exactly two
    fields:
-   - `Tasks:` — the surviving IDs plus the newly created ones, ascending.
-     Drop the IDs of tasks this run marked `[SKIP]`; keep `[DONE]` IDs.
+   - `Tasks:` — the surviving IDs, the archived IDs PHASE 1b left
+     unclassified, and the newly created ones, ascending. Drop the IDs of
+     tasks this run marked `[SKIP]`; keep `[DONE]` IDs.
    - `Status:` — `[PLANNED]`, from either `[NEW]` or `[ITERATED]`.
 
    Under SINGLE, or for a task the orphan question attached, write

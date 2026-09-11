@@ -1,6 +1,6 @@
 ---
 name: architect
-version: 0.8.0
+version: 0.8.1
 type: skill
 description: Turn one or more high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md — the bridge between /product-design and /task-add. Grounds the architecture in the project's recorded technical-direction.md or existing code, or proposes a tech stack when there is neither. Runs from a product-design section, named features, or a bare prompt with no design documents at all. On a project whose .claude/domain/product-roadmap.md slices the target section, it switches per target into slice mode: it architects one milestone's scope slice rather than the whole section, turns the slice's exclusions into the document's non-goals, and records the milestone as a parenthetical on the FEATURES.md Source: line; pass --no-slices to force traditional resolution. Re-architecting a feature that already has an entry triggers an iterate guard: refuses outright while any of its tasks is [IN PROGRESS], otherwise asks, then flips surviving tasks to [STALE] and the feature to [ITERATED] — from [PLANNED] or from [DONE] alike, and with no ask when there are no tasks left to invalidate. The amend form — /architect amend feature=<slug> followed by the quoted change — makes a targeted change to the named sections of one feature document without the clarify or architecture phases, behind one gate: a precision guard marks [STALE] only the tasks the change touches, refuses only when a touched task is [IN PROGRESS], and asks every time whether the change is editorial. Requires /domain-setup. At a genuine design fork it offers to convene claude-council when that skill is installed, and is silent when it is not. Nothing committed by default; pass --commit to commit and push exactly the written paths (--commit --no-push to skip the push).
 ---
@@ -217,11 +217,15 @@ existing target feature:
    `TASKS.md` write. The status is then decided by the entry's own `Status:`,
    never by the `Tasks:` line: `[NEW]` stays `[NEW]`, `[ITERATED]` stays
    `[ITERATED]`, and `[PLANNED]` or `[DONE]` flips to `[ITERATED]` and is
-   named in PHASE 3's report. `/task-clean` prunes resolved IDs and leaves
-   `Status:` alone, so `Tasks: none` cannot tell a cleaned feature from a
-   never-planned one.
-6. **IDs that resolve to no task** are ignored, not an error — a
-   hand-edited backlog must not break the run.
+   named in PHASE 3's report. `Status:`, not `Tasks:`, still decides: on a
+   backlog cleaned before task archiving, `/task-clean` dropped resolved IDs
+   from `Tasks:` and left `Status:` alone, so `Tasks: none` there cannot
+   tell a cleaned feature from a never-planned one.
+6. **IDs that resolve to no task** are ignored, not an error. An ID absent
+   from `.claude/TASKS.md` is archived and terminal (`task-engine`'s
+   `references/resolution.md` § *The archive*), so it has nothing to
+   refuse on, ask about or mark `[STALE]`. A hand-edited backlog must not
+   break the run either.
 
 `[DONE]` tasks are never touched, whatever the design does afterwards.
 

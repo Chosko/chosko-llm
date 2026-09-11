@@ -24,10 +24,11 @@ Read the entry's `Tasks:` line. It is a comma-separated list of task IDs, or
 `none`. Look each ID up in `.claude/TASKS.md` and note its `Status:` and
 title.
 
-**IDs that resolve to no task are ignored, not an error.** `/task-clean`
-normally prunes them from the `Tasks:` line, but a hand-edited backlog must
-not break the run. Mention them in passing if it's tidy to do so; do not
-stop.
+**IDs that resolve to no task are ignored, not an error.** An ID absent
+from `.claude/TASKS.md` is archived and terminal (`task-engine`'s
+`references/resolution.md` § *The archive*), so it has nothing to refuse
+on, ask about or mark `[STALE]`. A hand-edited backlog must not break the
+run either. Mention them in passing if it's tidy to do so; do not stop.
 
 **When nothing resolves** — `Tasks: none`, or every listed ID resolving to no
 task, which are the same case and neither of them an error — there is no task
@@ -43,10 +44,14 @@ entry's own `Status:`, never by the `Tasks:` line:
 | `[PLANNED]` | → `[ITERATED]` |
 | `[DONE]` | → `[ITERATED]` |
 
-`Tasks:` cannot be the discriminator here, because `/task-clean` prunes
-`[DONE]` and `[SKIP]` IDs out of that line and deliberately leaves `Status:`
-alone. A cleaned `[PLANNED]` or `[DONE]` feature therefore looks exactly like
-a never-planned `[NEW]` one, and reading `Tasks: none` as "never planned"
+`Status:`, not `Tasks:`, still decides: on a backlog cleaned before task
+archiving, `/task-clean` dropped resolved IDs from `Tasks:` and left
+`Status:` alone, so `Tasks: none` there cannot tell a cleaned feature from a
+never-planned one. The special case is kept for exactly those backlogs; on
+one cleaned since, a feature keeps every ID it generated, each resolving to
+nothing, and lands in this same case. A cleaned `[PLANNED]` or `[DONE]`
+feature on an older backlog looks exactly like a never-planned `[NEW]` one,
+and reading `Tasks: none` as "never planned"
 would leave it `[DONE]` where the state machine documents `[DONE]` →
 `[ITERATED]`. That also strands it: `/task-add feature=<slug>` never targets
 a `[DONE]` feature, so the re-architected design would have no route back
@@ -114,7 +119,8 @@ otherwise edit task entries, and never touch a task's body file.
 same status rule step 1 applies when nothing resolves — the two paths differ
 only in whether 4.1 ran. Re-architecting a `[DONE]` feature is not a special
 case: it reaches this guard with its tasks already `[DONE]` or `[SKIP]` — or,
-once `/task-clean` has pruned those, with no tasks at all, which is the
+once `/task-clean` has archived those, with IDs that resolve to nothing (or
+`Tasks: none` on a backlog cleaned before task archiving), which is the
 common shape and the one step 1 handles — so step 3 above only ever has
 `[SKIP]` tasks to list, if any.
 

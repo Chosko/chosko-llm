@@ -1,6 +1,6 @@
 ---
 name: task-iterate
-version: 0.1.0
+version: 0.1.1
 type: skill
 description: Triage review findings it did not produce, apply the ones that survive triage, and record why the rest did not. Three input forms — no argument iterates on the uncommitted working tree, a branch name on that branch against the repository's default branch or an explicit base=<ref>, and a PR number or URL on that pull request through gh. Findings come from exactly one of the review subagent's structured output, a .claude/reviews/<task>-R<n>.md file, or the PR's review comments; the skill never invents a finding and never adds one of its own. Triage is mandatory and explicit — every finding gets exactly one of fix, defer or reject, defer requires a follow-up task number or a note that one should be authored, reject requires a one-line reason, and the full verdict table is written before any edit is made. Committing depends on the caller and the caller asserts it: standalone it commits and pushes like every other auto-committing feature, accepting --no-commit and --no-push, while inside a /task-implement --review round it commits nothing and leaves the corrected tree for that run's Step 7 so the task still produces exactly one commit. It returns a triage summary, a sticky rejection ledger for the next round, and whether any BLOCKING findings remain unresolved. It never opens a pull request, in any mode.
 ---
@@ -177,6 +177,7 @@ order, taking the first that yields a `.claude/tasks/<n>.md` that exists:
 3. **The PR title** — pr mode only; a leading `Task <n>:` or a bare number.
 4. **The most recently modified `.claude/tasks/*.md`** — the weakest signal, so
    state which file was picked and why in the triage report.
+   `.claude/tasks/archive/` is excluded from the search.
 
 If none of the four resolves, **stop**:
 

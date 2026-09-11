@@ -2,6 +2,14 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.34.1 — 2026-09-11
+
+- **/production-status** counts a feature's task IDs that are no longer in `TASKS.md` as `archived: N` in its task rollup (`[archived]` under `--task-ids`) instead of dropping them, so a fully archived `[PLANNED]` feature no longer reads as having no tasks. It still opens nothing under `.claude/tasks/`.
+- **/task-implement** stops on a task number that is not in `TASKS.md` and names `.claude/tasks/archive/<N>.md` as where its body would be; an archived task is never implemented again.
+- **/task-add** `feature=<slug>` keeps archived task IDs on the feature's `Tasks:` line when it rewrites it.
+- **/task-review** and **/task-iterate** never pick a file under `.claude/tasks/archive/` when guessing which task a diff belongs to.
+- **/architect** iterate guard explains ids absent from `TASKS.md` as archived tasks; its behaviour is unchanged.
+
 ## 1.34.0 — 2026-09-11
 
 - **pipeline-suggest** (new skill) answers a free-form request to build, change, fix, remove or sequence work with one line naming the pipeline command that fits it — `/architect`, `/task-add`, `/pipeline-patch`, `/pipeline-revise` and the rest — then stops. Claude Code selects it from its description; it asks nothing, writes nothing, only checks whether `.claude/FEATURES.md` or `.claude/TASKS.md` exists, and says nothing on a project with neither.
