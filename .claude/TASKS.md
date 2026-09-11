@@ -116,7 +116,7 @@ Feature: pipeline-suggest
 
 ## 196. Put the archive rule in `resolution.md`, rewrite `/task-clean` as a skill that archives, and add `--backfill`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-engine/references/resolution.md, skills/task-engine/SKILL.md, skills/task-clean/SKILL.md, skills/task-clean/backfill.md, commands/task-clean.md, skills/task-engine/references/commit.md, claude-md/git-commit-style.md, VERSION, CHANGELOG.md
 Preconditions: none

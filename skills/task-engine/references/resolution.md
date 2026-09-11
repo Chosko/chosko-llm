@@ -1,14 +1,17 @@
 # Backlog resolution
 
 Authority for: where the backlog lives, what a summary block holds, when a
-per-task body file may be opened, how a run resolves which tasks it
-operates on, and the eligibility clause — status plus `Preconditions:` —
-that the batch selectors honour.
+per-task body file may be opened, where a task goes when it leaves the
+backlog and what an id absent from the index means, how a run resolves
+which tasks it operates on, and the eligibility clause — status plus
+`Preconditions:` — that the batch selectors honour.
 
 Extracted verbatim from the `LOCATING THE BACKLOG` sections of
 `/task-list`, `/task-clean` and `/task-implement`, from `/task-add`'s
 `PHASE 0 — SETUP CHECK` and `INDEX FILE FORMAT`, and from
-`/task-implement`'s `ARGUMENT PARSING` selectors.
+`/task-implement`'s `ARGUMENT PARSING` selectors. § *The archive* is the
+one exception: feature `task-archive` authored it here, and no consumer
+ever carried a copy of it.
 
 ---
 
@@ -109,6 +112,53 @@ need its spec — not before. Do NOT bulk-read every body file up front:
 open each one only at the moment its task becomes the current one. If the
 body file for a task you intend to implement is missing, stop and report
 — the task is corrupt and the user should investigate.
+
+This section governs live bodies only — the `.claude/tasks/<N>.md` paths.
+Nothing in it opens a file under `.claude/tasks/archive/`; a file there
+falls under § *The archive* instead.
+
+## The archive
+
+A task that leaves the backlog is archived, not deleted. Its body lives at
+`.claude/tasks/archive/<N>.md`, the task's id as the file name exactly as
+the live body had it. The folder is created by the first run that archives
+a task into it, and it is append-only: the archiving run is its only
+writer, and nothing removes a file from it or rewrites one in it.
+
+An archived file is the original body, unchanged, plus a frozen header
+directly under the title, written as the same `Key: value` lines the body
+already uses for `Target:`:
+
+```
+# Task 12 — <title>
+
+Archived: 2026-09-11
+Status: [DONE]
+Files: <as the summary block had it>
+Preconditions: <as the summary block had it>
+Feature: <slug>          ← only when the task had one
+
+Target: claude
+
+## Goal
+…
+```
+
+`Archived:` is the date the task left the backlog, as `YYYY-MM-DD`. Every
+other line is copied from the task's summary block as it stood at that
+moment — `Preconditions:` included, which may itself name archived ids.
+Nothing else is derived or added, and the header is written once and never
+updated.
+
+**The rule.** An id referenced anywhere but absent from `TASKS.md` is
+archived and terminal; no command probes the folder, opens an archived
+file, or reports on its contents, except when the user names a task and
+asks to read it.
+
+Absence is the whole signal. No reader verifies that the archived file is
+there, so a hand-deleted body is indistinguishable from an archived one —
+by design. The difference surfaces only when the user asks to read the
+task, and at that point a missing file says so itself.
 
 ## Where a status flip is written
 
@@ -216,12 +266,20 @@ requested task carries another one, is
   part of this file.
 - **`/task-clean`** — the not-initialised message is "No backlog file found
   — run /task-setup to initialize it." It parses number, title, status,
-  `Files:` and `Preconditions:` from each summary block, and it opens a
-  per-task body file only to probe whether it exists before planning its
-  deletion: "Probe each path with the Read tool first; if a body file is
-  unexpectedly missing, note that in the plan but do not error out." Its
-  argument is a status set, not a selector (see `status.md`). It also
-  pulls at start before PHASE 1 — see `commit.md`.
+  `Files:`, `Preconditions:` and `Feature:` from each summary block — the
+  last three because the frozen header carries them — and it opens a
+  per-task body file for a single reason: to probe that the file exists
+  before planning its **move** into the archive, noting a missing one in
+  the plan rather than erroring out. Beyond that it touches a body only to
+  move it and write its frozen header. It is the archive's only writer, and
+  so the one departure from § *The archive*'s read prohibition: it checks
+  whether `.claude/tasks/archive/<N>.md` exists for each id it is about to
+  write, and does nothing else there — no listing of the folder, no opening
+  of a file already in it. A prune does not open `.claude/FEATURES.md` at
+  all; the skill's only `FEATURES.md` write is the `Tasks:` restoration
+  under `--backfill`. Its argument is a status set, not a selector (see
+  `status.md`), or `--backfill`, never both. It also pulls at start before
+  PHASE 1 — see `commit.md`.
 - **`/task-implement`** — the not-initialised message is "No backlog file
   found — run /task-setup to initialize it, then /task-add to create
   tasks." The `all` / `next` / explicit-list selectors above are its
@@ -235,4 +293,8 @@ requested task carries another one, is
   `feature=<slug>` run, the tasks that feature already generated. Its
   setup check is the two-artifact probe quoted above rather than the
   index-only check the other three make, and its pull-at-start sits in the
-  same PHASE 0 — see `commit.md`.
+  same PHASE 0 — see `commit.md`. On a `feature=<slug>` run, its
+  reconciliation leaves an id on the feature's `Tasks:` line that has no
+  summary block unclassified — archived and terminal, per § *The archive*
+  — and keeps that id when it rewrites the `Tasks:` line at the end of the
+  run.

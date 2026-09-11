@@ -133,12 +133,31 @@ push sequence unconditionally — only the commit (checkin) step runs.
   A `--before <N>` run's edit to task N's `Preconditions:` line lives in
   `.claude/TASKS.md`, which every form already stages.
 - **`/task-clean`** — pulls at start before PHASE 1; `PHASE 3` commits with
-  `git commit -m "task-clean: remove tasks <N>[, <M>, …]"`, the pruned IDs in
-  ascending order. It stages `.claude/TASKS.md` plus each deleted body file
-  path — "Staging a deleted file via `git add -- path` works identically to
-  staging a modified one" — and adds `.claude/FEATURES.md` only when a
-  feature `Tasks:` line was rewritten. Apart from the `rm` of the body files
-  in PHASE 2, PHASE 3 is its only shell use.
+  `git commit -m "task-clean: archive tasks <N>[, <M>, …]"`, the archived IDs
+  in ascending order. Both halves of each move are already in the index by
+  then: PHASE 2's `git mv` stages the removal of `.claude/tasks/<N>.md` and
+  the addition of `.claude/tasks/archive/<N>.md` together, which is what
+  records the move as a rename. PHASE 3 therefore stages `.claude/TASKS.md`
+  plus each `.claude/tasks/archive/<N>.md` — picking up the frozen header
+  written after the move — and never names the old path, which by then
+  exists in neither the working tree nor the index and would make
+  `git add` fail. A body moved with a plain `mv` has no old half to stage.
+  `.claude/FEATURES.md` never joins a prune's paths: a prune does not open
+  it. Apart from the `mkdir -p` + `git mv` of the body
+  files in PHASE 2 — which replace the old `rm`, and which still run under
+  `--no-commit`, because the move is the prune's effect rather than a commit
+  step — PHASE 3 is its only shell use.
+
+  Under `--backfill` it commits once, with
+  `git commit -m "task-clean: backfill <N> archived tasks"`, `<N>` being the
+  count of bodies recovered. It stages each `.claude/tasks/archive/<N>.md`
+  it wrote, plus `.claude/FEATURES.md` when a feature `Tasks:` line was
+  restored — the one path on which `.claude/FEATURES.md` joins
+  `/task-clean`'s staged paths. Its reads of git history (`git log`,
+  `git show`), PHASE B2's `mkdir -p` and the redirected
+  `git show … > .claude/tasks/archive/<N>.md` write are that mode's own shell
+  use beside PHASE 3, and they still run under `--no-commit` — like the
+  prune's move, they are the mode's effect, not a commit step.
 - **`/task-implement`** — pulls at start in `PRE-FLIGHT` step 5; `Step 7`
   commits and pushes once per task, "immediately after that task's commit,
   mirroring 'each task gets exactly one commit' with 'each task gets exactly

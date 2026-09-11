@@ -1,6 +1,6 @@
 ---
 name: git-commit-style
-version: 0.1.0
+version: 0.1.1
 type: claude-md
 description: Keep commit messages scannable — short imperative subject, optional 2–3 line body, Claude trailers only on big commits.
 ---
@@ -38,6 +38,6 @@ over the last 200 commits), i.e. the top quarter of commits by size.
 convention — a CONTRIBUTING rule, its CLAUDE.md, or simply the shape visible
 in its `git log` — overrides it, and so does any command's own prescribed
 message form (e.g. task-engine's `Task <N>: …`, `Add task <N>: …`,
-`task-clean: remove tasks …`). The trailer threshold is a default the same
+`task-clean: archive tasks …`). The trailer threshold is a default the same
 way: a repo's own trailer convention, whether written down or just visible as
 an existing `Co-Authored-By` habit in `git log`, wins over the numbers above.

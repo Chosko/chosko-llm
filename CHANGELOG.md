@@ -2,6 +2,13 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.30.0 — 2026-09-11
+
+- **/task-clean** is now a skill (`skill:task-clean`) rather than a command; `chosko-llm add` / `update` of the skill retires an installed command copy.
+- **/task-clean** archives instead of deleting: each pruned body moves to `.claude/tasks/archive/<N>.md` under a frozen header recording its summary block, and a prune no longer touches `.claude/FEATURES.md`, so a feature keeps every task id it generated. Its commit now reads `task-clean: archive tasks …`.
+- **/task-clean** gains `--backfill`, which recovers from git history the bodies earlier runs deleted, archives them the same way, and puts each id back on its feature's `Tasks:` line.
+- **task-engine** `resolution.md` gains the archive rule: an id referenced but absent from `TASKS.md` is archived and terminal, and nothing reads the archive unless you name a task and ask for it.
+
 ## 1.29.0 — 2026-09-11
 
 - **/runbook-create** `--append` gains `--before <step>` / `--after <step>`: the new steps are written at that position in the runbook instead of at the foot, and still take the next unused step id. No existing step is edited, moved or renumbered.
