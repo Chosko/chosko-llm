@@ -55,10 +55,10 @@ separator and every other line are not rows. `scripts/check-routing.sh` and
 `probes.md`'s `installed` probe both read rows by exactly this shape, so a
 formatting change here is a change to both.
 
-A feature adds its own row in the change that ships it. `lint.md` names two
-fix commands that have no row, `/pipeline-patch` and `/pipeline-revise`:
-neither ships yet, and a row naming a feature the repository does not carry
-fails the routing check.
+A feature adds its own row in the change that ships it — as `/pipeline-patch`
+and `/pipeline-revise`, the two revision surfaces `lint.md` names as fix
+commands, did. A row naming a feature the repository does not carry fails the
+routing check.
 
 ---
 
@@ -85,3 +85,5 @@ fails the routing check.
 | `/runbook-clean` | `.claude/RUNBOOKS.md`, `File:` included; whether each body exists | Deleted bodies and a rewritten index; ids assigned to an id-less index (lines `/runbook-create` owns); one commit | The removal of a `[DONE]` runbook's index block and the deletion of its body | Every named runbook known and `[DONE]` | `[<name\|id> ...] [--no-commit] [--no-push]` | — |
 | `runbook-suggest` | The conversation only | One or two lines pointing at `/runbook-create`; writes nothing | Nothing | A follow-up list of three or more actions, two or more with an ordering constraint, or any action resting on decisions recorded nowhere on disk | None — selected from its description, never invoked | — |
 | `/pipeline-check` | The probe; the index lines of `.claude/FEATURES.md`, `.claude/TASKS.md`, `.claude/PLAN.md` and `.claude/RUNBOOKS.md` | A report; writes nothing | Nothing | At least one of those four indexes, else → `/task-setup`, `/domain-setup` | `[feature=<slug>]` | — |
+| `/pipeline-patch` | The probe; the index lines of `.claude/FEATURES.md`, `.claude/TASKS.md`, `.claude/PLAN.md` and `.claude/RUNBOOKS.md` — never a task body, feature document or runbook body; the one amend arm it loads by path, which reads its own inputs; `/pipeline-check`'s report | Exactly what the one arm writes (lines its owner owns) — `/architect amend`, `task-engine`'s `amend.md` or `runbook-run`'s `step-amend.md` — or a one-line refusal naming `/pipeline-revise`; nothing of its own | Nothing | An anchor that resolves, else it lists what exists; exactly one owner among feature document, task and runbook step and none of five structural signals, else it refuses → `/pipeline-revise` | `<anchor> "<change>" [--commit] [--no-push]` — anchor `feature=<slug>` \| `task=<N>` \| `runbook=<name\|id> step=<n>` | — |
+| `/pipeline-revise` | The probe; the four indexes; within the anchor's scope only, the target artifact's body, the bodies of the tasks whose `Preconditions:` name it or whose `Files:` overlap, and the open runbook bodies, for the steps that name it; one branch file; `/pipeline-check`'s report before and after | A tiered proposal behind one gate; on approval, what each owner step writes (lines those owners own) — through `/product-design`'s amend arm, `/architect amend`, `task-engine`'s `amend.md`, `runbook-run`'s `step-amend.md`, `/task-add`, `/runbook-create --append` and `/production-plan` — or a runbook `/runbook-create` writes; nothing of its own | Nothing | An anchor, given or named by the change, that resolves, else it lists what exists; every owner its plan needs installed; an owner that refuses stops the sequence at that step, earlier writes kept | `[<anchor>] "<change>" [--commit] [--no-push]` — anchor `feature=<slug>` \| `task=<N>` \| `runbook=<name\|id> step=<n>` | — |

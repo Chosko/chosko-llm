@@ -2,6 +2,14 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.33.0 — 2026-09-11
+
+- **/pipeline-revise** (new skill) changes, inserts into, removes from or reorders already-planned work — a feature document, a task or a runbook step — by walking the change's impact from an anchor and running each owner's own amend step in order.
+- **/pipeline-revise** proposes an editorial, local or structural plan behind one gate that always asks whether the change is editorial, and re-runs `/pipeline-check` on the anchor before and after.
+- **/pipeline-revise** runs three or fewer owner steps in the session and offers to hand four or more to `/runbook-create`; removal is `[SKIP]` or a struck step, never a deletion.
+- **/pipeline-patch** (new command) applies a change that touches exactly one feature document, task or runbook step through that owner's amend arm and re-checks it, reading only the indexes; anything structural is refused in one line naming `/pipeline-revise`.
+- **pipeline-engine** the routing table gains rows for `/pipeline-patch` and `/pipeline-revise`.
+
 ## 1.32.0 — 2026-09-11
 
 - **/architect** gains `amend feature=<slug> "<change>"`: a targeted change to the named sections of one feature document, behind one gate, without the clarify or architecture phases. Only the tasks the change touches are marked `[STALE]`, only a touched `[IN PROGRESS]` task refuses it, and you are asked every time whether the change is editorial — an editorial change stales nothing and leaves the feature's status alone.

@@ -1,8 +1,8 @@
 ---
 name: pipeline-engine
-version: 0.2.0
+version: 0.2.1
 type: skill
-description: Reference library for the pipeline as a whole — one authority per rule the pipeline-revision features share. Four files under references/ own the project probe and the one verdict line every consumer prints, the graph of how the pipeline's indexes point at each other, the routing table of what each pipeline feature consumes, produces and owns and where each owner's amend entry is, and the catalogue of drift findings. NOT a skill the user invokes and never a skill to suggest — it takes no arguments, runs nothing, and produces no output; /pipeline-check reads its files by path while it runs, and only the features that declare requires: skill:pipeline-engine should ever open it.
+description: Reference library for the pipeline as a whole — one authority per rule the pipeline-revision features share. Four files under references/ own the project probe and the one verdict line every consumer prints, the graph of how the pipeline's indexes point at each other, the routing table of what each pipeline feature consumes, produces and owns and where each owner's amend entry is, and the catalogue of drift findings. NOT a skill the user invokes and never a skill to suggest — it takes no arguments, runs nothing, and produces no output; /pipeline-check, /pipeline-patch and pipeline-revise read its files by path while they run, and only the features that declare requires: skill:pipeline-engine should ever open it.
 ---
 
 # pipeline-engine
@@ -10,9 +10,9 @@ description: Reference library for the pipeline as a whole — one authority per
 > **Not directly invocable.** This skill exists so that what every pipeline
 > feature needs to know about the pipeline as a whole has exactly one home. It
 > has no command, no arguments and no behaviour of its own. Nothing invokes
-> `/pipeline-engine`; nothing should suggest it. `/pipeline-check` cites the
-> files below by path while it runs, and those files are the only content
-> here.
+> `/pipeline-engine`; nothing should suggest it. `/pipeline-check`,
+> `/pipeline-patch` and `pipeline-revise` cite the files below by path while
+> they run, and those files are the only content here.
 
 > **Install path assumption:** this skill assumes installation at
 > `${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/` — where

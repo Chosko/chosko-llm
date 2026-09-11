@@ -76,7 +76,7 @@ Feature: owner-amend-arms
 
 ## 187. Ship the `pipeline-revise` skill with its four branches and the `/pipeline-patch` command
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/pipeline-revise/SKILL.md, skills/pipeline-revise/amend.md, skills/pipeline-revise/insert.md, skills/pipeline-revise/delete.md, skills/pipeline-revise/reorder.md, commands/pipeline-patch.md, skills/pipeline-engine/references/routing.md, skills/pipeline-engine/SKILL.md, skills/task-engine/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 169, 173, 175, 182
