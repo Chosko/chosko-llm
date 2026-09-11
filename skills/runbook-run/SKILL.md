@@ -1,8 +1,8 @@
 ---
 name: runbook-run
-version: 0.5.0
+version: 0.6.0
 type: skill
-description: Execute a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md — by walking it top to bottom, spawning one fresh subagent per step, relaying that subagent's questions to the user and the user's answers back to the same subagent, recording what each step actually did in a Done: line, and committing the runbook and its .claude/RUNBOOKS.md index after every step. Steps run one at a time, never in parallel. The orchestrator reads only CLAUDE.md, the runbook and the index, and writes only the runbook and the index — every other change in the tree is made by a subagent, and it never reviews or second-guesses one. Usage: /runbook-run <name|id> — a bare all-digits argument is the numeric id the index assigns each runbook, anything else its kebab-case name — with --from N to begin selection at step N, --to N to stop after step N (the two compose into --from X --to Y, an inclusive range), --only N to run exactly one step, --model <model> to override the runbook's header model for this run, --relay-spawns to force the spawn relay for a whole run, and --no-commit / --no-push with their usual meanings. Where a subagent cannot spawn a subagent — cloud sessions among them — a step's agent ends its turn with SPAWN REQUEST naming a prompt file and a result file under the OS temp dir; the orchestrator spawns that child at its own nesting level, waits for it, and tells the caller the result is ready, without ever opening either file. Also carries, in references/, the two files the rest of the runbook suite reads by path: runbook-schema.md (the asset kind — store, body schema, step markers, status vocabulary, the optional per-step Needs: field, the index block with its id and Last runbook number: counter, and the backfill an index written before ids gets from the first command that writes it) and subagent-contract.md (the OPERATING RULES block pasted verbatim into every spawned prompt).
+description: Execute a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md — by walking it top to bottom (list position is the order; a step's number is a stable id, not its position), spawning one fresh subagent per step, relaying that subagent's questions to the user and the user's answers back to the same subagent, recording what each step actually did in a Done: line, and committing the runbook and its .claude/RUNBOOKS.md index after every step. Steps run one at a time, never in parallel. The orchestrator reads only CLAUDE.md, the runbook and the index, and writes only the runbook and the index — every other change in the tree is made by a subagent, and it never reviews or second-guesses one. Usage: /runbook-run <name|id> — a bare all-digits argument is the numeric id the index assigns each runbook, anything else its kebab-case name — with --from N to begin selection at step N, --to N to stop after step N (the two compose into --from X --to Y, an inclusive range), --only N to run exactly one step, --model <model> to override the runbook's header model for this run, --relay-spawns to force the spawn relay for a whole run, and --no-commit / --no-push with their usual meanings. Where a subagent cannot spawn a subagent — cloud sessions among them — a step's agent ends its turn with SPAWN REQUEST naming a prompt file and a result file under the OS temp dir; the orchestrator spawns that child at its own nesting level, waits for it, and tells the caller the result is ready, without ever opening either file. Also carries, in references/, the two files the rest of the runbook suite reads by path: runbook-schema.md (the asset kind — store, body schema, step markers, status vocabulary, the optional per-step Needs: field, the index block with its id and Last runbook number: counter, and the backfill an index written before ids gets from the first command that writes it) and subagent-contract.md (the OPERATING RULES block pasted verbatim into every spawned prompt).
 ---
 
 # /runbook-run
@@ -67,8 +67,8 @@ invoked, when it is wanted, from inside a step's own prompt.
 | Argument | Effect |
 | --- | --- |
 | `<name>` \| `<id>` | The runbook to run. Required. A kebab-case name, or the numeric id the index assigns it — a bare all-digits argument is an id, anything else a name, per `runbook-schema.md` § *The store*. |
-| `--from N` | Begin selection at step N — steps before N are not considered. |
-| `--to N` | Stop after step N — steps after N are not considered. Inclusive: step N itself runs. |
+| `--from N` | Begin selection at step N — steps listed above it are not considered. |
+| `--to N` | Stop after step N — steps listed below it are not considered. Inclusive: step N itself runs. |
 | `--only N` | Run exactly step N, then stop. Exactly equivalent to `--from N --to N`. |
 | `--model <model>` | Override the runbook header's `Model:` for **this whole run**. There is no per-step model. |
 | `--relay-spawns` | Force the spawn relay for the whole run, for an environment already known to be flat. Without it the relay still works — the step's own subagent triggers it when it finds it cannot spawn. See THE SPAWN RELAY. |
@@ -81,6 +81,13 @@ to the end, `--to Y` with no `--from` starts wherever selection normally would.
 There is one selection model, not three: `--only N` **is** `--from N --to N`,
 and everything said about the bounds below holds for it unchanged.
 
+Each bound names a step **by id** and cuts the list **at that step's
+position**: order is list position and the id carries none, per
+`runbook-schema.md` § *A step*. On a body whose ids run in numeric order that
+is the same as comparing numbers; on one carrying a step inserted with
+`/runbook-create --append --before` / `--after`, it is what keeps the range
+the stretch of steps the run actually walks.
+
 `--from`, `--to` and `--only` **do not weaken dependencies.** A step selected by
 any of them whose `Depends on:` are not all `[x]` stops the run, naming the
 unmet dependency. The remedy is not a flag: the user marks that step `[x]` by
@@ -89,17 +96,20 @@ hand, which is a visible, committed act rather than a silent override.
 Two argument errors — name the problem and stop, having run nothing:
 
 - `--only` together with `--from` or `--to`. It is already both of them.
-- `--to Y` below `--from X`. An empty range is a typo, not a request.
+- `--to Y` naming a step listed above step X of `--from X`. An empty range is
+  a typo, not a request.
 
-A bound past the last step is **not** an error. Steps are appended mid-run by
-`/runbook-create --append`, and step 2 re-reads the body every step, so
-`--to 20` on a runbook that has ten steps today is a legitimate way to say
-"through step 20, however many exist by then".
+A bound naming a step the body does not hold yet is **not** an error. Steps are
+appended mid-run by `/runbook-create --append`, and step 2 re-reads the body
+every step, so `--to 20` on a runbook that has ten steps today is a legitimate
+way to say "through step 20, however many exist by then": until step 20
+exists the bound cuts nothing, and from the re-read where it appears the run
+stops after it, wherever in the list it was written.
 
-A bound that selects nothing — every step in range is already `[x]` — is not an
-error either, but it is never silent: say which range was asked for and that
-nothing in it remained, and stop. Doing nothing quietly is indistinguishable
-from a bug.
+A bound that selects nothing — every step in range is already `[x]`, or the
+`--from` step does not exist yet — is not an error either, but it is never
+silent: say which range was asked for and that nothing in it remained, and
+stop. Doing nothing quietly is indistinguishable from a bug.
 
 ---
 
@@ -155,10 +165,11 @@ There is no separate reconciliation mechanism because this one is free.
 
 ### 3. Select
 
-The first step whose marker is `[ ]`, `[~]` or `[!]`, and whose every
-`Depends on:` step is `[x]`. Under `--from N`, skip steps numbered below N.
-Under `--to N`, skip steps numbered above N. Under `--only N`, consider only
-step N — which is those two rules with the same N, not a third rule.
+The first step in list order — top to bottom, whatever its id — whose marker
+is `[ ]`, `[~]` or `[!]`, and whose every `Depends on:` step is `[x]`. Under
+`--from N`, skip the steps listed above step N. Under `--to N`, skip the steps
+listed below step N. Under `--only N`, consider only step N — which is those
+two rules with the same N, not a third rule.
 
 The bounds are re-applied against the body step 2 just re-read, every step, not
 resolved once into a fixed list. A step appended mid-run inside the range is

@@ -2,6 +2,12 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.29.0 — 2026-09-11
+
+- **/runbook-create** `--append` gains `--before <step>` / `--after <step>`: the new steps are written at that position in the runbook instead of at the foot, and still take the next unused step id. No existing step is edited, moved or renumbered.
+- **runbook schema** a step's number is a stable id, not its position: order is list position, and a body may carry step ids out of numeric order after an insert.
+- **/runbook-run** `--from`, `--to` and `--only` still name steps by id, and now cut the list at those steps' positions, so a range is always the stretch of steps the run walks.
+
 ## 1.28.0 — 2026-09-11
 
 - **/task-implement** `next` and `all` now honour `Preconditions:`: a task is picked only once every task it names is `[DONE]` or `[SKIP]`, and `all` orders its list so nothing starts ahead of what it waits on. A task named by number is never blocked.

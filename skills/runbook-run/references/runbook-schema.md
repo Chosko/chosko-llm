@@ -108,9 +108,29 @@ A step is a `##` heading carrying its marker, its number and its title:
 ## [ ] 3. Peer review the launcher change
 ```
 
+**The number is the step's id, not its position.** It is a stable
+identifier, assigned once when the step is written and never changed
+afterwards — the same rule `.claude/TASKS.md` uses for task ids. **Order is
+list position**: a runbook is walked top to bottom, and the step that appears
+first comes first, whatever its number. A body may therefore legally carry
+step ids out of numeric order — a step inserted with `/runbook-create --append
+<name> --before 3` takes the next unused id and sits above step 3:
+
+```
+## [x] 1. …
+## [x] 2. …
+## [ ] 6. …      ← inserted later; runs before 3
+## [ ] 3. …
+```
+
+Never infer order from the numbering, and never renumber to restore it. Every
+reference to a step is by id — `Depends on:`, `/runbook-run`'s `--from`,
+`--to` and `--only`, a `Context:` bullet's `(from step N)`, the index's
+`Failed at: step <n>` — and renumbering would silently repoint all of them.
+
 Under the heading, in this order:
 
-- **`Depends on:`** — a comma-separated list of step numbers, or `none`. It
+- **`Depends on:`** — a comma-separated list of step ids, or `none`. It
   records the real constraint. It never causes anything to run in parallel:
   steps are sequential, always. It exists so a deadlock is detectable and so
   `--from`, `--to` and `--only` have something to check against.

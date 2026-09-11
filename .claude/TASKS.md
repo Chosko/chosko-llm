@@ -16,7 +16,7 @@ Feature: backlog-ordering
 
 ## 173. Add positional `--before` / `--after` to `/runbook-create --append`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/runbook-create.md, skills/runbook-run/references/runbook-schema.md, skills/runbook-run/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: none

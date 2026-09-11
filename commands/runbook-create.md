@@ -1,8 +1,8 @@
 ---
 name: runbook-create
-version: 0.4.0
+version: 0.5.0
 type: command
-description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md, plus its .claude/RUNBOOKS.md index block — or append steps to one that already exists, including one a run is in the middle of. Assigns each new runbook the next id from the index's Last runbook number: counter, which every other runbook- command then accepts in place of the name. Authors each step's optional Needs: line (agent / agent+human / human, absent meaning agent) so a reader can see before starting which steps need a person, and calls those steps out at the confirmation gate. Two axes: where the steps go (a new runbook, --append <name|id>, --append with no name for the runbook this session is running, or no arguments at all, which asks) and where the material comes from (the current conversation's most recent follow-up list, the default; or a free-form description gathered through one batched interview). Enforces ten prompt-quality rules against every step before writing — self-contained, names the document to read first, carries every decision that exists nowhere on disk and nothing that already does, states its sequencing and what must not be re-proposed, uses real slash commands, references no path missing at run time, produces one deliverable, never invokes /runbook-run, and prefers two steps to one that would need a nested spawn — fixing failures and naming each fix in the confirmation report. The gate shows the proposed shape only, never the full prompts. Authoring command — leaves the runbook uncommitted for one review pass by default; pass --commit to commit and push it, or --commit --no-push to commit without pushing.
+description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md, plus its .claude/RUNBOOKS.md index block — or append steps to one that already exists, including one a run is in the middle of. An append goes at the foot by default; with --before <step> or --after <step> the new steps are written at that position in the list instead, still taking the next unused step id, because a step's id is a stable identifier and not its position — no existing step is ever edited or renumbered. Assigns each new runbook the next id from the index's Last runbook number: counter, which every other runbook- command then accepts in place of the name. Authors each step's optional Needs: line (agent / agent+human / human, absent meaning agent) so a reader can see before starting which steps need a person, and calls those steps out at the confirmation gate. Two axes: where the steps go (a new runbook, --append <name|id>, --append with no name for the runbook this session is running, or no arguments at all, which asks) and where the material comes from (the current conversation's most recent follow-up list, the default; or a free-form description gathered through one batched interview). Enforces ten prompt-quality rules against every step before writing — self-contained, names the document to read first, carries every decision that exists nowhere on disk and nothing that already does, states its sequencing and what must not be re-proposed, uses real slash commands, references no path missing at run time, produces one deliverable, never invokes /runbook-run, and prefers two steps to one that would need a nested spawn — fixing failures and naming each fix in the confirmation report. The gate shows the proposed shape only, never the full prompts. Authoring command — leaves the runbook uncommitted for one review pass by default; pass --commit to commit and push it, or --commit --no-push to commit without pushing.
 requires: skill:runbook-run
 ---
 
@@ -17,10 +17,13 @@ requires: skill:runbook-run
 #        /runbook-create <free-form description of the work>
 #        /runbook-create --append <name|id>
 #        /runbook-create --append
+#        /runbook-create --append <name|id> --before <step>  (insert above that step)
+#        /runbook-create --append <name|id> --after <step>   (insert below that step)
 #        /runbook-create <args> --commit            (commit and push what this run wrote)
 #        /runbook-create <args> --commit --no-push  (commit locally, skip the push)
 # Examples: /runbook-create implement-ecc-import
 #           /runbook-create --append implement-ecc-import
+#           /runbook-create --append 3 --before 4
 #           /runbook-create land the four follow-ups from today's architect run
 
 GOAL
@@ -49,8 +52,18 @@ is left is the target name or the free-form description.
 | Flag | Effect |
 | --- | --- |
 | `--append` | Set APPEND = true. The steps go onto an existing runbook rather than into a new one. |
+| `--before <step>` | Set POSITION = before `<step>`. The appended steps are written immediately above that step instead of at the foot. |
+| `--after <step>` | Set POSITION = after `<step>`. The appended steps are written immediately below that step instead of at the foot. |
 | `--commit` | Set COMMIT = true. Commit and push what this run wrote. Default is false — the output is left uncommitted for one review pass. |
 | `--no-push` | Set NO_PUSH = true. Only meaningful alongside `--commit`: commit locally, skip the pull/re-sync/push. |
+
+`--before` and `--after` each take a value — a **step id**, the number in a
+step's heading, never a position in the list — and both the flag and its value
+are stripped. They are mutually exclusive; if both appear, stop with:
+`--before and --after cannot be combined. Pick one.` Either one without
+`--append` stops with `--before requires --append.` (or `--after requires
+--append.`) — a new runbook has no steps to place against. Without either flag
+an append goes at the foot, exactly as it always has.
 
 `--no-push` without `--commit` is accepted and has no effect — there is
 nothing to push. If `--no-commit` is passed, say that this is an authoring
@@ -140,6 +153,13 @@ Four forms, resolved in this order.
    place new-versus-append is asked**, and it is asked here because this is
    the command the user chose to run — an auto-triggered suggestion must not
    ask it.
+
+**The step a `--before` / `--after` names** is resolved against the target
+runbook's body as soon as forms 1 or 2 have found it, before any material is
+gathered: `<step>` matches the id in a step heading, never the step's position
+in the list. An id no step carries is an error that **lists the runbook's
+steps** — id, marker and title, in list order — so a typo is corrected without
+going to look. Nothing is gathered and nothing is written.
 
 **Name collisions.** A new runbook whose name is already in the index is
 **refused with a suggested alternative**, never disambiguated automatically: a
@@ -332,6 +352,7 @@ PLAN — runbook <name>            (or: append to runbook <id>. <name>)
 Id:    <the id this runbook will be assigned>   (new runbooks only)
 File:  .claude/runbooks/<name>.md
 Index: .claude/RUNBOOKS.md
+Position: before step 4 — <its title>   (appends only; or: after step <n> — <title>; or: at the foot)
 
 Header:     Created <YYYY-MM-DD> · Source <…> · Model opus
 Sequencing: <the one-line prose statement of the order and why>
@@ -353,6 +374,11 @@ Do not re-propose: <n> items
 ```
 
 End with a single explicit prompt: **"Approve and write?"**
+
+On an append the list shows only the new steps, under the ids they will be
+written with, and `Position:` says where in the list they land — so a step
+numbered 6 that will run before step 4 reads that way at the gate, not only in
+the file.
 
 A step whose `Needs:` is `agent` prints no `needs:` annotation — the default
 is silent. A step that is **not** `agent` always prints one, and the plan says
@@ -414,15 +440,32 @@ corrections, failure notes, and facts learned by earlier steps.
 
 APPEND RULES
 
-All of these apply to every append, and to the `--append` half of PHASE 5:
+All of these apply to every append — at the foot or at a `--before` /
+`--after` position alike — and to the `--append` half of PHASE 5:
 
-- **Numbering continues** from the last existing step.
+- **Numbering continues** from the highest existing step id: the new steps take
+  the next unused ids, in the order they are authored. This is a rule about
+  the id only, never the position — after an earlier insert the step at the
+  foot need not be the highest-numbered one.
+- **Position is list position.** Without `--before` / `--after` the new steps
+  go after the last step in the list. `--before <step>` writes them, as one
+  contiguous block in their authored order, immediately above that step's
+  heading; `--after <step>` writes them immediately below that step's section,
+  above the next step's heading, or above `## Do not re-propose` or at the end
+  of the body when it is the last step. `/runbook-run` walks the body top to
+  bottom, so the position is the order and the id carries none, per
+  `runbook-schema.md` § *A step*.
 - **`Depends on:` may reference existing steps**, including completed ones.
+  The new steps' `Depends on:` lines are authored as part of the append, with
+  the position in mind. **An existing step's `Depends on:` is never
+  rewritten** — not to point at a step inserted above it, not for any reason.
 - **The `Sequencing:` header line is extended, never replaced.** It describes
   the whole runbook, and the appended steps are now part of it.
-- **Existing steps are never edited.** An append adds material after the last
-  step and touches nothing above the append point. This is what makes it safe
-  during a run.
+- **Existing steps are never edited.** This is the invariant that makes an
+  append safe during a run, and it holds wherever the new steps land: no
+  existing step's heading, marker, `Depends on:`, `Needs:`, `Context:`, prompt
+  block or `Done:` line changes, and none is moved or renumbered. An insert
+  adds new steps between existing ones; it changes none of them.
 - **Appending to a `[DONE]` runbook flips it back to `[PENDING]`.** There is
   unfinished work again and the status has to say so. This is the one status
   this command writes other than `[PENDING]` on creation.
@@ -431,7 +474,9 @@ All of these apply to every append, and to the `--append` half of PHASE 5:
 - **Appending to a `[RUNNING]` runbook is allowed only from the running
   session itself** — one session, one tree, no race. From any other session,
   refuse and say why. The run picks the new steps up at its next step
-  re-read; there is nothing to notify.
+  re-read; there is nothing to notify. It selects by list position, so a step
+  inserted above steps already `[x]` is simply the next pending step it
+  reaches.
 - **The index `Steps: <done>/<total>` is updated** — the total grows, the done
   count is untouched.
 - **The runbook's id and the counter are untouched.** An append adds steps to a
@@ -497,8 +542,14 @@ DO NOT:
   flip an append forces.
 - Write anything into `Context:` other than `none`. Corrections and learned
   facts are the run's, and a prompt's decisions belong inside the prompt.
-- Edit an existing step — its title, its `Depends on:`, or its prompt block —
-  during an append, or edit any line above the append point.
+- Edit an existing step during an append — its title, marker, `Depends on:`,
+  `Needs:`, `Context:`, prompt block or `Done:` line — or move or renumber
+  one. Writing new steps above an existing one with `--before` / `--after` is
+  not an edit to it; changing any line of an existing step is.
+- Give an inserted step an id derived from its position, or renumber existing
+  steps so the ids read in order — `runbook-schema.md` § *A step*.
+- Accept `--before` and `--after` together, either without `--append`, or a
+  step id no step carries.
 - Replace the `Sequencing:` line on an append. Extend it.
 - Append to a `[RUNNING]` runbook from a session that is not the one running
   it.
