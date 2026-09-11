@@ -26,7 +26,7 @@ Feature: backlog-ordering
 
 ## 174. Update documentation for feature `backlog-ordering`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, .claude/domain/task-workflow.md, .claude/domain/product-workflow.md, .claude/domain/features/runbook-suite.md, .claude/domain/features/backlog-ordering.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 169, 173

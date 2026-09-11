@@ -74,7 +74,11 @@ its `Preconditions:` line resolves to a task whose status is `[DONE]` or
 iterate guard extends to a hand-edited backlog. `all` is redefined as `next`
 applied repeatedly until no task is eligible, which keeps a batch run from
 starting a task ahead of the one it depends on and needs no second definition
-of eligibility. A batch that ends with implementable tasks still blocked by
+of eligibility. It is resolved once, up front, by simulating that repetition —
+each walk selects the first eligible task not yet selected and treats it as
+`[DONE]` for the walks after — which yields the same list repeated `next`
+would, while preserving the run's single resolution report and its delegation
+count. A batch that ends with implementable tasks still blocked by
 unmet preconditions reports them by id, so an unsatisfiable edge is visible
 rather than silently skipped.
 
@@ -185,6 +189,9 @@ existing invocation behaves exactly as today.
   preconditions would make the new selection rule visible in the listing. Left
   out until the rule has been used; it is a rendering change, cheap to add.
 - **Does `all` with subagents need the eligibility re-evaluated per spawn?**
-  A parallel session may flip a status between spawns. The launcher already
-  re-reads `TASKS.md` before each agent, which should suffice; to be
-  confirmed at planning time against the launcher's actual read points.
+  Settled: yes, and it already has a home. `/task-implement`'s existing
+  BETWEEN TASKS re-read of `TASKS.md` — the same re-read the delegated
+  launcher makes before each agent — is the per-spawn re-evaluation point: on
+  a run resolved by `all` it re-checks the upcoming task's `Preconditions:`
+  there and skips, with one line, a task whose preconditions no longer hold.
+  No new read was introduced.

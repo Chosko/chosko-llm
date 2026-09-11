@@ -157,8 +157,16 @@ Currently shipped:
   reading frontmatter; the `description` says the same thing in the words
   skill selection matches on, which is what keeps it out of suggestions.
   Seven files under `references/`, one authority each:
-  `resolution.md` (`.claude/TASKS.md` schema and parsing, the `all` /
-  `next` / explicit-list selectors, body-file location, the
+  `resolution.md` (`.claude/TASKS.md` schema and parsing — appearance
+  order is the backlog's order and need not be numeric, since
+  `/task-add --before`/`--after` insert mid-file under the next id — the
+  `all` / `next` / explicit-list selectors and the **eligibility clause**
+  the batch two honour: implementable status AND every `Preconditions:` id
+  `[DONE]`/`[SKIP]`, an id resolving to no task ignored; `all` is `next`
+  repeated, resolved once up front by simulating the repetition so the run
+  keeps one resolution report and one delegation count; implementable tasks
+  left blocked, a precondition cycle included, named by id in the report;
+  a task named by number never blocked; body-file location, the
   `/task-setup`-has-run gate), `status.md` (the eight-value status
   vocabulary, which statuses are terminal, which implementable, legal
   transitions), `targets.md` (`Target:` values, the `## Manual
@@ -185,9 +193,27 @@ Currently shipped:
   `requires: skill:task-engine` (`task-review` joined when it took the read
   budget on), so `add` pulls it in and `rm` refuses to
   take it away while any of them is installed.
-- `commands/task-add.md` — plans and appends new task conversationally:
+- `commands/task-add.md` — plans and writes new task conversationally:
   writes summary block to `.claude/TASKS.md` and thin body file at
-  `.claude/tasks/<N>.md`. Default body schema (target: claude) contains
+  `.claude/tasks/<N>.md`. **Placement**: new blocks append at the end by
+  default; `--before <N>` writes above task N's block and appends the new
+  id to N's `Preconditions:` (the one sanctioned edit to another task's
+  line), `--after <N>` writes below it and puts N on the new task's
+  `Preconditions:` — position and edge ALWAYS together (position for the
+  reader, edge for `next`/`all`), flags mutually exclusive, unknown N
+  stops, next id from the counter exactly as an append, no existing id
+  moves; with several new tasks the flag places the first and the rest
+  follow it. **`feature=<slug> --single`**: exactly one task attached to a
+  `[PLANNED]` feature (any other status stops) — `Feature:` line plus the
+  id appended to `Tasks:`, but NO reconciliation, `Status:` untouched, no
+  documentation task, no split; mutually exclusive with `--short`; the
+  report ends with a fixed write-back line naming
+  `/pipeline-patch feature=<slug>`; commits under the single-task/split
+  message plus `FEATURES.md` (`commit.md`'s fourth, "attached" form, never
+  `Plan feature`). **Orphan question**: a free-form run (not `--short`) on a
+  project with `.claude/FEATURES.md` asks inside PHASE 3's existing gate
+  whether the task belongs to a `[PLANNED]` feature, none the default; a
+  slug takes the `--single` path. No `FEATURES.md` → nothing asked. Default body schema (target: claude) contains
   Goal, Acceptance criteria, Decisions (when applicable), Hints.
   When work includes steps
   only human can perform in external tool (e.g. Unity editor),
@@ -228,7 +254,8 @@ Currently shipped:
   authorises that task's implementer — `/task-add` still never edits an
   owned document. Free-form text alongside slug narrows scope;
   feature document read-only to `/task-add` itself. Free-form path unchanged when
-  `feature=` absent.
+  `feature=` absent, save the orphan question above on a project with
+  `FEATURES.md`.
   Documents two product-pipeline additions to backlog schema: optional
   `Feature: <slug>` summary-block line (feature-derived tasks
   only; absent, not `none`, on free-form ones) and `[STALE]` status
@@ -307,7 +334,14 @@ Currently shipped:
   `skip-tests-unattended` marker value. On `[STALE]` task
   warns naming originating feature and offers implement-anyway or stop
   (`all` / `next` skip stale tasks, report them, rather than deciding
-  for user). On run resolving to 2+ tasks, offers
+  for user). `next` / `all` honour `Preconditions:` per `resolution.md`'s
+  eligibility clause — `all` orders its list so nothing starts ahead of
+  what it waits on and names blocked tasks by id; on a run resolved by
+  `all`, BETWEEN TASKS step 2 (and `delegated-runs.md`'s between-agents
+  re-read, which then spawns no agent for it) re-checks the upcoming task's
+  `Preconditions:` and skips it with one line when they no longer hold,
+  adding no read; an explicit-number list is never re-checked, a task named
+  by number never blocked. On run resolving to 2+ tasks, offers
   to implement each task in fresh subagent so later tasks don't inherit
   earlier ones' context; agents spawned one at a time, never
   parallel (shared working tree, branch, `TASKS.md`), each owning own
@@ -792,7 +826,13 @@ Currently shipped:
   `-` (`[DONE]`), `/task-add feature=<slug>` (`[NEW]`/`[ITERATED]`), `flip to
   [DONE] in FEATURES.md` (`[PLANNED]`, nothing left but `[DONE]`/`[SKIP]`
   tasks, zero-task case included), `/task-implement <N>` (`[PLANNED]`, work
-  left, not blocked, lowest such N) or `blocked by <slug>` — blockedness
+  left, not blocked — N the first open task in `TASKS.md` appearance order
+  whose `Preconditions:` are all `[DONE]`/`[SKIP]`, unresolvable ids
+  ignored: `task-engine`'s eligibility clause stated inline, fed by the
+  summary blocks already read, so no new read and still never a body),
+  `blocked by <slug>` (checked first, whatever the preconditions say) or
+  `waits on task <id>` (not blocked, but every open task has an unmet
+  precondition; names the first such task's unmet ids) — blockedness
   suppresses ONLY `/task-implement`, since planning and a bookkeeping flip are
   never blocked by a dependency. Task rollup is counts per status by default,
   `--task-ids` names each ID; zero tasks renders `-` on a `[DONE]`/`[PLANNED]`
@@ -922,9 +962,14 @@ Currently shipped:
   `max()` would hand a deleted runbook's id to the next one). An index written
   before ids is backfilled in place by the first command that **writes** it
   (`/runbook-create`, `/runbook-clean`, `/runbook-run`); a read-only command
-  never does. Loop: re-read body at start of EVERY step (this is the whole
+  never does. **A step's number is a stable id, not its position**: order is
+  list position, and `runbook-schema.md` declares a body carrying ids out of
+  numeric order (after a `/runbook-create --append --before`/`--after`
+  insert) legal — never infer order from numbering, never renumber. Loop:
+  re-read body at start of EVERY step (this is the whole
   reconciliation mechanism, and what makes mid-run `--append` steps picked up),
-  select first `[ ]`/`[~]`/`[!]` step whose `Depends on:` are all `[x]`, mark
+  select the first step **in list order** whose marker is `[ ]`/`[~]`/`[!]`
+  and whose `Depends on:` are all `[x]`, mark
   `[~]`, spawn ONE subagent, **wait for the result notification** (the single
   most dangerous point — the spawn's return value is not the result), classify,
   commit. **Four** result cases: `QUESTIONS FOR USER` → relay to user, answer back
@@ -972,9 +1017,11 @@ Currently shipped:
   refused at spawn time). `--from N`/`--to N`/`--only N` narrow selection but
   never weaken `Depends on:` — one model, not three (`--only N` **is**
   `--from N --to N`; naming `--only` beside either bound is an error, as is a
-  `--to` below a `--from`). Bounds are re-applied against the body re-read each
-  step, so a step appended mid-run inside the range runs and a bound past the
-  last step is not an error. Reaching a `--to` bound is **not** completion: the
+  `--to` naming a step listed above the `--from` step). The bounds name steps
+  **by id** and cut the list **at those steps' positions**, so a range is
+  always the stretch of steps the run walks. Bounds are re-applied against the
+  body re-read each step, so a step appended mid-run inside the range runs and
+  a bound naming a step not yet in the body is not an error. Reaching a `--to` bound is **not** completion: the
   index goes back to `[PENDING]` unless the whole runbook is `[x]`. Depth
   budget stated plainly in the body: orchestrator +
   step agent leaves one confirmed level **where nesting works at all** (depth 3
@@ -998,8 +1045,14 @@ Currently shipped:
   RECENT enumerated follow-up list, the default; or a free-form description via
   one batched interview). Append is a flag, not a `/runbook-append` command:
   interview, prompt rules and gate are identical, only the write target differs.
-  Append rules: numbering continues, existing steps NEVER edited, `Sequencing:`
-  extended not replaced, `[DONE]` → back to `[PENDING]`, `[FAILED]` stays
+  Append rules: new steps take the next unused ids from the highest existing
+  one; they go at the foot unless `--before <step>` / `--after <step>`
+  (mutually exclusive, `--append` only, value a step **id** never a position;
+  an unknown id is answered by listing the runbook's steps) writes them as one
+  contiguous block at that position — id is not position, so the foot need
+  not carry the highest id, and the gate's `Position:` line says where they
+  land; existing steps NEVER edited, moved or renumbered, their `Depends on:`
+  never rewritten, `Sequencing:` extended not replaced, `[DONE]` → back to `[PENDING]`, `[FAILED]` stays
   `[FAILED]`, `[RUNNING]` appendable **only from the running session itself**.
   Enforces ten prompt-quality rules before writing (self-contained; names the
   document to read first or carries evidence inline; carries every decision that

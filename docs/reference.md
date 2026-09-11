@@ -332,6 +332,17 @@ so this command computes it **on every read** and stores nothing:
   the command stops there: it reports the next thing to build, it doesn't
   start it.
 
+The **Next** column names one action per feature: `/task-add feature=<slug>`
+for a feature not yet planned, `/task-implement <N>` when work is left and
+nothing blocks it, `blocked by <slug>` when a dependency does,
+`flip to [DONE] in FEATURES.md` when every task is finished, and `-` on a
+feature already `[DONE]`. `<N>` is the first of the feature's open tasks in
+backlog order (the order of `TASKS.md`, not the id) whose `Preconditions:`
+are all `[DONE]` or `[SKIP]`, the same rule `/task-implement next` follows,
+so the report and `next` agree. When every open task of an unblocked feature
+waits on something unfinished, Next reads `waits on task <id>` instead,
+naming what to finish first.
+
 Task rollups are counts per status by default (`4 tasks — DONE: 2, MISSING:
 2`); pass `--task-ids` to name each task instead. `milestone=<slug>` reports a
 named milestone rather than the active one.
@@ -371,6 +382,35 @@ task, it appends one more at the end to update the affected documentation
 once the others land. You approve the whole plan, reconciliation included, in
 one pass.
 
+New tasks go at the end of `TASKS.md` by default. **`--before <N>`** writes
+the new task immediately above task N and adds its id to N's
+`Preconditions:`; **`--after <N>`** writes it immediately below task N and puts
+N on the new task's `Preconditions:`. Each flag always writes the position and
+the edge together: the position is for whoever reads the file top to bottom,
+the edge is what `/task-implement next` and `all` follow, and either one alone
+would leave the two disagreeing. The two flags are mutually exclusive, and an
+N that names no task stops the run before anything is written. No existing id
+changes, so a higher id sitting above a lower one is expected. When the run
+writes several tasks (a split, or a feature's drafts), the flag places the
+first and the rest follow it.
+
+**`feature=<slug> --single "<description>"`** attaches exactly one task to a
+`[PLANNED]` feature without re-planning it. The task is planned against the
+feature document, tagged `Feature: <slug>`, and its id is added to the
+feature's `Tasks:` line; nothing else about the feature changes. No
+reconciliation runs over its other tasks, its status stays `[PLANNED]`, and
+no documentation task is added. The feature document isn't updated either,
+and the report says so in one closing line naming
+`/pipeline-patch feature=<slug>` as the write-back, so the drift is announced
+the moment it's created. `--single` needs `feature=<slug>` and can't be
+combined with `--short`.
+
+On a project with a `.claude/FEATURES.md`, a free-form `/task-add` also asks,
+at its usual approval step, whether the task belongs to a feature, listing
+every `[PLANNED]` one with *none* as the default. Naming a slug takes the
+`--single` path; *none* writes the task exactly as before. A project without a
+feature index never sees the question.
+
 Tasks can be **human-in-the-loop**: when part of the work only a human can
 perform in an external tool (a Unity editor step, a cloud console, hardware),
 `/task-add` marks the task `Target: claude+human` (or `human` for fully
@@ -387,6 +427,15 @@ commit without pushing).
 ### `/task-implement`
 
 Build a task end-to-end, test-first, one commit (and push) each.
+
+Name tasks by number, or pass `next` or `all`. `next` implements the first
+eligible task in backlog order and `all` works through every eligible one.
+Both honour `Preconditions:`: a task is eligible only once every task it
+names is `[DONE]` or `[SKIP]`, and `all` is `next` repeated, so it never
+starts a task ahead of one it waits on. An `all` run names by id any task it
+left blocked, a precondition cycle included, and between tasks skips, with one
+line, a task whose preconditions no longer hold. A task you name by number is
+never blocked: naming it is choosing its moment.
 
 Pass `--review [--rounds N]` to have each task reviewed before it's
 committed: after the tests and before the status flip, the run spawns
@@ -543,10 +592,17 @@ that has none of the conversation the prompts came out of.
   all still in context), or from a free-form description through one batched
   interview. `--append <name>` adds steps to an existing runbook, including
   one a run is in the middle of; `--append` with no name targets the runbook
-  this session is running.
-- `/runbook-run <name>` — execute it, one step at a time. `--from N`, `--to N`
+  this session is running. Appended steps go at the foot unless
+  `--before <step>` or `--after <step>` places them at that step's position
+  instead (the two can't be combined, and an unknown step id is answered with
+  the runbook's step list). Either way they take the next unused step id: a
+  step's number is a stable id, not its position, so a runbook may list step
+  6 above step 3. No existing step is edited, moved or renumbered.
+- `/runbook-run <name>` — execute it, one step at a time, top to bottom in
+  list order. `--from N`, `--to N`
   (they compose: `--from X --to Y` runs that range, inclusive), `--only N` and
-  `--model <model>` narrow or redirect the run; `--relay-spawns` forces the
+  `--model <model>` narrow or redirect the run; the bounds name steps by id
+  and cut the list at those steps' positions. `--relay-spawns` forces the
   spawn relay described below. A run that stops at its `--to` bound leaves
   the runbook `[PENDING]`, never `[DONE]`: a bounded run leaves work behind
   by design.

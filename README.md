@@ -266,7 +266,12 @@ writes a task body with acceptance criteria you approve before anything is
 saved. This is the heart of the workflow: spend the focus in planning, then
 let the agent consume the tasks whenever it's convenient. With
 `feature=<slug>` it plans from an `/architect` document instead, so a
-feature becomes several tasks without re-explaining the work. When part of
+feature becomes several tasks without re-explaining the work. New tasks go
+at the end of the backlog unless you say otherwise: `--before <N>` /
+`--after <N>` write the task at that spot together with the
+`Preconditions:` edge the position implies, so a task found mid-feature runs
+when it should rather than last, and `feature=<slug> --single` attaches one
+task to an already-planned feature without re-planning it. When part of
 a task only a human can do (an editor step, a cloud console) it records the
 checkpoints and marks the task human-in-the-loop.
 
@@ -276,8 +281,10 @@ pushes. [Details →](docs/reference.md#4-planning-the-work)
 ## 5. Build and review
 
 **`/task-implement`** builds a task end-to-end, test-first, and lands it as
-exactly one commit. `next` takes the first eligible task, `all` works
-through the backlog; both skip stale tasks so a batch run never guesses, and
+exactly one commit. `next` takes the first eligible task and follows
+`Preconditions:`, so a task is picked only once everything it waits on is
+done; `all` works through the backlog in that same order. Both skip stale
+tasks so a batch run never guesses, and
 a multi-task run can hand each task to a fresh subagent so later tasks don't
 inherit earlier ones' context. On a human-in-the-loop task it pauses at each checkpoint,
 walks you through it, and verifies the outcome itself before moving on. On a

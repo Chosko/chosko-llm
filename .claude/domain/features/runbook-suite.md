@@ -508,12 +508,17 @@ the entire authoring apparatus to change one path.
 
 **Append rules.**
 
-- Numbering continues from the last existing step.
+- Numbering continues from the highest existing step id: the new steps take
+  the next unused ids. The id continues; the position need not — under
+  `--before <step>` / `--after <step>` the new steps are written at that
+  step's place in the list, so the step at the foot need not be the
+  highest-numbered one.
 - `Depends on:` may reference existing steps, including completed ones.
 - The `Sequencing:` header line is extended, not replaced — it describes the
   whole runbook and the appended steps are now part of it.
 - Existing steps are never edited. Ownership stays by line; an append adds
-  material after the last step and touches nothing above it.
+  new steps — at the foot, or between two existing ones — and changes no line
+  of any step already there, nor moves or renumbers one.
 - Appending to a `[DONE]` runbook flips it back to `[PENDING]`: there is
   unfinished work again, and the status has to say so.
 - Appending to a `[FAILED]` runbook leaves it `[FAILED]`. The halt still needs a
@@ -834,7 +839,8 @@ safe with two writers:
 | `## Do not re-propose` | `/runbook-create` | `/runbook-run` |
 
 An append writes only new steps and the `Sequencing:` extension; it never edits a
-line above the append point, which is what makes appending safe during a run.
+line of an existing step, wherever the new steps land, which is what makes
+appending safe during a run.
 
 `Context:` is the one field with a shared history: the author writes it as `none`
 in the common case, and what accumulates there afterwards belongs to the run.
@@ -854,7 +860,9 @@ it.
 /runbook-create                          ask: new runbook, or append to which
 /runbook-create <name>                   new runbook, material from the conversation
 /runbook-create <free-form description>  new runbook, material from the interview
-/runbook-create --append <name|id>       append steps to that runbook
+/runbook-create --append <name|id> [--before <step> | --after <step>]
+                                         append steps to that runbook, at the foot
+                                         or at that step's position
 /runbook-create --append                 append to the runbook this session is running
 /runbook-create <args> --commit [--no-push]
 

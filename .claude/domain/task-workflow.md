@@ -12,7 +12,7 @@ each:
 
 | File | Owns |
 | --- | --- |
-| `resolution.md` | `.claude/TASKS.md` parsing, body-file location, the `all` / `next` / explicit-list selectors, the `/task-setup`-has-run gate. |
+| `resolution.md` | `.claude/TASKS.md` parsing, body-file location, the `all` / `next` / explicit-list selectors and the eligibility clause the batch two honour, the `/task-setup`-has-run gate. |
 | `status.md` | Status vocabulary, which values are terminal, which implementable, legal transitions. |
 | `targets.md` | `Target:` values, the `## Manual interventions` pairing rule, the delegation guard. |
 | `stale.md` | `[STALE]`: who writes it, who clears it, the implement-anyway/stop protocol, reconciliation classification. |
@@ -151,7 +151,7 @@ minimal) authoring pass, exactly as in the thin schema. Usually absent.>
 
 `## Acceptance criteria` and `## Hints` omitted entirely — not left as placeholders — since authoring without deep investigation would likely produce content wrong or vacuous. PHASE 1.5 (split check) skipped entirely under `--short`, same as `--no-split`: task specific enough for `--short` is by definition not bundle of independent deliverables. PHASE 2 not skipped wholesale though — still asks about ambiguity inherent to user's own description; just doesn't ask about ambiguity that would only have surfaced through investigation `--short` skips.
 
-`--short` mutually exclusive with `feature=<slug>` — it implies exactly the deep investigation `--short` exists to skip. Composes normally with `--no-commit` and `--no-push`.
+`--short` mutually exclusive with `feature=<slug>` (and so with `--single`) — it implies exactly the deep investigation `--short` exists to skip. Composes normally with `--no-commit` and `--no-push`.
 
 ## TASKS.md summary block format
 
@@ -168,6 +168,14 @@ Feature: <slug>          # optional — feature-derived tasks only
 `Target:` in summary block mirrors body file's `Target:` field. Only field (besides `Files:`) intentionally duplicated between index and body, so backlog view shows implementer intent without opening body files.
 
 `Status:`, `Preconditions:`, `Feature:` deliberately absent from body: describe how task fits into backlog, not what needs to be built.
+
+## Backlog order and `Preconditions:`
+
+Two things order backlog, and selectors read both: **appearance order** in `TASKS.md` is the priority, **`Preconditions:`** the hard constraint. The id carries no order — ids stable and only ever increase, so a task inserted mid-file carries a higher id than tasks below it. Read order from position, never from number.
+
+`Preconditions:` is **load-bearing for `next` and `all`**, not informational. Task eligible only when its status is implementable **and** every id on its `Preconditions:` line resolves to a task `[DONE]` or `[SKIP]`; id resolving to no task ignored, never a blocker. `next` = first eligible task in appearance order. **`all` = `next` repeated** until nothing eligible — one rule, no second definition of eligibility, no graph algorithm — resolved once up front by simulating the repetition (each selected task treated `[DONE]` for the walks after), so a batch still gets one resolution report and one delegation count. Implementable tasks left unselected are named by id w/ what they wait on, a precondition cycle included; between tasks an `all` run re-checks upcoming task's `Preconditions:` against the `TASKS.md` re-read it already does, skipping w/ one line a task whose preconditions no longer hold. Task requested by number never blocked: naming it is choosing its moment. `/production-status`'s Next column picks `/task-implement <N>` by same rule. Clause lives once, in `task-engine`'s `resolution.md` § *Selectors*.
+
+**`/task-add` can insert.** Appending at end still default. `--before <N>` writes new summary block immediately above task N's and appends new id to N's `Preconditions:` (the one sanctioned edit to another task's line); `--after <N>` writes it immediately below and puts N on new task's `Preconditions:`. Both halves always together — position for human reading top to bottom, edge for selectors; either alone leaves the two disagreeing. Flags mutually exclusive; unknown N stops. Insertion consumes next id exactly as append does, no existing id moves; moving an existing task is a revision, not an insertion. When run writes several tasks (split, feature run) flag places the first, rest follow it. A `Feature:`-tagged task landing among another feature's tasks is legal — reconciliation keys on `Feature:`, never position.
 
 ## Status vocabulary
 
@@ -219,6 +227,14 @@ Feature whose `Tasks:` line is non-`none` has been planned before, so re-plannin
 Update-in-place preferred whenever task's goal survives design change: nothing implemented yet, so rewriting body cheaper, keeps backlog free of dead `[SKIP]` entries. Which applies is judgment call about how much task remains — no mechanical rule.
 
 Feature document itself read-only to `/task-add`. May still be named in a drafted task's Hints — but only with dated, point-scoped grant user gave at PHASE 3 ownership gate (see [product-workflow.md](./product-workflow.md) § Documentation task), or not at all. Grant binds that task's *implementer*; never `/task-add`, which stays a non-writer of every owned document.
+
+### Attaching one task (`--single`)
+
+`/task-add feature=<slug> --single "<description>"` plans exactly one task against feature document (still PHASE 1b's primary context) and attaches it to a feature without re-planning it. **What it changes:** new block carries `Feature: <slug>`, body names the feature in Goal and its document under Hints, id appended to entry's `Tasks:` line. **What it does not change:** no reconciliation over feature's other tasks (not even read); feature's `Status:` stays `[PLANNED]` — the only status `--single` accepts, since one more planned task leaves design-to-backlog relationship unchanged (`[NEW]`/`[ITERATED]` still need a full planning run, `[DONE]` would claim done w/ a task open); no documentation task; no split; `Doc:`/`Source:` untouched as always. Mutually exclusive w/ `--short`, same reason `feature=` is.
+
+Nor does it update feature document: report ends w/ one fixed line saying document was not updated and naming `/pipeline-patch feature=<slug>` as write-back, so drift announced when created rather than discovered later. `/task-add` stays non-writer of the document. One commit, under single-task (or split) message plus `FEATURES.md` — never `Plan feature`, since one attached task is not a planning pass.
+
+**Orphan question.** On a project w/ `.claude/FEATURES.md`, free-form run (not `--short`) asks inside PHASE 3's existing gate — never a second one — whether task belongs to a feature, listing every `[PLANNED]` entry, none the default. Slug takes the `--single` path; none writes task exactly as before. No `FEATURES.md`, or no `[PLANNED]` entry → question not asked, free-form path unchanged.
 
 ## Split suggestion (`/task-add`)
 
