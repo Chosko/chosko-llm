@@ -893,7 +893,9 @@ Currently shipped:
   probes `.claude/tasks/archive/`). Consumers cite
   `${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/references/<f>.md`
   and state only deviations. Three consumers: `/pipeline-check`,
-  `/pipeline-patch`, `pipeline-revise`. Routing
+  `/pipeline-patch`, `pipeline-revise`. A fourth feature, `pipeline-suggest`,
+  declares `requires: skill:pipeline-engine` but reads none of the four files
+  — installation only, and it buys the skill a routing row. Routing
   table kept honest by repo-local `scripts/check-routing.sh` (sibling of
   `check-changelog.sh`; not a feature, no frontmatter, installed nowhere):
   two existence invariants — every row names a `commands/<n>.md` or
@@ -1014,6 +1016,40 @@ Currently shipped:
   `--commit` / `--no-push` forwarded per owner step (arms commit their own
   write set; `/product-design`, `/production-plan`, `/runbook-create
   --append` get `--commit`; `/task-add` gets `--no-commit` without it).
+- `skills/pipeline-suggest/` — the pipeline's auto-suggested entry point
+  (feature `pipeline-suggest`) and the second artifact nobody invokes, built
+  in `runbook-suggest`'s shape: Claude Code selects it from its
+  `description`, so the frontmatter IS the trigger — no hook, no event
+  registration, no flag; fire rate tuned by narrowing the description. Fires
+  on a free-form request to build, change, fix, remove or sequence work that
+  names no slash command. Anti-triggers, deliberately longer than the
+  triggers: a question, a request naming a command, "just do it" /
+  "directly", work under way in a `/task-implement` run, an enumeration
+  inside an explanation, a follow-up list (`runbook-suggest`'s), a project
+  with neither index. Gate is TWO existence probes — `.claude/FEATURES.md`,
+  `.claude/TASKS.md` — both absent → silence, an erroring probe counts as
+  absent; no third probe, never the files' contents, NO reference file (not
+  the engine's `probes.md`, not `routing.md`). Body carries a nine-row
+  request-shape → command table (feature-sized addition `/architect`; bug /
+  small change / chore `/task-add`; small change to planned work
+  `/pipeline-patch`; large change, insert, delete or reorder of planned work
+  `/pipeline-revise`; "what next" `/production-status`; "is the backlog
+  consistent" `/pipeline-check`; follow-up list → none, `runbook-suggest`
+  fires; design decision `/product-design`; milestone/release
+  `/product-roadmap` or `/production-plan`) — NOT the engine's routing table
+  (consumes / produces / owns), different job and content, noted so
+  `/rule-overlap` reads the pair as intended. Output: silence on no match or
+  the follow-up row alone; else at most TWO lines — the command (both when two
+  rows match) plus the quoted matching phrase, optional second saying the
+  parent may proceed directly; nothing of the request restated, no failure
+  path adds a third. Never invokes, asks, gates or writes; no suppression list
+  (would be a state file). `requires: skill:pipeline-engine,
+  skill:pipeline-revise, command:pipeline-patch` — `requires:` is
+  non-transitive, so the revision surfaces are named; the other commands the
+  table names are deliberately not required. The engine is declared for
+  installation, not reading, and that declaration is why `routing.md` carries
+  a `pipeline-suggest` row (owns `Nothing`, Amend `—`) — `check-routing.sh`
+  demands one.
 - `commands/task-list.md` — prints backlog as compact read-only
   summary. Marks `claude+human` / `human` tasks with `⚠ <target>`, shows
   `[<slug>]` for tasks with `Feature:` line, appends `⚠ stale` to
@@ -1295,7 +1331,8 @@ Currently shipped:
   default (a deletion left uncommitted is the change most likely to be lost, and
   the confirm gate already served as the review pass); `--no-commit`/`--no-push`
   opt out.
-- `skills/runbook-suggest/` — the trigger, and the only artifact nobody invokes.
+- `skills/runbook-suggest/` — the trigger, and one of the two artifacts nobody
+  invokes (the other is `skills/pipeline-suggest/`, which copies its shape).
   `requires: command:runbook-create` — the one judgment call in the graph: it
   cites no shared file and needs no schema, but a proposal naming a command that
   is not installed is exactly what `requires:` exists to stop. It depends on the

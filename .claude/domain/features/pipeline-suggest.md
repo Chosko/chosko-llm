@@ -70,21 +70,33 @@ Two probes, nothing more: does `.claude/FEATURES.md` exist, does
 is cheaper than the engine's full probe on purpose; the skill needs to know
 only whether a pipeline exists, not its shape.
 
+### The routing row
+
+The feature ships one line outside its own folder: a `pipeline-suggest` row in
+`skills/pipeline-engine/references/routing.md`. It is not optional. Declaring
+`requires: skill:pipeline-engine` makes `scripts/check-routing.sh`'s
+completeness invariant — every shipped feature declaring that dependency has a
+row — demand one, so the row lands with the skill. It records that the skill
+consumes only the two files' existence and the request, produces nothing but
+the two lines, owns `Nothing`, and takes no argument because it is selected
+from its description; its Amend entry is `—`. The skill itself never reads the
+row.
+
 ### The shape table
 
-Ten rows at most, in the body:
+Nine rows, in the body, in this order:
 
-- a new capability or feature-sized addition → `/architect`;
-- a bug, a small change or a chore → `/task-add`;
-- a small change to something already planned → `/pipeline-patch`;
-- a large change, an insertion at a point in sequence, a deletion or a
-  reorder of planned work → `/pipeline-revise`;
-- "what should I build next" → `/production-status`;
-- "is the backlog consistent" → `/pipeline-check`;
-- an ordered list of follow-ups → `/runbook-suggest` already fires;
-- a design-level decision → `/product-design`;
-- a milestone or release question → `/product-roadmap` or
-  `/production-plan`.
+| Request shape | Command |
+| --- | --- |
+| A new capability or a feature-sized addition | `/architect` |
+| A bug, a small change or a chore | `/task-add` |
+| A small change to something already planned | `/pipeline-patch` |
+| A large change, an insertion at a point in the sequence, a deletion or a reorder of planned work | `/pipeline-revise` |
+| "What should I build next" | `/production-status` |
+| "Is the backlog consistent" | `/pipeline-check` |
+| An ordered list of follow-ups | none — `runbook-suggest` already fires |
+| A design-level decision | `/product-design` |
+| A milestone or release question | `/product-roadmap` or `/production-plan` |
 
 A request that matches no row produces no output. A request that matches two
 names both in one line.
@@ -103,8 +115,19 @@ because a suppression list would be a state file.
 
 ## Interfaces and contracts
 
-- Selected by description; no arguments; `requires: skill:pipeline-engine`
-  so the commands it names are installed, and the two revision surfaces.
+- Selected by description; no arguments; `requires: skill:pipeline-engine,
+  skill:pipeline-revise, command:pipeline-patch`. `requires:` is flat and
+  non-transitive, so the two revision surfaces four of the table's rows point
+  at are named explicitly rather than expected through the engine. The engine
+  is required for installation, not for reading — the zero-reference-read
+  contract stands — and declaring it is what obliges the routing row. Left
+  out of the frontmatter, deliberately: the pipeline's own commands the table
+  also names — `/architect`, `/task-add`, `/production-status`,
+  `/product-design`, `/product-roadmap`, `/production-plan` — and
+  `runbook-suggest`, since a project carrying `FEATURES.md` or `TASKS.md` is
+  already using them and requiring the whole pipeline for a two-line pointer
+  would make the cheapest tier the heaviest install. `/pipeline-check`, also
+  named by the table, is not in the frontmatter either.
 - Output: at most two lines, then end of turn for this skill; the parent
   continues.
 - Hard contracts: body under about forty-five lines like `runbook-suggest`;

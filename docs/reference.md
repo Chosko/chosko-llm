@@ -685,6 +685,67 @@ each owner step. An amend step commits its own writes; `/product-design`,
 `/task-add`, which commits by default, gets `--no-commit` when you didn't
 pass `--commit`. Requires the same four skills as `/pipeline-patch`.
 
+### `pipeline-suggest`
+
+A skill nobody invokes. Most requests that belong in the pipeline arrive as
+prose, not as a command: "add a login to the page", "fix this bug", "drop the
+export step". When one does, `pipeline-suggest` fires on its own description,
+names the pipeline command that fits in a line or two, and stops. The
+conversation carries on exactly as it would have.
+
+**When it fires.** Its description is the whole trigger: there is no hook,
+no event registration and no flag. It fires on a free-form request to build,
+change, fix, remove or sequence work that doesn't already name a slash
+command. It stays out of the way for:
+
+- a question;
+- a request that names a command;
+- a request that says "just do it" or "directly";
+- work already under way in a `/task-implement` run;
+- an enumeration inside an explanation;
+- a list of follow-ups meant for later sessions, which is `runbook-suggest`'s;
+- a project with neither a feature index nor a backlog.
+
+If it fires too often, the fix is a narrower description, never a setting.
+
+**Two probes, nothing more.** It checks whether `.claude/FEATURES.md` exists
+and whether `.claude/TASKS.md` exists. When neither does, it says nothing. A
+probe that errors counts as absent. It never opens either file, and it reads
+no reference file, `pipeline-engine`'s `probes.md` and `routing.md`
+included: it needs to know whether a pipeline exists, not its shape.
+
+**Which command.** A fixed table in its body maps the shape of the request to
+a command:
+
+| Request shape | Command |
+| --- | --- |
+| A new capability or a feature-sized addition | `/architect` |
+| A bug, a small change or a chore | `/task-add` |
+| A small change to something already planned | `/pipeline-patch` |
+| A large change, an insertion at a point in the sequence, a deletion or a reorder of planned work | `/pipeline-revise` |
+| "What should I build next" | `/production-status` |
+| "Is the backlog consistent" | `/pipeline-check` |
+| An ordered list of follow-ups | none — `runbook-suggest` already fires |
+| A design-level decision | `/product-design` |
+| A milestone or release question | `/product-roadmap` or `/production-plan` |
+
+It isn't `pipeline-engine`'s routing table, which records what each feature
+consumes, produces and owns. The two do different jobs.
+
+**What it prints.** Nothing, when the request matches no row or only the
+follow-up row. Otherwise **two lines at most**: the first names the command
+(both, when two rows match) and quotes the phrase in your request that
+matched; an optional second says you can go ahead directly instead. It
+restates nothing of what you asked, and no failure adds a third line.
+
+It **never invokes** the command it names, **never asks** a question or gates
+anything, and **never writes**. It keeps no memory of having suggested,
+deliberately, since a suppression list would be a state file: a repeated
+request earns a repeated line. Requires `skill:pipeline-engine`,
+`skill:pipeline-revise` and `command:pipeline-patch`, which `chosko-llm add`
+installs with it. The other commands its table names aren't required; a
+project with a feature index or a backlog is already using them.
+
 ---
 
 ## 5. Building and reviewing
@@ -856,10 +917,12 @@ Four reference files, each the single authority for its rule:
 Like `task-engine`, `pipeline-engine` is **not invocable**: it takes no
 arguments, runs nothing and produces no output, and nothing should suggest
 it. It's a reference library that other features read while they run.
-`/pipeline-check`, `/pipeline-patch` and `/pipeline-revise` declare
-`requires: skill:pipeline-engine`, so installing any of them installs the
-engine too, and `chosko-llm rm skill:pipeline-engine` refuses while any of
-them is still installed. The two engines sit side by side; neither absorbs
+`/pipeline-check`, `/pipeline-patch`, `/pipeline-revise` and
+`pipeline-suggest` declare `requires: skill:pipeline-engine`, so installing
+any of them installs the engine too, and `chosko-llm rm skill:pipeline-engine`
+refuses while any of them is still installed. (`pipeline-suggest` reads none
+of the four files; it declares the engine so it installs with it, and so it
+has a routing row.) The two engines sit side by side; neither absorbs
 the other.
 
 ### Stale tasks

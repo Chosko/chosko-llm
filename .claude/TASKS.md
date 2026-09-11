@@ -106,7 +106,7 @@ Feature: pipeline-suggest
 
 ## 195. Update documentation for feature `pipeline-suggest`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, .claude/domain/product-workflow.md, .claude/domain/features/pipeline-suggest.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 193, 194

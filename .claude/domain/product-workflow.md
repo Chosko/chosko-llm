@@ -1,6 +1,6 @@
 # Product workflow — from product idea to implementation task
 
-Source of truth for product pipeline: commands taking product from brainstorm through architecture to implementable backlog, docs they exchange, three status vocabularies keeping design, delivery and backlog in sync. Read when touching `/domain-setup`, `/product-design`, `/product-roadmap`, `/architect`, `/production-plan`, `/production-status`, `/pipeline-check`, `/pipeline-patch`, `/pipeline-revise`, or feature-aware parts of `/task-add`, `/task-list` and `/task-clean`.
+Source of truth for product pipeline: commands taking product from brainstorm through architecture to implementable backlog, docs they exchange, three status vocabularies keeping design, delivery and backlog in sync. Read when touching `/domain-setup`, `/product-design`, `/product-roadmap`, `/architect`, `/production-plan`, `/production-status`, `/pipeline-check`, `/pipeline-patch`, `/pipeline-revise`, `pipeline-suggest`, or feature-aware parts of `/task-add`, `/task-list` and `/task-clean`.
 
 ## Why this exists
 
@@ -22,8 +22,9 @@ Pipeline exists to make handoff explicit. Cost: set of files must agree on schem
 | read | `/production-status` | `PLAN.md`, `FEATURES.md`, `TASKS.md`, `product-roadmap.md` — all read-only | terminal output only; **nothing written** |
 | read | `/pipeline-check` | index lines of `FEATURES.md`, `TASKS.md`, `PLAN.md`, `RUNBOOKS.md` — all read-only, never a body | terminal output only; **nothing written** |
 | revise | `/pipeline-patch`, `/pipeline-revise` | an anchor + a described change; index lines (`/pipeline-patch` never more; `/pipeline-revise` also bodies within the anchor's scope) | **nothing of their own** — every write an owner's, through its amend arm or command |
+| suggest | `pipeline-suggest` (selected by description, never typed) | a free-form request; whether `FEATURES.md` / `TASKS.md` exist — never their contents | **nothing** — at most two lines naming the command that fits |
 
-Last three rows are not stages — nothing hands to them, they hand to nothing. Two are the read side, each spanning the whole pipeline; see [The read stage](#the-read-stage-production-status) below. Last is the revision side: changes what the stages already produced, through those stages' own owners; see [Revision](#revision-pipeline-patch-pipeline-revise) below.
+Last four rows are not stages — nothing hands to them, they hand to nothing. Two are the read side, each spanning the whole pipeline; see [The read stage](#the-read-stage-production-status) below. Third is the revision side: changes what the stages already produced, through those stages' own owners; see [Revision](#revision-pipeline-patch-pipeline-revise) below. Last is the auto-suggested entry point: a request arriving as prose may be pointed at the command owning it, never entered for the director; see [Auto-suggested entry](#auto-suggested-entry-pipeline-suggest) below.
 
 Stages entered, not marched through. Project w/ existing codebase commonly starts stage 0 then jumps stage 3; project whose next change obvious skips to stage 5 w/ free-form description, same as today. Nothing downstream requires upstream stage ever ran.
 
@@ -352,6 +353,14 @@ Count + closed checklist, never a judgement of size. Proceed → owner's arm by 
 
 **No new state.** No status value, no change ledger, no stored tier; outcomes are owners' writes in existing vocabularies (`[STALE]`, `[ITERATED]`, `[SKIP]`, `Preconditions:`, `Tasks:`, struck steps). Provenance = owner steps' commits and runbook `Done:` lines.
 
+## Auto-suggested entry (`pipeline-suggest`)
+
+Every other row of [the pipeline](#the-pipeline) is entered by the director typing a command. One entry point isn't: a request that arrives as prose — "add a login to the page", "fix this bug", "drop the export step" — may earn one line pointing at the command that owns it, from `skills/pipeline-suggest/`, a skill Claude Code selects off its `description` and nobody invokes. Same shape as `runbook-suggest`, the pipeline's counterpart for follow-up lists. Feature design: [`./features/pipeline-suggest.md`](./features/pipeline-suggest.md).
+
+- **Gate** — `FEATURES.md` or `TASKS.md` exists (existence only, contents never read); neither → silence. No shared probe, no reference read.
+- **Points, never enters.** Request shape → command table in the skill body: feature-sized addition → stage 3; bug / chore → stage 5's free-form path; change to planned work → the revision surfaces; the read commands; design and milestone questions → stages 1, 2, 4. Distinct from `pipeline-engine`'s `routing.md` (consumes / produces / owns). Director then types the command, or proceeds directly — the skill invokes nothing, asks nothing, gates nothing.
+- **Owns no line in any artifact.** Writes nothing; its `routing.md` row owns `Nothing`; no status, no suppression list (would be a state file). Enters no stage and hands to none — a stage is still entered only by its command.
+
 ## Documentation task
 
 When `feature=<slug>` run drafts at least one new task (plain or part of reconciliation), `/task-add` appends one more: `Target: claude` task titled "Update documentation for feature `<slug>`", w/ `Preconditions:` naming every other new task from run — signalling should land once they have. Hints drawn from whichever of README.md, `docs/authoring-guide.md`, relevant `.claude/domain/*.md` files, `.claude/context/features.md`, `.claude/context/INDEX.md` actually describe behavior run's tasks change. Reconciliation-only run creating no new tasks gets no documentation task — nothing new to document.
@@ -382,7 +391,7 @@ Exactly one writer per artifact, `FEATURES.md` deliberate exception.
 
 `FEATURES.md` split by *line*, not file, so two main writers never contend for same field. `/architect` never writes `Tasks:`; `/task-add` never writes `Doc:` or `Source:`.
 
-`/pipeline-patch` and `/pipeline-revise` appear in no row, deliberately: **neither owns a line in any index or document** — both `routing.md` rows own `Nothing`. What they drive is written by the owner already in this table, through its amend entry: a task line `task-engine`'s `amend.md` writes is still `/task-add`'s line, a feature doc `/architect amend` writes is still `/architect`'s, a struck step is still the runbook suite's. A revision adds a sequence, never a writer.
+`/pipeline-patch` and `/pipeline-revise` appear in no row, deliberately: **neither owns a line in any index or document** — both `routing.md` rows own `Nothing`. What they drive is written by the owner already in this table, through its amend entry: a task line `task-engine`'s `amend.md` writes is still `/task-add`'s line, a feature doc `/architect amend` writes is still `/architect`'s, a struck step is still the runbook suite's. A revision adds a sequence, never a writer. `pipeline-suggest` is absent for a simpler reason: it writes nothing at all, and its `routing.md` row owns `Nothing` too.
 
 ## The council gate (optional)
 

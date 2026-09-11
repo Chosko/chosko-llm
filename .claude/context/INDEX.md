@@ -31,7 +31,7 @@ Canonical project docs live outside this folder, stay authoritative:
 | [cmd-channel.md](./cmd-channel.md) | `scripts/cmd-channel.sh` — point managed clone at branch ('channel') to test unmerged work; no-arg show current, `--list` show available, `<branch>` switch + refresh proxy. |
 | [cmd-export.md](./cmd-export.md) | `scripts/cmd-export.sh` — package repo's Claude config into Markdown file or zip via `select_export_files`; output dir from `export_dir_path`. |
 | [cmd-help.md](./cmd-help.md) | `scripts/cmd-help.sh` — print `docs/cli-help.txt` or fallback help. |
-| [features.md](./features.md) | Shipped artifacts under `commands/`, `skills/`, `claude-md/`, `statusline/`, `hooks/`; frontmatter contract incl. optional `replaces:` / `requires:` and the hook-only `event:` / `matcher:`; the two non-invocable reference engines (`task-engine`, `pipeline-engine`) and the routing guard; the two revision surfaces (`/pipeline-patch`, `pipeline-revise` and its four branch files); cross-refs to authoring guide. |
+| [features.md](./features.md) | Shipped artifacts under `commands/`, `skills/`, `claude-md/`, `statusline/`, `hooks/`; frontmatter contract incl. optional `replaces:` / `requires:` and the hook-only `event:` / `matcher:`; the two non-invocable reference engines (`task-engine`, `pipeline-engine`) and the routing guard; the two revision surfaces (`/pipeline-patch`, `pipeline-revise` and its four branch files); the two artifacts nobody invokes (`runbook-suggest`, `pipeline-suggest`); cross-refs to authoring guide. |
 
 ## Domain
 

@@ -311,10 +311,13 @@ tier, every artifact it touches and the owner steps in order. It always asks
 whether the change is only a wording change, and runs `/pipeline-check`
 before and after so you can see what the change fixed and what it broke.
 Nothing is ever deleted: a removed task becomes `[SKIP]` with a reason, a
-removed runbook step is struck.
+removed runbook step is struck. And when you describe work in your own words
+instead of naming a command, `pipeline-suggest` fires on its own and points
+at the pipeline command that fits, in a line, then stops.
 
 `/production-plan` is uncommitted by default; `/task-add` commits and
-pushes; `/production-status` and `/pipeline-check` write nothing;
+pushes; `/production-status`, `/pipeline-check` and `pipeline-suggest` write
+nothing;
 `/pipeline-patch` and `/pipeline-revise` make no commit of their own and pass
 `--commit` / `--no-push` on to each owner step. [Details →](docs/reference.md#4-planning-the-work)
 
