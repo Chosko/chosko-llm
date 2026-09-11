@@ -156,7 +156,7 @@ Currently shipped:
   not-invocable statement for an agent that opened the file without
   reading frontmatter; the `description` says the same thing in the words
   skill selection matches on, which is what keeps it out of suggestions.
-  Seven files under `references/`, one authority each:
+  Eight files under `references/`, one authority each:
   `resolution.md` (`.claude/TASKS.md` schema and parsing — appearance
   order is the backlog's order and need not be numeric, since
   `/task-add --before`/`--after` insert mid-file under the next id — the
@@ -183,7 +183,14 @@ Currently shipped:
   effort axis — navigation layer full and uncounted at every tier, only
   distinct source/test files beyond the diff counted, `shallow` at zero —
   the no-test-command-at-any-tier clause, and the cap-bound and
-  resolved-pair reports). A
+  resolved-pair reports), and `amend.md` (changing one existing task in
+  place: two checks before writing — not `[IN PROGRESS]`, and no change to
+  what its feature promises, else route to `/architect amend` — which body
+  sections and summary-block fields may change, a dropped `Preconditions:`
+  edge named in `## Decisions`, deleting a live task as `[SKIP]` never by
+  removal, `Feature:` added only to an orphan, one gate, a closed write set;
+  authored in the engine rather than extracted, and read by NO `task-*`
+  feature — only by whatever amends a single task, by path). A
   consumer cites the file by
   `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/<f>.md`
   and states only its own deviations. Installed like any other skill
@@ -658,7 +665,7 @@ Currently shipped:
   the document) — stopping at mid-to-high technical level, no code, no
   file-by-file plans, those being `/task-add`'s output; PHASE 3 writes the
   documents, the `FEATURES.md` entries, the INDEX rows, and any upstream
-  design change. Six supporting files load only on their branch:
+  design change. Seven supporting files load only on their branch:
   `sectioned-input.md` and `sliced-input.md` — the two input-resolution
   modes, mutually exclusive per target and never both read for the same
   target: `sectioned-input.md` when the target resolves traditionally (no
@@ -670,7 +677,15 @@ Currently shipped:
   guessed), the exact-then-prose section matching rule, the slice's
   exclusions flowing into the feature document's non-goals, and the extended
   `Source:` — then
-  `iterating.md` (the feature already has an entry), `tech-stack-
+  `iterating.md` (the feature already has an entry), `amend.md` (the
+  `amend feature=<slug> "<change>"` argument form; replaces input
+  resolution, PHASE 0b and PHASES 1–3 for the run: edits only the sections
+  the change names, refusing a change it can't scope to named sections;
+  runs a PRECISION iterate guard — each live task classified touched or
+  untouched from its summary block, body opened only when that can't
+  decide — that refuses only on a touched `[IN PROGRESS]` task and stales
+  only touched tasks; one gate asking every time whether the change is
+  editorial; no progress marker), `tech-stack-
   selection.md` (no existing stack in either form — an existing stack
   always wins), `council-gate.md` (PHASE 2 hit a genuine design fork —
   optional delegation to the claude-council skill this repo ships (opt-in,
@@ -704,8 +719,9 @@ Currently shipped:
   self-transition, `[PLANNED]`/`[DONE]` → `[ITERATED]`, named in closing
   report), because `/task-clean` prunes resolved IDs while leaving `Status:`
   alone, leaving `Tasks: none` unable to tell a cleaned feature from a
-  never-planned one. That guard also only reason it touches
-  `.claude/TASKS.md`, writes nothing there but `Status:` lines. Slugs
+  never-planned one. That guard and `amend.md`'s precision guard are the
+  only reasons it touches `.claude/TASKS.md`; both write nothing there but
+  `Status:` lines. Slugs
   stable, never renamed. Never writes `technical-direction.md` — that
   is `/product-design`'s document. **Authoring skill — nothing committed by
   default; `--commit` stages exactly written paths (including TASKS.md
@@ -1013,7 +1029,14 @@ Currently shipped:
   and `references/subagent-contract.md` (the OPERATING RULES block pasted
   verbatim into every spawned prompt — two placeholders, `<RUNBOOK>` and `<N>`,
   and it now carries the `SPAWN REQUEST` rule), both cited by the other three by
-  `${CLAUDE_HOME:-$HOME/.claude}/...` path. No `requires:` — it IS the
+  `${CLAUDE_HOME:-$HOME/.claude}/...` path. A third, `references/step-amend.md`
+  (amending one pending step: strike it as `[x]` with a `Done:` line opening
+  `struck — <reason>` and no commit sha, never deleted or renumbered; insert
+  through `/runbook-create --append --before`/`--after`; add dated `Context:`
+  facts; the prompt block immutable, so a wrong prompt is struck and a
+  corrected step inserted; a `[RUNNING]` runbook accepting changes only after
+  its current step), is never read by this body — whatever amends a step
+  reads it by path. No `requires:` — it IS the
   dependency. **Ids**: every runbook carries one beside its kebab-case name,
   and every command taking a name takes an id in its place — **a bare
   all-digits argument is an id, anything else a name**, unambiguous because a
@@ -1299,7 +1322,7 @@ its state in versioned project document.
   files exist so the common path stays cheap: `SKILL.md` names the branch
   and the file to read when it fires, and nothing else reads them.
   `skills/task-implement/` (seven), `skills/product-design/` (four),
-  `skills/architect/` (three), `skills/task-review/remote-diffs.md`,
+  `skills/architect/` (seven), `skills/task-review/remote-diffs.md`,
   `skills/context-build/nested.md` and
   `skills/context-update/nested.md` (one each) all follow this.
   `skills/task-iterate/` has none, and says so in its body so nobody goes

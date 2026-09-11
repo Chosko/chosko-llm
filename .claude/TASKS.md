@@ -66,7 +66,7 @@ Feature: owner-amend-arms
 
 ## 186. Update documentation for feature `owner-amend-arms`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/domain/features/runbook-suite.md, .claude/domain/features/owner-amend-arms.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 182

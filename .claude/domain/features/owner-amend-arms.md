@@ -56,8 +56,9 @@ appears.
 
 ### `/architect amend`
 
-A new argument form, `amend feature=<slug> "<change>"`, dispatches to a new
-supporting file beside the skill's other on-demand files. The arm skips the
+A new argument form, `amend feature=<slug> "<change>"`, dispatches to
+`skills/architect/amend.md`, a supporting file beside the skill's other
+on-demand files. The arm skips the
 clarify and architecture phases entirely: the change is described, not
 designed. It reads the feature document, applies the described change to the
 sections it names, and then runs a **precision iterate guard** in place of the
@@ -85,8 +86,8 @@ marker; an amendment is one gate long and has nothing to resume.
 
 ### Single-task amend
 
-A new reference file in `task-engine` owns the rules for changing one existing
-task: which body sections may be rewritten and which summary-block fields may
+`skills/task-engine/references/amend.md`, a new reference file in
+`task-engine`, owns the rules for changing one existing task: which body sections may be rewritten and which summary-block fields may
 change; that `Preconditions:` may be rewritten to add or drop an edge and that
 a dropped edge is named in the task's `## Decisions`; that deleting a live
 task means `[SKIP]` with a reason, never removal, because physical removal is
@@ -100,8 +101,8 @@ document promises, which is the reviser's cue to route through
 
 ### Single-step amend
 
-A new reference file beside the runbook schema owns the rules for changing one
-step in an unfinished runbook: a step may be struck, which marks it skipped
+`skills/runbook-run/references/step-amend.md`, a new reference file beside the
+runbook schema, owns the rules for changing one step in an unfinished runbook: a step may be struck, which marks it skipped
 rather than deleting it and records why; a step may be inserted, which is the
 positional append that [backlog-ordering](./backlog-ordering.md) adds; a
 step's `Context:` may gain facts; a step's prompt block is immutable, the
@@ -149,7 +150,8 @@ resolve to nothing is tolerated exactly as the full guard tolerates it.
 - **[backlog-ordering](./backlog-ordering.md)** — the positional runbook
   insert the step arm uses.
 - **[pipeline-engine](./pipeline-engine.md)** — the routing table records
-  each owner's amend entry; the precision gate may run the scoped lint.
+  each owner's amend entry. The arm itself does not invoke `/pipeline-check`;
+  the reviser does.
 - **[shared-phase-engine](./shared-phase-engine.md)** and
   **[runbook-suite](./runbook-suite.md)** — the reference folders the two
   new files join.
@@ -169,5 +171,7 @@ resolve to nothing is tolerated exactly as the full guard tolerates it.
   cure may be more specific `Files:` lines at authoring time rather than a
   smarter classifier.
 - **Should `/architect amend` accept a free-form change with no section
-  names?** Refusing keeps the arm surgical; accepting makes it the full skill
-  with fewer questions. Start by refusing.
+  names?** Decided: no. The shipped arm refuses a change it cannot scope to
+  named sections, with a pointer to `/architect <slug>`. Refusing keeps the
+  arm surgical; accepting would have made it the full skill with fewer
+  questions.

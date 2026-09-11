@@ -70,6 +70,8 @@ Deliberately out:
   provenance, not structure.
 - **Rewriting a step's prompt.** The fenced prompt block is written once, by the
   author. New facts are appended to `Context:`; the prompt itself is immutable.
+  So a step whose prompt turns out to be wrong is never edited: it is struck,
+  and a corrected step is inserted after it (`references/step-amend.md`).
 - **Deletion on completion.** Finishing a runbook flips a status and nothing
   else. Removal is `/runbook-clean`'s explicit, confirmed act.
 - **Nested runbooks.** A step whose prompt runs `/runbook-run` is forbidden —
@@ -96,7 +98,7 @@ copy into `$CLAUDE_HOME`.
 
 | Artifact | Kind | Job |
 |---|---|---|
-| `skills/runbook-run/` | skill | the orchestrator, plus the two shared reference files |
+| `skills/runbook-run/` | skill | the orchestrator, plus the shared reference files |
 | `commands/runbook-create.md` | command | authors a runbook, or appends steps to one |
 | `commands/runbook-list.md` | command | read-only listing with status and progress |
 | `commands/runbook-describe.md` | command | read-only deep read of **one** runbook, body included |
@@ -129,6 +131,7 @@ skills/runbook-run/
   references/
     runbook-schema.md             the artifact: store, body, index, statuses
     subagent-contract.md          the preamble and OPERATING RULES, verbatim
+    step-amend.md                 amending one step: strike, insert, Context: facts
 ```
 
 Consumers cite them by installed path, honouring the `CLAUDE_HOME` override rule
@@ -141,9 +144,13 @@ ${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md
 This is the pattern the vendored `claude-council` skill already uses for its own
 install location, and the one `shared-phase-engine` generalizes.
 
-Two reference files, not three. The prompt-quality rules stay in
-`runbook-create`'s body: they have exactly one consumer, and a shared file with
-one consumer is indirection without benefit.
+This suite needed two reference files, not three. The prompt-quality rules stay
+in `runbook-create`'s body: they have exactly one consumer, and a shared file
+with one consumer is indirection without benefit. A third file joined the folder
+later, for the opposite reason: `step-amend.md`, added by
+[owner-amend-arms](./owner-amend-arms.md), owns the single-step amend rules
+because more than one feature reads them by path. `/runbook-run`'s own body
+never reads it.
 
 ### The store
 
@@ -232,6 +239,15 @@ The `Done:` line does not exist until a run writes it. It records the commit
 sha, the decisions taken while executing, and any premise in the step that
 turned out to be wrong — the three things the hand-run version recorded and the
 three that were re-read most often.
+
+A pending step can also be **struck** after authoring, per
+`references/step-amend.md`. It is written `[x]` with a `Done:` line opening
+`struck — <reason>` and no commit sha, since there was no commit. It is never
+deleted or renumbered, because another step's `Depends on:` may name it. No new
+marker is needed: `[x]` is what a dependency waits for and what `Steps:` counts,
+so a struck step releases its dependents and still lets the runbook reach
+`[DONE]`. A struck step's `Done:` line is the one `Done:` line not written by a
+run.
 
 A step carries an optional **`Needs:`** field — `agent` (the default, and
 absent in the common case), `agent+human`, or `human` — saying whether

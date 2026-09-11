@@ -287,7 +287,25 @@ Before re-architecting feature already having entry, `/architect` reads its `Tas
 
 `[DONE]` tasks never touched. Completed work stands regardless what design does afterwards.
 
-Only circumstance `/architect` writes to `TASKS.md` — writes nothing but `Status:` lines, never creating, deleting, reordering entries.
+Only circumstances `/architect` writes to `TASKS.md` — this guard and its precision variant below. Both write nothing but `Status:` lines, never creating, deleting, reordering entries.
+
+### Precision variant (`/architect amend`)
+
+`/architect amend feature=<slug> "<change>"` — targeted change to named sections of one feature doc, no clarify or architecture phase — runs precision guard in place of blanket one above. Arm: `skills/architect/amend.md`.
+
+- **Classify** every resolved task not `[DONE]`/`[SKIP]` as *touched* or *untouched* by change, from summary block alone (title and `Files:` against changed sections). Body opened only when block can't decide; still undecided → touched. Unresolvable IDs ignored, as item 5.
+- **Touched `[IN PROGRESS]` → refuse**, no override, as item 1. Untouched `[IN PROGRESS]` does not refuse — the precision blanket guard lacks.
+- **One gate, editorial question asked every time**, never inferred. `[NEW]` feature: no guard (no tasks), still asked.
+
+Flips each produces:
+
+| Guard | Tasks → `[STALE]` | Feature `Status:` |
+| --- | --- | --- |
+| Blanket (re-architect), on proceed | Every non-`[DONE]` task | `[PLANNED]`/`[DONE]` → `[ITERATED]`; `[NEW]`, `[ITERATED]` unchanged |
+| Precision, editorial | None | Unchanged |
+| Precision, not editorial | Touched tasks only | → `[ITERATED]` (from `[PLANNED]`/`[DONE]`; `[ITERATED]` stays) when any task staled or change adds scope no live task covers; else unchanged. `[NEW]` stays `[NEW]` |
+
+Legal transitions unchanged (§ Transitions) — precision variant only chooses among them w/ finer evidence.
 
 ## Reconciliation (`/task-add feature=<slug>`)
 

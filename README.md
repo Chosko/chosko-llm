@@ -238,8 +238,14 @@ on a feature that already has tasks and it checks them first: if any is
 `[IN PROGRESS]` it refuses outright; otherwise it asks, rewrites the
 document, marks the unfinished tasks `[STALE]` and the feature `[ITERATED]`.
 Nothing is deleted. `/task-add feature=<slug>` then reconciles each stale
-task, and `[DONE]` tasks are never touched. What each status means at each
-level is in [the production hierarchy](#the-production-hierarchy) above.
+task, and `[DONE]` tasks are never touched. For a targeted change rather
+than a redesign, `/architect amend feature=<slug> "<change>"` edits only the
+sections the change names and marks `[STALE]` only the tasks the change
+touches, judged from each task's title and `Files:` line. An `[IN PROGRESS]`
+task blocks it only when the change touches that task, and it asks every
+time whether the change is editorial; if it is, nothing is staled. What each
+status means at each level is in
+[the production hierarchy](#the-production-hierarchy) above.
 
 All four are authoring features: uncommitted by default, `--commit` to
 commit and push. [Details →](docs/reference.md#3-designing-the-product)

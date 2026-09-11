@@ -7,8 +7,8 @@ Source of truth for task backlog schema and implementation model. Read when touc
 Everything below this section is a *rule* — schema, vocabulary, protocol —
 and every rule has exactly one home. That home is `skills/task-engine/`, a
 shipped skill that is a reference library and not a command: no arguments,
-no behaviour, nothing to invoke. Six files under `references/`, one authority
-each:
+no behaviour, nothing to invoke. Eight files under `references/`, one
+authority each:
 
 | File | Owns |
 | --- | --- |
@@ -18,6 +18,8 @@ each:
 | `stale.md` | `[STALE]`: who writes it, who clears it, the implement-anyway/stop protocol, reconciliation classification. |
 | `tree.md` | The dirty-tree prompt protocol and the Step-7 fold. |
 | `commit.md` | Pull-at-start, commit and push per task, `--no-commit` / `--no-push` gating. |
+| `review-budget.md` | Review cost controls: the `--review-model` / `--review-effort` values, the deterministic `auto` tier table, the read budget behind the effort axis. |
+| `amend.md` | Changing one existing task in place: the two checks before writing (not `[IN PROGRESS]`; no change to what its feature promises, else route to `/architect amend`), which body sections and summary-block fields may change, a dropped `Preconditions:` edge named in `## Decisions`, deleting a live task as `[SKIP]`, adding `Feature:` to an orphan, one gate, a closed write set. |
 
 A consumer cites the file by path and then **states only its own
 deviations** — `/task-clean`'s prune set is `status.md`'s terminal statuses
@@ -26,9 +28,15 @@ the vocabulary they key off is not. That is the whole discipline: if a
 statement is true of two `task-*` features, it belongs in the engine, and a
 consumer restating it has created a second copy to forget.
 
-Four features consume it: `/task-add`, `/task-list`, `/task-clean`,
-`/task-implement`. `/task-review` and `/task-iterate` do not — they operate on
-diffs and findings, not on the backlog's schema.
+Five features consume it: `/task-add`, `/task-list`, `/task-clean`,
+`/task-implement`, and `/task-review` — the last for `review-budget.md` alone,
+when a `--review` spawn hands it a budget block. `/task-iterate` does not — it
+operates on diffs and findings, not on the backlog's schema.
+
+`amend.md` is the one file no `task-*` feature reads. It was authored in the
+engine, since no consumer ever carried a copy, and it is read by path by
+whatever amends a single task — the pipeline revision surfaces — which
+execute it but own none of the lines it writes.
 
 **Why a skill and not a command.** `cmd-add` installs a skill by `cp -R` of
 the whole folder, so supporting files ride along; a command is a single `.md`
@@ -40,7 +48,7 @@ never `~/.claude`, never a `docs/` path, since neither survives installation.
 **Why `requires:` had to exist first.** A body reading a file inside another
 installed feature breaks when that feature is absent, and the failure surfaces
 as an agent following a dangling path mid-run rather than as anything the CLI
-said. All four consumers declare `requires: skill:task-engine`; `chosko-llm
+said. All five consumers declare `requires: skill:task-engine`; `chosko-llm
 add` installs the engine before the dependent, and `chosko-llm rm
 skill:task-engine` refuses while any dependent is installed.
 

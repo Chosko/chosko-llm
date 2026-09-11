@@ -211,6 +211,40 @@ those tasks is `[IN PROGRESS]` it refuses outright, and otherwise it asks
 before marking the surviving tasks `[STALE]` and the feature `[ITERATED]`,
 then tells you to reconcile with `/task-add feature=<slug>`.
 
+**Amending instead of re-architecting.** `/architect amend feature=<slug>
+"<change>"` makes one targeted change to one feature document and skips the
+clarify and architecture phases, because the change is described, not
+designed. The change has to name the sections it lands in, or quote a
+passage that lives in them. A change it can't pin to named sections is
+refused, with a pointer to `/architect <slug>`. When the change moves a
+decision `product-design.md` records, the matching high-level edit is
+drafted there too.
+
+It then runs a **precision guard** in place of the blanket one. Each
+unfinished task is classified as touched or untouched by the change, from its
+title and `Files:` line alone. Its body is opened only when those can't
+decide, and a task still undecided after that counts as touched. Only a
+*touched* `[IN PROGRESS]` task refuses the amendment, where the blanket guard
+refuses on any. Only the touched tasks go `[STALE]`, where the blanket guard
+stales every unfinished one. `[DONE]` and `[SKIP]` tasks are never looked at.
+
+There is exactly one gate. It shows the drafted edit and the touched set,
+with the untouched live tasks listed too so you can overrule a
+classification, and the outcome of each answer. Then it asks the **editorial
+question**, on every amendment and never inferred: is this change wording
+only, with nothing any task builds changing?
+
+- *Editorial* edits the document, stales nothing, and leaves the feature's
+  status where it was.
+- *Not editorial* stales the touched tasks. It moves the feature to
+  `[ITERATED]` when anything was staled or when the change adds scope no
+  existing task covers.
+- *Stop* writes nothing.
+
+A `[NEW]` feature has no tasks, so it gets no guard, but it still gets the
+question and stays `[NEW]` either way. An amendment writes no progress
+marker, and `--commit` / `--no-push` work as on any other run.
+
 At a genuine design fork (the stack choice, the shape of the architecture,
 or where the low-level split falls) it can route the decision through the
 [council](#claude-council).
@@ -615,6 +649,15 @@ the others read while they run. `/task-add`, `/task-list`, `/task-clean`,
 engine too, and `chosko-llm rm skill:task-engine` refuses while any of them
 is still installed.
 
+An eighth reference file, `references/amend.md`, holds the rules for
+changing one existing task in place. It refuses a task that is
+`[IN PROGRESS]`, `[DONE]` or `[SKIP]`. It sends a change to what the task's
+feature promises through `/architect amend` instead. It deletes a live task
+only by marking it `[SKIP]` with a reason, and it requires a dropped
+`Preconditions:` edge to be explained in the task's `## Decisions`. No
+`task-*` command reads it itself: it's there for whatever amends a single
+task to read by path.
+
 ### `pipeline-engine`
 
 What the pipeline features need to know about the pipeline *as a whole* lives
@@ -630,8 +673,14 @@ Four reference files, each the single authority for its rule:
   `RUNBOOKS.md` point at each other, and which links vanish when an index is
   absent;
 - `references/routing.md` — one row per pipeline feature: what it consumes,
-  what it produces, which lines it owns, its preconditions and its argument
-  shape;
+  what it produces, which lines it owns, its preconditions, its argument
+  shape, and where its amend entry is. Those entries are
+  `skills/architect/amend.md` for `/architect`,
+  `skills/task-engine/references/amend.md` for `/task-add`'s task lines,
+  `skills/runbook-run/references/step-amend.md` for both runbook writers,
+  and the resume menu's amend arm for `/product-design`. `/product-roadmap`
+  and `/production-plan` have none by design, because each one diffs and
+  proposes on every run. Every other feature's entry is `—`;
 - `references/lint.md` — the drift catalogue `/pipeline-check` evaluates.
 
 Like `task-engine`, `pipeline-engine` is **not invocable**: it takes no
@@ -790,6 +839,28 @@ case the spawn relay covers at run time. Rule three is why one-line prompts
 are the expected case rather than a shortcut: `/task-implement 134` is
 complete, because the task body already carries the decisions and
 `/task-implement` reads it.
+
+**Amending a step.** `skills/runbook-run/references/` holds three reference
+files the suite reads by path. `runbook-schema.md` defines the asset kind,
+`subagent-contract.md` holds the operating rules every spawned prompt ends
+with, and `step-amend.md` holds the rules for changing one step of a runbook
+after it was authored.
+
+- **What can be amended.** Only a pending `[ ]` step. A step that's done,
+  failed or in a subagent's hands right now is the record, and stays as it
+  is.
+- **Strike.** A step nobody should run is struck, not deleted. It becomes
+  `[x]` with a `Done:` line opening `struck — <reason>` and no commit sha,
+  keeps its number, and releases every step that depended on it. Nothing is
+  ever deleted or renumbered, because another step's `Depends on:` may name
+  it.
+- **Insert.** A new step goes in through `/runbook-create --append --before
+  <step>` or `--after <step>`, the suite's only step writer.
+- **A wrong prompt.** A prompt block is immutable, so a step whose prompt is
+  wrong is struck and a corrected step is inserted after it.
+- **Context.** A pending step's `Context:` can gain dated facts.
+- **A running runbook.** On a `[RUNNING]` runbook, every amendment lands
+  after the current step and is made from the running session.
 
 Commit behaviour follows each command's family: `/runbook-create` is an
 authoring command and leaves the runbook uncommitted for one review pass
