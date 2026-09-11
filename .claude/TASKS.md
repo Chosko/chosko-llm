@@ -255,7 +255,7 @@ Feature: pipeline-engine
 Status: [MISSING]
 Target: claude
 Files: skills/pipeline-engine/references/graph.md, skills/pipeline-engine/SKILL.md, VERSION, CHANGELOG.md
-Preconditions: 175
+Preconditions: 175, 196
 Feature: pipeline-engine
 
 ---
