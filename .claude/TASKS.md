@@ -56,7 +56,7 @@ Feature: pipeline-engine
 
 ## 182. Add the three owner amend arms and record them in the pipeline routing table
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/architect/amend.md, skills/architect/SKILL.md, skills/task-engine/references/amend.md, skills/task-engine/SKILL.md, skills/runbook-run/references/step-amend.md, skills/runbook-run/SKILL.md, skills/pipeline-engine/references/routing.md, skills/pipeline-engine/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 173, 175

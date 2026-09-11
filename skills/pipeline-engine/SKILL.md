@@ -1,8 +1,8 @@
 ---
 name: pipeline-engine
-version: 0.1.0
+version: 0.2.0
 type: skill
-description: Reference library for the pipeline as a whole — one authority per rule the pipeline-revision features share. Four files under references/ own the project probe and the one verdict line every consumer prints, the graph of how the pipeline's indexes point at each other, the routing table of what each pipeline feature consumes, produces and owns, and the catalogue of drift findings. NOT a skill the user invokes and never a skill to suggest — it takes no arguments, runs nothing, and produces no output; /pipeline-check reads its files by path while it runs, and only the features that declare requires: skill:pipeline-engine should ever open it.
+description: Reference library for the pipeline as a whole — one authority per rule the pipeline-revision features share. Four files under references/ own the project probe and the one verdict line every consumer prints, the graph of how the pipeline's indexes point at each other, the routing table of what each pipeline feature consumes, produces and owns and where each owner's amend entry is, and the catalogue of drift findings. NOT a skill the user invokes and never a skill to suggest — it takes no arguments, runs nothing, and produces no output; /pipeline-check reads its files by path while it runs, and only the features that declare requires: skill:pipeline-engine should ever open it.
 ---
 
 # pipeline-engine
@@ -30,7 +30,7 @@ description: Reference library for the pipeline as a whole — one authority per
 | -------------- | ---- |
 | `references/probes.md` | The fixed set of cheap filesystem probes that describe a project's pipeline setup, the one verdict line every consumer prints, and the rule for reusing a verdict already in the conversation — including the writers whose runs invalidate it. |
 | `references/graph.md` | How the pipeline's indexes point at each other: each edge by the artifact and line it lives on, its direction, which side is authoritative, which command writes each side, what consumes it, and which edges vanish when an index is absent. |
-| `references/routing.md` | One row per pipeline feature — what it consumes, what it produces, which artifact lines it owns, its preconditions and its argument shape — and the table's contract as the revision suite's ownership authority. |
+| `references/routing.md` | One row per pipeline feature — what it consumes, what it produces, which artifact lines it owns, its preconditions, its argument shape and the path to its amend entry, or why it has none — and the table's contract as the revision suite's ownership authority. |
 | `references/lint.md` | The closed catalogue of structural drift findings: each finding's detection rule over the graph, its severity, its one fixing command and its output template, plus the two failure rules. |
 
 Each file is the **single authority** for its rule. A consuming feature cites

@@ -1,8 +1,8 @@
 ---
 name: architect
-version: 0.7.3
+version: 0.8.0
 type: skill
-description: Turn one or more high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md — the bridge between /product-design and /task-add. Grounds the architecture in the project's recorded technical-direction.md or existing code, or proposes a tech stack when there is neither. Runs from a product-design section, named features, or a bare prompt with no design documents at all. On a project whose .claude/domain/product-roadmap.md slices the target section, it switches per target into slice mode: it architects one milestone's scope slice rather than the whole section, turns the slice's exclusions into the document's non-goals, and records the milestone as a parenthetical on the FEATURES.md Source: line; pass --no-slices to force traditional resolution. Re-architecting a feature that already has an entry triggers an iterate guard: refuses outright while any of its tasks is [IN PROGRESS], otherwise asks, then flips surviving tasks to [STALE] and the feature to [ITERATED] — from [PLANNED] or from [DONE] alike, and with no ask when there are no tasks left to invalidate. Requires /domain-setup. At a genuine design fork it offers to convene claude-council when that skill is installed, and is silent when it is not. Nothing committed by default; pass --commit to commit and push exactly the written paths (--commit --no-push to skip the push).
+description: Turn one or more high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md — the bridge between /product-design and /task-add. Grounds the architecture in the project's recorded technical-direction.md or existing code, or proposes a tech stack when there is neither. Runs from a product-design section, named features, or a bare prompt with no design documents at all. On a project whose .claude/domain/product-roadmap.md slices the target section, it switches per target into slice mode: it architects one milestone's scope slice rather than the whole section, turns the slice's exclusions into the document's non-goals, and records the milestone as a parenthetical on the FEATURES.md Source: line; pass --no-slices to force traditional resolution. Re-architecting a feature that already has an entry triggers an iterate guard: refuses outright while any of its tasks is [IN PROGRESS], otherwise asks, then flips surviving tasks to [STALE] and the feature to [ITERATED] — from [PLANNED] or from [DONE] alike, and with no ask when there are no tasks left to invalidate. The amend form — /architect amend feature=<slug> followed by the quoted change — makes a targeted change to the named sections of one feature document without the clarify or architecture phases, behind one gate: a precision guard marks [STALE] only the tasks the change touches, refuses only when a touched task is [IN PROGRESS], and asks every time whether the change is editorial. Requires /domain-setup. At a genuine design fork it offers to convene claude-council when that skill is installed, and is silent when it is not. Nothing committed by default; pass --commit to commit and push exactly the written paths (--commit --no-push to skip the push).
 ---
 
 # /architect
@@ -16,6 +16,7 @@ description: Turn one or more high-level features into low-level feature documen
 #        /architect <free-form description of what to build>
 #        /architect <feature name> <milestone-slug>  (pick the slice up front on a roadmapped project)
 #        /architect <args> --no-slices     (ignore the roadmap; resolve every target traditionally)
+#        /architect amend feature=<slug> "<change>"  (targeted change to one feature document)
 #        /architect <args> --commit        (commit and push exactly what this run wrote)
 #        /architect <args> --commit --no-push  (commit locally, skip the push)
 
@@ -49,6 +50,7 @@ SUPPORTING FILES (read on demand — not up front)
 | `./sectioned-input.md` | PHASE 0, for each target resolving in **traditional mode** — no roadmap, or `--no-slices`, or a roadmap that does not slice this target's section. Matching against `product-design.md`'s sections and existing `FEATURES.md` slugs, and the `Source:` value that produces. |
 | `./sliced-input.md` | PHASE 0, for each target resolving in **slice mode** — `.claude/domain/product-roadmap.md` carries at least one milestone with a `Covers:` line, a slice matches this target, and `--no-slices` was not passed. Slice resolution, disambiguation, exclusions into non-goals, and the extended `Source:`. |
 | `./iterating.md` | PHASE 0 finds the target feature already has a `FEATURES.md` entry. Read before PHASE 0b. |
+| `./amend.md` | ARGUMENT PARSING recognised `amend feature=<slug> "<change>"`. Read once PHASE 0's gate has passed; it carries the whole amend path, including its precision guard, and replaces input resolution, PHASE 0b and PHASES 1–3 for the run. |
 | `./tech-stack-selection.md` | The project has NO existing tech stack AND no `technical-direction.md` (greenfield). Read at the start of PHASE 2. |
 | `./feature-doc-template.md` | PHASE 3, always — the feature-document schema and the `FEATURES.md` entry format. |
 | `./council-gate.md` | PHASE 2 reaches a genuine design fork — a real trade-off with nameable stakes, expensive to reverse once tasks exist. Not on a fork settled by an existing stack, and not when the blocker is a missing fact (that is a PHASE 1 clarification). |
@@ -58,7 +60,9 @@ input-resolution files are read per target, only once the PHASE 0 dispatch
 has decided which mode that target takes, and never both for the same
 target. The common path — a brownfield project with no roadmap, a feature
 architected for the first time — reads only `./sectioned-input.md` and
-`./feature-doc-template.md`.
+`./feature-doc-template.md`. An `amend` run reads `./amend.md`, then
+`./iterating.md` and `./feature-doc-template.md` only where `./amend.md`
+cites them, and never an input-resolution file.
 
 ---
 
@@ -79,9 +83,19 @@ NO_SLICES = true: PHASE 0 skips the roadmap probe entirely and every target
 resolves in traditional mode. On a project with no roadmap it is a silent
 no-op — never warn about it.
 
-What remains is the input, resolved in PHASE 0. Its forms — empty, one or
-more feature names, or a free-form description — and the rules that match
-them are carried by the input-resolution file PHASE 0 dispatches to.
+Then check whether what remains opens with the literal token `amend`
+immediately followed by a `feature=` token. Only then set AMEND = true: the
+rest is the change, as one quoted string — `amend feature=<slug> "<change>"`.
+Input that opens with `amend` but not with `amend feature=` is not the amend
+form: it falls through to ordinary input resolution as a free-form
+description. An empty slug or a missing change stops the run with:
+`amend needs feature=<slug> and the change to make, e.g. /architect amend feature=password-auth "Data and state: sessions expire after 30 days".`
+`--commit` and `--no-push` compose with it unchanged. `--no-slices` is
+accepted and has nothing to act on, since the amend path resolves no input.
+
+Otherwise what remains is the input, resolved in PHASE 0. Its forms — empty,
+one or more feature names, or a free-form description — and the rules that
+match them are carried by the input-resolution file PHASE 0 dispatches to.
 
 Maintain a `WRITTEN` list of every path this invocation wrote. It drives the
 final report and the optional commit.
@@ -103,6 +117,12 @@ If COMMIT is true and the project's CLAUDE.md does not carry a `## VCS`
 override (non-git), pull at start per the commit-and-push protocol: run
 `git pull` on the current branch. A conflict stops the run here — report
 the conflict output and tell the user to resolve manually and re-run.
+
+**Amend dispatch.** If AMEND is true, read `./amend.md` now and follow it for
+the rest of the run. It replaces everything below in PHASE 0, PHASE 0b,
+PHASE 1, PHASE 2 and PHASE 3 — the clarify and architecture phases do not run
+on this path — and the run then ends with COMMIT AND PUSH exactly as any
+other run does.
 
 **Read the inputs**, in this order, stopping when you have what you need:
 
@@ -205,8 +225,9 @@ existing target feature:
 
 `[DONE]` tasks are never touched, whatever the design does afterwards.
 
-This is the only circumstance in which this skill writes to
-`.claude/TASKS.md`, and it writes nothing but `Status:` lines.
+This and `./amend.md`'s precision guard are the only circumstances in which
+this skill writes to `.claude/TASKS.md`, and both write nothing but
+`Status:` lines.
 
 ---
 
@@ -404,13 +425,15 @@ DO NOT:
   is narrow: it permits those two files and nothing else, and neither ever
   enters `WRITTEN` or a `--commit` staging list.
   Everything else — feature documents, `FEATURES.md`, `INDEX.md`,
-  `product-design.md` — is PHASE 3's job, not PHASE 2's.
+  `product-design.md` — is PHASE 3's job, not PHASE 2's. On the amend path
+  PHASE 3 never runs, and `./amend.md` § 5 is the write step instead.
 - Write implementation-level detail: real code, class-by-class breakdowns,
   file-by-file plans, or lists of files to edit. `/task-add` produces those
   against the codebase as it then stands; freezing them here makes them
   stale before anyone reads them.
 - Create tasks, or touch `.claude/TASKS.md` for any reason other than
-  flipping a `Status:` line to `[STALE]` under PHASE 0b. Never create,
+  flipping a `Status:` line to `[STALE]` under PHASE 0b or `./amend.md`'s
+  precision guard. Never create,
   delete, or reorder task entries.
 - Leave a target's progress marker in place once PHASE 3 has completed
   normally for it. A written feature must never still look interrupted.
@@ -428,7 +451,8 @@ DO NOT:
   is re-running `/product-design`.
 - Rename a slug, or reuse one for a different feature. Slugs are stable
   identifiers, like task IDs.
-- Override the `[IN PROGRESS]` refusal in PHASE 0b — not on the user's
+- Override the `[IN PROGRESS]` refusal in PHASE 0b, or a touched
+  `[IN PROGRESS]` task's refusal in `./amend.md` — not on the user's
   insistence, not with a flag. Tell them to finish or reset that task
   first.
 - Advance past PHASE 2 without the user confirming the architecture — a

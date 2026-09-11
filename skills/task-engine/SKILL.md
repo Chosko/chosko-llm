@@ -1,8 +1,8 @@
 ---
 name: task-engine
-version: 0.4.0
+version: 0.5.0
 type: skill
-description: Reference library for the task-* features — one authority per rule they share. Seven files under references/ own backlog resolution, the TASKS.md schema, the task archive and the eligibility clause by which next / all honour Preconditions:, the status vocabulary and its transitions, Target: values and the delegation guard, [STALE] handling, the dirty-tree prompt protocol, commit/push gating with --no-commit / --no-push, and the review cost controls behind --review-model / --review-effort. NOT a skill the user invokes and never a skill to suggest — it takes no arguments, runs nothing, and produces no output; /task-add, /task-list, /task-clean, /task-implement and /task-review read its files by path while they run, and only they should ever open it.
+description: Reference library for the task-* features — one authority per rule they share. Eight files under references/ own backlog resolution, the TASKS.md schema, the task archive and the eligibility clause by which next / all honour Preconditions:, the status vocabulary and its transitions, Target: values and the delegation guard, [STALE] handling, the dirty-tree prompt protocol, commit/push gating with --no-commit / --no-push, the review cost controls behind --review-model / --review-effort, and the protocol for amending one existing task. NOT a skill the user invokes and never a skill to suggest — it takes no arguments, runs nothing, and produces no output; /task-add, /task-list, /task-clean, /task-implement and /task-review read its files by path while they run, the pipeline revision surfaces read references/amend.md by path, and only they should ever open it.
 ---
 
 # task-engine
@@ -12,7 +12,8 @@ description: Reference library for the task-* features — one authority per rul
 > arguments and no behaviour of its own. Nothing invokes `/task-engine`;
 > nothing should suggest it. `/task-add`, `/task-list`, `/task-clean`,
 > `/task-implement` and `/task-review` cite the files below by path while they
-> run, and those files are the only content here.
+> run, the pipeline revision surfaces read `references/amend.md` by path, and
+> those files are the only content here.
 
 > **Install path assumption:** this skill assumes installation at
 > `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/` — where
@@ -35,6 +36,7 @@ description: Reference library for the task-* features — one authority per rul
 | `references/tree.md` | The dirty-tree prompt protocol and the folding rules that follow from it. |
 | `references/commit.md` | Commit and push gating: `--no-commit` / `--no-push`, pull-at-start, what may be staged, one commit per unit of work, and commit/push failure handling. |
 | `references/review-budget.md` | Review cost controls: the `--review-model` / `--review-effort` values and their `same` / `auto` reserved words, the deterministic `auto` tier table, the read budget behind the effort axis, what is counted and what never is, and the cap-bound and resolved-pair reports. |
+| `references/amend.md` | Changing one existing task: the two checks before writing (not `[IN PROGRESS]`, and no change to what its feature promises), which body sections and summary-block fields may change, rewriting a `Preconditions:` edge, deleting a live task as `[SKIP]`, adding `Feature:` to an orphan, the single gate, the closed write set and the closing report line. |
 
 Each file is the **single authority** for its rule. A consuming feature cites
 the file and states only what it does differently.
@@ -43,8 +45,10 @@ the file and states only what it does differently.
 
 ## How to read a reference file
 
-Every reference file was extracted **verbatim** from the feature bodies that
-previously each carried their own copy of the rule. Where those copies said
+Every reference file but one was extracted **verbatim** from the feature
+bodies that previously each carried their own copy of the rule. The
+exception is `references/amend.md`, authored in the engine: no feature ever
+carried a copy of it, and it says so itself. Where those copies said
 the same thing in different words, the file carries the fuller statement
 unchanged and records the other copies' material divergences as explicit
 per-consumer notes. So a file reads as:

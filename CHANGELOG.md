@@ -2,6 +2,13 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.32.0 — 2026-09-11
+
+- **/architect** gains `amend feature=<slug> "<change>"`: a targeted change to the named sections of one feature document, behind one gate, without the clarify or architecture phases. Only the tasks the change touches are marked `[STALE]`, only a touched `[IN PROGRESS]` task refuses it, and you are asked every time whether the change is editorial — an editorial change stales nothing and leaves the feature's status alone.
+- **task-engine** gains `references/amend.md`, the rules for changing one existing task: which body sections and summary fields may change, dropping a `Preconditions:` edge with its reason recorded, deleting a live task as `[SKIP]`, and attaching an orphan task to a feature. It refuses an `[IN PROGRESS]`, `[DONE]` or `[SKIP]` task, and sends a change to what the feature promises to `/architect amend`.
+- **runbook-run** gains `references/step-amend.md`, the rules for changing one pending step: strike it (`[x]` with `Done: struck — <reason>`, never deleted or renumbered), insert a step through `/runbook-create --append --before` / `--after`, or add dated facts to its `Context:`. A wrong prompt is struck and a corrected step inserted; a running runbook takes changes only after its current step.
+- **pipeline-engine** the routing table records where each owner's amend entry is — `/architect`, the task suite, the runbook suite and `/product-design` — and that `/production-plan` and `/product-roadmap` need none.
+
 ## 1.31.0 — 2026-09-11
 
 - **/pipeline-check** (new command) reports structural drift across `FEATURES.md`, `TASKS.md`, `PLAN.md` and `RUNBOOKS.md`: an unknown feature slug, a precondition never assigned or pointing at a `[SKIP]` task, a precondition cycle, an `[ITERATED]` feature, a `[STALE]` task, a feature missing from the plan or a plan line naming an unknown one, a finished runbook still `[PENDING]`, and a `[PLANNED]` feature whose work has all resolved. Each finding carries an `ERROR` or `WARNING` severity and the one command that fixes it; a clean project prints one line.
