@@ -180,11 +180,11 @@ Preconditions: 165, 166, 167
 
 ---
 
-## 169. Make `next` and `all` honour `Preconditions:`
+## 169. Backlog ordering on the task side: selectors honour `Preconditions:`, `/production-status` agrees, `/task-add` can insert and attach
 
 Status: [MISSING]
 Target: claude
-Files: skills/task-engine/references/resolution.md, skills/task-engine/SKILL.md, skills/task-implement/SKILL.md, VERSION, CHANGELOG.md
+Files: skills/task-engine/references/resolution.md, skills/task-engine/SKILL.md, skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, commands/production-status.md, commands/task-add.md, VERSION, CHANGELOG.md
 Preconditions: none
 Feature: backlog-ordering
 
@@ -192,7 +192,7 @@ Feature: backlog-ordering
 
 ## 170. Derive `/production-status`'s Next task by the same precondition rule
 
-Status: [MISSING]
+Status: [SKIP]
 Target: claude
 Files: commands/production-status.md, VERSION, CHANGELOG.md
 Preconditions: 169
@@ -202,7 +202,7 @@ Feature: backlog-ordering
 
 ## 171. Add `--before` and `--after` placement flags to `/task-add`
 
-Status: [MISSING]
+Status: [SKIP]
 Target: claude
 Files: commands/task-add.md, VERSION, CHANGELOG.md
 Preconditions: 169
@@ -212,7 +212,7 @@ Feature: backlog-ordering
 
 ## 172. Add `feature=<slug> --single` and the orphan-task prompt to `/task-add`
 
-Status: [MISSING]
+Status: [SKIP]
 Target: claude
 Files: commands/task-add.md, VERSION, CHANGELOG.md
 Preconditions: 171
@@ -235,24 +235,24 @@ Feature: backlog-ordering
 Status: [MISSING]
 Target: claude
 Files: README.md, docs/reference.md, .claude/domain/task-workflow.md, .claude/domain/product-workflow.md, .claude/domain/features/runbook-suite.md, .claude/domain/features/backlog-ordering.md, .claude/context/features.md, .claude/context/INDEX.md
-Preconditions: 169, 170, 171, 172, 173
+Preconditions: 169, 173
 Feature: backlog-ordering
 
 ---
 
-## 175. Add the `pipeline-engine` skill and its probe reference
+## 175. Ship the `pipeline-engine` skill, the `/pipeline-check` command and the repo-local routing check
 
 Status: [MISSING]
 Target: claude
-Files: skills/pipeline-engine/SKILL.md, skills/pipeline-engine/references/probes.md, VERSION, CHANGELOG.md
-Preconditions: none
+Files: skills/pipeline-engine/SKILL.md, skills/pipeline-engine/references/probes.md, skills/pipeline-engine/references/graph.md, skills/pipeline-engine/references/routing.md, skills/pipeline-engine/references/lint.md, commands/pipeline-check.md, scripts/check-routing.sh, .claude/domain/features/pipeline-engine.md, VERSION, CHANGELOG.md
+Preconditions: 196
 Feature: pipeline-engine
 
 ---
 
 ## 176. Write the pipeline index-graph reference
 
-Status: [MISSING]
+Status: [SKIP]
 Target: claude
 Files: skills/pipeline-engine/references/graph.md, skills/pipeline-engine/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 175, 196
@@ -262,7 +262,7 @@ Feature: pipeline-engine
 
 ## 177. Write the pipeline routing table
 
-Status: [MISSING]
+Status: [SKIP]
 Target: claude
 Files: skills/pipeline-engine/references/routing.md, skills/pipeline-engine/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 175
@@ -272,7 +272,7 @@ Feature: pipeline-engine
 
 ## 178. Write the lint finding catalogue
 
-Status: [MISSING]
+Status: [SKIP]
 Target: claude
 Files: skills/pipeline-engine/references/lint.md, skills/pipeline-engine/SKILL.md, .claude/domain/features/pipeline-engine.md, VERSION, CHANGELOG.md
 Preconditions: 175, 176, 177, 196
@@ -282,7 +282,7 @@ Feature: pipeline-engine
 
 ## 179. Add the `/pipeline-check` command
 
-Status: [MISSING]
+Status: [SKIP]
 Target: claude
 Files: commands/pipeline-check.md, VERSION, CHANGELOG.md
 Preconditions: 175, 176, 178
@@ -292,7 +292,7 @@ Feature: pipeline-engine
 
 ## 180. Add the repo-local routing check
 
-Status: [MISSING]
+Status: [SKIP]
 Target: claude
 Files: scripts/check-routing.sh, VERSION, CHANGELOG.md
 Preconditions: 177
@@ -305,24 +305,24 @@ Feature: pipeline-engine
 Status: [MISSING]
 Target: claude
 Files: README.md, docs/reference.md, docs/authoring-guide.md, CLAUDE.md, .claude/domain/product-workflow.md, .claude/domain/features/pipeline-engine.md, .claude/context/features.md, .claude/context/INDEX.md
-Preconditions: 175, 176, 177, 178, 179, 180
+Preconditions: 175
 Feature: pipeline-engine
 
 ---
 
-## 182. Add the `/architect amend` arm
+## 182. Add the three owner amend arms and record them in the pipeline routing table
 
 Status: [MISSING]
 Target: claude
-Files: skills/architect/amend.md, skills/architect/SKILL.md, VERSION, CHANGELOG.md
-Preconditions: none
+Files: skills/architect/amend.md, skills/architect/SKILL.md, skills/task-engine/references/amend.md, skills/task-engine/SKILL.md, skills/runbook-run/references/step-amend.md, skills/runbook-run/SKILL.md, skills/pipeline-engine/references/routing.md, skills/pipeline-engine/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: 173, 175
 Feature: owner-amend-arms
 
 ---
 
 ## 183. Add the single-task amend reference to `task-engine`
 
-Status: [MISSING]
+Status: [SKIP]
 Target: claude
 Files: skills/task-engine/references/amend.md, skills/task-engine/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: none
@@ -332,7 +332,7 @@ Feature: owner-amend-arms
 
 ## 184. Add the single-step amend reference to `runbook-run`
 
-Status: [MISSING]
+Status: [SKIP]
 Target: claude
 Files: skills/runbook-run/references/step-amend.md, skills/runbook-run/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 173
@@ -342,7 +342,7 @@ Feature: owner-amend-arms
 
 ## 185. Record each owner's amend entry in the pipeline routing table
 
-Status: [MISSING]
+Status: [SKIP]
 Target: claude
 Files: skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
 Preconditions: 177, 182, 183, 184
@@ -355,24 +355,24 @@ Feature: owner-amend-arms
 Status: [MISSING]
 Target: claude
 Files: README.md, docs/reference.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/domain/features/runbook-suite.md, .claude/domain/features/owner-amend-arms.md, .claude/context/features.md, .claude/context/INDEX.md
-Preconditions: 182, 183, 184, 185
+Preconditions: 182
 Feature: owner-amend-arms
 
 ---
 
-## 187. Add the `pipeline-revise` skill body and its branch classifier
+## 187. Ship the `pipeline-revise` skill with its four branches and the `/pipeline-patch` command
 
 Status: [MISSING]
 Target: claude
-Files: skills/pipeline-revise/SKILL.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
-Preconditions: 176, 177, 178, 179
+Files: skills/pipeline-revise/SKILL.md, skills/pipeline-revise/amend.md, skills/pipeline-revise/insert.md, skills/pipeline-revise/delete.md, skills/pipeline-revise/reorder.md, commands/pipeline-patch.md, skills/pipeline-engine/references/routing.md, skills/pipeline-engine/SKILL.md, skills/task-engine/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: 169, 173, 175, 182
 Feature: pipeline-revision
 
 ---
 
 ## 188. Write the `pipeline-revise` amend branch
 
-Status: [MISSING]
+Status: [SKIP]
 Target: claude
 Files: skills/pipeline-revise/amend.md, skills/pipeline-revise/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 182, 183, 184, 187
@@ -382,7 +382,7 @@ Feature: pipeline-revision
 
 ## 189. Write the `pipeline-revise` insert branch
 
-Status: [MISSING]
+Status: [SKIP]
 Target: claude
 Files: skills/pipeline-revise/insert.md, skills/pipeline-revise/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 171, 172, 173, 182, 187
@@ -392,7 +392,7 @@ Feature: pipeline-revision
 
 ## 190. Write the `pipeline-revise` delete branch
 
-Status: [MISSING]
+Status: [SKIP]
 Target: claude
 Files: skills/pipeline-revise/delete.md, skills/pipeline-revise/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 183, 184, 187
@@ -402,7 +402,7 @@ Feature: pipeline-revision
 
 ## 191. Write the `pipeline-revise` reorder branch
 
-Status: [MISSING]
+Status: [SKIP]
 Target: claude
 Files: skills/pipeline-revise/reorder.md, skills/pipeline-revise/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 189, 190
@@ -412,7 +412,7 @@ Feature: pipeline-revision
 
 ## 192. Add the `/pipeline-patch` command
 
-Status: [MISSING]
+Status: [SKIP]
 Target: claude
 Files: commands/pipeline-patch.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
 Preconditions: 176, 177, 179, 182, 183, 184, 187
@@ -425,7 +425,7 @@ Feature: pipeline-revision
 Status: [MISSING]
 Target: claude
 Files: README.md, docs/reference.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/domain/features/pipeline-revision.md, .claude/context/features.md, .claude/context/INDEX.md
-Preconditions: 187, 188, 189, 190, 191, 192
+Preconditions: 187
 Feature: pipeline-revision
 
 ---
@@ -435,7 +435,7 @@ Feature: pipeline-revision
 Status: [MISSING]
 Target: claude
 Files: skills/pipeline-suggest/SKILL.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
-Preconditions: 177, 179, 187, 192
+Preconditions: 175, 187
 Feature: pipeline-suggest
 
 ---
@@ -450,11 +450,11 @@ Feature: pipeline-suggest
 
 ---
 
-## 196. Put the archive rule and the archived-file form in `resolution.md`
+## 196. Put the archive rule in `resolution.md`, rewrite `/task-clean` as a skill that archives, and add `--backfill`
 
 Status: [MISSING]
 Target: claude
-Files: skills/task-engine/references/resolution.md, skills/task-engine/SKILL.md, VERSION, CHANGELOG.md
+Files: skills/task-engine/references/resolution.md, skills/task-engine/SKILL.md, skills/task-clean/SKILL.md, skills/task-clean/backfill.md, commands/task-clean.md, skills/task-engine/references/commit.md, claude-md/git-commit-style.md, VERSION, CHANGELOG.md
 Preconditions: none
 Feature: task-archive
 
@@ -462,7 +462,7 @@ Feature: task-archive
 
 ## 197. Rewrite `/task-clean` as a skill that archives instead of deleting
 
-Status: [MISSING]
+Status: [SKIP]
 Target: claude
 Files: skills/task-clean/SKILL.md, commands/task-clean.md, skills/task-engine/references/commit.md, claude-md/git-commit-style.md, VERSION, CHANGELOG.md
 Preconditions: 196
@@ -472,7 +472,7 @@ Feature: task-archive
 
 ## 198. Add `/task-clean --backfill` and its supporting file
 
-Status: [MISSING]
+Status: [SKIP]
 Target: claude
 Files: skills/task-clean/backfill.md, skills/task-clean/SKILL.md, skills/task-engine/references/commit.md, VERSION, CHANGELOG.md
 Preconditions: 197
@@ -480,19 +480,19 @@ Feature: task-archive
 
 ---
 
-## 199. State the archive deviation in every id reader
+## 199. State the archive deviation in every id reader, including `/production-status`'s rollup
 
 Status: [MISSING]
 Target: claude
-Files: commands/task-add.md, skills/task-implement/SKILL.md, skills/task-review/SKILL.md, skills/task-iterate/SKILL.md, skills/architect/SKILL.md, skills/architect/iterating.md, VERSION, CHANGELOG.md
-Preconditions: 196
+Files: commands/task-add.md, skills/task-implement/SKILL.md, skills/task-review/SKILL.md, skills/task-iterate/SKILL.md, skills/architect/SKILL.md, skills/architect/iterating.md, commands/production-status.md, VERSION, CHANGELOG.md
+Preconditions: 169, 196
 Feature: task-archive
 
 ---
 
 ## 200. Report archived ids in `/production-status`'s task rollup
 
-Status: [MISSING]
+Status: [SKIP]
 Target: claude
 Files: commands/production-status.md, VERSION, CHANGELOG.md
 Preconditions: 196
@@ -505,5 +505,5 @@ Feature: task-archive
 Status: [MISSING]
 Target: claude
 Files: README.md, docs/reference.md, docs/authoring-guide.md, .claude/domain/task-workflow.md, .claude/domain/product-workflow.md, .claude/domain/features/task-archive.md, .claude/context/features.md, .claude/context/INDEX.md
-Preconditions: 196, 197, 198, 199, 200
+Preconditions: 196, 199
 Feature: task-archive
