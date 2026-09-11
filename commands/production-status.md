@@ -1,6 +1,6 @@
 ---
 name: production-status
-version: 0.2.1
+version: 0.3.0
 type: command
 description: Report what to build next by joining PLAN.md, FEATURES.md and TASKS.md — the active milestone with its roadmap goal and exit criteria, its features in plan order as a five-column markdown table whose Next column names the one concrete action each needs, the ready set, the single recommended next feature, blocked features named with their blocker, coverage gaps, features missing from the plan, and the remaining milestones. Readiness, the Next action and coverage are derived on every read. A [DONE] feature is reported plainly, never as ready, blocked, or recommended — it still satisfies dependency edges pointing at it. Read-only — writes nothing, runs no shell, and never opens a file under .claude/tasks/.
 ---
@@ -63,7 +63,7 @@ Read these four files, all **read-only**:
 | --- | --- |
 | `.claude/PLAN.md` | Milestone membership, order, `Status:`, and the flat `## Dependencies` edge list. |
 | `.claude/FEATURES.md` | Per-feature `Status:` and `Tasks:` IDs. |
-| `.claude/TASKS.md` | Per-task `Status:`, for the rollup and the readiness rule. |
+| `.claude/TASKS.md` | Per-task `Status:` and `Preconditions:`, for the rollup, the readiness rule and the Next field. |
 | `.claude/domain/product-roadmap.md` | `Goal:` and `Exit criteria:`, echoed for the reported milestone. |
 
 **`PLAN.md`'s schema**, which this command parses and never rewrites:
@@ -167,13 +167,30 @@ is exactly one of:
   nothing. Printed even when the feature is blocked — there is no work left
   for a dependency to block.
 - `/task-implement <N>` — the feature is `[PLANNED]`, has at least one task
-  that is not `[DONE]`/`[SKIP]`, and is **not** blocked. `<N>` is the
-  lowest-numbered such task.
-- `blocked by <slug>[, <slug>]` — the case immediately above, but the
-  feature **is** blocked, naming every unsatisfied dependency. This is the
-  only status where blockedness suppresses the action, because
+  that is not `[DONE]`/`[SKIP]`, is **not** blocked, and at least one such
+  task has its preconditions satisfied. `<N>` is the first such task, in
+  appearance order in `TASKS.md`, whose `Preconditions:` are
+  all `[DONE]` or `[SKIP]`; a precondition id resolving to no task is
+  ignored. That is the precondition half of the eligibility clause whose
+  authority is `task-engine`'s `references/resolution.md` § *Selectors* —
+  named here as the rule's home, not as a file this command opens. The part
+  this field needs is fully stated in this bullet, and `Preconditions:`
+  comes from the summary blocks already read, so the Next field adds no
+  read.
+- `blocked by <slug>[, <slug>]` — the feature is `[PLANNED]`, has at least
+  one task that is not `[DONE]`/`[SKIP]`, but the feature **is** blocked,
+  naming every unsatisfied dependency. Feature blockedness is checked first:
+  a blocked feature shows this value whatever its tasks' preconditions say.
+  It is the only feature-level status that suppresses the action, because
   `/task-implement` is the only suggested action a dependency can actually
   block.
+- `waits on task <id>[, <id>]` — the feature is `[PLANNED]`, has at least
+  one task that is not `[DONE]`/`[SKIP]`, and is **not** blocked, but every
+  such task has an unmet precondition, so there is no `<N>` to name. It
+  names the unmet precondition ids of the feature's first such task in
+  appearance order. Those are the ids to finish first, and a reader
+  following them one hop at a time reaches the task that can start — unless
+  the edges form a cycle, which `/task-implement all` reports as blocked.
 
 Readiness itself is untouched by this field: still derived on every read,
 still never stored, and still what sections 3, 4 and 5 are built from. Only
@@ -202,10 +219,11 @@ not a numbered list, not a padded plain-text block:
 | 3 | `<slug>` | `[DONE]` | 5 tasks — DONE: 5 | - |
 | 4 | `<slug>` | `[PLANNED]` | 3 tasks — DONE: 1, MISSING: 2 | blocked by `<slug>` |
 | 5 | `<slug>` | `[PLANNED]` | - | flip to `[DONE]` in `FEATURES.md` |
+| 6 | `<slug>` | `[PLANNED]` | 2 tasks — MISSING: 2 | waits on task 38 |
 
 Each row carries its `FEATURES.md` status, its task rollup, and its **Next**
 value — the one concrete action to take on the feature, per **The Next
-field** under READINESS above, which is the authority on which of its five
+field** under READINESS above, which is the authority on which of its six
 values a row gets. A `[DONE]` row still carries `-` in `Next` rather than an
 empty cell: a finished feature has no next action, and no readiness is
 computed for it either. A slug in `Features:` with no `FEATURES.md` entry

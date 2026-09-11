@@ -112,7 +112,7 @@ push sequence unconditionally — only the commit (checkin) step runs.
 - **`/task-list`** — never commits and never shells out. It has neither
   flag: it is read-only by contract.
 - **`/task-add`** — pulls at start inside `PHASE 0 — SETUP CHECK`; `PHASE 5`
-  is "the only phase that shells out". Three commit-message forms, one
+  is "the only phase that shells out". Four commit-message forms, one
   commit each:
   - single task — `git add -- .claude/TASKS.md .claude/tasks/<N>.md` then
     `git commit -m "Add task <N>: <title>"`;
@@ -124,6 +124,14 @@ push sequence unconditionally — only the commit (checkin) step runs.
     `git commit -m "Plan feature <slug>: tasks <N>-<M>"`. "The backlog
     change and the feature entry only make sense together, so they belong in
     one commit."
+  - attached — `feature=<slug> --single`, or a free-form task the orphan
+    question attached to a feature: the single-task (or split) paths plus
+    `.claude/FEATURES.md`, whose `Tasks:` line the run wrote, under the
+    single-task (or split) message. One attached task is not a planning
+    pass, so it never takes the `Plan feature` message.
+
+  A `--before <N>` run's edit to task N's `Preconditions:` line lives in
+  `.claude/TASKS.md`, which every form already stages.
 - **`/task-clean`** — pulls at start before PHASE 1; `PHASE 3` commits with
   `git commit -m "task-clean: remove tasks <N>[, <M>, …]"`, the pruned IDs in
   ascending order. It stages `.claude/TASKS.md` plus each deleted body file

@@ -1,8 +1,8 @@
 ---
 name: task-implement
-version: 1.4.1
+version: 1.5.0
 type: skill
-description: Implement one or more tasks from the project's task backlog end-to-end using a tests-first sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits and pushes each task separately; pass --no-commit to skip the per-task commits (and pushes), or --no-push to keep committing without pushing. Supports `next` to implement the first eligible task. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd|skip-tests-unattended` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time. In skip-tests mode, pass `-y` to suppress the per-task "Proceed?" confirmation for that run; the `skip-tests-unattended` marker value makes that the default for every run without needing `-y`. On a run resolving to 2+ tasks, offers to implement each task in a fresh subagent so later tasks don't inherit earlier ones' context — agents run one at a time, never in parallel, and `claude+human` / `human` / explicitly-requested `[STALE]` tasks stay in the parent conversation because they need the user present; pass `--agents` / `--no-agents` to pre-answer. On such a run the parent is a launcher: it evaluates the delegation guard from the `TASKS.md` summary blocks alone, never opens a delegated task's body, hands every agent the same fixed-size prompt carrying only the task number and the run's resolved flags, and keeps only the task number, terminal status, commit hash and one-line failure reason each agent returns — so the parent's context no longer grows with the size of the batch. Pass `--review` (optionally `--rounds N`, default 1) to have each task reviewed before it is committed: after the full test suite and before the status flip, the run spawns `/task-review` as a subagent so the review happens in a context that did not write the code, waits for its findings, and runs `/task-iterate` in the session to triage and apply them — the fixes ride in the task's own single commit, later rounds re-review only what the last iterate changed and only while `BLOCKING` findings remain, rejected findings may not be re-raised, and unresolved `BLOCKING` findings after the last round stop the run with the tree uncommitted and the task `[IN PROGRESS]`; without the flag nothing about the run changes. The spawned reviewer's cost is steerable with `--review-model <name>|same|auto` and `--review-effort shallow|standard|deep|same|auto` (both default `auto`, both require `--review`): `auto` picks the model and the read budget deterministically per task from that task's own diff, so an ordinary task gets a Sonnet reviewer and only a heavy one gets Opus, while `same` on either axis restores the inherit-the-implementer behaviour. When a `Feature:`-tagged task
+description: Implement one or more tasks from the project's task backlog end-to-end using a tests-first sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits and pushes each task separately; pass --no-commit to skip the per-task commits (and pushes), or --no-push to keep committing without pushing. Supports `next` to implement the first eligible task. `next` and `all` honour `Preconditions:` — a task is picked only once every task it names is `[DONE]` or `[SKIP]`, `all` orders its list so nothing runs ahead of what it waits on and names by id any task left blocked, and between tasks an `all` run skips, with one line, a task whose preconditions no longer hold; a task named by number is never blocked. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd|skip-tests-unattended` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time. In skip-tests mode, pass `-y` to suppress the per-task "Proceed?" confirmation for that run; the `skip-tests-unattended` marker value makes that the default for every run without needing `-y`. On a run resolving to 2+ tasks, offers to implement each task in a fresh subagent so later tasks don't inherit earlier ones' context — agents run one at a time, never in parallel, and `claude+human` / `human` / explicitly-requested `[STALE]` tasks stay in the parent conversation because they need the user present; pass `--agents` / `--no-agents` to pre-answer. On such a run the parent is a launcher: it evaluates the delegation guard from the `TASKS.md` summary blocks alone, never opens a delegated task's body, hands every agent the same fixed-size prompt carrying only the task number and the run's resolved flags, and keeps only the task number, terminal status, commit hash and one-line failure reason each agent returns — so the parent's context no longer grows with the size of the batch. Pass `--review` (optionally `--rounds N`, default 1) to have each task reviewed before it is committed: after the full test suite and before the status flip, the run spawns `/task-review` as a subagent so the review happens in a context that did not write the code, waits for its findings, and runs `/task-iterate` in the session to triage and apply them — the fixes ride in the task's own single commit, later rounds re-review only what the last iterate changed and only while `BLOCKING` findings remain, rejected findings may not be re-raised, and unresolved `BLOCKING` findings after the last round stop the run with the tree uncommitted and the task `[IN PROGRESS]`; without the flag nothing about the run changes. The spawned reviewer's cost is steerable with `--review-model <name>|same|auto` and `--review-effort shallow|standard|deep|same|auto` (both default `auto`, both require `--review`): `auto` picks the model and the read budget deterministically per task from that task's own diff, so an ordinary task gets a Sonnet reviewer and only a heavy one gets Opus, while `same` on either axis restores the inherit-the-implementer behaviour. When a `Feature:`-tagged task
 lands `[DONE]` and leaves every task for that feature `[DONE]`/`[SKIP]`,
 records it as a completion candidate and, once at the very end of the run
 (batched across the whole run, never per-task), proposes flipping that
@@ -186,13 +186,15 @@ and the output says nothing about reviewing.
 
 After stripping the flags, `$ARGUMENTS` is a whitespace-separated list of
 task numbers, the literal token `all`, or the literal token `next`. Those
-three selectors — what each resolves to, which statuses a batch selector
+three selectors — what each resolves to, the eligibility clause the batch
+selectors honour, which statuses and which blocked tasks a batch selector
 skips, the one-line resolution report each prints without asking for
 confirmation, the naming of skipped stale tasks, and the empty-argument
 stop — are
 `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`
 § *Selectors*. This skill is the only consumer that has them, so that
-section is written in its words; nothing here departs from it.
+section is written in its words. Its one departure is the precondition
+re-check in BETWEEN TASKS step 2, on a run resolved by `all`.
 
 A `[STALE]` task requested explicitly by number is not skipped — it goes
 through STALE TASKS below.
@@ -208,8 +210,8 @@ LOCATING THE BACKLOG
 Backlog resolution follows
 `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`,
 whose `/task-implement` note carries every way this skill departs from it:
-the wording of the not-initialised stop, and that the selectors above are
-its argument form. Its § *Opening a per-task body file* is the rule that a
+the wording of the not-initialised stop, that the selectors above are its
+argument form, and the precondition re-check in BETWEEN TASKS step 2. Its § *Opening a per-task body file* is the rule that a
 body is read only when its task becomes the current one, never in bulk and
 never in advance; its § *Where a status flip is written* is why every
 `Status:` edit in this skill lands in `.claude/TASKS.md` and never in a
@@ -575,7 +577,15 @@ After committing a task, before starting the next:
 2. Use the Read tool to re-open `.claude/TASKS.md` fresh. Task IDs are
    stable so numbers will not have moved, but statuses or
    `Preconditions:` lines may have been edited by a parallel
-   `/task-add` or `/task-clean` invocation.
+   `/task-add` or `/task-clean` invocation — or a task earlier in this run
+   may have landed `[PARTIAL]` rather than `[DONE]`. So on a run whose list
+   was resolved by `all`, re-check the upcoming task's `Preconditions:`
+   against this re-read, per clause 2 of `resolution.md` § *Eligibility*.
+   If they no longer hold, skip the task with one line — "Skipping task 14
+   — its preconditions no longer hold (waits on 12)." — and apply this step
+   to the task after it. The re-check uses only the file this step already
+   re-reads. An explicit-number list is never re-checked: a task requested
+   by number is never blocked by a precondition.
 3. Briefly report progress: "Task N committed. Starting task M."
 4. In skip-tests mode, ask "Proceed?" before starting the next task,
    unless AUTO_CONFIRM is true.

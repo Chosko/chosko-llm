@@ -1,8 +1,8 @@
 ---
 name: task-add
-version: 2.2.0
+version: 2.3.0
 type: command
-description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit and push. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, appending a final documentation-update task when new tasks were drafted, and setting the feature [PLANNED]. Whenever a drafted task names a document owned by another pipeline command, the PHASE 3 gate enumerates the reconciliations that task needs to make to it and asks the user to pre-authorise exactly those points or to drop the file — the grant, or the removal, is written into the task body so the implementer never has to ask. Pass --short for trivial low-ambiguity tasks to skip the deep PHASE 1 investigation and write a minimal Goal-only body (mutually exclusive with feature=), --no-split to always write exactly one task, --no-commit to write the files but skip the commit (and push), or --no-push to commit without pushing.
+description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit and push. Pass --before <N> or --after <N> to write the new task at that position in TASKS.md together with the Preconditions: edge the position implies — no existing id moves. Pass feature=<slug> --single to attach exactly one task to a [PLANNED] feature without reconciling or re-planning it; on a project with FEATURES.md, a free-form run asks at its existing approval gate whether the task belongs to a feature. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, appending a final documentation-update task when new tasks were drafted, and setting the feature [PLANNED]. Whenever a drafted task names a document owned by another pipeline command, the PHASE 3 gate enumerates the reconciliations that task needs to make to it and asks the user to pre-authorise exactly those points or to drop the file — the grant, or the removal, is written into the task body so the implementer never has to ask. Pass --short for trivial low-ambiguity tasks to skip the deep PHASE 1 investigation and write a minimal Goal-only body (mutually exclusive with feature= and --single), --no-split to always write exactly one task, --no-commit to write the files but skip the commit (and push), or --no-push to commit without pushing.
 requires: skill:task-engine
 ---
 
@@ -15,13 +15,16 @@ requires: skill:task-engine
 # units; pass `--no-split` to always get exactly one task. With
 # `feature=<slug>`, plans from a `/architect` feature document instead of a
 # prose description, and reconciles tasks that feature already generated.
-# Usage: /task-add [--short] [--no-split] [--no-commit] [--no-push] <free-form description of the task>
-#        /task-add feature=<slug> [--no-split] [--no-commit] [--no-push] [scope-narrowing text]
+# Usage: /task-add [--short] [--no-split] [--before <N> | --after <N>] [--no-commit] [--no-push] <free-form description of the task>
+#        /task-add feature=<slug> [--no-split] [--before <N> | --after <N>] [--no-commit] [--no-push] [scope-narrowing text]
+#        /task-add feature=<slug> --single [--before <N> | --after <N>] [--no-commit] [--no-push] <description of the one task>
 # Example: /task-add fix the URL normalization so two LinkedIn URLs dedupe
 # Example: /task-add --short document the current deployment method
 # Example: /task-add --no-split add CSV export and PDF export commands
+# Example: /task-add --before 42 migrate the config format ahead of the loader rewrite
 # Example: /task-add feature=session-handling
 # Example: /task-add feature=user-profile just the avatar upload
+# Example: /task-add feature=user-profile --single reject avatars over 5 MB
 
 GOAL
 Add one or more new tasks to the project's task backlog. The flow is:
@@ -30,7 +33,8 @@ SETUP-CHECK → READ → SPLIT-CHECK → ASK → DRAFT → CONFIRM → WRITE →
 Two input modes share that flow:
 
 - **Free-form** (the default) — a prose description of the work. Unchanged
-  in every respect by the feature mode below.
+  in every respect by the feature mode below, save the one question THE
+  ORPHAN QUESTION adds on a project that has `.claude/FEATURES.md`.
 - **Feature** (`feature=<slug>`) — plan from the low-level feature document
   `/architect` wrote, and reconcile any tasks that feature already
   generated. This is stage 5 of the product pipeline.
@@ -43,6 +47,12 @@ With `--short`, skip the deep PHASE 1 investigation for a trivial,
 low-ambiguity task and write a minimal Goal-only body instead — see the
 ARGUMENT NOTE and SHORT-FORM BODY sections below. `--short` is mutually
 exclusive with `feature=<slug>`.
+
+With `--before <N>` / `--after <N>`, the new task is written at that position
+rather than at the end, together with the `Preconditions:` edge the position
+implies — see PLACEMENT. With `feature=<slug> --single`, exactly one task is
+attached to a `[PLANNED]` feature without re-planning it — see SINGLE-TASK
+ATTACHMENT.
 
 Never write to any file before the user confirms the draft.
 
@@ -77,14 +87,38 @@ investigation `--short` exists to skip. If `--short` appears with it, stop
 with: `--short cannot be combined with feature=<slug>. Pick one.`
 `--short` composes normally with `--no-commit` and `--no-push`.
 
+Also scan for the optional `--before <N>` and `--after <N>` flags and strip
+whichever appears with its value, setting PLACE = `before` or `after` and
+ANCHOR = N. They are mutually exclusive — if both appear, stop with:
+`--before and --after cannot be combined. Pick one.` A flag with no value,
+or a value that is not a task number, stops with:
+`--before and --after need a task number.` Whether N names an existing task
+is checked in PHASE 1 step 1, once `TASKS.md` is read; an N matching no task
+stops there with the unknown-task message in PLACEMENT. Either flag composes
+with `--short`, `--no-split`, `--no-commit`, `--no-push`, `feature=<slug>`
+and `--single`. With neither, PLACE is unset and new tasks are appended at
+the end exactly as before.
+
+Also scan for the optional `--single` flag. If present, set SINGLE = true and
+strip it. It is meaningful only beside `feature=<slug>` — without it, stop
+with: `--single needs feature=<slug>.` It is mutually exclusive with
+`--short`, for the same reason `feature=<slug>` is: it plans against the
+feature document, which is the investigation `--short` exists to skip. If
+both appear, stop with: `--short cannot be combined with --single. Pick one.`
+SINGLE implies NO_SPLIT = true — exactly one task is written. See
+SINGLE-TASK ATTACHMENT.
+
 Finally, scan for an optional `feature=<slug>` argument. If present, set
 FEATURE = the slug and strip it; it composes with all flags above except
 `--short` (see the mutual-exclusion rule above). Whatever free-form text
 remains is NOT the task description in this mode — it narrows or annotates
 the scope (`feature=user-profile just the avatar upload`), and the feature
-document stays the primary source. When FEATURE is unset, every phase
-behaves exactly as it always has: no feature resolution, no
-reconciliation, no `Feature:` line, no new prompts.
+document stays the primary source. Under `--single` the remaining text IS
+the one task's description, planned against that document. When FEATURE is
+unset, every phase behaves exactly as it always has: no feature resolution,
+no reconciliation, no `Feature:` line, no new prompts — save the one
+question THE ORPHAN QUESTION adds to PHASE 3's existing gate, and only on a
+project that has `.claude/FEATURES.md`.
 
 ---
 
@@ -112,7 +146,18 @@ Do this immediately after PHASE 0's setup check, before PHASE 1.
 
 4. Note the entry's `Status:` and its `Tasks:` line. A non-`none` `Tasks:`
    line means this feature has been planned before, so this run
-   RECONCILES rather than appends — see PHASE 3.
+   RECONCILES rather than appends — see PHASE 3. Under SINGLE it never
+   does; see SINGLE-TASK ATTACHMENT.
+
+5. When SINGLE is true, the entry's `Status:` must be `[PLANNED]`, the only
+   status an attached task leaves true. Otherwise stop:
+
+   > `--single` attaches a task to a `[PLANNED]` feature; `<slug>` is
+   > `<status>`.
+
+   followed by `Run /task-add feature=<slug> to plan it.` for `[NEW]` or
+   `[ITERATED]`, or `Follow-up work on a finished feature is a free-form
+   task.` for `[DONE]`.
 
 ---
 
@@ -123,8 +168,9 @@ Backlog resolution follows
 whose `/task-add` note carries every way this command departs from it: the
 two-artifact probe this phase makes rather than the index-only check the
 other three make, the wording of its not-initialised stop, and that the only
-things it resolves from the index are the next task ID and — on a
-`feature=<slug>` run — the tasks that feature already generated.
+things it resolves from the index are the next task ID, the task a
+`--before <N>` / `--after <N>` flag names, and — on a `feature=<slug>` run —
+the tasks that feature already generated.
 
 Do not proceed to PHASE 1 until that probe passes. This rule has no
 exceptions.
@@ -145,9 +191,10 @@ schema, which fields a block holds and which of them is optional, and why
 This command is the writer of new summary blocks and the only thing that
 advances `Last task number`. Everything it writes into a block is fixed by
 the phases below: `Status:` from `status.md`, `Target:` from `targets.md`,
-`Files:` and `Preconditions:` from PHASE 1, and `Feature:` only on a
-`feature=<slug>` run. Description and decisions never go here — they live in
-the body.
+`Files:` and `Preconditions:` from PHASE 1 (plus the anchor edge under
+`--after`), and `Feature:` only on a `feature=<slug>` run or a task the
+orphan question attached. Where the block lands is PLACEMENT's. Description
+and decisions never go here — they live in the body.
 
 ---
 
@@ -265,6 +312,11 @@ under `--no-split`) and then PHASE 2.
 1. Read `.claude/TASKS.md`. Note:
    - The current `Last task number: N` value — new task ID = N + 1.
    - Title style in existing tasks — match it.
+   - When PLACE is set, task ANCHOR's summary block and its current
+     `Preconditions:` line. No such block → stop, per PLACEMENT.
+   - On a free-form run without `--short`, whether `.claude/FEATURES.md`
+     exists. If it does, read it, read-only, for THE ORPHAN QUESTION's slug
+     list; if it does not, say nothing about it.
 
 1b. **When FEATURE is set**, read the feature document resolved above and
    treat it as the PRIMARY context source — the way `/task-implement`
@@ -274,8 +326,9 @@ under `--no-split`) and then PHASE 2.
    `.claude/domain/` files only where the document does not cover what you
    need; do not re-derive from source what the document already states.
 
-   Then, if the entry's `Tasks:` line is non-`none`, read each listed
-   task's TASKS.md summary block AND its `.claude/tasks/<N>.md` body. You
+   Then, if the entry's `Tasks:` line is non-`none` and SINGLE is false,
+   read each listed task's TASKS.md summary block AND its
+   `.claude/tasks/<N>.md` body. You
    cannot classify a task you have not read, and PHASE 3 must classify
    every one of them. IDs that resolve to no task are ignored, not an
    error — `/task-clean` normally prunes them.
@@ -373,9 +426,12 @@ under `--short`.
 If there are zero open questions after PHASE 1 (and PHASE 1.5), say so in
 one line and skip to PHASE 3.
 
-Position questions are unnecessary — new tasks are appended at the end
-by default. Only ask about position if the user has signalled they want
-grouping.
+Position questions are unnecessary by default — new tasks are appended at
+the end, and `--before <N>` / `--after <N>` are how a position is expressed
+when one matters (see PLACEMENT). Only ask about position if the user has
+signalled they want the task somewhere specific without passing either
+flag; then ask which task it goes before or after, and apply the answer
+exactly as the matching flag would — position and edge together.
 
 When SPLIT is set (multiple parts), ask questions across the whole
 breakdown in one pass — per-part if a part has its own open question, but
@@ -392,12 +448,13 @@ drafts, so it is obvious what the tasks were derived from:
 ```
 Source feature: <slug> — <title from the FEATURES.md entry>
 Doc:            .claude/domain/features/<slug>.md
-Feature status: [NEW] → [PLANNED]        (or [ITERATED] → [PLANNED])
+Feature status: [NEW] → [PLANNED]        (or [ITERATED] → [PLANNED];
+                                          under --single: [PLANNED], unchanged)
 Scope note:     <the free-form narrowing text, if any>
 ```
 
-Then, when that feature already has tasks, render a RECONCILIATION section
-BEFORE the new drafts (see RECONCILIATION below). One approval covers the
+Then, when that feature already has tasks and SINGLE is false, render a
+RECONCILIATION section BEFORE the new drafts (see RECONCILIATION below). One approval covers the
 reconciliation and the new tasks together — there is no second gate.
 
 When SPLIT is none (the common case), render the single-task plan exactly
@@ -495,9 +552,19 @@ content, and OWNERSHIP PRE-AUTHORISATION for the question that accompanies it
 when its Hints name an owned document. Skip this entirely on a
 reconciliation-only run that drafts zero new tasks.
 
+When PLACE is set, add one line under the counter update, so the position —
+and, under `--before`, the edit to the anchor task — is approved with the
+rest:
+
+```
+Placement:  before task <ANCHOR> — task <ANCHOR> Preconditions: <old> → <new>
+            (or: after task <ANCHOR> — new task waits on <ANCHOR>)
+```
+
 Before the closing prompt, render the ownership question for every drafted task
 whose Hints or `Files:` name an owned document — see OWNERSHIP
 PRE-AUTHORISATION. It is answered in this same exchange, not at a second gate.
+On a free-form run, render THE ORPHAN QUESTION here too, under the same rule.
 
 End with: **"Approve and write?"**
 
@@ -507,7 +574,8 @@ not approval.
 
 ---
 
-RECONCILIATION (only when FEATURE is set and its `Tasks:` line is non-`none`)
+RECONCILIATION (only when FEATURE is set, SINGLE is false, and its `Tasks:`
+line is non-`none`)
 
 A re-planning run must not append blindly — that reliably produces
 overlapping work.
@@ -549,6 +617,8 @@ DOCUMENTATION TASK (feature mode only)
 Applies only when FEATURE is set, and only when this run drafts at least
 one new task. A reconciliation-only run that leaves every existing task
 untouched creates nothing new to document, so this section does not fire.
+It does not fire on a `--single` run either, nor on a free-form task the
+orphan question attached: one attached task is not a planning pass.
 
 After the normal new-task draft(s) — single or split — draft exactly one
 more task, appended last, whose job is to bring the documentation layers
@@ -573,6 +643,144 @@ Some of that collateral is owned by another command in this pipeline. Naming
 one of those documents here is allowed but never free: OWNERSHIP
 PRE-AUTHORISATION below governs it, and the documentation task is its worked
 example.
+
+---
+
+PLACEMENT (only when `--before <N>` or `--after <N>` was passed)
+
+By default a new task is appended at the end of `.claude/TASKS.md`. The two
+placement flags write it somewhere else, and each writes two things at once:
+
+- **`--before <N>`** — the new summary block goes immediately above task N's,
+  and the new task's ID is appended to task N's `Preconditions:` line
+  (replacing `none` when that is what it held). Task N now waits on the new
+  task.
+- **`--after <N>`** — the new summary block goes immediately below task N's,
+  and N goes on the new task's own `Preconditions:` line, beside whatever
+  PHASE 1 put there (replacing `none`). The new task now waits on task N.
+
+**Why both halves, always together.** The position is for the human reading
+`TASKS.md` top to bottom; the edge is for the selectors, which pick work by
+appearance order *and* by satisfied `Preconditions:` —
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`
+§ *Selectors*. A position without the edge lets a selector start the two
+tasks in the other order the moment both are eligible; an edge without the
+position leaves the file reading one order while the selectors follow
+another. Either half alone leaves the two disagreeing, so there is no flag
+for one without the other.
+
+**Unknown N.** PHASE 1 step 1 confirms a summary block `## <N>.` exists. If
+none does, stop — the unknown-task counterpart of the unknown-slug stop:
+
+> No task `<N>` in `.claude/TASKS.md`.
+
+N may carry any status. On a `[DONE]` or `[SKIP]` task the edge changes no
+selection, but it is written all the same, so position and edge never
+disagree. Under `--before <N>`, never also put N on the new task's own
+`Preconditions:` — that is a two-task cycle, and the selectors would report
+both tasks blocked for good.
+
+**IDs do not move.** An insertion consumes the next ID from
+`Last task number:` exactly as an append does. No existing task is
+renumbered or moved, and a higher ID sitting above a lower one is the
+expected result, not something to tidy. Moving an existing task is a
+revision, not an insertion, and is not this command's job.
+
+**Composition.** Either flag composes with `--short`, `--no-split`,
+`--no-commit`, `--no-push`, `feature=<slug>` and `--single`. When the run
+writes more than one new task — a split, or a `feature=<slug>` run's drafts
+with its documentation task last — the flag applies to the first of them,
+and the remaining ones follow it in order: they are written as one run, in
+their usual order, occupying the single block's place (immediately above
+N's block under `--before`, immediately below it under `--after`). The edge
+is written for the first task alone — under `--before`, N gains the first
+new ID; under `--after`, the first new task gains N — and the others carry
+their own `Preconditions:` wiring as usual.
+
+A task carrying a `Feature:` line may land among another feature's tasks, or
+among free-form ones. That is legal: reconciliation keys on the `Feature:`
+line, never on position.
+
+---
+
+SINGLE-TASK ATTACHMENT (`feature=<slug> --single`)
+
+`/task-add feature=<slug> --single "<description>"` plans exactly one task
+against the named feature's document and attaches it to that feature,
+without re-planning the feature. The description is this one task's; the
+feature document is still PHASE 1b's primary context, so the task is
+grounded in the design.
+
+What it writes:
+
+- the one task, whose summary block carries `Feature: <slug>` and whose body
+  names the feature in `## Goal` and its document under `## Hints`, exactly
+  like any feature-derived task;
+- the feature's `FEATURES.md` `Tasks:` line, with the new ID appended
+  (ascending).
+
+What it does not do:
+
+- **No reconciliation.** It runs no reconciliation over the feature's other
+  tasks: PHASE 1b does not read them, and PHASE 3 renders no RECONCILIATION
+  section. Whether they still match the design is a question for the next
+  full `/task-add feature=<slug>` run, not this one.
+- **No status change.** The feature's `FEATURES.md` `Status:` is untouched —
+  a `[PLANNED]` feature with one more planned task has not changed its
+  design-to-backlog relationship. That is also why only a `[PLANNED]`
+  feature takes an attached task (FEATURE RESOLUTION step 5): a `[NEW]`
+  feature has no tasks by definition, and a `[DONE]` one would be left
+  claiming every task is done with one open. `Doc:` and `Source:` are never
+  written, as on every run.
+- **No documentation task** — one attached task is not a planning pass.
+- **No split.** SINGLE implies NO_SPLIT; exactly one task is written.
+
+**The write-back line.** PHASE 4's report always ends with this one fixed
+line, so the drift is announced when it is created rather than discovered
+later:
+
+> Feature document `<the entry's Doc: path>` was not updated for task <N> —
+> `/pipeline-patch feature=<slug>` writes it back.
+
+That line is all this command does about the document. `/task-add` stays a
+non-writer of it, and of every other owned document.
+
+---
+
+THE ORPHAN QUESTION (free-form runs, only when `.claude/FEATURES.md` exists)
+
+Asked only when FEATURE is unset, SHORT is false, and `.claude/FEATURES.md`
+exists. **A project with no `.claude/FEATURES.md` sees no change at all** —
+the question is not asked and nothing is said about it. It is not asked
+under `--short` either: its only non-`none` answer is the `--single` path,
+which `--short` cannot take.
+
+It rides PHASE 3's existing single approval gate, never a second one. Just
+before **"Approve and write?"**, render:
+
+> Does this task belong to a feature?
+>
+>   `<slug-a>` — <title>
+>   `<slug-b>` — <title>
+>   none — keep it free-form (the default)
+
+listing every `[PLANNED]` entry in `.claude/FEATURES.md`, in index order —
+the only status an attached task leaves true. When no entry is `[PLANNED]`
+there is nothing to attach to, and the question is not asked.
+
+- **A slug** takes the `--single` path for that feature: read the entry's
+  `Doc:` as PHASE 1b's primary context, revise the draft against it (the
+  `Feature:` line, the Goal naming the feature, the document under Hints),
+  and re-present the plan at the same gate. That is the usual
+  re-presentation after a non-trivial revision, not a second gate. From then
+  on SINGLE-TASK ATTACHMENT applies in full, the write-back line included.
+  On a split plan, every part is attached the same way, and the write-back
+  line names every attached ID. The question is asked on every free-form
+  run, a split included, and applying the one-task attachment to each part
+  is the only reading that neither drops the question on a split nor
+  collapses the split to one task.
+- **none** — or an approval that does not address the question — writes
+  the task exactly as today.
 
 ---
 
@@ -685,7 +893,12 @@ Single-task case (SPLIT is none):
 
 1. Edit `.claude/TASKS.md`:
    a. Update `Last task number: K` → `Last task number: N`.
-   b. Append the new summary block with its `---` separator.
+   b. Insert the new summary block, with its `---` separator, at the
+      resolved position — the end of the file by default, or where
+      PLACEMENT puts it.
+   c. Under `--before <ANCHOR>`, append N to task ANCHOR's
+      `Preconditions:` line (replacing `none`) — the one edit this command
+      makes to another task's line.
 
 2. Write `.claude/tasks/<N>.md` with the full draft body.
    Task IDs never repeat — a collision is an error; stop and report.
@@ -696,8 +909,12 @@ Split case (SPLIT is set, k parts):
 
 1. Edit `.claude/TASKS.md` once:
    a. Update `Last task number: K` → `Last task number: K+k`.
-   b. Append all k summary blocks in order, each with its own `---`
-      separator, using sequential IDs `K+1 .. K+k`.
+   b. Insert all k summary blocks in order, each with its own `---`
+      separator, using sequential IDs `K+1 .. K+k`, at the resolved
+      position — the end of the file by default, or as one run where
+      PLACEMENT puts the first of them.
+   c. Under `--before <ANCHOR>`, append `K+1` — the first part's ID — to
+      task ANCHOR's `Preconditions:` line, as in the single-task case.
 
 2. Write each `.claude/tasks/<N>.md` body file, one per part, `N` ranging
    over `K+1 .. K+k`. A part that depends on an earlier part gets that
@@ -718,7 +935,8 @@ Feature case (FEATURE is set) — in addition to the above:
    to reach the design from the task without being told the slug
    separately.
 
-3. Apply the approved reconciliation, and nothing beyond it:
+3. Apply the approved reconciliation, and nothing beyond it (under SINGLE
+   there is none, so this step does nothing):
    - Rewrite the body of each task classified "update in place", and flip a
      `[STALE]` one back to `[MISSING]` in TASKS.md.
    - Set each "substantially invalidated" task's `Status:` to `[SKIP]`, and
@@ -733,6 +951,10 @@ Feature case (FEATURE is set) — in addition to the above:
      Drop the IDs of tasks this run marked `[SKIP]`; keep `[DONE]` IDs.
    - `Status:` — `[PLANNED]`, from either `[NEW]` or `[ITERATED]`.
 
+   Under SINGLE, or for a task the orphan question attached, write
+   `Tasks:` alone — the existing IDs plus the new one(s), ascending — and
+   leave `Status:` exactly as it is.
+
    Never write `Doc:` or `Source:` — those are `/architect`'s fields, and
    the by-line split is what lets the two commands share this file.
 
@@ -746,7 +968,10 @@ Feature case (FEATURE is set) — in addition to the above:
    above must already include this ID (e.g. single-task case:
    `Last task number K → N+1`, not `→ N`; split case:
    `Last task number K → K+k+1`, not `→ K+k`). Include its path in the
-   report and the commit alongside the rest.
+   report and the commit alongside the rest. Never under SINGLE.
+
+7. Under SINGLE, or for a task the orphan question attached, end the report
+   with the write-back line from SINGLE-TASK ATTACHMENT.
 
 Continue to PHASE 5.
 
@@ -758,8 +983,8 @@ Commit and push gating — the flags, pull-at-start, staging by explicit path,
 one commit per unit of work, the push protocol, and what to do when a commit
 or a push fails — is
 `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`. Its
-`/task-add` note carries this command's own specifics: the three
-commit-message forms — single task, split, feature — one commit each, exactly
+`/task-add` note carries this command's own specifics: the four
+commit-message forms — single task, split, feature, attached — one commit each, exactly
 which paths PHASE 4 leaves to stage in each case, and that PHASE 5 is the only
 phase here that shells out.
 
@@ -774,8 +999,15 @@ prompt is asked here.
 DO NOT:
 - Write to any file before PHASE 4.
 - Renumber existing tasks — `resolution.md` § *Index file format* is why IDs
-  are stable and `Last task number` only ever increases.
-- Update any other task's `Preconditions:` line.
+  are stable and `Last task number` only ever increases. An insertion under
+  `--before` / `--after` consumes the next ID exactly as an append does; no
+  existing ID moves.
+- Update any other task's `Preconditions:` line — with one bounded
+  exception: under `--before <N>`, append the new task's ID to task N's
+  `Preconditions:` line (PLACEMENT). Nothing else on task N changes, and no
+  other task's line is touched.
+- Write a placement's position without its edge, or its edge without its
+  position.
 - Auto-create `.claude/TASKS.md` or `.claude/tasks/` if missing —
   `resolution.md` § *When the backlog is not initialised* is the rule, and
   PHASE 0's stop is the whole response.
@@ -794,8 +1026,11 @@ DO NOT:
 - Bundle multiple commits for a split — `commit.md`'s `/task-add` note is one
   commit covering every task ID created.
 - Run PHASE 1.5 at all when `--no-split` or `--short` is passed.
-- Combine `--short` with `feature=<slug>` — stop with an
-  error instead (see the ARGUMENT NOTE mutual-exclusion rule).
+- Combine `--short` with `feature=<slug>` or `--single`, or `--before` with
+  `--after`, or pass `--single` without `feature=<slug>` — stop with an
+  error instead (see the ARGUMENT NOTE).
+- Reconcile the feature's other tasks, change its `Status:`, or draft a
+  documentation task under `--single`.
 - Write placeholder `## Acceptance criteria` or `## Hints` sections in a
   `--short` body — omit them entirely.
 - Skip PHASE 2 wholesale under `--short` — it still asks about ambiguity
@@ -806,12 +1041,15 @@ DO NOT:
   writes `Tasks:` and `Status:` only.
 - Modify, skip, reopen, or re-status a `[DONE]` task during reconciliation —
   `stale.md` § *Clearing it* is why follow-up work is a new task instead.
-- Add a `Feature:` line to a task that did not come from that feature, or
-  write `Feature: none` on a free-form task — `resolution.md` § *Index file
+- Add a `Feature:` line to a task that did not come from that feature and
+  was not attached to it by `--single` or the orphan question, or write
+  `Feature: none` on a free-form task — `resolution.md` § *Index file
   format* is why its absence is the signal.
 - Change any behavior of the free-form path when `feature=` is absent. The
   feature mode is additive; a plain `/task-add <description>` run must be
-  indistinguishable from before.
+  indistinguishable from before, save the orphan question — asked only on a
+  project with `.claude/FEATURES.md`. Without that file, and without a
+  placement flag, a free-form run is unchanged in every respect.
 - Write any drafted task — documentation task, free-form task, split part, or
   a body rewritten during reconciliation — that names a document from
   OWNERSHIP PRE-AUTHORISATION's owner table without a recorded grant or a

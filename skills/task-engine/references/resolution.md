@@ -1,8 +1,9 @@
 # Backlog resolution
 
 Authority for: where the backlog lives, what a summary block holds, when a
-per-task body file may be opened, and how a run resolves which tasks it
-operates on.
+per-task body file may be opened, how a run resolves which tasks it
+operates on, and the eligibility clause — status plus `Preconditions:` —
+that the batch selectors honour.
 
 Extracted verbatim from the `LOCATING THE BACKLOG` sections of
 `/task-list`, `/task-clean` and `/task-implement`, from `/task-add`'s
@@ -50,6 +51,12 @@ body file.
 `Last task number: N` tracks the highest ID ever assigned, not the highest
 currently present, and only ever increases. Task IDs are stable: survivors
 of a prune are never renumbered and a pruned ID is never reused.
+
+Appearance order in the file is the backlog's order, and it need not be
+numeric. `/task-add --before <N>` / `--after <N>` write a new block mid-file
+under the next ID from the counter, exactly as an append would, so a higher
+ID may sit above a lower one. No existing ID ever moves or changes. Read
+order from position, never from the number.
 
 ## When the backlog is not initialised
 
@@ -114,25 +121,69 @@ the body file when changing status.
 A run's task list resolves from its argument to one of:
 
 - A whitespace-separated list of task numbers — implement those tasks in
-  the order given.
-- The literal token `all` (case-insensitive) — implement every task in the
-  backlog whose current status is `[MISSING]`, `[STUBBED]`, `[INCORRECT]`,
-  or `[PARTIAL]`, in the order they appear in the file. Skip tasks whose
-  status is `[DONE]`, `[SKIP]`, `[IN PROGRESS]`, or `[STALE]`. After
-  resolving the list, report it to the user as a one-line summary ("Will
-  implement: 3, 7, 12 (5 tasks skipped: 1 DONE, 1 IN PROGRESS, 3 SKIP)")
-  and proceed without asking for confirmation — the user already chose
-  `all`.
-- The literal token `next` (case-insensitive) — find the first task in the
-  backlog (by appearance order in TASKS.md) whose status is `[MISSING]`,
-  `[STUBBED]`, `[INCORRECT]`, or `[PARTIAL]`, and implement that single
-  task. Skip tasks whose status is `[DONE]`, `[SKIP]`, `[IN PROGRESS]`, or
-  `[STALE]`. If no eligible task is found, tell the user "No eligible
-  tasks found — all tasks are DONE, SKIP, IN PROGRESS, or STALE." and
-  stop. Otherwise, report "Next eligible task: <N> — <title>" and proceed
-  without asking for confirmation.
+  the order given. Explicit-list selection is unchanged by the eligibility
+  clause below: **a task requested by number is never blocked by a
+  precondition.** The user who names a task has already chosen its moment;
+  the clause governs only the two batch selectors.
+- The literal token `next` (case-insensitive) — the first task in the
+  backlog, by appearance order in TASKS.md, that is **eligible** (below);
+  implement that single task. Report "Next eligible task: <N> — <title>" and
+  proceed without asking for confirmation. If no task is eligible, stop
+  with whichever of these is true:
+  - no implementable task exists at all — "No eligible tasks found — all
+    tasks are DONE, SKIP, IN PROGRESS, or STALE.";
+  - implementable tasks exist, but every one of them is blocked — "No
+    eligible tasks found — every implementable task is waiting on an unmet
+    precondition: 14 (waits on 12), 15 (waits on 14)." Name every blocked
+    task by id with the ids it waits on; never claim the backlog is
+    finished when the only reason nothing is eligible is an unmet
+    precondition.
+- The literal token `all` (case-insensitive) — `next` applied repeatedly
+  until no task is eligible, which keeps a batch from starting a task ahead
+  of one it waits on without a second definition of eligibility. It is
+  resolved **once, up front**, by simulating that repetition rather than
+  re-resolving after every task: walk the backlog from the top and select
+  the first eligible task not yet selected; from then on treat it as
+  `[DONE]`, so it satisfies every precondition that names it and is never
+  selected again; walk again from the top; stop when a walk selects
+  nothing. The selections, in the order made, are the run's fixed list — the
+  same list repeated `next` would yield — so the run still gets one
+  resolution report and one delegation count. Report it as a one-line
+  summary ("Will implement: 3, 7, 12 (5 tasks skipped: 1 DONE, 1 IN
+  PROGRESS, 3 SKIP)") and proceed without asking for confirmation — the
+  user already chose `all`. If the list comes out empty, stop with the same
+  message `next` would give.
 
-If the argument is empty, tell the user the usage and stop.
+### Eligibility
+
+A task is **eligible** only when both hold:
+
+1. its status is implementable — `[MISSING]`, `[STUBBED]`, `[INCORRECT]` or
+   `[PARTIAL]`. Tasks whose status is `[DONE]`, `[SKIP]`, `[IN PROGRESS]` or
+   `[STALE]` are skipped by both batch selectors;
+2. every id on its `Preconditions:` line resolves to a task whose status is
+   `[DONE]` or `[SKIP]`. `Preconditions: none` satisfies this trivially. An
+   id that resolves to no summary block in TASKS.md is ignored, never a
+   blocker — the same tolerance the suite already extends to a hand-edited
+   or pruned backlog wherever an id resolves to nothing.
+
+An implementable task that fails clause 2 is **blocked**. Eligibility is
+derived on every read and stored nowhere; `Preconditions:` keeps its shape
+and becomes load-bearing rather than informational.
+
+**The blocked report.** The `all` resolution report names, by id, every
+implementable task left unselected because a precondition is unmet, each
+with the ids it waits on — "Blocked by unmet preconditions: 14 (waits on
+12), 21 (waits on 20)." — so an unsatisfiable edge is visible rather than
+silently skipped. Omit the line when nothing is blocked.
+
+**A precondition cycle** — 20 waits on 21, 21 waits on 20, or any longer
+loop — makes every task on it ineligible, and every task waiting on one of
+them as well: none of them can ever satisfy clause 2. The resolution still
+terminates, because each walk either selects a task not selected before or
+ends the resolution, and the tasks are finite. The cycle's tasks appear in
+the blocked report like any other blocked task, each naming the ids it
+waits on, which is what lets a reader see the loop.
 
 `[STALE]` tasks are skipped by `all` and `next` because each one needs a
 per-task judgment call and a batch run should not stop to ask — see
@@ -174,9 +225,14 @@ requested task carries another one, is
 - **`/task-implement`** — the not-initialised message is "No backlog file
   found — run /task-setup to initialize it, then /task-add to create
   tasks." The `all` / `next` / explicit-list selectors above are its
-  argument form; it is the only consumer that has them.
-- **`/task-add`** — resolves nothing from the index but the next ID and, on
-  a `feature=<slug>` run, the tasks that feature already generated. Its
+  argument form; it is the only consumer that has them. Its one departure
+  is a re-check: between tasks of an `all` run it re-reads TASKS.md anyway,
+  and there it re-checks the upcoming task's `Preconditions:` against clause
+  2 of *Eligibility*, skipping with a one-line report a task whose
+  preconditions no longer hold. It reads nothing new to do it.
+- **`/task-add`** — resolves nothing from the index but the next ID, the
+  task a `--before <N>` / `--after <N>` flag names and, on a
+  `feature=<slug>` run, the tasks that feature already generated. Its
   setup check is the two-artifact probe quoted above rather than the
   index-only check the other three make, and its pull-at-start sits in the
   same PHASE 0 — see `commit.md`.

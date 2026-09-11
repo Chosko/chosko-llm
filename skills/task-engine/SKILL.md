@@ -1,8 +1,8 @@
 ---
 name: task-engine
-version: 0.2.0
+version: 0.3.0
 type: skill
-description: Reference library for the task-* features — one authority per rule they share. Seven files under references/ own backlog resolution and the TASKS.md schema, the status vocabulary and its transitions, Target: values and the delegation guard, [STALE] handling, the dirty-tree prompt protocol, commit/push gating with --no-commit / --no-push, and the review cost controls behind --review-model / --review-effort. NOT a skill the user invokes and never a skill to suggest — it takes no arguments, runs nothing, and produces no output; /task-add, /task-list, /task-clean, /task-implement and /task-review read its files by path while they run, and only they should ever open it.
+description: Reference library for the task-* features — one authority per rule they share. Seven files under references/ own backlog resolution, the TASKS.md schema and the eligibility clause by which next / all honour Preconditions:, the status vocabulary and its transitions, Target: values and the delegation guard, [STALE] handling, the dirty-tree prompt protocol, commit/push gating with --no-commit / --no-push, and the review cost controls behind --review-model / --review-effort. NOT a skill the user invokes and never a skill to suggest — it takes no arguments, runs nothing, and produces no output; /task-add, /task-list, /task-clean, /task-implement and /task-review read its files by path while they run, and only they should ever open it.
 ---
 
 # task-engine
@@ -28,7 +28,7 @@ description: Reference library for the task-* features — one authority per rul
 
 | Reference file | Owns |
 | -------------- | ---- |
-| `references/resolution.md` | Where the backlog lives, the `.claude/TASKS.md` summary-block schema, the not-initialised stop, when a per-task body file may be opened, and the `all` / `next` / explicit-list selectors. |
+| `references/resolution.md` | Where the backlog lives, the `.claude/TASKS.md` summary-block schema, the not-initialised stop, when a per-task body file may be opened, the `all` / `next` / explicit-list selectors, and the eligibility clause — implementable status plus satisfied `Preconditions:` — that the batch selectors honour. |
 | `references/status.md` | The eight status tags and what each means, which are terminal, which are implementable, how a status filter is accepted, and the legal transitions. |
 | `references/targets.md` | The three `Target:` values, the `## Manual interventions` pairing rule, what each target means at implementation time, and the delegation guard. |
 | `references/stale.md` | What `[STALE]` means, who sets and clears it, how the originating feature is found, and how each feature treats a stale task. |

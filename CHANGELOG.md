@@ -2,6 +2,14 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.28.0 — 2026-09-11
+
+- **/task-implement** `next` and `all` now honour `Preconditions:`: a task is picked only once every task it names is `[DONE]` or `[SKIP]`, and `all` orders its list so nothing starts ahead of what it waits on. A task named by number is never blocked.
+- **/task-implement** an `all` run names by id every task it left blocked, a precondition cycle included, and between tasks skips with one line a task whose preconditions no longer hold.
+- **/production-status** the Next column's `/task-implement <N>` is the first task in backlog order whose preconditions are satisfied, not the lowest-numbered open one; a feature whose open tasks all wait on something reads `waits on task <id>`.
+- **/task-add** gains `--before <N>` / `--after <N>`: the new task is written at that position in `TASKS.md` and the matching `Preconditions:` edge is written with it. No existing id is renumbered.
+- **/task-add** gains `feature=<slug> --single`, attaching one task to a `[PLANNED]` feature without re-planning it and saying that the feature document was not updated; on a project with `FEATURES.md`, a free-form run asks at its approval gate whether the task belongs to a feature.
+
 ## 1.27.0 — 2026-09-03
 
 - **/runbook-run** gains `--to N`, stopping the run after step N. It composes with `--from`, so `--from X --to Y` runs that range of steps inclusive.

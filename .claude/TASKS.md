@@ -6,7 +6,7 @@ Last task number: 201
 
 ## 169. Backlog ordering on the task side: selectors honour `Preconditions:`, `/production-status` agrees, `/task-add` can insert and attach
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-engine/references/resolution.md, skills/task-engine/SKILL.md, skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, commands/production-status.md, commands/task-add.md, VERSION, CHANGELOG.md
 Preconditions: none

@@ -184,7 +184,12 @@ After each agent returns, and before the next spawn:
    `Feature:` line and landed `[DONE]`, apply SKILL.md's FEATURE COMPLETION
    check here — same check Step 6 runs for an in-context task, just
    triggered by this re-read instead. Still don't propose anything; that
-   stays batched to the end of the whole run.
+   stays batched to the end of the whole run. On a run resolved by `all`,
+   this same re-read is where SKILL.md's BETWEEN TASKS step 2 re-checks the
+   next task's `Preconditions:`: if they no longer hold, skip that task with
+   its one-line report and spawn no agent for it, then apply the check to
+   the task after it. `Preconditions:` is on the summary block, so the
+   re-check opens no body and adds no read.
 2. Confirm the agent actually did what it claims — the status it reports
    should match the file, and under the default (committing) mode
    `git status --porcelain` should be clean. A mismatch is a failure; see
