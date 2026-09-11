@@ -130,27 +130,27 @@ Tasks: 182, 183, 184, 185, 186
 
 ## pipeline-revision — `/pipeline-patch` and `/pipeline-revise`: change planned work at proportional cost, through its owners
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/pipeline-revision.md
 Source: prompt
-Tasks: none
+Tasks: 187, 188, 189, 190, 191, 192, 193
 
 ---
 
 ## pipeline-suggest — One-line auto-triggered pointer from a free-form request to the pipeline command that fits
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/pipeline-suggest.md
 Source: prompt
-Tasks: none
+Tasks: 194, 195
 
 ---
 
 ## task-archive — `/task-clean` archives pruned bodies instead of deleting them; features keep every id
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/task-archive.md
 Source: product-design.md § Task backlog
-Tasks: none
+Tasks: 196, 197, 198, 199, 200, 201
 
 ---
