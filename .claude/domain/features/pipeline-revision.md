@@ -66,7 +66,7 @@ and the arms from [owner-amend-arms](./owner-amend-arms.md), declared through
 
 ### The patch command
 
-A single command file, thin by contract. It probes, reuses or prints the
+`commands/pipeline-patch.md`, a single command file, thin by contract. It probes, reuses or prints the
 verdict line, and walks the graph from the anchor the user named — a feature
 slug, a task id or a runbook step — reading only the indexes. It then counts
 the owners the change would touch. Exactly one, among feature document, task
@@ -85,8 +85,9 @@ is correct: a patcher with no owner to delegate to has nothing to do.
 
 ### The revise skill
 
-A skill folder with a short body and one supporting file per branch. The body
-probes, walks the graph from the anchor or from the free-form description,
+`skills/pipeline-revise/`, a skill folder: a short body in `SKILL.md` and one
+flat supporting file per branch — `amend.md`, `insert.md`, `delete.md` and
+`reorder.md`. The body probes, walks the graph from the anchor or from the free-form description,
 and classifies the request into one branch — amend, insert, delete or
 reorder — loading only that branch's file. Each branch file carries the
 impact walk's direction rules, the owner sequence and the tier logic for its
@@ -145,8 +146,10 @@ ledger is introduced.
 
 ## Interfaces and contracts
 
-- `/pipeline-patch <anchor> "<change>"` — anchor is `feature=<slug>`,
-  `task=<N>` or `runbook=<name|id> step=<n>`. Single owner or refuse.
+- `/pipeline-patch <anchor> "<change>" [--commit] [--no-push]` — anchor is
+  `feature=<slug>`, `task=<N>` or `runbook=<name|id> step=<n>`. Single owner
+  or refuse. `--commit` / `--no-push` are forwarded to the amend arm it
+  executes; it makes no commit of its own.
   `requires: skill:pipeline-engine, skill:architect, skill:task-engine,
   skill:runbook-run`.
 - `/pipeline-revise [<anchor>] "<change>" [--commit] [--no-push]` — anchor
@@ -187,9 +190,11 @@ step with earlier steps' writes intact and reported, never rolled back;
   orchestrator's subagent contract would give each owner step a clean context
   at the cost of relaying every gate. Start in-session; revisit if three-step
   revisions prove to bloat the conversation.
-- **Is a reorder branch worth shipping first?** Moving an existing task is
-  rarer than inserting one and can be expressed as skip-and-insert. It may
-  land as a later increment.
+- **Is a reorder branch worth shipping first?** Decided: it shipped with the
+  first increment, as `reorder.md`. Because a move is expressed as
+  skip-and-insert, the branch is thin — it composes `delete.md` and
+  `insert.md` and adds only its boundary against amend, its fixed structural
+  tier and its reason wording.
 - **Where does a revision that changes a roadmap milestone go?** Through
   `/product-roadmap`'s own revision path, sequenced by the reviser like any
   other owner run; whether that needs its own branch is undecided.

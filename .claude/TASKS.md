@@ -86,7 +86,7 @@ Feature: pipeline-revision
 
 ## 193. Update documentation for feature `pipeline-revision`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/domain/features/pipeline-revision.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 187

@@ -35,8 +35,9 @@ operates on diffs and findings, not on the backlog's schema.
 
 `amend.md` is the one file no `task-*` feature reads. It was authored in the
 engine, since no consumer ever carried a copy, and it is read by path by
-whatever amends a single task — the pipeline revision surfaces — which
-execute it but own none of the lines it writes.
+whatever amends a single task — the pipeline revision surfaces,
+`/pipeline-patch` and `/pipeline-revise` — which execute it but own none of
+the lines it writes. See [§ Changing a planned task](#changing-a-planned-task-pipeline-patch-pipeline-revise).
 
 **Why a skill and not a command.** `cmd-add` installs a skill by `cp -R` of
 the whole folder, so supporting files ride along; a command is a single `.md`
@@ -183,7 +184,7 @@ Two things order backlog, and selectors read both: **appearance order** in `TASK
 
 `Preconditions:` is **load-bearing for `next` and `all`**, not informational. Task eligible only when its status is implementable **and** every id on its `Preconditions:` line resolves to a task `[DONE]` or `[SKIP]`; id resolving to no task ignored, never a blocker. `next` = first eligible task in appearance order. **`all` = `next` repeated** until nothing eligible — one rule, no second definition of eligibility, no graph algorithm — resolved once up front by simulating the repetition (each selected task treated `[DONE]` for the walks after), so a batch still gets one resolution report and one delegation count. Implementable tasks left unselected are named by id w/ what they wait on, a precondition cycle included; between tasks an `all` run re-checks upcoming task's `Preconditions:` against the `TASKS.md` re-read it already does, skipping w/ one line a task whose preconditions no longer hold. Task requested by number never blocked: naming it is choosing its moment. `/production-status`'s Next column picks `/task-implement <N>` by same rule. Clause lives once, in `task-engine`'s `resolution.md` § *Selectors*.
 
-**`/task-add` can insert.** Appending at end still default. `--before <N>` writes new summary block immediately above task N's and appends new id to N's `Preconditions:` (the one sanctioned edit to another task's line); `--after <N>` writes it immediately below and puts N on new task's `Preconditions:`. Both halves always together — position for human reading top to bottom, edge for selectors; either alone leaves the two disagreeing. Flags mutually exclusive; unknown N stops. Insertion consumes next id exactly as append does, no existing id moves; moving an existing task is a revision, not an insertion. When run writes several tasks (split, feature run) flag places the first, rest follow it. A `Feature:`-tagged task landing among another feature's tasks is legal — reconciliation keys on `Feature:`, never position.
+**`/task-add` can insert.** Appending at end still default. `--before <N>` writes new summary block immediately above task N's and appends new id to N's `Preconditions:` (the one sanctioned edit to another task's line); `--after <N>` writes it immediately below and puts N on new task's `Preconditions:`. Both halves always together — position for human reading top to bottom, edge for selectors; either alone leaves the two disagreeing. Flags mutually exclusive; unknown N stops. Insertion consumes next id exactly as append does, no existing id moves; moving an existing task is a revision, not an insertion (§ Changing a planned task). When run writes several tasks (split, feature run) flag places the first, rest follow it. A `Feature:`-tagged task landing among another feature's tasks is legal — reconciliation keys on `Feature:`, never position.
 
 ## Status vocabulary
 
@@ -210,6 +211,19 @@ Reconciliation depends on it — without line, re-planning run can't tell which 
 - **Never picked up silently.** `/task-implement` warns — naming feature, saying design changed — lets user implement anyway or stop; `all` and `next` skip stale tasks rather than deciding for user. Only a human can judge whether superseded design still applies, so the choice is always put to them.
 
 See [`./product-workflow.md`](./product-workflow.md) for feature side of this contract: `FEATURES.md` schema, feature status machine, iterate guard that writes `[STALE]`, reconciliation protocol resolving it.
+
+## Changing a planned task (`/pipeline-patch`, `/pipeline-revise`)
+
+Live task changed after planning goes through `task-engine`'s `references/amend.md` — one arm, one gate, closed write set — never hand-edited, never re-planned by `/task-add`. No `task-*` feature drives that arm; the two pipeline revision surfaces do, by path:
+
+- **`/pipeline-patch task=<N> "<change>"`** — change touching this task alone (wording, Hints, `Files:`, `Target:`, an orphan's `Feature:`). Decided from `TASKS.md` and the other indexes, never the body; refused, naming `/pipeline-revise`, when a structural signal fires — an edge changing, a new task, a deletion another line points at, a move.
+- **`/pipeline-revise`** — change reaching past this task. Sequences the arm among other owners' steps, upstream first, behind one gate: `/architect amend` before the task arm when the change moves what the feature promises (the arm's own second check routes such a change there anyway), successors' `Preconditions:` through the same arm, one step per task.
+
+What the arm allows is `amend.md`'s, not restated here: refuses `[IN PROGRESS]`, `[DONE]`, `[SKIP]`; a change to what the feature promises goes to `/architect amend`; a dropped `Preconditions:` edge is named in the dependent's `## Decisions`. Neither surface writes a line itself — every line the arm writes is still `/task-add`'s, per `pipeline-engine`'s routing table. See [product-workflow.md § Revision](./product-workflow.md#revision-pipeline-patch-pipeline-revise).
+
+**Removing a live task is `[SKIP]` with a reason, never deletion.** Arm writes `Status: [SKIP]` + dated reason in `## Decisions`; summary block and body stay. Successors' edges on it dropped through the same arm, each naming the deletion. Physical removal stays `/task-clean`'s explicit act over terminal statuses — `[SKIP]` is what makes a task eligible for it.
+
+**Moving** a task is skip-and-insert (`/pipeline-revise`'s reorder branch): old task `[SKIP]` w/ `reordered — replaced by task <K>, <before|after> task <M>`, replacement inserted at the new place under a new id through `/task-add --before`/`--after`. Ids never renumbered, blocks never moved. **Inserting** is `/task-add feature=<slug> --single --before|--after <N>` (§ Backlog order), the scope written into the feature doc first by `/architect amend` when it's new. `[DONE]` tasks never touched by any of it — follow-up is a new task.
 
 ## Feature-derived tasks (`/task-add feature=<slug>`)
 
@@ -331,6 +345,7 @@ This is the only write `/task-implement` makes to `FEATURES.md`, and the only st
 - [`./product-workflow.md`](./product-workflow.md) — product pipeline upstream of this backlog: `FEATURES.md`, feature status machine, writers of `Feature:` and `[STALE]`.
 - [`./features/task-peer-review.md`](./features/task-peer-review.md) — feature design behind the review loop: the three input forms, the gates, mandatory triage, sticky rejections, and the `--review` / `--rounds` integration.
 - [`./features/shared-phase-engine.md`](./features/shared-phase-engine.md) — feature design behind `task-engine` and `requires:`: why the engine had to be a skill, what the CLI change is, the migration order, and what the extraction actually achieved.
+- [`./features/pipeline-revision.md`](./features/pipeline-revision.md) — feature design behind `/pipeline-patch` and `/pipeline-revise`, the surfaces that drive `amend.md`.
 - [`../../docs/authoring-guide.md`](../../docs/authoring-guide.md) — the `requires:` frontmatter contract, and the council-gate exception that `requires:` cannot cover.
 - [`../context/features.md`](../context/features.md) — shipped artifacts including every `task-*` command and skill, plus `skills/task-engine/`.
 - `commands/task-setup.md`, `commands/task-add.md`, `commands/task-clean.md`, `commands/task-list.md`, `skills/task-implement/SKILL.md`, `skills/task-engine/SKILL.md` + `skills/task-engine/references/*.md`, `skills/task-review/SKILL.md`, `skills/task-iterate/SKILL.md` — command and skill implementations.

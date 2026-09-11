@@ -1,6 +1,6 @@
 # Product workflow — from product idea to implementation task
 
-Source of truth for product pipeline: commands taking product from brainstorm through architecture to implementable backlog, docs they exchange, three status vocabularies keeping design, delivery and backlog in sync. Read when touching `/domain-setup`, `/product-design`, `/product-roadmap`, `/architect`, `/production-plan`, `/production-status`, `/pipeline-check`, or feature-aware parts of `/task-add`, `/task-list` and `/task-clean`.
+Source of truth for product pipeline: commands taking product from brainstorm through architecture to implementable backlog, docs they exchange, three status vocabularies keeping design, delivery and backlog in sync. Read when touching `/domain-setup`, `/product-design`, `/product-roadmap`, `/architect`, `/production-plan`, `/production-status`, `/pipeline-check`, `/pipeline-patch`, `/pipeline-revise`, or feature-aware parts of `/task-add`, `/task-list` and `/task-clean`.
 
 ## Why this exists
 
@@ -21,8 +21,9 @@ Pipeline exists to make handoff explicit. Cost: set of files must agree on schem
 | 6 — build | `/task-implement` | task body | code |
 | read | `/production-status` | `PLAN.md`, `FEATURES.md`, `TASKS.md`, `product-roadmap.md` — all read-only | terminal output only; **nothing written** |
 | read | `/pipeline-check` | index lines of `FEATURES.md`, `TASKS.md`, `PLAN.md`, `RUNBOOKS.md` — all read-only, never a body | terminal output only; **nothing written** |
+| revise | `/pipeline-patch`, `/pipeline-revise` | an anchor + a described change; index lines (`/pipeline-patch` never more; `/pipeline-revise` also bodies within the anchor's scope) | **nothing of their own** — every write an owner's, through its amend arm or command |
 
-Last two rows are not stages — nothing hands to them, they hand to nothing. They're the read side, each spanning the whole pipeline; see [The read stage](#the-read-stage-production-status) below.
+Last three rows are not stages — nothing hands to them, they hand to nothing. Two are the read side, each spanning the whole pipeline; see [The read stage](#the-read-stage-production-status) below. Last is the revision side: changes what the stages already produced, through those stages' own owners; see [Revision](#revision-pipeline-patch-pipeline-revise) below.
 
 Stages entered, not marched through. Project w/ existing codebase commonly starts stage 0 then jumps stage 3; project whose next change obvious skips to stage 5 w/ free-form description, same as today. Nothing downstream requires upstream stage ever ran.
 
@@ -322,6 +323,35 @@ Update-in-place preferred over skip-and-replace whenever task's goal survives de
 
 Run ends w/ feature at `[PLANNED]`, `Tasks:` line listing surviving and newly created IDs.
 
+## Revision (`/pipeline-patch`, `/pipeline-revise`)
+
+Changing work already planned — design decision, feature doc, task, runbook step. Before these: an amendment meant re-running whichever owner held the artifact, one command + one gate per artifact, user carrying the sequence and the forgotten step. Two surfaces, two costs. Both explicit, never auto-triggered; neither a writer — every write is an owner's, through the Amend entry `pipeline-engine`'s `routing.md` names or the owner's own command. Feature design: [`./features/pipeline-revision.md`](./features/pipeline-revision.md).
+
+**Anchor** — three forms, shared: `feature=<slug>` (entry in `FEATURES.md`), `task=<N>` (live summary block; archived or never-assigned id stops, said which), `runbook=<name|id> step=<n>`. Unresolved → stop listing what exists, nothing written.
+
+**`/pipeline-patch`** (`commands/pipeline-patch.md`) — single owner or refuse. Anchor required. Walks `graph.md`'s edges reading only the four indexes, never a body. Proceeds only when the change writes exactly one owner (feature doc / task / runbook step — writes an arm makes as its own consequence not counted) AND none of five structural signals:
+
+1. more than one owner;
+2. a dependency edge changing;
+3. scope added that no task covers (any new task included);
+4. a deletion that crosses artifacts;
+5. a reorder of existing entries.
+
+Count + closed checklist, never a judgement of size. Proceed → owner's arm by path, its gate intact, then `/pipeline-check` scoped to the anchor. Refuse → one line naming the signal and `/pipeline-revise`; no escalation, no second question, arm never loaded.
+
+**`/pipeline-revise`** (`skills/pipeline-revise/`) — everything else. Anchor optional (else found in the change; none or several → stop, never pick). Classifies into exactly one branch, first match wins: **reorder** → **delete** → **insert** → **amend**; reads only that branch's file (`reorder.md`, `delete.md`, `insert.md`, `amend.md`). `Preconditions:` change moving no entry = amend, not reorder. Two-kind request = two runs.
+
+- **Impact walk, both directions**, over `graph.md`'s edges only: top-down from design section / feature doc to tasks, plan edges, runbook steps; bottom-up from task to the feature doc that promised it, when `Feature:` resolves. Bodies opened only within the anchor's scope — target, tasks whose `Preconditions:` name it or whose `Files:` overlap, runbook steps naming it. Never bulk.
+- **Lint bracket** — `/pipeline-check` scoped to the anchor before the proposal and after actuation; report shows cleared / created / unchanged. Where a precondition moved, successor bodies read afterwards to confirm the sequence still reads as one — reported, never fixed.
+- **Tiers** — editorial (wording; anchored artifact's step only), local (artifact + entries merely citing it; no status move, no edge), structural (scope or a downstream contract changes; full sequence). Reorder always structural.
+- **One gate**, nothing written before it by the skill or any arm. Shows verdict line, anchor/branch/tier, touched artifacts (untouched ones listed, overrulable), numbered owner steps, expected lint delta. **Editorial question asked every run**, never inferred — same rule `/architect amend` keeps; tier sets sequence length, never whether the question is asked.
+- **Actuation** — three or fewer owner steps: in the session, sequential, each owner's gate intact. Four or more: gate also offers handing the steps to `/runbook-create` and stopping — only when `/runbook-create` is installed, silent otherwise (optional delegation, the council gate's shape). The skill never writes a runbook. Never parallel, never subagents.
+- **Owner sequence upstream first** — no downstream step written against a state a later step changes. Owner refusing (touched `[IN PROGRESS]` task, a `[RUNNING]` runbook position) stops the sequence at that step; earlier writes kept and reported, never rolled back.
+
+**Deletion maps onto existing vocabularies**; nothing physically removed. Task → `[SKIP]` w/ dated reason, successors' edges dropped w/ the reason recorded; runbook step → struck (`[x]`, `Done: struck — <reason>`); feature → every live task `[SKIP]`, `/production-plan` drops its edges, `FEATURES.md` entry stays. Removing terminal entries stays `/task-clean`'s and `/runbook-clean`'s explicit act. Reorder = skip-and-insert: new id at the new position, nothing renumbered. `[DONE]` never reopened.
+
+**No new state.** No status value, no change ledger, no stored tier; outcomes are owners' writes in existing vocabularies (`[STALE]`, `[ITERATED]`, `[SKIP]`, `Preconditions:`, `Tasks:`, struck steps). Provenance = owner steps' commits and runbook `Done:` lines.
+
 ## Documentation task
 
 When `feature=<slug>` run drafts at least one new task (plain or part of reconciliation), `/task-add` appends one more: `Target: claude` task titled "Update documentation for feature `<slug>`", w/ `Preconditions:` naming every other new task from run — signalling should land once they have. Hints drawn from whichever of README.md, `docs/authoring-guide.md`, relevant `.claude/domain/*.md` files, `.claude/context/features.md`, `.claude/context/INDEX.md` actually describe behavior run's tasks change. Reconciliation-only run creating no new tasks gets no documentation task — nothing new to document.
@@ -351,6 +381,8 @@ Exactly one writer per artifact, `FEATURES.md` deliberate exception.
 | `council-report-*.html`, `council-transcript-*.md` | claude-council, when the council gate is convened. Owned by **neither** skill: never added to `WRITTEN`, never staged by `--commit`, never deleted. Both stages name their paths in the closing report and leave them in the working tree for the user to keep or delete. |
 
 `FEATURES.md` split by *line*, not file, so two main writers never contend for same field. `/architect` never writes `Tasks:`; `/task-add` never writes `Doc:` or `Source:`.
+
+`/pipeline-patch` and `/pipeline-revise` appear in no row, deliberately: **neither owns a line in any index or document** — both `routing.md` rows own `Nothing`. What they drive is written by the owner already in this table, through its amend entry: a task line `task-engine`'s `amend.md` writes is still `/task-add`'s line, a feature doc `/architect amend` writes is still `/architect`'s, a struck step is still the runbook suite's. A revision adds a sequence, never a writer.
 
 ## The council gate (optional)
 
@@ -414,6 +446,8 @@ divergences.
 
 `/domain-setup`, `/product-design`, `/product-roadmap`, `/architect`, `/production-plan`: all authoring commands/skills — uncommitted by default, `--commit` opts in. When `--commit` passed, all five follow commit-and-push protocol in [docs/authoring-guide.md](../../docs/authoring-guide.md) — pull at start, commit, re-sync, push — not plain `git commit`. `--no-push` (only meaningful alongside `--commit`) skips sync/push cycle, commits locally only. Algorithm not re-derived here; see that doc.
 
+`/pipeline-patch` and `/pipeline-revise` have no commit phase of their own: `--commit` / `--no-push` forwarded to each owner step, which either commits its own write set (an arm executed by path) or receives the flag (an owner command — `/task-add`, committing by default, gets `--no-commit` when `--commit` is absent).
+
 ## Domain layer vs. context layer
 
 Two `.claude/` knowledge layers stay separate, product pipeline doesn't change that:
@@ -445,4 +479,5 @@ No `resume` argument. Weeks can pass between sessions, flag wouldn't be remember
 - [`./task-workflow.md`](./task-workflow.md) — backlog schema this pipeline feeds: `TASKS.md` summary blocks, body schemas, `Target:` values.
 - [`./context-workflow.md`](./context-workflow.md) — context layer, structure/domain boundary reconciled above.
 - [`../context/features.md`](../context/features.md) — shipped artifacts, including every command named here.
-- `commands/domain-setup.md`, `commands/task-add.md`, `commands/task-clean.md`, `commands/task-list.md`, `commands/production-status.md`, `commands/pipeline-check.md`, `skills/pipeline-engine/`, `skills/product-design/SKILL.md`, `skills/product-roadmap/SKILL.md`, `skills/architect/SKILL.md`, `skills/production-plan/SKILL.md` — the implementations.
+- [`./features/pipeline-revision.md`](./features/pipeline-revision.md) — feature design behind the revision surfaces.
+- `commands/domain-setup.md`, `commands/task-add.md`, `commands/task-clean.md`, `commands/task-list.md`, `commands/production-status.md`, `commands/pipeline-check.md`, `commands/pipeline-patch.md`, `skills/pipeline-engine/`, `skills/pipeline-revise/`, `skills/product-design/SKILL.md`, `skills/product-roadmap/SKILL.md`, `skills/architect/SKILL.md`, `skills/production-plan/SKILL.md` — the implementations.

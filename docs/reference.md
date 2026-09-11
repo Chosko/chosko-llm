@@ -423,8 +423,9 @@ The catalogue is closed. It has eleven findings and no others:
 
 `ERROR` means something a pipeline command will act on wrongly if it's left;
 `WARNING` means a legal state that needs its owner's attention.
-`/pipeline-patch` and `/pipeline-revise` are the pipeline's revision commands
-and have not shipped yet.
+`/pipeline-patch` and `/pipeline-revise` are the pipeline's revision
+commands; see [`/pipeline-patch`](#pipeline-patch) and
+[`/pipeline-revise`](#pipeline-revise) below.
 
 Two things are deliberately **not** findings. A feature's `Tasks:` id with no
 `TASKS.md` block is an archived task (the normal state of a feature after
@@ -514,6 +515,175 @@ section.
 
 Commits and pushes automatically (`--no-commit` to skip both, `--no-push` to
 commit without pushing).
+
+### `/pipeline-patch`
+
+Applies a change that touches **exactly one** feature document, task or
+runbook step through that owner's amend step, then re-checks it. Anything
+else it refuses.
+
+```
+/pipeline-patch <anchor> "<change>" [--commit] [--no-push]
+```
+
+The anchor is required, in one of three forms:
+
+- `feature=<slug>` — an entry in `FEATURES.md`;
+- `task=<N>` — a live summary block in `TASKS.md`;
+- `runbook=<name|id> step=<n>` — one step of a runbook listed in
+  `RUNBOOKS.md`.
+
+An anchor that resolves to nothing stops the run and lists what exists. A
+task id that has been archived is reported as archived; one that was never
+assigned is reported as that.
+
+It decides from the indexes alone (`FEATURES.md`, `TASKS.md`, `PLAN.md`,
+`RUNBOOKS.md`) and never opens a task body, a feature document or a runbook
+body. The **single-owner rule** is a count and a checklist, not a judgement
+about whether the change feels small. It goes ahead only when the change
+writes exactly one owner and none of these five structural signals is
+present:
+
+1. more than one owner;
+2. a dependency edge changing: an id added to, dropped from or re-pointed on
+   a `Preconditions:` line, or a plan dependency moving;
+3. scope added that no task covers: a new promise in a feature document that
+   no live task answers to, or any new task at all;
+4. a deletion that crosses artifacts: removing a task another line points
+   at, or a whole feature;
+5. a reorder of existing entries.
+
+Writes an owner's amend step makes as its own consequence, such as the
+`[STALE]` flips `/architect amend` makes, don't count as a second owner.
+
+When it goes ahead, it loads the owner's amend step by path and runs it with
+that step's own approval gate. That step is `/architect amend` for a
+feature document, `task-engine`'s `references/amend.md` for a task, and
+`runbook-run`'s `references/step-amend.md` for a runbook step. Then it runs
+`/pipeline-check` scoped to the anchor: the feature itself, the task's
+feature for a task anchor, or unscoped for a runbook step. When it refuses,
+it prints one line and stops:
+
+```
+Not a patch — <signal>: <what in the change set it off>. Run /pipeline-revise <anchor> "<change>".
+```
+
+There is no escalation and no second question, and nothing is written. A
+change that writes none of the three owners, only a line another command
+owns (a milestone's order in `PLAN.md`, say), is refused too, naming that
+line's owner.
+
+It makes no commit of its own. `--commit` and `--no-push` are passed on to
+the amend step, which then commits exactly what it wrote; without `--commit`
+nothing is committed and the report reminds you. Requires
+`skill:pipeline-engine`, `skill:architect`, `skill:task-engine` and
+`skill:runbook-run`, which `chosko-llm add` installs with it.
+
+### `/pipeline-revise`
+
+The heavier tool, for a change that reaches more than one artifact: new
+scope, a task or runbook step inserted, removed or moved, or a dependency
+edge changing. It traces the change's impact, proposes one plan, then runs
+each owner's own step in order. It writes nothing itself.
+
+```
+/pipeline-revise [<anchor>] "<change>" [--commit] [--no-push]
+```
+
+The anchor takes the same three forms as `/pipeline-patch` and is optional.
+Without one, the change itself must name exactly one feature slug, one task
+id, or one runbook together with a step, and the skill says which it picked.
+If the change names none, or more than one, the skill stops and lists what
+exists; it never picks between two.
+
+**Four branches.** Each request is classified into exactly one branch,
+tested in this order, and only that branch's instructions are read:
+
+- **reorder** — an existing task or runbook step is to run at a different
+  position. This is done as skip-and-insert: the old entry is marked `[SKIP]`
+  (or struck) with a reason naming the move, and a replacement goes in at the
+  new place under a new id. Nothing is renumbered.
+- **delete** — a live task, a pending runbook step or a whole feature is to
+  stop being work. A task becomes `[SKIP]` with a dated reason, the
+  `Preconditions:` edges its successors had on it are dropped with that
+  reason recorded, and its feature document stops promising it. A runbook
+  step is struck. For a feature, every live task is skipped and
+  `/production-plan` drops its edges, while its `FEATURES.md` entry stays.
+  `[DONE]` work is never touched, and actually removing anything stays
+  `/task-clean`'s and `/runbook-clean`'s job.
+- **insert** — a new task or runbook step is to exist. This is the case the
+  skill was built for: `/architect amend` writes the new scope into the
+  feature document first, `/task-add feature=<slug> --single --after <N>`
+  attaches and places the task, the successors' `Preconditions:` gain its
+  id, and `/runbook-create --append --after <n>` inserts the step that runs
+  it.
+- **amend** — anything else that changes what already exists, including a
+  `Preconditions:` change that moves no entry. Owners run upstream first: a
+  `product-design.md` decision, then each feature document, then each task,
+  then each runbook step.
+
+A request of two kinds is two runs: the skill does the first and tells you
+the rest is a separate run.
+
+**The impact walk.** From the anchor it follows the links between the
+indexes in both directions: down from a feature document to its tasks, its
+plan edges and the runbook steps that name them, and up from a task to the
+feature document that promised it, when the task's `Feature:` resolves.
+Unlike `/pipeline-patch` it may open bodies, but only within the anchor's
+scope: the target itself, the tasks whose `Preconditions:` name it or whose
+`Files:` overlap with it, and the runbook steps that name it. It never reads
+the backlog in bulk.
+
+**Lint before and after.** `/pipeline-check`, scoped to the anchor, runs
+before the plan is built, so the plan starts from the true state. It runs
+again after the steps have run, even when they stopped part-way, and the
+report shows the difference: findings cleared, findings created, findings
+unchanged. Where an insertion or a deletion changed a precondition, the
+skill also reads the successor tasks' bodies afterwards to confirm the
+sequence still reads as a sequence, and reports any gap without fixing it.
+
+**Three tiers.** The plan names one:
+
+- **editorial** — wording only, nothing downstream changes meaning. Only the
+  step that writes the anchored artifact runs.
+- **local** — the artifact plus the entries that merely cite it. No status
+  moves and no edge changes.
+- **structural** — the scope changes, or the contract of something
+  downstream does. The full sequence the walk reached runs. A reorder is
+  always structural.
+
+**One gate.** Nothing is written before it. It shows the probe's verdict
+line, the anchor, the branch and the tier, and every touched artifact with
+how it was reached. The artifacts judged untouched are listed too, so you
+can overrule the call. It numbers the owner steps in order and shows which
+`/pipeline-check` findings each is expected to clear or create. Then it asks
+the **editorial question**, on every run and never inferred: is this change
+wording only, with nothing downstream changing meaning?
+
+- *Editorial* runs the short sequence.
+- *Not editorial, here* runs the full sequence in this session.
+- *Not editorial, as a runbook* hands the full sequence to `/runbook-create`
+  and stops.
+- *Stop* writes nothing.
+
+The runbook option is offered only when the sequence has **four or more**
+owner steps and `/runbook-create` is installed; otherwise it simply isn't
+shown. Three steps or fewer always run in the session. You can overrule the
+tier or a touched/untouched call in the same answer, and the gate is shown
+again.
+
+**Running the steps.** One at a time, in order, never in parallel and never
+in a subagent, each with its owner's own approval gate intact. If an owner
+refuses (a touched `[IN PROGRESS]` task, say), or you stop at an owner's
+gate, the sequence ends there. Earlier steps' writes stay and are reported,
+never rolled back, and the lint after still runs. A step whose owner isn't
+installed stops the run before the gate.
+
+It makes no commit of its own. `--commit` and `--no-push` are passed on to
+each owner step. An amend step commits its own writes; `/product-design`,
+`/production-plan` and `/runbook-create --append` get `--commit`; and
+`/task-add`, which commits by default, gets `--no-commit` when you didn't
+pass `--commit`. Requires the same four skills as `/pipeline-patch`.
 
 ---
 
@@ -655,8 +825,8 @@ changing one existing task in place. It refuses a task that is
 feature promises through `/architect amend` instead. It deletes a live task
 only by marking it `[SKIP]` with a reason, and it requires a dropped
 `Preconditions:` edge to be explained in the task's `## Decisions`. No
-`task-*` command reads it itself: it's there for whatever amends a single
-task to read by path.
+`task-*` command reads it itself: `/pipeline-patch` and `/pipeline-revise`
+read it by path whenever they change a task.
 
 ### `pipeline-engine`
 
@@ -686,9 +856,10 @@ Four reference files, each the single authority for its rule:
 Like `task-engine`, `pipeline-engine` is **not invocable**: it takes no
 arguments, runs nothing and produces no output, and nothing should suggest
 it. It's a reference library that other features read while they run.
-`/pipeline-check` declares `requires: skill:pipeline-engine`, so installing it
-installs the engine too, and `chosko-llm rm skill:pipeline-engine` refuses
-while it's still installed. The two engines sit side by side; neither absorbs
+`/pipeline-check`, `/pipeline-patch` and `/pipeline-revise` declare
+`requires: skill:pipeline-engine`, so installing any of them installs the
+engine too, and `chosko-llm rm skill:pipeline-engine` refuses while any of
+them is still installed. The two engines sit side by side; neither absorbs
 the other.
 
 ### Stale tasks

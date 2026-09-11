@@ -190,7 +190,8 @@ Currently shipped:
   edge named in `## Decisions`, deleting a live task as `[SKIP]` never by
   removal, `Feature:` added only to an orphan, one gate, a closed write set;
   authored in the engine rather than extracted, and read by NO `task-*`
-  feature — only by whatever amends a single task, by path). A
+  feature — only by whatever amends a single task, by path: `/pipeline-patch`
+  and `pipeline-revise`). A
   consumer cites the file by
   `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/<f>.md`
   and states only its own deviations. Installed like any other skill
@@ -891,7 +892,8 @@ Currently shipped:
   findings, malformed block is its own `ERROR`; no rule reads a body or
   probes `.claude/tasks/archive/`). Consumers cite
   `${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/references/<f>.md`
-  and state only deviations. Only consumer today: `/pipeline-check`. Routing
+  and state only deviations. Three consumers: `/pipeline-check`,
+  `/pipeline-patch`, `pipeline-revise`. Routing
   table kept honest by repo-local `scripts/check-routing.sh` (sibling of
   `check-changelog.sh`; not a feature, no frontmatter, installed nowhere):
   two existence invariants — every row names a `commands/<n>.md` or
@@ -925,6 +927,93 @@ Currently shipped:
   included), `.claude/runbooks/` or `.claude/domain/features/`; the probe is
   its only shell use — the one stated departure from `/production-status`,
   which runs none. Runs only when invoked; no pipeline writer auto-runs it.
+- `commands/pipeline-patch.md` — cheap half of revising planned work
+  (feature `pipeline-revision`). Command not skill: one pass, no supporting
+  files, thin by contract. `requires: skill:pipeline-engine, skill:architect,
+  skill:task-engine, skill:runbook-run` — the engine plus every skill whose
+  amend arm it may load, so installing the patcher pulls in the owners.
+  Anchor REQUIRED, one of three forms: `feature=<slug>`, `task=<N>`,
+  `runbook=<name|id> step=<n>`; missing anchor or empty change stops, naming
+  `/pipeline-revise` as the no-anchor path; unresolved anchor stops listing
+  what exists (archived vs never-assigned task id said). Probes (or reuses a
+  verdict), walks `graph.md`'s edges reading ONLY the four indexes — never a
+  task body, feature doc or runbook body, which is the line separating it
+  from `pipeline-revise`. Decision is a count plus a closed checklist, never a
+  judgement: exactly ONE owner written (feature doc / task / runbook step;
+  writes an arm makes as its own consequence — `[STALE]` flips, an orphan's
+  `Tasks:` id, the `Steps:` count — not counted) AND none of five structural
+  signals (more than one owner; a dependency edge changing; scope added no
+  task covers, any new task included; a deletion crossing artifacts; a
+  reorder). Proceed → load that owner's arm by path
+  (`skills/architect/amend.md`, `task-engine`'s `references/amend.md`,
+  `runbook-run`'s `references/step-amend.md`), execute it with its own gate,
+  then `/pipeline-check` scoped to the anchor (`feature=` for a feature
+  anchor and for a task whose `Feature:` resolves, unscoped otherwise;
+  `lint.md` evaluated directly when `/pipeline-check` absent). Refuse → ONE
+  fixed line `Not a patch — <signal>: … Run /pipeline-revise <anchor>
+  "<change>".`, no escalation, no second question, arm never loaded; body
+  carries a signal → branch table naming where `pipeline-revise` takes each
+  signal. A change writing none of the three owners (only a `PLAN.md` line,
+  say) stops naming that line's owner from `routing.md`. Write set EMPTY:
+  owns no line, its routing row owns `Nothing`, no who-writes-what row. No
+  commit of its own: `--commit` / `--no-push` forwarded to the arm (the arm's
+  closed write set committed per `commit.md`; `/runbook-create --append` gets
+  the flags).
+- `skills/pipeline-revise/` — heavy half of revising planned work (feature
+  `pipeline-revision`). Explicit, never auto-triggered; same `requires:` as
+  the patcher. `SKILL.md` carries the workflow; four flat supporting files,
+  one per branch — `amend.md`, `insert.md`, `delete.md`, `reorder.md` — read
+  ON DEMAND, exactly one per run once CLASSIFY picks it, never a second; all
+  four share one seven-section schema (*Applies when*, *Impact walk*, *Owner
+  sequence*, *Tier*, *Verification*, *Outcomes*, *Never*). Anchor optional:
+  same three forms, or exactly one found in the change (stated in one line);
+  none or several stops listing what exists, never picks. CLASSIFY is
+  first-match in order reorder → delete → insert → amend (amend = everything
+  else, incl. a `Preconditions:` change that moves no entry — the boundary
+  `reorder.md` states so classification stays unambiguous); a request of two
+  kinds is two runs. Impact walk both directions over `graph.md`'s edges and
+  no other traversal — top-down design section → features → tasks, plan
+  edges, runbook steps; bottom-up task → feature doc when `Feature:` resolves
+  (an unresolved slug stops the upward walk, not an error). May open bodies,
+  scoped: the target artifact, tasks whose `Preconditions:` name it or whose
+  `Files:` overlap, runbook steps naming it; never bulk, never the archive.
+  Lint bracket: `/pipeline-check` scoped to the anchor BEFORE the proposal
+  and AFTER actuation (also when stopped part-way), report shows cleared /
+  created / unchanged; plus a successor-body read wherever an insert, delete
+  or edge change moved a precondition — reported, never fixed. Tiers
+  editorial / local / structural, judged by the branch file (`reorder.md`
+  fixed structural; `insert.md` structural when it adds scope, local when the
+  doc already promises it; `delete.md` local only for a task nothing else
+  names). ONE gate, nothing written before it by the skill or any arm:
+  verdict line, anchor/branch/tier, touched artifacts with the edge or read
+  that reached each plus the untouched ones listed for overruling, numbered
+  owner steps, expected lint delta, then the editorial question asked EVERY
+  run, never inferred — A editorial / B not editorial, here / C as a runbook /
+  D stop; C rendered only at FOUR OR MORE owner steps AND `/runbook-create`
+  installed (read off the verdict line's `installed` field, omitted silently
+  otherwise — the council gate's optional-delegation shape). Actuation:
+  sequential in the session, never parallel, never subagents, each owner's
+  gate intact; a step an earlier outcome made moot is dropped with a line,
+  none added after the gate; C invokes `/runbook-create` with self-contained
+  steps plus a final lint step, then stops — the skill never writes a
+  runbook. Owner sequences upstream first: amend = `/product-design`'s amend
+  arm → `/architect amend` per feature → task-engine `amend.md` per task →
+  `step-amend.md` per step; insert = `/architect amend` for new scope →
+  `/task-add feature=<slug> --single --before/--after` (or the reconciliation
+  form when step 1 leaves the feature `[ITERATED]`, both shown at the gate) →
+  successors' `Preconditions:` via the task arm → `/runbook-create --append
+  --before/--after`; delete = withdraw the promise → `[SKIP]` + dated reason →
+  successors' edges dropped with the reason → steps struck, and for a feature
+  every live task `[SKIP]` plus a `/production-plan` run, entry kept (lint
+  then reports L11); reorder = skip-and-insert, new id at the new place, no
+  renumber. Failure contract: an owner refusing (touched `[IN PROGRESS]`,
+  `[DONE]`, a `[RUNNING]` position) stops the sequence there, earlier writes
+  kept and reported, NEVER rolled back, the after-lint still runs; a missing
+  owner stops before the gate. Write set empty — no line, no file, no report
+  on disk; no status value, no change ledger. No commit of its own:
+  `--commit` / `--no-push` forwarded per owner step (arms commit their own
+  write set; `/product-design`, `/production-plan`, `/runbook-create
+  --append` get `--commit`; `/task-add` gets `--no-commit` without it).
 - `commands/task-list.md` — prints backlog as compact read-only
   summary. Marks `claude+human` / `human` tasks with `⚠ <target>`, shows
   `[<slug>]` for tasks with `Feature:` line, appends `⚠ stale` to
@@ -1036,7 +1125,7 @@ Currently shipped:
   facts; the prompt block immutable, so a wrong prompt is struck and a
   corrected step inserted; a `[RUNNING]` runbook accepting changes only after
   its current step), is never read by this body — whatever amends a step
-  reads it by path. No `requires:` — it IS the
+  (`/pipeline-patch`, `pipeline-revise`) reads it by path. No `requires:` — it IS the
   dependency. **Ids**: every runbook carries one beside its kebab-case name,
   and every command taking a name takes an id in its place — **a bare
   all-digits argument is an id, anything else a name**, unambiguous because a
@@ -1301,6 +1390,10 @@ non-transitive. Live examples: `commands/task-add.md`,
 `skills/task-implement/SKILL.md`, all declaring `requires: skill:task-engine`;
 and `commands/pipeline-check.md`, declaring `requires: skill:pipeline-engine` —
 the second engine, built on the same non-invocable-skill pattern.
+`commands/pipeline-patch.md` and `skills/pipeline-revise/SKILL.md` declare four
+at once (`skill:pipeline-engine, skill:architect, skill:task-engine,
+skill:runbook-run`) — the engine plus every owner whose amend arm they load by
+path.
 Unlike `replaces:`, it is permanent — the dependency does not "propagate" and
 the key is dropped only when the reference is.
 
@@ -1322,7 +1415,8 @@ its state in versioned project document.
   files exist so the common path stays cheap: `SKILL.md` names the branch
   and the file to read when it fires, and nothing else reads them.
   `skills/task-implement/` (seven), `skills/product-design/` (four),
-  `skills/architect/` (seven), `skills/task-review/remote-diffs.md`,
+  `skills/architect/` (seven), `skills/pipeline-revise/` (four, one per
+  branch), `skills/task-review/remote-diffs.md`,
   `skills/context-build/nested.md` and
   `skills/context-update/nested.md` (one each) all follow this.
   `skills/task-iterate/` has none, and says so in its body so nobody goes
