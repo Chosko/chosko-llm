@@ -103,7 +103,7 @@ Tasks: none
 
 ## backlog-ordering — Selection honours `Preconditions:`; tasks and runbook steps can be inserted, not only appended
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/backlog-ordering.md
 Source: prompt
 Tasks: 169, 173, 174
@@ -112,7 +112,7 @@ Tasks: 169, 173, 174
 
 ## pipeline-engine — Shared probes, index graph, routing table and the `/pipeline-check` lint
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/pipeline-engine.md
 Source: prompt
 Tasks: 175, 181
@@ -121,7 +121,7 @@ Tasks: 175, 181
 
 ## owner-amend-arms — Standalone amend files per artifact owner, with a precision iterate guard for `/architect`
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/owner-amend-arms.md
 Source: prompt
 Tasks: 182, 186
@@ -130,7 +130,7 @@ Tasks: 182, 186
 
 ## pipeline-revision — `/pipeline-patch` and `/pipeline-revise`: change planned work at proportional cost, through its owners
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/pipeline-revision.md
 Source: prompt
 Tasks: 187, 193
@@ -139,7 +139,7 @@ Tasks: 187, 193
 
 ## pipeline-suggest — One-line auto-triggered pointer from a free-form request to the pipeline command that fits
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/pipeline-suggest.md
 Source: prompt
 Tasks: 194, 195
@@ -148,7 +148,7 @@ Tasks: 194, 195
 
 ## task-archive — `/task-clean` archives pruned bodies instead of deleting them; features keep every id
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/task-archive.md
 Source: product-design.md § Task backlog
 Tasks: 196, 199, 201
