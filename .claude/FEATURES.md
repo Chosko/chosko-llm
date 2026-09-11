@@ -52,7 +52,7 @@ Tasks: none
 Status: [DONE]
 Doc: .claude/domain/features/task-peer-review.md
 Source: prompt
-Tasks: 158, 159, 160, 161
+Tasks: none
 
 ---
 
@@ -97,7 +97,7 @@ Tasks: none
 Status: [DONE]
 Doc: .claude/domain/features/version-changelog.md
 Source: prompt
-Tasks: 150
+Tasks: none
 
 ---
 
@@ -106,7 +106,7 @@ Tasks: 150
 Status: [PLANNED]
 Doc: .claude/domain/features/backlog-ordering.md
 Source: prompt
-Tasks: 169, 170, 171, 172, 173, 174
+Tasks: 169, 173, 174
 
 ---
 
@@ -115,7 +115,7 @@ Tasks: 169, 170, 171, 172, 173, 174
 Status: [PLANNED]
 Doc: .claude/domain/features/pipeline-engine.md
 Source: prompt
-Tasks: 175, 176, 177, 178, 179, 180, 181
+Tasks: 175, 181
 
 ---
 
@@ -124,7 +124,7 @@ Tasks: 175, 176, 177, 178, 179, 180, 181
 Status: [PLANNED]
 Doc: .claude/domain/features/owner-amend-arms.md
 Source: prompt
-Tasks: 182, 183, 184, 185, 186
+Tasks: 182, 186
 
 ---
 
@@ -133,7 +133,7 @@ Tasks: 182, 183, 184, 185, 186
 Status: [PLANNED]
 Doc: .claude/domain/features/pipeline-revision.md
 Source: prompt
-Tasks: 187, 188, 189, 190, 191, 192, 193
+Tasks: 187, 193
 
 ---
 
@@ -151,6 +151,6 @@ Tasks: 194, 195
 Status: [PLANNED]
 Doc: .claude/domain/features/task-archive.md
 Source: product-design.md § Task backlog
-Tasks: 196, 197, 198, 199, 200, 201
+Tasks: 196, 199, 201
 
 ---
