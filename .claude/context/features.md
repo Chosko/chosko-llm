@@ -847,6 +847,68 @@ Currently shipped:
   first `[PLANNED]`); the only stops are a missing `PLAN.md` and an unknown
   `milestone=`. Writes nothing, runs NO shell command of any kind, never opens
   a file under `.claude/tasks/`, and never starts the work it recommends.
+- `skills/pipeline-engine/` — second non-invocable reference library,
+  beside `task-engine` and deliberately NOT merged with it (open question in
+  `../domain/features/pipeline-engine.md`). Same pattern: no arguments, runs
+  nothing, no output; `SKILL.md` is a MAP carrying no rule text, the
+  not-invocable statement repeated in body and `description` so skill
+  selection never suggests it. Four files under `references/`, one authority
+  each: `probes.md` (fixed set of cheap filesystem probes describing a
+  project's pipeline setup, the one-line verdict every consumer prints
+  identically, and the in-session reuse rule naming the writers whose runs
+  invalidate a verdict; subagents re-probe), `graph.md` (how `FEATURES.md`,
+  `TASKS.md`, `PLAN.md`, `RUNBOOKS.md` point at each other — each edge, its
+  direction, authoritative side, writer and consumers, and which vanish with
+  an absent index; an id at or below `Last task number:` with no block
+  resolves archived and terminal), `routing.md` (one row per pipeline
+  feature — Feature / Consumes / Produces / Owns / Preconditions / Argument
+  shape / Amend — the ownership authority the revision suite reads; owned BY
+  LINE, no two rows claiming one line or value; every row verified against
+  the shipped body, never a design doc; agrees with `/task-add`'s
+  pre-authorisation table and is the one fixed if they diverge), `lint.md`
+  (closed catalogue of eleven structural drift findings L1–L11, each with a
+  detection rule over `graph.md`'s edges, severity `ERROR` or `WARNING` —
+  two levels, deliberately clear of every status vocabulary — one fix command
+  and a fixed output template; two deliberate absences recorded: a `Tasks:`
+  id absent from `TASKS.md` (archived, not drift) and a pending runbook step
+  naming a finished task (needs a body read); absent index drops its
+  findings, malformed block is its own `ERROR`; no rule reads a body or
+  probes `.claude/tasks/archive/`). Consumers cite
+  `${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/references/<f>.md`
+  and state only deviations. Only consumer today: `/pipeline-check`. Routing
+  table kept honest by repo-local `scripts/check-routing.sh` (sibling of
+  `check-changelog.sh`; not a feature, no frontmatter, installed nowhere):
+  two existence invariants — every row names a `commands/<n>.md` or
+  `skills/<n>/SKILL.md` in this repo; every shipped feature declaring
+  `requires: skill:pipeline-engine` has a row. Row shape (line beginning
+  `` | ` ``, name inside first backquotes, one leading `/` stripped) shared
+  with `probes.md`'s `installed` probe. Cell semantics not checked. No
+  context file of its own — `CLAUDE.md` § Versioning says when to run it.
+- `commands/pipeline-check.md` — second read-only reporter of the pipeline,
+  beside `/production-status`, and like it spanning the whole pipeline
+  rather than a stage. Command not skill (single pass, no supporting files);
+  declares `requires: skill:pipeline-engine` and restates no probe, edge or
+  finding — cites all four engine files by path. Probes (or reuses a verdict
+  already in the conversation), reads each of `.claude/FEATURES.md`,
+  `.claude/TASKS.md`, `.claude/PLAN.md`, `.claude/RUNBOOKS.md` that exists,
+  evaluates `lint.md` over `graph.md`'s edges, prints findings in one fenced
+  block grouped by artifact in fixed order (`FEATURES.md`, `PLAN.md`,
+  `TASKS.md`, `RUNBOOKS.md`), each line from its `lint.md` template with its
+  fix verbatim, closing on a count of both severities; clean run prints
+  exactly ONE line naming the indexes read. `feature=<slug>` keeps only the
+  findings touching that feature — its entry, tasks whose `Feature:` names it
+  or whose id is on its `Tasks:` with their precondition findings and
+  cycles, plan lines naming it; no runbook finding in scope (`RUNBOOKS.md`
+  ties no runbook to a slug). Unknown slug, or no `FEATURES.md`, said in one
+  line and the unscoped report runs. Failure contract is degradation: absent
+  index drops its findings, malformed block reported, unrecognised argument
+  named and ignored; ONLY stop is a project with none of the four indexes,
+  pointed at `/task-setup` / `/domain-setup`. Reports, never fixes: writes
+  nothing, commits nothing, flips no status; no exit-code contract, no
+  `--fix`, no `--quiet`. Opens no file under `.claude/tasks/` (archive
+  included), `.claude/runbooks/` or `.claude/domain/features/`; the probe is
+  its only shell use — the one stated departure from `/production-status`,
+  which runs none. Runs only when invoked; no pipeline writer auto-runs it.
 - `commands/task-list.md` — prints backlog as compact read-only
   summary. Marks `claude+human` / `human` tasks with `⚠ <target>`, shows
   `[<slug>]` for tasks with `Feature:` line, appends `⚠ stale` to
@@ -1213,7 +1275,9 @@ time. `add` installs them first, `rm` refuses to remove one while a dependent
 is installed (`--force` overrides). One level deep, unversioned,
 non-transitive. Live examples: `commands/task-add.md`,
 `commands/task-list.md`, `commands/task-clean.md` and
-`skills/task-implement/SKILL.md`, all declaring `requires: skill:task-engine`.
+`skills/task-implement/SKILL.md`, all declaring `requires: skill:task-engine`;
+and `commands/pipeline-check.md`, declaring `requires: skill:pipeline-engine` —
+the second engine, built on the same non-invocable-skill pattern.
 Unlike `replaces:`, it is permanent — the dependency does not "propagate" and
 the key is dropped only when the reference is.
 
@@ -1242,8 +1306,8 @@ its state in versioned project document.
   looking for one. Whole
   folder is copied on install regardless — the saving is tokens per run,
   not bytes on disk.
-- **`skills/task-engine/references/` is the other thing entirely.** Those
-  files are read by OTHER features, not by their own `SKILL.md`, which is why
+- **`skills/task-engine/references/` and `skills/pipeline-engine/references/`
+  are the other thing entirely.** Those files are read by OTHER features, not by their own `SKILL.md`, which is why
   the skill needs `requires:` and a plain supporting file does not. A skill's
   own supporting file is private to it and needs no declaration; a file
   another feature reads is a cross-feature dependency and must be declared, or

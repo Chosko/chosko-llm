@@ -83,7 +83,8 @@ never a `docs/` path.
   shape. Owner-of is the column [pipeline-revision](./pipeline-revision.md)
   keys on; consumes and produces are what its impact walk uses to order steps.
 - **Lint** — the finding catalogue: each finding's detection rule over the
-  indexes, its severity, and the one command that resolves it. The command
+  indexes, its severity — two levels, `ERROR` and `WARNING` — and the one
+  command that resolves it. The command
   and the two revision surfaces read this file so a finding is defined once.
 
 ### The findings
@@ -96,10 +97,16 @@ The initial catalogue, all derivable from indexes alone:
   precondition cycle;
 - a `[ITERATED]` feature; a `[STALE]` task; a `FEATURES.md` slug absent from
   `PLAN.md`; a plan edge naming an unknown slug;
-- a pending runbook step naming a task already `[DONE]` or `[SKIP]`; a
-  runbook `[PENDING]` with no unticked step;
+- a runbook `[PENDING]` with no unticked step, derived from `Steps: <n>/<n>`
+  and `Status:` in `RUNBOOKS.md` alone;
 - a `[PLANNED]` feature whose every task is `[DONE]` or `[SKIP]` and which
   has not been flipped.
+
+A pending runbook step naming a task already `[DONE]` or `[SKIP]` is not in
+the shipped catalogue: detecting it means reading a step's prompt, which means
+opening a runbook body, and no finding opens one. `/runbook-run` surfaces the
+same problem when it prints each step before spawning it. See the second open
+question.
 
 Each finding names its fix: `/task-add feature=<slug>` for the iterated
 feature, `/production-plan` for the missing slug, `flip to [DONE]` for the
@@ -118,9 +125,10 @@ they act.
 
 ### The routing check
 
-A repo-local script beside `check-changelog.sh` verifies that every shipped
-pipeline command or skill has a row in the routing table and that every row
-names a feature that exists. Semantics cannot be checked mechanically;
+A repo-local script beside `check-changelog.sh` verifies two invariants:
+every row in the routing table names a feature that exists as a command or a
+skill, and every feature declaring `requires: skill:pipeline-engine` has a
+row. Semantics cannot be checked mechanically;
 existence can, and a routing table that names a deleted skill is exactly the
 drift this feature is meant to catch elsewhere. Same register as the other
 repo-local audits: authoring-time only, never installed.
@@ -170,8 +178,10 @@ lint's at run time.
   rules are already useful outside `task-*`. Two engines with one consumer set
   is a smell; one engine with two audiences may be worse. Decide after both
   have shipped and the overlap is measurable.
-- **Should the runbook index carry per-step task ids?** Two lint findings
-  need a step's contents, which today means opening a runbook body. Adding a
+- **Should the runbook index carry per-step task ids?** One named finding — a
+  pending runbook step naming a task already `[DONE]` or `[SKIP]` — needs a
+  step's contents, which today means opening a runbook body, so it is left out
+  of the shipped catalogue. Adding a
   summary of step targets to `RUNBOOKS.md` would keep the lint index-only,
   at the cost of a derived field the schema currently avoids.
 - **Does a second non-invocable skill change harness behaviour?** The same

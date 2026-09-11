@@ -46,7 +46,7 @@ Feature: pipeline-engine
 
 ## 181. Update documentation for feature `pipeline-engine`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, docs/authoring-guide.md, CLAUDE.md, .claude/domain/product-workflow.md, .claude/domain/features/pipeline-engine.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 175

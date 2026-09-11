@@ -758,6 +758,38 @@ working repo — so it is not a subcommand either: `bin/chosko-llm` dispatches
 only its known subcommand list, and `chosko-llm check-changelog` is an unknown
 subcommand.
 
+## The routing guard
+
+`check-changelog.sh` has one sibling authoring-time guard:
+`scripts/check-routing.sh`. It keeps the pipeline routing table,
+`skills/pipeline-engine/references/routing.md` (the ownership authority the
+pipeline's revision features read), honest about existence. Run it whenever
+you add, rename, remove or re-kind a pipeline feature, add or drop a
+`requires: skill:pipeline-engine` declaration, or edit the table:
+
+```sh
+./scripts/check-routing.sh
+```
+
+It takes no arguments, reads only `routing.md` and the frontmatter of
+`commands/*.md` and `skills/*/SKILL.md`, writes nothing, and exits 0 **in
+silence** when the table is in order. Otherwise it exits non-zero naming the
+invariant it found violated:
+
+1. Every row names a feature that exists in this repo, as a command
+   (`commands/<name>.md`) or as a skill (`skills/<name>/SKILL.md`). A missing
+   table, or a table with no rows, fails here too. A row is a line beginning
+   `` | ` ``, and its name is the text inside the first pair of backquotes
+   with one leading `/` stripped. `probes.md`'s `installed` probe reads rows by
+   the same shape, so a formatting change to the table is a change to both.
+2. Every shipped feature that declares `requires: skill:pipeline-engine` has a
+   row.
+
+It proves existence and nothing more. Whether a row's cells are *true*, and
+whether a pipeline feature that doesn't read the engine has a row at all, are
+questions of meaning and stay a reviewer's job. Like `check-changelog.sh` it is
+repo-local: not a feature, no frontmatter, not a subcommand, installed nowhere.
+
 ## Commit-and-push convention
 
 Features that write files split into two groups, each exposing one opt-in

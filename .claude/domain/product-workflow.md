@@ -1,6 +1,6 @@
 # Product workflow — from product idea to implementation task
 
-Source of truth for product pipeline: commands taking product from brainstorm through architecture to implementable backlog, docs they exchange, three status vocabularies keeping design, delivery and backlog in sync. Read when touching `/domain-setup`, `/product-design`, `/product-roadmap`, `/architect`, `/production-plan`, `/production-status`, or feature-aware parts of `/task-add`, `/task-list` and `/task-clean`.
+Source of truth for product pipeline: commands taking product from brainstorm through architecture to implementable backlog, docs they exchange, three status vocabularies keeping design, delivery and backlog in sync. Read when touching `/domain-setup`, `/product-design`, `/product-roadmap`, `/architect`, `/production-plan`, `/production-status`, `/pipeline-check`, or feature-aware parts of `/task-add`, `/task-list` and `/task-clean`.
 
 ## Why this exists
 
@@ -20,8 +20,9 @@ Pipeline exists to make handoff explicit. Cost: set of files must agree on schem
 | 5 — plan | `/task-add feature=<slug>` | feature doc | task bodies + `TASKS.md` entries |
 | 6 — build | `/task-implement` | task body | code |
 | read | `/production-status` | `PLAN.md`, `FEATURES.md`, `TASKS.md`, `product-roadmap.md` — all read-only | terminal output only; **nothing written** |
+| read | `/pipeline-check` | index lines of `FEATURES.md`, `TASKS.md`, `PLAN.md`, `RUNBOOKS.md` — all read-only, never a body | terminal output only; **nothing written** |
 
-Last row is not a stage — nothing hands to it, it hands to nothing. It's the read side, spanning the whole pipeline; see [The read stage](#the-read-stage-production-status) below.
+Last two rows are not stages — nothing hands to them, they hand to nothing. They're the read side, each spanning the whole pipeline; see [The read stage](#the-read-stage-production-status) below.
 
 Stages entered, not marched through. Project w/ existing codebase commonly starts stage 0 then jumps stage 3; project whose next change obvious skips to stage 5 w/ free-form description, same as today. Nothing downstream requires upstream stage ever ran.
 
@@ -234,6 +235,14 @@ Eight output sections in fixed order: (1) the milestone — slug, title, `Status
 
 **It reports work, never selects or starts it.** Naming the next ready feature is where the command ends; `/task-add feature=<slug>` and `/task-implement` are how work begins.
 
+### `/pipeline-check` — drift between the indexes
+
+Second read-side entry, same register as `/production-status`, spanning whole pipeline the same way: not a stage, nothing hands to it, hands to nothing. `/production-status` answers *what next*; `/pipeline-check` answers *what disagrees* — reference between two indexes that doesn't resolve, or index state its owner hasn't acted on. None of the indexes reads the others for consistency, so drift otherwise sits until an implementer hits it.
+
+Reads index lines of `FEATURES.md`, `TASKS.md`, `PLAN.md`, `RUNBOOKS.md` (whichever exist), evaluates closed drift catalogue in `pipeline-engine`'s `lint.md` — eleven findings, each `ERROR` or `WARNING`, each naming the one command that fixes it — prints them grouped by artifact; clean project prints one line. `feature=<slug>` scopes to that feature, the tasks naming it or listed on its `Tasks:`, and the plan lines naming it. Structural only: whether a feature document still describes what its tasks build is `/architect amend`'s judgement, not a finding. An archived task (id at or below `Last task number:` with no block) is terminal, never drift.
+
+**Read-only, fixes nothing.** Writes nothing, flips no status, no commit, no cache, no baseline, no exit-code contract. Never opens a file under `.claude/tasks/` (archive included), `.claude/runbooks/` or `.claude/domain/features/`. One stated departure from `/production-status`: runs `pipeline-engine`'s probe, its only shell use. No pipeline writer runs it at its end — the lint stays an explicit act. Failure contract same degradation: absent index drops its findings, malformed block reported as its own `ERROR`; only stop is a project with none of the four indexes (→ `/task-setup`, `/domain-setup`).
+
 ## Task-side additions
 
 Pipeline adds two things to task backlog. Both invisible to free-form tasks — behave exactly as always.
@@ -383,7 +392,7 @@ divergences.
 
 ## Commit and push
 
-`/production-status` runs no git command at all and has no `--commit` — it is a reporter, not an author, and has nothing to commit.
+`/production-status` and `/pipeline-check` run no git command at all and have no `--commit` — they are reporters, not authors, and have nothing to commit.
 
 `/domain-setup`, `/product-design`, `/product-roadmap`, `/architect`, `/production-plan`: all authoring commands/skills — uncommitted by default, `--commit` opts in. When `--commit` passed, all five follow commit-and-push protocol in [docs/authoring-guide.md](../../docs/authoring-guide.md) — pull at start, commit, re-sync, push — not plain `git commit`. `--no-push` (only meaningful alongside `--commit`) skips sync/push cycle, commits locally only. Algorithm not re-derived here; see that doc.
 
@@ -418,4 +427,4 @@ No `resume` argument. Weeks can pass between sessions, flag wouldn't be remember
 - [`./task-workflow.md`](./task-workflow.md) — backlog schema this pipeline feeds: `TASKS.md` summary blocks, body schemas, `Target:` values.
 - [`./context-workflow.md`](./context-workflow.md) — context layer, structure/domain boundary reconciled above.
 - [`../context/features.md`](../context/features.md) — shipped artifacts, including every command named here.
-- `commands/domain-setup.md`, `commands/task-add.md`, `commands/task-clean.md`, `commands/task-list.md`, `commands/production-status.md`, `skills/product-design/SKILL.md`, `skills/product-roadmap/SKILL.md`, `skills/architect/SKILL.md`, `skills/production-plan/SKILL.md` — the implementations.
+- `commands/domain-setup.md`, `commands/task-add.md`, `commands/task-clean.md`, `commands/task-list.md`, `commands/production-status.md`, `commands/pipeline-check.md`, `skills/pipeline-engine/`, `skills/product-design/SKILL.md`, `skills/product-roadmap/SKILL.md`, `skills/architect/SKILL.md`, `skills/production-plan/SKILL.md` — the implementations.

@@ -50,7 +50,7 @@ Windows, run the installer from Git Bash. See [The CLI](#the-cli) below.
 | 1. Set up | `/project-setup`, `/task-setup`, `/domain-setup` | `CLAUDE.md`, `.claude/TASKS.md`, `.claude/domain/`, `.claude/FEATURES.md` |
 | 2. Orient | `/context-build`, `/context-update`, `/context-convert` | `.claude/context/` — the navigation layer |
 | 3. Design | `/product-design`, `/product-roadmap`, `/architect` | `product-design.md`, `technical-direction.md`, `product-roadmap.md`, one feature document per architected feature |
-| 4. Plan | `/production-plan`, `/production-status`, `/task-add` | `.claude/PLAN.md`, task bodies + `TASKS.md` entries |
+| 4. Plan | `/production-plan`, `/production-status`, `/pipeline-check`, `/task-add` | `.claude/PLAN.md`, task bodies + `TASKS.md` entries |
 | 5. Build | `/task-implement`, `/task-review`, `/task-iterate` | code, one reviewed commit per task |
 | 6. Continue | `/runbook-*`, `/session-save`, `/session-resume` | `.claude/runbooks/`, `.claude/sessions/` |
 | 7. Maintain | `/refactor-codebase`, `/refactor-tests` | a cleaner codebase, tests green throughout |
@@ -260,6 +260,21 @@ milestone, what's ready, what's blocked and by what, and the single
 recommended next feature. It writes nothing and stores nothing; a plan that
 has fallen behind shows up as gaps, not as a date.
 
+**`/pipeline-check`** reports drift between those indexes and
+`RUNBOOKS.md`: a task whose `Feature:` names no feature, or that has no
+`Feature:` line on a project that keeps a feature index; a precondition
+pointing at a task that was never assigned or at a `[SKIP]` one; a
+precondition cycle; an `[ITERATED]` feature or a `[STALE]` task still waiting
+to be re-planned; a feature missing from the plan, or a plan line naming one
+that doesn't exist; a finished runbook still marked `[PENDING]`; and a
+`[PLANNED]` feature whose tasks have all resolved. Each finding carries an
+`ERROR` or `WARNING` severity and the one command that fixes it, and a clean
+project prints a single line. It fixes nothing: it writes nothing, and every
+fix stays with the command that owns the line. `feature=<slug>` narrows the
+report to one feature and the tasks and plan lines that name it. Its
+catalogue lives in the **`pipeline-engine`** skill, which installs alongside
+it.
+
 **`/task-add`** turns intent into tasks. Give it a short description and it
 investigates the codebase, asks every question needed to fill the gaps, and
 writes a task body with acceptance criteria you approve before anything is
@@ -276,7 +291,7 @@ a task only a human can do (an editor step, a cloud console) it records the
 checkpoints and marks the task human-in-the-loop.
 
 `/production-plan` is uncommitted by default; `/task-add` commits and
-pushes. [Details →](docs/reference.md#4-planning-the-work)
+pushes; `/production-status` and `/pipeline-check` write nothing. [Details →](docs/reference.md#4-planning-the-work)
 
 ## 5. Build and review
 
@@ -446,6 +461,7 @@ A `VERSION` bump without a matching `CHANGELOG.md` section is an incomplete chan
 | `scripts/lib.sh`             | Shared shell helpers (logging, frontmatter, path resolution).            |
 | `scripts/cmd-*.sh`           | One file per CLI subcommand. The proxy delegates here.                   |
 | `scripts/check-changelog.sh` | Authoring-time guard: fails when a `VERSION` bump has no matching `CHANGELOG.md` section. Not a subcommand; run it by hand. |
+| `scripts/check-routing.sh`   | Authoring-time guard: fails when a row of the pipeline routing table (`skills/pipeline-engine/references/routing.md`) names no shipped feature, or a feature declaring `requires: skill:pipeline-engine` has no row. Not a subcommand; run it by hand. |
 | `commands/<name>.md`         | A Claude Code command. Frontmatter required.                             |
 | `skills/<name>/SKILL.md`     | A Claude Code skill. Frontmatter required.                               |
 | `claude-md/<name>.md`        | A CLAUDE.md snippet feature, merged into the user's CLAUDE.md.           |

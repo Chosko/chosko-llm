@@ -363,6 +363,67 @@ run `/production-plan`.
 Read-only in the strict sense: no writes, no commits, no shell commands, and
 it never opens a task body under `.claude/tasks/`.
 
+### `/pipeline-check`
+
+Reports **structural drift** across the pipeline's indexes: `FEATURES.md`,
+`TASKS.md`, `PLAN.md` and `RUNBOOKS.md`. Drift here means a reference between
+two indexes that doesn't resolve, or an index state its owner hasn't acted on
+yet. Whether a feature document still describes what its tasks build is a
+judgement, not structure, and this command doesn't attempt it.
+
+The catalogue is closed. It has eleven findings and no others:
+
+| Severity | Finding | Fix it names |
+| --- | --- | --- |
+| `ERROR` | a task's `Feature:` slug has no entry in `FEATURES.md` | `/pipeline-patch` |
+| `WARNING` | a task has no `Feature:` line, on a project that has a `FEATURES.md` | `/pipeline-patch` |
+| `ERROR` | a `Preconditions:` id was never assigned (it is above `Last task number:`) | `/pipeline-patch` |
+| `ERROR` | a `Preconditions:` id names a `[SKIP]` task | `/pipeline-patch` |
+| `ERROR` | a precondition cycle | `/pipeline-revise` |
+| `WARNING` | an `[ITERATED]` feature, whose backlog hasn't been re-planned | `/task-add feature=<slug>` |
+| `WARNING` | a `[STALE]` task | `/pipeline-revise` |
+| `WARNING` | a `FEATURES.md` slug that appears nowhere in `PLAN.md` | `/production-plan` |
+| `ERROR` | a `PLAN.md` line naming a slug that isn't in `FEATURES.md` | `/pipeline-patch` |
+| `WARNING` | a runbook still `[PENDING]` with every step done (`Steps: <n>/<n>`) | `/pipeline-patch` |
+| `WARNING` | a `[PLANNED]` feature whose every task is `[DONE]`, `[SKIP]` or archived | `flip to [DONE]` |
+
+`ERROR` means something a pipeline command will act on wrongly if it's left;
+`WARNING` means a legal state that needs its owner's attention.
+`/pipeline-patch` and `/pipeline-revise` are the pipeline's revision commands
+and have not shipped yet.
+
+Two things are deliberately **not** findings. A feature's `Tasks:` id with no
+`TASKS.md` block is an archived task (the normal state of a feature after
+`/task-clean`), and a precondition on an archived id counts as satisfied. A
+pending runbook step naming a task that is already finished would need a
+runbook body opened to detect, and no finding opens one; `/runbook-run`
+prints each step before running it, which is where that shows up.
+
+A clean project prints one line naming the indexes it read. Otherwise the
+findings print grouped by artifact (`FEATURES.md`, `PLAN.md`, `TASKS.md`,
+`RUNBOOKS.md`), one line each with its severity, the offending task, feature
+or runbook, and its fix, closing on a count of both severities. There is no
+exit code to gate on, no `--fix` and no `--quiet`.
+
+`feature=<slug>` narrows the report to that feature: its own entry, the tasks
+that name it or that its `Tasks:` line lists (with their precondition
+findings), and the plan lines that name it. Runbook findings are out of scope
+there, because `RUNBOOKS.md` doesn't tie a runbook to a feature. An unknown
+slug is reported in one line and the full report runs instead.
+
+Nothing here refuses except a project with none of the four indexes, which is
+pointed at `/task-setup` and `/domain-setup`. An absent index simply drops its
+findings, a block it can't read is reported as an `ERROR` of its own, and an
+argument it doesn't recognise is named and ignored.
+
+Read-only in the strict sense: no writes, no commits, no status flips, and no
+fixes. It never opens a file under `.claude/tasks/` (the archive included),
+`.claude/runbooks/` or `.claude/domain/features/`, and the only shell command
+it runs is the engine's probe of the project's setup. It runs when you invoke
+it; no pipeline command runs it for you. Requires `skill:pipeline-engine`
+(see [`pipeline-engine`](#pipeline-engine)), which `chosko-llm add` installs
+with it.
+
 ### `/task-add`
 
 Plan a task and write it down. Invoke it with a very short description, let
@@ -553,6 +614,33 @@ the others read while they run. `/task-add`, `/task-list`, `/task-clean`,
 `requires: skill:task-engine`, so installing any one of them installs the
 engine too, and `chosko-llm rm skill:task-engine` refuses while any of them
 is still installed.
+
+### `pipeline-engine`
+
+What the pipeline features need to know about the pipeline *as a whole* lives
+once, in a second reference skill beside `task-engine`: `pipeline-engine`.
+Four reference files, each the single authority for its rule:
+
+- `references/probes.md` — the cheap filesystem probes that describe a
+  project's pipeline setup (which indexes exist, whether the roadmap is
+  sliced, the testing-policy marker, which pipeline features are installed),
+  the one-line verdict every consumer prints, and when a verdict already in
+  the conversation may be reused;
+- `references/graph.md` — how `FEATURES.md`, `TASKS.md`, `PLAN.md` and
+  `RUNBOOKS.md` point at each other, and which links vanish when an index is
+  absent;
+- `references/routing.md` — one row per pipeline feature: what it consumes,
+  what it produces, which lines it owns, its preconditions and its argument
+  shape;
+- `references/lint.md` — the drift catalogue `/pipeline-check` evaluates.
+
+Like `task-engine`, `pipeline-engine` is **not invocable**: it takes no
+arguments, runs nothing and produces no output, and nothing should suggest
+it. It's a reference library that other features read while they run.
+`/pipeline-check` declares `requires: skill:pipeline-engine`, so installing it
+installs the engine too, and `chosko-llm rm skill:pipeline-engine` refuses
+while it's still installed. The two engines sit side by side; neither absorbs
+the other.
 
 ### Stale tasks
 
