@@ -165,11 +165,16 @@ staged", which is what it always meant and is now also what it says.
 
 ### Documentation as part of the change, not after it
 
-The old default is asserted in six places outside the shipped bodies:
-`README.md`, `docs/reference.md`, `docs/authoring-guide.md` §
+The old default is asserted in eight places outside the shipped bodies:
+`README.md` §§ 3 and 4, `docs/reference.md` (its opening commit-conventions
+paragraph and the four skills' own entries, plus `/pipeline-revise`'s
+forwarding paragraph), `docs/authoring-guide.md` §
 *Commit-and-push convention*, `.claude/domain/product-workflow.md` §
-*Commit and push*, `.claude/context/features.md`, and
-`.claude/domain/features/owner-amend-arms.md`. Per
+*Commit and push*, `.claude/context/features.md` (six rows, with
+`.claude/context/INDEX.md`'s `Last updated` anchor refreshed alongside),
+`.claude/domain/features/owner-amend-arms.md`,
+`.claude/domain/features/production-plan.md` and
+`.claude/domain/features/product-roadmap.md`. Per
 [CLAUDE.md](../../../CLAUDE.md) § Versioning these are documentation: they
 bump no `VERSION` and earn no `CHANGELOG` entry, while the four skill bodies
 and the two consumers are product and bump as always.

@@ -1,8 +1,8 @@
 ---
 name: product-roadmap
-version: 0.2.1
+version: 0.3.0
 type: skill
-description: Write the product's roadmap into .claude/domain/product-roadmap.md — an ordered list of milestones, each with a goal, exit criteria, rationale, and the scope slices saying which share of a high-level feature it takes on. The product-level WHEN of the pipeline, sitting between /product-design and /architect. Asks whether you already have an ordering in mind before drafting one, so a strategy you arrived with steers the roadmap instead of arguing with a draft, and records that strategic premise in the document. Usable from a bare description when product-design.md doesn't exist yet, and re-runnable: the document is its own resume state, so a later run proposes changes against what is already there. Reads .claude/FEATURES.md and never writes it, and carries no milestone status — that belongs to the plan, not the roadmap. Requires /domain-setup. Nothing committed by default; pass --commit to commit and push exactly what the run wrote (--commit --no-push to skip the push).
+description: Write the product's roadmap into .claude/domain/product-roadmap.md — an ordered list of milestones, each with a goal, exit criteria, rationale, and the scope slices saying which share of a high-level feature it takes on. The product-level WHEN of the pipeline, sitting between /product-design and /architect. Asks whether you already have an ordering in mind before drafting one, so a strategy you arrived with steers the roadmap instead of arguing with a draft, and records that strategic premise in the document. Usable from a bare description when product-design.md doesn't exist yet, and re-runnable: the document is its own resume state, so a later run proposes changes against what is already there. Reads .claude/FEATURES.md and never writes it, and carries no milestone status — that belongs to the plan, not the roadmap. Requires /domain-setup. Commits and pushes exactly what the run wrote by default; pass --no-commit to write everything and run no git command, or --no-push to commit without pushing.
 ---
 
 # /product-roadmap
@@ -14,8 +14,8 @@ description: Write the product's roadmap into .claude/domain/product-roadmap.md 
 # supplies the WHEN neither of them covers.
 # Usage: /product-roadmap                        (read the design, draft or revise the roadmap)
 #        /product-roadmap <free-form context>    (what the next release is about, constraints, deadlines)
-#        /product-roadmap --commit               (commit and push exactly what this run wrote)
-#        /product-roadmap --commit --no-push     (commit locally, skip the push)
+#        /product-roadmap --no-commit            (write the roadmap, run no git command)
+#        /product-roadmap --no-push              (commit the roadmap, skip the push)
 
 GOAL
 Produce an **ordered list of milestones**. Each one states the outcome it
@@ -50,9 +50,12 @@ split would protect.
 
 ARGUMENT PARSING
 
-Scan `$ARGUMENTS` for the optional `--commit` flag. If present, set
-COMMIT = true and strip it. `--commit` and `--no-commit` are mutually
-exclusive — if both appear, stop with:
+Scan `$ARGUMENTS` for the optional `--no-commit` flag. If present, set
+COMMIT = false and strip it; otherwise COMMIT is true — this skill commits
+and pushes what it wrote by default. `--no-commit` implies NO_PUSH: nothing
+is committed, so nothing is there to push. `--commit` is still accepted and
+stripped, and is a silent no-op naming the default. `--commit` and
+`--no-commit` are mutually exclusive — if both appear, stop with:
 `--commit and --no-commit cannot be combined. Pick one.`
 
 Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
@@ -358,18 +361,18 @@ coverage report is computed and none is stored.
 - Every open sequencing question recorded.
 - The paths written (`WRITTEN`).
 - The next step: `/architect <feature>` to design a milestone's slices.
-- When `WRITTEN` is non-empty and `--commit` was not passed: an explicit
+- When `WRITTEN` is non-empty and `--no-commit` was passed: an explicit
   reminder that nothing was committed.
 
 ---
 
-COMMIT AND PUSH (only when `--commit` was passed)
+COMMIT AND PUSH (unless `--no-commit` was passed)
 
-If COMMIT is false (the default), run no git/VCS command at all. The
-document is left uncommitted for the user to review — matching
-`/product-design`, `/architect`, and `/domain-setup`.
+If COMMIT is false (`--no-commit` was passed), run no git/VCS command at
+all. The document is left uncommitted for the user to review.
 
-If COMMIT is true (the pull-at-start from PHASE 0 already ran):
+If COMMIT is true (the default; the pull-at-start from PHASE 0 already
+ran):
 
 1. If `WRITTEN` is empty — the conversation ended without an approved
    roadmap, or a re-run changed nothing — make no commit and no push. Say
@@ -435,7 +438,7 @@ DO NOT:
 - Advance past PHASE 1 without the user confirming the roadmap. PHASE 0's
   steer question is a question, not an approval — this is the one gate
   guarding a write.
-- Run any git/VCS command unless `--commit` was passed; and with it, stage
+- Run any git/VCS command when `--no-commit` was passed; and otherwise, stage
   only the explicit `WRITTEN` paths, never a catch-all, push per the
   commit-and-push protocol unless `--no-push` was passed, and never
   force-push, retry a failed push, branch, tag, or use hook-skipping flags

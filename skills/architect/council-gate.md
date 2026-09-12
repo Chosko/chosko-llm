@@ -145,10 +145,10 @@ council-report-<ts>-q<sha>.html
 council-transcript-<ts>-q<sha>.md
 ```
 
-**These are never added to `WRITTEN`, and never staged by `--commit`.** They
+**These are never added to `WRITTEN`, and never staged.** They
 are the council's output, not this skill's. Committing generated HTML into a
 user's repository is a side effect `/architect` has no mandate for, and
-`--commit` stages explicit paths only.
+a commit stages explicit paths only.
 
 *(`/architect` only — this paragraph has no counterpart in the
 `/product-design` copy.)* Writing them also collides with the DO NOT rule

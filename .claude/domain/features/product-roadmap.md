@@ -61,10 +61,11 @@ per-feature versioning, the authoring-command commit family — are in
 
 **The skill.** A skill rather than a command, because the work is a
 multi-round conversation with supporting material, matching
-`/product-design` and `/architect`. Members of the authoring family: nothing
-is committed unless `--commit` is passed, `--no-push` commits without
-pushing, and the commit-and-push protocol in `docs/authoring-guide.md`
-applies when it is.
+`/product-design` and `/architect`. All three commit and push what they wrote
+unless `--no-commit` is passed, `--no-push` commits without pushing,
+`--commit` is accepted as a silent no-op, and the commit-and-push protocol in
+`docs/authoring-guide.md` applies whenever they commit — see feature
+`authoring-commit-default`.
 
 Its shape follows `/architect`'s: a gate that refuses when the domain layer
 is absent and points at `/domain-setup`; a read pass over
@@ -212,7 +213,8 @@ usable from a bare description, as `/architect` is.
 - A revision whose deltas contradict the recorded `Strategy:` premise → warn,
   name the contradiction, and ask which one moves. Never resolve it by
   rewriting the premise.
-- `--commit` with nothing written → make no commit and say so.
+- Nothing written → make no commit (and no push) and say so. `--commit` is
+  accepted as a silent no-op and never forces one.
 
 ## Dependencies
 

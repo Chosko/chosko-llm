@@ -146,7 +146,7 @@ Feature: task-archive
 
 ## 202. Flip `/architect` to commit by default
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/architect/SKILL.md, skills/architect/amend.md, skills/architect/iterating.md, skills/architect/council-gate.md, VERSION, CHANGELOG.md
 Preconditions: none
@@ -156,7 +156,7 @@ Feature: authoring-commit-default
 
 ## 203. Flip `/product-design`, `/product-roadmap` and `/production-plan` to commit by default
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/product-design/SKILL.md, skills/product-design/council-gate.md, skills/product-design/resuming.md, skills/product-roadmap/SKILL.md, skills/production-plan/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: none
@@ -166,7 +166,7 @@ Feature: authoring-commit-default
 
 ## 204. Move `/product-design` and `/production-plan` into the commits-by-default row of both forwarding tables
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/pipeline-patch.md, skills/pipeline-revise/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 202, 203
@@ -176,7 +176,7 @@ Feature: authoring-commit-default
 
 ## 205. Update documentation for feature `authoring-commit-default`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, docs/authoring-guide.md, .claude/domain/product-workflow.md, .claude/domain/features/authoring-commit-default.md, .claude/domain/features/owner-amend-arms.md, .claude/domain/features/production-plan.md, .claude/domain/features/product-roadmap.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 202, 203, 204

@@ -52,9 +52,9 @@ markdown indices. The two indices it reads are described in
 [task-workflow.md](../task-workflow.md) and
 [product-workflow.md](../product-workflow.md).
 
-**The skill**, `/production-plan`, is a member of the authoring family:
-nothing committed unless `--commit` is passed, `--no-push` commits without
-pushing. It gates on `FEATURES.md` existing and points at `/domain-setup`
+**The skill**, `/production-plan`, commits and pushes what it wrote unless
+`--no-commit` is passed, `--no-push` commits without pushing, and `--commit`
+is accepted as a silent no-op — see feature `authoring-commit-default`. It gates on `FEATURES.md` existing and points at `/domain-setup`
 when it does not. A roadmap is **not** required — without one, every feature
 lands in `Unscheduled` and dependency ordering still works, so a project can
 get sequencing without roadmap ceremony.
@@ -201,7 +201,8 @@ versus `FEATURES.md`, and it keeps one writer per artifact.
 - More than one `[ACTIVE]` milestone → report and ask which one is meant.
 - Slug in a dependency edge that resolves to no feature → report and drop
   the edge, as `/architect`'s iterate guard ignores unresolvable task IDs.
-- `--commit` with nothing changed → make no commit and say so.
+- Nothing changed → make no commit (and no push) and say so. `--commit` is
+  accepted as a silent no-op and never forces one.
 
 ## Dependencies
 

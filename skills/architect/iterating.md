@@ -128,8 +128,8 @@ common shape and the one step 1 handles — so step 3 above only ever has
 the design does afterwards; follow-up work is a new task, not a reopened
 one.
 
-Add `.claude/TASKS.md` to `WRITTEN` — under `--commit` it belongs in the same
-commit as the architecture, because the two changes only make sense
+Add `.claude/TASKS.md` to `WRITTEN` — when the run commits, it belongs in the
+same commit as the architecture, because the two changes only make sense
 together.
 
 ### 5. Carry it into the report

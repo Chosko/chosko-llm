@@ -2,6 +2,20 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.37.0 — 2026-09-12
+
+- **/pipeline-revise** forwards `--no-commit` to `/product-design` and `/production-plan` when the run was not given `--commit`, matching the defaults those two took in 1.36.0. Without it a revision run would have committed when the user did not ask. `/runbook-create --append` still commits nothing by default and is forwarded `--commit` as before.
+- **/pipeline-patch** and **/pipeline-revise** both label the forwarding table's first column as the revision command's own default, so no row reads as a claim about an owner's default.
+
+## 1.36.0 — 2026-09-12
+
+- **/product-design**, **/product-roadmap** and **/production-plan** commit and push what they wrote by default, the same flip `/architect` took in 1.35.0. Pass `--no-commit` to write everything and run no git command; `--no-push` commits without pushing. `--commit` is still accepted and is now a silent no-op. The pull-at-start now runs on every run that is not `--no-commit`.
+- **/product-design** now commits `.claude/domain/design-process.md`, so a resumed design process carries across machines and terminals instead of living in one working tree.
+
+## 1.35.0 — 2026-09-12
+
+- **/architect** commits and pushes what it wrote by default. Pass `--no-commit` to write everything and run no git command; `--no-push` commits without pushing. `--commit` is still accepted and is now a silent no-op, so existing invocations keep working. The pull-at-start now runs on every run that is not `--no-commit`.
+
 ## 1.34.1 — 2026-09-11
 
 - **/production-status** counts a feature's task IDs that are no longer in `TASKS.md` as `archived: N` in its task rollup (`[archived]` under `--task-ids`) instead of dropping them, so a fully archived `[PLANNED]` feature no longer reads as having no tasks. It still opens nothing under `.claude/tasks/`.

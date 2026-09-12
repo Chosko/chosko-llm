@@ -453,9 +453,13 @@ divergences.
 
 `/production-status` and `/pipeline-check` run no git command at all and have no `--commit` — they are reporters, not authors, and have nothing to commit.
 
-`/domain-setup`, `/product-design`, `/product-roadmap`, `/architect`, `/production-plan`: all authoring commands/skills — uncommitted by default, `--commit` opts in. When `--commit` passed, all five follow commit-and-push protocol in [docs/authoring-guide.md](../../docs/authoring-guide.md) — pull at start, commit, re-sync, push — not plain `git commit`. `--no-push` (only meaningful alongside `--commit`) skips sync/push cycle, commits locally only. Algorithm not re-derived here; see that doc.
+`/product-design`, `/product-roadmap`, `/architect`, `/production-plan`: commit and push by default. `--no-commit` writes everything and runs no git command; `--commit` still accepted, now a silent no-op. `/domain-setup` keeps the old authoring default — uncommitted, `--commit` opts in.
 
-`/pipeline-patch` and `/pipeline-revise` have no commit phase of their own: `--commit` / `--no-push` forwarded to each owner step, which either commits its own write set (an arm executed by path) or receives the flag (an owner command — `/task-add`, committing by default, gets `--no-commit` when `--commit` is absent).
+All five follow commit-and-push protocol in [docs/authoring-guide.md](../../docs/authoring-guide.md) whenever they commit — pull at start, commit, re-sync, push — not plain `git commit`. `--no-push` (only meaningful when something is being committed) skips sync/push cycle, commits locally only. Algorithm not re-derived here; see that doc.
+
+The four commit by default because their output is written and then read again by the next session, usually on another machine — the one place an uncommitted working tree helps nobody — and each already gates the director's review inside the run. One consequence worth knowing: `/product-design` now commits `.claude/domain/design-process.md`, so a resumed design process carries across machines.
+
+`/pipeline-patch` and `/pipeline-revise` have no commit phase of their own: `--commit` / `--no-push` forwarded to each owner step, which either commits its own write set (an arm executed by path) or receives the flag. Which flag depends on the owner's own default: a command committing by default — `/task-add`, `/product-design`, `/production-plan` — gets `--no-commit` when `--commit` is absent and no flag when it is present; a command committing nothing by default — `/runbook-create --append` — gets no flag when `--commit` is absent and `--commit` when it is present.
 
 ## Domain layer vs. context layer
 

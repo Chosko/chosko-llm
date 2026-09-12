@@ -157,7 +157,7 @@ Tasks: 196, 199, 201
 
 ## authoring-commit-default — `/architect`, `/product-design`, `/product-roadmap` and `/production-plan` commit by default
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/authoring-commit-default.md
 Source: prompt
 Tasks: 202, 203, 204, 205

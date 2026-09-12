@@ -1,8 +1,8 @@
 ---
 name: architect
-version: 0.8.1
+version: 0.9.0
 type: skill
-description: Turn one or more high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md — the bridge between /product-design and /task-add. Grounds the architecture in the project's recorded technical-direction.md or existing code, or proposes a tech stack when there is neither. Runs from a product-design section, named features, or a bare prompt with no design documents at all. On a project whose .claude/domain/product-roadmap.md slices the target section, it switches per target into slice mode: it architects one milestone's scope slice rather than the whole section, turns the slice's exclusions into the document's non-goals, and records the milestone as a parenthetical on the FEATURES.md Source: line; pass --no-slices to force traditional resolution. Re-architecting a feature that already has an entry triggers an iterate guard: refuses outright while any of its tasks is [IN PROGRESS], otherwise asks, then flips surviving tasks to [STALE] and the feature to [ITERATED] — from [PLANNED] or from [DONE] alike, and with no ask when there are no tasks left to invalidate. The amend form — /architect amend feature=<slug> followed by the quoted change — makes a targeted change to the named sections of one feature document without the clarify or architecture phases, behind one gate: a precision guard marks [STALE] only the tasks the change touches, refuses only when a touched task is [IN PROGRESS], and asks every time whether the change is editorial. Requires /domain-setup. At a genuine design fork it offers to convene claude-council when that skill is installed, and is silent when it is not. Nothing committed by default; pass --commit to commit and push exactly the written paths (--commit --no-push to skip the push).
+description: Turn one or more high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md — the bridge between /product-design and /task-add. Grounds the architecture in the project's recorded technical-direction.md or existing code, or proposes a tech stack when there is neither. Runs from a product-design section, named features, or a bare prompt with no design documents at all. On a project whose .claude/domain/product-roadmap.md slices the target section, it switches per target into slice mode: it architects one milestone's scope slice rather than the whole section, turns the slice's exclusions into the document's non-goals, and records the milestone as a parenthetical on the FEATURES.md Source: line; pass --no-slices to force traditional resolution. Re-architecting a feature that already has an entry triggers an iterate guard: refuses outright while any of its tasks is [IN PROGRESS], otherwise asks, then flips surviving tasks to [STALE] and the feature to [ITERATED] — from [PLANNED] or from [DONE] alike, and with no ask when there are no tasks left to invalidate. The amend form — /architect amend feature=<slug> followed by the quoted change — makes a targeted change to the named sections of one feature document without the clarify or architecture phases, behind one gate: a precision guard marks [STALE] only the tasks the change touches, refuses only when a touched task is [IN PROGRESS], and asks every time whether the change is editorial. Requires /domain-setup. At a genuine design fork it offers to convene claude-council when that skill is installed, and is silent when it is not. Commits and pushes exactly the paths the run wrote by default; pass --no-commit to write everything and run no git command, or --no-push to commit without pushing.
 ---
 
 # /architect
@@ -17,8 +17,8 @@ description: Turn one or more high-level features into low-level feature documen
 #        /architect <feature name> <milestone-slug>  (pick the slice up front on a roadmapped project)
 #        /architect <args> --no-slices     (ignore the roadmap; resolve every target traditionally)
 #        /architect amend feature=<slug> "<change>"  (targeted change to one feature document)
-#        /architect <args> --commit        (commit and push exactly what this run wrote)
-#        /architect <args> --commit --no-push  (commit locally, skip the push)
+#        /architect <args> --no-commit     (write everything, run no git command)
+#        /architect <args> --no-push       (commit what this run wrote, skip the push)
 
 GOAL
 Take what a feature must do and decide how it will be built, grounded in the
@@ -68,9 +68,12 @@ cites them, and never an input-resolution file.
 
 ARGUMENT PARSING
 
-Scan `$ARGUMENTS` for the optional `--commit` flag. If present, set
-COMMIT = true and strip it. `--commit` and `--no-commit` are mutually
-exclusive — if both appear, stop with:
+Scan `$ARGUMENTS` for the optional `--no-commit` flag. If present, set
+COMMIT = false and strip it; otherwise COMMIT is true — this skill commits
+and pushes what it wrote by default. `--no-commit` implies NO_PUSH: nothing
+is committed, so nothing is there to push. `--commit` is still accepted and
+stripped, and is a silent no-op naming the default. `--commit` and
+`--no-commit` are mutually exclusive — if both appear, stop with:
 `--commit and --no-commit cannot be combined. Pick one.`
 
 Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
@@ -90,7 +93,7 @@ Input that opens with `amend` but not with `amend feature=` is not the amend
 form: it falls through to ordinary input resolution as a free-form
 description. An empty slug or a missing change stops the run with:
 `amend needs feature=<slug> and the change to make, e.g. /architect amend feature=password-auth "Data and state: sessions expire after 30 days".`
-`--commit` and `--no-push` compose with it unchanged. `--no-slices` is
+`--no-commit` and `--no-push` compose with it unchanged. `--no-slices` is
 accepted and has nothing to act on, since the amend path resolves no input.
 
 Otherwise what remains is the input, resolved in PHASE 0. Its forms — empty,
@@ -360,7 +363,7 @@ Read `./feature-doc-template.md` for both schemas below.
    `.claude/domain/features/<target-slug>.architect-progress.md` if it
    exists — a normally-completed PHASE 3 means there is nothing left to
    resume, and a feature that finished writing must never still look
-   interrupted. If `--commit` was passed and the marker had previously been
+   interrupted. If COMMIT is true and the marker had previously been
    committed (an earlier, separately-committed interrupted run), add its
    path to `WRITTEN` so the deletion is staged and committed like any other
    change; if it only ever existed uncommitted within this same run,
@@ -381,16 +384,18 @@ Read `./feature-doc-template.md` for both schemas below.
 - If the council was convened: the question, the run SHA, the verdict, and
   the paths of the report and transcript it wrote, so the user can keep or
   delete them. Say nothing at all when it was not convened.
-- When `WRITTEN` is non-empty and `--commit` was not passed: an explicit
+- When `WRITTEN` is non-empty and `--no-commit` was passed: an explicit
   reminder that nothing was committed.
 
 ---
 
-COMMIT AND PUSH (only when `--commit` was passed)
+COMMIT AND PUSH (unless `--no-commit` was passed)
 
-If COMMIT is false (the default), run no git/VCS command at all.
+If COMMIT is false (`--no-commit` was passed), run no git/VCS command at
+all.
 
-If COMMIT is true (the pull-at-start from PHASE 0 already ran):
+If COMMIT is true (the default; the pull-at-start from PHASE 0 already
+ran):
 
 1. If `WRITTEN` is empty, make no commit (and no push). Say so and stop.
 2. Stage EXACTLY the paths in `WRITTEN` — the feature documents,
@@ -427,7 +432,7 @@ DO NOT:
   PHASE 2 council gate is convened (`council-report-*.html`,
   `council-transcript-*.md` — see `./council-gate.md`). The second carve-out
   is narrow: it permits those two files and nothing else, and neither ever
-  enters `WRITTEN` or a `--commit` staging list.
+  enters `WRITTEN` or a staging list.
   Everything else — feature documents, `FEATURES.md`, `INDEX.md`,
   `product-design.md` — is PHASE 3's job, not PHASE 2's. On the amend path
   PHASE 3 never runs, and `./amend.md` § 5 is the write step instead.
@@ -462,7 +467,7 @@ DO NOT:
 - Advance past PHASE 2 without the user confirming the architecture — a
   council verdict is an input to that confirmation, never a substitute for
   it, however confident it came back.
-- Run any git/VCS command unless `--commit` was passed; and with it, stage
+- Run any git/VCS command when `--no-commit` was passed; and otherwise, stage
   only the explicit `WRITTEN` paths, never a catch-all, push per the
   commit-and-push protocol unless `--no-push` was passed, and never
   force-push, retry a failed push, branch, tag, or use hook-skipping flags

@@ -1,6 +1,6 @@
 ---
 name: pipeline-patch
-version: 0.1.0
+version: 0.2.0
 type: command
 description: Apply a change that touches exactly one feature document, task or runbook step through that owner's amend arm, then re-check it — or refuse. From a required anchor (feature=<slug>, task=<N> or runbook=<name|id> step=<n>) it probes, walks the pipeline's graph reading only the indexes — FEATURES.md, TASKS.md, PLAN.md, RUNBOOKS.md, never a task body, feature document or runbook body — and counts the owners the change would touch. The single-owner rule is a count plus a closed checklist, never a judgement: exactly one owner and none of five structural signals (more than one owner, a dependency edge changing, scope added that no task covers, a deletion that crosses artifacts, a reorder of existing entries) loads that owner's amend arm by path, runs it with its own gate, and runs /pipeline-check scoped to the anchor. Anything else is refused in one line naming /pipeline-revise and the signal that triggered it — no escalation, no second question, nothing written. Writes no line of its own and makes no commit of its own; --commit / --no-push are forwarded to the arm.
 requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run
@@ -205,7 +205,7 @@ COMMITTING
 `--commit` and `--no-push` are parsed here and forwarded to the arm; this
 command makes no commit of its own.
 
-| Arm | Without `--commit` (the default) | With `--commit` |
+| Arm | Without `--commit` (this command's default) | With `--commit` |
 | --- | --- | --- |
 | An arm loaded by path — each leaves its commit to whoever executes it | nothing is committed | the arm's closed write set, staged by explicit path and committed as one unit of work, the arm's closing report line as the subject, per `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md` and its push protocol — pull-at-start included, the push skipped under `--no-push` |
 | `/runbook-create --append`, for a step insert | no flag | `--commit`, plus `--no-push` when given |

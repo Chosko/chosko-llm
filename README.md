@@ -247,8 +247,10 @@ time whether the change is editorial; if it is, nothing is staled. What each
 status means at each level is in
 [the production hierarchy](#the-production-hierarchy) above.
 
-All four are authoring features: uncommitted by default, `--commit` to
-commit and push. [Details →](docs/reference.md#3-designing-the-product)
+`/product-design`, `/product-roadmap` and `/architect` commit and push what
+they wrote by default; pass `--no-commit` to hold the output back for
+review, or `--no-push` to commit without pushing.
+[Details →](docs/reference.md#3-designing-the-product)
 
 ## 4. Plan the work
 
@@ -315,9 +317,9 @@ removed runbook step is struck. And when you describe work in your own words
 instead of naming a command, `pipeline-suggest` fires on its own and points
 at the pipeline command that fits, in a line, then stops.
 
-`/production-plan` is uncommitted by default; `/task-add` commits and
-pushes; `/production-status`, `/pipeline-check` and `pipeline-suggest` write
-nothing;
+`/production-plan` and `/task-add` both commit and push by default, and both
+take `--no-commit`; `/production-status`, `/pipeline-check` and
+`pipeline-suggest` write nothing;
 `/pipeline-patch` and `/pipeline-revise` make no commit of their own and pass
 `--commit` / `--no-push` on to each owner step. [Details →](docs/reference.md#4-planning-the-work)
 

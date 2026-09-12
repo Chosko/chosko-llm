@@ -12,7 +12,11 @@ conventions recur throughout: **authoring** features (those that write a
 document you review) leave their output uncommitted by default and commit
 under `--commit` (`--commit --no-push` commits without pushing); **working**
 features (those that advance a backlog) commit and push by default and take
-`--no-commit` / `--no-push` to hold back.
+`--no-commit` / `--no-push` to hold back. The four design skills —
+`/product-design`, `/product-roadmap`, `/architect` and `/production-plan` —
+write documents but follow the second convention: their output is written
+once and read again by the next session, usually on another machine. Each
+still accepts `--commit`, now as a silent no-op.
 
 ---
 
@@ -134,8 +138,10 @@ matters, it can route the decision through the
 [council](#claude-council).
 
 The output, including `technical-direction.md`, is `/architect`'s input.
-Nothing is committed by default; `--commit` commits and pushes what the run
-wrote (`--commit --no-push` to skip the push).
+Commits and pushes what the run wrote by default; `--no-commit` writes
+everything and runs no git command, `--no-push` commits without pushing.
+`design-process.md`, its resume state, is committed too, so a design process
+carries across machines.
 
 ### `/product-roadmap`
 
@@ -165,9 +171,9 @@ points you at `/architect <slug>` rather than changing anything downstream.
 Requires `/domain-setup`. `product-design.md` is optional: you can draft a
 roadmap from a bare description. Re-run it whenever the plan moves. The
 document is its own resume state, so a later run proposes changes against
-what's already there, behind the same single approval gate. Nothing is
-committed by default; `--commit` commits and pushes what the run wrote
-(`--commit --no-push` to skip the push).
+what's already there, behind the same single approval gate. Commits and
+pushes what the run wrote by default; `--no-commit` writes everything and
+runs no git command, `--no-push` commits without pushing.
 
 ### `/architect`
 
@@ -249,8 +255,9 @@ At a genuine design fork (the stack choice, the shape of the architecture,
 or where the low-level split falls) it can route the decision through the
 [council](#claude-council).
 
-Nothing committed by default; `--commit` commits and pushes exactly the
-written paths (`--commit --no-push` to skip the push).
+Commits and pushes exactly the written paths by default; `--no-commit`
+writes everything and runs no git command, `--no-push` commits without
+pushing.
 
 ### `claude-council`
 
@@ -339,9 +346,9 @@ ordering still works. Re-run it whenever features or milestones move; it
 reconciles against the current `FEATURES.md` and roadmap behind the same
 single approval gate, keeping the orderings and edges you set. It is the sole
 writer of `PLAN.md` and reads `FEATURES.md`, the feature documents, the
-roadmap and `TASKS.md` without writing any of them. Nothing is committed by
-default; `--commit` commits and pushes what the run wrote (`--commit
---no-push` to skip the push).
+roadmap and `TASKS.md` without writing any of them. Commits and pushes what
+the run wrote by default; `--no-commit` writes everything and runs no git
+command, `--no-push` commits without pushing.
 
 ### `/production-status`
 
@@ -680,10 +687,10 @@ never rolled back, and the lint after still runs. A step whose owner isn't
 installed stops the run before the gate.
 
 It makes no commit of its own. `--commit` and `--no-push` are passed on to
-each owner step. An amend step commits its own writes; `/product-design`,
-`/production-plan` and `/runbook-create --append` get `--commit`; and
-`/task-add`, which commits by default, gets `--no-commit` when you didn't
-pass `--commit`. Requires the same four skills as `/pipeline-patch`.
+each owner step. An amend step commits its own writes; `/runbook-create
+--append`, which commits nothing by default, gets `--commit` only when you
+passed it; and `/task-add`, `/product-design` and `/production-plan`, which
+commit by default, get `--no-commit` when you didn't. Requires the same four skills as `/pipeline-patch`.
 
 ### `pipeline-suggest`
 
