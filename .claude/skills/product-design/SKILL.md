@@ -1,8 +1,8 @@
 ---
 name: product-design
-version: 0.6.1
+version: 0.7.0
 type: skill
-description: Brainstorm and design a product from the ground up with the user, producing high-level design documentation under .claude/domain/ — a product design doc whose features are described from the user-experience angle, a technical direction (stack, topology, data, hosting) that /architect adopts, plus an optional business model. Resumable across sessions: the state lives in design-process.md, not in conversation history, and every phase transition rewrites the stage marker before the phase ends. That state file shrinks rather than grows — every round that ends, the first completion and each later amendment alike, compresses it by deleting; once the process is complete a re-run also offers an amend path that edits a decision directly without re-running phases. Works greenfield or brownfield (detected by reading the repo). Its output is /architect's input. Requires /domain-setup to have run. At a genuine greenfield technical fork it offers to convene claude-council when that skill is installed, and is silent when it is not. Nothing is committed by default; pass --commit to commit and push exactly the documents written (--commit --no-push to skip the push).
+description: Brainstorm and design a product from the ground up with the user, producing high-level design documentation under .claude/domain/ — a product design doc whose features are described from the user-experience angle, a technical direction (stack, topology, data, hosting) that /architect adopts, plus an optional business model. Resumable across sessions: the state lives in design-process.md, not in conversation history, and every phase transition rewrites the stage marker before the phase ends. That state file shrinks rather than grows — every round that ends, the first completion and each later amendment alike, compresses it by deleting; once the process is complete a re-run also offers an amend path that edits a decision directly without re-running phases. Works greenfield or brownfield (detected by reading the repo). Its output is /architect's input. Requires /domain-setup to have run. At a genuine greenfield technical fork it offers to convene claude-council when that skill is installed, and is silent when it is not. Commits and pushes exactly the documents the run wrote by default; pass --no-commit to write everything and run no git command, or --no-push to commit without pushing.
 ---
 
 # /product-design
@@ -11,9 +11,9 @@ description: Brainstorm and design a product from the ground up with the user, p
 # documentation. Spans multiple sessions — the state is
 # `.claude/domain/design-process.md`, so a later run resumes from what the
 # document says, not from what anyone remembers.
-# Usage: /product-design                    (leaves the documents uncommitted)
-#        /product-design --commit           (commit and push the documents this run wrote)
-#        /product-design --commit --no-push (commit locally, skip the push)
+# Usage: /product-design                    (commit and push the documents this run wrote)
+#        /product-design --no-commit        (write the documents, run no git command)
+#        /product-design --no-push          (commit the documents, skip the push)
 #        /product-design <free-form context about the product>
 
 GOAL
@@ -63,10 +63,14 @@ business modelling never touches `./business-model.md` or `./resuming.md`.
 
 ARGUMENT PARSING
 
-Scan `$ARGUMENTS` for the optional `--commit` flag. If present, set
-COMMIT = true and strip it; any remaining text is free-form context about
-the product, to be folded into PHASE 1's orientation. `--commit` and
-`--no-commit` are mutually exclusive — if both appear, stop with:
+Scan `$ARGUMENTS` for the optional `--no-commit` flag. If present, set
+COMMIT = false and strip it; otherwise COMMIT is true — this skill commits
+and pushes what it wrote by default. `--no-commit` implies NO_PUSH: nothing
+is committed, so nothing is there to push. `--commit` is still accepted and
+stripped, and is a silent no-op naming the default. Any remaining text is
+free-form context about the product, to be folded into PHASE 1's
+orientation. `--commit` and `--no-commit` are mutually exclusive — if both
+appear, stop with:
 `--commit and --no-commit cannot be combined. Pick one.`
 
 Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
@@ -362,7 +366,7 @@ the final report:
 - If the council was convened in PHASE 6: the question, the run SHA, the
   verdict, and the paths of the report and transcript it wrote, so the user
   can keep or delete them. Say nothing at all when it was not convened.
-- If `WRITTEN` is non-empty and `--commit` was NOT passed, an explicit
+- If `WRITTEN` is non-empty and `--no-commit` was passed, an explicit
   reminder that nothing was committed.
 
 ---
@@ -382,14 +386,13 @@ every resume reads it and nothing else to decide where to pick up.
 
 ---
 
-COMMIT AND PUSH (only when `--commit` was passed)
+COMMIT AND PUSH (unless `--no-commit` was passed)
 
-If COMMIT is false (the default), run no git/VCS command at all. The
-documents are left uncommitted for the user to review — matching
-`/domain-setup`, `/task-setup`, and `/context-build`.
+If COMMIT is false (`--no-commit` was passed), run no git/VCS command at
+all. The documents are left uncommitted for the user to review.
 
-If COMMIT is true, after the run's last phase completes (the pull-at-start
-from PHASE 0 already ran):
+If COMMIT is true (the default), after the run's last phase completes (the
+pull-at-start from PHASE 0 already ran):
 
 1. If `WRITTEN` is empty, make no commit (and no push). Say so and stop.
 2. Stage EXACTLY the paths in `WRITTEN` — the documents written plus the
@@ -432,7 +435,7 @@ DO NOT:
   input to that, never a substitute for it, however confident it came back.
 - Add the report and transcript claude-council writes for itself
   (`council-report-*.html`, `council-transcript-*.md`) to `WRITTEN`, or stage
-  them under `--commit`. They are the council's output, not this skill's.
+  them at all. They are the council's output, not this skill's.
   Name their paths in the final report and leave them in the working tree
   for the user to keep or delete.
 - Offer the council gate on PHASE 6's brownfield branch, or write anything
@@ -447,7 +450,7 @@ DO NOT:
   "Current stage" that reads as a changelog. A round that ends compresses
   the file by deleting; the amend path in `./resuming.md` does the same.
 - Create `business-model.md` unless the user opted into business modelling.
-- Run any git/VCS command unless `--commit` was passed; and with it, stage
+- Run any git/VCS command when `--no-commit` was passed; and otherwise, stage
   only the explicit `WRITTEN` paths, never a catch-all, push per the
   commit-and-push protocol unless `--no-push` was passed, and never
   force-push, retry a failed push, branch, tag, or use hook-skipping flags
