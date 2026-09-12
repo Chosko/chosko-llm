@@ -156,7 +156,7 @@ Feature: authoring-commit-default
 
 ## 203. Flip `/product-design`, `/product-roadmap` and `/production-plan` to commit by default
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/product-design/SKILL.md, skills/product-design/council-gate.md, skills/product-design/resuming.md, skills/product-roadmap/SKILL.md, skills/production-plan/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: none

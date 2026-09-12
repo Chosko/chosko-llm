@@ -132,8 +132,9 @@ re-decided.
    amendment must leave the file the same size and shape it found it in —
    not larger.
 5. Report what changed, in which document, and that `design-process.md` was
-   compressed. `--commit` behaves as it does everywhere else in this skill:
-   stage exactly `WRITTEN`, or leave everything uncommitted by default.
+   compressed. Committing behaves as it does everywhere else in this skill:
+   stage exactly `WRITTEN`, or, under `--no-commit`, leave everything
+   uncommitted.
 
 ---
 
