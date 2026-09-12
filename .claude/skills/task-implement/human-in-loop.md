@@ -1,0 +1,82 @@
+# Human-in-the-loop tasks (Target: claude+human / human)
+
+Read this when the current task's `Target:` is `claude+human` or `human`.
+
+A body whose `Target:` is `claude+human` or `human` carries a
+`## Manual interventions` section: a ⚠ warning line followed by numbered
+checkpoints, each anchored to a trigger point ("After X: …") with a manual
+step the user must perform in an external tool (e.g. the Unity editor) and
+a verifiable outcome. If the section is missing on such a target, stop and
+report — the task is inconsistent; the user should fix it with /task-add
+conventions in mind.
+
+## Unity MCP gate (check before applying the protocol)
+
+Before using the checkpoint protocol below, decide whether the manual
+checkpoints can be driven through Unity MCP instead of handed to the user:
+
+- If the project's CLAUDE.md contains the marker
+  `Unity MCP for /task-implement:` AND the `mcp__UnityMCP__*` tools are
+  present in this session (the Claude-side server is registered AND
+  connected right now), read `./unity-mcp-checkpoints.md` and follow its
+  enhanced protocol (it includes a one-time per-run opt-out).
+- If the marker is present but the `mcp__UnityMCP__*` tools are absent this
+  session, do NOT read `./unity-mcp-checkpoints.md`. Use the standard
+  protocol below, and tell the user once that Unity MCP is declared but not
+  connected — `/unity-mcp-setup` (then a session restart) would enable
+  editor automation.
+- If CLAUDE.md has no such marker, use the standard protocol below.
+
+This gate is the ONLY place the MCP check happens; SKILL.md Step 1 defers to
+it. Do the marker read and the tool-presence check here — nothing extra is
+read when the project has no Unity MCP.
+
+## Checkpoint protocol (used by both targets)
+
+1. **Pause** when implementation reaches a checkpoint's trigger point. Do
+   not continue past it.
+2. **Explain first, then ask.** Before any confirmation, write the manual
+   step out as exact, sequential actions — menu paths, object and component
+   names, field assignments — adapted to what actually happened so far
+   (real paths, real names — not the body's placeholders if they drifted).
+   The user must be able to act from this explanation alone, without prior
+   knowledge of the change and without asking back.
+   Deliver the explanation as a plain-text turn that ends with NO tool
+   call: some UIs (including the Claude Code CLI) hide assistant text that
+   precedes a question dialog in the same turn, so pairing the explanation
+   with a question tool renders the instructions invisible. End the turn by
+   telling the user how to confirm (e.g. "reply done when finished").
+3. **Wait for the user's explicit free-text confirmation** (e.g. "done")
+   that they performed it. Only after the Step 2 explanation — never a bare
+   "did you do it?" on its own, and never via a question dialog in the same
+   turn as the explanation.
+4. **Verify independently.** The user saying "done" is not proof. Check
+   the claimed outcome yourself: Read/Glob for files that must exist,
+   run a compile or test command, inspect the artifact's content —
+   whatever the checkpoint's outcome makes checkable. Only what is
+   genuinely unverifiable from the filesystem/CLI (e.g. a purely visual
+   editor state) may rest on the user's word — say so explicitly when it
+   does.
+5. **On verification failure:** report exactly what is missing or wrong
+   (e.g. "you confirmed the prefab was created, but
+   `Assets/_Project/Prefabs/Foo.prefab` does not exist"), re-guide the
+   user through the step, and repeat from 3. Never proceed past an
+   unverified checkpoint unless the user explicitly overrides ("skip the
+   check, move on") — record the override in the final report.
+
+## Target: claude+human
+
+Implement normally (all steps of the per-task workflow apply); the
+checkpoints interleave with Step 3 at their trigger points. Announce all
+checkpoints up front in Step 1 so the user knows the run will need them.
+
+## Target: human — guided walkthrough mode
+
+Claude makes NO production edits for this task: every change is performed
+by the user, guided checkpoint by checkpoint with the same protocol. Claude
+still runs read-only checks, compile/test commands for verification, and
+still owns the bookkeeping: the `Status:` flips in TASKS.md and the Step 7
+commit of the user's changes. Steps 2–5 of the per-task workflow apply only
+insofar as the user performs them under guidance; where the project's test
+flow is agent-runnable, Claude may still run the test commands itself
+(running tests is verification, not production editing).
