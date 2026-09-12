@@ -166,7 +166,7 @@ Feature: authoring-commit-default
 
 ## 204. Move `/product-design` and `/production-plan` into the commits-by-default row of both forwarding tables
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/pipeline-patch.md, skills/pipeline-revise/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 202, 203
