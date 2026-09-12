@@ -213,7 +213,8 @@ usable from a bare description, as `/architect` is.
 - A revision whose deltas contradict the recorded `Strategy:` premise → warn,
   name the contradiction, and ask which one moves. Never resolve it by
   rewriting the premise.
-- `--commit` with nothing written → make no commit and say so.
+- Nothing written → make no commit (and no push) and say so. `--commit` is
+  accepted as a silent no-op and never forces one.
 
 ## Dependencies
 

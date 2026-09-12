@@ -201,7 +201,8 @@ versus `FEATURES.md`, and it keeps one writer per artifact.
 - More than one `[ACTIVE]` milestone → report and ask which one is meant.
 - Slug in a dependency edge that resolves to no feature → report and drop
   the edge, as `/architect`'s iterate guard ignores unresolvable task IDs.
-- `--commit` with nothing changed → make no commit and say so.
+- Nothing changed → make no commit (and no push) and say so. `--commit` is
+  accepted as a silent no-op and never forces one.
 
 ## Dependencies
 
