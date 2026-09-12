@@ -146,7 +146,7 @@ Feature: task-archive
 
 ## 202. Flip `/architect` to commit by default
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/architect/SKILL.md, skills/architect/amend.md, skills/architect/iterating.md, skills/architect/council-gate.md, VERSION, CHANGELOG.md
 Preconditions: none

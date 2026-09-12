@@ -21,7 +21,8 @@ amendment is one gate long and has nothing to resume.
   `.claude/FEATURES.md` slug.
 - `<change>` — the quoted text after it: what to change, naming the
   section(s) of the feature document it lands in.
-- `--commit`, `--no-push` — unchanged in meaning; see *Committing* below.
+- `--commit`, `--no-commit`, `--no-push` — unchanged in meaning; see
+  *Committing* below.
 
 It reads these, and nothing beyond them:
 
@@ -189,13 +190,14 @@ Amended <slug>: <section>, <section>[; product-design.md § <section>] — <edit
 When any task was staled, follow it with
 `Reconcile with /task-add feature=<slug>.` — a stale task the user is not
 told about is the failure the guard exists to prevent. When `WRITTEN` is
-non-empty and `--commit` was not passed, end with an explicit reminder that
+non-empty and the run committed nothing, end with an explicit reminder that
 nothing was committed.
 
 ## Committing
 
 Under `/architect amend`, `SKILL.md`'s COMMIT AND PUSH applies to `WRITTEN`
-unchanged: `--commit` and `--no-push` mean what they mean on every other run,
+unchanged: `--commit`, `--no-commit` and `--no-push` mean what they mean on
+every other run,
 and PHASE 0 ran the pull-at-start before dispatching here. A consumer that
 executes this file by path commits under its own rules; the write set in
 step 5 is what it stages.
