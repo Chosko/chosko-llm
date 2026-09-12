@@ -100,10 +100,15 @@ agents that cannot run `install.sh` still have the commands they need.
 - **A feature may start project-specific and generalize.** Some features
   were built for one repository — the Plastic SCM and Unity sections — and
   are expected to serve others over time. Being born narrow is not a defect.
-- **Gates keep the director in the reviewer's seat.** Plan-first approval,
-  authoring commands that leave their output uncommitted unless `--commit`
-  is passed, and stop-and-approve phases exist so that Claude operates and
-  the director decides.
+- **Gates keep the director in the reviewer's seat.** Plan-first approval
+  and stop-and-approve phases exist so that Claude operates and the director
+  decides. The scaffolding, context-layer, refactoring and runbook-authoring
+  commands add a second pause, leaving their output uncommitted unless
+  `--commit` is passed. The four design-pipeline skills — `/product-design`,
+  `/product-roadmap`, `/architect`, `/production-plan` — no longer do:
+  their review happens inside the run, at their own approval gates, and
+  their output is read by the next session on another machine, so they
+  commit and push by default and take `--no-commit` to hold back.
 - **Governance stays simple on purpose.** One person holds write access;
   authoring teammates open pull requests. A richer permission model was
   judged not worth the scope.
