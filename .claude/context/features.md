@@ -606,15 +606,17 @@ Currently shipped:
   branch is excluded — confirm-and-record over an existing stack is not a
   fork. Dissent folds into `product-design.md`'s design decisions; the
   council's own report/transcript are owned by neither skill and never enter
-  `WRITTEN` or `--commit`; the `design-process.md` stage marker is not
+  `WRITTEN` and are never staged; the `design-process.md` stage marker is not
   written when convening, since a mid-phase consultation is not a phase
   transition. Kept in step with the `/architect` copy — see
   `../../docs/authoring-guide.md`. `product-design.md` and `business-model.md` stay high-level
   by construction: implementation detail is `/architect`'s output;
   `technical-direction.md` is one document where stack and
   infrastructure detail belongs. Never writes `.claude/FEATURES.md`,
-  feature docs, or tasks. **Authoring skill — nothing committed by default;
-  `--commit` stages exactly documents written in one commit.**
+  feature docs, or tasks. **Commits by default — stages exactly the documents
+  written, `design-process.md` included, in one commit and pushes;
+  `--no-commit` runs no git command, `--no-push` skips the push; `--commit`
+  accepted as a silent no-op.**
 - `skills/product-roadmap/` — product-level WHEN of the pipeline, between
   `/product-design` and `/architect`. Writes one document,
   `.claude/domain/product-roadmap.md`, plus its `.claude/domain/INDEX.md`
@@ -663,10 +665,10 @@ Currently shipped:
   whose deltas contradict recorded premise (names contradiction, asks which
   moves — premise is read as input on revision, NEVER rewritten to agree with
   a newly-decided order). No supporting
-  files — schema inline, one file per folder. **Authoring skill — nothing
-  committed by default; `--commit` stages exactly written paths in one
-  commit, `--no-push` skips the push; `--commit` with nothing written makes
-  no commit and says so.**
+  files — schema inline, one file per folder. **Commits by default — stages
+  exactly the written paths in one commit and pushes; `--no-commit` runs no
+  git command, `--no-push` skips the push; `--commit` accepted as a silent
+  no-op; nothing written makes no commit and says so.**
 - `skills/architect/` — stage 3 of product pipeline: turns one or more
   high-level features into low-level feature documents under
   `.claude/domain/features/`, each indexed by `.claude/FEATURES.md` entry.
@@ -757,9 +759,11 @@ Currently shipped:
   only reasons it touches `.claude/TASKS.md`; both write nothing there but
   `Status:` lines. Slugs
   stable, never renamed. Never writes `technical-direction.md` — that
-  is `/product-design`'s document. **Authoring skill — nothing committed by
-  default; `--commit` stages exactly written paths (including TASKS.md
-  when guard fired) in one commit.**
+  is `/product-design`'s document. **Commits by default — stages exactly the
+  written paths (including TASKS.md when guard fired) in one commit and
+  pushes; `--no-commit` runs no git command, `--no-push` skips the push;
+  `--commit` accepted as a silent no-op. `amend.md` run by path keeps no
+  default of its own — only `/architect amend` inherits this one.**
 - `skills/production-plan/` — feature-level WHEN of the pipeline, between
   `/architect` and `/task-add`. Sole writer of `.claude/PLAN.md`, a third
   index beside `TASKS.md` and `FEATURES.md`, and writes NOTHING else — never
@@ -809,10 +813,10 @@ Currently shipped:
   refusals: an edge slug resolving to no feature is dropped, a milestone with
   no features is a warning, `>1 [ACTIVE]` reports and asks. Nothing
   plan-aware exists in `/task-add`, `/task-implement`, or the bash CLI —
-  deferred by the feature's open questions. **Authoring skill — nothing
-  committed by default; `--commit` stages exactly `.claude/PLAN.md` in one
-  commit, `--no-push` skips the push; `--commit` with nothing written makes
-  no commit and says so.**
+  deferred by the feature's open questions. **Commits by default — stages
+  exactly `.claude/PLAN.md` in one commit and pushes; `--no-commit` runs no
+  git command, `--no-push` skips the push; `--commit` accepted as a silent
+  no-op; nothing written makes no commit and says so.**
 - `skills/unity-mcp-skill/` — Unity-MCP operator guide vendored from
   upstream skill. `SKILL.md` carries resource-first workflow,
   core tool categories, best-practice patterns for driving Unity
@@ -1002,7 +1006,8 @@ Currently shipped:
   owns no line, its routing row owns `Nothing`, no who-writes-what row. No
   commit of its own: `--commit` / `--no-push` forwarded to the arm (the arm's
   closed write set committed per `commit.md`; `/runbook-create --append` gets
-  the flags).
+  the flags). Forwarding table's first column is labelled this command's own
+  default, so no row reads as a claim about an owner's.
 - `skills/pipeline-revise/` — heavy half of revising planned work (feature
   `pipeline-revision`). Explicit, never auto-triggered; same `requires:` as
   the patcher. `SKILL.md` carries the workflow; four flat supporting files,
@@ -1056,8 +1061,9 @@ Currently shipped:
   owner stops before the gate. Write set empty — no line, no file, no report
   on disk; no status value, no change ledger. No commit of its own:
   `--commit` / `--no-push` forwarded per owner step (arms commit their own
-  write set; `/product-design`, `/production-plan`, `/runbook-create
-  --append` get `--commit`; `/task-add` gets `--no-commit` without it).
+  write set; `/runbook-create --append`, committing nothing by default, gets
+  `--commit` only when passed; `/task-add`, `/product-design` and
+  `/production-plan`, committing by default, get `--no-commit` without it).
 - `skills/pipeline-suggest/` — the pipeline's auto-suggested entry point
   (feature `pipeline-suggest`) and the second artifact nobody invokes, built
   in `runbook-suggest`'s shape: Claude Code selects it from its

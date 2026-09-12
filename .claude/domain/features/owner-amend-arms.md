@@ -127,7 +127,7 @@ uses the existing step-marker vocabulary rather than a new one.
 
 ## Interfaces and contracts
 
-- `/architect amend feature=<slug> "<change>" [--commit] [--no-push]` —
+- `/architect amend feature=<slug> "<change>" [--no-commit] [--no-push]` —
   one gate, precision guard, same `WRITTEN` discipline as the full skill.
   Unknown slug stops by listing the slugs that exist. A `[NEW]` feature is
   amended with no guard at all, having no tasks.

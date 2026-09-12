@@ -176,7 +176,7 @@ Feature: authoring-commit-default
 
 ## 205. Update documentation for feature `authoring-commit-default`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, docs/authoring-guide.md, .claude/domain/product-workflow.md, .claude/domain/features/authoring-commit-default.md, .claude/domain/features/owner-amend-arms.md, .claude/domain/features/production-plan.md, .claude/domain/features/product-roadmap.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 202, 203, 204

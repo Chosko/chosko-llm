@@ -800,15 +800,23 @@ flag so the user can override the default commit behaviour. The split is about
 
 - **Authoring commands (uncommitted by default).** `/context-build`,
   `/context-convert`, `/refactor-codebase`, `/refactor-tests`,
-  `/task-setup`, `/domain-setup`, `/unity-mcp-setup`, `/product-design`,
-  `/architect`, and
-  `/project-setup` write their output and leave it in the working tree
+  `/task-setup`, `/domain-setup`, `/unity-mcp-setup`, `/project-setup` and
+  `/runbook-create` write their output and leave it in the working tree
   for review. They accept **`--commit`** to commit what they wrote at the
   end.
 - **Auto-committing commands.** `/task-add`, `/task-clean`,
-  `/task-implement`, `/task-iterate`, and `/context-update` commit
+  `/task-implement`, `/task-iterate`, `/context-update`, `/architect`,
+  `/product-design`, `/product-roadmap` and `/production-plan` commit
   automatically. They accept **`--no-commit`** to write their changes but skip
   the commit.
+
+  The four design skills — `/architect`, `/product-design`,
+  `/product-roadmap`, `/production-plan` — joined this group rather than
+  starting in it. Their output is written and then read again by the next
+  session, usually on another machine, which is the one place an uncommitted
+  working tree helps nobody, and each already gates the director's review
+  inside the run. They keep accepting `--commit` as a silent no-op so
+  existing invocations do not break.
 
 `/task-review` belongs to neither group: it never commits anything, because it
 never changes anything. It is read-only by contract — no edit to a source file,
