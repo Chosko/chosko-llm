@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 205
+Last task number: 206
 
 ---
 
@@ -181,3 +181,12 @@ Target: claude
 Files: README.md, docs/reference.md, docs/authoring-guide.md, .claude/domain/product-workflow.md, .claude/domain/features/authoring-commit-default.md, .claude/domain/features/owner-amend-arms.md, .claude/domain/features/production-plan.md, .claude/domain/features/product-roadmap.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 202, 203, 204
 Feature: authoring-commit-default
+
+---
+
+## 206. Ship `hook:remote-stop-exemption`, exempting `/runbook-run`'s in-flight markers from the cloud Stop hook
+
+Status: [MISSING]
+Target: claude
+Files: hooks/remote-stop-exemption.sh, .claude/hooks/remote-stop-exemption.sh, .claude/settings.json, docs/reference.md, README.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION, CHANGELOG.md
+Preconditions: none
