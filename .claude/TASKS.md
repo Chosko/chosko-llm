@@ -186,7 +186,7 @@ Feature: authoring-commit-default
 
 ## 206. Answer the cloud Stop hook's block with a fixed literal reply instead of re-deriving it every step
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/SKILL.md, docs/reference.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION, CHANGELOG.md
 Preconditions: none

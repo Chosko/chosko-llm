@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.38.0 — 2026-09-13
+
+- **/runbook-run** answers the cloud sandbox's Stop hook with the fixed literal `stop hook refused` instead of re-explaining itself. That hook won't let a turn end on a dirty tree, and an in-flight step is dirty by design — the `[~]` heading and the index's `[RUNNING]` are the resume signal and must stay uncommitted — so the block landed at every step start and every relayed question, each time costing a few hundred tokens and a `git status` to re-derive an answer that never changes.
+- The rule applies only when the two bookkeeping files the run just wrote are the only dirty ones; anything else in the tree is handled normally, so a genuinely forgotten commit still gets thought about. No tool call, no explanation, and the turn ends there.
+
 ## 1.37.0 — 2026-09-12
 
 - **/pipeline-revise** forwards `--no-commit` to `/product-design` and `/production-plan` when the run was not given `--commit`, matching the defaults those two took in 1.36.0. Without it a revision run would have committed when the user did not ask. `/runbook-create --append` still commits nothing by default and is forwarded `--commit` as before.
