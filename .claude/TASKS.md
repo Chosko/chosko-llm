@@ -184,9 +184,9 @@ Feature: authoring-commit-default
 
 ---
 
-## 206. Ship `hook:remote-stop-exemption`, exempting `/runbook-run`'s in-flight markers from the cloud Stop hook
+## 206. Answer the cloud Stop hook's block with a fixed literal reply instead of re-deriving it every step
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
-Files: hooks/remote-stop-exemption.sh, .claude/hooks/remote-stop-exemption.sh, .claude/settings.json, docs/reference.md, README.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION, CHANGELOG.md
+Files: skills/runbook-run/SKILL.md, docs/reference.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION, CHANGELOG.md
 Preconditions: none

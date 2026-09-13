@@ -1266,7 +1266,26 @@ Currently shipped:
   `[~]` is deliberately NEVER committed — its presence in a tree is the resume
   signal and the same-tree exception to one-run-per-runbook (`[RUNNING]` in the
   index blocks a second run otherwise; no lock file, no timestamp, no staleness
-  heuristic). Hard contracts: steps are **always sequential** (never parallel,
+  heuristic). **The Stop-hook reply** (under COMMIT CADENCE) is the cost of that
+  choice, paid down: a cloud sandbox's Stop hook exits 2 on any dirty tree, and
+  an in-flight step is dirty by design, so the block lands at every step start
+  and every relayed question. It cannot be cleared from inside the run — the
+  harness runs the script after the model stops — but the script's own
+  `stop_hook_active` recursion guard makes it **one forced turn per fire, not a
+  loop**, and that turn is model-produced and so reachable by instruction. The
+  rule: when the only dirty files are the runbook and the index the orchestrator
+  itself just wrote, reply with the literal `stop hook refused`, no tool call, no
+  explanation, and end the turn. Condition is **the orchestrator's own writes,
+  never a `git status`** — it set `[~]` one step ago, so it needs no inspection,
+  the avoided tool call is the bigger saving, and anything else dirty falls
+  through to normal handling, which preserves the real forgotten-commit check.
+  Lives in THIS body, not a global `claude-md`: `Stop` fires for the main
+  session (a subagent's is `SubagentStop`), which is the orchestrator holding
+  this skill, so it costs zero resident tokens in every non-runbook session.
+  Chosen after a `SessionStart` hook that patched `stop-hook-git-check.sh` in
+  place was written and abandoned — a script rewriting a session guard reads as
+  weakening it, and cloud sessions (the only place its positive-only gate can
+  fire) refuse to run, install or commit it. Hard contracts: steps are **always sequential** (never parallel,
   even when declared independent — one question stream, and two agents would
   race on `Done:` lines); it **writes exactly two files** and does none of the
   work itself; **no step is ticked before its subagent's result arrives**; it

@@ -1,6 +1,6 @@
 ---
 name: runbook-run
-version: 0.7.0
+version: 0.8.0
 type: skill
 description: Execute a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md — by walking it top to bottom (list position is the order; a step's number is a stable id, not its position), spawning one fresh subagent per step, relaying that subagent's questions to the user and the user's answers back to the same subagent, recording what each step actually did in a Done: line, and committing the runbook and its .claude/RUNBOOKS.md index after every step. Steps run one at a time, never in parallel. The orchestrator reads only CLAUDE.md, the runbook and the index, and writes only the runbook and the index — every other change in the tree is made by a subagent, and it never reviews or second-guesses one. Usage: /runbook-run <name|id> — a bare all-digits argument is the numeric id the index assigns each runbook, anything else its kebab-case name — with --from N to begin selection at step N, --to N to stop after step N (the two compose into --from X --to Y, an inclusive range), --only N to run exactly one step, --model <model> to override the runbook's header model for this run, --relay-spawns to force the spawn relay for a whole run, and --no-commit / --no-push with their usual meanings. Where a subagent cannot spawn a subagent — cloud sessions among them — a step's agent ends its turn with SPAWN REQUEST naming a prompt file and a result file under the OS temp dir; the orchestrator spawns that child at its own nesting level, waits for it, and tells the caller the result is ready, without ever opening either file. Also carries, in references/, the three files the rest of the runbook suite and the pipeline revision surfaces read by path: runbook-schema.md (the asset kind — store, body schema, step markers, status vocabulary, the optional per-step Needs: field, the index block with its id and Last runbook number: counter, and the backfill an index written before ids gets from the first command that writes it), subagent-contract.md (the OPERATING RULES block pasted verbatim into every spawned prompt) and step-amend.md (the rules for amending one pending step — strike it as [x] with a Done: line opening struck and no commit sha, never deleted or renumbered; insert through /runbook-create --append --before / --after; add dated Context: facts — with the prompt block immutable, so a wrong prompt is struck and a corrected step inserted, and a [RUNNING] runbook accepting changes only after its current step).
 ---
@@ -595,6 +595,27 @@ On a non-git VCS — a project whose `CLAUDE.md` defines a `## VCS` section
 overriding git — skip the pull → re-sync → push sequence entirely; only the
 commit (checkin) step runs.
 
+**The Stop-hook reply.** A cloud sandbox's Stop hook refuses to end a turn on a
+dirty tree, and an in-flight step is dirty by design — the `[~]` heading and the
+index's `[RUNNING]`, which this section forbids committing. That block cannot
+be cleared from here, and it costs one forced turn every time it fires: at each
+step start, and at every question relayed to the user.
+
+When that feedback arrives and the only uncommitted changes are the runbook and
+the index **you yourself just wrote**, spend nothing on it. Reply with exactly
+
+```
+stop hook refused
+```
+
+and end the turn. No tool call, no `git status`, no explanation — you wrote
+those two files one step ago and already know what is dirty. Re-deriving it
+costs a few hundred tokens every time and changes nothing.
+
+If anything else is dirty, this is not that case — handle it normally. That
+fall-through is the point: the condition is your own two writes, so a genuinely
+forgotten commit still gets thought about.
+
 ---
 
 ## DO NOT
@@ -613,6 +634,9 @@ commit (checkin) step runs.
   do it inline, or by declining it. Spawn the child.
 - Let a step exceed eight relay rounds. The ninth is a failure, not a spawn.
 - Edit a step's fenced prompt block. Ever. Corrections go to `Context:`.
+- Re-derive or re-explain the Stop hook's block on an in-flight step. It fires
+  at every step start and every relayed question, and the answer is fixed — see
+  **The Stop-hook reply** under COMMIT CADENCE.
 - Edit the header, `Sequencing:`, `Companion:`, a step title, a
   `Depends on:` or a `Needs:` line — those are `/runbook-create`'s, by line.
 - Do a step's work yourself, patch a file a subagent should have patched, or

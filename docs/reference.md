@@ -1146,6 +1146,17 @@ the deletion by default (`--no-commit` / `--no-push`), `/runbook-run` commits
 after every step, and `/runbook-list`, `/runbook-describe` and
 `runbook-suggest` write nothing at all.
 
+**In a cloud sandbox, expect `stop hook refused` in the transcript.** The
+sandbox registers a Stop hook that won't let a turn end on a dirty tree, and an
+in-flight step is dirty on purpose — the `[~]` heading and the index's
+`[RUNNING]` are the resume signal and must stay uncommitted. That block can't be
+cleared from inside the run, and thanks to the hook's own recursion guard it
+costs exactly one forced turn each time it fires: at every step start and every
+question relayed to you. Rather than re-explain itself each time, `/runbook-run`
+answers with that fixed literal and stops. It applies only when the two
+bookkeeping files it just wrote are the only dirty ones; anything else in the
+tree is handled normally.
+
 A runbook is not a [session handoff](#session-save-and-session-resume): a
 session file is a snapshot of work in flight, a runbook is a plan for work
 not yet done. It's not a backlog either: a task is a unit of work with
