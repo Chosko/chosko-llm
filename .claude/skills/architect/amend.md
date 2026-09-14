@@ -125,7 +125,8 @@ The arm's one and only gate. One message, carrying:
 3. **The proposed outcome** under each answer below: which tasks go
    `[STALE]`, and what the feature's `Status:` becomes.
 4. **The question.** It is asked on every amendment, a `[NEW]` feature's
-   included, and is never inferred, classified or pre-answered by the arm:
+   included, and is never inferred, classified or pre-answered by the arm —
+   with one exception, below:
 
 > Is this change editorial — wording only, with nothing any task builds
 > changing?
@@ -136,11 +137,36 @@ The arm's one and only gate. One message, carrying:
 >    and `Status:` becomes `<outcome>`.
 > C. **Stop** — write nothing.
 
+**The one exception: an answer carried from `/pipeline-revise`.** When this
+arm runs as an owner step of `/pipeline-revise`, in the session that asked
+that skill's gate, the user has already answered the editorial question
+there for the same change. That answer is carried in, and the question is
+rendered as a confirmation of it instead of being asked again verbatim:
+
+> At the revise gate you chose *<editorial | not editorial>* for the whole
+> plan. For this document's edit that means <that answer's outcome, e.g.
+> edit the document, mark <ids> `[STALE]`, `Status:` becomes <outcome>>.
+> Judge this edit on its own — confirm, or switch if it differs?
+>
+> A. **Editorial** — edit the document; no task is staled and `Status:`
+>    stays `<status>`.
+> B. **Not editorial** — edit the document, mark <ids | no tasks> `[STALE]`,
+>    and `Status:` becomes `<outcome>`.
+> C. **Stop** — write nothing.
+
+The carried answer's letter is marked as the one given at the revise gate;
+replying with it confirms, replying with the other letter switches, and C
+stops. The gate is not skipped and the step is not approved by the carried
+answer: items 1–3 still render in full, and an explicit reply is still
+required. Only `/pipeline-revise` carries an answer. Standalone
+`/architect amend`, and `/pipeline-patch` — which has no gate of its own
+before the arm, so no earlier answer to carry — ask the full question above.
+
 The user may overrule a classification, or the scope call below, in the same
 answer; re-render the outcome and ask again. A reclassification that makes an
 `[IN PROGRESS]` task touched triggers step 3's refusal unchanged: stop, and
 write nothing. Wait for an explicit answer. Silence, an unclear reply or EOF
-is C.
+is C — under the confirmation form as under the full question.
 
 ### The status outcome
 
@@ -208,7 +234,9 @@ step 5 is what it stages.
 
 - Run PHASE 1 or PHASE 2, or ask anything but the gate's one question.
 - Infer whether a change is editorial, or skip the question because the
-  answer looks obvious.
+  answer looks obvious. The one answer the arm takes from outside is the one
+  the user gave at `/pipeline-revise`'s gate, and it is shown for
+  confirmation, never applied without an explicit reply (§ 4).
 - Stale an untouched task, or refuse on an untouched `[IN PROGRESS]` one.
 - Override a touched `[IN PROGRESS]` refusal.
 - Classify, stale or otherwise touch a `[DONE]` or `[SKIP]` task.

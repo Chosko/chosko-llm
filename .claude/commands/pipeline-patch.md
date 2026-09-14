@@ -1,8 +1,8 @@
 ---
 name: pipeline-patch
-version: 0.2.0
+version: 0.2.1
 type: command
-description: Apply a change that touches exactly one feature document, task or runbook step through that owner's amend arm, then re-check it — or refuse. From a required anchor (feature=<slug>, task=<N> or runbook=<name|id> step=<n>) it probes, walks the pipeline's graph reading only the indexes — FEATURES.md, TASKS.md, PLAN.md, RUNBOOKS.md, never a task body, feature document or runbook body — and counts the owners the change would touch. The single-owner rule is a count plus a closed checklist, never a judgement: exactly one owner and none of five structural signals (more than one owner, a dependency edge changing, scope added that no task covers, a deletion that crosses artifacts, a reorder of existing entries) loads that owner's amend arm by path, runs it with its own gate, and runs /pipeline-check scoped to the anchor. Anything else is refused in one line naming /pipeline-revise and the signal that triggered it — no escalation, no second question, nothing written. Writes no line of its own and makes no commit of its own; --commit / --no-push are forwarded to the arm.
+description: Apply a change that touches exactly one feature document, task or runbook step through that owner's amend arm, then re-check it — or refuse. From a required anchor (feature=<slug>, task=<N> or runbook=<id|name|id-name> step=<n>) it probes, walks the pipeline's graph reading only the indexes — FEATURES.md, TASKS.md, PLAN.md, RUNBOOKS.md, never a task body, feature document or runbook body — and counts the owners the change would touch. The single-owner rule is a count plus a closed checklist, never a judgement: exactly one owner and none of five structural signals (more than one owner, a dependency edge changing, scope added that no task covers, a deletion that crosses artifacts, a reorder of existing entries) loads that owner's amend arm by path, runs it with its own gate, and runs /pipeline-check scoped to the anchor. Anything else is refused in one line naming /pipeline-revise and the signal that triggered it — no escalation, no second question, nothing written. Writes no line of its own and makes no commit of its own; --commit / --no-push are forwarded to the arm.
 requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run
 ---
 
@@ -12,7 +12,7 @@ requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbo
 # anchor — or refuse in one line and name /pipeline-revise. Reads only the
 # indexes.
 # Usage: /pipeline-patch <anchor> "<change>" [--commit] [--no-push]
-#        anchor: feature=<slug> | task=<N> | runbook=<name|id> step=<n>
+#        anchor: feature=<slug> | task=<N> | runbook=<id|name|id-name> step=<n>
 # Examples: /pipeline-patch task=42 "Hints: point at the new loader module"
 #           /pipeline-patch feature=user-profile "Interfaces and contracts: promise task 51's size check"
 #           /pipeline-patch runbook=implement-auth step=4 "context: the schema migration already ran"
@@ -70,11 +70,11 @@ forms, and strip it:
 
 - `feature=<slug>`
 - `task=<N>`
-- `runbook=<name|id> step=<n>`
+- `runbook=<id|name|id-name> step=<n>`
 
 What remains is the change, as one quoted string. A missing anchor or an
 empty change stops with:
-`/pipeline-patch needs an anchor — feature=<slug>, task=<N> or runbook=<name|id> step=<n> — and the change to make. A change with no anchor is /pipeline-revise's.`
+`/pipeline-patch needs an anchor — feature=<slug>, task=<N> or runbook=<id|name|id-name> step=<n> — and the change to make. A change with no anchor is /pipeline-revise's.`
 
 ---
 
@@ -91,10 +91,11 @@ WORKFLOW
      `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`
      § *The archive*; one above it was never assigned. Either way stop, say
      which, and list the live tasks, id and title.
-   - `runbook=<name|id> step=<n>` — a block in `.claude/RUNBOOKS.md`, by name
-     or id, per
+   - `runbook=<id|name|id-name> step=<n>` — a block in `.claude/RUNBOOKS.md`, by id,
+     name or `<id>-<name>`, per
      `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`
-     § *The store*; an unknown one stops listing the runbooks. The step is
+     § *Resolving a runbook argument*; one that does not resolve stops listing
+     the runbooks. The step is
      resolved by the arm, which lists the runbook's steps for an unknown id —
      this command has no body to find it in.
 
@@ -133,7 +134,7 @@ WORKFLOW
    - `task=<N>` → `/pipeline-check feature=<slug>` with the slug on the task's
      `Feature:` line when it resolves in `.claude/FEATURES.md`, otherwise
      `/pipeline-check` unscoped;
-   - `runbook=<name|id> step=<n>` → `/pipeline-check` unscoped — no index line
+   - `runbook=<id|name|id-name> step=<n>` → `/pipeline-check` unscoped — no index line
      ties a runbook to a slug, so the command has no runbook scope.
 
    When `/pipeline-check` is not installed, evaluate `lint.md` directly over

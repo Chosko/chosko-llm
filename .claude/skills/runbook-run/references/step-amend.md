@@ -16,18 +16,22 @@ insert, which is performed by running `/runbook-create --append` itself.
 
 ## Inputs
 
-- **The runbook** — a name or an id, resolved by
+- **The runbook** — an id, a name or `<id>-<name>`, resolved by
   `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`
-  § *The store*'s one rule. An unknown name or id lists the runbooks that do
-  exist and stops.
+  § *The store*'s resolution rule. An unknown argument lists the runbooks that
+  do exist and stops; a compound whose halves disagree, or an ambiguity, is
+  reported as that rule says and stops.
 - **The step** — by id, never by position (`runbook-schema.md` § *A step*).
   An id no step carries lists the runbook's steps — id, marker and title, in
   list order — and stops.
 - **The operation** — *strike* with its reason, *insert* with its material
   and a position, or *context* with the facts to add.
 
-It reads `.claude/RUNBOOKS.md` (this runbook's block) and
-`.claude/runbooks/<name>.md`, and nothing else.
+It reads `.claude/RUNBOOKS.md` (this runbook's block) and the body at the path
+that block's `File:` line holds, and nothing else. It reads and writes the body
+at that path, whether it is `<id>-<name>.md` or a legacy `<name>.md`, and
+**never migrates** it: a legacy file name stays as it is, and `body-migration.md`
+is not read.
 
 ## What may be amended
 
@@ -79,7 +83,7 @@ relies on. After that, a step is struck, not deleted.
 ## Insert
 
 Inserting a step **is** the positional append:
-`/runbook-create --append <name|id> --before <step>` or `--after <step>`, run
+`/runbook-create --append <id|name|id-name> --before <step>` or `--after <step>`, run
 as that command runs it, with its own confirmation gate and its own APPEND
 RULES. Without either flag the new step goes to the foot. This file describes
 no second insertion mechanism: `/runbook-create --append` is the runbook
@@ -146,7 +150,7 @@ none beside it.
   more.
 
 Committing is the consumer's. When it commits, it stages exactly the runbook
-and the index, by explicit path.
+at its `File:` path and the index, by explicit path.
 
 ## The closing report line
 

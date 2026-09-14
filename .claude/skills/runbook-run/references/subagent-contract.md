@@ -1,20 +1,23 @@
 # The subagent contract
 
 Fixed text. The block below is pasted **verbatim** as the last section of every
-spawned step prompt, with only its two placeholders filled in. It is a
+spawned step prompt, with only its three placeholders filled in. It is a
 reference file rather than prose the orchestrator composes because it must be
 identical in every step of every runbook: a contract that is re-worded per
 spawn is a contract the agent can be talked out of.
 
-Two placeholders, and nothing else, is substituted:
+Three placeholders, and nothing else, are substituted:
 
 - `<RUNBOOK>` — the runbook's name, e.g. `implement-ecc-import`.
 - `<N>` — the step number being executed.
+- `<FILE>` — the runbook body's path, exactly as its index block's `File:` line
+  holds it, e.g. `.claude/runbooks/3-implement-ecc-import.md`.
 
-The relay rule below names no path of its own: the subagent chooses one under
-the OS temp directory and reports it. That is deliberate — a third placeholder
-would be a path the orchestrator has to invent before it knows whether the
-relay will be used at all.
+The relay rule below names no directory of its own: the subagent chooses one
+under the OS temp directory and reports it, and the file names are built from
+`<RUNBOOK>` and `<N>`. That is deliberate — a relay-path placeholder would be a
+path the orchestrator has to invent before it knows whether the relay will be
+used at all.
 
 It goes **last** in the assembled prompt, after the step's own fenced prompt
 block, so the operating rules are the final thing the agent reads.
@@ -45,7 +48,7 @@ OPERATING RULES
   `model: <model or "same">`. The orchestrator will spawn it for you and reply
   when the result file has been written; read it and continue. Ask for one
   child at a time.
-- Never edit .claude/runbooks/<RUNBOOK>.md or .claude/RUNBOOKS.md.
+- Never edit <FILE> or .claude/RUNBOOKS.md.
 - You are executing step <N> of runbook <RUNBOOK>.
 - When finished, end your turn with the literal line `DONE` followed by a
   concise report naming the commit sha(s), the decisions taken, and any premise
@@ -76,7 +79,13 @@ contract, and is never sent to a subagent.
   it) changes what the runbook does.
 - **Never edit the runbook or the index.** The orchestrator writes exactly two
   files and a subagent writes everything else. Two writers on the runbook is
-  how a `Done:` line gets lost.
+  how a `Done:` line gets lost. The body is named by `<FILE>` rather than built
+  from `<RUNBOOK>` because a body's file name is not derivable from its name —
+  it may be `<id>-<name>.md` or a legacy `<name>.md`, and only `File:` says
+  which. **`<FILE>` is an acceptable placeholder where a relay path was not**:
+  the orchestrator already holds `File:` from its *Resolve* step before it
+  spawns anything, so filling it invents nothing, whereas a relay path is one
+  it would have to make up before knowing whether the relay is used at all.
 - **Naming the runbook and step.** It orients the agent, it makes its report
   attributable, and it is what lets a step's subagent call
   `/runbook-create --append` with no name argument.
@@ -98,7 +107,7 @@ contract, and is never sent to a subagent.
   each reaching for the obvious name would hand one runbook's child the other's
   prompt — a collision the orchestrator cannot detect, since it never opens
   either file. `<RUNBOOK>` and `<N>` are already substituted here, so naming
-  them costs no third placeholder.
+  them costs no further placeholder.
 - **`DONE` plus the three-part report.** `DONE` is the literal marker the
   orchestrator classifies on; the sha, the decisions and the wrong premises are
   exactly what the `Done:` line records and what fact propagation feeds into

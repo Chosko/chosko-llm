@@ -1,28 +1,29 @@
 ---
 name: runbook-describe
-version: 0.1.0
+version: 0.2.1
 type: command
-description: Print one runbook in depth — its header (created, source, model, sequencing, companion), its index status and progress, and every step enumerated with its number, marker, title, dependencies, whether it needs a person, and the Done: line a run wrote for it. Takes the runbook's kebab-case name or the numeric id the index assigns it. This is the one read-only runbook command allowed to open a body, and it opens exactly one — the runbook asked about, never a walk of .claude/runbooks/ — which is the trade it exists to make against /runbook-list, whose whole contract is that it never opens one. A step's Needs: line is printed as authored; a step without one is read from its prompt block and may carry an inferred note, always labelled as inferred and never rendered as though it were authored. Writes nothing, runs no shell command including git, and corrects no status, count or marker however wrong it looks against the body.
+description: Print a compact summary of one runbook — a little more than its /runbook-list line and far less than its body. The index heading line (id, status, name, progress, title), one header line with Created, Source and Model, then one line per step with its marker, number and title, its dependencies when it has any and its Needs value when an authored one is not agent, plus at most one short done line per step that a run finished or failed, and a closing by-marker count naming the steps that need a person. Takes the runbook as the numeric id the index assigns it, its kebab-case name, or `<id>-<name>`, and reads the body at the index block's File: path. Reads the index and pulls only the lines it prints from that one runbook's body by targeted line extraction — never a full read of the body, never a step prompt, never a task body, never another runbook. Task ids in a Done line are printed as written and never followed. Writes nothing, runs no shell command including git, and corrects no status, count or marker however wrong it looks against the body.
 requires: skill:runbook-run
 ---
 
 # /runbook-describe
-# Global command: print one runbook in full — header, status, and every step
-# with its marker, dependencies, human-intervention need and Done: line.
-# Read-only — never modifies any file. Opens the index and exactly one body
-# under `.claude/runbooks/`.
-# Usage: /runbook-describe <name>
-#        /runbook-describe <id>
+# Global command: print a compact summary of one runbook — heading, one header
+# line, one line per step with an optional one-line done: summary, and a
+# closing count. Read-only — never modifies any file. Reads the index and
+# extracts lines from exactly one body, at its index block's `File:` path.
+# Usage: /runbook-describe <id|name|id-name>
 # Examples: /runbook-describe implement-ecc-import
 #           /runbook-describe 3
+#           /runbook-describe 3-implement-ecc-import
 
 GOAL
-Answer the question `/runbook-list` deliberately cannot: **what is actually in
-this runbook?** The listing gives one line per runbook from the index alone,
-which is what keeps its cost flat. This command spends the read the listing
-refuses to, on exactly one runbook, and prints what only the body holds — the
-steps, their order, their dependencies, which of them need a person, and what
-the ones that have run recorded.
+Answer the question `/runbook-list` deliberately cannot: **what are this
+runbook's steps, and how did the finished ones go?** The listing gives one line
+per runbook from the index alone. This command gives one runbook moderately
+more — one line per step and a one-line record per finished step — and nothing
+like the body itself. Its cost is roughly the lines it prints; a reader who
+needs the prompts, the `Context:` notes or the full `Done:` record opens the
+file.
 
 It is a diagnostic / orientation command. It must not write, edit, or commit
 anything.
@@ -43,43 +44,60 @@ the markers has drifted from the runner's describes a runbook nobody has.
 
 ---
 
-WHAT THIS COMMAND READS
+THE READ BUDGET
 
-**Two files, and no more.** `.claude/RUNBOOKS.md`, for the runbook's index
-block, and `.claude/runbooks/<name>.md`, for its body.
+**The index, and selected lines of one body.** `.claude/RUNBOOKS.md` is read
+for the runbook's index block. From the body at that block's `File:` path, the
+command pulls **only the lines it prints**, by targeted line extraction with
+the Grep tool (with line numbers) — never a full Read of the body:
 
-Opening a body is this command's whole reason to exist, and it is bounded:
-**exactly the one runbook the argument resolved to**. Never a second body,
-never a walk of `.claude/runbooks/`, never "while I am here" — the cost stays
-bounded by the size of one runbook, which is what makes reading it in full safe
-to do at all.
+- the header fields `Created:`, `Source:` and `Model:`;
+- the step headings — `##` lines carrying a marker and a number;
+- each step's `Depends on:` and `Needs:` lines;
+- the first line of each step's `Done:`;
+- the fence lines of the ```prompt``` blocks, used only to discard any match
+  that falls inside a prompt block. Nothing between the fences is read or
+  printed.
+
+Attach each field to the nearest preceding step heading. The
+`## Do not re-propose` heading is not a step and its contents are not read.
+
+A body whose extracted lines do not fit the schema — a step with no
+`Depends on:`, a heading without a number — is **reported as found**, in one
+line of prose. Never compensate by reading more of the body.
+
+The bound is the whole point of the command, so it is absolute:
+
+- never a full Read of the body, and never the text of a ```prompt``` block;
+- never a second runbook body, and never a walk of `.claude/runbooks/`;
+- never a file under `.claude/tasks/`, the archive included — a task id in a
+  `Done:` line is printed as written and never resolved;
+- never `.claude/domain/`, `.claude/context/`, or any source file.
+
+The Grep tool is not a shell command, so this still runs no shell.
 
 `/runbook-list`'s never-open-a-body rule is not weakened by this command's
-existence; the two are a deliberate pair. The listing answers *which runbooks
-exist and how far did they get* for all of them at index cost; this answers
-*what is in this one* for one of them at body cost. A `--verbose` flag on the
-listing would have destroyed the property the listing is built around, which is
-why this is a separate command.
-
-It reads no source file, no `.claude/context/`, no `.claude/domain/`, and no
-other runbook.
+existence; the two are a deliberate pair. A `--verbose` flag on the listing
+would have destroyed the property the listing is built around, which is why
+this is a separate command.
 
 ---
 
 RESOLVING THE ARGUMENT
 
-`$ARGUMENTS`, trimmed, names one runbook — its kebab-case name, or the numeric
-id its index block carries. The resolution rule is `runbook-schema.md`'s one
-rule and is not restated: a bare all-digits argument is an id, anything else a
-name.
+`$ARGUMENTS`, trimmed, names one runbook — as `<id>`, `<name>` or
+`<id>-<name>`. It is resolved to exactly one index block by
+`runbook-schema.md` § *Resolving a runbook argument*, whose checks, errors and
+ambiguity report are not restated here.
 
 - **No argument** — print the usage line and stop. Do not pick a runbook,
   do not default to the most recent, and do not fall back to listing them all;
   that is `/runbook-list`.
-- **An unknown name or id** — say which argument did not resolve, list the
-  runbooks that do exist (id, status and name, from the index), and stop.
-  Never guess at a near match, and never fall back from an id that matched
-  nothing to a name that looks similar.
+- **An argument that does not resolve** — unknown, a compound whose halves
+  disagree, or an ambiguity — report it as the schema says, list the runbooks
+  that do exist (id, status and name, from the index), and stop. Never guess
+  at a near match, and never fall back from one half of an argument to the
+  other.
 - **A missing or empty `.claude/RUNBOOKS.md`** — not an error. One line and
   stop:
 
@@ -98,156 +116,83 @@ WORKFLOW
 1. Read `.claude/RUNBOOKS.md` and resolve the argument to one block, per
    RESOLVING THE ARGUMENT.
 
-2. Read that runbook's body at the block's `File:` path. This is the one body
-   this command opens.
+2. Extract the body lines named in THE READ BUDGET from the block's `File:`
+   path, and attach each to its step.
 
-3. Parse the body per `runbook-schema.md`: the header fields, then every step
-   — its marker, number and title from the `##` heading, then its
-   `Depends on:`, its `Needs:` where present, its `Context:`, its ```prompt```
-   block, and its `Done:` line where a run has written one. Parse the trailing
-   `## Do not re-propose` section if there is one.
-
-4. Render the report in four parts, in this order.
-
-   **Part 1 — the heading line.** Id, name, status, and progress from the
-   index:
+3. Render exactly this shape, and nothing more:
 
    ```
    3. implement-ecc-import   [RUNNING]   4/7   —   Land the ECC import architecture
+      Created: 2026-09-01   Source: /architect ecc-import   Model: sonnet
+
+      [x] 1. Add the requires: field to the frontmatter contract
+             done: a1b2c3d — added the field and its cmd-add resolution (+1 wrong premise)
+      [!] 2. Wire cmd-rm's dependents guard            deps: 1
+             done: FAILED — <first clause of the reason>
+      [ ] 3. Update the authoring guide                 deps: 1, 2   needs: agent+human
+
+      7 steps: 4 done, 1 failed, 2 pending.
+      Step 3 needs a person present.
    ```
 
+   **The heading line.** Id, name, status, progress and title, from the index.
    For a `[FAILED]` runbook, and only for one, follow it with the index's
    `Failed at:` line as a continuation, exactly as `/runbook-list` renders it.
 
-   **Part 2 — the header.** The body's own header fields, one per line,
-   labelled: `Created:`, `Source:`, `Model:`, `Sequencing:` and `Companion:`.
-   Print `Sequencing:` in full and never summarise it — it is one line of
-   prose stating the order *and why it is the order*, and the why is the part a
-   reader came for. Omit `Companion:` entirely when the header has none.
+   **The header line.** One line: `Created:`, `Source:`, `Model:`. Nothing
+   else from the header — no `Sequencing:`, no `Companion:` — and no count of
+   `## Do not re-propose` items.
 
-   **Part 3 — the steps.** One block per step, in body order:
+   **The step lines.** One line per step, in body order:
 
-   ```
-   [x] 1. Add the requires: field to the frontmatter contract
-          depends on: none
-          done:  a1b2c3d — added the field and its cmd-add resolution; the
-                 "parse_frontmatter emits every key" premise was wrong, it
-                 gates on an allowlist.
+   - the marker **as the body carries it** — `[ ]`, `[~]`, `[x]`, `[!]` —
+     first on the line, then the number and the title;
+   - `deps:` on the same line, only when the step has dependencies. A step
+     whose `Depends on:` is `none` prints nothing for it;
+   - `needs:` on the same line, only when the step carries an authored `Needs:`
+     value that is not `agent`. A step without a `Needs:` line prints nothing.
 
-   [ ] 2. Wire cmd-rm's dependents guard
-          depends on: 1
-          needs: agent+human — the Unity editor step at checkpoint 2
+   **The `done:` line.** At most one, under a step that has a `Done:` line: the
+   commit sha(s) and a short summary of what was done. Wrong premises are shown
+   only as a count, `(+N wrong premise)` or `(+N wrong premises)`. A `[!]`
+   step's line opens with `FAILED —` and the first clause of its reason. Task
+   ids the `Done:` line mentions are printed as written.
 
-   [ ] 3. Update the authoring guide
-          depends on: 1, 2
-   ```
+   No `context:` line and no `Context:` text of any kind. No prompt text, in
+   whole or in part.
 
-   - The marker is printed **as the body carries it** — `[ ]`, `[~]`, `[x]`,
-     `[!]` — and is the first thing on the line, so the shape of the run is
-     readable down the left margin.
-   - `depends on:` is always printed, `none` included, so a reader never has
-     to wonder whether the line was missing or empty.
-   - `needs:` is printed **only when the step is not plain `agent`** — see
-     THE `Needs:` ANNOTATION below.
-   - `done:` is printed whenever the step has a `Done:` line, for `[x]` and
-     `[!]` alike, and is **rendered, not summarised**: the commit sha, the
-     decisions and the wrong premises are the three things it records and all
-     three are why a reader opened this. A `[!]` step's `Done:` line opens
-     with the failure reason; print it first, as the body has it.
-   - `Context:` bullets are printed under the step when it has any, beneath
-     `done:`, each on its own line. Skip the field entirely when it is `none`.
-   - **The ```prompt``` block is not printed.** It is the largest thing in the
-     body and reproducing every one of them would make this command a slow way
-     to `cat` the file. A reader who wants the prompts opens the file; this
-     command exists to make that decision an informed one.
-
-   **Part 4 — the trailing sections and the summary.** Print the number of
-   items under `## Do not re-propose` when the runbook has that section — not
-   the items themselves, which are prompt material. Close with one line
-   counting the steps by marker:
-
-   ```
-   7 steps: 4 done, 1 failed, 2 pending.
-   ```
-
-   Include only the non-zero counts, use the singular for one step, and name
-   `[~]` as "in progress". When any step is not plain `agent`, add one further
-   line naming those step numbers, because it is the fact that decides whether
-   the run can be started and left:
-
-   ```
-   Steps 2 and 5 need a person present.
-   ```
-
----
-
-THE `Needs:` ANNOTATION
-
-A step's `Needs:` line, where the author wrote one, is **authoritative**.
-Print it as the body carries it, with whatever the author wrote after it —
-**unless the authored value is `agent`**, which prints nothing, exactly as an
-absent line does. `runbook-schema.md` says `Needs: agent` is never written, so
-finding one means a hand-edited body; it is still authoritative, and the
-default is still silent.
-
-A step with **no** `Needs:` line means `agent` per `runbook-schema.md`, and in
-the ordinary case that is the whole story: print nothing, because the default
-is silent and a runbook of ordinary agent work should not render a column of
-noise.
-
-There is one exception, and it is why this command is allowed to read a body at
-all. A runbook written by hand, or authored before `Needs:` existed, carries no
-such lines even where a step plainly does need a person. For a step with no
-`Needs:` line, you **may** read its prompt block and, where it is clear that
-executing the step requires something an agent cannot do — an editor-only
-operation, a GUI wizard, a physical device, an external account — print an
-inferred note:
-
-```
-[ ] 4. Import the prefab and check the console
-       depends on: 3
-       needs: (inferred) agent+human — the prompt describes an operation in
-              the Unity editor. Not authored; /runbook-create --append can
-              record it.
-```
-
-Three rules govern it, and they are what keep the inference honest:
-
-- **It is always labelled `(inferred)`.** It never renders in the same form as
-  an authored value. A reader must be able to tell, at a glance and without
-  opening the body, which annotations the author wrote and which this command
-  guessed.
-- **It is only ever offered, never asserted.** An inference is a reading of
-  prose, and the confidence bar is high: infer only where the prompt names the
-  manual act, not where a step merely feels like it might involve one. When in
-  doubt, print nothing — a missing annotation costs a reader far less than a
-  wrong one.
-- **It is never written anywhere.** This command does not add the `Needs:`
-  line it inferred, does not offer to, and does not ask. Authoring is
-  `/runbook-create`'s, by line; naming `--append` in the note, as above, is
-  the whole of what this command does about it.
+   **The closing lines.** One line counting the steps by marker — only the
+   non-zero counts, the singular for one step, `[~]` named "in progress". When
+   any step has an authored `Needs:` value other than `agent`, one further line
+   naming those step numbers — "Step 3 needs a person present." or "Steps 2
+   and 5 need a person present." — because it is the fact that decides whether
+   the run can be started and left.
 
 ---
 
 DO NOT:
+- Read the body in full. Extract only the lines THE READ BUDGET names, and
+  report a malformed body as found rather than reading more of it.
+- Print, quote, summarise or read a ```prompt``` block, in whole or in part.
+- Open anything under `.claude/tasks/`, the archive included, or resolve a task
+  id a `Done:` line mentions. Print it as written.
 - Open a second runbook body, or walk `.claude/runbooks/`. Exactly one body,
   the one asked about.
+- Open `.claude/domain/`, `.claude/context/` or any source file.
+- Print `Sequencing:`, `Companion:`, any `Context:` text, or the
+  `## Do not re-propose` section or its count.
+- Print more than one `done:` line per step, or the wrong premises themselves
+  rather than their count.
+- Infer a `Needs:` value for a step that has none. A step without an authored
+  `Needs:` line prints nothing.
 - Write, edit, create or commit anything, and run no shell command of any
   kind, including `git`.
-- Add, edit or persist a `Needs:` line, or any other line, in a body or in the
-  index — including the one this command inferred. Authoring is
+- Add, edit or persist any line in a body or in the index. Authoring is
   `/runbook-create`'s by line, and the run's lines are `/runbook-run`'s.
-- Render an inferred `Needs:` value without the `(inferred)` label, or infer
-  one for a step that already carries an authored `Needs:` line.
-- Infer a `Needs:` value from a hunch. The prompt must name the manual act;
-  otherwise print nothing.
 - Correct a status, a `Steps:` count, a marker or a `Failed at:` line, however
-  wrong the index looks against the body it just read. Reconciliation belongs
-  to `/runbook-run`, which re-reads the body every step and rewrites the index
-  from it. Reporting an inconsistency in prose is fine — and this is the one
-  command positioned to notice one — but editing it is not.
-- Print the ```prompt``` blocks. The command reports the runbook's shape and
-  its record, not its contents.
+  wrong the index looks against the lines just extracted. Reconciliation
+  belongs to `/runbook-run`. Reporting an inconsistency in prose is fine;
+  editing it is not.
 - Restate the body schema, the markers, the `Needs:` values, the status
   vocabulary or the index block in this body. They are
   `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`,

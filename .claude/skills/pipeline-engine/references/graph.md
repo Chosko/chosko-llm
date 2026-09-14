@@ -170,7 +170,10 @@ ids that no longer have a block, which it alone still names.
 
 ### E6 — `RUNBOOKS.md` `File:` → runbook body
 
-- **Line.** `File: .claude/runbooks/<name>.md` on an index block.
+- **Line.** `File: .claude/runbooks/<id>-<name>.md` on an index block. A
+  legacy `File: .claude/runbooks/<name>.md` value is legal during lazy
+  migration: the body is wherever `File:` says it is
+  (`runbook-schema.md` § *`File:` is the body's path*).
 - **Direction.** Index block → the body it summarises.
 - **Authoritative.** The body: the index is its summary, derivable from it but
   for the id and its counter (`runbook-schema.md` § *The index block*).

@@ -1,33 +1,45 @@
 ---
 name: runbook-run
-version: 0.8.0
+version: 0.11.1
 type: skill
-description: Execute a runbook — an ordered list of self-contained prompts under .claude/runbooks/<name>.md — by walking it top to bottom (list position is the order; a step's number is a stable id, not its position), spawning one fresh subagent per step, relaying that subagent's questions to the user and the user's answers back to the same subagent, recording what each step actually did in a Done: line, and committing the runbook and its .claude/RUNBOOKS.md index after every step. Steps run one at a time, never in parallel. The orchestrator reads only CLAUDE.md, the runbook and the index, and writes only the runbook and the index — every other change in the tree is made by a subagent, and it never reviews or second-guesses one. Usage: /runbook-run <name|id> — a bare all-digits argument is the numeric id the index assigns each runbook, anything else its kebab-case name — with --from N to begin selection at step N, --to N to stop after step N (the two compose into --from X --to Y, an inclusive range), --only N to run exactly one step, --model <model> to override the runbook's header model for this run, --relay-spawns to force the spawn relay for a whole run, and --no-commit / --no-push with their usual meanings. Where a subagent cannot spawn a subagent — cloud sessions among them — a step's agent ends its turn with SPAWN REQUEST naming a prompt file and a result file under the OS temp dir; the orchestrator spawns that child at its own nesting level, waits for it, and tells the caller the result is ready, without ever opening either file. Also carries, in references/, the three files the rest of the runbook suite and the pipeline revision surfaces read by path: runbook-schema.md (the asset kind — store, body schema, step markers, status vocabulary, the optional per-step Needs: field, the index block with its id and Last runbook number: counter, and the backfill an index written before ids gets from the first command that writes it), subagent-contract.md (the OPERATING RULES block pasted verbatim into every spawned prompt) and step-amend.md (the rules for amending one pending step — strike it as [x] with a Done: line opening struck and no commit sha, never deleted or renumbered; insert through /runbook-create --append --before / --after; add dated Context: facts — with the prompt block immutable, so a wrong prompt is struck and a corrected step inserted, and a [RUNNING] runbook accepting changes only after its current step).
+description: Execute a runbook — an ordered list of self-contained prompts under .claude/runbooks/<id>-<name>.md, opened at the path its index block's File: line holds — by walking it top to bottom (list position is the order; a step's number is a stable id, not its position), by default spawning one fresh subagent per step, relaying that subagent's questions to the user and the user's answers back to the same subagent, recording what each step actually did in a Done: line, and committing the runbook and its .claude/RUNBOOKS.md index after every step. Steps run one at a time, never in parallel. In the default mode the orchestrator reads only CLAUDE.md, the runbook and the index, writes only the runbook and the index, and never does a step's work — every other change in the tree is made by a subagent, and it never reviews or second-guesses one. The one opt-in exception is --inline, under which the orchestrating session executes each selected step itself: bookkeeping (selection, markers, Done: lines, the index, fact propagation, commit cadence) is unchanged and records nothing about the mode, while an execution phase replaces spawn-and-wait under a fixed inline rule set in references/inline-contract.md (the brief is the authority, records win over memory, facts are still written down, questions are asked directly, a wanted child is spawned one level down and never done inline); --inline is refused beside --relay-spawns or --model, and the header Model: is not applied. Usage: /runbook-run <id|name|id-name> — the numeric id the index assigns each runbook, its kebab-case name, or the two joined as in its body's file name, resolved by the schema's rule — with --from N to begin selection at step N, --to N to stop after step N (the two compose into --from X --to Y, an inclusive range), --only N to run exactly one step, --steps N to run at most N steps in this run and then stop the way a --to bound does (composes with --from, refused beside --to or --only), --model <model> to override the runbook's header model for this run, --inline to execute the selected steps in this session instead of in subagents (composes with every selection and commit flag), --relay-spawns to force the spawn relay for a whole run, and --no-commit / --no-push with their usual meanings. Where a subagent cannot spawn a subagent — cloud sessions among them — a step's agent ends its turn with SPAWN REQUEST naming a prompt file and a result file under the OS temp dir; the orchestrator spawns that child at its own nesting level, waits for it, and tells the caller the result is ready, without ever opening either file. A legacy body at .claude/runbooks/<name>.md is renamed to <id>-<name>.md lazily, in Resolve and in the run's first step commit, never while the runbook is [RUNNING], per references/body-migration.md, which is read only when that check fires. Also carries, in references/, the files the rest of the runbook suite and the pipeline revision surfaces read by path: runbook-schema.md (the asset kind — store, File: as the body's path, the three-form id|name|id-name resolution rule and the migration check, body schema, step markers, status vocabulary, the optional per-step Needs: field, the index block with its id and Last runbook number: counter, and the backfill an index written before ids gets from the first command that writes it), subagent-contract.md (the OPERATING RULES block pasted verbatim into every spawned prompt, with its three placeholders <RUNBOOK>, <N> and <FILE>), body-migration.md (the lazy rename protocol, read only by /runbook-run and /runbook-create --append) and step-amend.md (the rules for amending one pending step — strike it as [x] with a Done: line opening struck and no commit sha, never deleted or renumbered; insert through /runbook-create --append --before / --after; add dated Context: facts — with the prompt block immutable, so a wrong prompt is struck and a corrected step inserted, and a [RUNNING] runbook accepting changes only after its current step).
 ---
 
 # /runbook-run
 # Global skill: execute a runbook, one step at a time, each in a fresh
-# subagent. Relays questions to the user, records what each step did, and
-# commits after every step.
-# Usage: /runbook-run <name|id>
-#        /runbook-run <name|id> --from N        (begin selection at step N)
-#        /runbook-run <name|id> --to N          (stop after step N)
-#        /runbook-run <name|id> --from X --to Y (run steps X through Y inclusive)
-#        /runbook-run <name|id> --only N        (run exactly step N, then stop)
-#        /runbook-run <name|id> --model sonnet  (override the header model)
-#        /runbook-run <name|id> --relay-spawns  (force the spawn relay for this run)
-#        /runbook-run <name|id> --no-commit     (write the bookkeeping, commit nothing)
-#        /runbook-run <name|id> --no-push       (commit as usual, skip the push)
+# subagent (or, under --inline, in this session). Relays questions to the
+# user, records what each step did, and commits after every step.
+# Usage: /runbook-run <id|name|id-name>
+#        /runbook-run <id|name|id-name> --from N        (begin selection at step N)
+#        /runbook-run <id|name|id-name> --to N          (stop after step N)
+#        /runbook-run <id|name|id-name> --from X --to Y (run steps X through Y inclusive)
+#        /runbook-run <id|name|id-name> --only N        (run exactly step N, then stop)
+#        /runbook-run <id|name|id-name> --steps N       (run at most N steps, then stop)
+#        /runbook-run <id|name|id-name> --from X --steps N (start at step X, run N steps)
+#        /runbook-run <id|name|id-name> --model sonnet  (override the header model)
+#        /runbook-run <id|name|id-name> --inline        (execute the selected steps in this session)
+#        /runbook-run <id|name|id-name> --relay-spawns  (force the spawn relay for this run)
+#        /runbook-run <id|name|id-name> --no-commit     (write the bookkeeping, commit nothing)
+#        /runbook-run <id|name|id-name> --no-push       (commit as usual, skip the push)
 # Examples: /runbook-run implement-ecc-import
+#           /runbook-run 3-implement-ecc-import
 #           /runbook-run 3 --from 12
 #           /runbook-run 3 --from 4 --to 9
+#           /runbook-run 3 --from 4 --steps 2
 #           /runbook-run implement-ecc-import --only 4 --model sonnet
+#           /runbook-run 3 --inline --from 4 --steps 2
 
 GOAL
 Take a runbook and execute it. For each step, in order: spawn one subagent
 with a fresh context and the assembled prompt, wait for its result, relay any
 question it asks to the user and the answer back to it, then record what it
 did and commit.
+
+That is the default mode. The one opt-in exception is `--inline`: the
+orchestrating session executes each selected step itself, in place of the
+spawn-and-wait, and everything else — selection, markers, `Done:` lines, the
+index, fact propagation, commit cadence — is exactly as above. See THE INLINE
+MODE.
 
 > **Install path assumption:** this skill assumes installation at
 > `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/`, where
@@ -37,6 +49,15 @@ did and commit.
 > and
 > `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/subagent-contract.md`.
 > A third,
+> `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/inline-contract.md`,
+> is read **only when `--inline` is passed** — it holds the inline rule set
+> that replaces the subagent contract's OPERATING RULES under that flag — so a
+> default run never loads it.
+> Another,
+> `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/body-migration.md`,
+> is read **only when the migration check fires** in step 1 — a legacy body
+> to rename — so a run with nothing to migrate never loads it.
+> A fifth,
 > `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/step-amend.md`,
 > sits beside them: this body never reads it — it holds the rules for
 > amending one step, read by path by whatever amends one.
@@ -47,9 +68,9 @@ did and commit.
 
 ## WHAT THIS SKILL READS AND WRITES
 
-**It reads three files.** The project's `CLAUDE.md`, the runbook
-(`.claude/runbooks/<name>.md`), and the index (`.claude/RUNBOOKS.md`) — plus
-the two reference files above, which are part of this skill. It does **not**
+**It reads three files.** The project's `CLAUDE.md`, the runbook (the body
+at the path its index block's `File:` line holds), and the index (`.claude/RUNBOOKS.md`) — plus
+the reference files above, which are part of this skill. It does **not**
 open `.claude/context/`, `.claude/domain/`, or any source file. It touches no
 source, so orienting in the codebase would be wasted tokens; orienting is each
 step's subagent's job, and the spawned prompt tells it to.
@@ -59,9 +80,19 @@ change in the tree is made by a subagent. This is a hard contract: an
 orchestrator that starts patching things is one that has lost track of what it
 delegated.
 
-**It does not review.** It reads three markers — `QUESTIONS FOR USER`,
+**It never does a step's work.** One fresh subagent per step does it.
+
+These three are **default-mode contracts**. Under `--inline` — their one
+opt-in exception — they hold for the session's **bookkeeping phase** and give
+way only in its **execution phase**, where the session reads what the step
+needs and makes the step's changes itself, but still never writes the runbook
+or the index. See THE INLINE MODE.
+
+**It does not review** — in either mode. It reads three markers — `QUESTIONS FOR USER`,
 `SPAWN REQUEST` and `DONE` — and classifies on them. It does not re-test, re-read a subagent's
-diff, or second-guess its commit. Review is `/task-review`'s job and is
+diff, or second-guess its commit. Under `--inline` it classifies on the
+session's own stated outcome and never re-inspects the session's own diff.
+Review is `/task-review`'s job and is
 invoked, when it is wanted, from inside a step's own prompt.
 
 ---
@@ -70,11 +101,13 @@ invoked, when it is wanted, from inside a step's own prompt.
 
 | Argument | Effect |
 | --- | --- |
-| `<name>` \| `<id>` | The runbook to run. Required. A kebab-case name, or the numeric id the index assigns it — a bare all-digits argument is an id, anything else a name, per `runbook-schema.md` § *The store*. |
+| `<id>` \| `<name>` \| `<id>-<name>` | The runbook to run. Required. The numeric id the index assigns it, its kebab-case name, or the two joined as in its body's file name — resolved by the rule in `runbook-schema.md` § *The store*. |
 | `--from N` | Begin selection at step N — steps listed above it are not considered. |
 | `--to N` | Stop after step N — steps listed below it are not considered. Inclusive: step N itself runs. |
 | `--only N` | Run exactly step N, then stop. Exactly equivalent to `--from N --to N`. |
+| `--steps N` | Run at most N steps in this run, then stop. N is a positive integer. Composes with `--from`; refused beside `--to` or `--only`. |
 | `--model <model>` | Override the runbook header's `Model:` for **this whole run**. There is no per-step model. |
+| `--inline` | Execute every selected step in **this session** instead of in a fresh subagent, for the whole run. Composes with `--from`, `--to`, `--only`, `--steps N`, `--no-commit` and `--no-push`, and changes nothing about selection or committing. Refused beside `--relay-spawns` or `--model`; the header `Model:` is not applied. See THE INLINE MODE. |
 | `--relay-spawns` | Force the spawn relay for the whole run, for an environment already known to be flat. Without it the relay still works — the step's own subagent triggers it when it finds it cannot spawn. See THE SPAWN RELAY. |
 | `--no-commit` | Do the work and write the bookkeeping, but commit nothing. Implies `--no-push`. |
 | `--no-push` | Commit each step as usual, skip the push. |
@@ -92,16 +125,43 @@ is the same as comparing numbers; on one carrying a step inserted with
 `/runbook-create --append --before` / `--after`, it is what keeps the range
 the stretch of steps the run actually walks.
 
-`--from`, `--to` and `--only` **do not weaken dependencies.** A step selected by
-any of them whose `Depends on:` are not all `[x]` stops the run, naming the
-unmet dependency. The remedy is not a flag: the user marks that step `[x]` by
-hand, which is a visible, committed act rather than a silent override.
+`--steps N` limits the run by count rather than by id, inside the same
+selection model: selection works exactly as it would without it, and once N
+steps have run in this run, the run stops. It composes with `--from` only —
+`--from X --steps N` begins selection at step X and runs at most N steps from
+there. The count is of steps **actually executed in this run**: a step counts
+when it was executed and its outcome reached step 8 as `DONE` — by a spawned
+subagent or, under `--inline`, by this session. Steps
+already `[x]` never count, because selection never picks them; a resumed `[~]`
+step or a re-run `[!]` step counts like any other selected step. The count is
+applied against the body re-read every step, like the bounds — no fixed list is
+resolved up front, so a step appended mid-run is selectable and counted.
+Reaching the count stops the run the way reaching a `--to` bound does — see
+step 8. Fewer than N selectable steps is not an error: the ordinary branches
+apply unchanged (completion, deadlock, or a failure's halt).
 
-Two argument errors — name the problem and stop, having run nothing:
+`--from`, `--to`, `--only` and `--steps` **do not weaken dependencies.** A step
+selected under any of them whose `Depends on:` are not all `[x]` stops the run,
+naming the unmet dependency. The remedy is not a flag: the user marks that step
+`[x]` by hand, which is a visible, committed act rather than a silent override.
+
+`--inline` decides how each selected step is executed, never which steps are
+selected or how many run: it is orthogonal to all four selection flags and to
+`--no-commit` / `--no-push`.
+
+Six argument errors — name the problem and stop, having run nothing:
 
 - `--only` together with `--from` or `--to`. It is already both of them.
 - `--to Y` naming a step listed above step X of `--from X`. An empty range is
   a typo, not a request.
+- `--steps` together with `--to` or `--only`. Two stopping conditions at once
+  would need a precedence rule; `--steps` composes with `--from` alone.
+- `--steps` with a missing value, or a value that is not a positive integer
+  (`0`, `-1`, `abc`). `--steps 0` would be a silent do-nothing run.
+- `--inline` together with `--relay-spawns`. There is no step subagent to relay
+  for.
+- `--inline` together with `--model`. The session's model cannot be changed
+  from inside the run.
 
 A bound naming a step the body does not hold yet is **not** an error. Steps are
 appended mid-run by `/runbook-create --append`, and step 2 re-reads the body
@@ -131,35 +191,61 @@ restated here — a second copy is the copy that drifts.
 
 ### 1. Resolve
 
-Resolve the argument to a runbook per `runbook-schema.md` § *The store* — a
-bare all-digits argument is an id, anything else a name — then read that
-runbook's block in `.claude/RUNBOOKS.md` and the body at
-`.claude/runbooks/<name>.md`. The name resolved from an id is what the rest of
-the run uses: reports, relay blocks and the spawned prompt all name the
+Resolve the argument to exactly one runbook by the resolution rule in
+`runbook-schema.md` § *The store*, then read that runbook's block in
+`.claude/RUNBOOKS.md` and the body at the path the block's `File:` line holds —
+never a path built from the name. The name of the resolved block is what the
+rest of the run uses: reports, relay blocks and the spawned prompt all name the
 runbook, never its id.
 
 If the index predates ids, backfill it per `runbook-schema.md`
-§ *Backfilling an index written before ids* before resolving. This skill writes
-the index every step, so it is one of the three commands that performs the
-backfill rather than working around it.
+§ *Backfilling an index written before ids* before resolving, and read `File:`
+only after that. This skill writes the index every step, so it is one of the
+three commands that performs the backfill rather than working around it.
 
-- **Unknown name or id** — report the available runbooks (from the index) and
+- **Unknown argument** — report the available runbooks (from the index) and
   stop. Never guess at a near match, and never fall back from an id that
   matched nothing to a name that looks similar.
+- **A compound whose halves disagree, or an ambiguity** — report it as the
+  schema's rule says, and stop.
+- **`File:` naming a file that does not exist** — report it and stop.
 - **`[DONE]` runbook, with no `--only` / `--from` / `--to`** — say so and stop.
-  Doing nothing quietly is indistinguishable from a bug.
+  Doing nothing quietly is indistinguishable from a bug. `--steps` is a count,
+  not a range: `--steps` alone on a `[DONE]` runbook stops here too.
 - **`[RUNNING]` runbook** — see ONE RUN PER RUNBOOK below. Usually this stops
   the run.
 - **`[FAILED]` runbook** — proceed. The failed step is re-runnable and its
   failure is already recorded in its `Context:`.
 
 Then run the pull-at-start half of the commit-and-push protocol (see COMMIT
-CADENCE) unless `--no-commit` or `--no-push` was passed.
+CADENCE) unless `--no-commit` or `--no-push` was passed. Nothing but an id
+backfill has been written at this point, so a pull conflict stops the run
+before any rename.
+
+**The migration check** comes after that pull, never before it. Re-read the
+runbook's block from the index as it now stands — a pull may have brought
+another machine's `[RUNNING]` or a changed `File:` — and re-apply the stops
+above to it. Then, on a runbook that is not `[RUNNING]`, and before step 4
+first marks it `[RUNNING]`, apply the check in `runbook-schema.md` § *The
+store*: when the file name in `File:` does not begin with `<id>-`, read
+`${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/body-migration.md`
+and migrate the body as it says. On no hit, that file is never opened. A
+`[RUNNING]` runbook — a resume — never migrates. Do not migrate under a
+condition that stops the run.
+
+Whatever path results — the `File:` path as read, or the new one after a
+migration — is **the resolved path**, and the run uses it for its whole life:
+every re-read, every write and every commit. Step 1 is not redone mid-run.
+
+Under `--inline`, read
+`${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/inline-contract.md`
+here, once, and give the run's opening line — see THE INLINE MODE
+§ *The opening line*.
 
 ### 2. Re-read the body
 
-**At the start of every step, not once per run.** Re-open
-`.claude/runbooks/<name>.md` from disk and re-parse it.
+**At the start of every step, not once per run.** Re-open the body at the
+resolved path from step 1 and re-parse it.
 
 This is deliberate and does two jobs. It reconciles a body edited by hand
 between steps — the index is a summary and the body is the source of truth, so
@@ -177,7 +263,8 @@ two rules with the same N, not a third rule.
 
 The bounds are re-applied against the body step 2 just re-read, every step, not
 resolved once into a fixed list. A step appended mid-run inside the range is
-therefore run, and one appended outside it is not.
+therefore run, and one appended outside it is not. `--steps N` changes nothing
+here: it selects no differently, and is checked in step 8 after each commit.
 
 - A **`[~]`** step is one a previous run was interrupted in. Report it as such
   and re-run it.
@@ -195,7 +282,8 @@ therefore run, and one appended outside it is not.
 ### 4. Mark
 
 Set the selected step's marker to `[~]` in the body, and the index `Status:`
-to `[RUNNING]`. Write both to disk now, before spawning.
+to `[RUNNING]`. Write both to disk now, before spawning — or, under
+`--inline`, before the execution phase begins.
 
 The `[~]` marker is **never committed** — it is in-run working state, and it
 is the resume signal (see ONE RUN PER RUNBOOK).
@@ -220,6 +308,12 @@ step's agent a second, so a nested orchestrator would leave nothing for the
 work. `/runbook-create` rejects such a step at authoring time; this check is
 what stops a hand-written runbook smuggling one in.
 
+**Under `--inline`**, spawn nothing. The **execution phase** takes the place of
+this step and step 6: the session assembles the step's brief and executes it
+itself, under the inline contract — see THE INLINE MODE. No other loop step
+changes. The nested-runbook refusal above still applies, unchanged: check it
+before the execution phase begins, and refuse the step exactly as written.
+
 ### 6. Wait
 
 **This is the single most dangerous point in the whole feature.**
@@ -233,9 +327,19 @@ Nothing happens until the result actually arrives. Do not mark, do not write a
 `Done:` line, do not commit, do not select the next step. **No step is ticked
 before its subagent's result has actually arrived.**
 
+**Under `--inline`** there is no spawn and no notification. The execution
+phase instead ends with the session **writing out its own outcome as a
+separate act**, before any bookkeeping is written — see THE INLINE MODE
+§ *Ending the execution phase*. The rule carries over unchanged in substance:
+**no step is ticked before its outcome exists.** The inline form of treating a
+spawn's return value as the result is ticking a step whose work did not
+finish.
+
 ### 7. Handle the result
 
-Four cases, and only four — see THE FOUR RESULT CASES below.
+Four cases, and only four — see THE FOUR RESULT CASES below. Under `--inline`,
+the outcome the execution phase wrote out is classified by those same four
+cases.
 
 ### 8. Commit and loop
 
@@ -253,6 +357,77 @@ run leaves work behind by design, and marking that `[DONE]` would be a lie. The
 report says the same thing: which range ran, a line per step as above, and which
 steps remain outside it. `--only N` stops this way too; it is the bound `--to N`
 doing it.
+
+**Reaching the `--steps` count is not completion either.** When the step just
+committed is the N-th step executed in this run, stop there instead of looping,
+exactly as at a `--to` bound: set the index back to `[PENDING]` unless every
+step in the whole runbook is now `[x]` (then it is `[DONE]` by the completion
+rule above), and report how many steps ran, a line per step as above, and which
+steps remain.
+
+---
+
+## THE INLINE MODE
+
+`--inline` is opt-in and a property of the **whole run**: every step the run
+selects is executed by this session, none by a subagent. There is no per-step
+mode and no mixing modes within one run. It is never the default.
+
+### The opening line
+
+An `--inline` run opens with one line, given once, before the first step,
+saying that the selected steps **share one context** — this session's — and
+that `--steps N` is what limits how many run. The same line names the runbook
+header's `Model:` as **not applied**, once: the session runs on its own model
+and cannot switch it.
+
+### The two phases
+
+Each inline step alternates between two roles, and the boundary between them
+is what keeps the default mode's *the orchestrator never patches work*
+discipline without a second agent:
+
+- **Bookkeeping phase** — loop steps 1–4 and 7–8: resolve, re-read, select,
+  mark, classify, write `Done:`, propagate facts, commit. Here the session is
+  the orchestrator, exactly as in the default mode: it reads only `CLAUDE.md`,
+  the runbook and the index, and writes only the runbook and the index.
+- **Execution phase** — in place of steps 5 and 6. The session executes the
+  step as a step's agent would: it orients per `CLAUDE.md`'s navigation
+  instructions, reads what the step needs, and makes the step's changes and
+  commits through whatever skill the prompt invokes. **It never edits the
+  runbook or the index** during this phase.
+
+### The brief and the inline contract
+
+The session assembles the same brief THE SPAWNED PROMPT describes — parts 1–5:
+preamble, `Companion:` background, `## Do not re-propose`, `Context:`, the
+verbatim prompt block — and works through it in that order. In place of part
+6, the OPERATING RULES, it follows the fixed rule set in
+`${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/inline-contract.md`,
+read once in step 1. Nothing else in the brief changes; the prompt block is
+still verbatim and still immutable.
+
+### Ending the execution phase
+
+The execution phase ends with the session writing out its own outcome, as a
+**separate act**, before any bookkeeping is written: either a `DONE` report
+naming the commit sha(s), the decisions taken and any premise that proved
+wrong, or a plain statement of failure. Step 7 classifies that written outcome
+by THE FOUR RESULT CASES.
+
+- An outcome the session cannot state confidently is a **failure**, exactly as
+  an ambiguous subagent report is.
+- Classification runs on the written outcome alone. It **never re-inspects the
+  session's own diff** — the orchestrator does not review, in either mode.
+
+### What does not change
+
+Nothing records the mode. `Done:` lines, step markers, `Steps:`, index
+statuses, `Failed at:`, the resume signal and COMMIT CADENCE are identical to
+the default mode, so a runbook partly run inline and resumed spawned (or the
+reverse) is consistent by construction. `[~]` is never committed. The
+bookkeeping commit stages only the runbook and the index; the step's own work
+commits through its own skill's explicit staging, beside it.
 
 ---
 
@@ -289,7 +464,9 @@ agent reads:
    slash command.
 6. **OPERATING RULES.** Verbatim from
    `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/subagent-contract.md`,
-   with only its two placeholders filled in. It is fixed text and goes last.
+   with only its three placeholders filled in: `<RUNBOOK>` with the runbook's
+   name, `<N>` with the step id, and `<FILE>` with the resolved path from
+   step 1. It is fixed text and goes last.
 
 ---
 
@@ -307,6 +484,14 @@ cannot confidently classify halts the run. The alternative is ticking a step
 on a guess, and the whole value of the `Done:` line is that it is true. A
 report with no `DONE` marker, no commit sha where one was clearly expected, or
 a narrative that trails off is ambiguous — halt.
+
+**Under `--inline`** the result is the outcome the execution phase wrote out
+(THE INLINE MODE § *Ending the execution phase*), classified by the same four
+rows. An outcome the session cannot state confidently is ambiguous and
+therefore a failure, and classification never re-inspects the session's own
+diff. A top-level inline session asks its questions directly rather than
+producing a `QUESTIONS FOR USER` result, and spawns a wanted child itself
+rather than producing a `SPAWN REQUEST` — see the relays below.
 
 ### On `DONE`
 
@@ -362,11 +547,26 @@ same fixed relay block as its own final turn, under a `QUESTIONS FOR USER`
 heading, for its parent to carry, and resumes when the answer comes back. It
 never answers on the user's behalf in either position.
 
+**Under `--inline`** there is no relay hop: the asker is the session itself.
+A top-level session **asks the user directly**, in the fixed block headed
+`Step <n> of <total> — <title> — asking (round <r>)`, with any approval-gate
+draft verbatim and unabridged. It never answers its own question, and never
+skips a gate the step's skill defines because it "already knows" the answer.
+The subagent-position rule above is unchanged: an inline session that is itself
+a subagent ends its turn under `QUESTIONS FOR USER` and resumes when the answer
+returns.
+
 ---
 
 ## THE SPAWN RELAY
 
 **The orchestrator forwards; it does not read.**
+
+**Under `--inline` this section has no role** — the relay, its eight-round
+cap and `--relay-spawns` alike. There is no step subagent to relay for: a step
+that wants a child has the session spawn it directly, one level down, per the
+inline contract, and the step's own skill bounds its own children. That is why
+`--relay-spawns` beside `--inline` is an argument error.
 
 In some environments — cloud sessions among them — a subagent cannot spawn a
 subagent. A step whose prompt invokes something that wants a child agent
@@ -558,13 +758,24 @@ Nested runbooks are the one case that *is* refused; see step 5. The relay does
 not change that — a runbook inside a runbook is refused for the orchestration
 it duplicates, not for the depth it costs.
 
+**Under `--inline`** there is no second level for the step: the step's work
+runs at the **orchestrator's own level**, and any child the step wants is
+spawned **one level down** — the level a step's agent occupies in the default
+mode. A top-level session can always do that. A session that cannot spawn
+follows its own parent's contract, and failing that the step fails, per the
+inline contract. The nested-runbook refusal is unchanged.
+
 ---
 
 ## COMMIT CADENCE
 
 **One commit per completed step**, staging **exactly** the runbook and the
-index — `.claude/runbooks/<name>.md` and `.claude/RUNBOOKS.md`, by explicit
-path. Never a catch-all (`git add -A` / `git add .` / `git add -u`). A
+index — the body at the resolved path (its `File:` path) and
+`.claude/RUNBOOKS.md`, by explicit path. On the step whose commit follows a
+migration in step 1, that commit also stages the old path — held from the
+migration, since `File:` no longer names it — so its removal and the rename
+land in that commit and no other, per `body-migration.md` § *Staging*. The run still writes only the runbook and the index. Never a
+catch-all (`git add -A` / `git add .` / `git add -u`). A
 subagent that commits its own work produces a separate commit; the runbook
 commit is bookkeeping and is expected to sit beside it.
 
@@ -622,7 +833,9 @@ forgotten commit still gets thought about.
 
 - Treat a spawn call's return value as the step's result — or a relayed
   child's. It is an id. Wait for the notification.
-- Tick a step before its subagent's result has arrived.
+- Tick a step before its subagent's result has arrived — or, under `--inline`,
+  before the execution phase has written out its outcome.
+- In the default mode, execute a step any way but in one fresh subagent.
 - Run two steps at once, or two runs of one runbook at once. A relayed child
   running while its caller is suspended is the one stated exception, and it
   does not extend to spawning a child while its caller is still working, or to
@@ -639,18 +852,31 @@ forgotten commit still gets thought about.
   **The Stop-hook reply** under COMMIT CADENCE.
 - Edit the header, `Sequencing:`, `Companion:`, a step title, a
   `Depends on:` or a `Needs:` line — those are `/runbook-create`'s, by line.
-- Do a step's work yourself, patch a file a subagent should have patched, or
-  fix up a subagent's commit.
-- Review, re-test or second-guess a subagent's work. Review is
+- In the default mode, do a step's work yourself, patch a file a subagent
+  should have patched, or fix up a subagent's commit.
+- Review, re-test or second-guess a subagent's work — or, under `--inline`,
+  re-inspect the session's own diff to classify its outcome. Review is
   `/task-review`'s job, invoked from inside a step's prompt.
+- Record the mode anywhere in the runbook or the index.
+- Apply `--model` or the header `Model:` under `--inline`.
+- Edit the runbook or the index during an `--inline` execution phase.
+- Answer the session's own question on the user's behalf under `--inline`, or
+  skip a gate because the answer seems known.
+- Do the work of a child the session cannot spawn under `--inline`. Follow the
+  parent's contract, or fail the step naming the child.
 - Answer a subagent's question on the user's behalf, or ask the user to
   re-state something an earlier step already settled.
 - Compress a draft at an approval gate.
 - Classify an ambiguous report as success.
 - Spawn a step whose prompt invokes `/runbook-run`.
-- Weaken a `Depends on:` because `--from`, `--to` or `--only` was passed.
-- Run a step outside `--from` / `--to`, or mark a runbook `[DONE]` because a
-  bounded run reached its `--to`. Steps outside the range are untouched work,
-  not finished work.
-- Stage anything but the runbook and the index.
-- Open `.claude/context/`, `.claude/domain/`, or a source file.
+- Weaken a `Depends on:` because `--from`, `--to`, `--only` or `--steps` was
+  passed.
+- Run a step outside `--from` / `--to`, run more than N steps under
+  `--steps N`, or mark a runbook `[DONE]` because a bounded run reached its
+  `--to` or its `--steps` count. Steps left behind are untouched work, not
+  finished work.
+- Stage anything but the runbook and the index in a bookkeeping commit.
+- In the default mode, or in an `--inline` bookkeeping phase, read anything but
+  `CLAUDE.md`, the runbook, the index and this skill's reference files — no
+  `.claude/context/`, `.claude/domain/`, or source file — or write anything but
+  the runbook and the index.
