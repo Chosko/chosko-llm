@@ -64,11 +64,54 @@ its artifact and the tier keeps it; the order never changes.
    step per feature, in `.claude/FEATURES.md` order. Never the full
    `/architect`: the arm's precision guard stales only the tasks the change
    touches, where the blanket guard would stale every one.
-3. **Each task** — its body and summary fields through
-   `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/amend.md`,
-   one step per task, in `.claude/TASKS.md` appearance order. A
-   `Preconditions:` edge is added or dropped here, on the dependent's own
-   line, the drop narrated in its `## Decisions` — that arm's rule.
+3. **The tasks** — in one of two forms per feature, both rendered at the
+   gate, because which one runs depends on step 2's answer, which the gate
+   cannot know:
+   - **(a) Per-task amends** — each task's body and summary fields through
+     `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/amend.md`,
+     one step per task, in `.claude/TASKS.md` appearance order. A
+     `Preconditions:` edge is added or dropped here, on the dependent's own
+     line, the drop narrated in its `## Decisions` — that arm's rule. The
+     form when step 2 stales nothing and leaves the feature's `Status:`
+     unchanged, and always the form for a task with no feature step 2 ran.
+   - **(b) Reconciliation** — one owner step,
+     `/task-add feature=<slug> "<annotation>"`, the reconciliation run. The
+     form when step 2 stales any task, or moves the feature to `[ITERATED]`
+     for scope no existing task covers. Reconciliation is the one clearer of
+     `[STALE]` — `task-engine/references/stale.md` § *Clearing it* — and it
+     rewrites each stale body in place, skips-and-replaces one whose goal no
+     longer survives, drafts tasks for the added scope and returns the
+     feature to `[PLANNED]`. So under (b) **no per-task amend runs for a task
+     step 2 staled**: its new body is reconciliation's to write.
+     A task step 2 did **not** stale whose own summary fields or body must
+     still change — a `Preconditions:` edge on its own line, say — keeps its
+     per-task amend, and that amend runs **before** the reconciliation step.
+     Reconciliation classifies every task the feature generated as its
+     summary block and body stand when it reads them, and drafts new tasks
+     against the edges it finds; run first, the amend hands it the final
+     state, where run after it would edit a backlog reconciliation has
+     already re-planned and shown at its gate.
+
+   Step 2's outcome selects the form at actuation, per feature; the user saw
+   both at the gate — the precedent is `./insert.md` § *When step 1 leaves the
+   feature `[ITERATED]`*.
+
+   **Facts the document does not carry.** A change often states things no
+   feature document holds — implementation notes such as which files to
+   touch, a decision spanning two tasks. Step 2 does not write them, and
+   reconciliation reads the document, not this conversation. So the gate lists
+   them under step 3, form (b) forwards them verbatim as the reconciliation's
+   free-form text — which in feature mode narrows or annotates the scope, and
+   is no new input — and the step's `Step <i>/<k>` line names each one as an
+   item to check at `/task-add`'s own gate, in the bodies it drafts or
+   rewrites. Under form (a) they ride the per-task amends that need them.
+
+   **What staling does.** A `[STALE]` task is not blocked:
+   `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/stale.md`
+   § *Implementing a stale task* — it is implementable on the user's explicit
+   say-so; a single-task `/task-implement` run warns and asks, and the batch
+   selectors skip it. Where the gate states step 2's staling, it says so in
+   those terms and never implies a stale task cannot be implemented.
 4. **Each runbook step** — through
    `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/step-amend.md`,
    one step per runbook step: a dated `Context:` fact, or, for a wrong prompt,
@@ -78,9 +121,11 @@ its artifact and the tier keeps it; the order never changes.
 later step changes. A task amended before the feature document that governs
 it would be amended against a promise about to move — and the task arm's own
 second check would route the change to `/architect amend` anyway. A task that
-step 2 stales is still amended in step 3 when its body must say something
-new; the task arm never clears the tag, so it stays `[STALE]`, and the report
-names `/task-add feature=<slug>` as what clears it.
+step 2 stales is not amended task by task: the task arm never clears the tag,
+so amending it would do reconciliation's work behind a second gate and still
+leave it `[STALE]`. Step 3's form (b) runs reconciliation instead, which
+rewrites the staled bodies, clears the tag and drafts tasks for the added
+scope, in one owner step.
 
 The `PLAN.md` lines the walk reaches are named in the proposal and written by
 no step here. When the change moves a feature's `## Dependencies`, the report
@@ -93,11 +138,13 @@ names `/production-plan` as the follow-up.
 - **Local** — one artifact plus the entries that merely name it: the anchored
   artifact's step, plus one step for each entry that names it without
   depending on what changed — a runbook step's `Context:` fact, a task's
-  `## Hints` citing a changed section. No status moves and no edge changes.
+  `## Hints` citing a changed section. No status moves and no edge changes,
+  so step 3, when present, is form (a).
 - **Structural** — the scope changes, or a downstream entry's contract
   changes: what a task delivers, its `Files:`, an edge. The full sequence the
-  walk reached, steps 1 to 4. A `Preconditions:` edge added or dropped is
-  always structural.
+  walk reached, steps 1 to 4, with step 3 rendered in both forms wherever
+  step 2 runs for the task's feature. A `Preconditions:` edge added or dropped
+  is always structural.
 
 The branch judges local or structural for the proposal. The tier decides how
 long the sequence is; it never decides whether the gate is asked. Under the
@@ -113,16 +160,24 @@ bracket.
 
 ## Outcomes
 
-No new status value. What an amend leaves is `[STALE]` on the tasks
-`/architect amend` touched, `[ITERATED]` on a feature it moved, and the
+No new status value. Under step 3's form (a), what an amend leaves is the
 owners' existing writes — a rewritten section or body, a dated `Context:`
-bullet, a struck step. Nothing else.
+bullet, a struck step. Under form (b), `/architect amend` writes `[STALE]` on
+the tasks it touched and `[ITERATED]` on the feature, and the reconciliation
+step then returns the feature to `[PLANNED]` and each staled task to
+`[MISSING]` — or `[SKIP]` with a replacement drafted — each `/task-add`'s own
+write. When the sequence stops before that step, `[STALE]` and `[ITERATED]`
+are what it leaves. Nothing else.
 
 ## Never
 
 - Write anything itself, or replace a step's arm with a direct edit.
-- Run the full `/architect` for a feature document, or a `/task-add` run to
-  change an existing task.
+- Run the full `/architect` for a feature document.
+- Run `/task-add` to change a single existing task. `/task-add
+  feature=<slug>` reconciliation is allowed only as step 3's form (b), after
+  step 2 staled a task or moved the feature to `[ITERATED]`.
+- Amend, task by task, a task step 2 staled, or run a per-task amend after
+  the reconciliation step of the same feature.
 - Write a task's `Preconditions:` anywhere but on its own line, through step
   3's arm.
 - Reorder the owner sequence, or run a downstream step before an upstream one.

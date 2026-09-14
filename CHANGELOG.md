@@ -2,6 +2,12 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.43.0 — 2026-09-14
+
+- **/pipeline-revise** amend branch: when `/architect amend` stales a task or moves the feature to `[ITERATED]`, the plan now runs one `/task-add feature=<slug>` reconciliation instead of amending each staled task. Reconciliation rewrites those tasks, clears `[STALE]`, drafts tasks for the added scope and returns the feature to `[PLANNED]`. Before, the same tasks were rewritten twice behind two sets of gates, and you still had to reconcile afterwards. The gate shows both forms.
+- Facts in your change that the feature document doesn't hold (which files to touch, decisions spanning tasks) are listed at the gate, passed to reconciliation as its annotation, and named as things to check at `/task-add`'s gate.
+- A change that also names something under a different anchor (a task of another feature) is scoped to the anchor, and the rest is reported as a separate run. The closing report drops the "Reconcile with /task-add" follow-up once reconciliation has run as a step.
+
 ## 1.42.2 — 2026-09-14
 
 - **/runbook-run** and **/runbook-create --append** rename an older `<name>.md` body with a plain move and stage nothing until their own commit, which names the old path, the new path and `.claude/RUNBOOKS.md` together. Before, the rename was staged at once, so a step's own commit (or your next unrelated one) could carry it away from the `File:` rewrite.

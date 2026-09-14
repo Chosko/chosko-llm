@@ -1,6 +1,6 @@
 ---
 name: pipeline-revise
-version: 0.2.1
+version: 0.3.0
 type: skill
 description: Revise work that is already planned — change, insert into, remove from or reorder a feature document, a task or a runbook step — through the owners of every artifact the change reaches. Probes, resolves an anchor (feature=<slug>, task=<N> or runbook=<id|name|id-name> step=<n>, or one the description names), classifies the request into exactly one branch — amend, insert, delete or reorder — and reads only that branch's file, then runs the impact walk in both directions over the pipeline's index graph, opening bodies only within the anchor's scope. /pipeline-check scoped to the anchor runs before the proposal and again after actuation, and the report shows the difference. The proposal names its tier — editorial, local or structural — the artifacts touched, the owner steps in order and the lint findings it will create or clear, behind a single gate that asks every time whether the change is editorial; nothing is written before it. Three or fewer owner steps run in the session, one at a time, each through its owner's amend arm or command with that owner's own gate intact; at four or more steps the gate also offers to hand the plan to /runbook-create and stop, when that command is installed. Removal is [SKIP] or a struck step, never physical deletion. Writes no line any owner owns and has no commit of its own — --commit / --no-push are forwarded to each owner step. For a change one owner's amend arm covers, /pipeline-patch is the cheaper tool.
 requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run
@@ -126,6 +126,11 @@ or id together with a step id. One → that is the anchor, stated in one line
 more than one → stop, naming the three anchor forms and listing what was
 found — or, when nothing was, the features, the live tasks and the runbooks
 that exist. Never pick between two.
+
+Given an anchor, a change that also names artifacts under a different anchor —
+a task of another feature, say — is scoped to the resolved anchor: say in one
+line that the rest is a separate `/pipeline-revise` run, the same shape as
+step 3's two-kinds rule, and carry on with the anchor.
 
 **3. Classify.** Put the request into exactly one branch. Test in this order;
 the first that matches wins:
@@ -278,7 +283,10 @@ Revised <anchor> — <branch>, <tier>, <A | B>: <run>/<k> owner steps run.
 then each step's closing line, the lint difference
 (`Lint: cleared <n> (<L-ids>), created <n> (<L-ids>), unchanged <n>.`), the
 sequence check's result, and every follow-up an owner named —
-`Reconcile with /task-add feature=<slug>.` among them. When anything was
+`Reconcile with /task-add feature=<slug>.` among them, save for a feature
+whose `/task-add feature=<slug>` reconciliation ran as a step of this
+sequence; when the sequence stopped before that step, the follow-up still
+appears. When anything was
 written and `--commit` was not passed, end with an explicit reminder that
 nothing was committed.
 

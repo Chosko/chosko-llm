@@ -1051,8 +1051,13 @@ Currently shipped:
   none added after the gate; C invokes `/runbook-create` with self-contained
   steps plus a final lint step, then stops — the skill never writes a
   runbook. Owner sequences upstream first: amend = `/product-design`'s amend
-  arm → `/architect amend` per feature → task-engine `amend.md` per task →
-  `step-amend.md` per step; insert = `/architect amend` for new scope →
+  arm → `/architect amend` per feature → tasks in two gate-shown forms
+  (task-engine `amend.md` per task when step 2 stales nothing; one `/task-add
+  feature=<slug>` reconciliation when it stales or moves the feature
+  `[ITERATED]`, unstaled tasks' own amends first, doc-less facts as its
+  annotation) → `step-amend.md` per step; report drops the reconcile
+  follow-up once reconciliation ran as a step; a change naming another
+  anchor's artifacts is scoped to the resolved one; insert = `/architect amend` for new scope →
   `/task-add feature=<slug> --single --before/--after` (or the reconciliation
   form when step 1 leaves the feature `[ITERATED]`, both shown at the gate) →
   successors' `Preconditions:` via the task arm → `/runbook-create --append

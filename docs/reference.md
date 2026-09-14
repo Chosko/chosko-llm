@@ -626,11 +626,20 @@ tested in this order, and only that branch's instructions are read:
   it.
 - **amend** — anything else that changes what already exists, including a
   `Preconditions:` change that moves no entry. Owners run upstream first: a
-  `product-design.md` decision, then each feature document, then each task,
-  then each runbook step.
+  `product-design.md` decision, then each feature document, then the tasks,
+  then each runbook step. The task step has two forms, both shown at the gate.
+  If `/architect amend` stales nothing, each task is amended on its own. If it
+  stales a task or moves the feature to `[ITERATED]`, one `/task-add
+  feature=<slug>` reconciliation runs instead. It rewrites the staled tasks,
+  clears `[STALE]` and drafts tasks for any added scope. Facts from your change
+  that the feature document doesn't hold are passed to it as its annotation.
+  An unstaled task whose own fields must change is still amended, before the
+  reconciliation.
 
 A request of two kinds is two runs: the skill does the first and tells you
-the rest is a separate run.
+the rest is a separate run. In the same way, a change that also names
+something under another anchor, such as a task of a different feature, is
+scoped to the anchor, and the rest is reported as a separate run.
 
 **The impact walk.** From the anchor it follows the links between the
 indexes in both directions: down from a feature document to its tasks, its

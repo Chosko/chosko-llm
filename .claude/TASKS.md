@@ -6,7 +6,7 @@ Last task number: 216
 
 ## 215. Route staled tasks to `/task-add feature=<slug>` reconciliation in `/pipeline-revise`'s amend branch
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/pipeline-revise/amend.md, skills/pipeline-revise/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: none
