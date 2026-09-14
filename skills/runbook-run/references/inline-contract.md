@@ -10,8 +10,9 @@ reason the subagent contract is one: a rule set re-worded per step is a rule
 set the session can talk itself out of, and under `--inline` the session is
 both the one bound by the rules and the one tempted to relax them.
 
-Two placeholders, as in the subagent contract, stand for the runbook's name
-(`<RUNBOOK>`) and the step being executed (`<N>`).
+Three placeholders, as in the subagent contract, stand for the runbook's name
+(`<RUNBOOK>`), the step being executed (`<N>`) and the body's path as its
+index block's `File:` line holds it (`<FILE>`).
 
 ---
 
@@ -47,8 +48,7 @@ INLINE RULES
   Failing that, the step fails [!] with a Done: line naming the child that could
   not be spawned and saying that re-running the step without --inline is the
   fix. Never do a child's work in your own context.
-- During the execution phase, never edit .claude/runbooks/<RUNBOOK>.md or
-  .claude/RUNBOOKS.md.
+- During the execution phase, never edit <FILE> or .claude/RUNBOOKS.md.
 - End the execution phase by writing out your outcome as a separate act, before
   any bookkeeping: the literal line `DONE` followed by the commit sha(s), the
   decisions taken and any premise that proved wrong — or, if the work failed or

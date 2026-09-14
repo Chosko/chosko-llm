@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.41.0 — 2026-09-14
+
+- **Runbook bodies** are now named `<id>-<name>.md` (`3-runbook-slug.md`), so the id you type is the one you see in `.claude/runbooks/`. Every body is opened at the path its `.claude/RUNBOOKS.md` block's `File:` line holds, so older `<name>.md` bodies keep working.
+- **/runbook-run** takes the runbook as its id, its name, or `<id>-<name>`. If the two halves don't match, it reports the runbook the id really belongs to instead of guessing. An older body is renamed to the new form the first time a run starts on it (never while it is running), and the rename goes into that run's first step commit.
+
 ## 1.40.0 — 2026-09-14
 
 - **/runbook-run** takes `--inline`: this session carries out each selected step itself instead of starting a fresh subagent per step. That saves the cost of orienting and spawning an agent for short runs of small, related steps. Selection, markers, `Done:` lines, the index, fact propagation and the per-step commits are unchanged, and nothing records which mode ran, so a runbook can be resumed in either mode.

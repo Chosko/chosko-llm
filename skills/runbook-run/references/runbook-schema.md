@@ -14,7 +14,7 @@ This file describes the artifact. It does not describe the execution protocol
 ## The store
 
 ```
-.claude/runbooks/<name>.md          the runbook
+.claude/runbooks/<id>-<name>.md     the runbook
 .claude/RUNBOOKS.md                 the index
 ```
 
@@ -22,23 +22,63 @@ Both are **committed**. The work a runbook drives is executed across machines
 and cloud sessions, and the `Done:` lines are the record of what actually
 happened — they are re-read far more often than anyone expects.
 
-`<name>` is kebab-case and **is** the identifier: it is what names the body
-file, what appears in the index heading, and what every message about a
-runbook calls it.
+`<name>` is kebab-case and **is** the identifier: it is what appears in the
+index heading, in the body heading (`# Runbook: <name>`), and in every error,
+report and relay block about a runbook.
 
 Beside the name, every runbook carries a numeric **id** — a shorthand for
 referring to it on a command line, the way a task id works in
-`.claude/TASKS.md`. The id is an **alias, never a replacement**: the body file
-stays `.claude/runbooks/<name>.md`, a rename is still a rename, and errors and
-reports name the runbook by name. Every command that takes a name —
-`/runbook-run`, `/runbook-create --append`, `/runbook-clean` — takes an id in
-its place, resolved by one rule:
+`.claude/TASKS.md`. The id is an **alias, never a replacement**: a rename is
+still a rename, errors and reports name the runbook by name, and the body
+carries no id of its own. The id appears in the body's **file name** — a
+runbook named `runbook-slug` with id 3 lives at `3-runbook-slug.md` — so the
+number typed on a command line is the one visible on disk; the index stays the
+id's authority.
 
-> **A bare all-digits argument is an id. Anything else is a name.**
+### `File:` is the body's path
 
-That is unambiguous rather than heuristic: a kebab-case name can never be all
-digits, so no argument is ever both. An id that matches no runbook is reported
-exactly as an unknown name is — by listing the runbooks that do exist.
+**Every command opens a runbook's body at the path its index block's `File:`
+line holds, and never builds the path from the name.** A block for a runbook
+created with ids in file names says `File: .claude/runbooks/<id>-<name>.md`. A
+block written earlier may still say `File: .claude/runbooks/<name>.md`, and
+that legacy value **stays correct**: the file is where `File:` says it is.
+
+**The migration check.** A command that is writing a runbook, and whose block's
+`File:` file name does not begin with `<id>-`, has a body to migrate, per
+`${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/body-migration.md`.
+
+### Resolving a runbook argument
+
+Every command that takes a runbook — `/runbook-run`, `/runbook-create
+--append`, `/runbook-clean`, `/runbook-describe`, and the `runbook=` anchor —
+accepts it as `<id>`, `<name>` or `<id>-<name>`, and resolves it to **exactly
+one** index block by these checks, in order:
+
+1. **All digits** — an id: the block carrying that id.
+2. **Exactly equal to a block's name** — that block.
+3. **Of the shape `<digits>-<rest>`, where block `<digits>` exists and its name
+   is `<rest>`** — that block. When the halves disagree it is an **error**,
+   never a fallback to either half: if block `<digits>` exists under a
+   different name, name the runbook that id actually belongs to and say that
+   `<rest>` is not it; if `<rest>` is some other runbook's name, say so too. A
+   mismatched compound is a typo, and either half picked silently would act on
+   the wrong runbook.
+4. **Anything else** — unknown. Report it by listing the runbooks that do
+   exist.
+
+An argument that resolves to no block stops the command before it writes
+anything, and so does one of the errors above.
+
+**Why this is unambiguous rather than heuristic.** A kebab-case name can never
+be all digits, so check 1 never meets a name. A new name whose first kebab
+segment is all digits (`2026-migration`) is **refused** at creation, with one
+suggested alternative, exactly as a name already taken is — so for every
+runbook created under this rule, checks 2 and 3 can never both match. Name
+before prefix protects a runbook authored earlier with such a name: it still
+resolves by its exact name. The one residual case is a legacy name that is
+exactly `<id>-<another runbook's name>`, which could match two blocks; that is
+**reported as an ambiguity naming both candidates**, never resolved by
+guessing.
 
 Both paths are created **on first use**, silently and idempotently, by
 whichever feature first needs to write one. A project needs no setup step for
@@ -239,7 +279,7 @@ Last runbook number: 7
 ## 3. <name> — <one-line title>
 
 Status: [PENDING]
-File: .claude/runbooks/<name>.md
+File: .claude/runbooks/<id>-<name>.md
 Created: 2026-08-24
 Source: /architect run
 Steps: 0/7

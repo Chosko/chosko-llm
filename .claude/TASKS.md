@@ -233,7 +233,7 @@ Feature: runbook-inline
 
 ## 211. Name runbook bodies `<id>-<name>.md` in the schema, add the lazy body-migration protocol, and make /runbook-run resolve and read by `File:`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/references/runbook-schema.md, skills/runbook-run/references/body-migration.md, skills/runbook-run/references/subagent-contract.md, skills/runbook-run/references/step-amend.md, skills/runbook-run/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 208, 209
