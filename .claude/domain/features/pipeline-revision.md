@@ -161,9 +161,10 @@ ledger is introduced.
   patcher requires.
 - Hard contracts: neither surface writes a line an owner owns; the patcher
   never opens a body; the reviser opens bodies only within the anchor's
-  scope; the editorial question is always asked — at the revise gate, and
-  confirmed there, not re-asked, at the `/architect amend` step; the runbook is never written
-  without the user's choice; the lint runs before and after every revise.
+  scope; the editorial question is always asked at the revise gate, and
+  confirmed, not re-asked, at the `/architect amend` step; the runbook is
+  never written without the user's choice; the lint runs before and after
+  every revise.
 
 Failure contract: an anchor that resolves to nothing stops by listing what
 exists; a patch refused for structure names the signal; an owner arm that

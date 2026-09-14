@@ -143,9 +143,10 @@ that skill's gate, the user has already answered the editorial question
 there for the same change. That answer is carried in, and the question is
 rendered as a confirmation of it instead of being asked again verbatim:
 
-> You answered *<editorial | not editorial>* at the revise gate — <that
-> answer's outcome, e.g. edit the document, mark <ids> `[STALE]`, `Status:`
-> becomes <outcome>>. Confirm?
+> At the revise gate you chose *<editorial | not editorial>* for the whole
+> plan. For this document's edit that means <that answer's outcome, e.g.
+> edit the document, mark <ids> `[STALE]`, `Status:` becomes <outcome>>.
+> Judge this edit on its own — confirm, or switch if it differs?
 >
 > A. **Editorial** — edit the document; no task is staled and `Status:`
 >    stays `<status>`.

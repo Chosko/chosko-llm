@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.44.1 — 2026-09-14
+
+- **/architect amend** under **/pipeline-revise**: the confirmation now says your revise-gate answer was given for the whole plan, and asks you to judge this document's edit on its own, so a structural plan doesn't nudge you into staling tasks for a wording-only document edit.
+
 ## 1.44.0 — 2026-09-14
 
 - **/pipeline-revise** no longer asks the editorial question twice. Your answer at its gate carries into the `/architect amend` step, whose gate still shows the full change, touched tasks and outcome but asks you to confirm that answer (or switch, or stop) instead of repeating the question.
