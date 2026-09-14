@@ -161,7 +161,7 @@ in-flight run working); state the chosen mechanism explicitly.
 
 Done: 336d248 (pushed) — wrote .claude/domain/features/runbook-id-filenames.md, added the FEATURES.md entry ([NEW], Source: prompt, Tasks: none) and a domain INDEX row. Decisions approved by the user: every command opens the body at the index File: path and never builds it from the name; new runbooks get File: .claude/runbooks/<id>-<name>.md, and a legacy <name>.md value stays valid. Resolution order: all-digits is an id, then exact name, then <digits>-<rest> where both halves must match (a mismatch is an error, never a fallback), else unknown. /runbook-create refuses new names whose first segment is all digits. Migration is targeted and lazy (Q1 a); per the user's amendment the protocol lives in a separate file, skills/runbook-run/references/body-migration.md, read only when File: lacks the <id>- prefix, and only by /runbook-run at Resolve (before it marks [RUNNING]; a resumed run never migrates) and by /runbook-create --append (not on a [RUNNING] target). A rename uses git mv, lands in that command's own commit, and never overwrites. No sweep ships, so this runbook's body is never renamed. subagent-contract.md gets a third placeholder, <FILE>, filled from File: (Q3 a). Premises: /runbook-list, /pipeline-check and lint.md need no change; /runbook-create's PHASE 4 must take the id before it writes the body; the agent skipped pull-at-start and pulled before committing instead (already up to date).
 
-## [ ] 6. Plan tasks for runbook-id-filenames
+## [x] 6. Plan tasks for runbook-id-filenames
 
 Depends on: 1, 2, 4, 5
 
@@ -183,6 +183,8 @@ skills/runbook-run/SKILL.md, runbook-schema.md), put the relevant earlier
 task ids on its Preconditions: line rather than sequencing by prose. This
 repository has no PLAN.md by design; do not propose one.
 ```
+
+Done: 529feb2 (pushed) — added tasks 211–214. runbook-id-filenames is now [PLANNED] with Tasks: 211, 212, 213, 214. Split by design section. 211: the runbook-run skill folder (schema, new body-migration.md, the subagent-contract <FILE> placeholder, step-amend, SKILL.md); Preconditions: 208, 209; its criteria forbid a sweep and forbid renaming any existing body. 212: /runbook-create; Preconditions: 211. 213: runbook-clean, runbook-describe, pipeline-patch, pipeline-revise, routing.md rows and graph.md E6, with a pipeline-engine version: patch bump; Preconditions: 207, 208, 209, 211. 214: docs, with a dated 2026-09-14 grant to edit runbook-suite.md on 4 points; Preconditions: 207, 208, 210, 211, 212, 213. The user approved the grant and the drafts. Premises wrong: runbook-schema.md is edited by none of 207–210 (207 only cites it), so it adds no precondition; the overlap list left out routing.md (208, 209) and the doc files (207, 208, 210), which were wired in. Noted: 208 and 209 edit routing.md without bumping pipeline-engine's version:, unlike 213. The agent's pre-push pull --rebase was refused by the orchestrator's uncommitted runbook/index edits; the push went through with nothing upstream.
 
 ## [ ] 7. Implement the runbook-describe rework
 
@@ -230,7 +232,8 @@ If Context: is empty, read step 4's Done: line in
 
 Depends on: 6, 7, 9
 
-Context: none
+Context:
+- 2026-09-14 (from step 6): step 6 created tasks 211, 212, 213, 214, to implement in that order (their Preconditions: chain them; 211 waits on 208 and 209, 213 on 207, 214 on 210).
 
 ```prompt
 /task-implement <the task ids step 6 created, as recorded in this step's Context:> -y --no-agents
