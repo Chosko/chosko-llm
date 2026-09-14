@@ -213,7 +213,7 @@ Preconditions: none
 
 ## 209. Add an --inline mode to /runbook-run that executes selected steps in the orchestrating session
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/SKILL.md, skills/runbook-run/references/inline-contract.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
 Preconditions: 208

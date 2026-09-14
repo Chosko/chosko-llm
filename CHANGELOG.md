@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.40.0 — 2026-09-14
+
+- **/runbook-run** takes `--inline`: this session carries out each selected step itself instead of starting a fresh subagent per step. That saves the cost of orienting and spawning an agent for short runs of small, related steps. Selection, markers, `Done:` lines, the index, fact propagation and the per-step commits are unchanged, and nothing records which mode ran, so a runbook can be resumed in either mode.
+- It composes with `--from`, `--to`, `--only`, `--steps N`, `--no-commit` and `--no-push`. It is refused beside `--relay-spawns` or `--model`, and the header `Model:` is not applied. Under it, steps share one context: the step's brief and the written records win over memory, questions are asked directly, and a child a step wants is spawned one level down, never done inline.
+
 ## 1.39.0 — 2026-09-14
 
 - **/runbook-run** takes `--steps N`: run at most N steps in this run, then stop — no need to look up which step id is N steps ahead. Only steps actually executed count, so already-done steps never use up the budget. It composes with `--from` (`--from 4 --steps 2`), is refused beside `--to` or `--only`, and needs a positive integer.
