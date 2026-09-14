@@ -127,7 +127,7 @@ repository has no PLAN.md by design; do not propose one.
 
 Done: bb948e0 (pushed) — added tasks 209 and 210. runbook-inline is now [PLANNED] with Tasks: 209, 210. Task 209 is the single implementation task, not split. It covers the --inline flag and its two argument errors (beside --relay-spawns or --model), the inline branch in loop steps 5–6, a new skills/runbook-run/references/inline-contract.md (name chosen by the agent), the broadened --steps count wording, the routing.md row, and the skill minor bump plus VERSION/CHANGELOG. Its Preconditions: is 208 because it edits SKILL.md. Task 210 covers the docs: README, docs/reference.md, the context layer, and dated 2026-09-14 grants to edit runbook-suite.md on 3 points (opening paragraph, orchestrator contracts scoped to the default mode, --inline usage line) and runbook-inline.md on 1 point (the shipped reference path). Its Preconditions: is 209. 209 edits no /architect-owned document. The user approved both grants and the drafts as written. Premises: none wrong; the README Runbooks paragraph was added to 210's scope.
 
-## [ ] 5. Architect runbook-id-filenames
+## [x] 5. Architect runbook-id-filenames
 
 Depends on: none
 
@@ -159,6 +159,8 @@ rename the body of a runbook that is [RUNNING] (or must otherwise keep an
 in-flight run working); state the chosen mechanism explicitly.
 ```
 
+Done: 336d248 (pushed) — wrote .claude/domain/features/runbook-id-filenames.md, added the FEATURES.md entry ([NEW], Source: prompt, Tasks: none) and a domain INDEX row. Decisions approved by the user: every command opens the body at the index File: path and never builds it from the name; new runbooks get File: .claude/runbooks/<id>-<name>.md, and a legacy <name>.md value stays valid. Resolution order: all-digits is an id, then exact name, then <digits>-<rest> where both halves must match (a mismatch is an error, never a fallback), else unknown. /runbook-create refuses new names whose first segment is all digits. Migration is targeted and lazy (Q1 a); per the user's amendment the protocol lives in a separate file, skills/runbook-run/references/body-migration.md, read only when File: lacks the <id>- prefix, and only by /runbook-run at Resolve (before it marks [RUNNING]; a resumed run never migrates) and by /runbook-create --append (not on a [RUNNING] target). A rename uses git mv, lands in that command's own commit, and never overwrites. No sweep ships, so this runbook's body is never renamed. subagent-contract.md gets a third placeholder, <FILE>, filled from File: (Q3 a). Premises: /runbook-list, /pipeline-check and lint.md need no change; /runbook-create's PHASE 4 must take the id before it writes the body; the agent skipped pull-at-start and pulled before committing instead (already up to date).
+
 ## [ ] 6. Plan tasks for runbook-id-filenames
 
 Depends on: 1, 2, 4, 5
@@ -167,6 +169,7 @@ Context:
 - 2026-09-14 (from step 1): the /runbook-describe rework task is id 207.
 - 2026-09-14 (from step 2): the step-count flag task is id 208 (--steps N). Besides skills/runbook-run/SKILL.md it edits skills/pipeline-engine/references/routing.md and runbook-suite.md. .claude/skills/runbook-run/ is an older installed snapshot (0.7.0), not the source.
 - 2026-09-14 (from step 4): the runbook-inline tasks are 209 and 210. Task 209 edits skills/runbook-run/SKILL.md, adds skills/runbook-run/references/inline-contract.md, and edits routing.md, VERSION and CHANGELOG.md. Task 210 edits runbook-suite.md, runbook-inline.md, README.md, docs/reference.md and .claude/context/features.md + INDEX.md.
+- 2026-09-14 (from step 5): the design (336d248) also touches skills/runbook-run/references/subagent-contract.md (new <FILE> placeholder), step-amend.md, a new references/body-migration.md, commands/runbook-create.md, runbook-clean.md, runbook-describe.md, pipeline-patch.md, skills/pipeline-revise/SKILL.md, pipeline-engine routing.md (rows) and graph.md (E6). Overlaps with earlier tasks: routing.md (208, 209), SKILL.md (208, 209), runbook-describe.md (207), runbook-suite.md docs (207, 208, 210). /runbook-list, /pipeline-check and lint.md are unchanged. The implementation must ship no sweep and must never rename this runbook's body.
 
 ```prompt
 /task-add feature=runbook-id-filenames
