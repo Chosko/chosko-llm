@@ -166,7 +166,7 @@ Tasks: 202, 203, 204, 205
 
 ## runbook-inline — `/runbook-run --inline` executes selected steps in the orchestrating session
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/runbook-inline.md
 Source: prompt
 Tasks: 209, 210
@@ -175,7 +175,7 @@ Tasks: 209, 210
 
 ## runbook-id-filenames — Runbook bodies named `<id>-<name>.md`, resolved by id, name or both
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/runbook-id-filenames.md
 Source: prompt
 Tasks: 211, 212, 213, 214
