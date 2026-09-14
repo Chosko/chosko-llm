@@ -125,7 +125,7 @@ features to attach them to.
 
 ### Insertion into a runbook
 
-`/runbook-create --append <name|id>` gains `--before <step>` and
+`/runbook-create --append <id|name|id-name>` gains `--before <step>` and
 `--after <step>`. Step ids are stable and the new step takes the next unused
 id, but it is written at the requested list position; `/runbook-run` already
 walks the body top to bottom, so order is list position and the id carries
@@ -160,7 +160,7 @@ append does. Eligibility is derived on every read and stored nowhere.
   `--short` for the reason `feature=` already is.
 - `/task-add` (free-form, `FEATURES.md` present) — the feature question at
   the existing gate.
-- `/runbook-create --append <name|id> [--before <step> | --after <step>]` —
+- `/runbook-create --append <id|name|id-name> [--before <step> | --after <step>]` —
   positional insert with a fresh id. Unknown step id reported by listing the
   runbook's steps.
 

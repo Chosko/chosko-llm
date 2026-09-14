@@ -130,10 +130,11 @@ migration a run that doesn't need one ever reads.
 **The protocol lives in its own reference file:**
 `skills/runbook-run/references/body-migration.md`. It carries:
 
-- the rename itself: `git mv` to `<id>-<name>.md`, then rewrite `File:`;
+- the rename itself: a plain move to `<id>-<name>.md`, then rewrite `File:`;
 - the `[RUNNING]` exclusion and why it exists;
-- how the rename is staged: both the old and the new path go into the command's
-  one commit;
+- how the rename is staged: nothing at migration time. The command's own commit
+  names the old path, the new path and the index explicitly, since a rename
+  staged early would ride into whichever commit came next;
 - what to do when the target path already exists: stop and report, never
   overwrite;
 - the non-git VCS mapping.

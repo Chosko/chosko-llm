@@ -191,11 +191,11 @@ the runbook or the index.
 ## Interfaces and contracts
 
 ```
-/runbook-run <name|id> --inline                  execute every selected step in this session
-/runbook-run <name|id> --inline --from X --steps N
-/runbook-run <name|id> --inline --only N
-/runbook-run <name|id> --inline --relay-spawns   error
-/runbook-run <name|id> --inline --model sonnet   error
+/runbook-run <id|name|id-name> --inline                  execute every selected step in this session
+/runbook-run <id|name|id-name> --inline --from X --steps N
+/runbook-run <id|name|id-name> --inline --only N
+/runbook-run <id|name|id-name> --inline --relay-spawns   error
+/runbook-run <id|name|id-name> --inline --model sonnet   error
 ```
 
 Composition with `--steps N` (task 208): orthogonal. `--steps` decides how

@@ -147,7 +147,7 @@ ledger is introduced.
 ## Interfaces and contracts
 
 - `/pipeline-patch <anchor> "<change>" [--commit] [--no-push]` — anchor is
-  `feature=<slug>`, `task=<N>` or `runbook=<name|id> step=<n>`. Single owner
+  `feature=<slug>`, `task=<N>` or `runbook=<id|name|id-name> step=<n>`. Single owner
   or refuse. `--commit` / `--no-push` are forwarded to the amend arm it
   executes; it makes no commit of its own.
   `requires: skill:pipeline-engine, skill:architect, skill:task-engine,

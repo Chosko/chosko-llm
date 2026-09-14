@@ -724,7 +724,7 @@ listing's one line, never a dump of the body. The two are a deliberate pair: a
 property the listing is built around, which is the whole reason this is a
 separate command rather than a flag.
 
-It takes one runbook by name or id and renders exactly this shape:
+It takes one runbook by id, name or `<id>-<name>` and renders exactly this shape:
 
 ```
 3. implement-ecc-import   [RUNNING]   4/7   —   Land the ECC import architecture
@@ -908,13 +908,13 @@ it.
 /runbook-create                          ask: new runbook, or append to which
 /runbook-create <name>                   new runbook, material from the conversation
 /runbook-create <free-form description>  new runbook, material from the interview
-/runbook-create --append <name|id> [--before <step> | --after <step>]
+/runbook-create --append <id|name|id-name> [--before <step> | --after <step>]
                                          append steps to that runbook, at the foot
                                          or at that step's position
 /runbook-create --append                 append to the runbook this session is running
 /runbook-create <args> --commit [--no-push]
 
-/runbook-run <name|id>                   run from the first selectable step
+/runbook-run <id|name|id-name>           run from the first selectable step
 /runbook-run <name> --from N             begin selection at step N
 /runbook-run <name> --to N               stop after step N (inclusive)
 /runbook-run <name> --from X --to Y      run steps X through Y, then stop
@@ -928,13 +928,12 @@ it.
 /runbook-run <name> --relay-spawns       force the spawn relay for this run
 
 /runbook-list [<STATUS>]
-/runbook-describe <name|id>              print a compact summary of one runbook
-/runbook-clean [<name|id> ...] [--no-commit] [--no-push]
+/runbook-describe <id|name|id-name>      print a compact summary of one runbook
+/runbook-clean [<id|name|id-name> ...] [--no-commit] [--no-push]
 ```
 
-Every command above that takes `<name>` takes `<id>` in its place, on the one
-rule under *The store*: a bare all-digits argument is an id, anything else a
-name.
+Every command above that takes `<name>` takes `<id>` or `<id>-<name>` in its
+place, resolved by the ordered rule under *The store*.
 
 `--from`, `--to` and `--only` do not weaken dependencies: a selected step whose
 `Depends on:` are not all `[x]` stops the run with the unmet dependency named. A
