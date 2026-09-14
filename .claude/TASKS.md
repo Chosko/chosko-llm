@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 214
+Last task number: 216
 
 ---
 
@@ -268,3 +268,21 @@ Target: claude
 Files: .claude/domain/features/runbook-suite.md, docs/reference.md, docs/authoring-guide.md, .claude/domain/product-workflow.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 207, 208, 210, 211, 212, 213
 Feature: runbook-id-filenames
+
+---
+
+## 215. Route staled tasks to `/task-add feature=<slug>` reconciliation in `/pipeline-revise`'s amend branch
+
+Status: [MISSING]
+Target: claude
+Files: skills/pipeline-revise/amend.md, skills/pipeline-revise/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 216. Carry `/pipeline-revise`'s editorial answer into the `/architect amend` step as a confirmation
+
+Status: [MISSING]
+Target: claude
+Files: skills/architect/amend.md, skills/pipeline-revise/SKILL.md, skills/pipeline-revise/amend.md, skills/pipeline-revise/insert.md, skills/pipeline-revise/delete.md, .claude/domain/features/pipeline-revision.md, VERSION, CHANGELOG.md
+Preconditions: 215
