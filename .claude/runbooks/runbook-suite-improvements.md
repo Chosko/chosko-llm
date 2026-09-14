@@ -105,7 +105,7 @@ must compose with it.
 
 Done: 27287f7 (pushed) — wrote .claude/domain/features/runbook-inline.md, added the FEATURES.md entry ([NEW], Source: prompt, Tasks: none) and a domain INDEX row. Decisions approved by the user: --inline changes only how a step is executed (steps 5–6 of the loop) and composes with --from/--to/--only/--steps/--no-commit/--no-push. --relay-spawns and --model are both argument errors beside --inline. The header Model: is not applied, and the opening line says so once. Replacing fresh context: the brief is the authority, the written records win over memory, facts are still propagated, and the opening line discloses the shared context (no cap). The session alternates a bookkeeping phase (today's read/write rules) with an execution phase (never edits the runbook or index). Questions are asked directly in the same fixed block. The inline rules go in a reference file read only under --inline. Markers, Done:, index, commits, resume and the nested-runbook ban are identical. runbook-suite.md was not edited; reconciling it is left to the generated tasks. Premises: none wrong.
 
-## [ ] 4. Plan tasks for runbook-inline
+## [x] 4. Plan tasks for runbook-inline
 
 Depends on: 2, 3
 
@@ -124,6 +124,8 @@ step-count task's id on the Preconditions: line of every runbook-inline task
 that edits skills/runbook-run/SKILL.md, rather than by prose. This
 repository has no PLAN.md by design; do not propose one.
 ```
+
+Done: bb948e0 (pushed) — added tasks 209 and 210. runbook-inline is now [PLANNED] with Tasks: 209, 210. Task 209 is the single implementation task, not split. It covers the --inline flag and its two argument errors (beside --relay-spawns or --model), the inline branch in loop steps 5–6, a new skills/runbook-run/references/inline-contract.md (name chosen by the agent), the broadened --steps count wording, the routing.md row, and the skill minor bump plus VERSION/CHANGELOG. Its Preconditions: is 208 because it edits SKILL.md. Task 210 covers the docs: README, docs/reference.md, the context layer, and dated 2026-09-14 grants to edit runbook-suite.md on 3 points (opening paragraph, orchestrator contracts scoped to the default mode, --inline usage line) and runbook-inline.md on 1 point (the shipped reference path). Its Preconditions: is 209. 209 edits no /architect-owned document. The user approved both grants and the drafts as written. Premises: none wrong; the README Runbooks paragraph was added to 210's scope.
 
 ## [ ] 5. Architect runbook-id-filenames
 
@@ -164,6 +166,7 @@ Depends on: 1, 2, 4, 5
 Context:
 - 2026-09-14 (from step 1): the /runbook-describe rework task is id 207.
 - 2026-09-14 (from step 2): the step-count flag task is id 208 (--steps N). Besides skills/runbook-run/SKILL.md it edits skills/pipeline-engine/references/routing.md and runbook-suite.md. .claude/skills/runbook-run/ is an older installed snapshot (0.7.0), not the source.
+- 2026-09-14 (from step 4): the runbook-inline tasks are 209 and 210. Task 209 edits skills/runbook-run/SKILL.md, adds skills/runbook-run/references/inline-contract.md, and edits routing.md, VERSION and CHANGELOG.md. Task 210 edits runbook-suite.md, runbook-inline.md, README.md, docs/reference.md and .claude/context/features.md + INDEX.md.
 
 ```prompt
 /task-add feature=runbook-id-filenames
@@ -210,7 +213,8 @@ If Context: is empty, read step 2's Done: line in
 
 Depends on: 4, 8
 
-Context: none
+Context:
+- 2026-09-14 (from step 4): step 4 created tasks 209 (implementation, Preconditions: 208) and 210 (docs, Preconditions: 209).
 
 ```prompt
 /task-implement <the task ids step 4 created, as recorded in this step's Context:> -y --no-agents
