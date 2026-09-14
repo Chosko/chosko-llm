@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 208
+Last task number: 210
 
 ---
 
@@ -208,3 +208,23 @@ Status: [MISSING]
 Target: claude
 Files: skills/runbook-run/SKILL.md, skills/pipeline-engine/references/routing.md, .claude/domain/features/runbook-suite.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none
+
+---
+
+## 209. Add an --inline mode to /runbook-run that executes selected steps in the orchestrating session
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/SKILL.md, skills/runbook-run/references/inline-contract.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
+Preconditions: 208
+Feature: runbook-inline
+
+---
+
+## 210. Update documentation for feature `runbook-inline`
+
+Status: [MISSING]
+Target: claude
+Files: .claude/domain/features/runbook-suite.md, .claude/domain/features/runbook-inline.md, README.md, docs/reference.md, .claude/context/features.md, .claude/context/INDEX.md
+Preconditions: 209
+Feature: runbook-inline

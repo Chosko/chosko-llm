@@ -166,9 +166,9 @@ Tasks: 202, 203, 204, 205
 
 ## runbook-inline — `/runbook-run --inline` executes selected steps in the orchestrating session
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/runbook-inline.md
 Source: prompt
-Tasks: none
+Tasks: 209, 210
 
 ---
