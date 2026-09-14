@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 206
+Last task number: 207
 
 ---
 
@@ -189,4 +189,13 @@ Feature: authoring-commit-default
 Status: [DONE]
 Target: claude
 Files: skills/runbook-run/SKILL.md, docs/reference.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 207. Rework /runbook-describe into a compact one-runbook summary that never reads prompts or task bodies
+
+Status: [MISSING]
+Target: claude
+Files: commands/runbook-describe.md, .claude/domain/features/runbook-suite.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none
