@@ -3,7 +3,7 @@
 Created: 2026-09-14 · Source: conversation (pipeline-suggest) · Model: opus
 Sequencing: 1–6 plan everything before any code moves, so each later planning step puts earlier task ids on its Preconditions: lines (runbook-inline and runbook-id-filenames edit skills/runbook-run/SKILL.md, which the step-count task also edits; runbook-id-filenames also touches /runbook-describe's resolution). 7–10 implement in dependency order; runbook-id-filenames goes last because it renames bodies and changes resolution in every runbook command.
 
-## [ ] 1. Plan the runbook-describe rework (brainstorm)
+## [x] 1. Plan the runbook-describe rework (brainstorm)
 
 Depends on: none
 
@@ -38,6 +38,8 @@ one-line summary of Done: or Context:, Do not re-propose count), and what
 the read budget is. Offer a recommended shape so it can be settled in one
 answer. Then write the task(s).
 ```
+
+Done: 5d42edc (pushed to pipeline) — added task 207, a single task (no split). Decisions from the brainstorm and approval: the render is a heading line, one header line (Created/Source/Model), and one line per step (marker, number, title, deps: only when present, needs: only when authored and not agent), plus at most one done: line (sha, short summary, wrong-premise count). Sequencing:, Companion:, Context: and the Do-not-re-propose count are dropped. The command reads the index plus targeted lines from the one body, never a full Read of the body, never task bodies, never other runbooks or the domain/context layers. Needs: inference is removed. Versions: feature 0.1.0 → 0.2.0, root VERSION patch bump. A dated 2026-09-14 grant allows edits to runbook-suite.md on 3 points: the table row, the section and the usage line. Wrong premise: 0.1.0 already forbade printing prompts and never mentioned task bodies. The real cost came from reading the whole body, the Needs: inference, printing Done:/Sequencing:/Context: in full, and no ban on following task ids.
 
 ## [ ] 2. Plan the step-count flag for /runbook-run
 
@@ -172,7 +174,8 @@ repository has no PLAN.md by design; do not propose one.
 
 Depends on: 1
 
-Context: none
+Context:
+- 2026-09-14 (from step 1): step 1 created a single task, id 207.
 
 ```prompt
 /task-implement <the task id(s) step 1 created, as recorded in this step's Context:> -y
