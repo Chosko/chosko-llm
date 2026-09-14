@@ -186,7 +186,7 @@ repository has no PLAN.md by design; do not propose one.
 
 Done: 529feb2 (pushed) — added tasks 211–214. runbook-id-filenames is now [PLANNED] with Tasks: 211, 212, 213, 214. Split by design section. 211: the runbook-run skill folder (schema, new body-migration.md, the subagent-contract <FILE> placeholder, step-amend, SKILL.md); Preconditions: 208, 209; its criteria forbid a sweep and forbid renaming any existing body. 212: /runbook-create; Preconditions: 211. 213: runbook-clean, runbook-describe, pipeline-patch, pipeline-revise, routing.md rows and graph.md E6, with a pipeline-engine version: patch bump; Preconditions: 207, 208, 209, 211. 214: docs, with a dated 2026-09-14 grant to edit runbook-suite.md on 4 points; Preconditions: 207, 208, 210, 211, 212, 213. The user approved the grant and the drafts. Premises wrong: runbook-schema.md is edited by none of 207–210 (207 only cites it), so it adds no precondition; the overlap list left out routing.md (208, 209) and the doc files (207, 208, 210), which were wired in. Noted: 208 and 209 edit routing.md without bumping pipeline-engine's version:, unlike 213. The agent's pre-push pull --rebase was refused by the orchestrator's uncommitted runbook/index edits; the push went through with nothing upstream.
 
-## [ ] 7. Implement the runbook-describe rework
+## [!] 7. Implement the runbook-describe rework
 
 Depends on: 1
 
@@ -199,6 +199,8 @@ Context:
 If Context: is empty, read step 1's Done: line in
 .claude/runbooks/runbook-suite-improvements.md for the ids.
 ```
+
+Done: aborted by user choice at /task-implement's dirty-tree check, before any work — no commit. The tree held only the orchestrator's in-flight bookkeeping (the [~] marker and the index [RUNNING]), and /task-implement -y asks what to do with a dirty tree (proceed / include / commit / abort); the user picked abort. Task 207 is still [MISSING], and nothing was staged or changed. The premise that `/task-implement ... -y` runs unattended inside a runbook step proved wrong: the dirty-tree gate fires on the orchestrator's own uncommitted marker, so steps 8–10 will meet the same gate.
 
 ## [ ] 8. Implement the step-count flag
 
