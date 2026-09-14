@@ -1299,7 +1299,12 @@ Currently shipped:
   always the stretch of steps the run walks. Bounds are re-applied against the
   body re-read each step, so a step appended mid-run inside the range runs and
   a bound naming a step not yet in the body is not an error. Reaching a `--to` bound is **not** completion: the
-  index goes back to `[PENDING]` unless the whole runbook is `[x]`. Depth
+  index goes back to `[PENDING]` unless the whole runbook is `[x]`.
+  `--steps N` runs at most N steps **executed in this run** (a step counts once
+  its result reached step 8 as `DONE`; `[x]` steps never count), composes with
+  `--from` only (error beside `--to`/`--only`, or with a non-positive-integer
+  value), never weakens `Depends on:`, and reaching the count stops the run
+  exactly like a `--to` bound (back to `[PENDING]` unless all `[x]`). Depth
   budget stated plainly in the body: orchestrator +
   step agent leaves one confirmed level **where nesting works at all** (depth 3
   verified locally 2026-08-24; a cloud subagent cannot spawn, and depth 4 was

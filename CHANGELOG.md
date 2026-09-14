@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.39.0 — 2026-09-14
+
+- **/runbook-run** takes `--steps N`: run at most N steps in this run, then stop — no need to look up which step id is N steps ahead. Only steps actually executed count, so already-done steps never use up the budget. It composes with `--from` (`--from 4 --steps 2`), is refused beside `--to` or `--only`, and needs a positive integer.
+- Reaching the count stops the run like a `--to` bound: the runbook goes back to `[PENDING]` unless every step is done, and `Depends on:` is never weakened.
+
 ## 1.38.1 — 2026-09-14
 
 - **/runbook-describe** prints a compact summary instead of a deep read: one header line (created, source, model), one line per step with its dependencies and `needs:` only when they apply, and at most one short `done:` line per finished or failed step, with wrong premises shown as a count. `Sequencing:`, `Companion:`, `Context:` notes and the re-propose count are no longer printed.

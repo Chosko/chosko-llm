@@ -1016,10 +1016,13 @@ that has none of the conversation the prompts came out of.
   list order. `--from N`, `--to N`
   (they compose: `--from X --to Y` runs that range, inclusive), `--only N` and
   `--model <model>` narrow or redirect the run; the bounds name steps by id
-  and cut the list at those steps' positions. `--relay-spawns` forces the
-  spawn relay described below. A run that stops at its `--to` bound leaves
-  the runbook `[PENDING]`, never `[DONE]`: a bounded run leaves work behind
-  by design.
+  and cut the list at those steps' positions. `--steps N` runs at most N
+  steps in this run and stops: it counts steps actually executed (never ones
+  already done), composes with `--from` (`--from X --steps N` starts at step
+  X), and is refused beside `--to` or `--only`. `--relay-spawns` forces the
+  spawn relay described below. A run that stops at its `--to` bound or its
+  `--steps` count leaves the runbook `[PENDING]`, never `[DONE]` (unless every
+  step is done): a bounded run leaves work behind by design.
 - `/runbook-list` — every runbook as one line: id, status, name, steps done
   over total, created date, source, and its one-line title.
 - `/runbook-describe <name|id>` — a compact summary of one runbook: its index

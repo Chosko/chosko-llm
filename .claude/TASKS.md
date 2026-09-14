@@ -204,7 +204,7 @@ Preconditions: none
 
 ## 208. Add a --steps N flag to /runbook-run that runs a given number of steps, then stops
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/SKILL.md, skills/pipeline-engine/references/routing.md, .claude/domain/features/runbook-suite.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none

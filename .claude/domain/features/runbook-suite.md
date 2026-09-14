@@ -898,6 +898,8 @@ it.
 /runbook-run <name> --to N               stop after step N (inclusive)
 /runbook-run <name> --from X --to Y      run steps X through Y, then stop
 /runbook-run <name> --only N             run exactly step N, then stop
+/runbook-run <name> --steps N            run at most N steps, then stop
+/runbook-run <name> --from X --steps N   begin at step X, run at most N steps
 /runbook-run <name> --model sonnet       override the header model for this run
 /runbook-run <name> --no-commit          write the bookkeeping, commit nothing
 /runbook-run <name> --no-push            commit as usual, skip the push
@@ -924,6 +926,12 @@ step is not, because steps are appended mid-run and the bounds are re-applied
 every step. Reaching a `--to` bound is not completion — the index goes back to
 `[PENDING]` unless the whole runbook is `[x]`, because a bounded run leaves work
 behind by design and `[DONE]` would be a lie.
+
+`--steps N` counts steps executed in this run rather than naming one. It likewise
+does not weaken dependencies, is an error beside `--to` or `--only`, and composes
+with `--from` — selection begins at step X and at most N steps run from there.
+Reaching the count stops the run the way a `--to` bound does: the index goes back
+to `[PENDING]` unless the whole runbook is `[x]`.
 
 The four result cases:
 
