@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 210
+Last task number: 214
 
 ---
 
@@ -228,3 +228,43 @@ Target: claude
 Files: .claude/domain/features/runbook-suite.md, .claude/domain/features/runbook-inline.md, README.md, docs/reference.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 209
 Feature: runbook-inline
+
+---
+
+## 211. Name runbook bodies `<id>-<name>.md` in the schema, add the lazy body-migration protocol, and make /runbook-run resolve and read by `File:`
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/references/runbook-schema.md, skills/runbook-run/references/body-migration.md, skills/runbook-run/references/subagent-contract.md, skills/runbook-run/references/step-amend.md, skills/runbook-run/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: 208, 209
+Feature: runbook-id-filenames
+
+---
+
+## 212. Make /runbook-create write `<id>-<name>.md`, refuse leading-numeric names, and migrate the target of `--append`
+
+Status: [MISSING]
+Target: claude
+Files: commands/runbook-create.md, VERSION, CHANGELOG.md
+Preconditions: 211
+Feature: runbook-id-filenames
+
+---
+
+## 213. Resolve `<id|name|id-name>` in /runbook-clean, /runbook-describe, /pipeline-patch and /pipeline-revise, and update the pipeline-engine routing rows and edge E6
+
+Status: [MISSING]
+Target: claude
+Files: commands/runbook-clean.md, commands/runbook-describe.md, commands/pipeline-patch.md, skills/pipeline-revise/SKILL.md, skills/pipeline-engine/references/routing.md, skills/pipeline-engine/references/graph.md, skills/pipeline-engine/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: 207, 208, 209, 211
+Feature: runbook-id-filenames
+
+---
+
+## 214. Update documentation for feature `runbook-id-filenames`
+
+Status: [MISSING]
+Target: claude
+Files: .claude/domain/features/runbook-suite.md, docs/reference.md, docs/authoring-guide.md, .claude/domain/product-workflow.md, .claude/context/features.md, .claude/context/INDEX.md
+Preconditions: 207, 208, 210, 211, 212, 213
+Feature: runbook-id-filenames
