@@ -10,7 +10,7 @@ Status: [RUNNING]
 File: .claude/runbooks/runbook-suite-improvements.md
 Created: 2026-09-14
 Source: conversation (pipeline-suggest)
-Steps: 1/10
+Steps: 2/10
 
 ---
 

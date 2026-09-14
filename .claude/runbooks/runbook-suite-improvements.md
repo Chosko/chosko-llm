@@ -41,7 +41,7 @@ answer. Then write the task(s).
 
 Done: 5d42edc (pushed to pipeline) — added task 207, a single task (no split). Decisions from the brainstorm and approval: the render is a heading line, one header line (Created/Source/Model), and one line per step (marker, number, title, deps: only when present, needs: only when authored and not agent), plus at most one done: line (sha, short summary, wrong-premise count). Sequencing:, Companion:, Context: and the Do-not-re-propose count are dropped. The command reads the index plus targeted lines from the one body, never a full Read of the body, never task bodies, never other runbooks or the domain/context layers. Needs: inference is removed. Versions: feature 0.1.0 → 0.2.0, root VERSION patch bump. A dated 2026-09-14 grant allows edits to runbook-suite.md on 3 points: the table row, the section and the usage line. Wrong premise: 0.1.0 already forbade printing prompts and never mentioned task bodies. The real cost came from reading the whole body, the Needs: inference, printing Done:/Sequencing:/Context: in full, and no ban on following task ids.
 
-## [ ] 2. Plan the step-count flag for /runbook-run
+## [x] 2. Plan the step-count flag for /runbook-run
 
 Depends on: none
 
@@ -69,6 +69,8 @@ Other planned work also edits skills/runbook-run/SKILL.md (an --inline
 execution mode and id-prefixed body filenames); those are planned by later
 steps and will take Preconditions: on this task, so do not fold them in.
 ```
+
+Done: b10de3c (pushed) — added task 208, a single task: a --steps N flag. Decisions confirmed by the user: the name is --steps N. It counts steps executed in this run (not [x] steps; a resumed [~] or re-run [!] step counts). Reaching the count stops the run like a --to bound ([PENDING] unless every step is [x]). Fewer than N steps left is not an error. Dependencies are never weakened. It composes with --from only. New argument errors: --steps with --to or --only, and a missing or non-positive value. Versions: skill minor bump (0.8.0 → 0.9.0), root VERSION minor bump. A dated 2026-09-14 grant allows edits to runbook-suite.md on 2 points: the usage block and the selection paragraphs. Scope added beyond the prompt: the /runbook-run row in skills/pipeline-engine/references/routing.md (check-routing.sh must pass), plus docs/reference.md and .claude/context/features.md. .claude/skills/runbook-run/ is an older tracked installed snapshot (0.7.0) that the task says to leave alone; only skills/runbook-run/ is edited. Premise note: SKILL.md has no "ARGUMENT NOTE" section; the ARGUMENTS section is the equivalent.
 
 ## [ ] 3. Architect runbook-inline (--inline)
 
@@ -105,7 +107,8 @@ must compose with it.
 
 Depends on: 2, 3
 
-Context: none
+Context:
+- 2026-09-14 (from step 2): the step-count flag task is id 208 (--steps N). It edits skills/runbook-run/SKILL.md and skills/pipeline-engine/references/routing.md. .claude/skills/runbook-run/ is an older installed snapshot (0.7.0), not the source; edit only skills/runbook-run/.
 
 ```prompt
 /task-add feature=runbook-inline
@@ -155,7 +158,9 @@ in-flight run working); state the chosen mechanism explicitly.
 
 Depends on: 1, 2, 4, 5
 
-Context: none
+Context:
+- 2026-09-14 (from step 1): the /runbook-describe rework task is id 207.
+- 2026-09-14 (from step 2): the step-count flag task is id 208 (--steps N). Besides skills/runbook-run/SKILL.md it edits skills/pipeline-engine/references/routing.md and runbook-suite.md. .claude/skills/runbook-run/ is an older installed snapshot (0.7.0), not the source.
 
 ```prompt
 /task-add feature=runbook-id-filenames
@@ -188,7 +193,8 @@ If Context: is empty, read step 1's Done: line in
 
 Depends on: 2
 
-Context: none
+Context:
+- 2026-09-14 (from step 2): step 2 created a single task, id 208.
 
 ```prompt
 /task-implement <the task id(s) step 2 created, as recorded in this step's Context:> -y
