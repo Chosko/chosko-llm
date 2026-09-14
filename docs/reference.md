@@ -1022,10 +1022,13 @@ that has none of the conversation the prompts came out of.
   by design.
 - `/runbook-list` — every runbook as one line: id, status, name, steps done
   over total, created date, source, and its one-line title.
-- `/runbook-describe <name|id>` — one runbook in depth: the header, and every
-  step with its marker, dependencies, whether it needs a person, and the
-  `Done:` line a run wrote for it. The one read-only runbook command that
-  opens a body, and it opens exactly one.
+- `/runbook-describe <name|id>` — a compact summary of one runbook: its index
+  line, one header line (created, source, model), one line per step with its
+  marker, dependencies when it has any and an authored `Needs:` other than
+  `agent`, a one-line `done:` summary for each finished or failed step, and a
+  by-marker count. It pulls only those lines from exactly one body — never a
+  full read, never a step prompt, never a task body — so its cost is roughly
+  what it prints. For the prompts or the full record, open the file.
 - `/runbook-clean` — delete finished runbooks, planning and confirming first.
 - `runbook-suggest` — a skill nobody invokes. It fires on its own description
   when a conversation produces a list worth capturing, points at

@@ -195,7 +195,7 @@ Preconditions: none
 
 ## 207. Rework /runbook-describe into a compact one-runbook summary that never reads prompts or task bodies
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/runbook-describe.md, .claude/domain/features/runbook-suite.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none

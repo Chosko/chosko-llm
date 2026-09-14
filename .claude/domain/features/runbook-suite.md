@@ -101,7 +101,7 @@ copy into `$CLAUDE_HOME`.
 | `skills/runbook-run/` | skill | the orchestrator, plus the shared reference files |
 | `commands/runbook-create.md` | command | authors a runbook, or appends steps to one |
 | `commands/runbook-list.md` | command | read-only listing with status and progress |
-| `commands/runbook-describe.md` | command | read-only deep read of **one** runbook, body included |
+| `commands/runbook-describe.md` | command | read-only compact summary of **one** runbook, lines extracted from its body |
 | `commands/runbook-clean.md` | command | plan-and-confirm removal of `[DONE]` runbooks |
 | `skills/runbook-suggest/` | skill | auto-triggering one-line suggestion, asks nothing |
 
@@ -693,50 +693,61 @@ it looks. Reconciliation belongs to the command that already has the body open.
 
 ---
 
-### `/runbook-describe` — the deep read side
+### `/runbook-describe` — the compact summary of one runbook
 
 `/runbook-list` answers *which runbooks exist and how far did they get* for all
-of them at index cost. `/runbook-describe` answers *what is actually in this
-one* for one of them, and pays a body read to do it. The two are a deliberate
-pair: a `--verbose` flag on the listing would have destroyed the never-open-a-
-body property the listing is built around, which is the whole reason this is a
+of them at index cost. `/runbook-describe` answers *what are this one's steps,
+and how did the finished ones go* for one of them — moderately more than the
+listing's one line, never a dump of the body. The two are a deliberate pair: a
+`--verbose` flag on the listing would have destroyed the never-open-a-body
+property the listing is built around, which is the whole reason this is a
 separate command rather than a flag.
 
-It takes one runbook by name or id and prints four parts: the index heading line
-(id, name, status, progress, title, plus the `Failed at:` continuation for a
-`[FAILED]` runbook), the body header with `Sequencing:` in full and never
-summarised, every step, and a by-marker summary.
+It takes one runbook by name or id and renders exactly this shape:
 
-A step renders as its marker — as the body carries it, so the shape of the run
-reads down the left margin — its number and title, then `depends on:` always
-(`none` included, so a reader never wonders whether the line was missing), then
-`needs:` only where the step is not plain `agent`, then its `Done:` line where a
-run wrote one and its `Context:` bullets where it has any. The `Done:` line is
-**rendered, not summarised**: the sha, the decisions and the wrong premises are
-the three things it records and all three are why someone opened this.
+```
+3. implement-ecc-import   [RUNNING]   4/7   —   Land the ECC import architecture
+   Created: 2026-09-01   Source: /architect ecc-import   Model: sonnet
 
-The ```prompt``` blocks are **not** printed. They are the largest thing in the
-body, and reproducing every one of them would make this a slow way to `cat` the
-file. The command exists to make opening that file an informed decision, not to
-replace it.
+   [x] 1. Add the requires: field to the frontmatter contract
+          done: a1b2c3d — added the field and its cmd-add resolution (+1 wrong premise)
+   [!] 2. Wire cmd-rm's dependents guard            deps: 1
+          done: FAILED — <first clause of the reason>
+   [ ] 3. Update the authoring guide                 deps: 1, 2   needs: agent+human
 
-The read is bounded to **exactly one body** — the runbook asked about, never a
-walk of `.claude/runbooks/` — which is what makes "allowed to read it in full"
-safe to grant at all. Beyond that it behaves exactly like `/runbook-list`: it
-writes nothing, runs no shell, and corrects no status, count or marker however
-wrong the index looks against the body it has just read. It is the one command
-positioned to notice such an inconsistency, and reporting one in prose is fine;
-editing it is `/runbook-run`'s, which re-reads the body every step.
+   7 steps: 4 done, 1 failed, 2 pending.
+   Step 3 needs a person present.
+```
 
-On the `Needs:` field it does one thing the other commands do not. An authored
-value is printed as authoritative. For a step with **no** `Needs:` line — a
-hand-written runbook, or one authored before the field existed — it may read
-the prompt block and print an inferred value, always labelled `(inferred)`,
-only where the prompt names the manual act rather than merely feeling like it
-might involve one, and **never written anywhere**. The note points at
-`/runbook-create --append` instead. That inference is the one place in the suite
-where a guess is rendered at all, which is why it carries a label, a high bar
-and no write.
+The heading line is the index's (plus the `Failed at:` continuation for a
+`[FAILED]` runbook), then one header line of `Created:`, `Source:` and `Model:`.
+`Sequencing:`, `Companion:` and the `## Do not re-propose` count are not
+printed. A step renders on one line as its marker — as the body carries it, so
+the shape of the run reads down the left margin — its number and title, `deps:`
+only when it has dependencies, and `needs:` only when an authored value is not
+`agent`. A step with a `Done:` line gets at most one `done:` line, **summarised**:
+the sha(s) and a short summary, wrong premises as a count only, and a `[!]`
+step's line opening `FAILED —` with the first clause of its reason. No
+`Context:` text is printed. A closing by-marker count and the "need a person
+present" line end it. There is no `--full` flag: a reader who needs the full
+record opens the file.
+
+The ```prompt``` blocks are **never** printed, in whole or in part, and never
+read.
+
+The read budget is **line extraction from exactly one body**: the command reads
+`.claude/RUNBOOKS.md` and pulls only the lines it prints from the one runbook
+asked about — header fields, step headings, `Depends on:`, `Needs:` and the
+first line of each `Done:`, plus the prompt fence lines, read only to discard
+matches that fall inside a prompt block — never a full read of the body, never a walk of
+`.claude/runbooks/`. It never opens `.claude/tasks/` (archive included),
+`.claude/domain/` or `.claude/context/`; a task id in a `Done:` line is printed
+as written and never resolved. A malformed body is reported as found, not
+compensated by reading more. Beyond that it behaves exactly like
+`/runbook-list`: it writes nothing, runs no shell, and corrects no status, count
+or marker however wrong the index looks against the lines it extracted.
+Reporting such an inconsistency in prose is fine; editing it is
+`/runbook-run`'s, which re-reads the body every step.
 
 ---
 
@@ -893,7 +904,7 @@ it.
 /runbook-run <name> --relay-spawns       force the spawn relay for this run
 
 /runbook-list [<STATUS>]
-/runbook-describe <name|id>              print one runbook in depth, body included
+/runbook-describe <name|id>              print a compact summary of one runbook
 /runbook-clean [<name|id> ...] [--no-commit] [--no-push]
 ```
 

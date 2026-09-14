@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.38.1 — 2026-09-14
+
+- **/runbook-describe** prints a compact summary instead of a deep read: one header line (created, source, model), one line per step with its dependencies and `needs:` only when they apply, and at most one short `done:` line per finished or failed step, with wrong premises shown as a count. `Sequencing:`, `Companion:`, `Context:` notes and the re-propose count are no longer printed.
+- It now pulls only the lines it prints from the runbook's body instead of reading the whole file, and never opens the task bodies a `Done:` line mentions, so its cost stays close to the size of its output. It no longer guesses a `Needs:` value for a step that has none.
+
 ## 1.38.0 — 2026-09-13
 
 - **/runbook-run** answers the cloud sandbox's Stop hook with the fixed literal `stop hook refused` instead of re-explaining itself. That hook won't let a turn end on a dirty tree, and an in-flight step is dirty by design — the `[~]` heading and the index's `[RUNNING]` are the resume signal and must stay uncommitted — so the block landed at every step start and every relayed question, each time costing a few hundred tokens and a `git status` to re-derive an answer that never changes.

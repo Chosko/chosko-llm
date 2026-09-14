@@ -1362,26 +1362,24 @@ Currently shipped:
   (`/task-list`'s convention); unknown status names the four valid ones rather
   than printing nothing. Missing/empty index is not an error. **Writes nothing**,
   runs no shell, corrects no status however wrong it looks.
-- `commands/runbook-describe.md` — the deep read side, and the deliberate pair
-  to `/runbook-list`. `requires: skill:runbook-run` for the schema. Takes one
-  runbook by **name or id** and prints it in four parts: the index heading line
-  (id, name, status, progress, title; `Failed at:` continuation for `[FAILED]`),
-  the body header (`Created:`/`Source:`/`Model:`/`Sequencing:`/`Companion:`,
-  `Sequencing:` never summarised), every step (marker as the body carries it,
-  `depends on:` always, `needs:` only when not plain `agent`, `Done:` rendered
-  not summarised for `[x]` and `[!]` alike, `Context:` bullets), then the
-  `## Do not re-propose` item count and a by-marker summary. **The one
-  read-only runbook command allowed to open a body, and it opens exactly one**
-  — never a walk of `.claude/runbooks/` — which is precisely the trade
-  `/runbook-list` refuses; a `--verbose` on the listing would have destroyed the
-  property that listing is built around, which is why this is its own command.
-  **Prompt blocks are NOT printed** (the largest thing in the body; this is not
-  a slow `cat`). `Needs:` is authoritative where authored; for a step lacking
-  one it MAY infer from the prompt block, always rendered `(inferred)`, only
-  where the prompt names the manual act, and **never written anywhere** — the
-  note points at `/runbook-create --append` instead. Writes nothing, runs no
-  shell, corrects no status however wrong the index looks against the body it
-  just read.
+- `commands/runbook-describe.md` — the compact one-runbook summary, and the
+  deliberate pair to `/runbook-list`. `requires: skill:runbook-run` for the
+  schema. Takes one runbook by **name or id** and renders a fixed shape: the
+  index heading line (`Failed at:` continuation for `[FAILED]` only), one header
+  line (`Created:`/`Source:`/`Model:` — no `Sequencing:`, `Companion:` or
+  re-propose count), one line per step (marker as the body carries it, `deps:`
+  only when non-empty, `needs:` only for an authored non-`agent` value), at most
+  one `done:` line per step (sha(s) + short summary, wrong premises as a count,
+  `[!]` opens `FAILED —`), no `Context:` text, then a by-marker count and the
+  "need a person present" line. **Read budget (THE READ BUDGET section):** the
+  index plus Grep line extraction from exactly one body — header fields, step
+  headings, `Depends on:`, `Needs:`, first line of `Done:`, prompt fences only
+  to discard matches inside them. Never a full Read of the body, never prompt
+  text, never `.claude/tasks/` (archive included), `.claude/domain/`,
+  `.claude/context/` or another body; task ids in `Done:` printed as written.
+  Malformed body reported as found, never compensated by reading more. No
+  `Needs:` inference (removed in 0.2.0). Writes nothing, runs no shell,
+  corrects no status however wrong the index looks.
 - `commands/runbook-clean.md` — pruning, `/task-clean`'s plan-and-confirm
   shape, except that it deletes: runbooks have no archive.
   `requires: skill:runbook-run` for the status vocabulary and block shape. Three
