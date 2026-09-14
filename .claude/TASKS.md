@@ -243,7 +243,7 @@ Feature: runbook-id-filenames
 
 ## 212. Make /runbook-create write `<id>-<name>.md`, refuse leading-numeric names, and migrate the target of `--append`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/runbook-create.md, VERSION, CHANGELOG.md
 Preconditions: 211

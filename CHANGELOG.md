@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.42.0 — 2026-09-14
+
+- **/runbook-create** writes a new runbook's body as `<id>-<name>.md`, and its plan shows that path. It refuses a new name whose first segment is all digits (`2026-migration`), suggesting one alternative, so `3-some-name` can never mean two runbooks.
+- `--append` takes the runbook as its id, its name, or `<id>-<name>`. An older `<name>.md` body is renamed to the new form when you append to it (never while it is running), and with `--commit` the rename goes into the append's own commit.
+
 ## 1.41.0 — 2026-09-14
 
 - **Runbook bodies** are now named `<id>-<name>.md` (`3-runbook-slug.md`), so the id you type is the one you see in `.claude/runbooks/`. Every body is opened at the path its `.claude/RUNBOOKS.md` block's `File:` line holds, so older `<name>.md` bodies keep working.
