@@ -72,7 +72,7 @@ steps and will take Preconditions: on this task, so do not fold them in.
 
 Done: b10de3c (pushed) — added task 208, a single task: a --steps N flag. Decisions confirmed by the user: the name is --steps N. It counts steps executed in this run (not [x] steps; a resumed [~] or re-run [!] step counts). Reaching the count stops the run like a --to bound ([PENDING] unless every step is [x]). Fewer than N steps left is not an error. Dependencies are never weakened. It composes with --from only. New argument errors: --steps with --to or --only, and a missing or non-positive value. Versions: skill minor bump (0.8.0 → 0.9.0), root VERSION minor bump. A dated 2026-09-14 grant allows edits to runbook-suite.md on 2 points: the usage block and the selection paragraphs. Scope added beyond the prompt: the /runbook-run row in skills/pipeline-engine/references/routing.md (check-routing.sh must pass), plus docs/reference.md and .claude/context/features.md. .claude/skills/runbook-run/ is an older tracked installed snapshot (0.7.0) that the task says to leave alone; only skills/runbook-run/ is edited. Premise note: SKILL.md has no "ARGUMENT NOTE" section; the ARGUMENTS section is the equivalent.
 
-## [ ] 3. Architect runbook-inline (--inline)
+## [x] 3. Architect runbook-inline (--inline)
 
 Depends on: none
 
@@ -103,12 +103,15 @@ A step-count flag for /runbook-run (recommended --steps N, composes with
 must compose with it.
 ```
 
+Done: 27287f7 (pushed) — wrote .claude/domain/features/runbook-inline.md, added the FEATURES.md entry ([NEW], Source: prompt, Tasks: none) and a domain INDEX row. Decisions approved by the user: --inline changes only how a step is executed (steps 5–6 of the loop) and composes with --from/--to/--only/--steps/--no-commit/--no-push. --relay-spawns and --model are both argument errors beside --inline. The header Model: is not applied, and the opening line says so once. Replacing fresh context: the brief is the authority, the written records win over memory, facts are still propagated, and the opening line discloses the shared context (no cap). The session alternates a bookkeeping phase (today's read/write rules) with an execution phase (never edits the runbook or index). Questions are asked directly in the same fixed block. The inline rules go in a reference file read only under --inline. Markers, Done:, index, commits, resume and the nested-runbook ban are identical. runbook-suite.md was not edited; reconciling it is left to the generated tasks. Premises: none wrong.
+
 ## [ ] 4. Plan tasks for runbook-inline
 
 Depends on: 2, 3
 
 Context:
 - 2026-09-14 (from step 2): the step-count flag task is id 208 (--steps N). It edits skills/runbook-run/SKILL.md and skills/pipeline-engine/references/routing.md. .claude/skills/runbook-run/ is an older installed snapshot (0.7.0), not the source; edit only skills/runbook-run/.
+- 2026-09-14 (from step 3): the runbook-inline design (27287f7) says: every generated task preconditions on task 208; task 208's --steps count definition generalises to "executed and reached step 8 as DONE"; the inline rule set lives in a new reference file under skills/runbook-run/references/, read only under --inline; reconciling runbook-suite.md (its never-does-the-work contracts become default-mode contracts) and the pipeline-engine routing row (check-routing.sh) are part of the generated work.
 
 ```prompt
 /task-add feature=runbook-inline
