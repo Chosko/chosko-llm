@@ -1221,8 +1221,10 @@ Currently shipped:
   its current step), is never read by this body — whatever amends a step
   (`/pipeline-patch`, `pipeline-revise`) reads it by path, and reads and writes
   the body at `File:`. A fifth, `references/body-migration.md` (the lazy rename
-  of a legacy `<name>.md` body: `git mv` to `<id>-<name>.md` then rewrite
-  `File:`, both paths staged in the writing command's one commit; never while
+  of a legacy `<name>.md` body: plain `mv` to `<id>-<name>.md` then rewrite
+  `File:`, nothing staged until the writing command's one commit, which names
+  old path, new path and the index explicitly — never `git mv`, whose staged
+  rename a step's own commit would carry off; never while
   `[RUNNING]`; a taken target path stops, never overwritten; non-git VCS
   mapping), is read ONLY by `/runbook-run` and `/runbook-create --append`, and
   only after the schema's one-sentence check finds a `File:` file name not

@@ -1,6 +1,6 @@
 ---
 name: runbook-create
-version: 0.6.0
+version: 0.6.1
 type: command
 description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/<id>-<name>.md, plus its .claude/RUNBOOKS.md index block — or append steps to one that already exists, including one a run is in the middle of. An append goes at the foot by default; with --before <step> or --after <step> the new steps are written at that position in the list instead, still taking the next unused step id, because a step's id is a stable identifier and not its position — no existing step is ever edited or renumbered. Assigns each new runbook the next id from the index's Last runbook number: counter, which every other runbook- command then accepts in place of the name. Authors each step's optional Needs: line (agent / agent+human / human, absent meaning agent) so a reader can see before starting which steps need a person, and calls those steps out at the confirmation gate. Refuses a new name that is already taken, or whose first kebab segment is all digits, with one suggested alternative. Two axes: where the steps go (a new runbook, --append <id|name|id-name>, which renames a legacy <name>.md body to <id>-<name>.md unless that runbook is running, --append with no name for the runbook this session is running, or no arguments at all, which asks) and where the material comes from (the current conversation's most recent follow-up list, the default; or a free-form description gathered through one batched interview). Enforces ten prompt-quality rules against every step before writing — self-contained, names the document to read first, carries every decision that exists nowhere on disk and nothing that already does, states its sequencing and what must not be re-proposed, uses real slash commands, references no path missing at run time, produces one deliverable, never invokes /runbook-run, and prefers two steps to one that would need a nested spawn — fixing failures and naming each fix in the confirmation report. The gate shows the proposed shape only, never the full prompts. Authoring command — leaves the runbook uncommitted for one review pass by default; pass --commit to commit and push it, or --commit --no-push to commit without pushing.
 requires: skill:runbook-run
@@ -550,10 +550,10 @@ order:
    git commit -m "Add runbook <name>"        # or: "Append <n> steps to runbook <name>"
    ```
 
-   On an append that migrated, `<File: path>` is the new path, and the one
-   commit carries both halves of the rename, which `git mv` already staged —
-   staged exactly as `body-migration.md` § *Staging* says, never in a commit
-   of its own.
+   On an append that migrated, `<File: path>` is the new path, and the same
+   `git add` also names the old path, held from the migration, so the one
+   commit carries both halves of the rename — staged exactly as
+   `body-migration.md` § *Staging* says, never in a commit of its own.
 
    Never a catch-all (`git add -A` / `git add .` / `git add -u`), never an
    empty commit, never `--no-verify` / `--amend` / `--no-gpg-sign`. On commit

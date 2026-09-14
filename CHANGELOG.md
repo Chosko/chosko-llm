@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.42.2 — 2026-09-14
+
+- **/runbook-run** and **/runbook-create --append** rename an older `<name>.md` body with a plain move and stage nothing until their own commit, which names the old path, the new path and `.claude/RUNBOOKS.md` together. Before, the rename was staged at once, so a step's own commit (or your next unrelated one) could carry it away from the `File:` rewrite.
+
 ## 1.42.1 — 2026-09-14
 
 - **/runbook-clean** and **/runbook-describe** take a runbook as its id, its name, or `<id>-<name>`, and open or delete the body wherever its `.claude/RUNBOOKS.md` block's `File:` line points, so older `<name>.md` bodies still work. Neither renames a body.
