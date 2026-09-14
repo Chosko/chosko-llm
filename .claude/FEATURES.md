@@ -163,3 +163,12 @@ Source: prompt
 Tasks: 202, 203, 204, 205
 
 ---
+
+## runbook-inline — `/runbook-run --inline` executes selected steps in the orchestrating session
+
+Status: [NEW]
+Doc: .claude/domain/features/runbook-inline.md
+Source: prompt
+Tasks: none
+
+---
