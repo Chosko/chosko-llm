@@ -39,7 +39,7 @@ The composition, by primitive:
 | `/task-add feature=<slug> --single` | attaches exactly one task to a `[PLANNED]` feature, with no reconciliation over its other tasks |
 | `--before <N>` / `--after <N>` | places it — immediately above or below task N's block — and writes the edge together with the position |
 | the orphan-task prompt | a free-form `/task-add` on a project with `.claude/FEATURES.md` asks whether the task belongs to a feature; `none` keeps a task that belongs to no feature free-form |
-| `/runbook-create --append <name\|id> --before <n>` / `--after <n>` | inserts a step at that position under the next unused step id |
+| `/runbook-create --append <id\|name\|id-name> --before <n>` / `--after <n>` | inserts a step at that position under the next unused step id |
 
 For the worked example — a task inserted after task N on a planned feature,
 which a runbook runs — in order:
@@ -56,7 +56,7 @@ which a runbook runs — in order:
    one step per successor that must now wait on the new task. Under
    `--before <N>` task N needs no step: `/task-add` writes that edge with the
    placement.
-4. **The runbook step** — `/runbook-create --append <name|id> --after <n>`
+4. **The runbook step** — `/runbook-create --append <id|name|id-name> --after <n>`
    (or `--before <n>`), the insert
    `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/step-amend.md`
    § *Insert* names, placed so the step running the new task sits ahead of the

@@ -1,8 +1,8 @@
 ---
 name: pipeline-revise
-version: 0.2.0
+version: 0.2.1
 type: skill
-description: Revise work that is already planned — change, insert into, remove from or reorder a feature document, a task or a runbook step — through the owners of every artifact the change reaches. Probes, resolves an anchor (feature=<slug>, task=<N> or runbook=<name|id> step=<n>, or one the description names), classifies the request into exactly one branch — amend, insert, delete or reorder — and reads only that branch's file, then runs the impact walk in both directions over the pipeline's index graph, opening bodies only within the anchor's scope. /pipeline-check scoped to the anchor runs before the proposal and again after actuation, and the report shows the difference. The proposal names its tier — editorial, local or structural — the artifacts touched, the owner steps in order and the lint findings it will create or clear, behind a single gate that asks every time whether the change is editorial; nothing is written before it. Three or fewer owner steps run in the session, one at a time, each through its owner's amend arm or command with that owner's own gate intact; at four or more steps the gate also offers to hand the plan to /runbook-create and stop, when that command is installed. Removal is [SKIP] or a struck step, never physical deletion. Writes no line any owner owns and has no commit of its own — --commit / --no-push are forwarded to each owner step. For a change one owner's amend arm covers, /pipeline-patch is the cheaper tool.
+description: Revise work that is already planned — change, insert into, remove from or reorder a feature document, a task or a runbook step — through the owners of every artifact the change reaches. Probes, resolves an anchor (feature=<slug>, task=<N> or runbook=<id|name|id-name> step=<n>, or one the description names), classifies the request into exactly one branch — amend, insert, delete or reorder — and reads only that branch's file, then runs the impact walk in both directions over the pipeline's index graph, opening bodies only within the anchor's scope. /pipeline-check scoped to the anchor runs before the proposal and again after actuation, and the report shows the difference. The proposal names its tier — editorial, local or structural — the artifacts touched, the owner steps in order and the lint findings it will create or clear, behind a single gate that asks every time whether the change is editorial; nothing is written before it. Three or fewer owner steps run in the session, one at a time, each through its owner's amend arm or command with that owner's own gate intact; at four or more steps the gate also offers to hand the plan to /runbook-create and stop, when that command is installed. Removal is [SKIP] or a struck step, never physical deletion. Writes no line any owner owns and has no commit of its own — --commit / --no-push are forwarded to each owner step. For a change one owner's amend arm covers, /pipeline-patch is the cheaper tool.
 requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run
 ---
 
@@ -12,7 +12,7 @@ requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbo
 # steps — by walking the impact, proposing a tiered plan behind one gate, and
 # running each owner's own amend arm or command in order. Writes nothing itself.
 # Usage: /pipeline-revise [<anchor>] "<change>" [--commit] [--no-push]
-#        anchor: feature=<slug> | task=<N> | runbook=<name|id> step=<n>
+#        anchor: feature=<slug> | task=<N> | runbook=<id|name|id-name> step=<n>
 # Examples: /pipeline-revise feature=password-auth "Data and state: sessions expire after 30 days"
 #           /pipeline-revise task=42 "insert a task after 42 that migrates the config format"
 #           /pipeline-revise runbook=implement-auth step=4 "strike it — task 44 was dropped"
@@ -87,7 +87,7 @@ Then scan for an anchor in exactly one of three forms, and strip it:
 
 - `feature=<slug>`
 - `task=<N>`
-- `runbook=<name|id> step=<n>`
+- `runbook=<id|name|id-name> step=<n>`
 
 What remains is the change, as one quoted string. An empty change stops with:
 `/pipeline-revise needs the change to make, e.g. /pipeline-revise task=42 "Hints: point at the new loader".`
@@ -112,10 +112,10 @@ also where step 6 reads which owners are installed.
   `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`
   § *The archive*; one above it was never assigned. Either way there is no live
   task to revise: stop, say which, and list the live tasks, id and title.
-- `runbook=<name|id> step=<n>` — the runbook resolved by
+- `runbook=<id|name|id-name> step=<n>` — the runbook resolved by
   `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`
-  § *The store*'s one rule; an unknown one stops listing the runbooks in
-  `.claude/RUNBOOKS.md`. The step by id in its body — the anchor's target
+  § *Resolving a runbook argument* — id, name or `<id>-<name>`; one that does
+  not resolve stops listing the runbooks in `.claude/RUNBOOKS.md`. The step by id in its body — the anchor's target
   artifact, read here; an unknown id stops listing the runbook's steps, id,
   marker and title, in list order.
 
@@ -170,7 +170,7 @@ proposal is built, so the plan starts from the true state:
 - `task=<N>` → `/pipeline-check feature=<slug>` with the slug on the task's
   `Feature:` line when it resolves in `.claude/FEATURES.md`, otherwise
   `/pipeline-check` unscoped;
-- `runbook=<name|id> step=<n>` → `/pipeline-check` unscoped — no index line
+- `runbook=<id|name|id-name> step=<n>` → `/pipeline-check` unscoped — no index line
   ties a runbook to a slug, so the command has no runbook scope.
 
 When `/pipeline-check` is not installed, evaluate

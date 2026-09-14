@@ -1,8 +1,8 @@
 ---
 name: runbook-describe
-version: 0.2.0
+version: 0.2.1
 type: command
-description: Print a compact summary of one runbook — a little more than its /runbook-list line and far less than its body. The index heading line (id, status, name, progress, title), one header line with Created, Source and Model, then one line per step with its marker, number and title, its dependencies when it has any and its Needs value when an authored one is not agent, plus at most one short done line per step that a run finished or failed, and a closing by-marker count naming the steps that need a person. Takes the runbook's kebab-case name or the numeric id the index assigns it. Reads the index and pulls only the lines it prints from that one runbook's body by targeted line extraction — never a full read of the body, never a step prompt, never a task body, never another runbook. Task ids in a Done line are printed as written and never followed. Writes nothing, runs no shell command including git, and corrects no status, count or marker however wrong it looks against the body.
+description: Print a compact summary of one runbook — a little more than its /runbook-list line and far less than its body. The index heading line (id, status, name, progress, title), one header line with Created, Source and Model, then one line per step with its marker, number and title, its dependencies when it has any and its Needs value when an authored one is not agent, plus at most one short done line per step that a run finished or failed, and a closing by-marker count naming the steps that need a person. Takes the runbook as the numeric id the index assigns it, its kebab-case name, or `<id>-<name>`, and reads the body at the index block's File: path. Reads the index and pulls only the lines it prints from that one runbook's body by targeted line extraction — never a full read of the body, never a step prompt, never a task body, never another runbook. Task ids in a Done line are printed as written and never followed. Writes nothing, runs no shell command including git, and corrects no status, count or marker however wrong it looks against the body.
 requires: skill:runbook-run
 ---
 
@@ -10,11 +10,11 @@ requires: skill:runbook-run
 # Global command: print a compact summary of one runbook — heading, one header
 # line, one line per step with an optional one-line done: summary, and a
 # closing count. Read-only — never modifies any file. Reads the index and
-# extracts lines from exactly one body under `.claude/runbooks/`.
-# Usage: /runbook-describe <name>
-#        /runbook-describe <id>
+# extracts lines from exactly one body, at its index block's `File:` path.
+# Usage: /runbook-describe <id|name|id-name>
 # Examples: /runbook-describe implement-ecc-import
 #           /runbook-describe 3
+#           /runbook-describe 3-implement-ecc-import
 
 GOAL
 Answer the question `/runbook-list` deliberately cannot: **what are this
@@ -85,18 +85,19 @@ this is a separate command.
 
 RESOLVING THE ARGUMENT
 
-`$ARGUMENTS`, trimmed, names one runbook — its kebab-case name, or the numeric
-id its index block carries. The resolution rule is `runbook-schema.md`'s one
-rule and is not restated: a bare all-digits argument is an id, anything else a
-name.
+`$ARGUMENTS`, trimmed, names one runbook — as `<id>`, `<name>` or
+`<id>-<name>`. It is resolved to exactly one index block by
+`runbook-schema.md` § *Resolving a runbook argument*, whose checks, errors and
+ambiguity report are not restated here.
 
 - **No argument** — print the usage line and stop. Do not pick a runbook,
   do not default to the most recent, and do not fall back to listing them all;
   that is `/runbook-list`.
-- **An unknown name or id** — say which argument did not resolve, list the
-  runbooks that do exist (id, status and name, from the index), and stop.
-  Never guess at a near match, and never fall back from an id that matched
-  nothing to a name that looks similar.
+- **An argument that does not resolve** — unknown, a compound whose halves
+  disagree, or an ambiguity — report it as the schema says, list the runbooks
+  that do exist (id, status and name, from the index), and stop. Never guess
+  at a near match, and never fall back from one half of an argument to the
+  other.
 - **A missing or empty `.claude/RUNBOOKS.md`** — not an error. One line and
   stop:
 

@@ -253,7 +253,7 @@ Feature: runbook-id-filenames
 
 ## 213. Resolve `<id|name|id-name>` in /runbook-clean, /runbook-describe, /pipeline-patch and /pipeline-revise, and update the pipeline-engine routing rows and edge E6
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/runbook-clean.md, commands/runbook-describe.md, commands/pipeline-patch.md, skills/pipeline-revise/SKILL.md, skills/pipeline-engine/references/routing.md, skills/pipeline-engine/references/graph.md, skills/pipeline-engine/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 207, 208, 209, 211

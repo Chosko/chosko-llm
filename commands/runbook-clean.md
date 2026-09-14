@@ -1,24 +1,25 @@
 ---
 name: runbook-clean
-version: 0.2.0
+version: 0.2.1
 type: command
-description: Prune finished runbooks — delete each body file under .claude/runbooks/ and remove its .claude/RUNBOOKS.md index block, including the surrounding --- rules. With no argument the plan is every [DONE] runbook; with names or ids, exactly those — a bare all-digits argument is an id, anything else a name. Survivors are never renumbered and the counter never moves down, so a pruned id is never handed out again. Only [DONE] is eligible — [PENDING] is unstarted work, [RUNNING] is a run someone is in the middle of, and [FAILED] is a halt that still needs a decision — and there is no --force and no status argument widening the set. A named runbook that is not [DONE] is refused by name with its actual status, an unknown name aborts the whole run before anything is deleted, and an empty plan says so and stops without asking. Always plans and confirms before writing. Automatically commits and pushes the removals; pass --no-commit to leave them uncommitted, or --no-push to commit without pushing.
+description: Prune finished runbooks — delete each body file under .claude/runbooks/ and remove its .claude/RUNBOOKS.md index block, including the surrounding --- rules. With no argument the plan is every [DONE] runbook; with runbooks given as `<id>`, `<name>` or `<id>-<name>`, exactly those, resolved by the runbook schema's rule. Each body is deleted at whatever path its index block's File: line holds, and is never renamed. Survivors are never renumbered and the counter never moves down, so a pruned id is never handed out again. Only [DONE] is eligible — [PENDING] is unstarted work, [RUNNING] is a run someone is in the middle of, and [FAILED] is a halt that still needs a decision — and there is no --force and no status argument widening the set. A named runbook that is not [DONE] is refused by name with its actual status, an unknown name aborts the whole run before anything is deleted, and an empty plan says so and stops without asking. Always plans and confirms before writing. Automatically commits and pushes the removals; pass --no-commit to leave them uncommitted, or --no-push to commit without pushing.
 requires: skill:runbook-run
 ---
 
 # /runbook-clean
 # Global command: prune runbooks in the terminal status from the project's
-# runbook store. Deletes the matched runbook's body file at
-# `.claude/runbooks/<name>.md` and removes its summary block from
+# runbook store. Deletes the matched runbook's body file at the path its
+# index block's `File:` line holds and removes that block from
 # `.claude/RUNBOOKS.md`. Always reports the plan and asks for explicit
 # confirmation before writing or deleting anything.
 # Usage: /runbook-clean
-#        /runbook-clean <name|id> [<name|id> ...]
-#        /runbook-clean [<name|id> ...] --no-commit   (delete, skip the commit and push)
-#        /runbook-clean [<name|id> ...] --no-push     (commit as usual, skip the push)
+#        /runbook-clean <id|name|id-name> [<id|name|id-name> ...]
+#        /runbook-clean [<id|name|id-name> ...] --no-commit   (delete, skip the commit and push)
+#        /runbook-clean [<id|name|id-name> ...] --no-push     (commit as usual, skip the push)
 # Examples: /runbook-clean
 #           /runbook-clean ecc-import-landing
 #           /runbook-clean 1 5
+#           /runbook-clean 1-ecc-import-landing
 #           /runbook-clean ecc-import-landing context-layer-refresh
 #           /runbook-clean --no-commit
 
@@ -42,8 +43,8 @@ $ARGUMENTS
 ARGUMENT NOTE
 
 Scan `$ARGUMENTS` and strip the flags below before STAGE 1 resolves anything;
-what is left is this command's own argument — a list of runbook names or ids,
-or empty for the default.
+what is left is this command's own argument — a list of runbooks, each as
+`<id>`, `<name>` or `<id>-<name>`, or empty for the default.
 
 | Flag | Effect |
 | --- | --- |
@@ -113,19 +114,24 @@ STAGE 1 — RESOLVE (no file writes, no deletions)
 
 2. Parse every block per `runbook-schema.md` § *The index block*: the id, the
    name and the one-line title from the heading, then `Status:`, `File:`,
-   `Created:`, `Source:` and `Steps:`. `/runbook-clean` is the one runbook command that
-   needs `File:` — it is the path to delete.
+   `Created:`, `Source:` and `Steps:`. `File:` is the path to delete — whatever
+   it holds, an `<id>-<name>.md` path or a legacy `<name>.md` one, per
+   `runbook-schema.md` § *`File:` is the body's path*. The path is never built
+   from the name.
 
 3. Resolve the set:
 
    - **No argument** — every runbook whose status is `[DONE]`. Nothing else.
-   - **Names or ids given** — exactly those runbooks, in the order the user
-     named them. Each argument is resolved by `runbook-schema.md` § *The
-     store*'s one rule: a bare all-digits argument is an id, anything else a
-     name. The set is never widened past what was asked for.
+   - **Runbooks given** — exactly those runbooks, in the order the user
+     named them. Each argument — `<id>`, `<name>` or `<id>-<name>` — is
+     resolved to one block by `runbook-schema.md` § *Resolving a runbook
+     argument*, which is not restated here. The set is never widened past what
+     was asked for.
 
-4. **An unknown name or id aborts the whole run**, before anything is deleted.
-   Say which argument is not in the index, list the runbooks that are, and stop
+4. **An argument that does not resolve aborts the whole run**, before anything
+   is deleted — an unknown one, a compound whose halves disagree, or an
+   ambiguity, each reported as the schema says. Say which argument did not
+   resolve, list the runbooks that are in the index, and stop
    — do not remove the ones that were recognised. A partial deletion from a
    mistyped list is the worst outcome available here, and it is silent: the
    user sees a success report naming fewer runbooks than they typed and has no
@@ -166,10 +172,10 @@ Index file: .claude/RUNBOOKS.md
 
 Runbooks to remove (2):
   1. ecc-import-landing    [DONE]  7/7   created 2026-08-24
-      body file:   .claude/runbooks/ecc-import-landing.md
+      body file:   .claude/runbooks/1-ecc-import-landing.md
       index block: .claude/RUNBOOKS.md
   5. context-layer-refresh [DONE]  3/3   created 2026-08-26
-      body file:   .claude/runbooks/context-layer-refresh.md
+      body file:   .claude/runbooks/5-context-layer-refresh.md
       index block: .claude/RUNBOOKS.md
 
 Refused (1):
@@ -183,6 +189,9 @@ Nothing else in .claude/runbooks/ is touched.
   line when it did, so a reader knows the number is new. `Steps:` is printed as the index carries it. Printing the id as
   well as the name is what lets a user check that the runbook they typed a
   number for is the one about to be deleted.
+- The body file is the block's `File:` value, printed verbatim — a legacy
+  `<name>.md` path is listed as it stands, never corrected to the prefixed
+  form.
 - Probe each body path with the Read tool before listing it. A body file that
   is unexpectedly missing is **noted in the plan** — `(body file: … —
   MISSING)` — and does not error out; its index block is still removed, which
@@ -203,8 +212,9 @@ STAGE 3 — REMOVE AND COMMIT (only after explicit approval)
 ### Remove
 
 1. Delete each body file. Use Bash:
-   `rm .claude/runbooks/ecc-import-landing.md .claude/runbooks/context-layer-refresh.md`
-   Skip any the plan flagged as already missing.
+   `rm .claude/runbooks/1-ecc-import-landing.md .claude/runbooks/5-context-layer-refresh.md`
+   — each path exactly as its block's `File:` holds it. Skip any the plan
+   flagged as already missing.
 
 2. Use the Edit tool on `.claude/RUNBOOKS.md` to remove each matched index
    block **including its surrounding `---` rules**. A block that is deleted
@@ -260,7 +270,7 @@ Otherwise follow the commit-and-push protocol — four steps, in this order:
    `.claude/RUNBOOKS.md`, by explicit path, and make one commit:
 
    ```
-   git add -- .claude/runbooks/ecc-import-landing.md .claude/RUNBOOKS.md
+   git add -- .claude/runbooks/1-ecc-import-landing.md .claude/RUNBOOKS.md
    git commit -m "Prune 1 done runbook: ecc-import-landing"
    ```
 
@@ -296,6 +306,8 @@ DO NOT:
 - Ask for confirmation on an empty plan. Say it is empty and stop.
 - Remove an index block without its surrounding `---` rules.
 - Edit a runbook body file, for any reason.
+- Rename or migrate a body, or read `body-migration.md`. A body is deleted
+  wherever `File:` says it is, a legacy `<name>.md` path included.
 - Change a `Status:`, `Steps:`, `Created:`, `Source:` or `Failed at:` line on a
   surviving runbook, however wrong it looks. That is `/runbook-run`'s to fix.
 - Delete the index's title line or its `Last runbook number:` counter when the

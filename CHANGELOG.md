@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.42.1 — 2026-09-14
+
+- **/runbook-clean** and **/runbook-describe** take a runbook as its id, its name, or `<id>-<name>`, and open or delete the body wherever its `.claude/RUNBOOKS.md` block's `File:` line points, so older `<name>.md` bodies still work. Neither renames a body.
+- **/pipeline-patch** and **/pipeline-revise** accept the same three forms in their `runbook=` anchor.
+
 ## 1.42.0 — 2026-09-14
 
 - **/runbook-create** writes a new runbook's body as `<id>-<name>.md`, and its plan shows that path. It refuses a new name whose first segment is all digits (`2026-migration`), suggesting one alternative, so `3-some-name` can never mean two runbooks.
