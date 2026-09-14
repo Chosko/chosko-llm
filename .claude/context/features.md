@@ -716,7 +716,8 @@ Currently shipped:
   untouched from its summary block, body opened only when that can't
   decide — that refuses only on a touched `[IN PROGRESS]` task and stales
   only touched tasks; one gate asking every time whether the change is
-  editorial; no progress marker), `tech-stack-
+  editorial — under `/pipeline-revise` it confirms the answer carried from
+  the revise gate instead of re-asking; no progress marker), `tech-stack-
   selection.md` (no existing stack in either form — an existing stack
   always wins), `council-gate.md` (PHASE 2 hit a genuine design fork —
   optional delegation to the claude-council skill this repo ships (opt-in,
@@ -1043,7 +1044,8 @@ Currently shipped:
   that reached each plus the untouched ones listed for overruling, numbered
   owner steps, expected lint delta, then the editorial question asked EVERY
   run, never inferred — A editorial / B not editorial, here / C as a runbook /
-  D stop; C rendered only at FOUR OR MORE owner steps AND `/runbook-create`
+  D stop; the answer is carried into each `/architect amend` step, whose gate
+  shows it for confirmation; C rendered only at FOUR OR MORE owner steps AND `/runbook-create`
   installed (read off the verdict line's `installed` field, omitted silently
   otherwise — the council gate's optional-delegation shape). Actuation:
   sequential in the session, never parallel, never subagents, each owner's

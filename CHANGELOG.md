@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.44.0 — 2026-09-14
+
+- **/pipeline-revise** no longer asks the editorial question twice. Your answer at its gate carries into the `/architect amend` step, whose gate still shows the full change, touched tasks and outcome but asks you to confirm that answer (or switch, or stop) instead of repeating the question.
+- Standalone **/architect amend** and **/pipeline-patch** still ask the full question every time.
+
 ## 1.43.0 — 2026-09-14
 
 - **/pipeline-revise** amend branch: when `/architect amend` stales a task or moves the feature to `[ITERATED]`, the plan now runs one `/task-add feature=<slug>` reconciliation instead of amending each staled task. Reconciliation rewrites those tasks, clears `[STALE]`, drafts tasks for the added scope and returns the feature to `[PLANNED]`. Before, the same tasks were rewritten twice behind two sets of gates, and you still had to reconcile afterwards. The gate shows both forms.

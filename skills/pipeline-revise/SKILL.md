@@ -1,6 +1,6 @@
 ---
 name: pipeline-revise
-version: 0.3.0
+version: 0.3.1
 type: skill
 description: Revise work that is already planned — change, insert into, remove from or reorder a feature document, a task or a runbook step — through the owners of every artifact the change reaches. Probes, resolves an anchor (feature=<slug>, task=<N> or runbook=<id|name|id-name> step=<n>, or one the description names), classifies the request into exactly one branch — amend, insert, delete or reorder — and reads only that branch's file, then runs the impact walk in both directions over the pipeline's index graph, opening bodies only within the anchor's scope. /pipeline-check scoped to the anchor runs before the proposal and again after actuation, and the report shows the difference. The proposal names its tier — editorial, local or structural — the artifacts touched, the owner steps in order and the lint findings it will create or clear, behind a single gate that asks every time whether the change is editorial; nothing is written before it. Three or fewer owner steps run in the session, one at a time, each through its owner's amend arm or command with that owner's own gate intact; at four or more steps the gate also offers to hand the plan to /runbook-create and stop, when that command is installed. Removal is [SKIP] or a struck step, never physical deletion. Writes no line any owner owns and has no commit of its own — --commit / --no-push are forwarded to each owner step. For a change one owner's amend arm covers, /pipeline-patch is the cheaper tool.
 requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run
@@ -220,7 +220,8 @@ and before any write:
 
 The question is asked on every run, whatever the tier — never inferred,
 classified or skipped. The tier decides how long the sequence is; it never
-decides whether the question is asked.
+decides whether the question is asked. The answer carried into owner steps
+(step 8) is the one the user gives here, and only that one.
 
 Arm C is rendered only when B's sequence has **four or more** owner steps and
 `/runbook-create` is installed — detected at run time from the verdict line's
@@ -246,6 +247,12 @@ parallel, never in a subagent. Before each, one line:
 executed from its file by path, or a command invoked as the user would invoke
 it, with the flags COMMITTING forwards. The owner's own gate is asked exactly
 as the owner asks it. After each, its closing line, as the owner writes it.
+
+An `/architect amend` step — in whichever branch runs one — receives the
+editorial answer the user gave at step 7's gate: A as *editorial*, B as *not
+editorial*. The arm's gate still renders in full and still needs an explicit
+reply, but shows that answer as a confirmation rather than asking the question
+again (`architect/amend.md` § 4). No other owner receives it.
 
 A later step that an earlier step's outcome made moot — an `/architect amend`
 answered editorial leaves no stale task for a later step to amend — is
@@ -336,6 +343,8 @@ DO NOT:
   arm or an owner command.
 - Write, or let an arm write, anything before the gate. Ask a second gate of
   your own, or infer, classify, pre-answer or skip the editorial question.
+  Carrying the user's own answer into an `/architect amend` step as a
+  confirmation (step 8) is not pre-answering; carrying anything else is.
 - Read the backlog in bulk: open a body outside step 4's scope, open every
   task body, or open anything under `.claude/tasks/archive/`.
 - Read a branch file before CLASSIFY has chosen it, or read a second one.

@@ -104,7 +104,9 @@ name it. Never a bulk read.
 **Tiers, one gate.** The proposal names the tier — editorial, local or
 structural — the artifacts touched, the owner steps in order and the lint
 findings the change will create or clear. The editorial question is always
-asked, never inferred. The user confirms once; nothing is written before.
+asked, never inferred; the answer passes through to the `/architect amend`
+arm it drives, whose gate shows it for confirmation instead of asking again.
+The user confirms once; nothing is written before.
 
 **Verification bracket.** The scoped lint runs before the proposal, so the
 plan starts from the true state, and again after actuation, and the report
@@ -159,7 +161,8 @@ ledger is introduced.
   patcher requires.
 - Hard contracts: neither surface writes a line an owner owns; the patcher
   never opens a body; the reviser opens bodies only within the anchor's
-  scope; the editorial question is always asked; the runbook is never written
+  scope; the editorial question is always asked — at the revise gate, and
+  confirmed there, not re-asked, at the `/architect amend` step; the runbook is never written
   without the user's choice; the lint runs before and after every revise.
 
 Failure contract: an anchor that resolves to nothing stops by listing what

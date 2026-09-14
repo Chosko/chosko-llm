@@ -247,6 +247,10 @@ only, with nothing any task builds changing?
   existing task covers.
 - *Stop* writes nothing.
 
+When `/pipeline-revise` runs the arm, you already answered this at its gate,
+so the arm shows that answer and asks you to confirm it, switch, or stop,
+instead of asking the question again.
+
 A `[NEW]` feature has no tasks, so it gets no guard, but it still gets the
 question and stays `[NEW]` either way. An amendment writes no progress
 marker, and `--commit` / `--no-push` work as on any other run.
@@ -686,7 +690,8 @@ The runbook option is offered only when the sequence has **four or more**
 owner steps and `/runbook-create` is installed; otherwise it simply isn't
 shown. Three steps or fewer always run in the session. You can overrule the
 tier or a touched/untouched call in the same answer, and the gate is shown
-again.
+again. Your answer carries into any `/architect amend` step, whose own gate
+then asks you to confirm it rather than asking the question again.
 
 **Running the steps.** One at a time, in order, never in parallel and never
 in a subagent, each with its owner's own approval gate intact. If an owner

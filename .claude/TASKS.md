@@ -15,7 +15,7 @@ Preconditions: none
 
 ## 216. Carry `/pipeline-revise`'s editorial answer into the `/architect amend` step as a confirmation
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/architect/amend.md, skills/pipeline-revise/SKILL.md, skills/pipeline-revise/amend.md, skills/pipeline-revise/insert.md, skills/pipeline-revise/delete.md, .claude/domain/features/pipeline-revision.md, VERSION, CHANGELOG.md
 Preconditions: 215
