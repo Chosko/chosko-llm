@@ -1020,7 +1020,12 @@ that has none of the conversation the prompts came out of.
   steps in this run and stops: it counts steps actually executed (never ones
   already done), composes with `--from` (`--from X --steps N` starts at step
   X), and is refused beside `--to` or `--only`. `--relay-spawns` forces the
-  spawn relay described below. A run that stops at its `--to` bound or its
+  spawn relay described below. `--inline` executes every selected step in
+  this session instead of a fresh subagent per step, so the steps share one
+  context; it works with `--from`, `--to`, `--only`, `--steps`, `--no-commit`
+  and `--no-push`, is refused beside `--relay-spawns` (there is no step
+  subagent to relay for) or `--model` (the session can't change its own
+  model), and doesn't apply the runbook header's `Model:`. A run that stops at its `--to` bound or its
   `--steps` count leaves the runbook `[PENDING]`, never `[DONE]` (unless every
   step is done): a bounded run leaves work behind by design.
 - `/runbook-list` — every runbook as one line: id, status, name, steps done

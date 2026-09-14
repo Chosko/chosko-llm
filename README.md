@@ -368,10 +368,12 @@ list of self-contained prompts, each written for a fresh agent that has none
 of the conversation, and checks ten rules before it writes (self-contained,
 names its document, carries every decision that exists nowhere on disk and
 nothing that already does). **`/runbook-run`** executes it one step at a
-time, one subagent per step, relaying each agent's questions to you and your
-answers back, committing after every step. It never runs steps in parallel,
-never does a step's work itself, and never reviews what a step did; that is
-`/task-review`'s job, invoked from inside the step. `/runbook-list`,
+time, by default one subagent per step, relaying each agent's questions to you
+and your answers back, committing after every step. It never runs steps in
+parallel, by default never does a step's work itself, and never reviews what a
+step did; that is `/task-review`'s job, invoked from inside the step.
+`--inline` is the one opt-in exception: it executes the selected steps in your
+own session, sharing one context, instead of spawning a subagent for each. `/runbook-list`,
 `/runbook-describe` and `/runbook-clean` round out the set, and
 `runbook-suggest` fires on its own when a conversation produces a list worth
 capturing.

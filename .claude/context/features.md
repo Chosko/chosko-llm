@@ -1202,7 +1202,9 @@ Currently shipped:
   and `references/subagent-contract.md` (the OPERATING RULES block pasted
   verbatim into every spawned prompt — two placeholders, `<RUNBOOK>` and `<N>`,
   and it now carries the `SPAWN REQUEST` rule), both cited by the other three by
-  `${CLAUDE_HOME:-$HOME/.claude}/...` path. A third, `references/step-amend.md`
+  `${CLAUDE_HOME:-$HOME/.claude}/...` path. A third, `references/inline-contract.md`,
+  holds the fixed inline rule set that replaces the OPERATING RULES under
+  `--inline`, read only when that flag is passed. A fourth, `references/step-amend.md`
   (amending one pending step: strike it as `[x]` with a `Done:` line opening
   `struck — <reason>` and no commit sha, never deleted or renumbered; insert
   through `/runbook-create --append --before`/`--after`; add dated `Context:`
@@ -1285,7 +1287,11 @@ Currently shipped:
   Chosen after a `SessionStart` hook that patched `stop-hook-git-check.sh` in
   place was written and abandoned — a script rewriting a session guard reads as
   weakening it, and cloud sessions (the only place its positive-only gate can
-  fire) refuse to run, install or commit it. Hard contracts: steps are **always sequential** (never parallel,
+  fire) refuse to run, install or commit it. Hard contracts (the reads/writes,
+  does-no-work and subagent-result ones are **default-mode contracts**; `--inline`
+  is their one opt-in exception, executing every selected step in the session
+  itself, refused beside `--relay-spawns` or `--model` — see
+  `.claude/domain/features/runbook-inline.md`): steps are **always sequential** (never parallel,
   even when declared independent — one question stream, and two agents would
   race on `Done:` lines); it **writes exactly two files** and does none of the
   work itself; **no step is ticked before its subagent's result arrives**; it

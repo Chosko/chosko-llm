@@ -6,7 +6,9 @@ written to be executed by a fresh agent that has none of the conversation the
 prompts came out of. `/runbook-run` walks one top to bottom, spawning one
 subagent per step, relaying that subagent's questions to the user and the
 user's answers back to the same subagent, recording what each step actually did,
-and committing after every step.
+and committing after every step. Spawning one subagent per step is the default
+mode; the one opt-in exception, executing the steps in the orchestrating
+session, is [runbook-inline](./runbook-inline.md).
 
 ## Purpose
 
@@ -330,7 +332,11 @@ same rule that stops it correcting a `Steps:` count it thinks is wrong.
 
 ### `/runbook-run` — the orchestrator
 
-**The execution loop.**
+**The execution loop.** Steps 5 and 6 below, and the orchestrator's contracts
+that follow — it reads only `CLAUDE.md`, the runbook and the index, writes only
+the runbook and the index, and never does a step's work — are **default-mode
+contracts**. Under `--inline` they apply as
+[runbook-inline](./runbook-inline.md)'s contract table scopes them.
 
 1. **Resolve.** Read the index block and the body. An unknown name reports the
    available ones. A `[DONE]` runbook with no `--only`/`--from`/`--to` says so
@@ -901,6 +907,7 @@ it.
 /runbook-run <name> --steps N            run at most N steps, then stop
 /runbook-run <name> --from X --steps N   begin at step X, run at most N steps
 /runbook-run <name> --model sonnet       override the header model for this run
+/runbook-run <name> --inline             execute the selected steps in this session
 /runbook-run <name> --no-commit          write the bookkeeping, commit nothing
 /runbook-run <name> --no-push            commit as usual, skip the push
 /runbook-run <name> --relay-spawns       force the spawn relay for this run

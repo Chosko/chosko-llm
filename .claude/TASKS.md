@@ -223,7 +223,7 @@ Feature: runbook-inline
 
 ## 210. Update documentation for feature `runbook-inline`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: .claude/domain/features/runbook-suite.md, .claude/domain/features/runbook-inline.md, README.md, docs/reference.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 209

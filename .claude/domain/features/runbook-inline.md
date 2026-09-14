@@ -100,7 +100,8 @@ The session assembles the same brief the spawned prompt carries — preamble,
 `Companion:` background, `## Do not re-propose`, `Context:`, the verbatim
 prompt block — and executes against it in that order. In place of the
 subagent contract's OPERATING RULES it follows a fixed inline rule set, kept
-in a reference file beside the contract and read only when `--inline` is
+in a reference file beside the contract,
+`skills/runbook-run/references/inline-contract.md`, and read only when `--inline` is
 passed, so a default run never loads it.
 
 ### Replacing the fresh context
