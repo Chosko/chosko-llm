@@ -328,7 +328,7 @@ Run ends w/ feature at `[PLANNED]`, `Tasks:` line listing surviving and newly cr
 
 Changing work already planned — design decision, feature doc, task, runbook step. Before these: an amendment meant re-running whichever owner held the artifact, one command + one gate per artifact, user carrying the sequence and the forgotten step. Two surfaces, two costs. Both explicit, never auto-triggered; neither a writer — every write is an owner's, through the Amend entry `pipeline-engine`'s `routing.md` names or the owner's own command. Feature design: [`./features/pipeline-revision.md`](./features/pipeline-revision.md).
 
-**Anchor** — three forms, shared: `feature=<slug>` (entry in `FEATURES.md`), `task=<N>` (live summary block; archived or never-assigned id stops, said which), `runbook=<name|id> step=<n>`. Unresolved → stop listing what exists, nothing written.
+**Anchor** — three forms, shared: `feature=<slug>` (entry in `FEATURES.md`), `task=<N>` (live summary block; archived or never-assigned id stops, said which), `runbook=<id|name|id-name> step=<n>`. Unresolved → stop listing what exists, nothing written.
 
 **`/pipeline-patch`** (`commands/pipeline-patch.md`) — single owner or refuse. Anchor required. Walks `graph.md`'s edges reading only the four indexes, never a body. Proceeds only when the change writes exactly one owner (feature doc / task / runbook step — writes an arm makes as its own consequence not counted) AND none of five structural signals:
 

@@ -550,7 +550,8 @@ resume artifact — it holds no state, and its path is relative to the skill
 folder rather than to the project — so it never earns a row.
 
 The runbook store is another instance of the same rule, for work rather than
-for a skill's phases. `.claude/runbooks/<name>.md` holds an ordered list of
+for a skill's phases. `.claude/runbooks/<id>-<name>.md` (the path its index
+block's `File:` line holds) holds an ordered list of
 self-contained prompts and the `Done:` line each one earns when it runs, and
 `.claude/RUNBOOKS.md` indexes them — both committed, both project-scoped,
 neither reachable from conversation history or a `--resume` flag. The split is

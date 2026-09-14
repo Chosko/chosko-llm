@@ -537,7 +537,7 @@ The anchor is required, in one of three forms:
 
 - `feature=<slug>` — an entry in `FEATURES.md`;
 - `task=<N>` — a live summary block in `TASKS.md`;
-- `runbook=<name|id> step=<n>` — one step of a runbook listed in
+- `runbook=<id|name|id-name> step=<n>` — one step of a runbook listed in
   `RUNBOOKS.md`.
 
 An anchor that resolves to nothing stops the run and lists what exists. A
@@ -1004,7 +1004,7 @@ that has none of the conversation the prompts came out of.
 - `/runbook-create` — author one from the conversation you're in (the
   default: the decisions, the rejected options and the verified probes are
   all still in context), or from a free-form description through one batched
-  interview. `--append <name>` adds steps to an existing runbook, including
+  interview. `--append <id|name|id-name>` adds steps to an existing runbook, including
   one a run is in the middle of; `--append` with no name targets the runbook
   this session is running. Appended steps go at the foot unless
   `--before <step>` or `--after <step>` places them at that step's position
@@ -1012,7 +1012,7 @@ that has none of the conversation the prompts came out of.
   the runbook's step list). Either way they take the next unused step id: a
   step's number is a stable id, not its position, so a runbook may list step
   6 above step 3. No existing step is edited, moved or renumbered.
-- `/runbook-run <name>` — execute it, one step at a time, top to bottom in
+- `/runbook-run <id|name|id-name>` — execute it, one step at a time, top to bottom in
   list order. `--from N`, `--to N`
   (they compose: `--from X --to Y` runs that range, inclusive), `--only N` and
   `--model <model>` narrow or redirect the run; the bounds name steps by id
@@ -1030,7 +1030,7 @@ that has none of the conversation the prompts came out of.
   step is done): a bounded run leaves work behind by design.
 - `/runbook-list` — every runbook as one line: id, status, name, steps done
   over total, created date, source, and its one-line title.
-- `/runbook-describe <name|id>` — a compact summary of one runbook: its index
+- `/runbook-describe <id|name|id-name>` — a compact summary of one runbook: its index
   line, one header line (created, source, model), one line per step with its
   marker, dependencies when it has any and an authored `Needs:` other than
   `agent`, a one-line `done:` summary for each finished or failed step, and a
@@ -1042,20 +1042,32 @@ that has none of the conversation the prompts came out of.
   when a conversation produces a list worth capturing, points at
   `/runbook-create` in one line, and stops.
 
-Every command that takes a runbook name takes its **id** instead: a bare
-number, as with tasks. A kebab-case name is never all digits, so the two
-can't be confused: `/runbook-run 3` and `/runbook-run ecc-import-landing` are
-the same command.
+Every command that takes a runbook takes it in any of three forms: its
+**id** (a bare number, as with tasks), its name, or the two joined as
+`<id>-<name>`, the way its body file is named. `/runbook-run 3`,
+`/runbook-run ecc-import-landing` and `/runbook-run 3-ecc-import-landing` are
+the same command. A kebab-case name is never all digits, so an id and a name
+can't be confused. A joined form whose halves disagree is an error naming the
+runbook the id belongs to, never a guess at either half. `/runbook-create`
+refuses a new name whose first segment is all digits (`2026-migration`) and
+suggests another, so a name can never look like `<id>-<name>`.
 
-The store is committed, like the backlog: `.claude/runbooks/<name>.md` per
-runbook, plus a `.claude/RUNBOOKS.md` index mirroring `TASKS.md`'s block shape
-and its `Last runbook number:` counter. The **body is the source of truth**;
+The store is committed, like the backlog: `.claude/runbooks/<id>-<name>.md`
+per runbook (`3-ecc-import-landing.md`), plus a `.claude/RUNBOOKS.md` index
+mirroring `TASKS.md`'s block shape and its `Last runbook number:` counter.
+Each index block's `File:` line is where every command finds that runbook's
+body; none builds the path from the name. A runbook written before ids
+reached file names keeps its `<name>.md` body, with a `File:` line that says
+so, until a command that writes it renames it: `/runbook-run` before a run
+starts, or `/runbook-create --append`. The rename rides in that command's
+own commit, and a `[RUNNING]` runbook is never renamed. There is no bulk
+migration. The **body is the source of truth**;
 the index's `Status:` and `Steps: <done>/<total>` are derived from it and can
 be rebuilt by re-reading it. The id is the one thing that isn't: it's
 assigned, it only ever increases, and a pruned one is never reused, so a
 number you wrote down last month still means the runbook you meant. The name
-stays canonical throughout: it names the file, and it's what every message
-calls the runbook. No `chosko-llm` subcommand walks `.claude/runbooks/`;
+stays canonical throughout: it's what every message calls the runbook, and
+the id, even in the file name, is only an alias for it. No `chosko-llm` subcommand walks `.claude/runbooks/`;
 runbooks are input to agents, never to tooling.
 
 **The execution loop.** `/runbook-run` re-reads the body at the start of

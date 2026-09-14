@@ -263,7 +263,7 @@ Feature: runbook-id-filenames
 
 ## 214. Update documentation for feature `runbook-id-filenames`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: .claude/domain/features/runbook-suite.md, docs/reference.md, docs/authoring-guide.md, .claude/domain/product-workflow.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 207, 208, 210, 211, 212, 213

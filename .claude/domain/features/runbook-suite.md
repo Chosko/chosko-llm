@@ -159,7 +159,7 @@ never reads it.
 One file per runbook, uniquely named, many coexisting, all committed:
 
 ```
-.claude/runbooks/<name>.md          the runbook
+.claude/runbooks/<id>-<name>.md     the runbook
 .claude/RUNBOOKS.md                 the index, mirroring TASKS.md's shape
 ```
 
@@ -168,20 +168,35 @@ deliberate opposite of the open question hanging over `.claude/sessions/` —
 because the work is executed across machines and cloud sessions and the `Done:`
 lines are the record of what happened.
 
+The index block's `File:` line is the authority for a body's path. Every
+command opens a body at the path `File:` holds and never builds it from the
+name. That is what lets a body written before ids reached file names keep its
+`<name>.md` path until it is renamed; see
+[runbook-id-filenames](./runbook-id-filenames.md).
+
 Beside the name, each runbook carries a numeric **id**, and the index carries a
 `Last runbook number:` counter to assign them from. This reverses the original
 decision recorded here — that names were the only identifiers, exactly as in
 `FEATURES.md` — and the reversal is narrow: the id is a **command-line alias**,
-not the identity. The body file is still `.claude/runbooks/<name>.md`, messages
-still name the runbook, and nothing is renamed. What it buys is that a runbook
-can be referred to by a number rather than a kebab-case string, the way a task
-already can. Every command taking a name takes an id in its place, on one
-unambiguous rule: **a bare all-digits argument is an id, anything else a name**
-— a kebab-case name can never be all digits, so no argument is ever both.
+not the identity. The id appears in the body's file name, but messages still
+name the runbook, the body carries no id of its own, and the index stays the
+id's authority. What it buys is that a runbook can be referred to by a number
+rather than a kebab-case string, the way a task already can. Every command
+taking a runbook accepts it as `<id>`, `<name>` or `<id>-<name>`, and resolves
+it to exactly one runbook. **All digits is an id. An exact name is that name.
+`<id>-<name>` is that runbook only when both halves agree**; when they don't,
+it is an error naming the runbook the id belongs to, never a fallback to
+either half. A kebab-case name can never be all digits, so an id and a name
+never collide.
 
 Making the id *primary* was considered and rejected: it would break every
 existing invocation form, the `--append <name>` resolution and the
 name-collision rule, and buy nothing the alias does not.
+
+The name-collision rule carries one restriction: a new name whose first kebab
+segment is all digits (`2026-migration`) is refused with a suggested
+alternative, the same way a taken name is. That keeps a name from ever
+reading as `<id>-<name>`.
 
 ### The body schema
 
@@ -297,7 +312,7 @@ Last runbook number: 7
 ## 3. <name> — <one-line title>
 
 Status: [PENDING]
-File: .claude/runbooks/<name>.md
+File: .claude/runbooks/<id>-<name>.md
 Created: 2026-08-24
 Source: /architect run
 Steps: 0/7

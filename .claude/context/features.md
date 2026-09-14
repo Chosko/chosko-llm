@@ -923,9 +923,12 @@ Currently shipped:
   `TASKS.md`, `PLAN.md`, `RUNBOOKS.md` point at each other — each edge, its
   direction, authoritative side, writer and consumers, and which vanish with
   an absent index; an id at or below `Last task number:` with no block
-  resolves archived and terminal), `routing.md` (one row per pipeline
+  resolves archived and terminal; E6 is `File: .claude/runbooks/<id>-<name>.md`
+  → body, a legacy `<name>.md` value legal during lazy migration),
+  `routing.md` (one row per pipeline
   feature — Feature / Consumes / Produces / Owns / Preconditions / Argument
-  shape / Amend — the ownership authority the revision suite reads; owned BY
+  shape / Amend — runbook rows take `<id|name|id-name>` and read bodies at
+  `File:` — the ownership authority the revision suite reads; owned BY
   LINE, no two rows claiming one line or value; every row verified against
   the shipped body, never a design doc; agrees with `/task-add`'s
   pre-authorisation table and is the one fixed if they diverge), `lint.md`
@@ -981,7 +984,8 @@ Currently shipped:
   skill:task-engine, skill:runbook-run` — the engine plus every skill whose
   amend arm it may load, so installing the patcher pulls in the owners.
   Anchor REQUIRED, one of three forms: `feature=<slug>`, `task=<N>`,
-  `runbook=<name|id> step=<n>`; missing anchor or empty change stops, naming
+  `runbook=<id|name|id-name> step=<n>` (resolved by `runbook-schema.md`'s
+  rule); missing anchor or empty change stops, naming
   `/pipeline-revise` as the no-anchor path; unresolved anchor stops listing
   what exists (archived vs never-assigned task id said). Probes (or reuses a
   verdict), walks `graph.md`'s edges reading ONLY the four indexes — never a
@@ -1015,7 +1019,8 @@ Currently shipped:
   ON DEMAND, exactly one per run once CLASSIFY picks it, never a second; all
   four share one seven-section schema (*Applies when*, *Impact walk*, *Owner
   sequence*, *Tier*, *Verification*, *Outcomes*, *Never*). Anchor optional:
-  same three forms, or exactly one found in the change (stated in one line);
+  same three forms (`runbook=<id|name|id-name> step=<n>`), or exactly one
+  found in the change (stated in one line);
   none or several stops listing what exists, never picks. CLASSIFY is
   first-match in order reorder → delete → insert → amend (amend = everything
   else, incl. a `Preconditions:` change that moves no entry — the boundary
@@ -1190,7 +1195,8 @@ Currently shipped:
   `/session-save`, no `chosko-llm` subcommand walks `.claude/sessions/` —
   session files are context for a human or agent, never input to tooling.
 - `skills/runbook-run/` — orchestrator of the runbook asset kind
-  (`.claude/runbooks/<name>.md` bodies + `.claude/RUNBOOKS.md` index; body is
+  (`.claude/runbooks/<id>-<name>.md` bodies at the path each index block's
+  `File:` holds + `.claude/RUNBOOKS.md` index; body is
   source of truth, index's `Status:`/`Steps:` derived and rebuildable from it —
   the id and its counter are the one exception, assigned rather than derived).
   **Skill not command** because `cmd-add` copies a skill folder with `cp -R`
@@ -1200,7 +1206,9 @@ Currently shipped:
   per-step `Needs:` field, index block + its `Last runbook number:` counter and
   per-runbook **id**)
   and `references/subagent-contract.md` (the OPERATING RULES block pasted
-  verbatim into every spawned prompt — two placeholders, `<RUNBOOK>` and `<N>`,
+  verbatim into every spawned prompt — three placeholders, `<RUNBOOK>`, `<N>`
+  and `<FILE>` (the body's `File:` path, for the never-edit rule; relay file
+  names stay built from `<RUNBOOK>`/`<N>`),
   and it now carries the `SPAWN REQUEST` rule), both cited by the other three by
   `${CLAUDE_HOME:-$HOME/.claude}/...` path. A third, `references/inline-contract.md`,
   holds the fixed inline rule set that replaces the OPERATING RULES under
@@ -1211,13 +1219,25 @@ Currently shipped:
   facts; the prompt block immutable, so a wrong prompt is struck and a
   corrected step inserted; a `[RUNNING]` runbook accepting changes only after
   its current step), is never read by this body — whatever amends a step
-  (`/pipeline-patch`, `pipeline-revise`) reads it by path. No `requires:` — it IS the
+  (`/pipeline-patch`, `pipeline-revise`) reads it by path, and reads and writes
+  the body at `File:`. A fifth, `references/body-migration.md` (the lazy rename
+  of a legacy `<name>.md` body: `git mv` to `<id>-<name>.md` then rewrite
+  `File:`, both paths staged in the writing command's one commit; never while
+  `[RUNNING]`; a taken target path stops, never overwritten; non-git VCS
+  mapping), is read ONLY by `/runbook-run` and `/runbook-create --append`, and
+  only after the schema's one-sentence check finds a `File:` file name not
+  beginning `<id>-`. No sweep, no migration script. No `requires:` — it IS the
   dependency. **Ids**: every runbook carries one beside its kebab-case name,
-  and every command taking a name takes an id in its place — **a bare
-  all-digits argument is an id, anything else a name**, unambiguous because a
-  kebab-case name is never all digits. The id is an alias, never the identity:
-  the body file stays `.claude/runbooks/<name>.md` and messages name the
-  runbook. `Last runbook number:` only ever increases; survivors are never
+  and every command taking a runbook accepts `<id>`, `<name>` or
+  `<id>-<name>`, resolved in order: all digits → id; exact name → that block;
+  `<digits>-<rest>` → that block only when block `<digits>` is named `<rest>`,
+  else an error naming the id's real runbook (never a fallback to either
+  half); anything else unknown, listing what exists. A legacy name matching
+  two blocks is reported as an ambiguity. The id is an alias, never the
+  identity: it appears in the body's file name, but the body carries no id,
+  messages name the runbook, and **every command opens the body at `File:`,
+  never a path built from the name** (a legacy `<name>.md` value stays
+  correct). `Last runbook number:` only ever increases; survivors are never
   renumbered and a pruned id is never reused (`TASKS.md`'s rule, same reason —
   `max()` would hand a deleted runbook's id to the next one). An index written
   before ids is backfilled in place by the first command that **writes** it
@@ -1263,8 +1283,13 @@ Currently shipped:
   follows **unabridged** — the one place it must not compress. In the subagent
   position (depth 3, a batch parent driving the runbook) it emits the same block
   as its own final turn under `QUESTIONS FOR USER`, for its parent to carry.
+  **Resolve** reads the body at `File:` (a missing file stops) and, before
+  marking `[RUNNING]`, runs the migration check — a hit reads
+  `body-migration.md` and the run uses the new path for its whole life; a
+  resume of an already-`[RUNNING]` runbook never migrates.
   **Commit convention: one commit per completed step**, staging exactly the
-  runbook and the index, then push; `--no-commit`/`--no-push` usual meanings.
+  runbook (its `File:` path; both old and new path on the step that migrated
+  it) and the index, then push; `--no-commit`/`--no-push` usual meanings.
   `[~]` is deliberately NEVER committed — its presence in a tree is the resume
   signal and the same-tree exception to one-run-per-runbook (`[RUNNING]` in the
   index blocks a second run otherwise; no lock file, no timestamp, no staleness
@@ -1319,15 +1344,23 @@ Currently shipped:
 - `commands/runbook-create.md` — authors a runbook, or appends to one.
   `requires: skill:runbook-run` — it cites that skill's `runbook-schema.md` for
   the body/index shape rather than carrying a second copy. **The only assigner
-  of ids**: a new runbook takes `Last runbook number: + 1` (never `max()`) and
-  advances the counter in the same write; an append assigns nothing. Also the
+  of ids**: a new runbook takes `Last runbook number: + 1` (never `max()`)
+  BEFORE writing the body, writes it at `.claude/runbooks/<id>-<name>.md`, and
+  advances the counter and appends the block (`File:` prefixed) in the same
+  index write; an append assigns nothing. Refuses a new name that is taken OR
+  whose first kebab segment is all digits (`2026-migration`), with one
+  suggested alternative. `--append <id|name|id-name>` resolves by the schema's
+  rule, then runs the migration check (reading `body-migration.md` on a hit)
+  before gathering material — unless the target is `[RUNNING]`, which is
+  appended to at its current `File:` path, never renamed; body always read and
+  written at `File:`, staged by that path (both paths when it migrated). Also the
   only writer of a step's `Needs:` line (`agent` / `agent+human` / `human`,
   absent meaning `agent`) — a seventh from-scratch interview question, harvested
   in passing in conversation mode, and called out at the gate because whether
   the run can be left unattended is the one thing the titles cannot say.
   Command not skill:
   one pass with a confirmation gate, no supporting files of its own. Two
-  orthogonal axes — target (`<name>` new / `--append <name>` / bare `--append` =
+  orthogonal axes — target (`<name>` new / `--append <id|name|id-name>` / bare `--append` =
   the runbook this session is running, which a step's subagent knows because the
   spawned prompt names it / no args = ask) and source (the conversation's MOST
   RECENT enumerated follow-up list, the default; or a free-form description via
@@ -1375,7 +1408,9 @@ Currently shipped:
   runs no shell, corrects no status however wrong it looks.
 - `commands/runbook-describe.md` — the compact one-runbook summary, and the
   deliberate pair to `/runbook-list`. `requires: skill:runbook-run` for the
-  schema. Takes one runbook by **name or id** and renders a fixed shape: the
+  schema. Takes one runbook as `<id|name|id-name>` (the schema's resolution
+  rule), extracts from the body at its block's `File:` path (a `File:` that
+  does not resolve is reported; never migrates), and renders a fixed shape: the
   index heading line (`Failed at:` continuation for `[FAILED]` only), one header
   line (`Created:`/`Source:`/`Model:` — no `Sequencing:`, `Companion:` or
   re-propose count), one line per step (marker as the body carries it, `deps:`
@@ -1394,11 +1429,14 @@ Currently shipped:
 - `commands/runbook-clean.md` — pruning, `/task-clean`'s plan-and-confirm
   shape, except that it deletes: runbooks have no archive.
   `requires: skill:runbook-run` for the status vocabulary and block shape. Three
-  stages: resolve (no arg = every `[DONE]`; names **or ids** = exactly those,
+  stages: resolve (no arg = every `[DONE]`; `<id|name|id-name>` arguments,
+  by the schema's rule = exactly those,
   and a named non-`[DONE]` runbook is refused BY NAME with its actual status,
   never silently skipped; survivors are never renumbered and the counter never
   moves down) → plan and confirm (name, created date, steps done/total, both paths;
-  empty plan says so and stops) → remove and commit (delete body files, remove
+  empty plan says so and stops) → remove and commit (delete each body at its
+  block's `File:` path, printed verbatim in the plan, a legacy `<name>.md`
+  included — never renames, never reads `body-migration.md`; remove
   index blocks incl. surrounding `---` rules, stage exactly those paths). An
   unknown name aborts the whole run **before anything is deleted**. Only
   `[DONE]` is eligible — narrower than `/task-clean`, which also takes `[SKIP]`;
