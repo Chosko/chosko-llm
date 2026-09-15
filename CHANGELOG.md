@@ -2,6 +2,27 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.47.3 — 2026-09-15
+
+- **/pipeline-revise** no longer walks up from a successor whose dropped dependency edge is immediately replaced by one carrying the same spec. `delete.md`'s upward continuation, added in 1.47.1, keyed on the edge being dropped when it should have keyed on the work actually being withdrawn — so a reorder, which is a drop plus an insert, proposed an `/architect amend` step for every successor's feature document even though nothing stopped being delivered. The guard now sits on the general rule, matching the one `amend.md` already had, and `reorder.md` still needs no text of its own.
+
+## 1.47.2 — 2026-09-15
+
+- **/task-add** now says which rule wins when the ownership gate's **Drop** answer lands on a feature-derived task's own feature document. PHASE 4's feature case requires that pointer in every new body, and 1.47.0 closed that contradiction only for the case where no reconciliation points could be named; where points could be named, Drop and the PHASE 4 requirement still gave opposite instructions on the same path. The user's Drop answer decides, the body is written without the pointer, and the unreconciled points are recorded as that outcome already requires.
+
+## 1.47.1 — 2026-09-15
+
+- **/pipeline-revise** now says in each branch whether its impact walk continues from the tasks it reaches forward, instead of leaving it implicit. `amend.md` continues from every successor whose basis changes — up to that successor's own feature document, then forward again — and `delete.md` does the same from every successor whose edge is dropped, each node visited once. `insert.md` states that it does not: a task that only gains a wait edge still delivers what it did. `reorder.md` inherits both and needs no rule of its own.
+- A feature document reached that way is named from index lines and shown at the gate as an `/architect amend` step, so an under-scoped plan is caught at the gate rather than by the task arm refusing partway through. It is named, never opened — the branch's body scope is unchanged, and whether the document really needs a change stays `/architect amend`'s call.
+
+## 1.47.0 — 2026-09-15
+
+- **/task-add** now offers three answers at its ownership gate instead of two: **Grant**, **Reference** and **Drop**. A Reference keeps an owned document in a task's Hints under one literal marker (`— read-only reference, do not edit`), authorises no edit, and never joins the task's `Files:` line — so a pointer the implementer only needs to read survives instead of being deleted whenever the design document is already correct.
+- A feature-derived task's own feature document, the documentation task's included, is now written as a Reference without asking. `/task-add`'s PHASE 4 already required that pointer on every new body of a feature run, so the rule decides it rather than the user; the two no longer contradict each other.
+- A marked Reference carried unchanged into a rewritten body — a reconciliation, or an amendment — counts as already decided and is not asked about again, so a restored pointer is no longer stripped by the next reconciliation. Turning one into an edit target, or adding a new owned path, is still a new question.
+- **/task-implement** treats a Hint carrying that marker as read-only: it reads the document for context and leaves it alone, and stops to say so if the implementation turns out to need it changed.
+- Every detected file still leaves the gate with a decision recorded, silence is still never a grant, and PHASE 4 still refuses a task whose detected file is neither granted, referenced nor removed.
+
 ## 1.46.6 — 2026-09-15
 
 - **This repo's own `remote-session-protocol` hook** is now committed as executable, so a fresh clone's `PreToolUse[AskUserQuestion]` hook actually runs instead of failing with permission denied. Installed copies were already executable and are unaffected.

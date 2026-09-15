@@ -90,11 +90,19 @@ own `Target:` line.
 | Title line `# Task <N> — <Title>` | Changes only when the summary block's title does, to the same text. |
 
 **Owned documents.** A change that adds a path owned by another pipeline
-command to `## Hints` or to `Files:` needs the grant-or-drop answer that
-`/task-add`'s OWNERSHIP PRE-AUTHORISATION asks for such a path — its owner
-table, its two answers and its hard rules, cited here and not restated —
-asked inside this file's gate, never at a second one. An existing grant is
-never widened by an amendment; a wider grant is a new question.
+command to `## Hints` or to `Files:` needs the Grant / Reference / Drop
+answer that `/task-add`'s OWNERSHIP PRE-AUTHORISATION asks for such a path —
+its owner table, its three answers, its read-only marker and its hard rules,
+cited here and not restated — asked inside this file's gate, never at a
+second one. An existing grant is never widened by an amendment; a wider grant
+is a new question.
+
+A Hint already carrying that marker, carried through the amendment unchanged,
+is already decided and is not asked about again — the same carryover rule
+OWNERSHIP PRE-AUTHORISATION states, and what keeps an amendment from
+stripping a Reference an earlier run recorded. Turning such a Hint into
+something the task edits is a Grant question, and so is adding an owned path
+the body did not carry before.
 
 ### The summary block
 
@@ -193,5 +201,5 @@ Amended task <N> — <fields and sections changed>[; skipped: <reason>][; droppe
 - **`/task-add`** — the owner of the lines this file lets change: the body,
   the block's title, `Target:`, `Files:`, `Preconditions:` and `Feature:`,
   and `FEATURES.md` `Tasks:`. Its own body does not read this file. Its
-  OWNERSHIP PRE-AUTHORISATION and its `--single` rule are cited above, not
-  changed.
+  OWNERSHIP PRE-AUTHORISATION — its three answers and its read-only marker
+  included — and its `--single` rule are cited above, not changed.

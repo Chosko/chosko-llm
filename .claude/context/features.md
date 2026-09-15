@@ -258,13 +258,24 @@ Currently shipped:
   `technical-direction.md` / `business-model.md` → `/product-design`;
   `product-roadmap.md` → `/product-roadmap`; `PLAN.md` →
   `/production-plan`; `FEATURES.md` / `TASKS.md` excluded), specific
-  reconciliations enumerated per file, one question per file inside PHASE
-  3's single gate, answered as grant (dated point-scoped bullet written
-  into body's Decisions, points into Acceptance criteria) or drop (path
-  removed from Hints and `Files:`, remainder noted in Decisions). Silence
-  is not a grant; PHASE 4 refuses a task left un-adjudicated. Grant
-  authorises that task's implementer — `/task-add` still never edits an
-  owned document. Free-form text alongside slug narrows scope;
+  reconciliations enumerated per file, then three outcomes: grant (dated
+  point-scoped bullet written into body's Decisions, points into Acceptance
+  criteria), reference (path kept in Hints under the one literal marker
+  `— read-only reference, do not edit`, kept out of `Files:`, authorising no
+  edit) or drop (path removed from Hints and `Files:`, remainder noted in
+  Decisions). Which is asked depends on what could be named: points nameable
+  → one question per file inside PHASE 3's single gate offering all three;
+  no points but path is that feature-derived task's own feature document
+  (doc task included) → reference written unasked, since PHASE 4 feature
+  case step 2 requires the pointer; no points but a concrete read reason →
+  reference-or-drop asked; no points, no read reason → dropped unasked. A
+  marked reference carried unchanged into a rewritten body (reconciliation
+  or `task-engine/references/amend.md`) is already decided, not re-asked;
+  turning it into an edit target, or adding a new owned path, is a new
+  question. Silence is not a grant and a reference is not a grant; PHASE 4
+  refuses a task whose detected file is neither granted, referenced nor
+  removed. Grant authorises that task's implementer — `/task-add` still never
+  edits an owned document, and a reference makes nobody a writer. Free-form text alongside slug narrows scope;
   feature document read-only to `/task-add` itself. Free-form path unchanged when
   `feature=` absent, save the orphan question above on a project with
   `FEATURES.md`.
@@ -1032,7 +1043,20 @@ Currently shipped:
   kinds is two runs. Impact walk both directions over `graph.md`'s edges and
   no other traversal — top-down design section → features → tasks, plan
   edges, runbook steps; bottom-up task → feature doc when `Feature:` resolves
-  (an unresolved slug stops the upward walk, not an error). May open bodies,
+  (an unresolved slug stops the upward walk, not an error), plus forward to
+  E4 successors. Whether the walk continues FROM those successors is per
+  branch and written down in each: `amend.md` continues from every successor
+  whose basis changes — up to that successor's own feature doc (E3b, then
+  E2), stopping on an unresolved slug as for the anchor, then forward again
+  (E4) — and `delete.md` the same from every successor whose edge is dropped
+  AND whose basis is thereby withdrawn, which is what keeps a reorder (drop
+  then replace with the same spec) from walking up spuriously;
+  `insert.md` explicitly does NOT, a successor gaining a wait edge still
+  delivering what it did; `reorder.md` inherits both. Every node visited once.
+  A doc reached that way is named from index lines and enters the owner
+  sequence as an `/architect amend` step, never opened here — whether it needs
+  a change is that arm's call, and its Stop answer is the accepted cost of
+  catching one that does. May open bodies,
   scoped: the target artifact, tasks whose `Preconditions:` name it or whose
   `Files:` overlap, runbook steps naming it; never bulk, never the archive.
   Lint bracket: `/pipeline-check` scoped to the anchor BEFORE the proposal

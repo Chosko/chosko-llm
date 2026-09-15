@@ -22,7 +22,18 @@ Over `graph.md`'s edges, named by id.
   (E4); each such edge is dropped. For a feature, that means the successors
   of every task being skipped that lie outside the feature. Also forward to
   the open runbooks whose steps run the removed task or name the removed
-  feature (E7).
+  feature (E7). **From each successor whose edge is dropped, and whose basis is
+  thereby withdrawn, the walk continues upward as it did from the anchor**: to
+  that task's own feature document when its `Feature:` slug resolves (E3b,
+  then E2), stopping there on a missing or unresolved slug exactly as below.
+  That condition carries the reason: the successor then builds on something
+  nobody will deliver, so the promise its own feature made may rest on
+  withdrawn work. Where the dropped edge is immediately replaced by one
+  carrying the same spec — a reorder, which composes this walk with
+  `./insert.md`'s, per `./reorder.md` — nothing is withdrawn and the walk does
+  not continue from that successor. Every node is visited once, and a document
+  reached this way is named from index lines and enters the owner sequence as a
+  step 1 entry — never opened here, exactly as for the anchor's own.
 - **Upward** — to the feature document that promised the deleted scope (E3b,
   then E2), so that it stops promising work nobody will do. A task with no
   resolvable `Feature:` has no upward walk. A feature's removal walks no

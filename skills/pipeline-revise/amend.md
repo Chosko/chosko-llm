@@ -42,7 +42,28 @@ Over `graph.md`'s edges, named by id.
   unresolved slug still surfaces — as the lint bracket's finding, not as a
   walk failure;
 - and forward to the tasks whose `Preconditions:` name it (E4), when the
-  change alters what the task delivers — they build on it.
+  change alters what the task delivers — they build on it. **From each such
+  task the walk continues exactly as it did from the anchor**: up to that
+  task's own feature document when its `Feature:` slug resolves in
+  `.claude/FEATURES.md` (E3b, then E2) — a missing or unresolved slug stops
+  it there, as for the anchor and for the same reason — and then forward
+  again from it (E4). A successor whose basis does not change is not walked
+  from: the condition on this bullet applies at every hop, not just the
+  first.
+
+Every node is visited once. A task or feature document the walk has already
+reached is not walked from a second time, which is what terminates the walk
+on a backlog whose edges rejoin.
+
+A feature document reached this way is **named, not opened**. It comes from
+the index lines the walk has already read — the task's `Feature:` and that
+entry's `Doc:` — and enters the proposal as a step 2 entry of the owner
+sequence below, like the anchor's own document. Whether it really needs a
+change is `/architect amend`'s to judge when its arm opens it, and that arm
+may answer **Stop**; a step that turns out to change nothing is the accepted
+cost of catching one that does. `./SKILL.md` step 4's body scope is unchanged
+by this — it lists the bodies this branch may open, and a reached document is
+not one of them.
 
 From a runbook step, the walk reads the step's prompt in the body the anchor
 already opened, goes up to the tasks and features it names, and continues

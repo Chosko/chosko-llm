@@ -26,7 +26,11 @@ Over `graph.md`'s edges, named by id.
   new id (E4): the task the new one is placed before, and any task that must
   now wait on it. From those successors, on to the open runbooks whose steps
   run them (E7), where a step for the new task has to be inserted ahead of
-  theirs.
+  theirs. The walk does **not** continue upward from those successors, unlike
+  `./amend.md`'s and `./delete.md`'s. A successor that gains a wait edge still
+  delivers exactly what it delivered before — only when it may start changes —
+  so its own feature document has nothing to restate and is not named. The
+  upward walk below is the new task's alone.
 - **Upward** — to the feature document that must promise the new scope (E3b,
   then E2). A task that belongs to no feature has no upward walk.
 
