@@ -96,7 +96,7 @@ Preconditions: none
 
 ## 225. Let an owned document stay in a task's Hints as a read-only Reference
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-add.md, skills/task-engine/references/amend.md, skills/task-engine/SKILL.md, skills/task-implement/SKILL.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none

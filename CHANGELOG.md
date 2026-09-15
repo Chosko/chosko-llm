@@ -2,6 +2,14 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.47.0 — 2026-09-15
+
+- **/task-add** now offers three answers at its ownership gate instead of two: **Grant**, **Reference** and **Drop**. A Reference keeps an owned document in a task's Hints under one literal marker (`— read-only reference, do not edit`), authorises no edit, and never joins the task's `Files:` line — so a pointer the implementer only needs to read survives instead of being deleted whenever the design document is already correct.
+- A feature-derived task's own feature document, the documentation task's included, is now written as a Reference without asking. `/task-add`'s PHASE 4 already required that pointer on every new body of a feature run, so the rule decides it rather than the user; the two no longer contradict each other.
+- A marked Reference carried unchanged into a rewritten body — a reconciliation, or an amendment — counts as already decided and is not asked about again, so a restored pointer is no longer stripped by the next reconciliation. Turning one into an edit target, or adding a new owned path, is still a new question.
+- **/task-implement** treats a Hint carrying that marker as read-only: it reads the document for context and leaves it alone, and stops to say so if the implementation turns out to need it changed.
+- Every detected file still leaves the gate with a decision recorded, silence is still never a grant, and PHASE 4 still refuses a task whose detected file is neither granted, referenced nor removed.
+
 ## 1.46.6 — 2026-09-15
 
 - **This repo's own `remote-session-protocol` hook** is now committed as executable, so a fresh clone's `PreToolUse[AskUserQuestion]` hook actually runs instead of failing with permission denied. Installed copies were already executable and are unaffected.

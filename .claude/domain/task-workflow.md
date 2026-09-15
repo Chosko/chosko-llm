@@ -264,7 +264,7 @@ Feature whose `Tasks:` line is non-`none` has been planned before, so re-plannin
 
 Update-in-place preferred whenever task's goal survives design change: nothing implemented yet, so rewriting body cheaper, keeps backlog free of dead `[SKIP]` entries. Which applies is judgment call about how much task remains — no mechanical rule.
 
-Feature document itself read-only to `/task-add`. May still be named in a drafted task's Hints — but only with dated, point-scoped grant user gave at PHASE 3 ownership gate (see [product-workflow.md](./product-workflow.md) § Documentation task), or not at all. Grant binds that task's *implementer*; never `/task-add`, which stays a non-writer of every owned document.
+Feature document itself read-only to `/task-add`. May still be named in a drafted task's Hints under one of three outcomes of PHASE 3 ownership gate (see [product-workflow.md](./product-workflow.md) § Documentation task): dated, point-scoped **grant** user gave; **read-only Reference**, the path kept in Hints under the marker `— read-only reference, do not edit`, authorising no edit and never joining `Files:`; or **dropped** entirely. A feature-derived task's own feature document is written as a Reference by the rule itself, unasked. Grant binds that task's *implementer*; a Reference binds nobody to write anything; never `/task-add`, which stays a non-writer of every owned document.
 
 ### Attaching one task (`--single`)
 
