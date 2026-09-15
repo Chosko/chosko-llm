@@ -102,8 +102,8 @@ agents that cannot run `install.sh` still have the commands they need.
   are expected to serve others over time. Being born narrow is not a defect.
 - **Gates keep the director in the reviewer's seat.** Plan-first approval
   and stop-and-approve phases exist so that Claude operates and the director
-  decides. The scaffolding, context-layer, refactoring and runbook-authoring
-  commands add a second pause, leaving their output uncommitted unless
+  decides. The scaffolding, context-layer and refactoring commands add a
+  second pause, leaving their output uncommitted unless
   `--commit` is passed. The four design-pipeline skills — `/product-design`,
   `/product-roadmap`, `/architect`, `/production-plan` — no longer do:
   their review happens inside the run, at their own approval gates, and

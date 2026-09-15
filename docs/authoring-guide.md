@@ -801,15 +801,18 @@ flag so the user can override the default commit behaviour. The split is about
 
 - **Authoring commands (uncommitted by default).** `/context-build`,
   `/context-convert`, `/refactor-codebase`, `/refactor-tests`,
-  `/task-setup`, `/domain-setup`, `/unity-mcp-setup`, `/project-setup` and
-  `/runbook-create` write their output and leave it in the working tree
-  for review. They accept **`--commit`** to commit what they wrote at the
-  end.
+  `/task-setup`, `/domain-setup`, `/unity-mcp-setup` and `/project-setup`
+  write their output and leave it in the working tree for review. They
+  accept **`--commit`** to commit what they wrote at the end.
 - **Auto-committing commands.** `/task-add`, `/task-clean`,
   `/task-implement`, `/task-iterate`, `/context-update`, `/architect`,
-  `/product-design`, `/product-roadmap` and `/production-plan` commit
-  automatically. They accept **`--no-commit`** to write their changes but skip
-  the commit.
+  `/product-design`, `/product-roadmap`, `/production-plan`,
+  `/runbook-create` and `/session-save` commit automatically. They accept
+  **`--no-commit`** to write their changes but skip the commit.
+
+  `/runbook-create` and `/session-save` joined this group for the design
+  skills' reason: a runbook and a handoff are both read by the next session,
+  often on another machine. Both keep accepting `--commit` as a silent no-op.
 
   The four design skills — `/architect`, `/product-design`,
   `/product-roadmap`, `/production-plan` — joined this group rather than
@@ -847,10 +850,18 @@ When adding a new command that writes files, follow the same rules:
 - On a non-git VCS, honour the project CLAUDE.md `## VCS` mapping
   (e.g. git→`cm` for Plastic SCM).
 
-`/project-setup --commit` is the one orchestrator: it commits its own
-artifacts first, then invokes its nested commands with `--commit` so each
-commits its own output (`/task-setup`, `/domain-setup`, `/context-build`, and
-`/unity-mcp-setup`, in that order).
+Commands that run other commands follow one of two orchestrator patterns:
+
+- **Each nested command commits its own output.** `/project-setup --commit`
+  commits its own artifacts first, then invokes its nested commands with
+  `--commit` so each commits its own output (`/task-setup`, `/domain-setup`,
+  `/context-build`, and `/unity-mcp-setup`, in that order).
+- **One commit at the end.** `/pipeline-patch` and `/pipeline-revise` commit
+  by default and own the commit: every owner step runs with `--no-commit` (an
+  arm executed by path, with no commit), and after the last step they stage
+  the union of the paths the steps wrote and make one commit for the whole
+  change. A run that stops part-way is left uncommitted, so every commit holds
+  a complete change.
 
 ### The push protocol
 

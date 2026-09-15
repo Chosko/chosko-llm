@@ -33,7 +33,7 @@ Preconditions: 227
 
 ## 230. Update documentation for the new commit defaults
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, docs/authoring-guide.md, .claude/domain/product-workflow.md, .claude/domain/features/authoring-commit-default.md, .claude/domain/features/pipeline-revision.md, .claude/domain/features/session-continuity.md, .claude/domain/features/runbook-suite.md, .claude/domain/product-design.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 227, 228, 229

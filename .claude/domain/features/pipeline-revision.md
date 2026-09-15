@@ -147,22 +147,23 @@ No new stored state. The tier, the touched set and the owner sequence exist
 only in the proposal at the gate. What persists is written by owners in the
 existing vocabularies: `[STALE]`, `[ITERATED]`, `[SKIP]`, `Preconditions:`,
 `Tasks:`, struck steps, a runbook when the user asked for one. Provenance is
-the commits each owner step makes and the runbook's `Done:` lines; no change
-ledger is introduced.
+the revision's one commit and the runbook's `Done:` lines; no change ledger
+is introduced.
 
 ## Interfaces and contracts
 
-- `/pipeline-patch <anchor> "<change>" [--commit] [--no-push]` — anchor is
+- `/pipeline-patch <anchor> "<change>" [--no-commit] [--no-push]` — anchor is
   `feature=<slug>`, `task=<N>` or `runbook=<id|name|id-name> step=<n>`. Single owner
-  or refuse. `--commit` / `--no-push` are forwarded to the amend arm it
-  executes; it makes no commit of its own.
+  or refuse. The amend arm it executes runs uncommitted; the patch lands as
+  one commit, made at the end.
   `requires: skill:pipeline-engine, skill:architect, skill:task-engine,
   skill:runbook-run`.
-- `/pipeline-revise [<anchor>] "<change>" [--commit] [--no-push]` — anchor
+- `/pipeline-revise [<anchor>] "<change>" [--no-commit] [--no-push]` — anchor
   optional when the description resolves one; branch chosen by
   classification; one gate; in-session actuation or runbook offer at four or
-  more steps. `requires: skill:pipeline-engine` plus the owner skills the
-  patcher requires.
+  more steps. Every owner step runs uncommitted; the revision lands as one
+  commit, made at the end. `requires: skill:pipeline-engine` plus the owner
+  skills the patcher requires.
 - Hard contracts: neither surface writes a line an owner owns; the patcher
   never opens a body; the reviser opens bodies only within the anchor's
   scope; the editorial question is always asked at the revise gate, and
@@ -174,8 +175,8 @@ ledger is introduced.
 Failure contract: an anchor that resolves to nothing stops by listing what
 exists; a patch refused for structure names the signal; an owner arm that
 refuses, such as a touched `[IN PROGRESS]` task, stops the sequence at that
-step with earlier steps' writes intact and reported, never rolled back;
-`/runbook-create` absent removes the runbook offer and says nothing.
+step with earlier steps' writes intact and reported, never rolled back, and
+left uncommitted; `/runbook-create` absent removes the runbook offer and says nothing.
 
 ## Dependencies
 

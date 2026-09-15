@@ -44,9 +44,11 @@ Deliberately out:
 - **Duplicating a skill's own resume artifact.** When one exists, the session
   file points at it and says nothing else. Two accounts of the same state that
   can disagree is worse than one.
-- **Committing.** `/session-save` writes the file and reports its path. It does
-  not commit, does not push, and offers no `--commit`. Nor does it touch
-  `.gitignore` — see [The store](#the-store).
+- **Committing from `/session-resume`.** `/session-resume` stays read-only: it
+  commits, pushes and stages nothing. `/session-save`, by contrast, commits and
+  pushes the handoff it wrote by default (`--no-commit` to hold it back,
+  `--no-push` to skip the push), since a handoff usually crosses machines.
+  Neither touches `.gitignore` — see [The store](#the-store).
 - **Cross-machine or cross-project handoff.** A session file is readable by
   anyone given the path, but nothing in the feature moves it anywhere.
 
@@ -247,7 +249,8 @@ mechanism has three parts, split across both commands:
    a file writes its new snapshot and then deletes the file it resumed from, as
    superseded — so two snapshots of the same work never coexist. The path comes
    from the conversation, never from guessing at the directory; when it cannot
-   be told, nothing is deleted.
+   be told, nothing is deleted. When the superseded file was tracked, its
+   deletion rides in the save's commit beside the new snapshot.
 3. **An unresumed file is never auto-deleted.** Nothing searches the directory
    for stale candidates. The >14-day flag `/session-resume` raises before a
    briefing is the only signal such a file will ever get.

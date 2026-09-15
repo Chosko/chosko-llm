@@ -683,9 +683,10 @@ file a moment later, uncommitted and open to review. The gate exists to catch a
 wrong order or a missing step, both expensive after the first step has run and
 cheap now.
 
-As an authoring command it leaves its output uncommitted for one review pass;
-`--commit` opts in, `--commit --no-push` commits without pushing. The review
-pass matters more here than usual: the prompts are the whole product, and they
+It commits and pushes the runbook it wrote by default; `--no-commit` leaves it
+uncommitted, `--no-push` commits without pushing, and `--commit` is accepted
+and changes nothing. A runbook is read by the next session, often on another
+machine, and its review already happens at the gate above, where the prompts
 are cheapest to fix before the first step runs.
 
 ---
@@ -930,7 +931,7 @@ it.
                                          append steps to that runbook, at the foot
                                          or at that step's position
 /runbook-create --append                 append to the runbook this session is running
-/runbook-create <args> --commit [--no-push]
+/runbook-create <args> [--no-commit] [--no-push]
 
 /runbook-run <id|name|id-name>           run from the first selectable step
 /runbook-run <name> --from N             begin selection at step N

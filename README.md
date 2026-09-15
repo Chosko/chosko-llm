@@ -322,8 +322,8 @@ at the pipeline command that fits, in a line, then stops.
 `/production-plan` and `/task-add` both commit and push by default, and both
 take `--no-commit`; `/production-status`, `/pipeline-check` and
 `pipeline-suggest` write nothing;
-`/pipeline-patch` and `/pipeline-revise` make no commit of their own and pass
-`--commit` / `--no-push` on to each owner step. [Details →](docs/reference.md#4-planning-the-work)
+`/pipeline-patch` and `/pipeline-revise` run every owner step uncommitted and
+land the whole change as one commit at the end (`--no-commit`, `--no-push`). [Details →](docs/reference.md#4-planning-the-work)
 
 ## 5. Build and review
 
@@ -375,7 +375,9 @@ and your answers back, committing after every step. It never runs steps in
 parallel, by default never does a step's work itself, and never reviews what a
 step did; that is `/task-review`'s job, invoked from inside the step.
 `--inline` is the one opt-in exception: it executes the selected steps in your
-own session, sharing one context, instead of spawning a subagent for each. `/runbook-list`,
+own session, sharing one context, instead of spawning a subagent for each.
+`/runbook-create` commits and pushes the runbook it wrote by default
+(`--no-commit`, `--no-push`). `/runbook-list`,
 `/runbook-describe` and `/runbook-clean` round out the set, and
 `runbook-suggest` fires on its own when a conversation produces a list worth
 capturing.
@@ -383,8 +385,9 @@ capturing.
 **Session handoffs** are for work in flight. **`/session-save`** writes what
 this conversation knows into `.claude/sessions/`: what was tried and failed,
 what was deliberately not tried, which files are half-finished, the exact
-next step. Nine sections, every one written even when it's `N/A`.
-**`/session-resume`** briefs a new conversation from that file, flags it if
+next step. Nine sections, every one written even when it's `N/A`. It commits
+and pushes the handoff by default (`--no-commit`, `--no-push`), since a handoff
+usually crosses machines. **`/session-resume`** briefs a new conversation from that file, flags it if
 stale, and **stops**; it takes no step of the plan it just described. A
 handoff is deleted by finishing the work, not by a flag.
 

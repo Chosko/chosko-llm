@@ -28,9 +28,9 @@ The four commit-by-default; the remaining authoring commands do not. That
 asymmetry is the feature, not a defect of it: the scaffolding commands
 (`/task-setup`, `/domain-setup`, `/project-setup`, `/unity-mcp-setup`), the
 context-layer builders (`/context-build`, `/context-convert`), the
-refactorers (`/refactor-codebase`, `/refactor-tests`) and `/runbook-create`
-all produce output whose first read is a human's eyes on the diff, and they
-keep the old default deliberately.
+refactorers (`/refactor-codebase`, `/refactor-tests`) all produce output
+whose first read is a human's eyes on the diff, and they keep the old default
+deliberately.
 
 ## Scope and non-goals
 
@@ -51,13 +51,12 @@ keep the old default deliberately.
 
 **Non-goals**
 
-- **The other nine authoring commands.** `/task-setup`, `/domain-setup`,
+- **The other authoring commands.** `/task-setup`, `/domain-setup`,
   `/project-setup`, `/unity-mcp-setup`, `/context-build`,
-  `/context-convert`, `/refactor-codebase`, `/refactor-tests` and
-  `/runbook-create` keep the old default. This is settled, not deferred: the
-  authoring group in
+  `/context-convert`, `/refactor-codebase` and `/refactor-tests` keep the old
+  default. This is settled, not deferred: the authoring group in
   [`docs/authoring-guide.md`](../../../docs/authoring-guide.md) shrinks to
-  those nine and goes on existing.
+  those commands and goes on existing.
 - **Collapsing the four commit blocks onto one authority.** Each of the four
   carries its own near-identical ARGUMENT PARSING / pull-at-start /
   `COMMIT AND PUSH` apparatus, and each keeps it. Routing them through

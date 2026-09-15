@@ -1022,11 +1022,14 @@ Currently shipped:
   carries a signal → branch table naming where `pipeline-revise` takes each
   signal. A change writing none of the three owners (only a `PLAN.md` line,
   say) stops naming that line's owner from `routing.md`. Write set EMPTY:
-  owns no line, its routing row owns `Nothing`, no who-writes-what row. No
-  commit of its own: `--commit` / `--no-push` forwarded to the arm (the arm's
-  closed write set committed per `commit.md`; `/runbook-create --append` gets
-  the flags). Forwarding table's first column is labelled this command's own
-  default, so no row reads as a claim about an owner's.
+  owns no line, its routing row owns `Nothing`, no who-writes-what row.
+  Owns the run's commit (COMMITTING, per `commit.md`): commits + pushes by
+  default, `--no-commit` / `--no-push`, `--commit` a no-op; pull once at
+  start after the anchor resolves; the arm runs uncommitted and an owner
+  command it invokes (`/runbook-create --append`) always gets `--no-commit`,
+  no owner pulls or pushes; then ONE commit of exactly what the arm wrote,
+  subject = the arm's closing report line. No commit on a refusal, a stop, an
+  empty write, or `--no-commit`.
 - `skills/pipeline-revise/` — heavy half of revising planned work (feature
   `pipeline-revision`). Explicit, never auto-triggered; same `requires:` as
   the patcher. `SKILL.md` carries the workflow; four flat supporting files,
@@ -1103,11 +1106,17 @@ Currently shipped:
   `[DONE]`, a `[RUNNING]` position) stops the sequence there, earlier writes
   kept and reported, NEVER rolled back, the after-lint still runs; a missing
   owner stops before the gate. Write set empty — no line, no file, no report
-  on disk; no status value, no change ledger. No commit of its own:
-  `--commit` / `--no-push` forwarded per owner step (arms commit their own
-  write set; `/runbook-create --append`, committing nothing by default, gets
-  `--commit` only when passed; `/task-add`, `/product-design` and
-  `/production-plan`, committing by default, get `--no-commit` without it).
+  on disk; no status value, no change ledger. Owns the run's commit
+  (COMMITTING, per `commit.md`): commits + pushes by default, `--no-commit` /
+  `--no-push`, `--commit` a no-op; pull once at start after the anchor
+  resolves; every owner step uncommitted (`/task-add`, `/product-design`,
+  `/production-plan`, `/runbook-create` incl. `--append`, `/architect` always
+  get `--no-commit`; by-path arms run with no commit; no owner pulls or
+  pushes); after step 9's lint, ONE commit of the union of reported writes,
+  subject = the `Revised <anchor> — <branch>, <tier>` line; arm C commits the
+  runbook `/runbook-create` wrote as that one commit. No commit on a stop
+  before the gate, D, a sequence stopped part-way (left uncommitted on
+  purpose, every path listed), an empty write, or `--no-commit`.
 - `skills/pipeline-suggest/` — the pipeline's auto-suggested entry point
   (feature `pipeline-suggest`) and the second artifact nobody invokes, built
   in `runbook-suggest`'s shape: Claude Code selects it from its
@@ -1201,9 +1210,12 @@ Currently shipped:
   path taken from conversation (`/session-resume` states it), never guessed;
   deletes nothing when it can't tell, so an unresumed file is never
   auto-deleted. Writes nothing outside `.claude/sessions/` — not `.gitignore`,
-  not `TASKS.md`/`FEATURES.md`, not a feature or context file. Runs no shell
-  command but a single clock read, never `git`. **Does not commit, does not
-  push, has no `--commit`.**
+  not `TASKS.md`/`FEATURES.md`, not a feature or context file. **Commits and
+  pushes by default** (`--no-commit` / `--no-push`, `--commit` a no-op): pull
+  at start before writing, then ONE commit `Save session <slug>` staging the
+  new file plus, when the superseded file was tracked, its deletion; shell use
+  is a clock read plus the commit-and-push protocol's git commands, none under
+  `--no-commit`.
 - `commands/session-resume.md` — reads one handoff and briefs current
   conversation from it. Command not skill, same single-pass shape. Resolution
   has exactly THREE forms: no argument → newest candidate; `YYYY-MM-DD` →
@@ -1440,8 +1452,9 @@ Currently shipped:
   shape only — never the full prompts, which are a wall of text and are in the
   file a moment later. `Context:` is authored as `none`: decisions belong INSIDE
   the fenced prompt, which keeps it pasteable into a fresh session by hand.
-  **Commit convention: authoring** — leaves output uncommitted by default;
-  `--commit` commits + pushes, `--commit --no-push` commits only.
+  **Commits and pushes by default** (`Add runbook <name>` / `Append <n> steps
+  to runbook <name>`, staging exactly the written paths); `--no-commit` writes
+  only, `--no-push` commits only, `--commit` accepted as a no-op.
 - `commands/runbook-list.md` — read side. `requires: skill:runbook-run`, for
   vocabulary rather than parsing: the status set and index block shape are
   specified once in `runbook-schema.md`. One pass over `.claude/RUNBOOKS.md`,

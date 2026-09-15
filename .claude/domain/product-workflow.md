@@ -351,7 +351,7 @@ Count + closed checklist, never a judgement of size. Proceed → owner's arm by 
 
 **Deletion maps onto existing vocabularies**; nothing physically removed. Task → `[SKIP]` w/ dated reason, successors' edges dropped w/ the reason recorded; runbook step → struck (`[x]`, `Done: struck — <reason>`); feature → every live task `[SKIP]`, `/production-plan` drops its edges, `FEATURES.md` entry stays. Clearing terminal entries stays `/task-clean`'s (which archives, never deletes) and `/runbook-clean`'s explicit act. Reorder = skip-and-insert: new id at the new position, nothing renumbered. `[DONE]` never reopened.
 
-**No new state.** No status value, no change ledger, no stored tier; outcomes are owners' writes in existing vocabularies (`[STALE]`, `[ITERATED]`, `[SKIP]`, `Preconditions:`, `Tasks:`, struck steps). Provenance = owner steps' commits and runbook `Done:` lines.
+**No new state.** No status value, no change ledger, no stored tier; outcomes are owners' writes in existing vocabularies (`[STALE]`, `[ITERATED]`, `[SKIP]`, `Preconditions:`, `Tasks:`, struck steps). Provenance = the revision's one commit and runbook `Done:` lines.
 
 ## Auto-suggested entry (`pipeline-suggest`)
 
@@ -461,7 +461,7 @@ All five follow commit-and-push protocol in [docs/authoring-guide.md](../../docs
 
 The four commit by default because their output is written and then read again by the next session, usually on another machine — the one place an uncommitted working tree helps nobody — and each already gates the director's review inside the run. One consequence worth knowing: `/product-design` now commits `.claude/domain/design-process.md`, so a resumed design process carries across machines.
 
-`/pipeline-patch` and `/pipeline-revise` have no commit phase of their own: `--commit` / `--no-push` forwarded to each owner step, which either commits its own write set (an arm executed by path) or receives the flag. Which flag depends on the owner's own default: a command committing by default — `/task-add`, `/product-design`, `/production-plan` — gets `--no-commit` when `--commit` is absent and no flag when it is present; a command committing nothing by default — `/runbook-create --append` — gets no flag when `--commit` is absent and `--commit` when it is present.
+`/pipeline-patch` and `/pipeline-revise` commit and push by default and own the commit: a patch or a revision is one unit of work, so it lands as exactly one commit, made at the end — never one per owner step. Pull once at start, after the anchor resolves. Every owner step runs uncommitted: a command owner (`/task-add`, `/product-design`, `/production-plan`, `/runbook-create`, `/architect`) always receives `--no-commit`, whatever its own default; an arm executed by path runs with no commit; no owner step pulls or pushes. After the last step and the closing lint, stage the union of the paths the steps wrote, commit once (subject: the arm's closing report line for a patch, the `Revised <anchor> — …` line for a revision), re-sync, push. Revise's arm C commits the runbook `/runbook-create` wrote as the revision's one commit. No commit on a refusal, a stop, a sequence stopped part-way, a run that wrote nothing, or `--no-commit` — a partial sequence is left uncommitted on purpose, so every commit holds a complete revision. `--no-push` commits without pushing; `--commit` accepted, no-op.
 
 ## Domain layer vs. context layer
 

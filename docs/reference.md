@@ -15,8 +15,11 @@ features (those that advance a backlog) commit and push by default and take
 `--no-commit` / `--no-push` to hold back. The four design skills —
 `/product-design`, `/product-roadmap`, `/architect` and `/production-plan` —
 write documents but follow the second convention: their output is written
-once and read again by the next session, usually on another machine. Each
-still accepts `--commit`, now as a silent no-op.
+once and read again by the next session, usually on another machine. So do
+`/runbook-create` and `/session-save`, for the same reason. Each still accepts
+`--commit`, now as a silent no-op. `/pipeline-patch` and `/pipeline-revise`
+commit by default too, but own the commit: every owner step they run stays
+uncommitted, and the whole change lands as one commit at the end.
 
 ---
 
@@ -544,7 +547,7 @@ runbook step through that owner's amend step, then re-checks it. Anything
 else it refuses.
 
 ```
-/pipeline-patch <anchor> "<change>" [--commit] [--no-push]
+/pipeline-patch <anchor> "<change>" [--no-commit] [--no-push]
 ```
 
 The anchor is required, in one of three forms:
@@ -594,9 +597,14 @@ change that writes none of the three owners, only a line another command
 owns (a milestone's order in `PLAN.md`, say), is refused too, naming that
 line's owner.
 
-It makes no commit of its own. `--commit` and `--no-push` are passed on to
-the amend step, which then commits exactly what it wrote; without `--commit`
-nothing is committed and the report reminds you. Requires
+A patch is one unit of work, so it lands as exactly one commit, made at the
+end. It pulls once at the start, runs the amend step uncommitted (an owner
+command the step invokes, such as `/runbook-create --append`, always gets
+`--no-commit`), then stages exactly what the step wrote and commits it with
+the step's closing report line as the subject, and pushes. `--no-push`
+commits without pushing; `--no-commit` commits nothing and the report lists
+what was written. A refusal, a step answered stop, or a run that wrote nothing
+commits nothing. `--commit` is still accepted and changes nothing. Requires
 `skill:pipeline-engine`, `skill:architect`, `skill:task-engine` and
 `skill:runbook-run`, which `chosko-llm add` installs with it.
 
@@ -608,7 +616,7 @@ edge changing. It traces the change's impact, proposes one plan, then runs
 each owner's own step in order. It writes nothing itself.
 
 ```
-/pipeline-revise [<anchor>] "<change>" [--commit] [--no-push]
+/pipeline-revise [<anchor>] "<change>" [--no-commit] [--no-push]
 ```
 
 The anchor takes the same three forms as `/pipeline-patch` and is optional.
@@ -720,11 +728,18 @@ gate, the sequence ends there. Earlier steps' writes stay and are reported,
 never rolled back, and the lint after still runs. A step whose owner isn't
 installed stops the run before the gate.
 
-It makes no commit of its own. `--commit` and `--no-push` are passed on to
-each owner step. An amend step commits its own writes; `/runbook-create
---append`, which commits nothing by default, gets `--commit` only when you
-passed it; and `/task-add`, `/product-design` and `/production-plan`, which
-commit by default, get `--no-commit` when you didn't. Requires the same four skills as `/pipeline-patch`.
+A revision is one unit of work, so it lands as exactly one commit, made at
+the end, never one per owner step. It pulls once at the start; every owner
+step runs uncommitted (`/task-add`, `/product-design`, `/production-plan`,
+`/runbook-create` and `/architect` always get `--no-commit`, and an amend step
+run by path commits nothing). After the last step and the lint, it stages the
+paths the steps wrote, commits them with the `Revised <anchor> — …` report
+line as the subject, and pushes. Handing the plan to `/runbook-create` commits
+the new runbook as the revision's one commit. A sequence that stops part-way
+(an owner refuses, or you stop at its gate) commits nothing: the report lists
+every path written so far, so every commit holds a complete revision.
+`--no-push` commits without pushing, `--no-commit` commits nothing, and
+`--commit` is still accepted and changes nothing. Requires the same four skills as `/pipeline-patch`.
 
 ### `pipeline-suggest`
 
@@ -1201,9 +1216,10 @@ after it was authored.
 - **A running runbook.** On a `[RUNNING]` runbook, every amendment lands
   after the current step and is made from the running session.
 
-Commit behaviour follows each command's family: `/runbook-create` is an
-authoring command and leaves the runbook uncommitted for one review pass
-(`--commit`, or `--commit --no-push`), `/runbook-clean` commits and pushes
+Commit behaviour: `/runbook-create` commits and pushes the runbook it wrote
+by default (`--no-commit` / `--no-push`), since a runbook is read by the next
+session and its review already happens at the plan gate; `--commit` is still
+accepted and changes nothing. `/runbook-clean` commits and pushes
 the deletion by default (`--no-commit` / `--no-push`), `/runbook-run` commits
 after every step, and `/runbook-list`, `/runbook-describe` and
 `runbook-suggest` write nothing at all.
@@ -1286,9 +1302,13 @@ of the same work never coexist. A file that was never resumed is never
 deleted automatically; the stale flag is the only signal it will ever get.
 There is no `--prune`.
 
-Neither command commits. `/session-save` writes the file, reports the path,
-and notes in one line that it's untracked; whether a handoff belongs in the
-repo's history is your call.
+`/session-save` commits and pushes the handoff by default, as
+`Save session <slug>`: a handoff usually crosses machines, where an untracked
+file helps nobody. When the save supersedes a tracked session file, that
+file's deletion rides in the same commit. `--no-commit` leaves the handoff
+uncommitted, `--no-push` commits without pushing, and `--commit` is accepted
+and changes nothing. `/session-resume` commits nothing: it writes, deletes and
+stages nothing.
 
 ### `hook:remote-session-protocol`
 
