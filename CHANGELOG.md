@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.46.2 — 2026-09-15
+
+- A runbook's `Sequencing:` header line is now optional and one line: only *why* the order is what it is, where list position and `Depends on:` can't show it.
+- **/runbook-create --append** and step amendments no longer extend it; a dated fact about an inserted or struck step goes in that step's `Context:`. Existing longer lines are left as they are.
+
 ## 1.46.1 — 2026-09-15
 
 - **/runbook-run** now writes a terse `Done:` line by default: `Done: <date>, commit <sha> (<N> files, +X/-Y).` A decision or wrong premise is added only when a later reader would be misled without it; review tallies, touched files, restated prompts and resumption narrative stay off the line.

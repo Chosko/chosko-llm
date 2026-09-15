@@ -99,7 +99,7 @@ way a task's `Preconditions:` line points at a task id.
 # Runbook: <name>
 
 Created: 2026-08-24 · Source: /architect run · Model: opus
-Sequencing: 1–4 ordered (all three edit skills/task-implement/SKILL.md); 5–7 independent.
+Sequencing: 1–4 all edit skills/task-implement/SKILL.md.          ← optional; one line
 Companion: .claude/sessions/2026-08-24-1430-ecc-import-architecture.md
 
 ## [ ] 1. <title>
@@ -137,7 +137,7 @@ Context: none
 | `Created:` | provenance — the date the runbook was authored. |
 | `Source:` | provenance — where the material came from (`/architect run`, `manual`, …). |
 | `Model:` | the model **every** step is spawned with. Header-only; there is no per-step model. `/runbook-run --model <model>` overrides it for a whole run. |
-| `Sequencing:` | one line of prose stating the order **and why it is the order**. This is the part a reader needs and a bare dependency graph does not carry — "1–4 all edit the same file" is worth more than four `Depends on:` lines. |
+| `Sequencing:` | optional, absent by default; **one line** when present. Its only job is **why** this is the order, in the cases list position and `Depends on:` cannot express — "1–4 all edit the same file". What the order *is* is list position and `Depends on:`, never this line. It is written at authoring time and never changed afterwards: an append or an amendment does not extend it, and a dated fact about an inserted or struck step goes in that step's `Context:`. The one-line cap is what stops the header growing without bound — an extendable field accumulated a full page of dated append narration in one real runbook. An existing longer line is left as it is. |
 | `Companion:` | optional. A background document offered to every step, inserted into every spawned prompt. |
 
 ### A step

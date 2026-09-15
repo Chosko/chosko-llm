@@ -1,6 +1,6 @@
 ---
 name: runbook-create
-version: 0.6.1
+version: 0.6.2
 type: command
 description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/<id>-<name>.md, plus its .claude/RUNBOOKS.md index block — or append steps to one that already exists, including one a run is in the middle of. An append goes at the foot by default; with --before <step> or --after <step> the new steps are written at that position in the list instead, still taking the next unused step id, because a step's id is a stable identifier and not its position — no existing step is ever edited or renumbered. Assigns each new runbook the next id from the index's Last runbook number: counter, which every other runbook- command then accepts in place of the name. Authors each step's optional Needs: line (agent / agent+human / human, absent meaning agent) so a reader can see before starting which steps need a person, and calls those steps out at the confirmation gate. Refuses a new name that is already taken, or whose first kebab segment is all digits, with one suggested alternative. Two axes: where the steps go (a new runbook, --append <id|name|id-name>, which renames a legacy <name>.md body to <id>-<name>.md unless that runbook is running, --append with no name for the runbook this session is running, or no arguments at all, which asks) and where the material comes from (the current conversation's most recent follow-up list, the default; or a free-form description gathered through one batched interview). Enforces ten prompt-quality rules against every step before writing — self-contained, names the document to read first, carries every decision that exists nowhere on disk and nothing that already does, states its sequencing and what must not be re-proposed, uses real slash commands, references no path missing at run time, produces one deliverable, never invokes /runbook-run, and prefers two steps to one that would need a nested spawn — fixing failures and naming each fix in the confirmation report. The gate shows the proposed shape only, never the full prompts. Authoring command — leaves the runbook uncommitted for one review pass by default; pass --commit to commit and push it, or --commit --no-push to commit without pushing.
 requires: skill:runbook-run
@@ -264,9 +264,10 @@ so the whole interview can be settled in a sentence:
 1. **What must be true when this runbook is finished?** The end state. It is
    what makes the last step recognizable as the last step.
 2. **What are the steps, in order?** Titles are enough at this stage.
-3. **Which steps must precede which, and why?** The *why* is the part that
-   goes on the `Sequencing:` line — "1–4 all edit the same file" is worth more
-   to a future reader than a dependency graph.
+3. **Which steps must precede which, and why?** The order is list position
+   and the edges are `Depends on:`. A *why* those two cannot show — "1–4 all
+   edit the same file" — is the optional one-line `Sequencing:`; when there is
+   none, the runbook has no `Sequencing:` line.
 4. **For each step, which document should the agent read first?** A step with
    no such document needs its evidence carried inline instead, which is worth
    knowing now rather than at write time.
@@ -393,7 +394,7 @@ Index: .claude/RUNBOOKS.md
 Position: before step 4 — <its title>   (appends only; or: after step <n> — <title>; or: at the foot)
 
 Header:     Created <YYYY-MM-DD> · Source <…> · Model opus
-Sequencing: <the one-line prose statement of the order and why>
+Sequencing: <one line: why this order, where position and Depends on: can't show it — or none>
 Companion:  <path, or none>
 
 Steps:
@@ -500,8 +501,12 @@ All of these apply to every append — at the foot or at a `--before` /
   The new steps' `Depends on:` lines are authored as part of the append, with
   the position in mind. **An existing step's `Depends on:` is never
   rewritten** — not to point at a step inserted above it, not for any reason.
-- **The `Sequencing:` header line is extended, never replaced.** It describes
-  the whole runbook, and the appended steps are now part of it.
+- **The `Sequencing:` header line is never touched** — not extended, not
+  replaced, not added to a runbook that has none. It is one line, fixed at
+  authoring time, per `runbook-schema.md` § *The header*; an append that
+  extended it is what once grew a header to a page of dated narration. A dated
+  fact an appended step needs goes in its prompt, and a fact learned later
+  goes in its `Context:`.
 - **Existing steps are never edited.** This is the invariant that makes an
   append safe during a run, and it holds wherever the new steps land: no
   existing step's heading, marker, `Depends on:`, `Needs:`, `Context:`, prompt
@@ -602,7 +607,8 @@ DO NOT:
   steps so the ids read in order — `runbook-schema.md` § *A step*.
 - Accept `--before` and `--after` together, either without `--append`, or a
   step id no step carries.
-- Replace the `Sequencing:` line on an append. Extend it.
+- Write to the `Sequencing:` line on an append — neither extend nor replace
+  it — or write one longer than a single line when authoring.
 - Append to a `[RUNNING]` runbook from a session that is not the one running
   it.
 - Disambiguate a colliding name automatically. Refuse it, suggest one

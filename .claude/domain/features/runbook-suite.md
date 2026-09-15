@@ -232,9 +232,10 @@ Depends on: 1
 ````
 
 Header fields: `Created:` and `Source:` are provenance; `Model:` is the model
-every step is spawned with; `Sequencing:` is one line of prose stating the order
-and *why* it is the order, which is the part a reader needs and a bare
-dependency graph does not carry. `Companion:` is optional — a background
+every step is spawned with; `Sequencing:` is optional and one line when present,
+carrying only *why* this is the order where list position and `Depends on:`
+cannot show it ("1–4 all edit the same file") — never changed after authoring,
+so it cannot grow. `Companion:` is optional — a background
 document offered to every step, which in the reference file was pasted into all
 seven prompts by hand.
 

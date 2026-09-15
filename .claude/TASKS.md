@@ -51,7 +51,7 @@ Preconditions: none
 
 ## 220. Make `Sequencing:` optional and one line, and stop appends extending it
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/references/runbook-schema.md, skills/runbook-run/references/step-amend.md, commands/runbook-create.md, skills/pipeline-engine/references/routing.md, .claude/domain/features/runbook-suite.md, .claude/context/features.md, docs/reference.md, VERSION, CHANGELOG.md
 Preconditions: none

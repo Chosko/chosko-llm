@@ -1045,7 +1045,9 @@ that has none of the conversation the prompts came out of.
   instead (the two can't be combined, and an unknown step id is answered with
   the runbook's step list). Either way they take the next unused step id: a
   step's number is a stable id, not its position, so a runbook may list step
-  6 above step 3. No existing step is edited, moved or renumbered.
+  6 above step 3. No existing step is edited, moved or renumbered, and the
+  header's optional one-line `Sequencing:` (why the order is what it is) is
+  never extended.
 - `/runbook-run <id|name|id-name>` — execute it, one step at a time, top to bottom in
   list order. `--from N`, `--to N`
   (they compose: `--from X --to Y` runs that range, inclusive), `--only N` and

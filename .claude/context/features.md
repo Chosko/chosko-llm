@@ -1392,7 +1392,7 @@ Currently shipped:
   contiguous block at that position — id is not position, so the foot need
   not carry the highest id, and the gate's `Position:` line says where they
   land; existing steps NEVER edited, moved or renumbered, their `Depends on:`
-  never rewritten, `Sequencing:` extended not replaced, `[DONE]` → back to `[PENDING]`, `[FAILED]` stays
+  never rewritten, `Sequencing:` (optional, one line) never touched, `[DONE]` → back to `[PENDING]`, `[FAILED]` stays
   `[FAILED]`, `[RUNNING]` appendable **only from the running session itself**.
   Enforces ten prompt-quality rules before writing (self-contained; names the
   document to read first or carries evidence inline; carries every decision that
