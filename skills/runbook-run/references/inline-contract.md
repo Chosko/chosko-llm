@@ -50,8 +50,9 @@ INLINE RULES
   fix. Never do a child's work in your own context.
 - During the execution phase, never edit <FILE> or .claude/RUNBOOKS.md.
 - End the execution phase by writing out your outcome as a separate act, before
-  any bookkeeping: the literal line `DONE` followed by the commit sha(s), the
-  decisions taken and any premise that proved wrong — or, if the work failed or
+  any bookkeeping: the literal line `DONE` followed by the commit sha(s) and
+  their diffstat, plus any decision or wrong premise a later reader of this
+  runbook would be misled without — or, if the work failed or
   could not be completed, a plain statement of failure. If you cannot state the
   outcome confidently, it is a failure.
 - The Stop-hook reply is unchanged.

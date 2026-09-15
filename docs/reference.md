@@ -1112,9 +1112,9 @@ spawns **one** subagent with a fixed prompt (a preamble telling it to orient
 from `CLAUDE.md`, the companion document, the runbook's
 `## Do not re-propose` section, the step's `Context:` bullets, the prompt
 block verbatim, then the operating rules), and then waits. It ticks nothing
-before that agent's result actually arrives. On `DONE` it writes a `Done:`
-line recording the commit sha, the decisions taken and any premise that
-proved wrong, then commits the runbook and the index: one commit per
+before that agent's result actually arrives. On `DONE` it writes a terse `Done:`
+line — the date, the commit sha and its diffstat, with a decision or wrong
+premise added only when a later reader would be misled without it — then commits the runbook and the index: one commit per
 completed step. The `[~]` marker is never committed, so finding one in your
 tree is the signal that this is the tree an interrupted run left behind.
 

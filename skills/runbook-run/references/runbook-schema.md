@@ -227,17 +227,41 @@ turned down.
 ### The `Done:` line
 
 **It does not exist until a run writes it.** An authored runbook has no `Done:`
-lines at all. A run appends one when a step reaches `[x]` or `[!]`, and it
-records three things:
+lines at all. A run appends one when a step reaches `[x]` or `[!]`.
 
-1. **the commit sha** (or that there was none, and why),
-2. **the decisions taken while executing** — what the agent chose where the
-   prompt left room,
-3. **any premise in the step that proved wrong.**
+**The default is terse — one line, in this form:**
 
-Those are the three things a hand-run of this loop recorded and the three that
-were re-read most often. A `Done:` line whose only content is "done" is a line
-that will be worthless in a week.
+```
+Done: <YYYY-MM-DD>, commit `<sha>` (<N> files, +<X>/-<Y>).
+```
+
+The date the step finished, the commit sha (several, comma-separated, with the
+diffstat summed across them), and the diffstat. A step that made no commit says
+so in the sha's place, and why: `Done: <YYYY-MM-DD>, no commit — <reason>.`
+
+Two things are added **only when they pass one test** — would a later reader of
+this runbook be misled without it?
+
+- **a decision taken while executing** — what the agent chose where the prompt
+  left room, when a later step or reader would otherwise assume the other
+  choice;
+- **a premise in the step that proved wrong.**
+
+What passes the test is what a re-reader must know, never what the agent did to
+arrive there. None of these belong on the line, whatever the report carried:
+
+- per-round review tallies — findings raised, accepted, rejected;
+- which files were touched — the diffstat already counts them, and the commit
+  names them;
+- a restatement of the step's prompt or of a task body;
+- narration of the agent's own resumption, retries or process.
+
+A line that passes nothing is the one-line default and is complete as it is.
+The record lives in the commit; the `Done:` line points at it. (Lines written
+before this form are not rewritten — they are the record of what happened.)
+
+A `[!]` step's `Done:` line still **opens with the failure reason**, and a
+struck step's line is `references/step-amend.md`'s, unchanged.
 
 ---
 

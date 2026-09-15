@@ -42,7 +42,7 @@ Preconditions: 217
 
 ## 219. Cap the runbook `Done:` line to a terse default form
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/references/runbook-schema.md, skills/runbook-run/SKILL.md, skills/runbook-run/references/subagent-contract.md, .claude/domain/features/runbook-suite.md, .claude/context/features.md, docs/reference.md, VERSION, CHANGELOG.md
 Preconditions: none

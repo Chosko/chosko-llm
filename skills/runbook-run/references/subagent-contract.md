@@ -51,9 +51,13 @@ OPERATING RULES
 - Never edit <FILE> or .claude/RUNBOOKS.md.
 - You are executing step <N> of runbook <RUNBOOK>.
 - When finished, end your turn with the literal line `DONE` followed by a
-  concise report naming the commit sha(s), the decisions taken, and any premise
-  in the prompt or task body that proved wrong. If the work failed or could not
-  be completed, say so plainly instead of `DONE`.
+  concise report naming the commit sha(s) and their diffstat (files changed,
+  insertions, deletions), plus any decision taken or premise in the prompt or
+  task body that proved wrong which a later reader of this runbook would be
+  misled without. Leave out review tallies, the list of touched files, a
+  restatement of the prompt or task body, and any account of your own process.
+  If the work failed or could not be completed, say so plainly instead of
+  `DONE`.
 ```
 
 ## Paste ends
@@ -108,8 +112,13 @@ contract, and is never sent to a subagent.
   prompt — a collision the orchestrator cannot detect, since it never opens
   either file. `<RUNBOOK>` and `<N>` are already substituted here, so naming
   them costs no further placeholder.
-- **`DONE` plus the three-part report.** `DONE` is the literal marker the
-  orchestrator classifies on; the sha, the decisions and the wrong premises are
-  exactly what the `Done:` line records and what fact propagation feeds into
-  later steps. "Say so plainly instead of `DONE`" exists because an agent that
+- **`DONE` plus the terse report.** `DONE` is the literal marker the
+  orchestrator classifies on. The sha and the diffstat are exactly what the
+  default `Done:` line records, and asking the agent for the diffstat is what
+  lets the orchestrator write that line without running git — a cheap
+  orchestrator is the thing being protected. Decisions and wrong premises are
+  conditional, as on the `Done:` line itself, and feed fact propagation into
+  later steps. The exclusion list names what agents were observed dumping into
+  the line — review tallies, touched files, restated prompts, resumption
+  narrative — until runbook bodies grew unreadable. "Say so plainly instead of `DONE`" exists because an agent that
   fails and still writes `DONE` out of politeness produces a runbook that lies.

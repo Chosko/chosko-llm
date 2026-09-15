@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.46.1 — 2026-09-15
+
+- **/runbook-run** now writes a terse `Done:` line by default: `Done: <date>, commit <sha> (<N> files, +X/-Y).` A decision or wrong premise is added only when a later reader would be misled without it; review tallies, touched files, restated prompts and resumption narrative stay off the line.
+- A step's agent now reports the diffstat beside the sha, so the orchestrator writes the line without running git. Existing `Done:` lines are not rewritten.
+
 ## 1.46.0 — 2026-09-15
 
 - **/pipeline-revise** now marks a recommended answer at its editorial question, taken from the tier the plan already shows: an editorial tier recommends A, a local or structural one recommends B. One evidence line names the touched artifacts. You still have to reply, and silence still stops.

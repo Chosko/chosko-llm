@@ -1270,8 +1270,10 @@ Currently shipped:
   `[~]`, spawn ONE subagent, **wait for the result notification** (the single
   most dangerous point — the spawn's return value is not the result), classify,
   commit. **Four** result cases: `QUESTIONS FOR USER` → relay to user, answer back
-  to the SAME subagent, repeat; `SPAWN REQUEST` → the spawn relay, below; `DONE` + report → `[x]`, write `Done:` (sha,
-  decisions, wrong premises), propagate facts as dated `Context:` bullets,
+  to the SAME subagent, repeat; `SPAWN REQUEST` → the spawn relay, below; `DONE` + report → `[x]`, write `Done:` (terse default
+  `Done: <date>, commit <sha> (<N> files, +X/-Y)` from the report's sha +
+  diffstat; decisions / wrong premises only if a re-reader would be misled),
+  propagate facts as dated `Context:` bullets,
   update `Steps:`, commit; **anything else, incl. ambiguous → `[!]`**, index
   `[FAILED]` + `Failed at:`, halt. **Spawn relay** (`--relay-spawns` forces it;
   otherwise the step's own agent triggers it): where a subagent cannot spawn a

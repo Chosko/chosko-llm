@@ -1,6 +1,6 @@
 ---
 name: runbook-run
-version: 0.11.1
+version: 0.11.2
 type: skill
 description: Execute a runbook — an ordered list of self-contained prompts under .claude/runbooks/<id>-<name>.md, opened at the path its index block's File: line holds — by walking it top to bottom (list position is the order; a step's number is a stable id, not its position), by default spawning one fresh subagent per step, relaying that subagent's questions to the user and the user's answers back to the same subagent, recording what each step actually did in a Done: line, and committing the runbook and its .claude/RUNBOOKS.md index after every step. Steps run one at a time, never in parallel. In the default mode the orchestrator reads only CLAUDE.md, the runbook and the index, writes only the runbook and the index, and never does a step's work — every other change in the tree is made by a subagent, and it never reviews or second-guesses one. The one opt-in exception is --inline, under which the orchestrating session executes each selected step itself: bookkeeping (selection, markers, Done: lines, the index, fact propagation, commit cadence) is unchanged and records nothing about the mode, while an execution phase replaces spawn-and-wait under a fixed inline rule set in references/inline-contract.md (the brief is the authority, records win over memory, facts are still written down, questions are asked directly, a wanted child is spawned one level down and never done inline); --inline is refused beside --relay-spawns or --model, and the header Model: is not applied. Usage: /runbook-run <id|name|id-name> — the numeric id the index assigns each runbook, its kebab-case name, or the two joined as in its body's file name, resolved by the schema's rule — with --from N to begin selection at step N, --to N to stop after step N (the two compose into --from X --to Y, an inclusive range), --only N to run exactly one step, --steps N to run at most N steps in this run and then stop the way a --to bound does (composes with --from, refused beside --to or --only), --model <model> to override the runbook's header model for this run, --inline to execute the selected steps in this session instead of in subagents (composes with every selection and commit flag), --relay-spawns to force the spawn relay for a whole run, and --no-commit / --no-push with their usual meanings. Where a subagent cannot spawn a subagent — cloud sessions among them — a step's agent ends its turn with SPAWN REQUEST naming a prompt file and a result file under the OS temp dir; the orchestrator spawns that child at its own nesting level, waits for it, and tells the caller the result is ready, without ever opening either file. A legacy body at .claude/runbooks/<name>.md is renamed to <id>-<name>.md lazily, in Resolve and in the run's first step commit, never while the runbook is [RUNNING], per references/body-migration.md, which is read only when that check fires. Also carries, in references/, the files the rest of the runbook suite and the pipeline revision surfaces read by path: runbook-schema.md (the asset kind — store, File: as the body's path, the three-form id|name|id-name resolution rule and the migration check, body schema, step markers, status vocabulary, the optional per-step Needs: field, the index block with its id and Last runbook number: counter, and the backfill an index written before ids gets from the first command that writes it), subagent-contract.md (the OPERATING RULES block pasted verbatim into every spawned prompt, with its three placeholders <RUNBOOK>, <N> and <FILE>), body-migration.md (the lazy rename protocol, read only by /runbook-run and /runbook-create --append) and step-amend.md (the rules for amending one pending step — strike it as [x] with a Done: line opening struck and no commit sha, never deleted or renumbered; insert through /runbook-create --append --before / --after; add dated Context: facts — with the prompt block immutable, so a wrong prompt is struck and a corrected step inserted, and a [RUNNING] runbook accepting changes only after its current step).
 ---
@@ -411,8 +411,9 @@ still verbatim and still immutable.
 
 The execution phase ends with the session writing out its own outcome, as a
 **separate act**, before any bookkeeping is written: either a `DONE` report
-naming the commit sha(s), the decisions taken and any premise that proved
-wrong, or a plain statement of failure. Step 7 classifies that written outcome
+naming the commit sha(s) with their diffstat, plus any decision or wrong
+premise a later reader would be misled without, or a plain statement of
+failure. Step 7 classifies that written outcome
 by THE FOUR RESULT CASES.
 
 - An outcome the session cannot state confidently is a **failure**, exactly as
@@ -495,8 +496,14 @@ rather than producing a `SPAWN REQUEST` — see the relays below.
 
 ### On `DONE`
 
-Write the `Done:` line from the agent's report: the commit sha, the decisions
-taken while executing, and any premise in the step that proved wrong. Then set
+Write the `Done:` line from the agent's report, in the terse default form
+`runbook-schema.md` § *The `Done:` line* gives —
+`Done: <YYYY-MM-DD>, commit `<sha>` (<N> files, +<X>/-<Y>).` — taking the sha
+and the diffstat from the report, never from git. Add a decision or a wrong
+premise only when it passes that section's test: a later reader of this runbook
+would be misled without it. Review tallies, touched files, restated prompt or
+task content and resumption narrative stay off the line even when the report
+carries them. The same form applies under `--inline`. Then set
 the marker to `[x]`, update the index's `Steps:` count (`[x]` only), and
 propagate facts (below).
 

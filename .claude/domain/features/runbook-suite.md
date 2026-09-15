@@ -252,10 +252,15 @@ Step markers, in the `##` heading:
 | `[x]` | done — a `Done:` line follows |
 | `[!]` | failed — a `Done:` line follows, opening with the reason |
 
-The `Done:` line does not exist until a run writes it. It records the commit
-sha, the decisions taken while executing, and any premise in the step that
-turned out to be wrong — the three things the hand-run version recorded and the
-three that were re-read most often.
+The `Done:` line does not exist until a run writes it. By default it is one
+terse line — `Done: <YYYY-MM-DD>, commit `<sha>` (<N> files, +<X>/-<Y>).` —
+with the sha and diffstat taken from the agent's report. The decisions taken
+while executing and any premise in the step that turned out to be wrong are
+added only when a later reader of the runbook would be misled without them.
+The hand-run version recorded all three every time, but mandating them in a run
+turned the line into a place to narrate process — per-round review tallies,
+touched files, restated prompts, resumption narrative — until runbook bodies
+grew unreadable; those never belong on it.
 
 A pending step can also be **struck** after authoring, per
 `references/step-amend.md`. It is written `[x]` with a `Done:` line opening
