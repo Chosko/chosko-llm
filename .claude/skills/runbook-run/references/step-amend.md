@@ -119,9 +119,9 @@ ahead of the steps that depended on the struck one; say so at the gate.
 
 ## Never changed
 
-- The header, `Sequencing:` (an insert extends it, as `/runbook-create
-  --append` does), `Companion:`, `## Do not re-propose`, and any step's
-  title, `Depends on:` or `Needs:`.
+- The header, `Sequencing:`, `Companion:`, `## Do not re-propose`, and any
+  step's title, `Depends on:` or `Needs:`. A dated fact about an inserted or
+  struck step goes in that step's `Context:`, never the header.
 - Any marker, except a pending step's `[ ]` → `[x]` on a strike.
 - Any step already `[x]`, `[!]` or `[~]`, and any `Done:` line already
   written.

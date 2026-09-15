@@ -89,6 +89,10 @@ Under the gate's A, the sequence keeps only the removal itself — step 2, or
 the strike — and the gate shows the L4 findings that leaving the successors'
 edges in place will create.
 
+Neither tier is editorial — a removal ends what an entry means — so both mark
+B at the gate, per `./SKILL.md` step 7: the evidence names the removed entry,
+and under structural the artifacts it crosses or the edge it drops.
+
 ## Verification
 
 When the deletion dropped an edge, `./SKILL.md` step 9's successor read

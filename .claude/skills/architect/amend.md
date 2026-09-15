@@ -125,17 +125,43 @@ The arm's one and only gate. One message, carrying:
 3. **The proposed outcome** under each answer below: which tasks go
    `[STALE]`, and what the feature's `Status:` becomes.
 4. **The question.** It is asked on every amendment, a `[NEW]` feature's
-   included, and is never inferred, classified or pre-answered by the arm —
-   with one exception, below:
+   included, and is never pre-answered by the arm — with one exception,
+   below. It carries one marked letter, the recommendation (next paragraph),
+   marked exactly as the carried answer's letter is marked in that exception
+   — one marking mechanism, two sources.
 
 > Is this change editorial — wording only, with nothing any task builds
 > changing?
+>
+> <evidence line>
 >
 > A. **Editorial** — edit the document; no task is staled and `Status:`
 >    stays `<status>`.
 > B. **Not editorial** — edit the document, mark <ids | no tasks> `[STALE]`,
 >    and `Status:` becomes `<outcome>`.
 > C. **Stop** — write nothing.
+
+**The recommendation is derived, never judged.** It is a closed rule over two
+findings the gate already renders — the touched set (item 2) and the scope
+call (item 3, § *The status outcome*) — and adds no inference of its own:
+
+- touched set empty **and** no scope added → mark **A**;
+- otherwise → mark **B**.
+
+The evidence line above the letters states which findings decided it, citing
+only what items 2–3 already render — a task id, an edited section, or the
+named scope item — never an adjective:
+
+- A marked: `Recommended: A — no task touched, no scope added; A and B write
+  the identical set here.` A is marked only on that pair of findings, and on
+  it A and B do write the identical set — no task to stale, no `Status:`
+  change — so the line says so. Both letters are still offered, so the
+  classification can be overruled.
+- B marked: `Recommended: B — touched: <ids>` and/or `scope added: <named
+  scope item> (§ <edited section>)`.
+
+The marked letter is a recommendation, not an answer: the reply still has to
+name a letter, and nothing is written on it alone.
 
 **The one exception: an answer carried from `/pipeline-revise`.** When this
 arm runs as an owner step of `/pipeline-revise`, in the session that asked
@@ -154,19 +180,24 @@ rendered as a confirmation of it instead of being asked again verbatim:
 >    and `Status:` becomes `<outcome>`.
 > C. **Stop** — write nothing.
 
-The carried answer's letter is marked as the one given at the revise gate;
-replying with it confirms, replying with the other letter switches, and C
-stops. The gate is not skipped and the step is not approved by the carried
+The carried answer's letter is marked as the one given at the revise gate —
+the carried answer stays the marked letter, and the recommendation above never
+replaces it. When the arm's own derivation marks the other letter, add it as
+one line above the letters — `This edit's own findings would mark <letter>:
+<evidence>.` — and otherwise add nothing. Replying with the marked letter
+confirms, replying with the other letter switches, and C stops. The gate is not skipped and the step is not approved by the carried
 answer: items 1–3 still render in full, and an explicit reply is still
 required. Only `/pipeline-revise` carries an answer. Standalone
 `/architect amend`, and `/pipeline-patch` — which has no gate of its own
 before the arm, so no earlier answer to carry — ask the full question above.
 
 The user may overrule a classification, or the scope call below, in the same
-answer; re-render the outcome and ask again. A reclassification that makes an
+answer; re-render the outcome, re-derive the marked letter from the new
+findings, and ask again. A reclassification that makes an
 `[IN PROGRESS]` task touched triggers step 3's refusal unchanged: stop, and
 write nothing. Wait for an explicit answer. Silence, an unclear reply or EOF
-is C — under the confirmation form as under the full question.
+is C — under the confirmation form as under the full question, and whichever
+letter is marked. No flag pre-answers the question.
 
 ### The status outcome
 
@@ -233,10 +264,12 @@ step 5 is what it stages.
 ## Never
 
 - Run PHASE 1 or PHASE 2, or ask anything but the gate's one question.
-- Infer whether a change is editorial, or skip the question because the
-  answer looks obvious. The one answer the arm takes from outside is the one
-  the user gave at `/pipeline-revise`'s gate, and it is shown for
-  confirmation, never applied without an explicit reply (§ 4).
+- Skip the question because the answer looks obvious, or treat the marked
+  letter as the answer. The recommendation is derived from the touched set
+  and the scope call, and is shown for an explicit reply; the one answer the
+  arm takes from outside is the one the user gave at `/pipeline-revise`'s
+  gate, and it too is shown for confirmation, never applied without an
+  explicit reply (§ 4).
 - Stale an untouched task, or refuse on an untouched `[IN PROGRESS]` one.
 - Override a touched `[IN PROGRESS]` refusal.
 - Classify, stale or otherwise touch a `[DONE]` or `[SKIP]` task.

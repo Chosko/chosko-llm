@@ -146,9 +146,15 @@ names `/production-plan` as the follow-up.
   step 2 runs for the task's feature. A `Preconditions:` edge added or dropped
   is always structural.
 
-The branch judges local or structural for the proposal. The tier decides how
+The branch judges the tier for the proposal, and judges **editorial** only when
+all three hold: the change is wording only; nothing downstream changes meaning
+— no status moves, no edge, no `Files:`, no scope; and the sequence A leaves
+equals the sequence B runs, the one step that writes the anchored artifact.
+When any one fails it judges local or structural, as above. The tier decides how
 long the sequence is; it never decides whether the gate is asked. Under the
-gate's A the sequence is the editorial one; under B, the judged tier's.
+gate's A the sequence is the editorial one; under B, the judged tier's. The
+judged tier is also the letter the gate marks, per `./SKILL.md` step 7:
+editorial marks A, local or structural marks B.
 
 ## Verification
 

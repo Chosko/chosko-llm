@@ -1,8 +1,8 @@
 ---
 name: pipeline-revise
-version: 0.3.1
+version: 0.4.0
 type: skill
-description: Revise work that is already planned — change, insert into, remove from or reorder a feature document, a task or a runbook step — through the owners of every artifact the change reaches. Probes, resolves an anchor (feature=<slug>, task=<N> or runbook=<id|name|id-name> step=<n>, or one the description names), classifies the request into exactly one branch — amend, insert, delete or reorder — and reads only that branch's file, then runs the impact walk in both directions over the pipeline's index graph, opening bodies only within the anchor's scope. /pipeline-check scoped to the anchor runs before the proposal and again after actuation, and the report shows the difference. The proposal names its tier — editorial, local or structural — the artifacts touched, the owner steps in order and the lint findings it will create or clear, behind a single gate that asks every time whether the change is editorial; nothing is written before it. Three or fewer owner steps run in the session, one at a time, each through its owner's amend arm or command with that owner's own gate intact; at four or more steps the gate also offers to hand the plan to /runbook-create and stop, when that command is installed. Removal is [SKIP] or a struck step, never physical deletion. Writes no line any owner owns and has no commit of its own — --commit / --no-push are forwarded to each owner step. For a change one owner's amend arm covers, /pipeline-patch is the cheaper tool.
+description: Revise work that is already planned — change, insert into, remove from or reorder a feature document, a task or a runbook step — through the owners of every artifact the change reaches. Probes, resolves an anchor (feature=<slug>, task=<N> or runbook=<id|name|id-name> step=<n>, or one the description names), classifies the request into exactly one branch — amend, insert, delete or reorder — and reads only that branch's file, then runs the impact walk in both directions over the pipeline's index graph, opening bodies only within the anchor's scope. /pipeline-check scoped to the anchor runs before the proposal and again after actuation, and the report shows the difference. The proposal names its tier — editorial, local or structural — the artifacts touched, the owner steps in order and the lint findings it will create or clear, behind a single gate that asks every time whether the change is editorial, marking the answer the judged tier implies (editorial recommends A, local or structural recommends B) with an evidence line from the touched artifacts — a recommendation that still needs an explicit reply; nothing is written before it. Three or fewer owner steps run in the session, one at a time, each through its owner's amend arm or command with that owner's own gate intact; at four or more steps the gate also offers to hand the plan to /runbook-create and stop, when that command is installed. Removal is [SKIP] or a struck step, never physical deletion. Writes no line any owner owns and has no commit of its own — --commit / --no-push are forwarded to each owner step. For a change one owner's amend arm covers, /pipeline-patch is the cheaper tool.
 requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run
 ---
 
@@ -212,16 +212,39 @@ and before any write:
 > Is this change editorial — wording only, with nothing downstream changing
 > meaning?
 >
+> <evidence line>
+>
 > A. **Editorial** — run <the steps A leaves>.
 > B. **Not editorial, here** — run steps 1–<k> in this session, one at a time.
 > C. **Not editorial, as a runbook** — hand steps 1–<k> to `/runbook-create`
 >    and stop.
 > D. **Stop** — write nothing.
 
-The question is asked on every run, whatever the tier — never inferred,
-classified or skipped. The tier decides how long the sequence is; it never
-decides whether the question is asked. The answer carried into owner steps
-(step 8) is the one the user gives here, and only that one.
+The question is asked on every run, whatever the tier — never pre-answered or
+skipped. The tier decides how long the sequence is; it never decides whether
+the question is asked. The answer carried into owner steps (step 8) is the one
+the user gives here, and only that one — never the marked letter.
+
+**The judged tier is the recommendation.** The gate marks one letter, taken
+from the tier item 2 already renders, and adds no concept of its own:
+
+- tier **editorial** → mark **A**;
+- tier **local** or **structural** → mark **B**.
+
+The evidence line above the letters cites only what item 3 already lists — the
+touched artifacts, by id, and the edge or reason that made the tier — never an
+adjective:
+
+- A marked: `Recommended: A — editorial: only <anchored artifact> is touched;
+  A and B run the identical sequence here.` A judged editorial tier makes A's
+  and B's sequences identical, so the line says so; both letters are still
+  offered, so the tier can be overruled.
+- B marked: `Recommended: B — <local | structural>: <touched artifacts, or the
+  reason the branch file gives>`.
+
+The marked letter is a recommendation, not an answer: the reply still has to
+name a letter, and nothing is written on it alone. An overruled tier or
+touched/untouched call re-derives the marked letter when the gate re-renders.
 
 Arm C is rendered only when B's sequence has **four or more** owner steps and
 `/runbook-create` is installed — detected at run time from the verdict line's
@@ -232,7 +255,8 @@ rendered.
 
 The user may overrule a touched/untouched call or the tier in the same answer;
 re-render and ask again — the same gate, not a second one. Wait for an
-explicit answer. Silence, an unclear reply or EOF is Stop.
+explicit answer. Silence, an unclear reply or EOF is Stop, whichever letter is
+marked.
 
 **Exactly one gate is this skill's, and nothing is written before it** — by
 this skill, or by any arm it drives, since no arm has run yet. The gates the
@@ -250,7 +274,7 @@ as the owner asks it. After each, its closing line, as the owner writes it.
 
 An `/architect amend` step — in whichever branch runs one — receives the
 editorial answer the user gave at step 7's gate: A as *editorial*, B as *not
-editorial*. The arm's gate still renders in full and still needs an explicit
+editorial* — the user's reply, never the letter the gate marked. The arm's gate still renders in full and still needs an explicit
 reply, but shows that answer as a confirmation rather than asking the question
 again (`architect/amend.md` § 4). No other owner receives it.
 
@@ -342,9 +366,11 @@ DO NOT:
   `Context:` fact, a runbook or a report on disk. Every write goes through an
   arm or an owner command.
 - Write, or let an arm write, anything before the gate. Ask a second gate of
-  your own, or infer, classify, pre-answer or skip the editorial question.
-  Carrying the user's own answer into an `/architect amend` step as a
-  confirmation (step 8) is not pre-answering; carrying anything else is.
+  your own, skip or pre-answer the editorial question, or treat the letter the gate marks
+  as the answer — the recommendation is shown for an explicit reply, and
+  nothing is written on it alone. Carrying the user's own answer into an
+  `/architect amend` step as a confirmation (step 8) is not pre-answering;
+  carrying anything else — the recommendation included — is.
 - Read the backlog in bulk: open a body outside step 4's scope, open every
   task body, or open anything under `.claude/tasks/archive/`.
 - Read a branch file before CLASSIFY has chosen it, or read a second one.

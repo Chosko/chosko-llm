@@ -92,6 +92,10 @@ Under the gate's A, the sequence keeps only the step that writes the new entry
 — step 2 with the edge its placement flag writes, or step 4 on a runbook-only
 insert — and drops every step that changes another entry's meaning.
 
+Neither tier is editorial — an insert makes a new entry, which is never
+wording only — so both mark B at the gate, per `./SKILL.md` step 7: the
+evidence names the new entry, and under structural the scope step 1 adds.
+
 ## Verification
 
 A task insert always changes a precondition, so `./SKILL.md` step 9's
