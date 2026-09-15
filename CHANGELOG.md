@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.50.1 — 2026-09-15
+
+- **/session-save** no longer fails to commit when the session file it supersedes was never tracked — a handoff from before 1.49.0, or from a `--no-commit` save. It stages that deletion with `git rm --cached --ignore-unmatch`, which does nothing for an untracked file, instead of a `git add` that aborted staging of the new handoff too.
+- **/pipeline-revise** now commits a completed revision in which a step was dropped as moot. Its commit step used to require that every step ran, contradicting its own COMMITTING rules, which withhold the commit only when a sequence stops part-way.
+
 ## 1.50.0 — 2026-09-15
 
 - **/pipeline-patch** and **/pipeline-revise** now commit and push by default, and own the commit: every owner step runs uncommitted, and one commit at the end holds the whole patch or revision — never one commit per owner step. The subject is the arm's closing report line for a patch, and the `Revised <anchor> — …` report line for a revision. Pass `--no-commit` to leave the changes uncommitted, or `--no-push` to commit without pushing; `--commit` is still accepted and changes nothing.

@@ -1,6 +1,6 @@
 ---
 name: session-save
-version: 0.2.0
+version: 0.2.1
 type: command
 description: Capture what this conversation knows — what was tried, what failed, what was deliberately not tried, which files are half-finished, and the exact next step — into a timestamped handoff file under .claude/sessions/, written in full nine-section form or shrunk to a pointer when the work already has its own resume artifact. Never rewrites a file in place. Commits and pushes the handoff it wrote by default, since a handoff usually crosses machines; pass --no-commit to leave it uncommitted, or --no-push to commit without pushing. --commit is accepted and changes nothing.
 ---
@@ -279,10 +279,14 @@ is done, follow the commit-and-push protocol — four steps, in this order:
 
 1. **Pull at start.** Already run before anything was written, per ARGUMENT
    PARSING.
-2. **Commit.** Stage by explicit path exactly the new session file — plus,
-   when SUPERSESSION DELETE removed a file git was tracking, that file's
-   deletion (`git add -- <new-path> <superseded-path>`). An untracked
-   superseded file is simply deleted; there is nothing to stage for it. Make
+2. **Commit.** Stage by explicit path exactly the new session file
+   (`git add -- <new-path>`) — plus, when SUPERSESSION DELETE removed a file,
+   that file's deletion, in its own command:
+   `git rm --cached --quiet --ignore-unmatch -- <superseded-path>`. It stages
+   the deletion when git was tracking the file and does nothing when it was
+   not — a handoff written by an earlier `--no-commit` save, say — so this
+   command never needs to know which, and an untracked superseded path can
+   never abort staging of the new file. Make
    one commit: `git commit -m "Save session <slug>"`. The new snapshot and the
    removal of the one it replaces are one unit of work, so they ride in one
    commit.

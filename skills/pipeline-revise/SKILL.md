@@ -1,6 +1,6 @@
 ---
 name: pipeline-revise
-version: 0.5.0
+version: 0.5.1
 type: skill
 description: Revise work that is already planned — change, insert into, remove from or reorder a feature document, a task or a runbook step — through the owners of every artifact the change reaches. Probes, resolves an anchor (feature=<slug>, task=<N> or runbook=<id|name|id-name> step=<n>, or one the description names), classifies the request into exactly one branch — amend, insert, delete or reorder — and reads only that branch's file, then runs the impact walk in both directions over the pipeline's index graph, opening bodies only within the anchor's scope. /pipeline-check scoped to the anchor runs before the proposal and again after actuation, and the report shows the difference. The proposal names its tier — editorial, local or structural — the artifacts touched, the owner steps in order and the lint findings it will create or clear, behind a single gate that asks every time whether the change is editorial, marking the answer the judged tier implies (editorial recommends A, local or structural recommends B) with an evidence line from the touched artifacts — a recommendation that still needs an explicit reply; nothing is written before it. Three or fewer owner steps run in the session, one at a time, each through its owner's amend arm or command with that owner's own gate intact; at four or more steps the gate also offers to hand the plan to /runbook-create and stop, when that command is installed. Removal is [SKIP] or a struck step, never physical deletion. Writes no line any owner owns, and commits and pushes by default: every owner step runs uncommitted, and one commit at the end holds the whole revision; a sequence that stops part-way commits nothing. Pass --no-commit to leave the revision uncommitted, or --no-push to commit without pushing. For a change one owner's amend arm covers, /pipeline-patch is the cheaper tool.
 requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run
@@ -313,7 +313,8 @@ id — and confirm the sequence still reads as a sequence. The branch file's
 one is reported with what does not follow; it is never fixed here — that is a
 new revision.
 
-**10. Commit.** When every step ran and at least one wrote, make the
+**10. Commit.** When the sequence completed — a step dropped as moot under
+step 8 still counts as completed — and at least one step wrote, make the
 revision's one commit and push, per COMMITTING, the report line below as the
 subject. A sequence that stopped part-way, a run that wrote nothing, or
 `--no-commit` makes no commit.
