@@ -1,8 +1,8 @@
 ---
 name: task-add
-version: 2.3.1
+version: 2.4.1
 type: command
-description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit and push. Pass --before <N> or --after <N> to write the new task at that position in TASKS.md together with the Preconditions: edge the position implies — no existing id moves. Pass feature=<slug> --single to attach exactly one task to a [PLANNED] feature without reconciling or re-planning it; on a project with FEATURES.md, a free-form run asks at its existing approval gate whether the task belongs to a feature. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, appending a final documentation-update task when new tasks were drafted, and setting the feature [PLANNED]. Whenever a drafted task names a document owned by another pipeline command, the PHASE 3 gate enumerates the reconciliations that task needs to make to it and asks the user to pre-authorise exactly those points or to drop the file — the grant, or the removal, is written into the task body so the implementer never has to ask. Pass --short for trivial low-ambiguity tasks to skip the deep PHASE 1 investigation and write a minimal Goal-only body (mutually exclusive with feature= and --single), --no-split to always write exactly one task, --no-commit to write the files but skip the commit (and push), or --no-push to commit without pushing.
+description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit and push. Pass --before <N> or --after <N> to write the new task at that position in TASKS.md together with the Preconditions: edge the position implies — no existing id moves. Pass feature=<slug> --single to attach exactly one task to a [PLANNED] feature without reconciling or re-planning it; on a project with FEATURES.md, a free-form run asks at its existing approval gate whether the task belongs to a feature. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, appending a final documentation-update task when new tasks were drafted, and setting the feature [PLANNED]. Whenever a drafted task names a document owned by another pipeline command, the PHASE 3 gate enumerates the reconciliations that task needs to make to it and asks the user to pre-authorise exactly those points, keep the file as a read-only reference, or drop it — the grant, the reference marker, or the removal is written into the task body so the implementer never has to ask. Pass --short for trivial low-ambiguity tasks to skip the deep PHASE 1 investigation and write a minimal Goal-only body (mutually exclusive with feature= and --single), --no-split to always write exactly one task, --no-commit to write the files but skip the commit (and push), or --no-push to commit without pushing.
 requires: skill:task-engine
 ---
 
@@ -223,8 +223,10 @@ MANUAL INTERVENTIONS below.>
 
 ## Hints
 <Required. Always present. File paths the implementer should touch:
-edit targets, test files, documentation, collateral files. Write
-"none" explicitly only when nothing collateral genuinely exists.>
+edit targets, test files, documentation, collateral files. A path
+carrying the read-only marker defined in OWNERSHIP PRE-AUTHORISATION is
+a pointer to read rather than an edit target, and authorises no edit.
+Write "none" explicitly only when nothing collateral genuinely exists.>
 - <path/to/file>
 - <…>
 ```
@@ -810,20 +812,46 @@ line rather than by file, and this command is itself one of their writers.
 
 Run the check against both the drafted `## Hints` and the summary block's
 `Files:` line, for every task drafted in this run. A path matching a row above
-is a *detected file*, and its task cannot be written until the question below
-has an answer.
+is a *detected file*, and its task cannot be written until that path has one of
+the three outcomes below: **Grant**, **Reference** or **Drop**.
+
+**The read-only marker.** A path kept as a Reference is written in `## Hints`
+with this literal suffix and no other wording:
+
+```
+— read-only reference, do not edit
+```
+
+That one text is what a later reader, the next reconciliation and
+`/task-implement` all key on, so it is defined here once and copied verbatim
+wherever a Reference is written.
 
 **Enumeration.** For each detected file, list the specific reconciliations the
 task needs to make to it — the concrete points at which the implementation
 diverges from, or settles, what the document says — numbered, one line or two
-each. A detected file for which no concrete point can be named is not a Hint at
-all: drop it and ask nothing. "Review this document for drift" is not a point.
+each. "Review this document for drift" is not a point. What happens next is
+decided by what could be named, in this order:
+
+1. **Points can be named** — ask the question below, with all three answers.
+2. **No points, and the path is this feature-derived task's own feature
+   document** (the `Doc:` of the feature the task carries) — write it as a
+   Reference, and ask nothing. PHASE 4 feature case step 2 requires that
+   pointer on every new body of a feature run, so the rule decides it rather
+   than the user. The documentation task is included: step 2 covers it too, and
+   its writer reads the design to know what the feature promised.
+3. **No points, some other owned path, and a concrete reason to read it** —
+   the section of that document the task implements — ask the question below
+   with the Reference and Drop answers only. With no points there is nothing to
+   grant.
+4. **No points and no read reason** — drop it, and ask nothing.
+
+Cases 2 and 4 are the rule deciding; only 1 and 3 reach the user. Either way
+every detected file leaves this step with a decision, and silence is never one.
 
 **The question.** Ask it at PHASE 3, inside the existing single approval gate,
 never as a second gate. One question per detected file, grouped into a single
 question when several files are involved, across all drafted tasks in one pass.
-Exactly two answers are offered — rendered here for the documentation task, the
-common case:
+Rendered here for the documentation task, the common case:
 
 > Task `<N>` (the documentation task) names
 > `.claude/domain/features/<slug>.md` in its Hints. That document is
@@ -836,10 +864,16 @@ common case:
 >
 > A. **Grant** — authorise task `<N>`'s implementer to edit that document for
 >    exactly those 3 points and nothing else.
-> B. **Drop** — leave the file out of task `<N>`, and leave the document to
+> B. **Reference** — keep the path in task `<N>`'s Hints as a read-only
+>    pointer. It authorises no edit; those 3 points are left to `/architect`.
+> C. **Drop** — leave the file out of task `<N>`, and leave the document to
 >    `/architect` on a later run.
 >
 > Which?
+
+Under case 3 the same question is asked without answer A and without the
+numbered list — there are no points, so it names the reason to read the
+document in their place.
 
 **Grant outcome.** Write the grant into the drafted body before PHASE 4. Its
 `## Acceptance criteria` carries the enumerated points:
@@ -863,7 +897,18 @@ and its `## Decisions` carries:
 
 `<YYYY-MM-DD>` is the date of this `/task-add` run.
 
-**Decline outcome.** Remove the path from the drafted `## Hints` and from the
+**Reference outcome.** Keep the path in the drafted `## Hints` with the
+read-only marker appended, and keep it out of the summary block's `Files:`
+line — `Files:` is the task's edit surface, and a Reference authorises no edit:
+
+> - `<path>` — read-only reference, do not edit
+
+When points were named (case 1), record them in `## Decisions` exactly as the
+Drop outcome does, so what is left undone is still written down. Under cases 2
+and 3 there are no points, and nothing goes into `## Decisions`: the marked
+Hint is the whole record.
+
+**Drop outcome.** Remove the path from the drafted `## Hints` and from the
 summary block's `Files:` line, and record the decision in `## Decisions`, naming
 the points left unreconciled so a later run of the owner command knows what is
 outstanding:
@@ -872,20 +917,37 @@ outstanding:
 >   task ships — `<point>`, `<point>` — is real but out of scope here; a later
 >   `<owner>` run reconciles it.
 
+Under case 4 nothing was asked and no points exist to name, so nothing is
+recorded either — the path simply does not appear in the body.
+
+**A carried-over Reference is already decided.** When a body is rewritten —
+reconciliation here, or an amendment under
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/amend.md` — a Hint
+that already carries the marker and survives the rewrite unchanged is not
+asked about again. That is what lets a Reference outlive the next
+reconciliation instead of being stripped by it. Two things are still new
+questions: turning a marked Reference into something the task edits, which is a
+Grant question, and adding an owned path the body did not carry before.
+
 **Hard rules.**
 
 - A grant is never written without an explicit user answer. Silence is not a
   grant, and neither is an approval that did not address the question.
+- **A Reference is not a grant.** It authorises reading and nothing else, it
+  never puts the path in `Files:`, and it never stands in for a Grant on a path
+  the task must edit.
 - PHASE 3's **"Approve and write?"** does not answer this question. If the
   user approves the plan while the ownership question is still unanswered, the
   approval is incomplete: re-ask the question and wait, rather than assuming
-  either outcome.
-- PHASE 4 must not write a task in which a detected file is neither granted nor
-  removed. If it would, stop the run and report — write nothing.
+  any of the three outcomes.
+- PHASE 4 must not write a task in which a detected file is neither granted,
+  referenced, nor removed. If it would, stop the run and report — write
+  nothing.
 - **A grant does not make this command a writer.** `/task-add` still never
   edits an owned document itself; the grant authorises the *implementer of the
   task it drafts*, at implementation time. One writer per artifact holds for
-  the pipeline commands exactly as before.
+  the pipeline commands exactly as before, and a Reference makes nobody a
+  writer at all.
 
 ---
 
@@ -935,7 +997,16 @@ Feature case (FEATURE is set) — in addition to the above:
 2. Every new body's `## Goal` names the originating feature, and its
    document path appears under `## Hints` — the implementer should be able
    to reach the design from the task without being told the slug
-   separately.
+   separately. That pointer is a read-only Reference unless the ownership
+   question granted an edit on it: OWNERSHIP PRE-AUTHORISATION case 2 writes
+   it with the marker and asks nothing, which is what keeps this step and that
+   rule from contradicting each other on the healthy path — a document that
+   needs no reconciliation. **The one exception is an explicit Drop** under
+   that rule's case 1: where points could be named and the user chose to leave
+   the document to `/architect`, their answer decides and this step does not
+   override it — the body is written without the pointer, and the unreconciled
+   points are recorded in `## Decisions` as the Drop outcome requires. Nothing
+   else omits it.
 
 3. Apply the approved reconciliation, and nothing beyond it (under SINGLE
    there is none, so this step does nothing):
@@ -1055,8 +1126,9 @@ DO NOT:
   placement flag, a free-form run is unchanged in every respect.
 - Write any drafted task — documentation task, free-form task, split part, or
   a body rewritten during reconciliation — that names a document from
-  OWNERSHIP PRE-AUTHORISATION's owner table without a recorded grant or a
-  recorded removal. Including such a document is allowed; leaving it
-  un-adjudicated is not, and silence is not a grant.
+  OWNERSHIP PRE-AUTHORISATION's owner table without a recorded grant, a
+  recorded read-only Reference, or a recorded removal. Including such a
+  document is allowed; leaving it un-adjudicated is not, silence is not a
+  grant, and a Reference is not a grant either.
 - Draft a documentation task on a reconciliation-only run that creates zero
   new tasks.
