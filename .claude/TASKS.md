@@ -87,7 +87,7 @@ Preconditions: none
 
 ## 224. Restore the exec bit on this repo's own `.claude/hooks/remote-session-protocol.sh`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: .claude/hooks/remote-session-protocol.sh, VERSION, CHANGELOG.md
 Preconditions: none

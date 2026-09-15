@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.46.6 — 2026-09-15
+
+- **This repo's own `remote-session-protocol` hook** is now committed as executable, so a fresh clone's `PreToolUse[AskUserQuestion]` hook actually runs instead of failing with permission denied. Installed copies were already executable and are unaffected.
+
 ## 1.46.5 — 2026-09-15
 
 - **/runbook-run --inline** no longer stalls on a step's `/task-implement` dirty-tree prompt when the only dirty files are the runbook and its index: the session answers `proceed` itself (never `include`) and says so in one line. Anything else dirty still brings the prompt to you.
