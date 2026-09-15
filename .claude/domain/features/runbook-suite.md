@@ -679,7 +679,7 @@ runbook the way `Preconditions:` lines point at task IDs.
 shape — target runbook, step titles, sequencing line, dependencies, and any
 rule-8 splits it made — and stops for approval. Only the shape: showing every
 full prompt back is a wall of text that gets skimmed, and the prompts are in the
-file a moment later, uncommitted and open to review. The gate exists to catch a
+committed file a moment later, still editable before the first step runs. The gate exists to catch a
 wrong order or a missing step, both expensive after the first step has run and
 cheap now.
 
