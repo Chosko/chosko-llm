@@ -49,8 +49,10 @@ Deliberately out:
   pushes the handoff it wrote by default (`--no-commit` to hold it back,
   `--no-push` to skip the push), since a handoff usually crosses machines.
   Neither touches `.gitignore` — see [The store](#the-store).
-- **Cross-machine or cross-project handoff.** A session file is readable by
-  anyone given the path, but nothing in the feature moves it anywhere.
+- **Cross-project handoff.** A session file belongs to the project it was
+  written in, and nothing in the feature carries it to another. Crossing
+  machines is git's job: `/session-save` pushes the handoff, and
+  `/session-resume` reads whatever the user's own pull brought in.
 
 ## Architecture
 
@@ -73,13 +75,14 @@ same-day collisions without a hash. Markdown, not `.tmp`: the file is a
 document, and the extension should say so.
 
 **The store is not gitignored, and neither command touches `.gitignore`.**
-Session files are personal working state and will usually be noise in a diff,
-which argues for ignoring the directory in `/task-setup` or `/project-setup`.
-Against it: a session file is exactly the thing you would want to hand a
-colleague, and silently ignoring it makes that harder. The tie goes to leaving
-the decision with the user — `/session-save` prints a one-line note that the
-file is untracked, and whether a handoff belongs in the repo's history is
-theirs to settle per project.
+Session files are working state and can be noise in a diff, which argues for
+ignoring the directory in `/task-setup` or `/project-setup`. Against it: a
+handoff exists to cross the gap between sessions — usually a gap between
+machines — and is exactly the thing you would hand a colleague, and an ignored
+or untracked file crosses nothing. So `/session-save` commits and pushes the
+file it wrote by default, and `--no-commit` is the per-save way to keep one
+handoff out of history. Ignoring the directory outright stays the user's call,
+per project.
 
 ### Two file forms
 
