@@ -39,10 +39,9 @@ for the replacement at the new one.
 ## Tier
 
 Fixed, not judged: every reorder is **structural**, because it changes an
-order or an edge by definition. The editorial question is still asked, per
-`./SKILL.md`, and the gate marks B, with that reason as its evidence; under A
-the gate shows the same sequence as under B, with that reason, since no step
-of a reorder can be dropped as wording.
+order or an edge by definition. So the gate classifies it not editorial
+without asking the question, per `./SKILL.md` step 7, with that reason as the
+`Classified:` line's evidence: no step of a reorder can be dropped as wording.
 
 ## Verification
 

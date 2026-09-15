@@ -92,13 +92,10 @@ the gate.
 - **Local** — the insert is something the feature document already promises.
   No step 1; the feature's status is left alone, and step 2 is `--single`.
 
-Under the gate's A, the sequence keeps only the step that writes the new entry
-— step 2 with the edge its placement flag writes, or step 4 on a runbook-only
-insert — and drops every step that changes another entry's meaning.
-
 Neither tier is editorial — an insert makes a new entry, which is never
-wording only — so both mark B at the gate, per `./SKILL.md` step 7: the
-evidence names the new entry, and under structural the scope step 1 adds.
+wording only — so the gate classifies it not editorial without asking the
+question, per `./SKILL.md` step 7: the `Classified:` line names the new entry,
+and under structural the scope step 1 adds.
 
 ## Verification
 

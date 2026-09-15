@@ -9,8 +9,9 @@ this folder, this file cites it by path and restates nothing it owns.
 
 The arm skips PHASE 1 (clarify) and PHASE 2 (architect) entirely: the change
 is described, not designed. It edits the sections the change names, runs a
-**precision** iterate guard in place of `./iterating.md`'s blanket one, asks
-one question at one gate, and writes. It writes no progress marker: an
+**precision** iterate guard in place of `./iterating.md`'s blanket one,
+settles one question at one gate — on its own when the evidence is clear,
+asking only when it is not — and writes. It writes no progress marker: an
 amendment is one gate long and has nothing to resume.
 
 ---
@@ -122,13 +123,55 @@ The arm's one and only gate. One message, carrying:
 2. **The touched set** — each touched task's id, status and title, and
    whether its summary block or its body decided it. Untouched live tasks
    follow, one line each, so a classification can be overruled.
-3. **The proposed outcome** under each answer below: which tasks go
-   `[STALE]`, and what the feature's `Status:` becomes.
-4. **The question.** It is asked on every amendment, a `[NEW]` feature's
-   included, and is never pre-answered by the arm — with one exception,
-   below. It carries one marked letter, the recommendation (next paragraph),
-   marked exactly as the carried answer's letter is marked in that exception
-   — one marking mechanism, two sources.
+3. **The proposed outcome**: which tasks go `[STALE]`, and what the
+   feature's `Status:` becomes — under the classification applied on a clear
+   case, under each answer when the question is asked.
+4. **The classification** — a `Classified:` line on a clear case, the
+   question on an ambiguous one, by the rule below. Step 3's refusal has
+   already run: a touched `[IN PROGRESS]` task stops the arm before this
+   item, clear case or not.
+
+### Clear or ambiguous
+
+Whether the change is editorial is settled by a closed rule over findings
+items 1–3 already render — the touched set and how each status in it was
+decided, the drafted edit, and the scope call (§ *The status outcome*). "Clear"
+means a mechanical signal, never the arm's confidence. Test in this order;
+the first that matches wins:
+
+1. **Ambiguous** — any one of:
+   - a live task's touched or untouched status needed its body read (step 3);
+   - the scope call is borderline — the change may add scope, but no
+     component, contract or promise it adds can be named;
+   - the findings point different ways — no task is touched and no scope is
+     added, yet contract or interface text in an edited section changes.
+2. **Clear not editorial** — a task is touched on its summary block (its
+   title or its `Files:`), or the added scope is a nameable component,
+   contract or promise.
+3. **Clear editorial** — the touched set is empty, no scope is added, and no
+   contract or interface text in the edited sections changes.
+
+A `[NEW]` feature has no tasks, so no body was read and its touched set is
+empty; the scope call and the edited text classify it like any other.
+
+### A clear case
+
+No question. After items 1–3, one line:
+
+```
+Classified: <editorial | not editorial> — <evidence>
+```
+
+The evidence cites only what items 1–3 render, never an adjective:
+`touched on summary block: <ids>` and/or `scope added: <named scope item>
+(§ <edited section>)` for not editorial; `no task touched, no scope added, no
+contract text changed` for editorial. Then go to step 5 and write, without
+waiting for a reply: the user's description of the change is authorisation
+enough when the evidence settles the tier.
+
+### An ambiguous case
+
+The question, with one marked letter — the recommendation:
 
 > Is this change editorial — wording only, with nothing any task builds
 > changing?
@@ -163,16 +206,28 @@ named scope item — never an adjective:
 The marked letter is a recommendation, not an answer: the reply still has to
 name a letter, and nothing is written on it alone.
 
-**The one exception: an answer carried from `/pipeline-revise`.** When this
-arm runs as an owner step of `/pipeline-revise`, in the session that asked
-that skill's gate, the user has already answered the editorial question
-there for the same change. That answer is carried in, and the question is
-rendered as a confirmation of it instead of being asked again verbatim:
+### A classification carried from `/pipeline-revise`
 
-> At the revise gate you chose *<editorial | not editorial>* for the whole
-> plan. For this document's edit that means <that answer's outcome, e.g.
+When this arm runs as an owner step of `/pipeline-revise`, that skill's gate
+has already settled the editorial question for the same change — by the
+user's reply, or by its own classification when nothing there was open. That
+classification is carried in, and set against the letter this arm's own
+findings mark under the recommendation rule above:
+
+- **They agree** — apply the carried classification with no prompt. After
+  items 1–3, one line —
+  `Classified: <editorial | not editorial> — carried from the revise gate; this edit's own findings agree: <evidence>`
+  — then go to step 5.
+- **They disagree** — ask, in the confirmation form. The carried
+  classification's letter is the marked one, and the recommendation never
+  replaces it; the arm's own derivation is the one line above the letters:
+
+> At the revise gate this plan was classified *<editorial | not editorial>*.
+> For this document's edit that means <that classification's outcome, e.g.
 > edit the document, mark <ids> `[STALE]`, `Status:` becomes <outcome>>.
 > Judge this edit on its own — confirm, or switch if it differs?
+>
+> This edit's own findings would mark <letter>: <evidence>.
 >
 > A. **Editorial** — edit the document; no task is staled and `Status:`
 >    stays `<status>`.
@@ -180,24 +235,26 @@ rendered as a confirmation of it instead of being asked again verbatim:
 >    and `Status:` becomes `<outcome>`.
 > C. **Stop** — write nothing.
 
-The carried answer's letter is marked as the one given at the revise gate —
-the carried answer stays the marked letter, and the recommendation above never
-replaces it. When the arm's own derivation marks the other letter, add it as
-one line above the letters — `This edit's own findings would mark <letter>:
-<evidence>.` — and otherwise add nothing. Replying with the marked letter
-confirms, replying with the other letter switches, and C stops. The gate is not skipped and the step is not approved by the carried
-answer: items 1–3 still render in full, and an explicit reply is still
-required. Only `/pipeline-revise` carries an answer. Standalone
-`/architect amend`, and `/pipeline-patch` — which has no gate of its own
-before the arm, so no earlier answer to carry — ask the full question above.
+  Replying with the marked letter confirms, replying with the other letter
+  switches, and C stops; items 1–3 still render in full, and an explicit
+  reply is required.
 
-The user may overrule a classification, or the scope call below, in the same
-answer; re-render the outcome, re-derive the marked letter from the new
-findings, and ask again. A reclassification that makes an
-`[IN PROGRESS]` task touched triggers step 3's refusal unchanged: stop, and
-write nothing. Wait for an explicit answer. Silence, an unclear reply or EOF
-is C — under the confirmation form as under the full question, and whichever
-letter is marked. No flag pre-answers the question.
+Only `/pipeline-revise` carries a classification. Standalone
+`/architect amend`, and `/pipeline-patch` — which has no gate of its own
+before the arm, so nothing to carry — apply the clear-or-ambiguous rule above.
+
+### Replies
+
+Whenever the arm asks — the question or the confirmation form — the user may
+overrule a touched/untouched call, or the scope call below, in the same
+answer; re-render the outcome and re-apply the rules above to the new
+findings, writing without another prompt when they are now clear (or now
+agree with a carried classification), and asking again otherwise. A
+reclassification that makes an `[IN PROGRESS]` task touched triggers step 3's
+refusal unchanged: stop, and write nothing. Wait for an explicit answer.
+Silence, an unclear reply or EOF is C — under the confirmation form as under
+the full question, and whichever letter is marked. No flag pre-answers the
+question.
 
 ### The status outcome
 
@@ -222,8 +279,9 @@ work is new tasks.
 
 ## 5. Write
 
-On A or B, write exactly the following, adding each path written to
-`WRITTEN`:
+On A or B — whether answered, or applied by a clear case or an agreeing
+carried classification — write exactly the following, adding each path
+written to `WRITTEN`:
 
 | Path | What is written |
 | --- | --- |
@@ -264,11 +322,12 @@ step 5 is what it stages.
 ## Never
 
 - Run PHASE 1 or PHASE 2, or ask anything but the gate's one question.
-- Skip the question because the answer looks obvious, or treat the marked
-  letter as the answer. The recommendation is derived from the touched set
-  and the scope call, and is shown for an explicit reply; the one answer the
-  arm takes from outside is the one the user gave at `/pipeline-revise`'s
-  gate, and it too is shown for confirmation, never applied without an
+- Classify without asking on anything but § 4's clear case — never on a
+  body read, a borderline scope call or findings that point different ways,
+  and never because the answer merely looks obvious — or ask the question on
+  a clear case. On an ambiguous case, treat the marked letter as the answer:
+  it is shown for an explicit reply. Apply a classification carried from
+  `/pipeline-revise` that this edit's own findings disagree with without an
   explicit reply (§ 4).
 - Stale an untouched task, or refuse on an untouched `[IN PROGRESS]` one.
 - Override a touched `[IN PROGRESS]` refusal.

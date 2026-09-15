@@ -96,13 +96,10 @@ them.
 - **Structural** — a deletion that crosses artifacts, or that drops an edge.
   The full sequence the walk reached.
 
-Under the gate's A, the sequence keeps only the removal itself — step 2, or
-the strike — and the gate shows the L4 findings that leaving the successors'
-edges in place will create.
-
-Neither tier is editorial — a removal ends what an entry means — so both mark
-B at the gate, per `./SKILL.md` step 7: the evidence names the removed entry,
-and under structural the artifacts it crosses or the edge it drops.
+Neither tier is editorial — a removal ends what an entry means — so the gate
+classifies it not editorial without asking the question, per `./SKILL.md`
+step 7: the `Classified:` line names the removed entry, and under structural
+the artifacts it crosses or the edge it drops.
 
 ## Verification
 
@@ -116,7 +113,7 @@ removed task.
 
 No new status value and no change ledger. A deletion's provenance is the
 `[SKIP]` and its dated reason in `## Decisions`, the struck step's `Done:`
-line, and the commits the owner steps make. Nothing else records it, and
+line, and the revision's one commit. Nothing else records it, and
 nothing needs to.
 
 ## Never

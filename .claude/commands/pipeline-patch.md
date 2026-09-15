@@ -1,8 +1,8 @@
 ---
 name: pipeline-patch
-version: 0.2.1
+version: 0.3.0
 type: command
-description: Apply a change that touches exactly one feature document, task or runbook step through that owner's amend arm, then re-check it — or refuse. From a required anchor (feature=<slug>, task=<N> or runbook=<id|name|id-name> step=<n>) it probes, walks the pipeline's graph reading only the indexes — FEATURES.md, TASKS.md, PLAN.md, RUNBOOKS.md, never a task body, feature document or runbook body — and counts the owners the change would touch. The single-owner rule is a count plus a closed checklist, never a judgement: exactly one owner and none of five structural signals (more than one owner, a dependency edge changing, scope added that no task covers, a deletion that crosses artifacts, a reorder of existing entries) loads that owner's amend arm by path, runs it with its own gate, and runs /pipeline-check scoped to the anchor. Anything else is refused in one line naming /pipeline-revise and the signal that triggered it — no escalation, no second question, nothing written. Writes no line of its own and makes no commit of its own; --commit / --no-push are forwarded to the arm.
+description: Apply a change that touches exactly one feature document, task or runbook step through that owner's amend arm, then re-check it — or refuse. From a required anchor (feature=<slug>, task=<N> or runbook=<id|name|id-name> step=<n>) it probes, walks the pipeline's graph reading only the indexes — FEATURES.md, TASKS.md, PLAN.md, RUNBOOKS.md, never a task body, feature document or runbook body — and counts the owners the change would touch. The single-owner rule is a count plus a closed checklist, never a judgement: exactly one owner and none of five structural signals (more than one owner, a dependency edge changing, scope added that no task covers, a deletion that crosses artifacts, a reorder of existing entries) loads that owner's amend arm by path, runs it with its own gate and without committing, and runs /pipeline-check scoped to the anchor. Anything else is refused in one line naming /pipeline-revise and the signal that triggered it — no escalation, no second question, nothing written. Writes no line of its own, and commits and pushes by default: one commit at the end holding exactly the paths the arm wrote, the arm's closing report line as the subject. Pass --no-commit to leave the patch uncommitted, or --no-push to commit without pushing.
 requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run
 ---
 
@@ -11,7 +11,7 @@ requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbo
 # task or runbook step, through that owner's amend arm, and re-check the
 # anchor — or refuse in one line and name /pipeline-revise. Reads only the
 # indexes.
-# Usage: /pipeline-patch <anchor> "<change>" [--commit] [--no-push]
+# Usage: /pipeline-patch <anchor> "<change>" [--no-commit] [--no-push]
 #        anchor: feature=<slug> | task=<N> | runbook=<id|name|id-name> step=<n>
 # Examples: /pipeline-patch task=42 "Hints: point at the new loader module"
 #           /pipeline-patch feature=user-profile "Interfaces and contracts: promise task 51's size check"
@@ -61,9 +61,13 @@ This command restates no probe, no edge, no finding and no arm's rule.
 
 ARGUMENT PARSING
 
-Scan `$ARGUMENTS` for the optional `--commit` flag (COMMIT = true) and the
-optional `--no-push` flag (NO_PUSH = true), and strip both. NO_PUSH only
-matters when COMMIT is true.
+Scan `$ARGUMENTS` for the optional `--no-commit` flag (COMMIT = false), the
+optional `--no-push` flag (NO_PUSH = true) and the optional `--commit` flag,
+and strip all three. COMMIT is true unless `--no-commit` is passed;
+`--no-commit` implies NO_PUSH. `--commit` is accepted and changes nothing —
+COMMIT is already true. `--commit` and `--no-commit` together stop the run
+with: `--commit and --no-commit cannot be combined. Pick one.` What each flag
+does is COMMITTING.
 
 Then scan for the anchor, which is **required** here, in exactly one of three
 forms, and strip it:
@@ -101,6 +105,10 @@ WORKFLOW
 
    Nothing is written on a stop.
 
+   **Pull at start.** Once the anchor resolves, and before the walk, pull
+   once for the whole run per COMMITTING — skipped under `--no-commit` or
+   `--no-push`.
+
 3. **Walk the graph** from the anchor along `graph.md`'s edges, reading only
    `.claude/FEATURES.md`, `.claude/TASKS.md`, `.claude/PLAN.md` and
    `.claude/RUNBOOKS.md`: the entries the change would write, and the edges it
@@ -123,7 +131,7 @@ WORKFLOW
    Owns column, and write nothing.
 
 5. **Proceed.** Load the owner's arm by path and execute it end to end,
-   **including its own gate**, with the flags COMMITTING forwards. The arm
+   **including its own gate**, without committing, per COMMITTING. The arm
    reads what its own inputs name; that read comes after this command's
    decision and never feeds back into it. An arm that refuses, or whose gate
    the user answers with stop, ends the run with the arm's own message and
@@ -141,9 +149,13 @@ WORKFLOW
    the indexes and keep the findings whose identifier is the anchor or an
    entry the walk reached, rendered from their templates unchanged.
 
-7. **Report** — the arm's closing report line, then the check's output. When
-   the arm wrote and `--commit` was not passed, end with an explicit reminder
-   that nothing was committed.
+7. **Commit.** When the arm wrote, make the run's one commit and push, per
+   COMMITTING. Nothing written → no commit.
+
+8. **Report** — the arm's closing report line, then the check's output, then
+   the commit hash. When the arm wrote and `--no-commit` was passed, list the
+   paths written and end with an explicit reminder that nothing was
+   committed.
 
 ---
 
@@ -203,13 +215,26 @@ path the arm is never loaded.
 
 COMMITTING
 
-`--commit` and `--no-push` are parsed here and forwarded to the arm; this
-command makes no commit of its own.
+This command owns the run's commit. A patch is one unit of work, so it lands
+as exactly one commit, made at the end — never one per owner write, and never
+by the arm. Commit and push gating is
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`.
 
-| Arm | Without `--commit` (this command's default) | With `--commit` |
-| --- | --- | --- |
-| An arm loaded by path — each leaves its commit to whoever executes it | nothing is committed | the arm's closed write set, staged by explicit path and committed as one unit of work, the arm's closing report line as the subject, per `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md` and its push protocol — pull-at-start included, the push skipped under `--no-push` |
-| `/runbook-create --append`, for a step insert | no flag | `--commit`, plus `--no-push` when given |
+- **Pull at start** — once per run, after the anchor resolves and before the
+  walk (WORKFLOW step 2), unless `--no-commit` or `--no-push`. A conflict
+  stops the run there, nothing written.
+- **The owner runs uncommitted.** An arm loaded by path is executed with no
+  commit. An owner command the arm invokes — `/runbook-create --append`, for
+  a step insert — always receives `--no-commit`, whatever its own default.
+  No owner pulls or pushes.
+- **One commit.** After the arm and the closing check, stage exactly the
+  paths the arm reported writing — `/runbook-create`'s included — by explicit
+  path, and commit once, the arm's closing report line as the subject. Then
+  re-sync and push per `commit.md`'s push protocol, the push skipped under
+  `--no-push`. Report the hash.
+- **No commit** on a refusal, an arm that refuses or is answered stop, a run
+  that wrote nothing, or `--no-commit`. Under `--no-commit` nothing touches
+  git; otherwise only the pull at start does.
 
 ---
 
@@ -217,7 +242,8 @@ WRITE SET
 
 Empty. This command writes no line any owner owns — every write in a run is
 the arm's — and it appears in no who-writes-what table: its routing row owns
-nothing.
+nothing. Its commit stages only what the arm wrote, and never a path the arm
+did not write.
 
 ---
 
@@ -232,5 +258,7 @@ DO NOT:
 - Escalate into `/pipeline-revise`, ask a second question, or write anything
   on the refuse path.
 - Load more than one arm, run an arm twice, or bypass an arm's own gate.
-- Write any line yourself, or commit anything but the arm's own write set.
+- Write any line yourself, or stage a path the arm did not write.
+- Let the arm, or an owner command it invokes, commit, pull or push; make
+  more than one commit; or commit under `--no-commit`.
 - Skip the scoped check after the arm wrote.
