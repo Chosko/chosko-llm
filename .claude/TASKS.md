@@ -13,11 +13,11 @@ Preconditions: none
 
 ---
 
-## 228. Make `/session-save` and `/session-resume` commit by default
+## 228. Make `/session-save` commit by default
 
 Status: [MISSING]
 Target: claude
-Files: commands/session-save.md, commands/session-resume.md, VERSION, CHANGELOG.md
+Files: commands/session-save.md, VERSION, CHANGELOG.md
 Preconditions: none
 
 ---
