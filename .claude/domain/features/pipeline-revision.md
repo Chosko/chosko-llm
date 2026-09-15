@@ -105,12 +105,18 @@ name it. Never a bulk read.
 structural, each judged by the branch; editorial only when the change is
 wording only, nothing downstream changes meaning, and A's sequence equals
 B's — the artifacts touched, the owner steps in order and the lint findings
-the change will create or clear. The editorial question is always asked; the
-judged tier marks the recommended answer — editorial marks A, local or
-structural marks B — with an evidence line citing the touched artifacts, a
-recommendation that still needs an explicit reply. The answer passes through to the `/architect amend`
-arm it drives, whose gate shows it for confirmation instead of asking again.
-The user confirms once; nothing is written before.
+the change will create or clear. The editorial question is decided without a
+reply when a mechanical signal settles it — insert, delete and reorder are
+never editorial; an amend that adds or drops an edge, changes `Files:` or
+changes scope is not, and one meeting all three editorial conditions is — and
+asked only for a borderline wording-versus-meaning amend, where the judged
+tier marks the recommended answer — editorial marks A, local or structural
+marks B — with an evidence line citing the touched artifacts, a
+recommendation that still needs an explicit reply. The gate waits for a reply
+only when that question or the here-versus-runbook choice is open. The
+classification passes through to the `/architect amend` arm it drives, which
+applies it without a prompt when its own findings agree and asks for
+confirmation when they disagree. Nothing is written before the gate.
 
 **Verification bracket.** The scoped lint runs before the proposal, so the
 plan starts from the true state, and again after actuation, and the report
@@ -166,9 +172,12 @@ is introduced.
   skills the patcher requires.
 - Hard contracts: neither surface writes a line an owner owns; the patcher
   never opens a body; the reviser opens bodies only within the anchor's
-  scope; the editorial question is always asked at the revise gate, and
-  confirmed, not re-asked, at the `/architect amend` step, the answer carried
-  there being the user's reply, never the recommendation; the runbook is
+  scope; the editorial question is classified at the revise gate when a
+  mechanical signal settles it and asked only when it does not, and the
+  classification carried to the `/architect amend` step — the user's reply
+  when asked, the automatic one otherwise, never the recommendation — is
+  applied there without a prompt when the arm's findings agree, and confirmed
+  when they disagree; the runbook is
   never written without the user's choice; the lint runs before and after
   every revise.
 

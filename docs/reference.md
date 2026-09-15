@@ -239,9 +239,8 @@ stales every unfinished one. `[DONE]` and `[SKIP]` tasks are never looked at.
 
 There is exactly one gate. It shows the drafted edit and the touched set,
 with the untouched live tasks listed too so you can overrule a
-classification, and the outcome of each answer. Then it asks the **editorial
-question**, on every amendment and never inferred: is this change wording
-only, with nothing any task builds changing?
+classification, and the outcome. Then it settles the **editorial question** —
+is this change wording only, with nothing any task builds changing?
 
 - *Editorial* edits the document, stales nothing, and leaves the feature's
   status where it was.
@@ -250,22 +249,33 @@ only, with nothing any task builds changing?
   existing task covers.
 - *Stop* writes nothing.
 
-The gate marks a recommended answer, worked out from what it already shows
-rather than judged: no touched task and no added scope recommends
-*Editorial*, and anything else recommends *Not editorial*. One line gives the
-evidence, naming the touched task ids or the added scope. When *Editorial* is
-recommended, the line also says both answers would write the same thing. You
-still have to reply; silence, an unclear reply or EOF is *Stop*.
+When the evidence is clear, the arm decides without asking. A task touched on
+its title or `Files:` line, or added scope it can name as a component,
+contract or promise, makes the change *not editorial*. No touched task, no
+added scope and no contract text changed makes it *editorial*. The gate shows
+one `Classified:` line with that evidence and writes, with no reply needed.
 
-When `/pipeline-revise` runs the arm in the same session, you already
-answered this at its gate, so the arm shows that answer and asks you to
-confirm it, switch, or stop, instead of asking the question again. Your
-carried answer stays the marked one; the arm's own recommendation appears as
-one extra line only when it differs. A runbook
-step run later asks the full question.
+It asks only when the call rests on judgement: a task's touched status needed
+its body read, the scope call is borderline, or the findings point different
+ways. Then the gate marks a recommended answer, worked out from what it
+already shows: no touched task and no added scope recommends *Editorial*, and
+anything else recommends *Not editorial*. One line gives the evidence, naming
+the touched task ids or the added scope. When *Editorial* is recommended, the
+line also says both answers would write the same thing. You still have to
+reply; silence, an unclear reply or EOF is *Stop*.
 
-A `[NEW]` feature has no tasks, so it gets no guard, but it still gets the
-question and stays `[NEW]` either way. An amendment writes no progress
+An `[IN PROGRESS]` touched task still refuses the amendment before anything
+is classified.
+
+When `/pipeline-revise` runs the arm in the same session, its gate already
+settled the question, so the arm carries that classification in. When the
+arm's own findings agree, it applies it with no prompt. When they differ, it
+shows the carried classification as the marked answer, with one line saying
+what its own findings would mark, and asks you to confirm it, switch, or
+stop. A runbook step run later applies the rule above on its own.
+
+A `[NEW]` feature has no tasks, so it gets no guard; it is classified by the
+same rule and stays `[NEW]` either way. An amendment writes no progress
 marker, and `--commit` / `--no-push` work as on any other run.
 
 At a genuine design fork (the stack choice, the shape of the architecture,
@@ -695,9 +705,9 @@ sequence still reads as a sequence, and reports any gap without fixing it.
 line, the anchor, the branch and the tier, and every touched artifact with
 how it was reached. The artifacts judged untouched are listed too, so you
 can overrule the call. It numbers the owner steps in order and shows which
-`/pipeline-check` findings each is expected to clear or create. Then it asks
-the **editorial question**, on every run: is this change
-wording only, with nothing downstream changing meaning?
+`/pipeline-check` findings each is expected to clear or create. Then it
+settles the **editorial question**: is this change wording only, with nothing
+downstream changing meaning?
 
 - *Editorial* runs the short sequence.
 - *Not editorial, here* runs the full sequence in this session.
@@ -705,21 +715,32 @@ wording only, with nothing downstream changing meaning?
   and stops.
 - *Stop* writes nothing.
 
-The gate marks a recommended answer, taken from the tier it already shows:
-an editorial tier recommends *Editorial*, a local or structural one
-recommends *Not editorial*. One line gives the evidence, naming the touched
-artifacts. When *Editorial* is recommended, the line also says both answers
-run the same sequence. You still have to reply; silence, an unclear reply or
-EOF is *Stop*, and only your reply, never the recommendation, carries into an
-`/architect amend` step.
+When a mechanical signal settles it, the gate decides without asking and shows
+one `Classified:` line with the evidence. An insert, a delete or a reorder is
+never editorial. An amend that adds or drops a dependency edge, changes a
+`Files:` line or changes scope is not editorial; one that is wording only,
+changes nothing downstream and runs the same sequence either way is.
+
+The gate waits for your reply only when something is still open: the
+editorial question on a borderline amend, or the here-versus-runbook choice
+when the runbook option is shown. With neither open, it shows the plan and
+runs it.
+
+When the question is asked, the gate marks a recommended answer, taken from
+the tier it already shows: an editorial tier recommends *Editorial*, a local
+or structural one recommends *Not editorial*. One line gives the evidence,
+naming the touched artifacts. You still have to reply; silence, an unclear
+reply or EOF is *Stop*, and the recommendation never carries into an
+`/architect amend` step — only your reply, or the gate's own classification.
 
 The runbook option is offered only when the sequence has **four or more**
 owner steps and `/runbook-create` is installed; otherwise it simply isn't
 shown. Three steps or fewer always run in the session. You can overrule the
-tier or a touched/untouched call in the same answer, and the gate is shown
-again. Your answer carries into any `/architect amend` step run in the same
-session, whose own gate then asks you to confirm it rather than asking the
-question again. A step handed off as a runbook asks the full question.
+tier or a touched/untouched call in any answer the gate asks for, and the gate
+is shown again. The classification carries into any `/architect amend` step
+run in the same session, which applies it without a prompt when its own
+findings agree and asks you to confirm it when they differ. A step handed off
+as a runbook applies the arm's own rule.
 
 **Running the steps.** One at a time, in order, never in parallel and never
 in a subagent, each with its owner's own approval gate intact. If an owner

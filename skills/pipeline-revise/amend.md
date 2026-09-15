@@ -172,10 +172,14 @@ all three hold: the change is wording only; nothing downstream changes meaning
 — no status moves, no edge, no `Files:`, no scope; and the sequence A leaves
 equals the sequence B runs, the one step that writes the anchored artifact.
 When any one fails it judges local or structural, as above. The tier decides how
-long the sequence is; it never decides whether the gate is asked. Under the
-gate's A the sequence is the editorial one; under B, the judged tier's. The
-judged tier is also the letter the gate marks, per `./SKILL.md` step 7:
-editorial marks A, local or structural marks B.
+long the sequence is. Whether the editorial question is asked is `./SKILL.md`
+step 7's rule over these findings: a `Preconditions:` edge added or dropped, a
+`Files:` change or a scope change classifies the amend not editorial, and all
+three editorial conditions above classify it editorial — either way without
+asking. Only a borderline wording-versus-meaning amend is asked, and then the
+judged tier is the letter the gate marks: editorial marks A, local or
+structural marks B. Editorial runs the editorial sequence; not editorial, the
+judged tier's.
 
 ## Verification
 

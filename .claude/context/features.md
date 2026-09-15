@@ -726,12 +726,16 @@ Currently shipped:
   runs a PRECISION iterate guard — each live task classified touched or
   untouched from its summary block, body opened only when that can't
   decide — that refuses only on a touched `[IN PROGRESS]` task and stales
-  only touched tasks; one gate asking every time whether the change is
-  editorial, marking the letter derived from the touched set and scope call
-  (empty and none → A, else B) with an evidence line — under
-  `/pipeline-revise` it confirms the answer carried from the revise gate
-  instead of re-asking, adding its own derivation only when it differs; no
-  progress marker), `tech-stack-
+  only touched tasks; one gate settling whether the change is editorial —
+  CLEAR cases (task touched on its summary block or nameable added scope →
+  not editorial; empty touched set, no scope, no contract text changed →
+  editorial) print a `Classified:` evidence line and write with no reply;
+  AMBIGUOUS cases (a body read decided a touched status, borderline scope
+  call, findings pointing different ways) ask A/B/C with the letter derived
+  from touched set and scope call (empty and none → A, else B) — under
+  `/pipeline-revise` it applies the carried classification with no prompt
+  when its own derivation agrees, and asks the confirmation form when it
+  differs; no progress marker), `tech-stack-
   selection.md` (no existing stack in either form — an existing stack
   always wins), `council-gate.md` (PHASE 2 hit a genuine design fork —
   optional delegation to the claude-council skill this repo ships (opt-in,
@@ -1074,13 +1078,18 @@ Currently shipped:
   editorial). ONE gate, nothing written before it by the skill or any arm:
   verdict line, anchor/branch/tier, touched artifacts with the edge or read
   that reached each plus the untouched ones listed for overruling, numbered
-  owner steps, expected lint delta, then the editorial question asked EVERY
-  run, never skipped — A editorial / B not editorial, here / C as a runbook /
-  D stop — marking the letter the judged tier implies (editorial → A, local /
-  structural → B) with an evidence line from the touched artifacts, a
-  recommendation only, silence still Stop; the user's reply (never the
-  recommendation) is carried into each `/architect amend` step, whose gate
-  shows it for confirmation; C rendered only at FOUR OR MORE owner steps AND `/runbook-create`
+  owner steps, expected lint delta, then the editorial CLASSIFICATION —
+  automatic `Classified:` line when a mechanical signal settles it
+  (insert/delete/reorder never editorial; amend with edge / `Files:` / scope
+  change → not editorial; amend meeting all three editorial conditions →
+  editorial), the question asked only for a borderline amend — A editorial /
+  B not editorial, here / C as a runbook / D stop — marking the letter the
+  judged tier implies (editorial → A, local / structural → B), a
+  recommendation only, silence still Stop; a classified change with C
+  rendered asks only here / runbook / stop; nothing open → actuates with no
+  reply; the classification (user's reply or automatic, never the
+  recommendation) is carried into each `/architect amend` step, applied there
+  with no prompt when its findings agree, confirmed when they differ; C rendered only at FOUR OR MORE owner steps AND `/runbook-create`
   installed (read off the verdict line's `installed` field, omitted silently
   otherwise — the council gate's optional-delegation shape). Actuation:
   sequential in the session, never parallel, never subagents, each owner's

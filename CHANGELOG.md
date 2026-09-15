@@ -2,6 +2,12 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.51.0 — 2026-09-16
+
+- **/architect amend** no longer asks whether a change is editorial when its own evidence settles it. A task touched on its title or `Files:` line, or added scope it can name, is classified not editorial; no touched task, no added scope and no contract text changed is classified editorial. The gate shows one `Classified:` line with that evidence and writes without waiting for a reply. It still asks — with a recommended answer — when a task's body had to be read, the scope call is borderline, or the findings disagree. **/pipeline-patch** inherits this through the arm it runs.
+- **/pipeline-revise** classifies inserts, deletes and reorders as not editorial without asking, and an amend too whenever an edge, a `Files:` line or the scope changes, or all three editorial conditions hold. Its gate waits for a reply only when a borderline amend's editorial question or the here-versus-runbook choice is open; otherwise it shows the plan and runs it. Its report line now names the classification instead of a letter.
+- When **/pipeline-revise** runs an `/architect amend` step, that step applies the carried classification without a prompt when its own findings agree, and asks for confirmation only when they differ.
+
 ## 1.50.1 — 2026-09-15
 
 - **/session-save** no longer fails to commit when the session file it supersedes was never tracked — a handoff from before 1.49.0, or from a `--no-commit` save. It stages that deletion with `git rm --cached --ignore-unmatch`, which does nothing for an untracked file, instead of a `git add` that aborted staging of the new handoff too.

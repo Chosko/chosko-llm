@@ -44,10 +44,12 @@ Deliberately out:
   amend entry is, and that is enough.
 - **Editing `[DONE]` work.** No amend arm reopens a done task or rewrites a
   ticked runbook step. Follow-up work is a new task or a new step, as today.
-- **Applying an editorial-versus-semantic classification without an
-  answer.** The arm asks, every time, and no classification is ever applied
-  without an explicit answer. The user chose to be asked rather than trust a
-  classification; the letter the gate marks is a recommendation, not a
+- **Asking the editorial question when the evidence already settles it.**
+  The arm applies an editorial-versus-semantic classification without an
+  answer when a mechanical signal decides it, and asks only when the call
+  rests on judgement. The user first chose to be asked every time, then
+  (2026-09-16) chose not to be asked where the evidence is clear; on an
+  ambiguous case the letter the gate marks is still a recommendation, not a
   decision.
 
 ## Architecture
@@ -75,11 +77,15 @@ blanket one:
   the full guard would; an untouched `[IN PROGRESS]` task does not, which is
   the precision the blanket guard lacks.
 - One gate presents the change, the touched set and the proposed status
-  outcome, and asks whether the change is editorial. It also marks the letter
-  its touched set and scope call imply — editorial when no task is touched
-  and no scope is added, not editorial otherwise — with a one-line evidence
-  statement citing what it already shows. On proceed, `[STALE]` is written on
-  touched tasks only.
+  outcome, and decides whether the change is editorial when the evidence is
+  clear — a task touched on its summary block or a nameable added scope item
+  is not editorial; no touched task, no added scope and no contract text
+  changed is editorial — stating it in one `Classified:` evidence line and
+  proceeding without a reply. It asks only when the case is ambiguous — a
+  touched status needed a body read, the scope call is borderline, or the
+  findings point different ways — marking the letter its touched set and
+  scope call imply, with a one-line evidence statement citing what it already
+  shows. On proceed, `[STALE]` is written on touched tasks only.
 - The feature flips to `[ITERATED]` when any task was staled or when the
   change adds scope no existing task covers; an editorial change leaves the
   status as it was. The legal transitions are unchanged; the arm only chooses
@@ -144,8 +150,11 @@ uses the existing step-marker vocabulary rather than a new one.
 - Hard contracts: an arm never writes a line another owner owns; an arm never
   touches `[DONE]` or `[SKIP]` work; the touched classification opens a task
   body only when the summary block cannot decide; the editorial question is
-  asked on every amendment; silence is still Stop, and a recommended letter
-  is never a default.
+  decided without a reply when the evidence is clear and asked when it is
+  ambiguous; a classification carried from `/pipeline-revise` is accepted
+  without a prompt when the arm's own findings agree, and confirmed when they
+  disagree; whenever the arm asks, silence is still Stop, and a recommended
+  letter is never a default.
 
 Failure contract: a change that the arm cannot scope to named sections is
 refused with a pointer to the full skill; a touched `[IN PROGRESS]` task

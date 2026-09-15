@@ -242,9 +242,9 @@ task, and `[DONE]` tasks are never touched. For a targeted change rather
 than a redesign, `/architect amend feature=<slug> "<change>"` edits only the
 sections the change names and marks `[STALE]` only the tasks the change
 touches, judged from each task's title and `Files:` line. An `[IN PROGRESS]`
-task blocks it only when the change touches that task, and it asks every
-time whether the change is editorial, recommending the answer its touched
-tasks and scope call imply; if it is, nothing is staled. What each
+task blocks it only when the change touches that task. It decides on its own
+whether the change is editorial when its touched tasks and scope call settle
+it, and asks only when they don't; if it is editorial, nothing is staled. What each
 status means at each level is in
 [the production hierarchy](#the-production-hierarchy) above.
 
