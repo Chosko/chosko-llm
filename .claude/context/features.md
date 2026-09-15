@@ -1325,6 +1325,10 @@ Currently shipped:
   never a `git status`** — it set `[~]` one step ago, so it needs no inspection,
   the avoided tool call is the bigger saving, and anything else dirty falls
   through to normal handling, which preserves the real forgotten-commit check.
+  Under `--inline` the same condition answers a step command's dirty-tree
+  prompt (`task-engine` `tree.md`) with `1` / `proceed`, never `include`, in one
+  line — rule in `references/inline-contract.md`, pointer from the Stop-hook
+  reply; `tree.md` itself knows nothing of runbooks.
   Lives in THIS body, not a global `claude-md`: `Stop` fires for the main
   session (a subagent's is `SubagentStop`), which is the orchestrator holding
   this skill, so it costs zero resident tokens in every non-runbook session.

@@ -1217,7 +1217,10 @@ costs exactly one forced turn each time it fires: at every step start and every
 question relayed to you. Rather than re-explain itself each time, `/runbook-run`
 answers with that fixed literal and stops. It applies only when the two
 bookkeeping files it just wrote are the only dirty ones; anything else in the
-tree is handled normally.
+tree is handled normally. Under `--inline` the same condition covers a step's
+`/task-implement` dirty-tree prompt: the session answers `proceed` itself (never
+`include`), says so in one line, and carries on; anything else dirty still
+brings the prompt to you.
 
 A runbook is not a [session handoff](#session-save-and-session-resume): a
 session file is a snapshot of work in flight, a runbook is a plan for work

@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.46.5 — 2026-09-15
+
+- **/runbook-run --inline** no longer stalls on a step's `/task-implement` dirty-tree prompt when the only dirty files are the runbook and its index: the session answers `proceed` itself (never `include`) and says so in one line. Anything else dirty still brings the prompt to you.
+
 ## 1.46.4 — 2026-09-15
 
 - **/runbook-run** now answers the cloud sandbox's Stop hook with `stop hook ignored on runbook WIP` instead of `stop hook refused`, so the transcript says the block was deliberately ignored and why. When it applies, and the one forced turn it costs, are unchanged.

@@ -78,7 +78,7 @@ Preconditions: none
 
 ## 223. Auto-answer `/task-implement`'s dirty-tree prompt under `--inline` when only runbook bookkeeping is dirty
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/references/inline-contract.md, skills/runbook-run/SKILL.md, .claude/context/features.md, docs/reference.md, VERSION, CHANGELOG.md
 Preconditions: none

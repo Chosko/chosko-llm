@@ -41,6 +41,14 @@ INLINE RULES
   verbatim and unabridged. Never answer your own question, and never skip a
   gate because you "already know" the answer. If you are yourself a subagent,
   end your turn under `QUESTIONS FOR USER` instead, as in the default mode.
+- One prompt is the exception: the dirty-tree prompt (`Working tree has
+  uncommitted changes. Choose:`) a step's command puts before it starts. When
+  the only uncommitted changes it lists are <FILE> and .claude/RUNBOOKS.md —
+  the runbook and the index you yourself just wrote — answer `1` / `proceed`
+  yourself, print the one line
+  `dirty-tree prompt answered proceed — only runbook WIP is dirty`, and carry
+  on. Never `include`: those two files must not ride in the step's commit. If
+  anything else is dirty, put the prompt to the user unchanged.
 - Follow the invoked skill's default commit behaviour. Add no flag the user did
   not type.
 - If the work wants a child subagent, spawn it directly, one level down. If you
@@ -85,6 +93,17 @@ Not part of the rule set — this section is for whoever maintains the contract.
   that answers its own question, or skips a gate it thinks it can predict, has
   made a decision the user never made. The fixed block tells the user which
   step is asking.
+- **The dirty-tree prompt answers itself.** Under `--inline` a step's
+  `/task-implement` runs in the session that set `[~]` and `[RUNNING]` one
+  moment earlier, so its pre-flight check meets them and would stall on a
+  question whose answer is already known. The condition mirrors SKILL.md's
+  Stop-hook reply — the runbook and the index you yourself just wrote — so the
+  two read as one rule applied twice, and its fall-through is the same: anything
+  else dirty still reaches the user. `proceed`, never `include`, because folding
+  the markers into the task's commit would commit the in-flight state COMMIT
+  CADENCE forbids. The rule lives here, not in `task-engine`'s `tree.md`: the
+  caller answers its own prompt, and `/task-implement` learns nothing about
+  runbooks.
 - **Children one level down, never inline.** The default mode's step agent sat
   one level below the orchestrator; under `--inline` that level is free, so a
   wanted child goes there. Doing a child's work in the session destroys the
