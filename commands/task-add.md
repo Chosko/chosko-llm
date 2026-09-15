@@ -1,6 +1,6 @@
 ---
 name: task-add
-version: 2.4.0
+version: 2.4.1
 type: command
 description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit and push. Pass --before <N> or --after <N> to write the new task at that position in TASKS.md together with the Preconditions: edge the position implies — no existing id moves. Pass feature=<slug> --single to attach exactly one task to a [PLANNED] feature without reconciling or re-planning it; on a project with FEATURES.md, a free-form run asks at its existing approval gate whether the task belongs to a feature. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, appending a final documentation-update task when new tasks were drafted, and setting the feature [PLANNED]. Whenever a drafted task names a document owned by another pipeline command, the PHASE 3 gate enumerates the reconciliations that task needs to make to it and asks the user to pre-authorise exactly those points, keep the file as a read-only reference, or drop it — the grant, the reference marker, or the removal is written into the task body so the implementer never has to ask. Pass --short for trivial low-ambiguity tasks to skip the deep PHASE 1 investigation and write a minimal Goal-only body (mutually exclusive with feature= and --single), --no-split to always write exactly one task, --no-commit to write the files but skip the commit (and push), or --no-push to commit without pushing.
 requires: skill:task-engine
@@ -999,8 +999,14 @@ Feature case (FEATURE is set) — in addition to the above:
    to reach the design from the task without being told the slug
    separately. That pointer is a read-only Reference unless the ownership
    question granted an edit on it: OWNERSHIP PRE-AUTHORISATION case 2 writes
-   it with the marker and asks nothing, which is what keeps this step and
-   that rule from contradicting each other.
+   it with the marker and asks nothing, which is what keeps this step and that
+   rule from contradicting each other on the healthy path — a document that
+   needs no reconciliation. **The one exception is an explicit Drop** under
+   that rule's case 1: where points could be named and the user chose to leave
+   the document to `/architect`, their answer decides and this step does not
+   override it — the body is written without the pointer, and the unreconciled
+   points are recorded in `## Decisions` as the Drop outcome requires. Nothing
+   else omits it.
 
 3. Apply the approved reconciliation, and nothing beyond it (under SINGLE
    there is none, so this step does nothing):

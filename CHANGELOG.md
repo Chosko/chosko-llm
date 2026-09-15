@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.47.2 — 2026-09-15
+
+- **/task-add** now says which rule wins when the ownership gate's **Drop** answer lands on a feature-derived task's own feature document. PHASE 4's feature case requires that pointer in every new body, and 1.47.0 closed that contradiction only for the case where no reconciliation points could be named; where points could be named, Drop and the PHASE 4 requirement still gave opposite instructions on the same path. The user's Drop answer decides, the body is written without the pointer, and the unreconciled points are recorded as that outcome already requires.
+
 ## 1.47.1 — 2026-09-15
 
 - **/pipeline-revise** now says in each branch whether its impact walk continues from the tasks it reaches forward, instead of leaving it implicit. `amend.md` continues from every successor whose basis changes — up to that successor's own feature document, then forward again — and `delete.md` does the same from every successor whose edge is dropped, each node visited once. `insert.md` states that it does not: a task that only gains a wait edge still delivers what it did. `reorder.md` inherits both and needs no rule of its own.
