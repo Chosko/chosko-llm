@@ -44,8 +44,11 @@ Deliberately out:
   amend entry is, and that is enough.
 - **Editing `[DONE]` work.** No amend arm reopens a done task or rewrites a
   ticked runbook step. Follow-up work is a new task or a new step, as today.
-- **Deciding editorial versus semantic.** The arm asks, every time. The user
-  chose to be asked rather than trust a classification.
+- **Applying an editorial-versus-semantic classification without an
+  answer.** The arm asks, every time, and no classification is ever applied
+  without an explicit answer. The user chose to be asked rather than trust a
+  classification; the letter the gate marks is a recommendation, not a
+  decision.
 
 ## Architecture
 
@@ -72,8 +75,11 @@ blanket one:
   the full guard would; an untouched `[IN PROGRESS]` task does not, which is
   the precision the blanket guard lacks.
 - One gate presents the change, the touched set and the proposed status
-  outcome, and asks whether the change is editorial. On proceed, `[STALE]` is
-  written on touched tasks only.
+  outcome, and asks whether the change is editorial. It also marks the letter
+  its touched set and scope call imply — editorial when no task is touched
+  and no scope is added, not editorial otherwise — with a one-line evidence
+  statement citing what it already shows. On proceed, `[STALE]` is written on
+  touched tasks only.
 - The feature flips to `[ITERATED]` when any task was staled or when the
   change adds scope no existing task covers; an editorial change leaves the
   status as it was. The legal transitions are unchanged; the arm only chooses
@@ -138,7 +144,8 @@ uses the existing step-marker vocabulary rather than a new one.
 - Hard contracts: an arm never writes a line another owner owns; an arm never
   touches `[DONE]` or `[SKIP]` work; the touched classification opens a task
   body only when the summary block cannot decide; the editorial question is
-  asked on every amendment.
+  asked on every amendment; silence is still Stop, and a recommended letter
+  is never a default.
 
 Failure contract: a change that the arm cannot scope to named sections is
 refused with a pointer to the full skill; a touched `[IN PROGRESS]` task

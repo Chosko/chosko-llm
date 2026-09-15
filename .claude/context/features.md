@@ -716,8 +716,11 @@ Currently shipped:
   untouched from its summary block, body opened only when that can't
   decide — that refuses only on a touched `[IN PROGRESS]` task and stales
   only touched tasks; one gate asking every time whether the change is
-  editorial — under `/pipeline-revise` it confirms the answer carried from
-  the revise gate instead of re-asking; no progress marker), `tech-stack-
+  editorial, marking the letter derived from the touched set and scope call
+  (empty and none → A, else B) with an evidence line — under
+  `/pipeline-revise` it confirms the answer carried from the revise gate
+  instead of re-asking, adding its own derivation only when it differs; no
+  progress marker), `tech-stack-
   selection.md` (no existing stack in either form — an existing stack
   always wins), `council-gate.md` (PHASE 2 hit a genuine design fork —
   optional delegation to the claude-council skill this repo ships (opt-in,

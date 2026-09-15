@@ -24,7 +24,7 @@ Preconditions: 215
 
 ## 217. Recommend an answer at `/architect amend`'s editorial gate, derived from its own touched set and scope call
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/architect/amend.md, skills/architect/SKILL.md, skills/pipeline-engine/references/routing.md, .claude/domain/features/owner-amend-arms.md, .claude/context/features.md, README.md, docs/reference.md, VERSION, CHANGELOG.md
 Preconditions: none

@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.45.0 — 2026-09-15
+
+- **/architect amend** now marks a recommended answer at its editorial question, worked out from what the gate already shows: no touched task and no added scope recommends editorial, anything else recommends not editorial. One evidence line names the touched task ids or the added scope. You still have to reply, and silence still stops.
+- Under **/pipeline-revise** your carried answer stays the marked one; the arm's own recommendation shows as one extra line only when it differs.
+
 ## 1.44.1 — 2026-09-14
 
 - **/architect amend** under **/pipeline-revise**: the confirmation now says your revise-gate answer was given for the whole plan, and asks you to judge this document's edit on its own, so a structural plan doesn't nudge you into staling tasks for a wording-only document edit.

@@ -247,9 +247,18 @@ only, with nothing any task builds changing?
   existing task covers.
 - *Stop* writes nothing.
 
+The gate marks a recommended answer, worked out from what it already shows
+rather than judged: no touched task and no added scope recommends
+*Editorial*, and anything else recommends *Not editorial*. One line gives the
+evidence, naming the touched task ids or the added scope. When *Editorial* is
+recommended, the line also says both answers would write the same thing. You
+still have to reply; silence, an unclear reply or EOF is *Stop*.
+
 When `/pipeline-revise` runs the arm in the same session, you already
 answered this at its gate, so the arm shows that answer and asks you to
-confirm it, switch, or stop, instead of asking the question again. A runbook
+confirm it, switch, or stop, instead of asking the question again. Your
+carried answer stays the marked one; the arm's own recommendation appears as
+one extra line only when it differs. A runbook
 step run later asks the full question.
 
 A `[NEW]` feature has no tasks, so it gets no guard, but it still gets the
