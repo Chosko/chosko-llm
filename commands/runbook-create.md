@@ -1,8 +1,8 @@
 ---
 name: runbook-create
-version: 0.6.2
+version: 0.7.0
 type: command
-description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/<id>-<name>.md, plus its .claude/RUNBOOKS.md index block — or append steps to one that already exists, including one a run is in the middle of. An append goes at the foot by default; with --before <step> or --after <step> the new steps are written at that position in the list instead, still taking the next unused step id, because a step's id is a stable identifier and not its position — no existing step is ever edited or renumbered. Assigns each new runbook the next id from the index's Last runbook number: counter, which every other runbook- command then accepts in place of the name. Authors each step's optional Needs: line (agent / agent+human / human, absent meaning agent) so a reader can see before starting which steps need a person, and calls those steps out at the confirmation gate. Refuses a new name that is already taken, or whose first kebab segment is all digits, with one suggested alternative. Two axes: where the steps go (a new runbook, --append <id|name|id-name>, which renames a legacy <name>.md body to <id>-<name>.md unless that runbook is running, --append with no name for the runbook this session is running, or no arguments at all, which asks) and where the material comes from (the current conversation's most recent follow-up list, the default; or a free-form description gathered through one batched interview). Enforces ten prompt-quality rules against every step before writing — self-contained, names the document to read first, carries every decision that exists nowhere on disk and nothing that already does, states its sequencing and what must not be re-proposed, uses real slash commands, references no path missing at run time, produces one deliverable, never invokes /runbook-run, and prefers two steps to one that would need a nested spawn — fixing failures and naming each fix in the confirmation report. The gate shows the proposed shape only, never the full prompts. Authoring command — leaves the runbook uncommitted for one review pass by default; pass --commit to commit and push it, or --commit --no-push to commit without pushing.
+description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/<id>-<name>.md, plus its .claude/RUNBOOKS.md index block — or append steps to one that already exists, including one a run is in the middle of. An append goes at the foot by default; with --before <step> or --after <step> the new steps are written at that position in the list instead, still taking the next unused step id, because a step's id is a stable identifier and not its position — no existing step is ever edited or renumbered. Assigns each new runbook the next id from the index's Last runbook number: counter, which every other runbook- command then accepts in place of the name. Authors each step's optional Needs: line (agent / agent+human / human, absent meaning agent) so a reader can see before starting which steps need a person, and calls those steps out at the confirmation gate. Refuses a new name that is already taken, or whose first kebab segment is all digits, with one suggested alternative. Two axes: where the steps go (a new runbook, --append <id|name|id-name>, which renames a legacy <name>.md body to <id>-<name>.md unless that runbook is running, --append with no name for the runbook this session is running, or no arguments at all, which asks) and where the material comes from (the current conversation's most recent follow-up list, the default; or a free-form description gathered through one batched interview). Enforces ten prompt-quality rules against every step before writing — self-contained, names the document to read first, carries every decision that exists nowhere on disk and nothing that already does, states its sequencing and what must not be re-proposed, uses real slash commands, references no path missing at run time, produces one deliverable, never invokes /runbook-run, and prefers two steps to one that would need a nested spawn — fixing failures and naming each fix in the confirmation report. The gate shows the proposed shape only, never the full prompts. Commits and pushes what it wrote by default, since a runbook is read by the next session and its review happens at the gate; pass --no-commit to leave it uncommitted, or --no-push to commit without pushing. --commit is accepted and changes nothing.
 requires: skill:runbook-run
 ---
 
@@ -21,8 +21,8 @@ requires: skill:runbook-run
 #        /runbook-create --append
 #        /runbook-create --append <id|name|id-name> --before <step>  (insert above that step)
 #        /runbook-create --append <id|name|id-name> --after <step>   (insert below that step)
-#        /runbook-create <args> --commit            (commit and push what this run wrote)
-#        /runbook-create <args> --commit --no-push  (commit locally, skip the push)
+#        /runbook-create <args> --no-commit  (write the runbook, skip the commit and push)
+#        /runbook-create <args> --no-push    (commit as usual, skip the push)
 # Examples: /runbook-create implement-ecc-import
 #           /runbook-create --append implement-ecc-import
 #           /runbook-create --append 3 --before 4
@@ -56,8 +56,9 @@ is left is the target name or the free-form description.
 | `--append` | Set APPEND = true. The steps go onto an existing runbook rather than into a new one. |
 | `--before <step>` | Set POSITION = before `<step>`. The appended steps are written immediately above that step instead of at the foot. |
 | `--after <step>` | Set POSITION = after `<step>`. The appended steps are written immediately below that step instead of at the foot. |
-| `--commit` | Set COMMIT = true. Commit and push what this run wrote. Default is false — the output is left uncommitted for one review pass. |
-| `--no-push` | Set NO_PUSH = true. Only meaningful alongside `--commit`: commit locally, skip the pull/re-sync/push. |
+| `--no-commit` | Set COMMIT = false. Write the runbook, but make no commit and no push. Implies NO_PUSH. |
+| `--no-push` | Set NO_PUSH = true. Commit as usual, skip the pull/re-sync/push. |
+| `--commit` | Accepted and changes nothing — COMMIT is already true. |
 
 `--before` and `--after` each take a value — a **step id**, the number in a
 step's heading, never a position in the list — and both the flag and its value
@@ -67,10 +68,15 @@ are stripped. They are mutually exclusive; if both appear, stop with:
 --append.`) — a new runbook has no steps to place against. Without either flag
 an append goes at the foot, exactly as it always has.
 
-`--no-push` without `--commit` is accepted and has no effect — there is
-nothing to push. If `--no-commit` is passed, say that this is an authoring
-command whose default already commits nothing, and continue as if it were
-absent.
+COMMIT is true unless `--no-commit` is passed. `--commit` is stripped
+silently, so existing runbook steps and invocations that still pass it keep
+working. `--commit` and `--no-commit` together stop the run with:
+`--commit and --no-commit cannot be combined. Pick one.`
+
+**Pull at start.** Unless `--no-commit` was passed or `NO_PUSH` is true, run
+`git pull` on the current branch before PHASE 1 resolves anything. A conflict
+stops the run there: report the output and tell the user to resolve manually
+and re-run. On a non-git VCS (a `## VCS` section in `CLAUDE.md`) skip it.
 
 ---
 
@@ -171,7 +177,7 @@ steps** — id, marker and title, in list order — so a typo is corrected witho
 going to look. Nothing is gathered and nothing is written.
 
 **The migration check on an append target.** Once form 1 or 2 has resolved
-the target — after the `--commit` pull at start, and before any material is
+the target — after the pull at start, and before any material is
 gathered — apply the check in `runbook-schema.md` § *The store* to the target's
 block. On a hit, read
 `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/body-migration.md`
@@ -426,8 +432,8 @@ steps. That is the one thing about the shape a user cannot infer from the
 titles, and it decides whether they can start the run and walk away.
 
 **Only the shape.** Full prompts are deliberately not shown back: they are a
-wall of text that gets skimmed, and they are in the file a moment later,
-uncommitted and open to review. The gate exists to catch a **wrong order or a
+wall of text that gets skimmed, and they are in the file a moment later, where
+a fix is one `/pipeline-patch` or `--append` away. The gate exists to catch a **wrong order or a
 missing step** — both expensive after the first step has run, and cheap now.
 
 Wait for an explicit answer. Iterate and re-render the whole plan after any
@@ -532,20 +538,16 @@ All of these apply to every append — at the foot or at a `--before` /
 
 ---
 
-PHASE 6 — COMMIT AND PUSH (only when `--commit` was passed)
+PHASE 6 — COMMIT AND PUSH (skipped under `--no-commit`)
 
-If COMMIT is false (the default), do nothing here. Report the paths written
-and stop, closing with the one line that matters: the prompts **are** the
-product, and they are cheapest to fix now, before the first step runs. The
-review pass matters more here than for most authoring commands.
+If COMMIT is false (`--no-commit` was passed), do nothing here. Report the
+paths written, remind the user that nothing was committed, and stop.
 
-If COMMIT is true, follow the commit-and-push protocol — four steps, in this
-order:
+Otherwise (the default), follow the commit-and-push protocol — four steps, in
+this order:
 
-1. **Pull at start.** `git pull` on the current branch, before this run's own
-   work begins (i.e. before PHASE 1 resolves anything, when `--commit` is on
-   the command line). A conflict stops the run there: report the output and
-   tell the user to resolve manually and re-run.
+1. **Pull at start.** Already run before PHASE 1, per ARGUMENT NOTE. A
+   conflict stopped the run there.
 2. **Commit.** Stage **exactly** the paths this run wrote — the body at its
    `File:` path and `.claude/RUNBOOKS.md`, by explicit path — and make one
    commit:
@@ -627,6 +629,6 @@ DO NOT:
 - Execute a runbook, or any step of one. That is `/runbook-run`.
 - Create a task, a feature document, or any file other than the body at its
   `File:` path and `.claude/RUNBOOKS.md`.
-- Run any git command unless `--commit` was passed — other than the move an
-  append target's migration makes, which runs either way; and with it, never
+- Run any git command under `--no-commit` — other than the move an append
+  target's migration makes, which runs either way; and on any run, never
   force-push, retry a failed push, branch, tag, or stage with a catch-all.

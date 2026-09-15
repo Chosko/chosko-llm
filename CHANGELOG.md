@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.48.0 — 2026-09-15
+
+- **/runbook-create** now commits and pushes the runbook it wrote by default, like `/runbook-run` and `/runbook-clean`. A runbook is read by the next session, often on another machine, and its review already happens at the plan gate. Pass `--no-commit` to leave it uncommitted; `--commit` is still accepted and changes nothing, so existing invocations keep working.
+- **/pipeline-patch** and **/pipeline-revise** forward `--no-commit` to `/runbook-create` when the run was not given `--commit`, so a revision run still commits nothing unasked.
+
 ## 1.47.3 — 2026-09-15
 
 - **/pipeline-revise** no longer walks up from a successor whose dropped dependency edge is immediately replaced by one carrying the same spec. `delete.md`'s upward continuation, added in 1.47.1, keyed on the edge being dropped when it should have keyed on the work actually being withdrawn — so a reorder, which is a drop plus an insert, proposed an `/architect amend` step for every successor's feature document even though nothing stopped being delivered. The guard now sits on the general rule, matching the one `amend.md` already had, and `reorder.md` still needs no text of its own.

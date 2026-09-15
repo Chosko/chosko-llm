@@ -6,7 +6,7 @@ Last task number: 230
 
 ## 227. Make `/runbook-create` commit by default
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/runbook-create.md, commands/pipeline-patch.md, skills/pipeline-revise/SKILL.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
 Preconditions: none
