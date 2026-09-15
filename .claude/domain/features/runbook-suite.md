@@ -566,8 +566,10 @@ the entire authoring apparatus to change one path.
   step's place in the list, so the step at the foot need not be the
   highest-numbered one.
 - `Depends on:` may reference existing steps, including completed ones.
-- The `Sequencing:` header line is extended, not replaced — it describes the
-  whole runbook and the appended steps are now part of it.
+- The `Sequencing:` header line is never touched — not extended, not
+  replaced, not added to a runbook that has none. It is fixed at authoring
+  time; a dated fact an appended step needs goes in its prompt, and a fact
+  learned later goes in its `Context:`.
 - Existing steps are never edited. Ownership stays by line; an append adds
   new steps — at the foot, or between two existing ones — and changes no line
   of any step already there, nor moves or renumbers one.
@@ -598,9 +600,10 @@ answer for each so it can be settled in a sentence:
 1. **What must be true when this runbook is finished?** The end state, which is
    what makes the last step recognizable as the last step.
 2. **What are the steps, in order?** Titles are enough at this stage.
-3. **Which steps must precede which, and why?** The reason is the part that goes
-   on the `Sequencing:` line — "1–4 all edit the same file" is worth more to a
-   future reader than a dependency graph.
+3. **Which steps must precede which, and why?** The reason, where list position
+   and `Depends on:` cannot show it, is the part that goes on the optional
+   one-line `Sequencing:` — "1–4 all edit the same file" is worth more to a
+   future reader than a dependency graph. No such reason, no `Sequencing:` line.
 4. **For each step, which document should the agent read first?** A step with no
    such document needs its evidence inline instead, which is worth knowing now
    rather than at write time.
@@ -901,7 +904,7 @@ safe with two writers:
 | the step marker, `Done:`, `Context:` appendices | `/runbook-run` | `/runbook-create` |
 | `## Do not re-propose` | `/runbook-create` | `/runbook-run` |
 
-An append writes only new steps and the `Sequencing:` extension; it never edits a
+An append writes only new steps, never the `Sequencing:` line; it never edits a
 line of an existing step, wherever the new steps land, which is what makes
 appending safe during a run.
 

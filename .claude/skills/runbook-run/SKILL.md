@@ -816,7 +816,7 @@ When that feedback arrives and the only uncommitted changes are the runbook and
 the index **you yourself just wrote**, spend nothing on it. Reply with exactly
 
 ```
-stop hook refused
+stop hook ignored on runbook WIP
 ```
 
 and end the turn. No tool call, no `git status`, no explanation — you wrote

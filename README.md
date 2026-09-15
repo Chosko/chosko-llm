@@ -311,7 +311,8 @@ structural: new scope, a task inserted, removed or moved, or a dependency
 edge changing. It traces the change up to the feature document and down to
 the tasks and runbook steps built on it, then shows the whole plan once: its
 tier, every artifact it touches and the owner steps in order. It always asks
-whether the change is only a wording change, and runs `/pipeline-check`
+whether the change is only a wording change, recommending the answer its
+tier implies, and runs `/pipeline-check`
 before and after so you can see what the change fixed and what it broke.
 Nothing is ever deleted: a removed task becomes `[SKIP]` with a reason, a
 removed runbook step is struck. And when you describe work in your own words
