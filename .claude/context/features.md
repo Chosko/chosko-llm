@@ -1048,7 +1048,9 @@ Currently shipped:
   branch and written down in each: `amend.md` continues from every successor
   whose basis changes — up to that successor's own feature doc (E3b, then
   E2), stopping on an unresolved slug as for the anchor, then forward again
-  (E4) — and `delete.md` the same from every successor whose edge is dropped;
+  (E4) — and `delete.md` the same from every successor whose edge is dropped
+  AND whose basis is thereby withdrawn, which is what keeps a reorder (drop
+  then replace with the same spec) from walking up spuriously;
   `insert.md` explicitly does NOT, a successor gaining a wait edge still
   delivering what it did; `reorder.md` inherits both. Every node visited once.
   A doc reached that way is named from index lines and enters the owner
