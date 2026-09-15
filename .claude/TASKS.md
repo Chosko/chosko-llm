@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 218
+Last task number: 219
 
 ---
 
@@ -37,3 +37,12 @@ Status: [MISSING]
 Target: claude
 Files: skills/pipeline-revise/SKILL.md, skills/pipeline-revise/amend.md, skills/pipeline-revise/insert.md, skills/pipeline-revise/delete.md, skills/pipeline-revise/reorder.md, .claude/domain/features/pipeline-revision.md, .claude/context/features.md, docs/reference.md, VERSION, CHANGELOG.md
 Preconditions: 217
+
+---
+
+## 219. Cap the runbook `Done:` line to a terse default form
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/references/runbook-schema.md, skills/runbook-run/SKILL.md, skills/runbook-run/references/subagent-contract.md, .claude/domain/features/runbook-suite.md, .claude/context/features.md, docs/reference.md, VERSION, CHANGELOG.md
+Preconditions: none
