@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.49.0 — 2026-09-15
+
+- **/session-save** now commits and pushes the handoff it wrote by default, as `Save session <slug>`. A handoff usually crosses machines, where an untracked file helps nobody. When the save supersedes a tracked session file, that file's deletion rides in the same commit. Pass `--no-commit` to leave the handoff uncommitted, or `--no-push` to commit without pushing; `--commit` is accepted and changes nothing.
+- **/session-resume** is unchanged — it still writes, deletes and commits nothing.
+
 ## 1.48.0 — 2026-09-15
 
 - **/runbook-create** now commits and pushes the runbook it wrote by default, like `/runbook-run` and `/runbook-clean`. A runbook is read by the next session, often on another machine, and its review already happens at the plan gate. Pass `--no-commit` to leave it uncommitted; `--commit` is still accepted and changes nothing, so existing invocations keep working.

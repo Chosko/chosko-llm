@@ -1,8 +1,8 @@
 ---
 name: session-save
-version: 0.1.0
+version: 0.2.0
 type: command
-description: Capture what this conversation knows — what was tried, what failed, what was deliberately not tried, which files are half-finished, and the exact next step — into a timestamped handoff file under .claude/sessions/, written in full nine-section form or shrunk to a pointer when the work already has its own resume artifact. Never commits, never rewrites a file in place.
+description: Capture what this conversation knows — what was tried, what failed, what was deliberately not tried, which files are half-finished, and the exact next step — into a timestamped handoff file under .claude/sessions/, written in full nine-section form or shrunk to a pointer when the work already has its own resume artifact. Never rewrites a file in place. Commits and pushes the handoff it wrote by default, since a handoff usually crosses machines; pass --no-commit to leave it uncommitted, or --no-push to commit without pushing. --commit is accepted and changes nothing.
 ---
 
 # /session-save
@@ -11,6 +11,8 @@ description: Capture what this conversation knows — what was tried, what faile
 # no phases, no conversation, no supporting files.
 # Usage: /session-save
 #        /session-save <slug>
+#        /session-save [<slug>] --no-commit  (write the handoff, skip the commit and push)
+#        /session-save [<slug>] --no-push    (commit as usual, skip the push)
 # Examples: /session-save
 #           /session-save ecc-import-architecture
 
@@ -23,9 +25,11 @@ are*; neither records the middle, so it is re-derived from scratch at full
 token cost every time a session ends mid-flight, with no guarantee the
 re-derivation matches.
 
-This command **writes** a handoff — it does not finish the work, does not
-commit, and does not clean up after itself beyond the one deletion described
-under SUPERSESSION DELETE.
+This command **writes** a handoff and commits it — it does not finish the
+work, and does not clean up after itself beyond the one deletion described
+under SUPERSESSION DELETE. A handoff exists to cross the gap between sessions,
+which is usually a gap between machines, and an untracked file crosses
+nothing.
 
 $ARGUMENTS
 
@@ -33,14 +37,32 @@ $ARGUMENTS
 
 ARGUMENT PARSING
 
-`$ARGUMENTS` is either empty or a single slug.
+First scan `$ARGUMENTS` for the flags below and strip whichever appear:
+
+| Flag | Effect |
+|---|---|
+| `--no-commit` | Set COMMIT = false. Write the handoff, but make no commit and no push. Implies NO_PUSH. |
+| `--no-push` | Set NO_PUSH = true. Commit as usual, skip the pull/re-sync/push. |
+| `--commit` | Accepted and changes nothing — COMMIT is already true. |
+
+COMMIT is true unless `--no-commit` is passed. `--commit` and `--no-commit`
+together stop the run with:
+`--commit and --no-commit cannot be combined. Pick one.` That is the only
+argument this command refuses over.
+
+What is left is either empty or a single slug.
 
 - Empty — generate the slug yourself (see WHERE THE FILE GOES).
 - A slug — use it verbatim as `<slug>`, lower-casing it and replacing spaces
   with hyphens if it is not already kebab-case.
 
 Anything else is not a recognized argument. Say so in one line and carry on
-with a generated slug — this command never refuses over its own arguments.
+with a generated slug — this command never refuses over any other argument.
+
+**Pull at start.** Unless COMMIT is false or NO_PUSH is true, run `git pull`
+on the current branch once, before anything is written. A conflict stops the run there: report the output and tell
+the user to resolve manually and re-run. On a non-git VCS (a `## VCS` section
+in `CLAUDE.md`) skip it.
 
 ---
 
@@ -54,8 +76,11 @@ WHERE THE FILE GOES
   the directory; no separate `mkdir` step.
 - `YYYY-MM-DD-HHMM` is the local date and time now. Read the clock **once**:
   use the date and time the session context already carries if it has them,
-  otherwise run `date` a single time. That is the only shell command this
-  command is allowed to run — it runs no `git`, no `ls`, no `grep`.
+  otherwise run `date` a single time. That clock read and the git commands of
+  the commit-and-push protocol (ARGUMENT PARSING's pull at start, COMMIT AND
+  PUSH) are the only
+  shell commands this command is allowed to run — it runs no `ls`, no `grep`,
+  and no other `git`.
 - `<slug>` is a **two-or-three-word kebab-case summary of the work**, not a
   random id and not a generic word like `session` or `handoff`. The directory
   listing is the only way the user ever finds an old session, so the slug has
@@ -245,6 +270,35 @@ must never coexist in the directory.
 
 ---
 
+COMMIT AND PUSH (skipped under `--no-commit`)
+
+If COMMIT is false, do nothing here and run no git command.
+
+Otherwise (the default), after the file is written and any SUPERSESSION DELETE
+is done, follow the commit-and-push protocol — four steps, in this order:
+
+1. **Pull at start.** Already run before anything was written, per ARGUMENT
+   PARSING.
+2. **Commit.** Stage by explicit path exactly the new session file — plus,
+   when SUPERSESSION DELETE removed a file git was tracking, that file's
+   deletion (`git add -- <new-path> <superseded-path>`). An untracked
+   superseded file is simply deleted; there is nothing to stage for it. Make
+   one commit: `git commit -m "Save session <slug>"`. The new snapshot and the
+   removal of the one it replaces are one unit of work, so they ride in one
+   commit.
+3. **Pre-push re-sync.** Unless NO_PUSH is true, `git pull` again. A conflict:
+   abort the merge, keep the local commit, do not push, and report that it
+   needs a manual sync and push.
+4. **Push.** Unless NO_PUSH is true, `git push`. On failure, report the exact
+   output and stop — never retry, never force-push.
+
+On a non-git VCS (a `## VCS` section in `CLAUDE.md`), only the commit step
+runs. On a commit failure (a pre-commit hook, say), surface the exact output
+and stop — do not retry, amend or skip hooks. The session file stays written
+either way.
+
+---
+
 REPORTING
 
 On success, report exactly this much:
@@ -252,19 +306,22 @@ On success, report exactly this much:
 ```
 Wrote .claude/sessions/2026-08-24-1430-ecc-import-architecture.md (full form)
 Deleted .claude/sessions/2026-08-23-0915-ecc-import-architecture.md (superseded)
-The file is untracked — commit it if you want it to travel.
+Committed a1b2c3d — Save session ecc-import-architecture
 ```
 
 The deletion line appears only when SUPERSESSION DELETE actually removed a
-file. The untracked note is one line and is not repeated or expanded on.
-
-This command does not commit, does not push, and has no `--commit` flag. The
-user decides whether a handoff belongs in the repo's history.
+file. The last line carries the commit hash (`git rev-parse --short HEAD`),
+with `(not pushed)` appended under `--no-push`. Under `--no-commit` it is
+instead one line — `Nothing committed — the session file is uncommitted.` —
+and is not repeated or expanded on.
 
 ---
 
 DO NOT:
-- Commit, push, stage, or offer to. There is no `--commit`.
+- Stage with `git add -A`, `git add .` or `git add -u`, stage anything but the
+  new session file and the superseded file's deletion, commit twice, amend,
+  skip hooks, force-push, retry a failed push, branch, or tag.
+- Run any git command under `--no-commit`.
 - Touch `.gitignore`, or write anything at all outside `.claude/sessions/`.
 - Update a previous session file in place, append to one, or reuse its
   filename. Every save is a new file.
@@ -280,6 +337,7 @@ DO NOT:
 - Write to `TASKS.md`, `FEATURES.md`, `PLAN.md`, a feature document, or
   anything under `.claude/context/`, or copy their contents into a section
   instead of linking to them.
-- Run any shell command other than the single clock read, and never `git`.
+- Run any shell command other than the single clock read and the git
+  commands of the commit-and-push protocol.
 - Start, finish, or continue the work being handed off. Writing the file is
   where this command ends.

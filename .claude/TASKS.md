@@ -15,7 +15,7 @@ Preconditions: none
 
 ## 228. Make `/session-save` commit by default
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/session-save.md, VERSION, CHANGELOG.md
 Preconditions: none
