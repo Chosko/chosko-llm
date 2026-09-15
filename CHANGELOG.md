@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.46.4 — 2026-09-15
+
+- **/runbook-run** now answers the cloud sandbox's Stop hook with `stop hook ignored on runbook WIP` instead of `stop hook refused`, so the transcript says the block was deliberately ignored and why. When it applies, and the one forced turn it costs, are unchanged.
+
 ## 1.46.3 — 2026-09-15
 
 - **/runbook-run** keeps the part of a spawned prompt it writes itself minimal: the preamble names only the navigation instruction, the runbook and the step, and never restates a task body, feature document, context file or backlog the step will read for itself.

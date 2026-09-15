@@ -1320,7 +1320,7 @@ Currently shipped:
   `stop_hook_active` recursion guard makes it **one forced turn per fire, not a
   loop**, and that turn is model-produced and so reachable by instruction. The
   rule: when the only dirty files are the runbook and the index the orchestrator
-  itself just wrote, reply with the literal `stop hook refused`, no tool call, no
+  itself just wrote, reply with the literal `stop hook ignored on runbook WIP`, no tool call, no
   explanation, and end the turn. Condition is **the orchestrator's own writes,
   never a `git status`** — it set `[~]` one step ago, so it needs no inspection,
   the avoided tool call is the bigger saving, and anything else dirty falls

@@ -1208,7 +1208,7 @@ the deletion by default (`--no-commit` / `--no-push`), `/runbook-run` commits
 after every step, and `/runbook-list`, `/runbook-describe` and
 `runbook-suggest` write nothing at all.
 
-**In a cloud sandbox, expect `stop hook refused` in the transcript.** The
+**In a cloud sandbox, expect `stop hook ignored on runbook WIP` in the transcript.** The
 sandbox registers a Stop hook that won't let a turn end on a dirty tree, and an
 in-flight step is dirty on purpose — the `[~]` heading and the index's
 `[RUNNING]` are the resume signal and must stay uncommitted. That block can't be

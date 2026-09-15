@@ -69,7 +69,7 @@ Preconditions: none
 
 ## 222. Rename the `stop hook refused` literal to `stop hook ignored on runbook WIP`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/SKILL.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none
