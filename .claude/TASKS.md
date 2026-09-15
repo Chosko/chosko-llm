@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 223
+Last task number: 224
 
 ---
 
@@ -81,4 +81,13 @@ Preconditions: none
 Status: [MISSING]
 Target: claude
 Files: skills/runbook-run/references/inline-contract.md, skills/runbook-run/SKILL.md, .claude/context/features.md, docs/reference.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 224. Restore the exec bit on this repo's own `.claude/hooks/remote-session-protocol.sh`
+
+Status: [MISSING]
+Target: claude
+Files: .claude/hooks/remote-session-protocol.sh, VERSION, CHANGELOG.md
 Preconditions: none
