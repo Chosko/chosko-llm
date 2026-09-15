@@ -2,6 +2,12 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.50.0 — 2026-09-15
+
+- **/pipeline-patch** and **/pipeline-revise** now commit and push by default, and own the commit: every owner step runs uncommitted, and one commit at the end holds the whole patch or revision — never one commit per owner step. The subject is the arm's closing report line for a patch, and the `Revised <anchor> — …` report line for a revision. Pass `--no-commit` to leave the changes uncommitted, or `--no-push` to commit without pushing; `--commit` is still accepted and changes nothing.
+- Both pull once at the start of the run, after the anchor resolves, since the owner steps no longer pull themselves.
+- A **/pipeline-revise** sequence that stops part-way — an owner refuses, or its gate is answered stop — commits nothing and lists every path written so far, so every commit holds a complete revision. Handing the plan to `/runbook-create` (answer C) commits the new runbook as the revision's one commit.
+
 ## 1.49.0 — 2026-09-15
 
 - **/session-save** now commits and pushes the handoff it wrote by default, as `Save session <slug>`. A handoff usually crosses machines, where an untracked file helps nobody. When the save supersedes a tracked session file, that file's deletion rides in the same commit. Pass `--no-commit` to leave the handoff uncommitted, or `--no-push` to commit without pushing; `--commit` is accepted and changes nothing.

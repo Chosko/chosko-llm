@@ -1,8 +1,8 @@
 ---
 name: pipeline-revise
-version: 0.4.3
+version: 0.5.0
 type: skill
-description: Revise work that is already planned — change, insert into, remove from or reorder a feature document, a task or a runbook step — through the owners of every artifact the change reaches. Probes, resolves an anchor (feature=<slug>, task=<N> or runbook=<id|name|id-name> step=<n>, or one the description names), classifies the request into exactly one branch — amend, insert, delete or reorder — and reads only that branch's file, then runs the impact walk in both directions over the pipeline's index graph, opening bodies only within the anchor's scope. /pipeline-check scoped to the anchor runs before the proposal and again after actuation, and the report shows the difference. The proposal names its tier — editorial, local or structural — the artifacts touched, the owner steps in order and the lint findings it will create or clear, behind a single gate that asks every time whether the change is editorial, marking the answer the judged tier implies (editorial recommends A, local or structural recommends B) with an evidence line from the touched artifacts — a recommendation that still needs an explicit reply; nothing is written before it. Three or fewer owner steps run in the session, one at a time, each through its owner's amend arm or command with that owner's own gate intact; at four or more steps the gate also offers to hand the plan to /runbook-create and stop, when that command is installed. Removal is [SKIP] or a struck step, never physical deletion. Writes no line any owner owns and has no commit of its own — --commit / --no-push are forwarded to each owner step. For a change one owner's amend arm covers, /pipeline-patch is the cheaper tool.
+description: Revise work that is already planned — change, insert into, remove from or reorder a feature document, a task or a runbook step — through the owners of every artifact the change reaches. Probes, resolves an anchor (feature=<slug>, task=<N> or runbook=<id|name|id-name> step=<n>, or one the description names), classifies the request into exactly one branch — amend, insert, delete or reorder — and reads only that branch's file, then runs the impact walk in both directions over the pipeline's index graph, opening bodies only within the anchor's scope. /pipeline-check scoped to the anchor runs before the proposal and again after actuation, and the report shows the difference. The proposal names its tier — editorial, local or structural — the artifacts touched, the owner steps in order and the lint findings it will create or clear, behind a single gate that asks every time whether the change is editorial, marking the answer the judged tier implies (editorial recommends A, local or structural recommends B) with an evidence line from the touched artifacts — a recommendation that still needs an explicit reply; nothing is written before it. Three or fewer owner steps run in the session, one at a time, each through its owner's amend arm or command with that owner's own gate intact; at four or more steps the gate also offers to hand the plan to /runbook-create and stop, when that command is installed. Removal is [SKIP] or a struck step, never physical deletion. Writes no line any owner owns, and commits and pushes by default: every owner step runs uncommitted, and one commit at the end holds the whole revision; a sequence that stops part-way commits nothing. Pass --no-commit to leave the revision uncommitted, or --no-push to commit without pushing. For a change one owner's amend arm covers, /pipeline-patch is the cheaper tool.
 requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run
 ---
 
@@ -11,7 +11,7 @@ requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbo
 # every artifact it reaches — feature documents, tasks, plan edges, runbook
 # steps — by walking the impact, proposing a tiered plan behind one gate, and
 # running each owner's own amend arm or command in order. Writes nothing itself.
-# Usage: /pipeline-revise [<anchor>] "<change>" [--commit] [--no-push]
+# Usage: /pipeline-revise [<anchor>] "<change>" [--no-commit] [--no-push]
 #        anchor: feature=<slug> | task=<N> | runbook=<id|name|id-name> step=<n>
 # Examples: /pipeline-revise feature=password-auth "Data and state: sessions expire after 30 days"
 #           /pipeline-revise task=42 "insert a task after 42 that migrates the config format"
@@ -78,10 +78,13 @@ same order: *Applies when*, *Impact walk*, *Owner sequence*, *Tier*,
 
 ARGUMENT PARSING
 
-Scan `$ARGUMENTS` for the optional `--commit` flag (COMMIT = true) and the
-optional `--no-push` flag (NO_PUSH = true), and strip both. NO_PUSH only
-matters when COMMIT is true. Neither is acted on by this skill itself — see
-COMMITTING.
+Scan `$ARGUMENTS` for the optional `--no-commit` flag (COMMIT = false), the
+optional `--no-push` flag (NO_PUSH = true) and the optional `--commit` flag,
+and strip all three. COMMIT is true unless `--no-commit` is passed;
+`--no-commit` implies NO_PUSH. `--commit` is accepted and changes nothing —
+COMMIT is already true. `--commit` and `--no-commit` together stop the run
+with: `--commit and --no-commit cannot be combined. Pick one.` What each flag
+does is COMMITTING.
 
 Then scan for an anchor in exactly one of three forms, and strip it:
 
@@ -131,6 +134,10 @@ Given an anchor, a change that also names artifacts under a different anchor —
 a task of another feature, say — is scoped to the resolved anchor: say in one
 line that the rest is a separate `/pipeline-revise` run, the same shape as
 step 3's two-kinds rule, and carry on with the anchor.
+
+**Pull at start.** Once the anchor resolves, and before the walk, pull once
+for the whole run per COMMITTING — skipped under `--no-commit` or
+`--no-push`.
 
 **3. Classify.** Put the request into exactly one branch. Test in this order;
 the first that matches wins:
@@ -269,7 +276,7 @@ this skill.
 parallel, never in a subagent. Before each, one line:
 `Step <i>/<k> — <owner>: <invocation>`. Each runs through its entry: an arm
 executed from its file by path, or a command invoked as the user would invoke
-it, with the flags COMMITTING forwards. The owner's own gate is asked exactly
+it, without committing, per COMMITTING. The owner's own gate is asked exactly
 as the owner asks it. After each, its closing line, as the owner writes it.
 
 An `/architect amend` step — in whichever branch runs one — receives the
@@ -287,11 +294,12 @@ addition.
 *As a runbook (C).* Invoke `/runbook-create` with the owner steps as its
 follow-up list, in order — each step's prompt self-contained: the invocation
 or arm path, the anchor, the change and the decisions taken at this gate —
-followed by one last step that runs step 9 of this workflow. Pass it the
-flags COMMITTING forwards. `/runbook-create`'s own gate decides what is
-written; this skill writes no line of the runbook. Then stop, reporting step
-5's findings and the runbook `/runbook-create` created. Step 9 runs in that
-runbook's last step, not here.
+followed by one last step that runs step 9 of this workflow. Pass it
+`--no-commit`, per COMMITTING. `/runbook-create`'s own gate decides what is
+written; this skill writes no line of the runbook. Then make the revision's
+one commit — the runbook body and `.claude/RUNBOOKS.md` — and stop, reporting
+step 5's findings and the runbook `/runbook-create` created. Step 9 runs in
+that runbook's last step, not here.
 
 **9. Lint — after, and verify.** Run step 5's scoped `/pipeline-check` again
 — also when the sequence stopped part-way, so the report shows the state it
@@ -305,7 +313,12 @@ id — and confirm the sequence still reads as a sequence. The branch file's
 one is reported with what does not follow; it is never fixed here — that is a
 new revision.
 
-**10. Report.**
+**10. Commit.** When every step ran and at least one wrote, make the
+revision's one commit and push, per COMMITTING, the report line below as the
+subject. A sequence that stopped part-way, a run that wrote nothing, or
+`--no-commit` makes no commit.
+
+**11. Report.**
 
 ```
 Revised <anchor> — <branch>, <tier>, <A | B>: <run>/<k> owner steps run.
@@ -317,22 +330,42 @@ sequence check's result, and every follow-up an owner named —
 `Reconcile with /task-add feature=<slug>.` among them, save for a feature
 whose `/task-add feature=<slug>` reconciliation ran as a step of this
 sequence; when the sequence stopped before that step, the follow-up still
-appears. When anything was
-written and `--commit` was not passed, end with an explicit reminder that
-nothing was committed.
+appears. Then the commit hash. When anything was written and no commit was
+made — `--no-commit`, or a sequence that stopped part-way — list every path
+written so far and end with an explicit reminder that nothing was committed.
 
 ---
 
 COMMITTING
 
-`--commit` and `--no-push` are forwarded to each owner step and acted on by
-that step, and nowhere else: this skill has no commit phase of its own and
-never stages a path no owner step wrote.
+This skill owns the run's commit. A revision is one unit of work, so it lands
+as exactly one commit, made at the end — never one per owner step. Commit and
+push gating is
+`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`.
 
-| Owner step | Without `--commit` (this skill's default) | With `--commit` |
-| --- | --- | --- |
-| An arm executed by path — `architect`'s `amend.md`, `task-engine`'s `references/amend.md`, `runbook-run`'s `references/step-amend.md` — each of which leaves its commit to whoever executes it | nothing is committed | the arm's closed write set, staged by explicit path and committed as that step's one unit of work, the arm's closing report line as the subject, per `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md` and its push protocol — pull-at-start included, the push skipped under `--no-push` |
-| A command that commits by default — `/task-add`, `/product-design`, `/production-plan`, `/runbook-create` (`--append` included) | `--no-commit` | no flag, plus `--no-push` when given |
+- **Pull at start** — once per run, after the anchor resolves and before the
+  walk (WORKFLOW step 2), unless `--no-commit` or `--no-push`. A conflict
+  stops the run there, nothing written.
+- **Every owner step runs uncommitted.** A command owner — `/task-add`,
+  `/product-design`, `/production-plan`, `/runbook-create` (`--append`
+  included), `/architect` — always receives `--no-commit`, whatever its own
+  default. An arm executed by path — `architect`'s `amend.md`, `task-engine`'s
+  `references/amend.md`, `runbook-run`'s `references/step-amend.md` — is
+  executed with no commit. No owner step pulls or pushes.
+- **One commit.** After the last step and the closing check (step 9), stage
+  exactly the union of the paths the owner steps reported writing, by
+  explicit path, and commit once, the `Revised <anchor> — <branch>, <tier>`
+  report line as the subject. Then re-sync and push per `commit.md`'s push
+  protocol, the push skipped under `--no-push`. Report the hash.
+- **Arm C follows the same rule.** `/runbook-create` runs with `--no-commit`,
+  and the runbook body and `.claude/RUNBOOKS.md` it wrote are the revision's
+  one commit.
+- **No commit** on a stop before the gate, gate answer D, a sequence that
+  stops part-way (an owner refuses, or its gate is answered stop), a run that
+  wrote nothing, or `--no-commit`. A partial sequence is left uncommitted on
+  purpose: every commit holds a complete revision, and step 9 already reports
+  the state the stopped sequence left. Under `--no-commit` nothing touches
+  git; otherwise only the pull at start does on those paths.
 
 ---
 
@@ -341,7 +374,8 @@ WRITE SET
 Closed, and empty: this skill writes no line any owner owns, and no file of
 its own — no index line, no body, no runbook, no report on disk. Every write
 in a run is an owner step's, through an arm or an owner command, after the
-gate.
+gate. Its commit stages only those writes, and never stages a path no owner
+step wrote.
 
 ---
 
@@ -354,8 +388,9 @@ FAILURE CONTRACT
 - **An owner that refuses** — a touched `[IN PROGRESS]` task, a `[DONE]` task,
   a position on a `[RUNNING]` runbook its arm will not take — or a user who
   answers stop at an owner's own gate, **stops the sequence at that step.**
-  Earlier steps' writes stay intact and are reported, **never rolled back**;
-  the steps not run are listed; step 9 still runs.
+  Earlier steps' writes stay intact, uncommitted, and are reported path by
+  path, **never rolled back**; the steps not run are listed; step 9 still
+  runs; nothing is committed.
 - **`/runbook-create` absent** removes arm C and says nothing.
 
 ---
@@ -382,7 +417,8 @@ DO NOT:
 - Roll back an earlier step's writes when a later step fails.
 - Delete, remove or renumber a task, a step or a feature entry; reopen or
   re-status `[DONE]` work.
-- Commit anything but an owner step's own write set, or make a commit of your
-  own.
+- Stage a path no owner step wrote; let an owner step commit, pull or push;
+  make more than one commit; or commit a sequence that stopped part-way, or
+  anything under `--no-commit`.
 - Introduce a status value or a change ledger. The outcomes are the owners'
   existing vocabularies.

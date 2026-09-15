@@ -116,7 +116,7 @@ removed task.
 
 No new status value and no change ledger. A deletion's provenance is the
 `[SKIP]` and its dated reason in `## Decisions`, the struck step's `Done:`
-line, and the commits the owner steps make. Nothing else records it, and
+line, and the revision's one commit. Nothing else records it, and
 nothing needs to.
 
 ## Never

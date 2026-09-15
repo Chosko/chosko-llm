@@ -24,7 +24,7 @@ Preconditions: none
 
 ## 229. Make `/pipeline-patch` and `/pipeline-revise` commit once, at the end
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/pipeline-patch.md, skills/pipeline-revise/SKILL.md, skills/pipeline-revise/delete.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
 Preconditions: 227
