@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 221
+Last task number: 222
 
 ---
 
@@ -63,4 +63,13 @@ Preconditions: none
 Status: [MISSING]
 Target: claude
 Files: skills/runbook-run/SKILL.md, .claude/domain/features/runbook-suite.md, .claude/context/features.md, docs/reference.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 222. Rename the `stop hook refused` literal to `stop hook ignored on runbook WIP`
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/SKILL.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none
