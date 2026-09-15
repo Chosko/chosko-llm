@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.47.1 — 2026-09-15
+
+- **/pipeline-revise** now says in each branch whether its impact walk continues from the tasks it reaches forward, instead of leaving it implicit. `amend.md` continues from every successor whose basis changes — up to that successor's own feature document, then forward again — and `delete.md` does the same from every successor whose edge is dropped, each node visited once. `insert.md` states that it does not: a task that only gains a wait edge still delivers what it did. `reorder.md` inherits both and needs no rule of its own.
+- A feature document reached that way is named from index lines and shown at the gate as an `/architect amend` step, so an under-scoped plan is caught at the gate rather than by the task arm refusing partway through. It is named, never opened — the branch's body scope is unchanged, and whether the document really needs a change stays `/architect amend`'s call.
+
 ## 1.47.0 — 2026-09-15
 
 - **/task-add** now offers three answers at its ownership gate instead of two: **Grant**, **Reference** and **Drop**. A Reference keeps an owned document in a task's Hints under one literal marker (`— read-only reference, do not edit`), authorises no edit, and never joins the task's `Files:` line — so a pointer the implementer only needs to read survives instead of being deleted whenever the design document is already correct.

@@ -1043,7 +1043,18 @@ Currently shipped:
   kinds is two runs. Impact walk both directions over `graph.md`'s edges and
   no other traversal — top-down design section → features → tasks, plan
   edges, runbook steps; bottom-up task → feature doc when `Feature:` resolves
-  (an unresolved slug stops the upward walk, not an error). May open bodies,
+  (an unresolved slug stops the upward walk, not an error), plus forward to
+  E4 successors. Whether the walk continues FROM those successors is per
+  branch and written down in each: `amend.md` continues from every successor
+  whose basis changes — up to that successor's own feature doc (E3b, then
+  E2), stopping on an unresolved slug as for the anchor, then forward again
+  (E4) — and `delete.md` the same from every successor whose edge is dropped;
+  `insert.md` explicitly does NOT, a successor gaining a wait edge still
+  delivering what it did; `reorder.md` inherits both. Every node visited once.
+  A doc reached that way is named from index lines and enters the owner
+  sequence as an `/architect amend` step, never opened here — whether it needs
+  a change is that arm's call, and its Stop answer is the accepted cost of
+  catching one that does. May open bodies,
   scoped: the target artifact, tasks whose `Preconditions:` name it or whose
   `Files:` overlap, runbook steps naming it; never bulk, never the archive.
   Lint bracket: `/pipeline-check` scoped to the anchor BEFORE the proposal

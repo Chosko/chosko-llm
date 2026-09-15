@@ -105,7 +105,7 @@ Preconditions: none
 
 ## 226. Make `/pipeline-revise`'s impact walk explicit on continuing from forward-reached tasks
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/pipeline-revise/amend.md, skills/pipeline-revise/delete.md, skills/pipeline-revise/insert.md, skills/pipeline-revise/SKILL.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none
