@@ -1113,7 +1113,10 @@ selects the first step whose dependencies are all done, marks it `[~]`,
 spawns **one** subagent with a fixed prompt (a preamble telling it to orient
 from `CLAUDE.md`, the companion document, the runbook's
 `## Do not re-propose` section, the step's `Context:` bullets, the prompt
-block verbatim, then the operating rules), and then waits. It ticks nothing
+block verbatim, then the operating rules), and then waits. What the
+orchestrator writes around the prompt block stays minimal: it restates
+nothing the step will read for itself — a task body, a feature document,
+context files — and never opens those documents to write the prompt. It ticks nothing
 before that agent's result actually arrives. On `DONE` it writes a terse `Done:`
 line — the date, the commit sha and its diffstat, with a decision or wrong
 premise added only when a later reader would be misled without it — then commits the runbook and the index: one commit per

@@ -1339,7 +1339,11 @@ Currently shipped:
   even when declared independent — one question stream, and two agents would
   race on `Done:` lines); it **writes exactly two files** and does none of the
   work itself; **no step is ticked before its subagent's result arrives**; it
-  reads only `CLAUDE.md`, the runbook and the index, and **does not review** a
+  reads only `CLAUDE.md`, the runbook and the index — **never a step's task
+  body or named document, not even to compose the prompt**, whose
+  orchestrator-written parts 1–4 restate nothing the step will read itself
+  (preamble = navigation instruction + runbook name + step number, plus the
+  `--relay-spawns` sentence) — and **does not review** a
   step's diff or commit; **no step invokes `/runbook-run`** (nested runbooks
   refused at spawn time). `--from N`/`--to N`/`--only N` narrow selection but
   never weaken `Depends on:` — one model, not three (`--only N` **is**

@@ -60,7 +60,7 @@ Preconditions: none
 
 ## 221. Keep the orchestrator-authored part of a spawned prompt minimal
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/SKILL.md, .claude/domain/features/runbook-suite.md, .claude/context/features.md, docs/reference.md, VERSION, CHANGELOG.md
 Preconditions: none

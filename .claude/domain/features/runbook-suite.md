@@ -390,7 +390,13 @@ contracts**. Under `--inline` they apply as
    remain, set the index to `[DONE]` and report.
 
 **The spawned prompt**, assembled in this order so the operating rules are the
-last thing the agent reads:
+last thing the agent reads. Parts 1–4 are the only text the orchestrator
+writes, and they are bound by a brevity rule: they never restate anything the
+step's own prompt will cause the agent to read — task bodies, feature
+documents, context files, the backlog. The orchestrator never opens a step's
+task body, or any document the step names, to compose them; its read scope
+bounds prompt authoring as it bounds the step's work. Parts 5 and 6 are outside
+the rule.
 
 1. **Preamble** — orient in a fresh session: read the project's `CLAUDE.md` and
    follow its navigation instructions as written — the index of each navigation
@@ -399,6 +405,9 @@ last thing the agent reads:
    step's subagent use `/runbook-create --append` with no name. The
    orchestrator itself reads `CLAUDE.md`, the runbook and the index, and nothing
    else — it never opens a navigation layer, since it touches no source.
+   The preamble carries exactly what the agent cannot derive — the navigation
+   instruction, the runbook name and the step number (plus the one
+   `--relay-spawns` sentence when that flag is passed) — and nothing more.
 2. **Background** — the `Companion:` document, if the header names one.
 3. **Do not re-propose** — the runbook's trailing section, if present.
 4. **Context** — the step's `Context:` bullets, if any.

@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.46.3 — 2026-09-15
+
+- **/runbook-run** keeps the part of a spawned prompt it writes itself minimal: the preamble names only the navigation instruction, the runbook and the step, and never restates a task body, feature document, context file or backlog the step will read for itself.
+- The orchestrator no longer opens a step's task body or named documents to compose the prompt. The prompt block, the operating rules and `Context:` bullets are unchanged.
+
 ## 1.46.2 — 2026-09-15
 
 - A runbook's `Sequencing:` header line is now optional and one line: only *why* the order is what it is, where list position and `Depends on:` can't show it.
