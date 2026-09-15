@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 224
+Last task number: 226
 
 ---
 
@@ -90,4 +90,22 @@ Preconditions: none
 Status: [DONE]
 Target: claude
 Files: .claude/hooks/remote-session-protocol.sh, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 225. Let an owned document stay in a task's Hints as a read-only Reference
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-add.md, skills/task-engine/references/amend.md, skills/task-engine/SKILL.md, skills/task-implement/SKILL.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/context/features.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 226. Make `/pipeline-revise`'s impact walk explicit on continuing from forward-reached tasks
+
+Status: [MISSING]
+Target: claude
+Files: skills/pipeline-revise/amend.md, skills/pipeline-revise/delete.md, skills/pipeline-revise/insert.md, skills/pipeline-revise/SKILL.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none
