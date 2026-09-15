@@ -102,9 +102,13 @@ open bodies, scoped by the anchor: the target artifact, the tasks whose
 name it. Never a bulk read.
 
 **Tiers, one gate.** The proposal names the tier — editorial, local or
-structural — the artifacts touched, the owner steps in order and the lint
-findings the change will create or clear. The editorial question is always
-asked, never inferred; the answer passes through to the `/architect amend`
+structural, each judged by the branch; editorial only when the change is
+wording only, nothing downstream changes meaning, and A's sequence equals
+B's — the artifacts touched, the owner steps in order and the lint findings
+the change will create or clear. The editorial question is always asked; the
+judged tier marks the recommended answer — editorial marks A, local or
+structural marks B — with an evidence line citing the touched artifacts, a
+recommendation that still needs an explicit reply. The answer passes through to the `/architect amend`
 arm it drives, whose gate shows it for confirmation instead of asking again.
 The user confirms once; nothing is written before.
 
@@ -162,7 +166,8 @@ ledger is introduced.
 - Hard contracts: neither surface writes a line an owner owns; the patcher
   never opens a body; the reviser opens bodies only within the anchor's
   scope; the editorial question is always asked at the revise gate, and
-  confirmed, not re-asked, at the `/architect amend` step; the runbook is
+  confirmed, not re-asked, at the `/architect amend` step, the answer carried
+  there being the user's reply, never the recommendation; the runbook is
   never written without the user's choice; the lint runs before and after
   every revise.
 

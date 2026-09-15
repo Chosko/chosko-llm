@@ -2,6 +2,12 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.46.0 — 2026-09-15
+
+- **/pipeline-revise** now marks a recommended answer at its editorial question, taken from the tier the plan already shows: an editorial tier recommends A, a local or structural one recommends B. One evidence line names the touched artifacts. You still have to reply, and silence still stops.
+- The amend branch can now judge a change editorial (wording only, nothing downstream changing meaning, both answers running the same sequence), so that tier is reachable. Inserts, deletes and reorders are never editorial and recommend B.
+- The answer carried into an `/architect amend` step is still your reply, never the recommendation.
+
 ## 1.45.0 — 2026-09-15
 
 - **/architect amend** now marks a recommended answer at its editorial question, worked out from what the gate already shows: no touched task and no added scope recommends editorial, anything else recommends not editorial. One evidence line names the touched task ids or the added scope. You still have to reply, and silence still stops.

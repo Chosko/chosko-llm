@@ -675,7 +675,8 @@ sequence still reads as a sequence, and reports any gap without fixing it.
 **Three tiers.** The plan names one:
 
 - **editorial** — wording only, nothing downstream changes meaning. Only the
-  step that writes the anchored artifact runs.
+  step that writes the anchored artifact runs. The amend branch can judge a
+  change editorial; an insert, a delete or a reorder never is.
 - **local** — the artifact plus the entries that merely cite it. No status
   moves and no edge changes.
 - **structural** — the scope changes, or the contract of something
@@ -687,7 +688,7 @@ line, the anchor, the branch and the tier, and every touched artifact with
 how it was reached. The artifacts judged untouched are listed too, so you
 can overrule the call. It numbers the owner steps in order and shows which
 `/pipeline-check` findings each is expected to clear or create. Then it asks
-the **editorial question**, on every run and never inferred: is this change
+the **editorial question**, on every run: is this change
 wording only, with nothing downstream changing meaning?
 
 - *Editorial* runs the short sequence.
@@ -695,6 +696,14 @@ wording only, with nothing downstream changing meaning?
 - *Not editorial, as a runbook* hands the full sequence to `/runbook-create`
   and stops.
 - *Stop* writes nothing.
+
+The gate marks a recommended answer, taken from the tier it already shows:
+an editorial tier recommends *Editorial*, a local or structural one
+recommends *Not editorial*. One line gives the evidence, naming the touched
+artifacts. When *Editorial* is recommended, the line also says both answers
+run the same sequence. You still have to reply; silence, an unclear reply or
+EOF is *Stop*, and only your reply, never the recommendation, carries into an
+`/architect amend` step.
 
 The runbook option is offered only when the sequence has **four or more**
 owner steps and `/runbook-create` is installed; otherwise it simply isn't

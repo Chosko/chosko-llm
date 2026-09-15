@@ -1039,15 +1039,20 @@ Currently shipped:
   and AFTER actuation (also when stopped part-way), report shows cleared /
   created / unchanged; plus a successor-body read wherever an insert, delete
   or edge change moved a precondition — reported, never fixed. Tiers
-  editorial / local / structural, judged by the branch file (`reorder.md`
-  fixed structural; `insert.md` structural when it adds scope, local when the
-  doc already promises it; `delete.md` local only for a task nothing else
-  names). ONE gate, nothing written before it by the skill or any arm:
+  editorial / local / structural, judged by the branch file (`amend.md` may
+  judge editorial — wording only, nothing downstream changes meaning, A's
+  sequence equal to B's; `reorder.md` fixed structural; `insert.md`
+  structural when it adds scope, local when the doc already promises it;
+  `delete.md` local only for a task nothing else names — insert/delete never
+  editorial). ONE gate, nothing written before it by the skill or any arm:
   verdict line, anchor/branch/tier, touched artifacts with the edge or read
   that reached each plus the untouched ones listed for overruling, numbered
   owner steps, expected lint delta, then the editorial question asked EVERY
-  run, never inferred — A editorial / B not editorial, here / C as a runbook /
-  D stop; the answer is carried into each `/architect amend` step, whose gate
+  run, never skipped — A editorial / B not editorial, here / C as a runbook /
+  D stop — marking the letter the judged tier implies (editorial → A, local /
+  structural → B) with an evidence line from the touched artifacts, a
+  recommendation only, silence still Stop; the user's reply (never the
+  recommendation) is carried into each `/architect amend` step, whose gate
   shows it for confirmation; C rendered only at FOUR OR MORE owner steps AND `/runbook-create`
   installed (read off the verdict line's `installed` field, omitted silently
   otherwise — the council gate's optional-delegation shape). Actuation:

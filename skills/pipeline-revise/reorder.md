@@ -40,8 +40,9 @@ for the replacement at the new one.
 
 Fixed, not judged: every reorder is **structural**, because it changes an
 order or an edge by definition. The editorial question is still asked, per
-`./SKILL.md`; under A the gate shows the same sequence as under B, with that
-reason, since no step of a reorder can be dropped as wording.
+`./SKILL.md`, and the gate marks B, with that reason as its evidence; under A
+the gate shows the same sequence as under B, with that reason, since no step
+of a reorder can be dropped as wording.
 
 ## Verification
 

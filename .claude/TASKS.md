@@ -33,7 +33,7 @@ Preconditions: none
 
 ## 218. Recommend an answer at `/pipeline-revise`'s editorial gate by letting the branch judge the `editorial` tier
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/pipeline-revise/SKILL.md, skills/pipeline-revise/amend.md, skills/pipeline-revise/insert.md, skills/pipeline-revise/delete.md, skills/pipeline-revise/reorder.md, .claude/domain/features/pipeline-revision.md, .claude/context/features.md, docs/reference.md, VERSION, CHANGELOG.md
 Preconditions: 217
