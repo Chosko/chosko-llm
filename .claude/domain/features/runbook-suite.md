@@ -811,6 +811,33 @@ It takes one runbook by id, name or `<id>-<name>` and renders exactly this shape
    Step 3 needs a person present.
 ```
 
+A **pruned** runbook — one whose body carries an `Archive:` line — renders one
+further line, directly under the header line and printed **only** in that case:
+
+```
+3. implement-ecc-import   [PENDING]   3/5   —   Land the ECC import architecture
+   Created: 2026-09-01   Source: /architect ecc-import   Model: sonnet
+   Archived: 1, 2, 3   (pruned; counted as done)
+
+   [!] 4. Wire cmd-rm's dependents guard            deps: 1
+          done: FAILED — <first clause of the reason>
+   [ ] 6. Update the authoring guide                deps: 1, 2
+
+   5 steps: 3 done, 1 failed, 1 pending.
+```
+
+The ids go in the header region rather than beside the closing count because a
+reader who meets them *after* the step list has already read a partial list as
+complete — the exact failure the line exists to remove. They count as done and
+as present in the closing count (§ *An archived id counts as `[x]`*), so
+describe's total agrees with the progress figure in the heading line it printed
+a moment earlier. A surviving `deps:` naming an archived id is printed verbatim
+and never annotated; the two lines sitting in one render is the whole mechanism.
+A runbook never pruned renders with no `Archived:` line and no changed count,
+exactly as it did before — `Archive:` is absent on most runbooks and never
+written empty — and a body pruned to nothing renders heading, header,
+`Archived:` and count, which is a legal body and not an error.
+
 The heading line is the index's (plus the `Failed at:` continuation for a
 `[FAILED]` runbook), then one header line of `Created:`, `Source:` and `Model:`.
 `Sequencing:`, `Companion:` and the `## Do not re-propose` count are not
@@ -829,7 +856,8 @@ read.
 
 The read budget is **line extraction from exactly one body**: the command reads
 `.claude/RUNBOOKS.md` and pulls only the lines it prints from the one runbook
-asked about — header fields, step headings, `Depends on:`, `Needs:` and the
+asked about — the header fields `Created:`, `Source:`, `Model:` and `Archive:`,
+step headings, `Depends on:`, `Needs:` and the
 first line of each `Done:`, plus the prompt fence lines, read only to discard
 matches that fall inside a prompt block — never a full read of the body, never a walk of
 `.claude/runbooks/`. It never opens `.claude/tasks/` (archive included),
@@ -838,7 +866,10 @@ as written and never resolved. A malformed body is reported as found, not
 compensated by reading more. Beyond that it behaves exactly like
 `/runbook-list`: it writes nothing, runs no shell, and corrects no status, count
 or marker however wrong the index looks against the lines it extracted.
-Reporting such an inconsistency in prose is fine; editing it is
+Deriving its own closing count from the body's steps *and* its `Archive:` line
+is derivation, not reconciliation — it is how that count is arrived at every
+time — and it is what makes an index `Steps:` disagreement visible in the first
+place. Reporting such an inconsistency in prose is fine; editing it is
 `/runbook-run`'s, which re-reads the body every step.
 
 ---

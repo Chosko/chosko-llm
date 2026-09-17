@@ -78,7 +78,7 @@ Preconditions: 232, 233
 
 ## 235. Surface a runbook's archived step ids in `/runbook-describe`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/runbook-describe.md, .claude/domain/features/runbook-suite.md, docs/reference.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION, CHANGELOG.md
 Preconditions: 232, 233

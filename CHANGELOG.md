@@ -2,6 +2,12 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.53.1 — 2026-09-17
+
+- **/runbook-describe** now surfaces a pruned runbook's archived step ids. It extracts the body header's `Archive:` line and prints it as one `Archived: 1, 2, 3   (pruned; counted as done)` line directly under the `Created:`/`Source:`/`Model:` line — above the step list, so the list is never read as the whole runbook — and counts every archived id as done and as present in its closing by-marker count, which is what makes that count agree again with the progress figure in the heading line above it. A surviving `deps:` naming an archived id is still printed verbatim and never annotated.
+- A runbook that has never been pruned renders exactly as before, line for line: `Archive:` is absent on most runbooks, so the line and the count change are a no-op there. A body pruned to nothing renders its heading, header, `Archived:` line and count rather than an empty step list. `Last step number:` is deliberately not printed — it is bookkeeping for `/runbook-create --append`, not an answer to what a runbook's steps are.
+- Still one targeted extraction pass over one body, still read-only: deriving the count from the body's steps and its `Archive:` line is derivation, not reconciliation, and an index `Steps:` count that disagrees is reported in prose and never corrected.
+
 ## 1.53.0 — 2026-09-17
 
 - New command **/runbook-prune `<id|name|id-name>`** — removes every `[x]` step from one runbook's body, heading through prompt block, so a long-running runbook stops carrying finished prompts through the re-read `/runbook-run` does at the start of every step. `[ ]`, `[~]` and `[!]` are never touched; a struck step is `[x]` and is pruned like any other. It plans and confirms first, then commits and pushes by default (`--no-commit` / `--no-push` opt out), staging exactly the body and `.claude/RUNBOOKS.md`.

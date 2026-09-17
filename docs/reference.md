@@ -1105,12 +1105,18 @@ that has none of the conversation the prompts came out of.
 - `/runbook-list` — every runbook as one line: id, status, name, steps done
   over total, created date, source, and its one-line title.
 - `/runbook-describe <id|name|id-name>` — a compact summary of one runbook: its index
-  line, one header line (created, source, model), one line per step with its
+  line, one header line (created, source, model), an `Archived:` line printed
+  only when the body carries an `Archive:` line (the pruned ids, ascending,
+  noted as counted done), one line per step with its
   marker, dependencies when it has any and an authored `Needs:` other than
   `agent`, a one-line `done:` summary for each finished or failed step, and a
-  by-marker count. It pulls only those lines from exactly one body — never a
+  by-marker count **that counts every archived id as done and as present**, so
+  it agrees with the progress figure in the index line above it. A runbook
+  never pruned renders exactly as before, line for line. It pulls only those
+  lines from exactly one body — never a
   full read, never a step prompt, never a task body — so its cost is roughly
-  what it prints. For the prompts or the full record, open the file.
+  what it prints. `Last step number:` is deliberately not printed. For the
+  prompts or the full record, open the file.
 - `/runbook-prune <id|name|id-name>` — remove the finished steps from **one**
   runbook, so the body that every subsequent step re-reads is the plan that's
   left rather than the plan that was. It takes exactly one runbook and no step

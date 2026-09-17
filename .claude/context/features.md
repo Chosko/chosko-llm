@@ -1493,20 +1493,33 @@ Currently shipped:
   rule), extracts from the body at its block's `File:` path (a `File:` that
   does not resolve is reported; never migrates), and renders a fixed shape: the
   index heading line (`Failed at:` continuation for `[FAILED]` only), one header
-  line (`Created:`/`Source:`/`Model:` — no `Sequencing:`, `Companion:` or
-  re-propose count), one line per step (marker as the body carries it, `deps:`
-  only when non-empty, `needs:` only for an authored non-`agent` value), at most
+  line (`Created:`/`Source:`/`Model:` — no `Sequencing:`, `Companion:`,
+  `Last step number:` or
+  re-propose count), an `Archived: <ids>   (pruned; counted as done)` line
+  directly under it **only when the body carries an `Archive:` line** (absent
+  renders nothing — a never-pruned runbook is byte-identical to before 0.3.0),
+  one line per step (marker as the body carries it, `deps:`
+  only when non-empty and printed verbatim even when it names an archived id —
+  never annotated or cross-referenced against `Archived:`, `needs:` only for an
+  authored non-`agent` value), at most
   one `done:` line per step (sha(s) + short summary, wrong premises as a count,
-  `[!]` opens `FAILED —`), no `Context:` text, then a by-marker count and the
+  `[!]` opens `FAILED —`), no `Context:` text, then a by-marker count **that
+  counts every archived id as done and as present** (schema § *An archived id
+  counts as `[x]`*, so the count agrees with the heading line's progress
+  figure; a fully-pruned body renders heading + header + `Archived:` + count,
+  not an error) and the
   "need a person present" line. **Read budget (THE READ BUDGET section):** the
-  index plus Grep line extraction from exactly one body — header fields, step
+  index plus Grep line extraction from exactly one body — header fields
+  (`Created:`, `Source:`, `Model:`, `Archive:`), step
   headings, `Depends on:`, `Needs:`, first line of `Done:`, prompt fences only
   to discard matches inside them. Never a full Read of the body, never prompt
   text, never `.claude/tasks/` (archive included), `.claude/domain/`,
   `.claude/context/` or another body; task ids in `Done:` printed as written.
   Malformed body reported as found, never compensated by reading more. No
   `Needs:` inference (removed in 0.2.0). Writes nothing, runs no shell,
-  corrects no status however wrong the index looks.
+  corrects no status however wrong the index looks — deriving the count from
+  the body's steps *and* its `Archive:` line is derivation, not
+  reconciliation; a disagreeing index `Steps:` is reported in prose only.
 - `commands/runbook-clean.md` — pruning, `/task-clean`'s plan-and-confirm
   shape, except that it deletes: runbooks have no archive.
   `requires: skill:runbook-run` for the status vocabulary and block shape. Three
