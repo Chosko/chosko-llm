@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.53.2 — 2026-09-17
+
+- **/runbook-describe**'s header-line paragraph no longer reads as though `Created:`/`Source:`/`Model:` were the only header fields the command ever prints. It is now scoped to that one line and points at the `Archive:` line below it, so an executing agent that stops reading at that paragraph is not left with a rule the next paragraph contradicts.
+
 ## 1.53.1 — 2026-09-17
 
 - **/runbook-describe** now surfaces a pruned runbook's archived step ids. It extracts the body header's `Archive:` line and prints it as one `Archived: 1, 2, 3   (pruned; counted as done)` line directly under the `Created:`/`Source:`/`Model:` line — above the step list, so the list is never read as the whole runbook — and counts every archived id as done and as present in its closing by-marker count, which is what makes that count agree again with the progress figure in the heading line above it. A surviving `deps:` naming an archived id is still printed verbatim and never annotated.
