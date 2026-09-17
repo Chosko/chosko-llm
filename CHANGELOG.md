@@ -2,6 +2,12 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.52.0 — 2026-09-17
+
+- A runbook body's header now carries a **`Last step number:`** counter — the highest step id ever assigned in that runbook, monotonic, never derived with `max()`. It is the same rule `TASKS.md`'s `Last task number:` and the index's `Last runbook number:` already follow, and it is what keeps step ids stable once a step can be removed: a derived counter would hand a removed step's id to the next step written and silently repoint every `Depends on:`, `Failed at: step <n>` and `Context:` bullet recorded before then.
+- **/runbook-create** writes that counter on a new runbook and takes each appended step's id from it, advancing it in the same write, instead of numbering from the highest existing step id.
+- A body written before the field is legal and is backfilled in place, set to the highest step id present, by the first command that writes it and needs the value. No sweep and no migration.
+
 ## 1.51.0 — 2026-09-16
 
 - **/architect amend** no longer asks whether a change is editorial when its own evidence settles it. A task touched on its title or `Files:` line, or added scope it can name, is classified not editorial; no touched task, no added scope and no contract text changed is classified editorial. The gate shows one `Classified:` line with that evidence and writes without waiting for a reply. It still asks — with a recommended answer — when a task's body had to be read, the scope call is borderline, or the findings disagree. **/pipeline-patch** inherits this through the arm it runs.

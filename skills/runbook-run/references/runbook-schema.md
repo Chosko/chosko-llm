@@ -99,6 +99,7 @@ way a task's `Preconditions:` line points at a task id.
 # Runbook: <name>
 
 Created: 2026-08-24 · Source: /architect run · Model: opus
+Last step number: 7
 Sequencing: 1–4 all edit skills/task-implement/SKILL.md.          ← optional; one line
 Companion: .claude/sessions/2026-08-24-1430-ecc-import-architecture.md
 
@@ -137,6 +138,7 @@ Context: none
 | `Created:` | provenance — the date the runbook was authored. |
 | `Source:` | provenance — where the material came from (`/architect run`, `manual`, …). |
 | `Model:` | the model **every** step is spawned with. Header-only; there is no per-step model. `/runbook-run --model <model>` overrides it for a whole run. |
+| `Last step number:` | the **highest step id ever assigned** in this runbook — not the highest currently present — and it **only ever increases**. The next unused step id is this value plus one; it is **never derived with `max()`** over the step headings. This is `.claude/TASKS.md`'s `Last task number:` rule and the index's own `Last runbook number:` rule verbatim, and it holds for the same reason: once a step can be removed, a counter derived with `max()` drops and hands a removed step's id to the next step written — repointing every reference recorded before the removal (`Depends on:` lines, `Failed at: step <n>`, `Context:` bullets, commit messages) at the wrong step. |
 | `Sequencing:` | optional, absent by default; **one line** when present. Its only job is **why** this is the order, in the cases list position and `Depends on:` cannot express — "1–4 all edit the same file". What the order *is* is list position and `Depends on:`, never this line. It is written at authoring time and never changed afterwards: an append or an amendment does not extend it, and a dated fact about an inserted or struck step goes in that step's `Context:`. The one-line cap is what stops the header growing without bound — an extendable field accumulated a full page of dated append narration in one real runbook. An existing longer line is left as it is. |
 | `Companion:` | optional. A background document offered to every step, inserted into every spawned prompt. |
 
@@ -150,7 +152,9 @@ A step is a `##` heading carrying its marker, its number and its title:
 
 **The number is the step's id, not its position.** It is a stable
 identifier, assigned once when the step is written and never changed
-afterwards — the same rule `.claude/TASKS.md` uses for task ids. **Order is
+afterwards — the same rule `.claude/TASKS.md` uses for task ids. **The next
+unused id is the header's `Last step number:` plus one**, never the highest
+existing step id: the counter is what survives a step being removed. **Order is
 list position**: a runbook is walked top to bottom, and the step that appears
 first comes first, whatever its number. A body may therefore legally carry
 step ids out of numeric order — a step inserted with `/runbook-create --append
@@ -346,6 +350,30 @@ nothing else in the file.
 block with `-` in its id column and moves on. Correcting the index belongs to a
 command that already has it open for writing — the same rule that stops the
 listing correcting a `Steps:` count it thinks is wrong.
+
+### Backfilling a body written before the step counter
+
+The same shape, one level down. A body with **no `Last step number:` line** is
+legal — every body written before the field existed has none — and is upgraded
+**in place**, set to the highest step id present in it, by whichever of these
+two commands writes it first:
+
+- **`/runbook-create --append`**, before it assigns any id;
+- **`/runbook-prune`**, before it removes anything.
+
+Those are the only two. They are the commands the counter is load-bearing
+for — one assigns from it, the other is why deriving it with `max()` stopped
+being safe — and a body they never touch needs no upgrade.
+
+**`/runbook-run` and `references/step-amend.md` write bodies and never backfill
+it.** The header is `/runbook-create`'s line by that command's
+ownership-by-line table, and neither of them reads the value: a run writes
+markers, `Done:` lines and `Context:` bullets, and an amendment strikes a
+pending step. Widening the header's ownership for a value neither needs buys
+nothing. **A read-only command never backfills**, exactly as above.
+
+This is a backfill, not a migration: no sweep, no script, and no
+`/pipeline-check` finding for a body that has not got one yet.
 
 ---
 

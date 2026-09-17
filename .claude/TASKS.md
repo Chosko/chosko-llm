@@ -51,7 +51,7 @@ Preconditions: none
 
 ## 232. Store a per-runbook step counter in the body header
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/references/runbook-schema.md, commands/runbook-create.md, VERSION, CHANGELOG.md
 Preconditions: none

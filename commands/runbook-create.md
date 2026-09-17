@@ -1,8 +1,8 @@
 ---
 name: runbook-create
-version: 0.7.0
+version: 0.8.0
 type: command
-description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/<id>-<name>.md, plus its .claude/RUNBOOKS.md index block — or append steps to one that already exists, including one a run is in the middle of. An append goes at the foot by default; with --before <step> or --after <step> the new steps are written at that position in the list instead, still taking the next unused step id, because a step's id is a stable identifier and not its position — no existing step is ever edited or renumbered. Assigns each new runbook the next id from the index's Last runbook number: counter, which every other runbook- command then accepts in place of the name. Authors each step's optional Needs: line (agent / agent+human / human, absent meaning agent) so a reader can see before starting which steps need a person, and calls those steps out at the confirmation gate. Refuses a new name that is already taken, or whose first kebab segment is all digits, with one suggested alternative. Two axes: where the steps go (a new runbook, --append <id|name|id-name>, which renames a legacy <name>.md body to <id>-<name>.md unless that runbook is running, --append with no name for the runbook this session is running, or no arguments at all, which asks) and where the material comes from (the current conversation's most recent follow-up list, the default; or a free-form description gathered through one batched interview). Enforces ten prompt-quality rules against every step before writing — self-contained, names the document to read first, carries every decision that exists nowhere on disk and nothing that already does, states its sequencing and what must not be re-proposed, uses real slash commands, references no path missing at run time, produces one deliverable, never invokes /runbook-run, and prefers two steps to one that would need a nested spawn — fixing failures and naming each fix in the confirmation report. The gate shows the proposed shape only, never the full prompts. Commits and pushes what it wrote by default, since a runbook is read by the next session and its review happens at the gate; pass --no-commit to leave it uncommitted, or --no-push to commit without pushing. --commit is accepted and changes nothing.
+description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/<id>-<name>.md, plus its .claude/RUNBOOKS.md index block — or append steps to one that already exists, including one a run is in the middle of. An append goes at the foot by default; with --before <step> or --after <step> the new steps are written at that position in the list instead, still taking the next unused step id, because a step's id is a stable identifier and not its position — no existing step is ever edited or renumbered. Takes every step id from the body header's monotonic Last step number: counter rather than from max() over the headings present, writes that counter on a new runbook, advances it on an append, and backfills it in place on a body written before the field existed. Assigns each new runbook the next id from the index's Last runbook number: counter, which every other runbook- command then accepts in place of the name. Authors each step's optional Needs: line (agent / agent+human / human, absent meaning agent) so a reader can see before starting which steps need a person, and calls those steps out at the confirmation gate. Refuses a new name that is already taken, or whose first kebab segment is all digits, with one suggested alternative. Two axes: where the steps go (a new runbook, --append <id|name|id-name>, which renames a legacy <name>.md body to <id>-<name>.md unless that runbook is running, --append with no name for the runbook this session is running, or no arguments at all, which asks) and where the material comes from (the current conversation's most recent follow-up list, the default; or a free-form description gathered through one batched interview). Enforces ten prompt-quality rules against every step before writing — self-contained, names the document to read first, carries every decision that exists nowhere on disk and nothing that already does, states its sequencing and what must not be re-proposed, uses real slash commands, references no path missing at run time, produces one deliverable, never invokes /runbook-run, and prefers two steps to one that would need a nested spawn — fixing failures and naming each fix in the confirmation report. The gate shows the proposed shape only, never the full prompts. Commits and pushes what it wrote by default, since a runbook is read by the next session and its review happens at the gate; pass --no-commit to leave it uncommitted, or --no-push to commit without pushing. --commit is accepted and changes nothing.
 requires: skill:runbook-run
 ---
 
@@ -102,7 +102,7 @@ which is what makes appending safe while a run is in progress:
 
 | Line | Written here | Never written here |
 | --- | --- | --- |
-| the header, `Sequencing:`, `Companion:` | yes | — |
+| the header, `Last step number:`, `Sequencing:`, `Companion:` | yes | — |
 | a step's title and its ```prompt``` block | yes | — |
 | `Depends on:` | yes | — |
 | `Needs:` | `agent+human` and `human` only | `agent`, which is the default and is never written |
@@ -225,6 +225,15 @@ headings carry no id — is backfilled here, per `runbook-schema.md`
 § *Backfilling an index written before ids*, before this run assigns anything.
 This command writes the index, so it performs the backfill rather than working
 around it.
+
+**A body written before the step counter** — an append target whose header
+carries no `Last step number:` line — is backfilled the same way and at the same
+point, per `runbook-schema.md` § *Backfilling a body written before the step
+counter*: set it in place to the highest step id present in the body, before
+this run assigns anything. This command is one of the two the counter is
+load-bearing for, and it owns the header line, so it performs the backfill
+rather than falling back to `max()`. A new runbook has nothing to backfill —
+PHASE 5 writes the line.
 
 ---
 
@@ -456,17 +465,21 @@ Two cases.
 2. Take the new id from `Last runbook number: + 1` — **before** the body is
    written, because the body's file name carries it. Nothing is written yet.
 3. Write `.claude/runbooks/<id>-<name>.md`: the header, then each step in
-   order.
+   order. The header's `Last step number:` is the last step id assigned in this
+   write — on a runbook authored whole, the number of steps.
 4. Append the index block with `Status: [PENDING]`, `Steps: 0/<total>` and
    `File: .claude/runbooks/<id>-<name>.md`, in the heading and field shape
    `runbook-schema.md` § *The index block* gives, and advance the counter to
    the id **in the same write**.
 
-What is this command's own is the *when*: it is the only thing that assigns an
-id or advances the counter, exactly as `/task-add` is for `.claude/TASKS.md`,
-and an append assigns nothing because the runbook it appends to already has
-one. The id's shape and the reason it is taken from the counter rather than
-from `max()` are the schema's, cited and not copied.
+What is this command's own is the *when*: it is the only thing that assigns a
+**runbook** id or advances `Last runbook number:`, exactly as `/task-add` is for
+`.claude/TASKS.md`, and an append assigns no runbook id because the runbook it
+appends to already has one. **Step** ids are the parallel case one level down —
+this command is the only thing that assigns one or advances the body's
+`Last step number:`, and there both a new runbook and an append do. The ids'
+shape and the reason each is taken from its counter rather than from `max()`
+are the schema's, cited and not copied.
 
 Every step marker is `[ ]`. There are no `Done:` lines — an authored runbook
 has none at all.
@@ -491,10 +504,14 @@ APPEND RULES
 All of these apply to every append — at the foot or at a `--before` /
 `--after` position alike — and to the `--append` half of PHASE 5:
 
-- **Numbering continues** from the highest existing step id: the new steps take
-  the next unused ids, in the order they are authored. This is a rule about
-  the id only, never the position — after an earlier insert the step at the
-  foot need not be the highest-numbered one.
+- **Numbering continues from the body header's `Last step number:` counter**,
+  never from the highest existing step id: the new steps take the next unused
+  ids — the counter plus one, plus two, … — in the order they are authored, and
+  the counter is advanced to the last id assigned in the same write. Backfill a
+  body that has no such line first, per PHASE 1's rule. Never derive the next id
+  with `max()` over the headings present; `runbook-schema.md` § *The header* is
+  why. This is a rule about the id only, never the position — after an earlier
+  insert the step at the foot need not be the highest-numbered one.
 - **Position is list position.** Without `--before` / `--after` the new steps
   go after the last step in the list. `--before <step>` writes them, as one
   contiguous block in their authored order, immediately above that step's
@@ -532,9 +549,10 @@ All of these apply to every append — at the foot or at a `--before` /
   reaches.
 - **The index `Steps: <done>/<total>` is updated** — the total grows, the done
   count is untouched.
-- **The runbook's id and the counter are untouched.** An append adds steps to a
-  runbook that already has an id; nothing is assigned and
-  `Last runbook number:` does not move.
+- **The runbook's id and the index counter are untouched.** An append adds steps
+  to a runbook that already has an id; nothing is assigned and
+  `Last runbook number:` does not move. The body's own `Last step number:` is
+  the opposite — an append is exactly what advances it.
 
 ---
 
@@ -620,6 +638,11 @@ DO NOT:
   runbook's id, renumber an existing runbook, or advance
   `Last runbook number:` on an append — `runbook-schema.md`
   § *The index block* is the authority for all four.
+- Derive a new **step** id with `max()` over the headings present, or leave the
+  body's `Last step number:` unadvanced after assigning one. The counter is the
+  only source of the next unused step id, and a body missing the line is
+  backfilled before it is read, never worked around — `runbook-schema.md`
+  § *The header* and § *Backfilling a body written before the step counter*.
 - Treat the id as the runbook's identity. It is an alias for the command line
   that the body's file name also carries; the name still names every message
   about the runbook.
