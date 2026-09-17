@@ -1,8 +1,8 @@
 ---
 name: runbook-describe
-version: 0.2.1
+version: 0.3.1
 type: command
-description: Print a compact summary of one runbook — a little more than its /runbook-list line and far less than its body. The index heading line (id, status, name, progress, title), one header line with Created, Source and Model, then one line per step with its marker, number and title, its dependencies when it has any and its Needs value when an authored one is not agent, plus at most one short done line per step that a run finished or failed, and a closing by-marker count naming the steps that need a person. Takes the runbook as the numeric id the index assigns it, its kebab-case name, or `<id>-<name>`, and reads the body at the index block's File: path. Reads the index and pulls only the lines it prints from that one runbook's body by targeted line extraction — never a full read of the body, never a step prompt, never a task body, never another runbook. Task ids in a Done line are printed as written and never followed. Writes nothing, runs no shell command including git, and corrects no status, count or marker however wrong it looks against the body.
+description: Print a compact summary of one runbook — a little more than its /runbook-list line and far less than its body. The index heading line (id, status, name, progress, title), one header line with Created, Source and Model, an archived-ids line printed only when the body carries an Archive: line, then one line per step with its marker, number and title, its dependencies when it has any and its Needs value when an authored one is not agent, plus at most one short done line per step that a run finished or failed, and a closing by-marker count that counts every archived id as done and as present, naming the steps that need a person. Takes the runbook as the numeric id the index assigns it, its kebab-case name, or `<id>-<name>`, and reads the body at the index block's File: path. Reads the index and pulls only the lines it prints from that one runbook's body by targeted line extraction — never a full read of the body, never a step prompt, never a task body, never another runbook. Task ids in a Done line are printed as written and never followed. Writes nothing, runs no shell command including git, and corrects no status, count or marker however wrong it looks against the body.
 requires: skill:runbook-run
 ---
 
@@ -51,7 +51,7 @@ for the runbook's index block. From the body at that block's `File:` path, the
 command pulls **only the lines it prints**, by targeted line extraction with
 the Grep tool (with line numbers) — never a full Read of the body:
 
-- the header fields `Created:`, `Source:` and `Model:`;
+- the header fields `Created:`, `Source:`, `Model:` and `Archive:`;
 - the step headings — `##` lines carrying a marker and a number;
 - each step's `Depends on:` and `Needs:` lines;
 - the first line of each step's `Done:`;
@@ -61,6 +61,12 @@ the Grep tool (with line numbers) — never a full Read of the body:
 
 Attach each field to the nearest preceding step heading. The
 `## Do not re-propose` heading is not a step and its contents are not read.
+
+`Archive:` is optional and absent on every runbook never pruned, so the pass
+usually finds nothing for it. Its absence is the common case, not a malformed
+body: extract it when it is there, and print nothing for it when it is not.
+Adding it costs no extra pass — it is one more field of the same Grep over the
+same body.
 
 A body whose extracted lines do not fit the schema — a step with no
 `Depends on:`, a heading without a number — is **reported as found**, in one
@@ -140,15 +146,53 @@ WORKFLOW
    `Failed at:` line as a continuation, exactly as `/runbook-list` renders it.
 
    **The header line.** One line: `Created:`, `Source:`, `Model:`. Nothing
-   else from the header — no `Sequencing:`, no `Companion:` — and no count of
-   `## Do not re-propose` items.
+   else from the header on this line — no `Sequencing:`, no `Companion:`, no
+   `Last step number:` — and no count of `## Do not re-propose` items. The one
+   other header field that is ever printed, `Archive:`, gets its own line
+   below.
+
+   **The archived-ids line.** One further line, directly under the header
+   line, **printed only when the body carries an `Archive:` line** — the ids
+   as the body holds them, ascending, followed by a short parenthetical
+   saying they were pruned and count as done:
+
+   ```
+   3. implement-ecc-import   [PENDING]   3/5   —   Land the ECC import architecture
+      Created: 2026-09-01   Source: /architect ecc-import   Model: sonnet
+      Archived: 1, 2, 3   (pruned; counted as done)
+
+      [!] 4. Wire cmd-rm's dependents guard            deps: 1
+             done: FAILED — <first clause of the reason>
+      [ ] 6. Update the authoring guide                deps: 1, 2
+
+      5 steps: 3 done, 1 failed, 1 pending.
+   ```
+
+   It sits in the header region, above the step list, so the step list is
+   never read as the whole runbook — a reader who met the archived ids after
+   the list would already have read a partial list as complete, which is the
+   failure this line exists to remove.
+
+   **A runbook that has never been pruned renders exactly as it does
+   otherwise, line for line**: no `Archived:` line, no empty placeholder, no
+   changed count. That is the common case — `Archive:` is absent on every
+   runbook never pruned and is never written empty.
+
+   A body whose every step has been pruned is a legal body, not a malformed
+   one. It renders its heading, its header line, its `Archived:` line and its
+   count (`7 steps: 7 done.`) and nothing between them. Do not report it as
+   an error, and do not render an empty step list with no explanation.
 
    **The step lines.** One line per step, in body order:
 
    - the marker **as the body carries it** — `[ ]`, `[~]`, `[x]`, `[!]` —
      first on the line, then the number and the title;
    - `deps:` on the same line, only when the step has dependencies. A step
-     whose `Depends on:` is `none` prints nothing for it;
+     whose `Depends on:` is `none` prints nothing for it. A surviving
+     `Depends on:` naming an archived id is printed **verbatim**, like any
+     other: do not annotate it, do not mark it satisfied, and do not
+     cross-reference it against the `Archived:` line. The two lines sitting
+     in one render is the whole mechanism;
    - `needs:` on the same line, only when the step carries an authored `Needs:`
      value that is not `agent`. A step without a `Needs:` line prints nothing.
 
@@ -162,7 +206,13 @@ WORKFLOW
    whole or in part.
 
    **The closing lines.** One line counting the steps by marker — only the
-   non-zero counts, the singular for one step, `[~]` named "in progress". When
+   non-zero counts, the singular for one step, `[~]` named "in progress".
+   **Every id on the `Archive:` line counts as done and as present**, per
+   `runbook-schema.md` § *An archived id counts as `[x]`* and the index's
+   `Steps:` accounting one level down: the total is the steps present plus
+   the archived ids, and the done count is the present `[x]` steps plus the
+   same archived ids. That is what keeps this count agreeing with the
+   progress figure in the heading line printed a moment earlier. When
    any step has an authored `Needs:` value other than `agent`, one further line
    naming those step numbers — "Step 3 needs a person present." or "Steps 2
    and 5 need a person present." — because it is the fact that decides whether
@@ -181,6 +231,14 @@ DO NOT:
 - Open `.claude/domain/`, `.claude/context/` or any source file.
 - Print `Sequencing:`, `Companion:`, any `Context:` text, or the
   `## Do not re-propose` section or its count.
+- Print `Last step number:`. It is deliberately omitted, not overlooked: this
+  command answers *what are this runbook's steps, and how did the finished
+  ones go*, and the counter answers neither — it is bookkeeping for
+  `/runbook-create --append`, the only thing that assigns from it. `Archive:`
+  is the opposite case and is printed for the opposite reason: without it the
+  render is wrong, not merely less informative.
+- Print an `Archived:` line on a runbook whose body carries no `Archive:`
+  line, or an empty one. Absent is the common case and renders nothing.
 - Print more than one `done:` line per step, or the wrong premises themselves
   rather than their count.
 - Infer a `Needs:` value for a step that has none. A step without an authored
@@ -192,7 +250,11 @@ DO NOT:
 - Correct a status, a `Steps:` count, a marker or a `Failed at:` line, however
   wrong the index looks against the lines just extracted. Reconciliation
   belongs to `/runbook-run`. Reporting an inconsistency in prose is fine;
-  editing it is not.
+  editing it is not. Deriving the closing count from the body's steps **and
+  its `Archive:` line** is derivation, not reconciliation — it is how the
+  count is arrived at every time, pruned runbook or not. An index `Steps:`
+  count that disagrees with the derived one is still reported in prose and
+  never corrected: no file is written and no shell is run.
 - Restate the body schema, the markers, the `Needs:` values, the status
   vocabulary or the index block in this body. They are
   `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`,
