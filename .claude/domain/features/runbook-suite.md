@@ -1,6 +1,6 @@
 # Runbooks
 
-A new asset kind and the six shipped artifacts that author, execute, read and
+A new asset kind and the seven shipped artifacts that author, execute, read and
 prune it. A **runbook** is an ordered list of self-contained prompts, each
 written to be executed by a fresh agent that has none of the conversation the
 prompts came out of. `/runbook-run` walks one top to bottom, spawning one
@@ -75,7 +75,13 @@ Deliberately out:
   So a step whose prompt turns out to be wrong is never edited: it is struck,
   and a corrected step is inserted after it (`references/step-amend.md`).
 - **Deletion on completion.** Finishing a runbook flips a status and nothing
-  else. Removal is `/runbook-clean`'s explicit, confirmed act.
+  else, and finishing a *step* removes nothing at all. Every removal is an
+  explicit, confirmed act of its own command: `/runbook-clean` for a whole
+  `[DONE]` runbook, `/runbook-prune` for the `[x]` steps of one that is still
+  live. The second of those is a **mid-life** event, which nothing else in this
+  document anticipated: a runbook is not only authored and then finished, it is
+  also trimmed while it runs, which is why a removed step's id survives on
+  `Archive:` rather than vanishing with the step.
 - **Nested runbooks.** A step whose prompt runs `/runbook-run` is forbidden —
   see the decision under the orchestrator.
 - **Being a session-handoff mechanism.** That is
@@ -96,7 +102,7 @@ Built on the repo's existing shape per [product-design.md](../product-design.md)
 shipped commands and skill folders under `commands/` and `skills/`, installed by
 copy into `$CLAUDE_HOME`.
 
-### The six shipped artifacts
+### The seven shipped artifacts
 
 | Artifact | Kind | Job |
 |---|---|---|
@@ -104,20 +110,21 @@ copy into `$CLAUDE_HOME`.
 | `commands/runbook-create.md` | command | authors a runbook, or appends steps to one |
 | `commands/runbook-list.md` | command | read-only listing with status and progress |
 | `commands/runbook-describe.md` | command | read-only compact summary of **one** runbook, lines extracted from its body |
+| `commands/runbook-prune.md` | command | plan-and-confirm removal of the `[x]` **steps** of one runbook |
 | `commands/runbook-clean.md` | command | plan-and-confirm removal of `[DONE]` runbooks |
 | `skills/runbook-suggest/` | skill | auto-triggering one-line suggestion, asks nothing |
 
-Six separate features in the shipped catalogue, each with its own frontmatter
+Seven separate features in the shipped catalogue, each with its own frontmatter
 and `version:`, exactly like every other feature in this repo — not one skill
 with verbs. They are one *production* feature because they share an artifact and
 are useless apart; `/task-add` splits them into at least one task per artifact
 plus documentation.
 
 **Ship order: `runbook-run` first**, then `runbook-create`, then `runbook-list`,
-`runbook-describe` and `runbook-clean` in any order, then `runbook-suggest`
-last. The order is forced by the dependency graph below: four artifacts cite
-files that live inside the runbook-run skill folder, and `runbook-suggest`
-proposes a command that must exist.
+`runbook-describe`, `runbook-clean` and `runbook-prune` in any order, then
+`runbook-suggest` last. The order is forced by the dependency graph below: five
+artifacts cite files that live inside the runbook-run skill folder, and
+`runbook-suggest` proposes a command that must exist.
 
 ### Why the shared files live in a skill
 
@@ -204,8 +211,10 @@ reading as `<id>-<name>`.
 # Runbook: <name>
 
 Created: 2026-08-24 · Source: /architect run · Model: opus
+Last step number: 7
 Sequencing: 1–4 ordered (all three edit skills/task-implement/SKILL.md); 5–7 independent.
 Companion: .claude/sessions/2026-08-24-1430-ecc-import-architecture.md
+Archive: 1, 2
 
 ## [ ] 1. <title>
 
@@ -238,6 +247,33 @@ cannot show it ("1–4 all edit the same file") — never changed after authorin
 so it cannot grow. `Companion:` is optional — a background
 document offered to every step, which in the reference file was pasted into all
 seven prompts by hand.
+
+Two further header fields are optional and came later, both of them the index's
+own arrangement repeated one level down:
+
+- **`Last step number:`** — the highest step id **ever assigned** in this
+  runbook, not the highest currently present. It only ever increases, the next
+  unused step id is this value plus one, and it is **never derived with
+  `max()`** over the headings. This is `Last runbook number:`'s rule and
+  `TASKS.md`'s, for their reason: once a step can be removed, a derived counter
+  drops and hands a removed step's id to the next step written, repointing every
+  reference recorded before the removal — a `Depends on:` line, a `Failed at:
+  step <n>`, a `Context:` bullet, a commit message — at the wrong step.
+- **`Archive:`** — optional, last in the header, after `Companion:`. The
+  ascending comma-separated list of step ids `/runbook-prune` has removed from
+  this body, and **an id on it counts as `[x]` everywhere a marker is read**.
+  That one rule is what keeps a surviving `Depends on:` naming a pruned step
+  resolvable and the `Steps:` count honest once the steps it counted are gone.
+  It is a bare id list: no titles, no `Done:` lines, no shas — the record of
+  what those steps did is in the commits they made. A runbook never pruned
+  carries no such line, and one is never written empty.
+
+A body with **no `Last step number:` line** is legal — every body written before
+the field existed has none — and is backfilled in place, to the highest id
+present, by the first of `/runbook-create --append` and `/runbook-prune` to
+write it. The prune's backfill runs *before* any step is removed and counts the
+steps about to go, so a prune can never lower the next append's id. There is no
+bulk migration, the same way there is none for `File:` paths.
 
 `## Do not re-propose` is optional, global to the runbook, and appended to every
 spawned prompt. The reference file carried exactly such a section and it was
@@ -300,8 +336,13 @@ Four statuses, in `.claude/RUNBOOKS.md`, deliberately distinct from both
 | `[FAILED]` | a step reported failure or an unreadable result; the run halted | `/runbook-run` |
 | `[DONE]` | every step is `[x]` | `/runbook-run` |
 
-There is no `[SKIP]`: a runbook is authored complete and a step nobody wants is
-deleted before the run, not carried as a tombstone.
+There is no `[SKIP]`: a runbook is authored complete, and a step nobody wants is
+struck rather than carried as a tombstone with a status of its own. "Authored
+complete" is about how a runbook *starts*, not a promise that its body never
+changes afterwards: `/runbook-create --append` adds steps to a live runbook and
+`/runbook-prune` removes finished ones from it, and neither needs a fifth
+status — an appended step is `[ ]` like any other, and a pruned step's id is
+`[x]` from `Archive:`.
 
 ### The index block
 
@@ -326,7 +367,13 @@ Steps: 0/7
 ---
 ```
 
-`Steps:` is `<done>/<total>`, where done counts `[x]` only. A line
+`Steps:` is `<done>/<total>`, where done counts `[x]` only — and **every id on
+the body's `Archive:` line counts toward both halves**, since it is `[x]` and it
+was a step. Total is the steps present plus the archived ids; done is the
+present `[x]` steps plus the same archived ids. A prune therefore changes
+neither number: a runbook pruned to nothing still reads `7/7`, not `0/0`, which
+is what keeps the count derivable from the body alone — from its steps and its
+header together. A line
 `Failed at: step <n> — <reason>` is present only while the status is
 `[FAILED]`, and is removed when a re-run clears it.
 
@@ -560,8 +607,13 @@ the entire authoring apparatus to change one path.
 
 **Append rules.**
 
-- Numbering continues from the highest existing step id: the new steps take
-  the next unused ids. The id continues; the position need not — under
+- Numbering continues from the header's `Last step number:` counter: the new
+  steps take the next unused ids, counter + 1 onward, and the counter is
+  advanced to match. It is never derived with `max()` over the existing
+  headings — that is what keeps an id unique after `/runbook-prune` has removed
+  the step that held the highest one. A body with no counter line is backfilled
+  to the highest id present before any id is assigned.
+  The id continues; the position need not — under
   `--before <step>` / `--after <step>` the new steps are written at that
   step's place in the list, so the step at the foot need not be the
   highest-numbered one.
@@ -999,12 +1051,14 @@ requires: skill:runbook-run
 requires: skill:runbook-run
 # commands/runbook-clean.md
 requires: skill:runbook-run
+# commands/runbook-prune.md
+requires: skill:runbook-run
 # skills/runbook-suggest/SKILL.md
 requires: command:runbook-create
 ```
 
 `runbook-suggest`'s edge is the one judgment call in that graph: it cites no
-shared file and needs no schema, so unlike the other three it has no mechanical
+shared file and needs no schema, so unlike the others it has no mechanical
 dependency. What it has is a proposal that is useless if the command it names is
 not installed, and `requires:` exists to stop exactly that — an agent following a
 path, or here a command name, that does not resolve. It depends on the command
@@ -1032,10 +1086,10 @@ Hard contracts:
 - Shipped bodies reference `${CLAUDE_HOME:-...}` paths, never `~/.claude`, and
   never any path under `docs/`.
 
-All six artifacts need `name`, `version`, `type`, `description` frontmatter per
+All seven artifacts need `name`, `version`, `type`, `description` frontmatter per
 [docs/authoring-guide.md](../../../docs/authoring-guide.md), starting at
 `version: 0.1.0`. Root `VERSION` moves **per task, not once for the feature**:
-the suite lands over six shipped-artifact tasks, each taking its own minor bump
+the suite lands over seven shipped-artifact tasks, each taking its own minor bump
 relative to whatever is in place when it lands, plus a patch bump for the
 documentation task that follows them.
 
@@ -1043,14 +1097,14 @@ documentation task that follows them.
 
 - **Task 125** — the `requires:` frontmatter field and its install-time
   resolution, from [shared-phase-engine](./shared-phase-engine.md). **Every task
-  derived from this feature preconditions on it.** Five of the six artifacts
+  derived from this feature preconditions on it.** Six of the seven artifacts
   declare `requires:`, and without the field they can be installed with their
   dependency absent — a command citing a schema file that is not there, or a
   skill proposing a command that does not exist.
 - **Internal ship order**, forced by that graph: `runbook-run` first (it is the
   dependency and ships the two reference files), then `runbook-create`, then
-  `runbook-list`, `runbook-describe` and `runbook-clean`, then
-  `runbook-suggest` last. This is the same order stated under *The six shipped
+  `runbook-list`, `runbook-describe`, `runbook-clean` and `runbook-prune`, then
+  `runbook-suggest` last. This is the same order stated under *The seven shipped
   artifacts*; it is repeated here because this is the section that carries the
   dependency graph forcing it.
 - Subagent spawning, with results arriving asynchronously and nesting confirmed

@@ -1079,8 +1079,10 @@ that has none of the conversation the prompts came out of.
   this session is running. Appended steps go at the foot unless
   `--before <step>` or `--after <step>` places them at that step's position
   instead (the two can't be combined, and an unknown step id is answered with
-  the runbook's step list). Either way they take the next unused step id: a
-  step's number is a stable id, not its position, so a runbook may list step
+  the runbook's step list). Either way they take the next unused step id, read
+  from the body header's `Last step number:` counter and never derived with
+  `max()` over the headings — the counter is what survives a step being pruned.
+  A step's number is a stable id, not its position, so a runbook may list step
   6 above step 3. No existing step is edited, moved or renumbered, and the
   header's optional one-line `Sequencing:` (why the order is what it is) is
   never extended.
@@ -1109,7 +1111,30 @@ that has none of the conversation the prompts came out of.
   by-marker count. It pulls only those lines from exactly one body — never a
   full read, never a step prompt, never a task body — so its cost is roughly
   what it prints. For the prompts or the full record, open the file.
+- `/runbook-prune <id|name|id-name>` — remove the finished steps from **one**
+  runbook, so the body that every subsequent step re-reads is the plan that's
+  left rather than the plan that was. It takes exactly one runbook and no step
+  argument: the set is **every `[x]` step** in it, struck steps included, and
+  `[ ]`, `[~]` and `[!]` are never touched. Each removed step goes whole —
+  heading through prompt block — and its id goes on the body header's
+  `Archive:` line, where **an id counts as `[x]`**: a surviving `Depends on:`
+  naming a pruned step still resolves and is left exactly as written, and the
+  index's `Steps:` count keeps counting archived ids toward both halves, so a
+  runbook pruned to nothing reads `7/7`, not `0/0`. It refuses a `[RUNNING]`
+  runbook, and any body holding a `[~]` step whatever the index says — a step
+  is executing, possibly in another session, and that run re-reads this body
+  every step. `[PENDING]`, `[FAILED]` and `[DONE]` are all prunable;
+  `[FAILED]` is where it helps most, since the steps left are the ones about to
+  be re-run. A runbook with no `[x]` steps says so and stops without asking.
+  It plans and confirms first — both file paths, the steps to remove, the ids
+  that remain, and the resulting `Archive:` and `Steps:` values beside their
+  previous ones — and writes nothing before an explicit **"Apply?"**. It
+  commits and pushes by default (`--no-commit` / `--no-push`). A prune may
+  legally empty a body of steps; the file and its index block stay, because
+  removing a runbook is `/runbook-clean`'s job.
 - `/runbook-clean` — delete finished runbooks, planning and confirming first.
+  The pair to `/runbook-prune`: prune removes finished *steps* from a live
+  runbook, clean removes finished *runbooks*.
 - `runbook-suggest` — a skill nobody invokes. It fires on its own description
   when a conversation produces a list worth capturing, points at
   `/runbook-create` in one line, and stops.
@@ -1137,7 +1162,17 @@ migration. The **body is the source of truth**;
 the index's `Status:` and `Steps: <done>/<total>` are derived from it and can
 be rebuilt by re-reading it. The id is the one thing that isn't: it's
 assigned, it only ever increases, and a pruned one is never reused, so a
-number you wrote down last month still means the runbook you meant. The name
+number you wrote down last month still means the runbook you meant. A body
+carries the same arrangement one level down, in two optional header fields:
+`Last step number:`, the highest step id ever assigned in that runbook, which
+only ever increases and is what the next append counts from; and `Archive:`,
+the ascending list of ids `/runbook-prune` has removed, each of which counts
+as `[x]` everywhere a marker is read. A runbook never pruned carries no
+`Archive:` line at all, and one is never written empty. A body with no
+`Last step number:` line — every body written before the field existed — is
+backfilled in place, to the highest id present counted before anything is
+removed, by whichever of `/runbook-create --append` and `/runbook-prune`
+writes it first. There is no bulk migration for these either. The name
 stays canonical throughout: it's what every message calls the runbook, and
 the id, even in the file name, is only an alias for it. No `chosko-llm` subcommand walks `.claude/runbooks/`;
 runbooks are input to agents, never to tooling.
@@ -1240,8 +1275,10 @@ after it was authored.
 Commit behaviour: `/runbook-create` commits and pushes the runbook it wrote
 by default (`--no-commit` / `--no-push`), since a runbook is read by the next
 session and its review already happens at the plan gate; `--commit` is still
-accepted and changes nothing. `/runbook-clean` commits and pushes
-the deletion by default (`--no-commit` / `--no-push`), `/runbook-run` commits
+accepted and changes nothing. `/runbook-clean` and `/runbook-prune` commit and
+push by default (`--no-commit` / `--no-push`) — for the same two reasons: their
+plan gate has already served as the review pass, and a removal left uncommitted
+is the change most likely to be lost. `/runbook-run` commits
 after every step, and `/runbook-list`, `/runbook-describe` and
 `runbook-suggest` write nothing at all.
 

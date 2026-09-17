@@ -69,7 +69,7 @@ Preconditions: 232
 
 ## 234. Document `/runbook-prune` and the two new runbook header fields
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, .claude/domain/features/runbook-suite.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 232, 233

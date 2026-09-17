@@ -378,9 +378,11 @@ step did; that is `/task-review`'s job, invoked from inside the step.
 own session, sharing one context, instead of spawning a subagent for each.
 `/runbook-create` commits and pushes the runbook it wrote by default
 (`--no-commit`, `--no-push`). `/runbook-list`,
-`/runbook-describe` and `/runbook-clean` round out the set, and
-`runbook-suggest` fires on its own when a conversation produces a list worth
-capturing.
+`/runbook-describe`, `/runbook-prune` and `/runbook-clean` round out the set —
+prune removes the finished **steps** from one live runbook, recording their ids
+on an `Archive:` line so a surviving `Depends on:` still resolves, while clean
+removes finished **runbooks** — and `runbook-suggest` fires on its own when a
+conversation produces a list worth capturing.
 
 **Session handoffs** are for work in flight. **`/session-save`** writes what
 this conversation knows into `.claude/sessions/`: what was tried and failed,

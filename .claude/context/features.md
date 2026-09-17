@@ -1264,7 +1264,15 @@ Currently shipped:
   runbook-schema.md` (store, body schema, step markers `[ ]`/`[~]`/`[x]`/`[!]`,
   the four statuses `[PENDING]`/`[RUNNING]`/`[FAILED]`/`[DONE]`, the optional
   per-step `Needs:` field, index block + its `Last runbook number:` counter and
-  per-runbook **id**)
+  per-runbook **id**, plus two header fields of the body's own: the
+  `Last step number:` step counter — highest id ever assigned, only ever
+  increases, never `max()`, next unused id = value + 1 — and the optional
+  `Archive:` id list `/runbook-prune` writes, whose ids **count as `[x]`**
+  everywhere a marker is read, keeping a surviving `Depends on:` resolvable and
+  the `Steps:` count unchanged by a prune; a body with no `Last step number:`
+  line is backfilled in place — to the highest id present, counting steps about
+  to be removed — by whichever of `/runbook-create --append` and
+  `/runbook-prune` writes it first)
   and `references/subagent-contract.md` (the OPERATING RULES block pasted
   verbatim into every spawned prompt — three placeholders, `<RUNBOOK>`, `<N>`
   and `<FILE>` (the body's `File:` path, for the never-edit rule; relay file
@@ -1519,6 +1527,34 @@ Currently shipped:
   default (a deletion left uncommitted is the change most likely to be lost, and
   the confirm gate already served as the review pass); `--no-commit`/`--no-push`
   opt out.
+- `commands/runbook-prune.md` — the other pruner, and the pair to
+  `/runbook-clean`: **clean removes finished runbooks, prune removes finished
+  steps from one live runbook**. `requires: skill:runbook-run` for the body
+  schema, the markers and the two header fields, none of them restated in the
+  body. Takes **exactly one** runbook as `<id|name|id-name>` (the schema's
+  resolution rule); no step argument, no `--all`, no `--force` — the set is
+  every `[x]` step in the named runbook, struck steps included, and `[ ]`, `[~]`
+  and `[!]` are never touched. Refuses a `[RUNNING]` runbook and any body
+  holding a `[~]` step (the body decides, not the index); `[PENDING]`,
+  `[FAILED]` and `[DONE]` are all prunable, and `[FAILED]` is where it helps
+  most. Nothing to prune says so and stops without a prompt. Writes exactly two
+  files — the body at its block's `File:` path, verbatim, never migrated — and
+  `.claude/RUNBOOKS.md`, where the one line it touches is `Steps:`. Removes each
+  `[x]` step whole (heading through prompt fence) and records its id on the
+  header's `Archive:` line, ascending, extended rather than replaced; a
+  surviving `Depends on:` naming a pruned step is **left exactly as it is**,
+  which is what `Archive:` is for. **Never touches `Last step number:`** on a
+  body that has one — up or down — so pruning the highest-numbered step is
+  legal; the one exception is the backfill, which runs *before* any removal and
+  counts the steps about to go, so a prune can never lower the next append's id.
+  Both derived values (`Archive:`, `Steps:`) and the backfill are computed in
+  STAGE 1 and printed in STAGE 2's plan with their previous values beside them,
+  ending in **"Apply?"** — nothing is written before an explicit answer, and a
+  step the user rescues re-renders the whole plan. A prune may legally empty a
+  body of steps; the file and its index block stay (removal is
+  `/runbook-clean`'s). **Commit convention: cleanup** — commits and pushes by
+  default, `--no-commit`/`--no-push` opt out, the plan gate serving as the
+  review pass.
 - `skills/runbook-suggest/` — the trigger, and one of the two artifacts nobody
   invokes (the other is `skills/pipeline-suggest/`, which copies its shape).
   `requires: command:runbook-create` — the one judgment call in the graph: it
