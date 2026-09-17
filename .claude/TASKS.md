@@ -60,7 +60,7 @@ Preconditions: none
 
 ## 233. Add `/runbook-prune` — remove done steps, keep their ids in an `Archive:` line
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/runbook-prune.md, skills/runbook-run/references/runbook-schema.md, skills/runbook-run/SKILL.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
 Preconditions: 232

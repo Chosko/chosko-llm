@@ -2,6 +2,13 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.53.0 — 2026-09-17
+
+- New command **/runbook-prune `<id|name|id-name>`** — removes every `[x]` step from one runbook's body, heading through prompt block, so a long-running runbook stops carrying finished prompts through the re-read `/runbook-run` does at the start of every step. `[ ]`, `[~]` and `[!]` are never touched; a struck step is `[x]` and is pruned like any other. It plans and confirms first, then commits and pushes by default (`--no-commit` / `--no-push` opt out), staging exactly the body and `.claude/RUNBOOKS.md`.
+- The removed ids go on a new body-header **`Archive:`** line, and **an id on that line counts as `[x]`**. A surviving `Depends on:` naming a pruned step therefore still resolves — `/runbook-run` resolves it from the header — and the index's `Steps:` count keeps counting archived ids toward both halves, so a runbook pruned to nothing reads `7/7` rather than `0/0`. The line is a bare id list: no digest section, no retained `Done:` lines.
+- A prune never moves `Last step number:`, which is what makes pruning the highest-numbered step safe. On a body written before that counter existed, the prune backfills it — to the highest id present, counting the steps about to go — as its first write, so a prune can never lower the next append's id.
+- Refuses a `[RUNNING]` runbook and a body holding a `[~]` step; every other status may be pruned, `[FAILED]` included. A runbook with no `[x]` steps says so and stops without asking.
+
 ## 1.52.0 — 2026-09-17
 
 - A runbook body's header now carries a **`Last step number:`** counter — the highest step id ever assigned in that runbook, monotonic, never derived with `max()`. It is the same rule `TASKS.md`'s `Last task number:` and the index's `Last runbook number:` already follow, and it is what keeps step ids stable once a step can be removed: a derived counter would hand a removed step's id to the next step written and silently repoint every `Depends on:`, `Failed at: step <n>` and `Context:` bullet recorded before then.
