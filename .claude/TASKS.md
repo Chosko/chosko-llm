@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 234
+Last task number: 235
 
 ---
 
@@ -72,4 +72,13 @@ Preconditions: 232
 Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, .claude/domain/features/runbook-suite.md, .claude/context/features.md, .claude/context/INDEX.md
+Preconditions: 232, 233
+
+---
+
+## 235. Surface a runbook's archived step ids in `/runbook-describe`
+
+Status: [MISSING]
+Target: claude
+Files: commands/runbook-describe.md, .claude/domain/features/runbook-suite.md, docs/reference.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION, CHANGELOG.md
 Preconditions: 232, 233
