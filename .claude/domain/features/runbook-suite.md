@@ -951,15 +951,31 @@ safe with two writers:
 
 | Line | Written by | Never touched by |
 |---|---|---|
-| the header, `Sequencing:`, `Companion:` | `/runbook-create` | `/runbook-run` |
+| `Created:`, `Source:`, `Model:`, `Sequencing:`, `Companion:` | `/runbook-create` | `/runbook-run`, `/runbook-prune` |
+| `Last step number:` | `/runbook-create`; backfilled in place by whichever of `/runbook-create --append` and `/runbook-prune` writes the body first | `/runbook-run` |
+| `Archive:` | `/runbook-prune` | `/runbook-create`, `/runbook-run` |
 | a step's title and its ```prompt``` block | `/runbook-create` | `/runbook-run` |
 | `Depends on:` and `Needs:` | `/runbook-create` | `/runbook-run` |
 | the step marker, `Done:`, `Context:` appendices | `/runbook-run` | `/runbook-create` |
 | `## Do not re-propose` | `/runbook-create` | `/runbook-run` |
 
+The two counter-and-archive rows are the suite's later arrivals and the only
+ones with more than one writer. `Last step number:` is assigned by the author
+and merely *backfilled* by the other two — raised to the highest id present
+when a body written before the field existed is first rewritten, and otherwise
+advanced only by an append. `Archive:` has exactly one writer, which is what
+keeps the rule *an id on `Archive:` counts as `[x]`* readable from one place.
+
 An append writes only new steps, never the `Sequencing:` line; it never edits a
 line of an existing step, wherever the new steps land, which is what makes
 appending safe during a run.
+
+A prune sits outside the by-line discipline rather than extending it: it does
+not edit lines, it **removes whole `[x]` steps**, heading through prompt block.
+No line of a surviving step is touched, no step is renumbered, and the only
+other lines it writes are the two above plus the index's `Steps:`. That is why
+it needs no ownership row of its own for step content — there is no line it
+edits, only steps it deletes.
 
 `Context:` is the one field with a shared history: the author writes it as `none`
 in the common case, and what accumulates there afterwards belongs to the run.
@@ -1000,8 +1016,19 @@ it.
 
 /runbook-list [<STATUS>]
 /runbook-describe <id|name|id-name>      print a compact summary of one runbook
+/runbook-prune <id|name|id-name>         remove that runbook's [x] steps, keeping
+                                         their ids on the body's Archive: line
+/runbook-prune <id|name|id-name> [--no-commit] [--no-push]
 /runbook-clean [<id|name|id-name> ...] [--no-commit] [--no-push]
 ```
+
+`/runbook-prune` takes exactly one runbook and has no step argument and no
+`--all`: it prunes every `[x]` step of the runbook it is given. It refuses a
+`[RUNNING]` runbook and one carrying a `[~]` step — an interrupted run's body is
+not a body to rewrite underneath it — and a runbook with no `[x]` steps says so
+and stops. Every other status may be pruned, which is the difference from
+`/runbook-clean`: that one takes a status as its default set and deletes whole
+runbooks, this one is always named and edits a body.
 
 Every command above that takes `<name>` takes `<id>` or `<id>-<name>` in its
 place, resolved by the ordered rule under *The store*.
