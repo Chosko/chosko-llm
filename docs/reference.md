@@ -1113,9 +1113,10 @@ that has none of the conversation the prompts came out of.
   its last act is one [`/follow-ups`](#follow-ups) call, once for the whole
   run and never per step, after the closing report and the final commit. In
   the default spawned mode that reading covers the step subagents' result
-  reports as well as the orchestrator's own conversation, which is the one
-  carve-out in "the orchestrator never reads a child's work"; under `--inline`
-  there are no step reports and nothing changes. It adds no commit and is
+  reports as well as the orchestrator's own conversation — a step's result is
+  already in hand by then, so this opens no file and leaves the "reads three
+  files" contract and the spawn relay's never-read-a-relay-file rule alike
+  untouched; under `--inline` there are no step reports and nothing changes. It adds no commit and is
   skipped silently when `/follow-ups` isn't installed.
 - `/runbook-list` — every runbook as one line: id, status, name, steps done
   over total, created date, source, and its one-line title.

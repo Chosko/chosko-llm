@@ -1308,9 +1308,10 @@ Currently shipped:
   `--steps` bound, a user-requested stop after a step, or a failure halt),
   after the closing report and the final commit, adding no commit and skipped
   silently when the command is absent; in the default spawned mode that
-  reading covers the step subagents' result reports — the one carve-out in
-  "the orchestrator never reads a child's work" — and `--inline` is
-  unchanged. **Ids**: every runbook carries one beside its kebab-case name,
+  reading covers the step subagents' result reports — already in hand from
+  step 7, so no file is opened and neither the "reads three files" contract
+  nor the spawn relay's never-read-a-relay-file rule is touched — and
+  `--inline` is unchanged. **Ids**: every runbook carries one beside its kebab-case name,
   and every command taking a runbook accepts `<id>`, `<name>` or
   `<id>-<name>`, resolved in order: all digits → id; exact name → that block;
   `<digits>-<rest>` → that block only when block `<digits>` is named `<rest>`,

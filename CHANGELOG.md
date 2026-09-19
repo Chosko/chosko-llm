@@ -2,11 +2,16 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.55.1 — 2026-09-19
+
+- **/task-implement**'s closing-call section no longer implies that a `--agents` run's follow-up list draws much from the agents. The four-field return contract carries no narrative, so an agent's own "this left something behind" never reaches the parent; the section now says that plainly and points at the launcher's own conversation — the delegation split, tasks skipped for unmet preconditions, failure lines, declined feature slugs — as the substantive half. The return contract is unchanged.
+- **/runbook-run**'s closing-call section attributed a sentence to its own reads-and-writes contract that is not in it. Corrected to the real one: reading a step's result opens no file and happens at step 7 anyway, so the "reads three files" contract and the spawn relay's never-read-a-relay-file rule are both untouched.
+
 ## 1.55.0 — 2026-09-19
 
 - **/runbook-run** and **/task-implement** now end every run with one **/follow-ups** call, after the run's own closing report and after the last commit. A run no longer ends leaving unrecorded work visible only in the transcript.
 - It fires **once per run, never per step and never per task**, and at every point a run stops — not only at completion. For `/runbook-run` that is a `--to` / `--only` / `--steps` bound, a user-requested stop after a step (even with no bound to it) and a failure halt, as well as the runbook finishing. For `/task-implement` it is the end of the run whatever it resolved to (`<N>...`, `all`, `next`), a user-requested stop between tasks and a failure halt — and it comes *after* the feature-completion proposal, which can itself leave a slug `[PLANNED]`.
-- In `/runbook-run`'s default spawned mode the orchestrator's reading covers the step subagents' result reports as well as its own conversation — the one carve-out in "the orchestrator never reads a child's work", and it opens no file to do it. `--inline` is unchanged. Under `/task-implement --agents` the parent likewise reads the per-agent returns it already collects, and the return contract is unchanged.
+- In `/runbook-run`'s default spawned mode the orchestrator's reading covers the step subagents' result reports as well as its own conversation — already in hand from the step it just classified, so it opens no file and the "reads three files" contract is untouched. `--inline` is unchanged. Under `/task-implement --agents` the parent likewise reads the per-agent returns it already collects, and the return contract is unchanged.
 - The call adds no commit, flips no status and runs after the index `Status:` and the final commit are already written, so it never dirties a tree a run just cleaned. Both skills declare `requires: command:follow-ups` and skip the call silently when the command is not installed — an absent optional closing step is not a run failure.
 
 ## 1.54.0 — 2026-09-19
