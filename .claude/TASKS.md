@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 235
+Last task number: 238
 
 ---
 
@@ -82,3 +82,30 @@ Status: [DONE]
 Target: claude
 Files: commands/runbook-describe.md, .claude/domain/features/runbook-suite.md, docs/reference.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION, CHANGELOG.md
 Preconditions: 232, 233
+
+---
+
+## 236. Add `/follow-ups` — list what this conversation left unhandled
+
+Status: [MISSING]
+Target: claude
+Files: commands/follow-ups.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 237. Call `/follow-ups` at the end of every `/runbook-run` and `/task-implement` run
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/SKILL.md, skills/task-implement/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: 236
+
+---
+
+## 238. Document `/follow-ups` and the runners' closing call
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/reference.md, .claude/domain/features/runbook-suite.md, .claude/domain/features/task-implement-launcher.md, .claude/context/features.md, .claude/context/INDEX.md
+Preconditions: 236, 237
