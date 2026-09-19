@@ -1,6 +1,6 @@
 ---
 name: pipeline-engine
-version: 0.2.8
+version: 0.2.9
 type: skill
 description: Reference library for the pipeline as a whole — one authority per rule the pipeline-revision features share. Four files under references/ own the project probe and the one verdict line every consumer prints, the graph of how the pipeline's indexes point at each other, the routing table of what each pipeline feature consumes, produces and owns and where each owner's amend entry is, and the catalogue of drift findings. NOT a skill the user invokes and never a skill to suggest — it takes no arguments, runs nothing, and produces no output; /pipeline-check, /pipeline-patch and pipeline-revise read its files by path while they run, and only the features that declare requires: skill:pipeline-engine should ever open it.
 ---
@@ -14,13 +14,23 @@ description: Reference library for the pipeline as a whole — one authority per
 > `/pipeline-patch` and `pipeline-revise` cite the files below by path while
 > they run, and those files are the only content here.
 
-> **Install path assumption:** this skill assumes installation at
-> `${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/` — where
-> `chosko-llm add skill:pipeline-engine` writes it. A feature that reads a file
-> here names it as
-> `${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/references/<file>.md`,
-> never as a hardcoded home path — the `CLAUDE_HOME` override has to keep
-> working.
+> **Install path assumption:** this skill installs beside the features that
+> read it — `chosko-llm add skill:pipeline-engine` writes it under the same
+> home those features are installed into, whichever home that is. So a
+> feature names a file here by a path **relative to its own body**, never by
+> an absolute home path:
+> `../skills/pipeline-engine/references/<file>.md` from a command,
+> `../pipeline-engine/references/<file>.md` from another skill's `SKILL.md`,
+> `../../pipeline-engine/references/<file>.md` from another skill's reference
+> file, and `./<file>.md` between two files in this skill.
+>
+> That is scope-proof by construction. `CLAUDE_HOME` still governs where
+> `install.sh` and the `scripts/cmd-*.sh` verbs *write* — including
+> `--local`, which repoints the whole home to `$PWD/.claude` — but a shipped
+> body cannot re-derive it at run time, because the executing agent expands
+> `${CLAUDE_HOME:-$HOME/.claude}` itself and always lands on the global home.
+> Citing body and cited file are always siblings under one root, so a
+> relative path is correct in either scope with no probing and no fallback.
 
 ---
 

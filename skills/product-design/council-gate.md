@@ -37,11 +37,14 @@ propagates into every feature document downstream.
 Probe for the skill:
 
 ```
-${CLAUDE_HOME:-$HOME/.claude}/skills/claude-council/SKILL.md
+../claude-council/SKILL.md
 ```
 
-Honor `CLAUDE_HOME` when it is set — never hardcode `~/.claude`; this repo's
-scripts resolve paths that way and a shipped body must not disagree with them.
+That path is relative to this file, so it resolves under a `--local` install
+as well as a global one — the two skills are always siblings under whichever
+home `chosko-llm add` wrote them into. Never re-derive an absolute home path
+here: a shipped body cannot expand `CLAUDE_HOME` at run time and would land on
+the global home whatever the install scope.
 
 **If the file does not exist, stop here and say nothing.** Proceed with the
 inline propose-and-recommend flow unchanged. Do not mention claude-council,

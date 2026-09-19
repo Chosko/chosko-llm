@@ -38,7 +38,7 @@ root, with the result shape the verdict line prints.
 | `roadmap` | `.claude/domain/product-roadmap.md` exists, and whether any line of it begins `Covers:` — a milestone carrying scope slices. | `none` \| `unsliced` \| `sliced` |
 | `plan` | `.claude/PLAN.md` exists. | `yes` \| `no` |
 | `runbooks` | `.claude/RUNBOOKS.md` exists. | `yes` \| `no` |
-| `council` | `${CLAUDE_HOME:-$HOME/.claude}/skills/claude-council/SKILL.md` exists — the path the council gates of `/architect` and `/product-design` probe. | `yes` \| `no` |
+| `council` | `$H/skills/claude-council/SKILL.md` exists, `$H` being the install home the snippet below derives — the path the council gates of `/architect` and `/product-design` probe. | `yes` \| `no` |
 | `testing` | The project's `CLAUDE.md` carries a line `Testing policy for /task-implement: <value>`, and its value. The marker and its values are `/task-implement`'s; the probe reads the value and interprets nothing. | the value, or `none` |
 | `installed` | Which pipeline features are installed under `${CLAUDE_HOME:-$HOME/.claude}` — each feature a row of `routing.md` names, found as `commands/<name>.md` or `skills/<name>/SKILL.md`, either kind. | `<found>/<rows>`, plus ` (missing: <name>, …)` when any is absent |
 
@@ -48,7 +48,7 @@ root, with the result shape the verdict line prints.
 **There is no probe of `.claude/tasks/archive/`, and none may be added.** A
 folder no command traverses costs the same as a folder that is not there —
 that is the archive's whole guarantee
-(`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`
+(`../../task-engine/references/resolution.md`
 § *The archive*) — and a probe here would be the first traversal of it. No
 pipeline decision turns on whether the archive exists: an id absent from
 `TASKS.md` resolves from the absence alone.

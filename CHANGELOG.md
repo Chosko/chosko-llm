@@ -2,6 +2,15 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.57.0 — 2026-09-19
+
+- **Every shipped body now cites another shipped file by a path relative to itself**, replacing all 134 absolute-home citations across 37 commands and skills. The old form — `${CLAUDE_HOME:-$HOME/.claude}/skills/<name>/…` — never resolved for a `--local` install: `chosko-llm add --local` repoints `CLAUDE_HOME` to `$PWD/.claude` for the duration of the install, but the executing agent expands the variable itself at read time and always lands on the global home. A project that installed the `task-*`, `runbook-*` or `pipeline-*` suites locally was therefore reading a different copy of every reference file, or none at all — and it failed silently, because a missing file is a legitimate skip.
+- Four forms cover every case: `./<file>.md` within one skill, `../<other>/references/<file>.md` from another skill's `SKILL.md`, `../../<other>/references/<file>.md` from another skill's reference file, and `../skills/<other>/references/<file>.md` from a command. They are correct by construction in both scopes — `--local` repoints the whole home and `cmd-add` installs `requires:` dependencies into that same home, so citing body and cited file are always siblings under one root.
+- The `CLAUDE_HOME` override is unchanged: it still governs where `install.sh` and every `scripts/cmd-*.sh` verb writes. Only shipped bodies stopped trying to re-derive it at read time. The install-path notes in `task-engine`, `runbook-run`, `pipeline-engine` and the vendored `claude-council` now say so.
+- The vendored `claude-council` skill's three `bash` invocations now go through a `SKILL_DIR` its install-path note defines, because those lines run from the project root and so cannot use a path relative to the skill body. Its journal and scripts are unchanged.
+- Every affected command and skill takes a patch `version:` bump, so `chosko-llm update --all` actually delivers this fix to an existing install rather than reporting it already up-to-date.
+- **New authoring-time guard, `scripts/check-home-paths.sh`.** Silent on success, non-zero naming each body that cites another shipped file by an absolute install home. Repo-local like `check-changelog.sh` and `check-routing.sh` — not a feature, installed nowhere, run by hand; `CLAUDE.md` § Versioning says when.
+
 ## 1.56.3 — 2026-09-19
 
 - Fixed a scope bug in 1.56.2: the `--agents` hand-off prompt told the delegated agent to read `${CLAUDE_HOME:-$HOME/.claude}/commands/follow-ups.md`, a path that only ever resolves to the **global** install. `chosko-llm add --local` repoints `CLAUDE_HOME` to `$PWD/.claude` at install time, so a project that installed `/follow-ups` locally would have had every delegated agent find nothing there and report no follow-ups — silently, since a missing file is a legitimate skip.

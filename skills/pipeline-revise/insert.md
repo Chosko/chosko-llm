@@ -49,20 +49,20 @@ For the worked example — a task inserted after task N on a planned feature,
 which a runbook runs — in order:
 
 1. **The scope** — `/architect amend feature=<slug> "<the new scope>"`,
-   executed from `${CLAUDE_HOME:-$HOME/.claude}/skills/architect/amend.md` by
+   executed from `../architect/amend.md` by
    path, so the document promises the task before the task exists. Omitted
    when the document already promises it.
 2. **The task** — `/task-add feature=<slug> --single --after <N> "<the task>"`,
    attaching and placing it under the id `Last task number:` + 1, which the
    gate shows.
 3. **Each successor's `Preconditions:`** — through
-   `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/amend.md`,
+   `../task-engine/references/amend.md`,
    one step per successor that must now wait on the new task. Under
    `--before <N>` task N needs no step: `/task-add` writes that edge with the
    placement.
 4. **The runbook step** — `/runbook-create --append <id|name|id-name> --after <n>`
    (or `--before <n>`), the insert
-   `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/step-amend.md`
+   `../runbook-run/references/step-amend.md`
    § *Insert* names, placed so the step running the new task sits ahead of the
    steps running its successors. A `[RUNNING]` runbook accepts inserts after
    the current step and nothing before it — `step-amend.md`'s rule, which this

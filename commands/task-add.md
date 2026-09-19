@@ -1,6 +1,6 @@
 ---
 name: task-add
-version: 2.4.1
+version: 2.4.2
 type: command
 description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit and push. Pass --before <N> or --after <N> to write the new task at that position in TASKS.md together with the Preconditions: edge the position implies — no existing id moves. Pass feature=<slug> --single to attach exactly one task to a [PLANNED] feature without reconciling or re-planning it; on a project with FEATURES.md, a free-form run asks at its existing approval gate whether the task belongs to a feature. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, appending a final documentation-update task when new tasks were drafted, and setting the feature [PLANNED]. Whenever a drafted task names a document owned by another pipeline command, the PHASE 3 gate enumerates the reconciliations that task needs to make to it and asks the user to pre-authorise exactly those points, keep the file as a read-only reference, or drop it — the grant, the reference marker, or the removal is written into the task body so the implementer never has to ask. Pass --short for trivial low-ambiguity tasks to skip the deep PHASE 1 investigation and write a minimal Goal-only body (mutually exclusive with feature= and --single), --no-split to always write exactly one task, --no-commit to write the files but skip the commit (and push), or --no-push to commit without pushing.
 requires: skill:task-engine
@@ -60,7 +60,7 @@ $ARGUMENTS
 
 ARGUMENT NOTE — the `--no-commit` and `--no-push` flags, and everything they
 gate, are
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`.
+`../skills/task-engine/references/commit.md`.
 Scan `$ARGUMENTS` for them before PHASE 1 and strip whichever appear; what
 is left, after the flags below are stripped too, is the task description.
 Here NO_COMMIT false — the default — means PHASE 5 auto-commits as before.
@@ -164,7 +164,7 @@ Do this immediately after PHASE 0's setup check, before PHASE 1.
 PHASE 0 — SETUP CHECK (must pass before anything else)
 
 Backlog resolution follows
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`,
+`../skills/task-engine/references/resolution.md`,
 whose `/task-add` note carries every way this command departs from it: the
 two-artifact probe this phase makes rather than the index-only check the
 other three make, the wording of its not-initialised stop, and that the only
@@ -185,7 +185,7 @@ INDEX FILE FORMAT (`.claude/TASKS.md`)
 The index file's shape — the header, the `---` separators, the summary-block
 schema, which fields a block holds and which of them is optional, and why
 `Last task number` only ever increases — is
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`
+`../skills/task-engine/references/resolution.md`
 § *Index file format*. Emit exactly that shape.
 
 This command is the writer of new summary blocks and the only thing that
@@ -240,7 +240,7 @@ that `claude+human` / `human` and a `## Manual interventions` section always
 go together, and that section's shape — the ⚠ warning line, the numbered
 checkpoints each anchored to a trigger point and ending in a verifiable
 outcome, and the worked Unity example — are
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/targets.md`.
+`../skills/task-engine/references/targets.md`.
 Its `/task-add` note carries this command's half: it is the **only** writer
 of `Target:`, `claude` is its default, and it sets `claude+human` or `human`
 only alongside that section — never one without the other.
@@ -280,7 +280,7 @@ STATUS TAGS (the only allowed values, recorded in TASKS.md)
 
 The status vocabulary — the eight tags and what each means, which are
 terminal, and the legal transitions — is
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/status.md`. Its
+`../skills/task-engine/references/status.md`. Its
 `/task-add` note carries what this command does with them.
 
 Here a status is only ever something written onto a task this command
@@ -291,7 +291,7 @@ sets `[IN PROGRESS]` or `[DONE]`; during reconciliation it may write
 `[SKIP]` on a superseded task, or flip a `[STALE]` one back to `[MISSING]`.
 
 What `[STALE]` means, who sets it and who clears it, is
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/stale.md`. This
+`../skills/task-engine/references/stale.md`. This
 command is its clearer and never its writer: `/architect` sets the tag, and
 only a `feature=<slug>` reconciliation here resolves it.
 
@@ -587,7 +587,7 @@ overlapping work.
 The four-way classification itself, the standing preference for
 update-in-place over skip-and-replace, and the rule that `[DONE]` is
 untouchable are
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/stale.md`
+`../skills/task-engine/references/stale.md`
 § *Clearing it*. This command is the only feature that applies them.
 
 What is this command's own is when and how they are applied: classify EVERY
@@ -666,7 +666,7 @@ placement flags write it somewhere else, and each writes two things at once:
 **Why both halves, always together.** The position is for the human reading
 `TASKS.md` top to bottom; the edge is for the selectors, which pick work by
 appearance order *and* by satisfied `Preconditions:` —
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`
+`../skills/task-engine/references/resolution.md`
 § *Selectors*. A position without the edge lets a selector start the two
 tasks in the other order the moment both are eligible; an edge without the
 position leaves the file reading one order while the selectors follow
@@ -922,7 +922,7 @@ recorded either — the path simply does not appear in the body.
 
 **A carried-over Reference is already decided.** When a body is rewritten —
 reconciliation here, or an amendment under
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/amend.md` — a Hint
+`../skills/task-engine/references/amend.md` — a Hint
 that already carries the marker and survives the rewrite unchanged is not
 asked about again. That is what lets a Reference outlive the next
 reconciliation instead of being stripped by it. Two things are still new
@@ -1056,7 +1056,7 @@ PHASE 5 — COMMIT AND PUSH
 Commit and push gating — the flags, pull-at-start, staging by explicit path,
 one commit per unit of work, the push protocol, and what to do when a commit
 or a push fails — is
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`. Its
+`../skills/task-engine/references/commit.md`. Its
 `/task-add` note carries this command's own specifics: the four
 commit-message forms — single task, split, feature, attached — one commit each, exactly
 which paths PHASE 4 leaves to stage in each case, and that PHASE 5 is the only

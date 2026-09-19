@@ -124,4 +124,4 @@ task's own changes:
 - **`/task-add`, `/task-list`, `/task-clean`** — no dirty-tree check. They
   stage only the explicit paths they wrote (`/task-list` writes nothing at
   all), so a dirty tree cannot reach their commits — see
-  `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`.
+  `./commit.md`.

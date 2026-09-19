@@ -1,6 +1,6 @@
 ---
 name: pipeline-check
-version: 0.1.0
+version: 0.1.1
 type: command
 description: Report structural drift across the pipeline's indexes — FEATURES.md, TASKS.md, PLAN.md and RUNBOOKS.md — as findings grouped by artifact, each with its ERROR or WARNING severity and the one command that fixes it, closing on a count of both; a clean project prints one line. feature=<slug> scopes the report to that feature and to the tasks and plan edges that name it. An absent index drops its findings rather than failing the run. Read-only — writes nothing, creates nothing, commits nothing, flips no status, never opens a file under .claude/tasks/ (the archive included), .claude/runbooks/ or .claude/domain/features/, and runs no shell beyond the probe.
 requires: skill:pipeline-engine
@@ -30,14 +30,14 @@ THE ENGINE
 Everything this command evaluates is defined in `pipeline-engine` and read
 from it by path:
 
-- `${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/references/probes.md`
+- `../skills/pipeline-engine/references/probes.md`
   — the probe, its verdict line and the reuse rule;
-- `${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/references/graph.md`
+- `../skills/pipeline-engine/references/graph.md`
   — the edges between the indexes, and which vanish with an absent index;
-- `${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/references/lint.md`
+- `../skills/pipeline-engine/references/lint.md`
   — the finding catalogue: detection rules, severities, fix commands, output
   templates and the two failure rules;
-- `${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/references/routing.md`
+- `../skills/pipeline-engine/references/routing.md`
   — the owner each fix command routes to, and this command's own row.
 
 This command restates no probe, no edge and no finding. What follows is only

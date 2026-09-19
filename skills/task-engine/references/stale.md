@@ -62,7 +62,7 @@ design still applies, and nothing here decides that for them.
 A batch selector (`all` / `next`) skips stale tasks rather than asking,
 because each one needs a per-task judgment call and a batch run should not
 stop to ask — see
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`.
+`./resolution.md`.
 
 ## Clearing it
 

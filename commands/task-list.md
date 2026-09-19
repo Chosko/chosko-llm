@@ -1,6 +1,6 @@
 ---
 name: task-list
-version: 0.6.0
+version: 0.6.1
 type: command
 description: Print the project's task backlog as a compact summary, optionally filtered by status. Marks human-in-the-loop tasks (target claude+human or human) with a ⚠ so the user can see which tasks need them present, marks [STALE] tasks whose originating feature was re-architected, and shows the Feature: slug on feature-derived tasks. When the project has a .claude/PLAN.md, groups tasks by milestone in plan order — resolving each task's Feature: slug through the plan — and flags tasks whose feature is blocked with the blocker's name; with no plan, output is exactly what it has always been. Read-only — reads TASKS.md, and PLAN.md plus FEATURES.md when a plan exists, never the per-task body files.
 requires: skill:task-engine
@@ -32,7 +32,7 @@ $ARGUMENTS
 LOCATING THE BACKLOG
 
 Backlog resolution follows
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`,
+`../skills/task-engine/references/resolution.md`,
 whose `/task-list` note carries every way this command departs from it: the
 wording of the not-initialised stop, the no-writes / no-shell guarantee, and
 the ban on opening anything under `.claude/tasks/`.
@@ -55,7 +55,7 @@ are read-only, like `TASKS.md`.
 STATUS TAGS AND THE FILTER
 
 The status vocabulary, and how a status argument is accepted, are
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/status.md`. Its
+`../skills/task-engine/references/status.md`. Its
 `/task-list` note carries what this command adds: the `[STALE]` gloss and the
 padded status column.
 
@@ -132,7 +132,7 @@ groups, and the summary line of step 4 is unchanged and counts the whole
 WORKFLOW
 
 1. Read `.claude/TASKS.md` and parse it exactly as
-   `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`
+   `../skills/task-engine/references/resolution.md`
    § *Parsing the index* describes. `/task-list` uses every field named
    there, and displays the `Last task number: N` header value in the
    summary line so the user can see the highest ID ever assigned, even

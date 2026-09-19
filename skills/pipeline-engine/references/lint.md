@@ -125,7 +125,7 @@ ERROR   TASKS.md task <N> — Preconditions: <id> is [SKIP] → /pipeline-patch
 - **Needs.** `TASKS.md`.
 - **Fires when** following `Preconditions:` from a task leads back to it — a
   cycle in the sense
-  `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`
+  `../../task-engine/references/resolution.md`
   § *Eligibility* gives it. Each cycle is reported once, on whichever of its
   tasks appears first in `TASKS.md`.
 
@@ -149,7 +149,7 @@ WARNING FEATURES.md feature <slug> — [ITERATED]: re-architected, backlog not r
 - **Walks.** E3b, to name the feature in the message.
 - **Needs.** `TASKS.md`.
 - **Fires when** a summary block's `Status:` is `[STALE]`. What the tag means
-  is `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/stale.md`.
+  is `../../task-engine/references/stale.md`.
   With no `Feature:` line, the message says the originating feature is
   unrecorded.
 
@@ -192,7 +192,7 @@ slug.
 - **Fires when** an index block carries `Status: [PENDING]` together with
   `Steps: <n>/<n>` — done equal to total. **Derived from `RUNBOOKS.md` alone:**
   `Steps:` counts `[x]` steps only
-  (`${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`
+  (`../../runbook-run/references/runbook-schema.md`
   § *The index block*), so `<n>/<n>` says every step is done while
   `[PENDING]` says the runbook is still waiting to run. The block contradicts
   itself, and neither half needs the body to see it.
@@ -226,7 +226,7 @@ reader neither concludes they were forgotten nor adds them back.
 `/task-clean` moves a pruned body to `.claude/tasks/archive/<N>.md` and leaves
 the feature's `Tasks:` line intact, so that absence is the normal state of a
 cleaned feature and means **archived, terminal** — the rule is
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`
+`../../task-engine/references/resolution.md`
 § *The archive*. Reporting it would flag every cleaned feature on the first
 run against an archived backlog.
 

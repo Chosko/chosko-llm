@@ -1,6 +1,6 @@
 ---
 name: claude-council
-version: 0.1.0
+version: 0.1.1
 type: skill
 description: 'Pressure-test a high-stakes decision with a structured LLM Council — five thinking-lens advisors (Red Team, First Principles, Expansionist, Outsider, Executor), anonymised peer review, forced debate when consensus looks too clean, and a dual-chairman synthesis that preserves dissent. Triggers: /claude-council, "convene the council", "run this by the council", "council this", "pressure-test this", "stress-test this", "war room this", "debate this", "torn between two options", "this is a big decision", "I need outside perspectives". Not for factual questions, coding help, debugging, quick yes/no calls, or emotional support. Suffixes: "with codex", "deep", "quick". Secondary: /claude-council outcome <sha1> <note>, /claude-council meta.'
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent, AskUserQuestion
@@ -8,7 +8,27 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent, AskUserQuestion
 
 # LLM Council
 
-> **Install path assumption:** This skill assumes installation at `${CLAUDE_HOME:-$HOME/.claude}/skills/claude-council/` — where `chosko-llm add skill:claude-council` writes it. If installed elsewhere (e.g. under a plugin's own `skills/claude-council/` directory), adjust script paths in Steps 0, 2, and 10 accordingly.
+> **Install path assumption:** every path in this body — `./scripts/…`,
+> `./journal/…` — is relative to **this file's own directory**, wherever
+> `chosko-llm add skill:claude-council` wrote it (the global home, or
+> `$PWD/.claude` under `--local`). Never re-derive an absolute home path:
+> `CLAUDE_HOME` is repointed at install time only, so a body that expands it
+> at read time always lands on the global home and misses every `--local`
+> install. If the skill is installed somewhere else again (e.g. under a
+> plugin's own `skills/claude-council/` directory), the same rule still
+> holds — the scripts and the journal sit beside this file.
+>
+> **The `bash` lines in Steps 0, 2 and 10 run from the project root, not from
+> here**, so they cannot use those paths as written. Before the first one,
+> set `SKILL_DIR` to the absolute directory this file was read from:
+>
+> ```bash
+> SKILL_DIR=<the directory containing this SKILL.md>
+> ```
+>
+> Every fenced `bash` block below invokes its script through `$SKILL_DIR`.
+> The scripts themselves self-locate once given a correct path, so only the
+> path handed to `bash` matters.
 >
 > **Prerequisite:** `jq` must be on `PATH`. The Step 10 journal append and `/claude-council meta` both require it; the Step 2 journal lookup degrades to a warning without it. Everything else runs without `jq`.
 
@@ -20,8 +40,8 @@ Run any high-stakes decision through five structured thinking lenses, a peer-rev
 
 ## Step 0 — Handle special invocations first
 
-- `/claude-council outcome <sha1> <note>` — look up the run in `${CLAUDE_HOME:-$HOME/.claude}/skills/claude-council/journal/council-log.jsonl` by sha1 prefix, update its `outcome` field, and confirm. Done.
-- `/claude-council meta` — run `bash ${CLAUDE_HOME:-$HOME/.claude}/skills/claude-council/scripts/meta_analysis.sh` and surface the resulting amendment file path. Done. (Requires `jq`.)
+- `/claude-council outcome <sha1> <note>` — look up the run in `./journal/council-log.jsonl` (i.e. `"$SKILL_DIR/journal/council-log.jsonl"`) by sha1 prefix, update its `outcome` field, and confirm. Done.
+- `/claude-council meta` — run `bash "$SKILL_DIR/scripts/meta_analysis.sh"` and surface the resulting amendment file path. Done. (Requires `jq`.)
 - Any other invocation → continue to Step 1.
 
 ---
@@ -43,7 +63,7 @@ Reject and answer directly if ANY applies:
 Escape the raw question for safe shell passing: replace all single quotes with `'\''`, then wrap in single quotes. Store as `$ESCAPED_QUESTION`. Never pass raw user text directly to bash — `$(...)`, backticks, and `\` sequences in the question would execute.
 
 ```bash
-bash ${CLAUDE_HOME:-$HOME/.claude}/skills/claude-council/scripts/journal_search.sh "$ESCAPED_QUESTION"
+bash "$SKILL_DIR/scripts/journal_search.sh" "$ESCAPED_QUESTION"
 ```
 
 If ≥1 prior run matches on sha1-prefix or keyword overlap: surface a one-line summary ("Related council on DATE — recommended X — outcome: Y") and inject up to 2 prior verdicts as **"Prior council context"** in the framed question.
@@ -298,7 +318,7 @@ PAYLOAD=$(jq -n \
     chairman_confidence:$chair_conf, recommendation_one_liner:$rec,
     dissent_ledger:$dissent, html_path:$html, transcript_path:$transcript,
     outcome:null}')
-bash ${CLAUDE_HOME:-$HOME/.claude}/skills/claude-council/scripts/journal_append.sh "$PAYLOAD"
+bash "$SKILL_DIR/scripts/journal_append.sh" "$PAYLOAD"
 ```
 
 Where the shell variables are set from the run's outputs:

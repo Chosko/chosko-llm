@@ -1,6 +1,6 @@
 ---
 name: task-engine
-version: 0.5.2
+version: 0.5.3
 type: skill
 description: Reference library for the task-* features — one authority per rule they share. Eight files under references/ own backlog resolution, the TASKS.md schema, the task archive and the eligibility clause by which next / all honour Preconditions:, the status vocabulary and its transitions, Target: values and the delegation guard, [STALE] handling, the dirty-tree prompt protocol, commit/push gating with --no-commit / --no-push, the review cost controls behind --review-model / --review-effort, and the protocol for amending one existing task. NOT a skill the user invokes and never a skill to suggest — it takes no arguments, runs nothing, and produces no output; /task-add, /task-list, /task-clean, /task-implement and /task-review read its files by path while they run, the pipeline revision surfaces /pipeline-patch and /pipeline-revise read references/amend.md by path, and only they should ever open it.
 ---
@@ -16,13 +16,22 @@ description: Reference library for the task-* features — one authority per rul
 > read `references/amend.md` by path, and those files are the only content
 > here.
 
-> **Install path assumption:** this skill assumes installation at
-> `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/` — where
-> `chosko-llm add skill:task-engine` writes it. A feature that reads a file
-> here names it as
-> `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/<file>.md`,
-> never as a hardcoded home path — the `CLAUDE_HOME` override has to keep
-> working.
+> **Install path assumption:** this skill installs beside the features that
+> read it — `chosko-llm add skill:task-engine` writes it under the same home
+> those features are installed into, whichever home that is. So a feature
+> names a file here by a path **relative to its own body**, never by an
+> absolute home path: `../task-engine/references/<file>.md` from another
+> skill's `SKILL.md`, `../../task-engine/references/<file>.md` from another
+> skill's reference file, `../skills/task-engine/references/<file>.md` from a
+> command, and `./<file>.md` between two files in this skill.
+>
+> That is scope-proof by construction. `CLAUDE_HOME` still governs where
+> `install.sh` and the `scripts/cmd-*.sh` verbs *write* — including
+> `--local`, which repoints the whole home to `$PWD/.claude` — but a shipped
+> body cannot re-derive it at run time, because the executing agent expands
+> `${CLAUDE_HOME:-$HOME/.claude}` itself and always lands on the global home.
+> Citing body and cited file are always siblings under one root, so a
+> relative path is correct in either scope with no probing and no fallback.
 
 ---
 

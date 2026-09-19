@@ -147,15 +147,18 @@ skills/runbook-run/
     step-amend.md                 amending one step: strike, insert, Context: facts
 ```
 
-Consumers cite them by installed path, honouring the `CLAUDE_HOME` override rule
-rather than hardcoding `~/.claude`:
+Consumers cite them by a path relative to the citing body, never by an absolute
+install home — that is the only form correct under both a global and a
+`--local` install:
 
 ```
-${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md
+./references/runbook-schema.md              from skills/runbook-run/SKILL.md
+../runbook-run/references/runbook-schema.md from another skill's SKILL.md
+../skills/runbook-run/references/…          from a command
 ```
 
 This is the pattern the vendored `claude-council` skill already uses for its own
-install location, and the one `shared-phase-engine` generalizes.
+files, and the one `shared-phase-engine` generalizes.
 
 This suite needed two reference files, not three. The prompt-quality rules stay
 in `runbook-create`'s body: they have exactly one consumer, and a shared file
@@ -1156,8 +1159,8 @@ Hard contracts:
 - No step is ticked before its subagent's result has actually arrived.
 - Never two concurrent runs of one runbook.
 - No step invokes `/runbook-run`.
-- Shipped bodies reference `${CLAUDE_HOME:-...}` paths, never `~/.claude`, and
-  never any path under `docs/`.
+- Shipped bodies cite another shipped file by a path relative to themselves,
+  never by an absolute install home and never under `docs/`.
 
 All seven artifacts need `name`, `version`, `type`, `description` frontmatter per
 [docs/authoring-guide.md](../../../docs/authoring-guide.md), starting at

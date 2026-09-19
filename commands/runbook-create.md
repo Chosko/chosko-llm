@@ -1,6 +1,6 @@
 ---
 name: runbook-create
-version: 0.8.1
+version: 0.8.2
 type: command
 description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/<id>-<name>.md, plus its .claude/RUNBOOKS.md index block — or append steps to one that already exists, including one a run is in the middle of. An append goes at the foot by default; with --before <step> or --after <step> the new steps are written at that position in the list instead, still taking the next unused step id, because a step's id is a stable identifier and not its position — no existing step is ever edited or renumbered. Takes every step id from the body header's monotonic Last step number: counter rather than from max() over the headings present, writes that counter on a new runbook, advances it on an append, and backfills it in place on a body written before the field existed. Assigns each new runbook the next id from the index's Last runbook number: counter, which every other runbook- command then accepts in place of the name. Authors each step's optional Needs: line (agent / agent+human / human, absent meaning agent) so a reader can see before starting which steps need a person, and calls those steps out at the confirmation gate. Refuses a new name that is already taken, or whose first kebab segment is all digits, with one suggested alternative. Two axes: where the steps go (a new runbook, --append <id|name|id-name>, which renames a legacy <name>.md body to <id>-<name>.md unless that runbook is running, --append with no name for the runbook this session is running, or no arguments at all, which asks) and where the material comes from (the current conversation's most recent follow-up list, the default; or a free-form description gathered through one batched interview). Enforces ten prompt-quality rules against every step before writing — self-contained, names the document to read first, carries every decision that exists nowhere on disk and nothing that already does, states its sequencing and what must not be re-proposed, uses real slash commands, references no path missing at run time, produces one deliverable, never invokes /runbook-run, and prefers two steps to one that would need a nested spawn — fixing failures and naming each fix in the confirmation report. The gate shows the proposed shape only, never the full prompts. Commits and pushes what it wrote by default, since a runbook is read by the next session and its review happens at the gate; pass --no-commit to leave it uncommitted, or --no-push to commit without pushing. --commit is accepted and changes nothing.
 requires: skill:runbook-run
@@ -84,7 +84,7 @@ THE ARTIFACT
 
 The store, the body schema, the four step markers, the `Done:` line, the
 four-status vocabulary and the index block are all specified in
-`${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`.
+`../skills/runbook-run/references/runbook-schema.md`.
 Read it before parsing or writing either file, and emit exactly the shapes it
 gives. **Nothing about the artifact is restated here** — a second copy is the
 copy that drifts.
@@ -180,7 +180,7 @@ going to look. Nothing is gathered and nothing is written.
 the target — after the pull at start, and before any material is
 gathered — apply the check in `runbook-schema.md` § *The store* to the target's
 block. On a hit, read
-`${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/body-migration.md`
+`../skills/runbook-run/references/body-migration.md`
 and migrate the body as it says; on no hit that file is never opened. A
 `[RUNNING]` target is **never migrated**, under any flag: it is appended to at
 its current `File:` path. A target path that is already taken stops the run
@@ -605,7 +605,7 @@ DO NOT:
 - Accept a new name that is taken or whose first kebab segment is all digits.
 - Restate the body schema, the step markers, the status vocabulary or the
   index block in this body. They are
-  `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`,
+  `../skills/runbook-run/references/runbook-schema.md`,
   cited and never copied.
 - Show the full prompts back at the confirmation gate. Shape only.
 - Fix a rule failure silently. Every fix is named in the report.

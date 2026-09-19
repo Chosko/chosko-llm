@@ -54,9 +54,11 @@ Deliberately out:
 Built on the existing markdown-prompt stack per `technical-direction.md`. A
 shared file can only ship inside a skill folder, so the engine is a skill,
 non-invocable in the same way `task-engine` is, and its consumers declare
-`requires: skill:pipeline-engine`. Every consumer reads it at the
-`${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/references/` path and
-never a `docs/` path.
+`requires: skill:pipeline-engine`. Every consumer reads it at a
+`pipeline-engine/references/` path written relative to the consumer's own body
+— `../skills/pipeline-engine/references/<file>.md` from a command,
+`../pipeline-engine/references/<file>.md` from another skill's `SKILL.md` —
+never an absolute install home and never a `docs/` path.
 
 ### The reference files
 
