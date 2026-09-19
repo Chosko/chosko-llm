@@ -360,7 +360,7 @@ The build commands commit and push by default (`--no-commit`, `--no-push`).
 
 ## 6. Work across sessions
 
-Three features solve one problem: a conversation ends and its context dies
+Four features solve one problem: a conversation ends and its context dies
 with it.
 
 **Runbooks** are for work not yet done. A design conversation ends with
@@ -383,6 +383,19 @@ prune removes the finished **steps** from one live runbook, recording their ids
 on an `Archive:` line so a surviving `Depends on:` still resolves, while clean
 removes finished **runbooks** — and `runbook-suggest` fires on its own when a
 conversation produces a list worth capturing.
+
+**`/follow-ups`** is for what the conversation is about to lose. It reads the
+session and lists what would go with it — actions proposed but never executed,
+outcomes never recorded on disk, decisions taken here and written down nowhere
+— as a numbered list, each item a slash command plus a short "to …" wherever
+one fits. The alternative answer is the single line `No follow-ups left`, and
+that is a guarantee rather than a shrug: the session can be quit without
+information or operation loss. Work already tracked on disk is never a
+follow-up; a task created here and not yet appended to the running runbook is.
+It takes no arguments, opens no project file and writes nothing, and
+`/runbook-run` and `/task-implement` call it once at the end of every run — at
+a bound, a user-requested stop and a failure halt as much as at completion — so
+a run never ends leaving unrecorded work visible only in the transcript.
 
 **Session handoffs** are for work in flight. **`/session-save`** writes what
 this conversation knows into `.claude/sessions/`: what was tried and failed,

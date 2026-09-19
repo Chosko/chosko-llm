@@ -2,6 +2,52 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.56.3 — 2026-09-19
+
+- Fixed a scope bug in 1.56.2: the `--agents` hand-off prompt told the delegated agent to read `${CLAUDE_HOME:-$HOME/.claude}/commands/follow-ups.md`, a path that only ever resolves to the **global** install. `chosko-llm add --local` repoints `CLAUDE_HOME` to `$PWD/.claude` at install time, so a project that installed `/follow-ups` locally would have had every delegated agent find nothing there and report no follow-ups — silently, since a missing file is a legitimate skip.
+- The agent is now given the command's **name and never a path**, which resolves in either scope, and the reason is recorded beside it so the path does not come back. `/task-implement`'s DO NOT list names the command's own body, rather than a repo path, as the single authority for what counts as a follow-up.
+
+## 1.56.2 — 2026-09-19
+
+- Under `--agents`, a delegated agent now **reads `/follow-ups`' rules rather than invoking the command** to populate the fifth return field. It opens `commands/follow-ups.md` at its installed path and applies what is there to its own session, keeping at most three items. The rules stay stated once, in that file, exactly as in 1.56.1 — only the mechanism changed.
+- Two things this buys. The rule that `/follow-ups` fires **once per run, never per task** is whole again: nothing invokes the command but the run's own closing call, so 1.56.1's carve-out in the DO NOT list is gone and the bullet is a flat prohibition once more. And the field now degrades where an invocation would not — a user who removed the command by hand leaves the agent with nothing to read, and it skips the field silently, the same rule the closing call already follows. A missing optional input never fails a task.
+
+## 1.56.1 — 2026-09-19
+
+- The `--agents` return contract's fifth field is now **`/follow-ups`' output** rather than a bespoke format. Each delegated agent runs the command on its own session — which for a delegated agent is exactly the one task — and returns its list, capped at three items. 1.56.0 had restated the command's reading rule, its exclusion rule and its item format inside the contract; those are now stated once, in `commands/follow-ups.md`, and cited from the contract. A second copy is a copy that would drift.
+- Only two bounds remain the channel's own, and they are named as such: the cap of three, which protects the parent's context rather than redefining a follow-up, and omission when the list is empty. The `--review` carve-out also got shorter — no rule is needed to keep findings out of the field, because the command's own exclusion rule already does.
+- `/task-implement`'s DO NOT list now draws the line explicitly: a delegated agent running `/follow-ups` on its own session is **not** the run's closing call, which is still once per run in the parent, after the closing report. It produces one of that call's inputs, in a session the parent never sees, and emits nothing to the user. A second bullet forbids restating what counts as a follow-up anywhere in the skill.
+
+## 1.56.0 — 2026-09-19
+
+- **/task-implement --agents**: the per-agent return contract gains a fifth, optional field — **at most three one-line follow-ups**. Each agent may now report what its task left *unrecorded on disk* and would otherwise lose with its context, written the way `/follow-ups` writes an item: a slash command plus a short "to …" where one fits. This is what makes the run's closing `/follow-ups` call worth anything in a delegated run; before it, the four fields carried no narrative and an agent's "this left something behind" died with the agent.
+- The field is deliberately narrow, and empty on almost every task. The same exclusion rule `/follow-ups` states applies: work already tracked on disk is not a follow-up, so a task the agent created, a commit it made and a status it flipped are all excluded. Three bounds keep it from becoming the narrative channel the other four fields refuse to be — one line each, at most three, and omitted entirely when there are none. A fifty-task run still leaves the parent holding fifty short rows.
+- The parent records the lines, folds them into the closing list attributed to the task they came from, and does nothing else with them: it never acts on one mid-run, never re-words one into a judgement it cannot support, and never verifies one — it did not open the task. A follow-up line is never a reason to halt a run.
+- `--review` is unchanged: a finding is still never a follow-up and no report, triage table or rejection ledger travels up. The one thing from a review loop that legitimately reaches the new field is a deferral `/task-iterate` noted should become a task, where none was authored — an unwritten task, not a finding.
+
+## 1.55.2 — 2026-09-19
+
+- **/task-implement**'s frontmatter `description:` is folded onto one physical line. It had grown across ten lines, and the CLI's frontmatter parser keeps only the first — so `chosko-llm show task-implement` had been silently truncating the description at the feature-completion clause, hiding the delegation, `--review`, review-budget and closing-call paragraphs from anyone reading it there. No wording changed; only the line breaks are gone.
+
+## 1.55.1 — 2026-09-19
+
+- **/task-implement**'s closing-call section no longer implies that a `--agents` run's follow-up list draws much from the agents. The four-field return contract carries no narrative, so an agent's own "this left something behind" never reaches the parent; the section now says that plainly and points at the launcher's own conversation — the delegation split, tasks skipped for unmet preconditions, failure lines, declined feature slugs — as the substantive half. The return contract is unchanged.
+- **/runbook-run**'s closing-call section attributed a sentence to its own reads-and-writes contract that is not in it. Corrected to the real one: reading a step's result opens no file and happens at step 7 anyway, so the "reads three files" contract and the spawn relay's never-read-a-relay-file rule are both untouched.
+
+## 1.55.0 — 2026-09-19
+
+- **/runbook-run** and **/task-implement** now end every run with one **/follow-ups** call, after the run's own closing report and after the last commit. A run no longer ends leaving unrecorded work visible only in the transcript.
+- It fires **once per run, never per step and never per task**, and at every point a run stops — not only at completion. For `/runbook-run` that is a `--to` / `--only` / `--steps` bound, a user-requested stop after a step (even with no bound to it) and a failure halt, as well as the runbook finishing. For `/task-implement` it is the end of the run whatever it resolved to (`<N>...`, `all`, `next`), a user-requested stop between tasks and a failure halt — and it comes *after* the feature-completion proposal, which can itself leave a slug `[PLANNED]`.
+- In `/runbook-run`'s default spawned mode the orchestrator's reading covers the step subagents' result reports as well as its own conversation — already in hand from the step it just classified, so it opens no file and the "reads three files" contract is untouched. `--inline` is unchanged. Under `/task-implement --agents` the parent likewise reads the per-agent returns it already collects, and the return contract is unchanged.
+- The call adds no commit, flips no status and runs after the index `Status:` and the final commit are already written, so it never dirties a tree a run just cleaned. Both skills declare `requires: command:follow-ups` and skip the call silently when the command is not installed — an absent optional closing step is not a run failure.
+
+## 1.54.0 — 2026-09-19
+
+- New command **/follow-ups** — reads the current conversation and lists what would be lost if it ended now: actions proposed but never executed, outcomes never recorded on disk, decisions taken in conversation and written down nowhere. It answers with exactly `No follow-ups left` or with a numbered list, and an empty list is a guarantee — the session can be quit without information or operation loss.
+- Each item is written as a slash command plus a short "to …" explanation wherever a command fits, so a follow-up is executable rather than merely noted. The numbering is the handle: replying "execute 1 and 2" is ordinary conversation, not something the command implements.
+- Work already tracked on disk is never a follow-up — a runbook that already holds the remaining steps leads the next session to them by itself. A task created in the conversation but not yet appended to the running runbook is one, because nothing on disk connects it to the work in flight.
+- Read-only and argument-free: it opens no project file, writes nothing, commits nothing, and invokes no other command.
+
 ## 1.53.2 — 2026-09-17
 
 - **/runbook-describe**'s header-line paragraph no longer reads as though `Created:`/`Source:`/`Model:` were the only header fields the command ever prints. It is now scoped to that one line and points at the `Archive:` line below it, so an executing agent that stops reading at that paragraph is not left with a rule the next paragraph contradicts.

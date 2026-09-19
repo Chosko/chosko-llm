@@ -36,7 +36,8 @@ Deliberately out:
 - **Changing what a task run does.** Steps 1–7 are identical. This is a change
   to who reads what, not to the implementation flow.
 - **Removing the parent's summary duties.** Feature-completion proposals,
-  batched to the end of the run, still happen in the parent.
+  batched to the end of the run, still happen in the parent — and so does the
+  closing `/follow-ups` call the run makes once, after that proposal.
 
 ## Architecture
 
@@ -74,8 +75,12 @@ flags for the run, and the instruction to proceed as if invoked directly:
 Implement task <n> from this project's backlog using /task-implement.
 Flags for this run: <resolved flag list>.
 Read the task body, CLAUDE.md, and .claude/context/ yourself — you have not
-been given them. Report back only: task number, terminal status, commit hash
-if you committed, and a one-line failure reason if you did not.
+been given them. When you are finished, read the /follow-ups command's own
+body and apply its rules to this session, keeping at most three items; do not
+invoke the command, and skip this if it is not available to you.
+Report back only: task number, terminal status, commit hash if you committed,
+a one-line failure reason if you did not, and that list, omitted when it is
+empty.
 ```
 
 The prompt is O(1) in the number of tasks and O(1) in task size. A fifty-task
@@ -96,13 +101,46 @@ delegated flow and the manual flow stop being two things that can drift apart.
 
 ### What the parent accumulates
 
-Per returned agent: task number, terminal status, commit hash, and a one-line
-failure reason if it failed. Nothing else. The parent's context after a
-fifty-task run is fifty short rows.
+Per returned agent: task number, terminal status, commit hash, a one-line
+failure reason if it failed, and at most three follow-ups derived by applying
+`/follow-ups`' rules to its own session. Nothing else. The fifth field applies
+that command's rules rather than defining a format of its own: what counts as
+a follow-up and what is excluded are stated once, in the command's own body,
+and deliberately not restated in the contract, so the two cannot drift apart.
+The agent is handed the command's **name and never a path** — `--local`
+installs into `$PWD/.claude` instead of the global home, so no path written
+into a shipped body resolves in both scopes, and one that named the global
+`commands/follow-ups.md` would silently report no follow-ups on every project
+that installed the command locally.
+
+The agent **reads** those rules rather than invoking the command, which buys
+two things. Invoking would be a per-task `/follow-ups` call, and the rule that
+the closing call fires once per run stays whole. And a read degrades cleanly
+where an invocation would not: a user who removed the command by hand leaves
+nothing to read, and the agent skips the field silently — the same rule the
+closing call follows — instead of failing a task over a missing optional
+input.
+
+The parent's context after a fifty-task run is still fifty short rows, because
+the command's own exclusion rule empties the field on almost every task. Two
+bounds are the channel's rather than the command's, and only two: a cap of
+three items, which exists to protect the parent's context and not to redefine
+a follow-up, and omission when the list is empty.
 
 Failure handling is unchanged: a failed agent stops the run without spawning
 the next, and the parent reports which tasks completed with hashes, which failed
 and what the agent said, and which were never attempted.
+
+Those rows are also what the run's closing `/follow-ups` call reads, alongside
+the parent's own conversation: the per-agent result reports are already in
+hand, so the call is not skipped under `--agents` and opens nothing new. The
+fifth field exists for that call and feeds nothing else — the parent records
+it, never acts on it mid-run, and never verifies it, since it did not open the
+task and is in no position to. A follow-up line is therefore never a reason to
+halt a run. Where the user then asks to
+execute or plan a listed follow-up that came from a delegated agent, the parent
+may forward it to that same agent where that is convenient. Judgement, not a
+rule, and not a new relay protocol.
 
 ### Interaction with `--review`
 

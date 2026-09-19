@@ -1,8 +1,9 @@
 ---
 name: runbook-run
-version: 0.12.0
+version: 0.13.1
 type: skill
-description: Execute a runbook — an ordered list of self-contained prompts under .claude/runbooks/<id>-<name>.md, opened at the path its index block's File: line holds — by walking it top to bottom (list position is the order; a step's number is a stable id, not its position), by default spawning one fresh subagent per step, relaying that subagent's questions to the user and the user's answers back to the same subagent, recording what each step actually did in a Done: line, and committing the runbook and its .claude/RUNBOOKS.md index after every step. Steps run one at a time, never in parallel. In the default mode the orchestrator reads only CLAUDE.md, the runbook and the index, writes only the runbook and the index, and never does a step's work — every other change in the tree is made by a subagent, and it never reviews or second-guesses one. The one opt-in exception is --inline, under which the orchestrating session executes each selected step itself: bookkeeping (selection, markers, Done: lines, the index, fact propagation, commit cadence) is unchanged and records nothing about the mode, while an execution phase replaces spawn-and-wait under a fixed inline rule set in references/inline-contract.md (the brief is the authority, records win over memory, facts are still written down, questions are asked directly, a wanted child is spawned one level down and never done inline); --inline is refused beside --relay-spawns or --model, and the header Model: is not applied. Usage: /runbook-run <id|name|id-name> — the numeric id the index assigns each runbook, its kebab-case name, or the two joined as in its body's file name, resolved by the schema's rule — with --from N to begin selection at step N, --to N to stop after step N (the two compose into --from X --to Y, an inclusive range), --only N to run exactly one step, --steps N to run at most N steps in this run and then stop the way a --to bound does (composes with --from, refused beside --to or --only), --model <model> to override the runbook's header model for this run, --inline to execute the selected steps in this session instead of in subagents (composes with every selection and commit flag), --relay-spawns to force the spawn relay for a whole run, and --no-commit / --no-push with their usual meanings. Where a subagent cannot spawn a subagent — cloud sessions among them — a step's agent ends its turn with SPAWN REQUEST naming a prompt file and a result file under the OS temp dir; the orchestrator spawns that child at its own nesting level, waits for it, and tells the caller the result is ready, without ever opening either file. A legacy body at .claude/runbooks/<name>.md is renamed to <id>-<name>.md lazily, in Resolve and in the run's first step commit, never while the runbook is [RUNNING], per references/body-migration.md, which is read only when that check fires. Also carries, in references/, the files the rest of the runbook suite and the pipeline revision surfaces read by path: runbook-schema.md (the asset kind — store, File: as the body's path, the three-form id|name|id-name resolution rule and the migration check, body schema, step markers, status vocabulary, the optional per-step Needs: field, the index block with its id and Last runbook number: counter, and the backfill an index written before ids gets from the first command that writes it), subagent-contract.md (the OPERATING RULES block pasted verbatim into every spawned prompt, with its three placeholders <RUNBOOK>, <N> and <FILE>), body-migration.md (the lazy rename protocol, read only by /runbook-run and /runbook-create --append) and step-amend.md (the rules for amending one pending step — strike it as [x] with a Done: line opening struck and no commit sha, never deleted or renumbered; insert through /runbook-create --append --before / --after; add dated Context: facts — with the prompt block immutable, so a wrong prompt is struck and a corrected step inserted, and a [RUNNING] runbook accepting changes only after its current step).
+description: Execute a runbook — an ordered list of self-contained prompts under .claude/runbooks/<id>-<name>.md, opened at the path its index block's File: line holds — by walking it top to bottom (list position is the order; a step's number is a stable id, not its position), by default spawning one fresh subagent per step, relaying that subagent's questions to the user and the user's answers back to the same subagent, recording what each step actually did in a Done: line, and committing the runbook and its .claude/RUNBOOKS.md index after every step. Steps run one at a time, never in parallel. In the default mode the orchestrator reads only CLAUDE.md, the runbook and the index, writes only the runbook and the index, and never does a step's work — every other change in the tree is made by a subagent, and it never reviews or second-guesses one. The one opt-in exception is --inline, under which the orchestrating session executes each selected step itself: bookkeeping (selection, markers, Done: lines, the index, fact propagation, commit cadence) is unchanged and records nothing about the mode, while an execution phase replaces spawn-and-wait under a fixed inline rule set in references/inline-contract.md (the brief is the authority, records win over memory, facts are still written down, questions are asked directly, a wanted child is spawned one level down and never done inline); --inline is refused beside --relay-spawns or --model, and the header Model: is not applied. Usage: /runbook-run <id|name|id-name> — the numeric id the index assigns each runbook, its kebab-case name, or the two joined as in its body's file name, resolved by the schema's rule — with --from N to begin selection at step N, --to N to stop after step N (the two compose into --from X --to Y, an inclusive range), --only N to run exactly one step, --steps N to run at most N steps in this run and then stop the way a --to bound does (composes with --from, refused beside --to or --only), --model <model> to override the runbook's header model for this run, --inline to execute the selected steps in this session instead of in subagents (composes with every selection and commit flag), --relay-spawns to force the spawn relay for a whole run, and --no-commit / --no-push with their usual meanings. Where a subagent cannot spawn a subagent — cloud sessions among them — a step's agent ends its turn with SPAWN REQUEST naming a prompt file and a result file under the OS temp dir; the orchestrator spawns that child at its own nesting level, waits for it, and tells the caller the result is ready, without ever opening either file. A legacy body at .claude/runbooks/<name>.md is renamed to <id>-<name>.md lazily, in Resolve and in the run's first step commit, never while the runbook is [RUNNING], per references/body-migration.md, which is read only when that check fires. Also carries, in references/, the files the rest of the runbook suite and the pipeline revision surfaces read by path: runbook-schema.md (the asset kind — store, File: as the body's path, the three-form id|name|id-name resolution rule and the migration check, body schema, step markers, status vocabulary, the optional per-step Needs: field, the index block with its id and Last runbook number: counter, and the backfill an index written before ids gets from the first command that writes it), subagent-contract.md (the OPERATING RULES block pasted verbatim into every spawned prompt, with its three placeholders <RUNBOOK>, <N> and <FILE>), body-migration.md (the lazy rename protocol, read only by /runbook-run and /runbook-create --append) and step-amend.md (the rules for amending one pending step — strike it as [x] with a Done: line opening struck and no commit sha, never deleted or renumbered; insert through /runbook-create --append --before / --after; add dated Context: facts — with the prompt block immutable, so a wrong prompt is struck and a corrected step inserted, and a [RUNNING] runbook accepting changes only after its current step). Every run ends with one /follow-ups call — after the closing report and after the last commit, at completion, at a --to / --only / --steps bound, at a user-requested stop and at a failure halt alike — reading the step subagents' result reports as well as the orchestrator's own conversation; the call is skipped silently when /follow-ups is not installed.
+requires: command:follow-ups
 ---
 
 # /runbook-run
@@ -370,6 +371,9 @@ step in the whole runbook is now `[x]` (then it is `[DONE]` by the completion
 rule above), and report how many steps ran, a line per step as above, and which
 steps remain.
 
+Whichever of those three ended the run, the closing report is not the last
+thing the run does — CLOSING THE RUN is.
+
 ---
 
 ## THE INLINE MODE
@@ -531,7 +535,9 @@ propagate facts (below).
 
 Do not retry the step, do not attempt the work yourself, and do not continue
 to the next step. Report to the user: which step failed, the reason, what the
-agent said, and which steps were never started.
+agent said, and which steps were never started. Then make the closing
+call — a halted run is a run that ended, and it is the one most likely to
+strand unrecorded work. See CLOSING THE RUN.
 
 ---
 
@@ -859,6 +865,54 @@ dirty-tree prompt, answered `proceed` — see `inline-contract.md`.
 
 ---
 
+## CLOSING THE RUN
+
+**Every run ends with one `/follow-ups` call.** It fires **once per run —
+never per step** — after the run's own closing report is printed, and it is
+the last thing the run does.
+
+It fires at every point a run stops, not only at completion:
+
+- when no `[ ]` steps remain and the index went `[DONE]`;
+- at a `--to`, `--only` or `--steps` bound;
+- at a failure halt — the `[!]` marker and the index `[FAILED]`;
+- when the user asks to stop after a step mid-run, **even when the run
+  carried no bound to that step**.
+
+A single-step run is not a special case: the end of the one step is the end
+of the run.
+
+**What the reading covers.** In the default spawned mode, the orchestrator
+reads its own conversation *and the step subagents' result reports* — agents
+routinely name their own follow-ups there, and that report is the
+orchestrator's only window onto the step. No file is opened to get them, so
+WHAT THIS SKILL READS AND WRITES' "It reads three files" is untouched: a
+step's result is already in hand by then — step 7 classifies it and the
+`Done:` line is written from it. THE SPAWN RELAY's rule against reading a
+child's output is about the relay's request and result *files*, which this
+never touches. Under `--inline`
+nothing changes — there are no step reports, and the session's own
+conversation is the whole reading.
+
+Where the user then asks to execute or plan one of the listed follow-ups
+that came from a step subagent, forwarding it to that same subagent is often
+the convenient thing to do, and is allowed. Judgement, not a rule — this is
+not a new relay protocol and adds no round to the cap.
+
+**It changes no bookkeeping.** The call sits outside COMMIT CADENCE: it adds
+no commit, and it runs after the index `Status:` (`[DONE]` / `[FAILED]` /
+`[PENDING]`) and the run's final commit are already written, so it never
+dirties a tree the run just cleaned. The `[~]`-marker rule and the Stop-hook
+reply are untouched.
+
+**When `/follow-ups` is not installed, skip the call silently.** The
+frontmatter declares `requires: command:follow-ups`, so the dependency
+helpers install it alongside this skill; a user who removed it by hand gets
+no message and no error. An absent optional closing step is not a run
+failure.
+
+---
+
 ## DO NOT
 
 - Treat a spawn call's return value as the step's result — or a relayed
@@ -898,6 +952,10 @@ dirty-tree prompt, answered `proceed` — see `inline-contract.md`.
   re-state something an earlier step already settled.
 - Compress a draft at an approval gate.
 - Classify an ambiguous report as success.
+- Call `/follow-ups` per step. It is once per run, after the closing report —
+  see CLOSING THE RUN.
+- Skip the closing call because the run stopped at a bound, was stopped by the
+  user, or halted on a failure. Those are the runs that most need it.
 - Spawn a step whose prompt invokes `/runbook-run`.
 - Weaken a `Depends on:` because `--from`, `--to`, `--only` or `--steps` was
   passed.
