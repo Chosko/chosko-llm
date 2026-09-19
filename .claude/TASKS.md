@@ -105,7 +105,7 @@ Preconditions: 236
 
 ## 238. Document `/follow-ups` and the runners' closing call
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, .claude/domain/features/runbook-suite.md, .claude/domain/features/task-implement-launcher.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 236, 237

@@ -36,7 +36,8 @@ Deliberately out:
 - **Changing what a task run does.** Steps 1–7 are identical. This is a change
   to who reads what, not to the implementation flow.
 - **Removing the parent's summary duties.** Feature-completion proposals,
-  batched to the end of the run, still happen in the parent.
+  batched to the end of the run, still happen in the parent — and so does the
+  closing `/follow-ups` call the run makes once, after that proposal.
 
 ## Architecture
 
@@ -103,6 +104,14 @@ fifty-task run is fifty short rows.
 Failure handling is unchanged: a failed agent stops the run without spawning
 the next, and the parent reports which tasks completed with hashes, which failed
 and what the agent said, and which were never attempted.
+
+Those rows are also what the run's closing `/follow-ups` call reads, alongside
+the parent's own conversation: the per-agent result reports are already in
+hand, so the call is not skipped under `--agents` and opens nothing new — the
+four-field return contract is unchanged by it. Where the user then asks to
+execute or plan a listed follow-up that came from a delegated agent, the parent
+may forward it to that same agent where that is convenient. Judgement, not a
+rule, and not a new relay protocol.
 
 ### Interaction with `--review`
 

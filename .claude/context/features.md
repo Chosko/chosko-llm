@@ -357,6 +357,11 @@ Currently shipped:
   (non-current body schema), `delegated-runs.md` (2+-task run user delegated to subagents),
   and `review-rounds.md` (`--review` passed; read once after argument
   parsing, before the first task, never otherwise).
+  Also declares `requires: command:follow-ups`, for the closing `/follow-ups`
+  call its CLOSING THE RUN section makes once per run — after the
+  feature-completion proposal, at a user-requested stop between tasks and at a
+  failure halt too, reading the per-agent returns under `--agents`, adding no
+  commit and skipped silently when the command is absent.
   Reads each task's body file from `.claude/tasks/<N>.md` only when
   needed, treats it as primary context source — only fans out to
   CLAUDE.md and context layer when body doesn't cover what's
@@ -1296,8 +1301,16 @@ Currently shipped:
   `[RUNNING]`; a taken target path stops, never overwritten; non-git VCS
   mapping), is read ONLY by `/runbook-run` and `/runbook-create --append`, and
   only after the schema's one-sentence check finds a `File:` file name not
-  beginning `<id>-`. No sweep, no migration script. No `requires:` — it IS the
-  dependency. **Ids**: every runbook carries one beside its kebab-case name,
+  beginning `<id>-`. No sweep, no migration script. It IS the dependency
+  the rest of the runbook suite declares — and declares one itself,
+  `requires: command:follow-ups`, for the closing `/follow-ups` call its
+  CLOSING THE RUN section makes once per run (completion, a `--to`/`--only`/
+  `--steps` bound, a user-requested stop after a step, or a failure halt),
+  after the closing report and the final commit, adding no commit and skipped
+  silently when the command is absent; in the default spawned mode that
+  reading covers the step subagents' result reports — the one carve-out in
+  "the orchestrator never reads a child's work" — and `--inline` is
+  unchanged. **Ids**: every runbook carries one beside its kebab-case name,
   and every command taking a runbook accepts `<id>`, `<name>` or
   `<id>-<name>`, resolved in order: all digits → id; exact name → that block;
   `<digits>-<rest>` → that block only when block `<digits>` is named `<rest>`,
@@ -1592,6 +1605,32 @@ Currently shipped:
   body), **writes nothing**, and never invokes `/runbook-create` itself. Fire
   rate is tuned by narrowing the description after observing real sessions —
   the accepted method, not an open question, and never a suppression flag.
+- `commands/follow-ups.md` — reads the current conversation and lists what it
+  would lose if it ended now: actions proposed but never executed, outcomes
+  never recorded on disk, decisions taken in conversation and written down
+  nowhere. Output is exactly one of the single line `No follow-ups left` (a
+  guarantee, not a shrug) or a numbered list, each item a slash command plus a
+  short "to …" wherever one fits. **Command not skill** — the inverse of
+  `skills/runbook-suggest/`, which fires from its description and is never
+  invoked: this one is invoked by name and fires from nothing. The two are
+  complementary and deliberately unwired — a `/follow-ups` list of 3+ ordered
+  items is exactly what `runbook-suggest` already watches for. Exclusion rule
+  carried in the body with both sides: work already tracked on disk is not a
+  follow-up (`/runbook-run X to continue` isn't one — the runbook tracks it),
+  while a task created in the conversation and not yet appended to the running
+  runbook is, because nothing on disk connects it to the work in flight. The
+  numbering is the handle: replying by number is ordinary conversation, not
+  something the command implements. Takes no arguments, opens no project file,
+  writes nothing, commits nothing, invokes nothing. Deliberately short — a
+  reading rule, an exclusion rule, an output shape and a stop; `runbook-suggest`
+  is the register it imitates. No `requires:` of its own; the dependency runs
+  the other way — `skills/runbook-run/` and `skills/task-implement/` both
+  declare `requires: command:follow-ups` for the closing call they make at the
+  end of every run, which is what installs it alongside them. Carries a
+  `routing.md` row (Consumes the conversation only, Produces the list, Owns
+  `Nothing`, no preconditions, no arguments, Amend `—`) in the shape
+  `runbook-suggest` and `pipeline-suggest` use; `check-routing.sh` does not
+  demand one — it declares no engine — but consistency does.
 - `commands/refactor-codebase.md` — behaviour-preserving, plan-first,
   test-gated refactor: extract constants/enums, dedupe, split oversized
   files, clean imports, rename. `scope=` / `focus=` limit work; `--commit`

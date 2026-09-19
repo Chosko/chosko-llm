@@ -65,7 +65,11 @@ Deliberately out:
   orchestrator spawns a child on a caller's behalf, but it reads neither the
   request file nor the result file, so no part of that work passes through it.
   Reading a child's report would be both the token cost the relay exists to
-  avoid and one step from reviewing work it delegated.
+  avoid and one step from reviewing work it delegated. The one carve-out is at
+  run end: the closing `/follow-ups` call reads the step subagents' result
+  reports the orchestrator already holds, because agents routinely name their
+  own follow-ups there and that report is its only window onto the step. It
+  opens no file to do it, and by then there is no work left to review.
 - **Coupling to any upstream skill.** Nothing here knows about `/architect`,
   `/product-design` or `/product-roadmap`, and none of them reference this
   suite. A runbook is a list of prompts; where the prompts came from is
@@ -401,9 +405,10 @@ same rule that stops it correcting a `Steps:` count it thinks is wrong.
 ### `/runbook-run` — the orchestrator
 
 **The execution loop.** Steps 5 and 6 below, and the orchestrator's contracts
-that follow — it reads only `CLAUDE.md`, the runbook and the index, writes only
-the runbook and the index, and never does a step's work — are **default-mode
-contracts**. Under `--inline` they apply as
+that follow — it reads only `CLAUDE.md`, the runbook and the index (plus, at
+run end only, the step reports it already holds, for the closing
+`/follow-ups` call), writes only the runbook and the index, and never does a
+step's work — are **default-mode contracts**. Under `--inline` they apply as
 [runbook-inline](./runbook-inline.md)'s contract table scopes them.
 
 1. **Resolve.** Read the index block and the body. An unknown name reports the
@@ -434,7 +439,14 @@ contracts**. Under `--inline` they apply as
    never ran and commit the lie.
 7. **Handle the result** — the four cases under Interfaces and contracts.
 8. **Commit** the runbook and the index, then loop to 2. When no `[ ]` steps
-   remain, set the index to `[DONE]` and report.
+   remain, set the index to `[DONE]` and report. Then, after that report and
+   after the final commit, call `/follow-ups` once — the run's last act. It
+   fires at every point a run stops, not only here: at a `--to` / `--only` /
+   `--steps` bound, at a user-requested stop after a step (even with no bound
+   to that step) and at a failure halt, always once per run and never per
+   step. It adds no commit and flips no status, so it never dirties the tree
+   the run just cleaned, and it is skipped silently when `/follow-ups` is not
+   installed.
 
 **The spawned prompt**, assembled in this order so the operating rules are the
 last thing the agent reads. Parts 1–4 are the only text the orchestrator
@@ -1081,7 +1093,10 @@ behind by design and `[DONE]` would be a lie.
 does not weaken dependencies, is an error beside `--to` or `--only`, and composes
 with `--from` — selection begins at step X and at most N steps run from there.
 Reaching the count stops the run the way a `--to` bound does: the index goes back
-to `[PENDING]` unless the whole runbook is `[x]`.
+to `[PENDING]` unless the whole runbook is `[x]`. A bounded run is still a run that
+ended, so it makes the closing `/follow-ups` call in step 8 exactly as a
+completed one does — as do a stop the user asks for after a step and a failure
+halt.
 
 The four result cases:
 

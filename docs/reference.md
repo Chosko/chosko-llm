@@ -878,6 +878,13 @@ standard manual protocol runs unchanged.
 Commits and pushes once per task (`--no-commit` to skip both, `--no-push` to
 commit without pushing).
 
+Every run ends with one [`/follow-ups`](#follow-ups) call, once for the whole
+run and after the feature-completion proposal — at a stop you asked for
+between tasks and at a failure halt as much as at the end of the last task.
+Under `--agents` the parent's reading covers the per-agent returns it already
+holds. The call adds no commit and flips no status, and it is skipped silently
+when `/follow-ups` isn't installed.
+
 ### `/task-review`
 
 Audit a diff against the acceptance criteria of the task that produced it.
@@ -1101,7 +1108,15 @@ that has none of the conversation the prompts came out of.
   subagent to relay for) or `--model` (the session can't change its own
   model), and doesn't apply the runbook header's `Model:`. A run that stops at its `--to` bound or its
   `--steps` count leaves the runbook `[PENDING]`, never `[DONE]` (unless every
-  step is done): a bounded run leaves work behind by design.
+  step is done): a bounded run leaves work behind by design. However the run ends —
+  completion, a bound, a stop you asked for after a step, or a failure halt —
+  its last act is one [`/follow-ups`](#follow-ups) call, once for the whole
+  run and never per step, after the closing report and the final commit. In
+  the default spawned mode that reading covers the step subagents' result
+  reports as well as the orchestrator's own conversation, which is the one
+  carve-out in "the orchestrator never reads a child's work"; under `--inline`
+  there are no step reports and nothing changes. It adds no commit and is
+  skipped silently when `/follow-ups` isn't installed.
 - `/runbook-list` — every runbook as one line: id, status, name, steps done
   over total, created date, source, and its one-line title.
 - `/runbook-describe <id|name|id-name>` — a compact summary of one runbook: its index
@@ -1306,6 +1321,46 @@ A runbook is not a [session handoff](#session-save-and-session-resume): a
 session file is a snapshot of work in flight, a runbook is a plan for work
 not yet done. It's not a backlog either: a task is a unit of work with
 acceptance criteria, a runbook step is a prompt.
+
+### `/follow-ups`
+
+What would this conversation lose if it ended right now?
+
+`/follow-ups` reads the session — and nothing else, no project file — and
+answers with exactly one of two things: the single line `No follow-ups left`,
+or a numbered list. The empty answer is a guarantee rather than a shrug: the
+conversation can be quit with no information and no operation left behind.
+
+Three kinds of thing count. An **action proposed but never executed** —
+something the session said it would do, or offered to do, and didn't. An
+**outcome never recorded on disk** — something that happened here and left no
+trace in a file, an index or a commit. A **decision or fact taken in
+conversation and written down nowhere** — it exists only in the transcript,
+and the transcript is what's about to go away.
+
+What doesn't count is work already tracked on disk. `/runbook-run X to
+continue the implementation` is not a follow-up: the runbook already holds
+those steps and the next session finds them by reading it. But a task created
+in this conversation and *not yet appended* to the running runbook is one —
+nothing on disk connects it to the work in flight, so it can slip out of the
+pipeline unnoticed. The test isn't "is it written down", it's "does what's
+written down lead a later session to it".
+
+Each item is written as a slash command plus a short "to …" explanation
+wherever a command fits — `/task-add feature=password-auth to reconcile tasks
+12 and 14, which went stale after the amendment` — with free-form items legal
+where none does. The numbering is the handle: reply "execute 1 and 2 now" or
+"insert 3 as the next step in this runbook" and that's ordinary conversation,
+not something the command implements.
+
+It takes no arguments and is read-only: it opens no project file, writes
+nothing, commits nothing, and invokes no other command.
+[`/runbook-run`](#the-runbook--commands) and
+[`/task-implement`](#task-implement) call it at the end of every run, which is
+where most of its value is — a run that stopped at a bound or halted on a
+failure is exactly the one most likely to strand unrecorded work. It is the
+inverse of `runbook-suggest`, which fires on its own: a `/follow-ups` list of
+three or more ordered items is precisely what that skill watches for.
 
 ### `/session-save` and `/session-resume`
 
