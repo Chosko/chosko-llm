@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.7.2
+version: 1.7.3
 type: skill
 description: Implement one or more tasks from the project's task backlog end-to-end using a tests-first sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits and pushes each task separately; pass --no-commit to skip the per-task commits (and pushes), or --no-push to keep committing without pushing. Supports `next` to implement the first eligible task. `next` and `all` honour `Preconditions:` — a task is picked only once every task it names is `[DONE]` or `[SKIP]`, `all` orders its list so nothing runs ahead of what it waits on and names by id any task left blocked, and between tasks an `all` run skips, with one line, a task whose preconditions no longer hold; a task named by number is never blocked. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd|skip-tests-unattended` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time. In skip-tests mode, pass `-y` to suppress the per-task "Proceed?" confirmation for that run; the `skip-tests-unattended` marker value makes that the default for every run without needing `-y`. On a run resolving to 2+ tasks, offers to implement each task in a fresh subagent so later tasks don't inherit earlier ones' context — agents run one at a time, never in parallel, and `claude+human` / `human` / explicitly-requested `[STALE]` tasks stay in the parent conversation because they need the user present; pass `--agents` / `--no-agents` to pre-answer. On such a run the parent is a launcher: it evaluates the delegation guard from the `TASKS.md` summary blocks alone, never opens a delegated task's body, hands every agent the same fixed-size prompt carrying only the task number and the run's resolved flags, and keeps only the task number, terminal status, commit hash, one-line failure reason and a list of at most three follow-ups each agent returns — so the parent's context no longer grows with the size of the batch. Pass `--review` (optionally `--rounds N`, default 1) to have each task reviewed before it is committed: after the full test suite and before the status flip, the run spawns `/task-review` as a subagent so the review happens in a context that did not write the code, waits for its findings, and runs `/task-iterate` in the session to triage and apply them — the fixes ride in the task's own single commit, later rounds re-review only what the last iterate changed and only while `BLOCKING` findings remain, rejected findings may not be re-raised, and unresolved `BLOCKING` findings after the last round stop the run with the tree uncommitted and the task `[IN PROGRESS]`; without the flag nothing about the run changes. The spawned reviewer's cost is steerable with `--review-model <name>|same|auto` and `--review-effort shallow|standard|deep|same|auto` (both default `auto`, both require `--review`): `auto` picks the model and the read budget deterministically per task from that task's own diff, so an ordinary task gets a Sonnet reviewer and only a heavy one gets Opus, while `same` on either axis restores the inherit-the-implementer behaviour. When a `Feature:`-tagged task lands `[DONE]` and leaves every task for that feature `[DONE]`/`[SKIP]`, records it as a completion candidate and, once at the very end of the run (batched across the whole run, never per-task), proposes flipping that feature's `FEATURES.md` `Status:` from `[PLANNED]` to `[DONE]` — the user decides, per feature; declined or unnamed slugs stay `[PLANNED]`. Every run then ends with one /follow-ups call — after the closing report and after the feature-completion proposal, at completion, at a user-requested stop between tasks and at a failure halt alike, reading under --agents the follow-ups each agent derived for its own session by applying /follow-ups' rules without invoking it, and skipped silently where that command is not installed; the call is skipped silently when /follow-ups is not installed.
 requires: skill:task-engine, command:follow-ups
@@ -709,11 +709,12 @@ five-field returns in `./delegated-runs.md` — as well as its own conversation.
 It opens nothing new to do it.
 
 The fifth field is what makes that reading worth anything: before returning,
-each agent reads `commands/follow-ups.md` at its installed path and applies
-that command's rules to its own session, handing back at most three items. It
-reads the rules rather than invoking the command — the run's closing call
-stays the only one — and where the file is absent it skips the field silently
-instead of failing. Nothing here or in `./delegated-runs.md` restates what
+each agent reads the `/follow-ups` command's own body and applies its rules to
+its own session, handing back at most three items. The agent is given the
+command's **name and never a path** — `--local` puts a feature somewhere no
+path in a shipped body would find it — and it reads the rules rather than
+invoking the command, so the run's closing call stays the only one. Where the
+command is unavailable it skips the field silently instead of failing. Nothing here or in `./delegated-runs.md` restates what
 counts as a follow-up. Fold the lines it does return into the run's list,
 attributed to the task they came from. They are the agent's claim and the parent never saw
 the work, so pass them through as stated — do not re-word them into a
@@ -838,7 +839,7 @@ DO NOT:
   proposal — see CLOSING THE RUN. An agent populating the fifth return field
   *reads* that command's rules and applies them; it does not invoke it.
 - Restate what counts as a follow-up, what is excluded, or how an item is
-  written — here or in `./delegated-runs.md`. `commands/follow-ups.md` is their
-  single authority; a second copy is a copy that will drift.
+  written — here or in `./delegated-runs.md`. The `/follow-ups` command's own
+  body is their single authority; a second copy is a copy that will drift.
 - Skip the closing call because the run was stopped by the user between
   tasks or halted on a failure. Those are the runs that most need it.

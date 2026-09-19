@@ -75,9 +75,9 @@ flags for the run, and the instruction to proceed as if invoked directly:
 Implement task <n> from this project's backlog using /task-implement.
 Flags for this run: <resolved flag list>.
 Read the task body, CLAUDE.md, and .claude/context/ yourself — you have not
-been given them. When you are finished, read commands/follow-ups.md at its
-installed path and apply its rules to this session, keeping at most three
-items; do not invoke the command, and skip this if the file is not there.
+been given them. When you are finished, read the /follow-ups command's own
+body and apply its rules to this session, keeping at most three items; do not
+invoke the command, and skip this if it is not available to you.
 Report back only: task number, terminal status, commit hash if you committed,
 a one-line failure reason if you did not, and that list, omitted when it is
 empty.
@@ -105,8 +105,13 @@ Per returned agent: task number, terminal status, commit hash, a one-line
 failure reason if it failed, and at most three follow-ups derived by applying
 `/follow-ups`' rules to its own session. Nothing else. The fifth field applies
 that command's rules rather than defining a format of its own: what counts as
-a follow-up and what is excluded are stated once, in `commands/follow-ups.md`,
+a follow-up and what is excluded are stated once, in the command's own body,
 and deliberately not restated in the contract, so the two cannot drift apart.
+The agent is handed the command's **name and never a path** — `--local`
+installs into `$PWD/.claude` instead of the global home, so no path written
+into a shipped body resolves in both scopes, and one that named the global
+`commands/follow-ups.md` would silently report no follow-ups on every project
+that installed the command locally.
 
 The agent **reads** those rules rather than invoking the command, which buys
 two things. Invoking would be a per-task `/follow-ups` call, and the rule that

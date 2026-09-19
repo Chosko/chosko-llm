@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.56.3 — 2026-09-19
+
+- Fixed a scope bug in 1.56.2: the `--agents` hand-off prompt told the delegated agent to read `${CLAUDE_HOME:-$HOME/.claude}/commands/follow-ups.md`, a path that only ever resolves to the **global** install. `chosko-llm add --local` repoints `CLAUDE_HOME` to `$PWD/.claude` at install time, so a project that installed `/follow-ups` locally would have had every delegated agent find nothing there and report no follow-ups — silently, since a missing file is a legitimate skip.
+- The agent is now given the command's **name and never a path**, which resolves in either scope, and the reason is recorded beside it so the path does not come back. `/task-implement`'s DO NOT list names the command's own body, rather than a repo path, as the single authority for what counts as a follow-up.
+
 ## 1.56.2 — 2026-09-19
 
 - Under `--agents`, a delegated agent now **reads `/follow-ups`' rules rather than invoking the command** to populate the fifth return field. It opens `commands/follow-ups.md` at its installed path and applies what is there to its own session, keeping at most three items. The rules stay stated once, in that file, exactly as in 1.56.1 — only the mechanism changed.

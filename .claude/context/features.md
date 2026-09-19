@@ -414,10 +414,14 @@ Currently shipped:
   nothing-committed, one-line failure reason only on failure, and at most
   three follow-ups, omitted when empty, which is almost every task). The
   field applies `/follow-ups`' rules, **not a format of its own** — the agent
-  reads `commands/follow-ups.md` at its installed path and applies what is
-  there; what counts, what is excluded and how an item is written are that
-  command's and are deliberately not restated in either `delegated-runs.md`
-  or SKILL.md, leaving only the cap and the omit-when-empty to the channel.
+  reads that command's own body and applies what is there; what counts, what
+  is excluded and how an item is written are that command's and are
+  deliberately not restated in either `delegated-runs.md` or SKILL.md,
+  leaving only the cap and the omit-when-empty to the channel. **Named, never
+  pathed**: `--local` installs into `$PWD/.claude` rather than the global
+  home, so a shipped body citing
+  `${CLAUDE_HOME:-$HOME/.claude}/commands/follow-ups.md` would miss every
+  local install; the command's name resolves in both scopes.
   **Reads the rules, never invokes the command** — invoking would be the
   per-task call the DO NOT list forbids, and a read degrades where an
   invocation would not: no file to read means skip the field silently, the
