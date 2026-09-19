@@ -127,8 +127,11 @@ The whole thing reads roughly:
 > user anything; if something genuinely needs a human decision, stop and
 > report it.
 >
-> When the task is finished, run `/follow-ups` on your own session and keep
-> its list — at most the first three items. `No follow-ups left` means none.
+> When the task is finished, read
+> `${CLAUDE_HOME:-$HOME/.claude}/commands/follow-ups.md` — it states what
+> counts as a follow-up, what is excluded, and how an item is written — and
+> apply its rules to this session, keeping at most three items. Do not invoke
+> the command. If that file is not there, skip this and report nothing for it.
 >
 > Report back only: the task number, the terminal status you wrote, the
 > commit hash (or that nothing was committed), — only if it failed — a
@@ -184,17 +187,26 @@ narrative, no "surprises worth mentioning" — an agent with something to say
 says it in the failure line, and a task that needs the user's attention is a
 task that stopped. After a fifty-task run the parent holds fifty short rows.
 
-**The fifth field is `/follow-ups`' output, not a format of its own.** The
-agent runs the command on its own session — which for a delegated agent is
-exactly the one task — and returns its list. What counts as a follow-up, what
-is excluded because it is already tracked on disk, and how an item is written
-are all that command's, and are **not restated here**: a second copy is a copy
-that will drift, and this file is not its authority. The agent has the command
-installed, because this skill declares `requires: command:follow-ups`.
+**The fifth field applies `/follow-ups`' rules; it does not define its own.**
+The agent reads `commands/follow-ups.md` at its installed path and applies
+what it finds there to its own session — which, for a delegated agent, is
+exactly the one task. What counts as a follow-up, what is excluded because it
+is already tracked on disk, and how an item is written are all that command's,
+and are **not restated here**: a second copy is a copy that will drift, and
+this file is not its authority.
 
-That is also why the field is empty on almost every task. `/follow-ups`'
-exclusion rule does the work: an agent that did its task and wrote it down
-answers `No follow-ups left`, and the field is omitted.
+**It reads the rules rather than invoking the command**, for two reasons.
+Invoking it would be a per-task `/follow-ups` call, which SKILL.md's DO NOT
+list forbids — the run's closing call is once, in the parent. And a read
+degrades where an invocation would not: `requires: command:follow-ups` means
+the file is normally installed, but a user who removed it by hand leaves the
+agent with nothing to read, and the rule there is the same silent skip the
+closing call makes — omit the field, report nothing about it, and do not fail
+the task. An absent optional field is not a failed task.
+
+That is also why the field is empty on almost every task: the command's
+exclusion rule does the work, and an agent that did its task and wrote it down
+has nothing that qualifies.
 
 Two bounds belong to this channel rather than to the command, and only these
 two. **At most three items** — the command imposes no cap, and this one exists

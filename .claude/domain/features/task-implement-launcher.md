@@ -75,10 +75,12 @@ flags for the run, and the instruction to proceed as if invoked directly:
 Implement task <n> from this project's backlog using /task-implement.
 Flags for this run: <resolved flag list>.
 Read the task body, CLAUDE.md, and .claude/context/ yourself — you have not
-been given them. When you are finished, run /follow-ups on your own session
-and keep at most its first three items. Report back only: task number,
-terminal status, commit hash if you committed, a one-line failure reason if
-you did not, and that list, omitted when it is empty.
+been given them. When you are finished, read commands/follow-ups.md at its
+installed path and apply its rules to this session, keeping at most three
+items; do not invoke the command, and skip this if the file is not there.
+Report back only: task number, terminal status, commit hash if you committed,
+a one-line failure reason if you did not, and that list, omitted when it is
+empty.
 ```
 
 The prompt is O(1) in the number of tasks and O(1) in task size. A fifty-task
@@ -100,16 +102,25 @@ delegated flow and the manual flow stop being two things that can drift apart.
 ### What the parent accumulates
 
 Per returned agent: task number, terminal status, commit hash, a one-line
-failure reason if it failed, and the list `/follow-ups` returns when the agent
-runs it on its own session. Nothing else. The fifth field is that command's
-output rather than a format of its own: what counts as a follow-up and what is
-excluded are the command's, stated once there and deliberately not restated in
-the contract, so the two cannot drift apart. The parent's context after a
-fifty-task run is still fifty short rows, because the command's own exclusion
-rule makes the answer `No follow-ups left` on almost every task. Two bounds
-are the channel's rather than the command's, and only two: a cap of three
-items, which exists to protect the parent's context and not to redefine a
-follow-up, and omission when the list is empty.
+failure reason if it failed, and at most three follow-ups derived by applying
+`/follow-ups`' rules to its own session. Nothing else. The fifth field applies
+that command's rules rather than defining a format of its own: what counts as
+a follow-up and what is excluded are stated once, in `commands/follow-ups.md`,
+and deliberately not restated in the contract, so the two cannot drift apart.
+
+The agent **reads** those rules rather than invoking the command, which buys
+two things. Invoking would be a per-task `/follow-ups` call, and the rule that
+the closing call fires once per run stays whole. And a read degrades cleanly
+where an invocation would not: a user who removed the command by hand leaves
+nothing to read, and the agent skips the field silently — the same rule the
+closing call follows — instead of failing a task over a missing optional
+input.
+
+The parent's context after a fifty-task run is still fifty short rows, because
+the command's own exclusion rule empties the field on almost every task. Two
+bounds are the channel's rather than the command's, and only two: a cap of
+three items, which exists to protect the parent's context and not to redefine
+a follow-up, and omission when the list is empty.
 
 Failure handling is unchanged: a failed agent stops the run without spawning
 the next, and the parent reports which tasks completed with hashes, which failed

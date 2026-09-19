@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.56.2 — 2026-09-19
+
+- Under `--agents`, a delegated agent now **reads `/follow-ups`' rules rather than invoking the command** to populate the fifth return field. It opens `commands/follow-ups.md` at its installed path and applies what is there to its own session, keeping at most three items. The rules stay stated once, in that file, exactly as in 1.56.1 — only the mechanism changed.
+- Two things this buys. The rule that `/follow-ups` fires **once per run, never per task** is whole again: nothing invokes the command but the run's own closing call, so 1.56.1's carve-out in the DO NOT list is gone and the bullet is a flat prohibition once more. And the field now degrades where an invocation would not — a user who removed the command by hand leaves the agent with nothing to read, and it skips the field silently, the same rule the closing call already follows. A missing optional input never fails a task.
+
 ## 1.56.1 — 2026-09-19
 
 - The `--agents` return contract's fifth field is now **`/follow-ups`' output** rather than a bespoke format. Each delegated agent runs the command on its own session — which for a delegated agent is exactly the one task — and returns its list, capped at three items. 1.56.0 had restated the command's reading rule, its exclusion rule and its item format inside the contract; those are now stated once, in `commands/follow-ups.md`, and cited from the contract. A second copy is a copy that would drift.
