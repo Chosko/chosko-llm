@@ -87,7 +87,7 @@ Preconditions: 232, 233
 
 ## 236. Add `/follow-ups` — list what this conversation left unhandled
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/follow-ups.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
 Preconditions: none

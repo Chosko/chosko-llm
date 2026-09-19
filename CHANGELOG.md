@@ -2,6 +2,13 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.54.0 — 2026-09-19
+
+- New command **/follow-ups** — reads the current conversation and lists what would be lost if it ended now: actions proposed but never executed, outcomes never recorded on disk, decisions taken in conversation and written down nowhere. It answers with exactly `No follow-ups left` or with a numbered list, and an empty list is a guarantee — the session can be quit without information or operation loss.
+- Each item is written as a slash command plus a short "to …" explanation wherever a command fits, so a follow-up is executable rather than merely noted. The numbering is the handle: replying "execute 1 and 2" is ordinary conversation, not something the command implements.
+- Work already tracked on disk is never a follow-up — a runbook that already holds the remaining steps leads the next session to them by itself. A task created in the conversation but not yet appended to the running runbook is one, because nothing on disk connects it to the work in flight.
+- Read-only and argument-free: it opens no project file, writes nothing, commits nothing, and invokes no other command.
+
 ## 1.53.2 — 2026-09-17
 
 - **/runbook-describe**'s header-line paragraph no longer reads as though `Created:`/`Source:`/`Model:` were the only header fields the command ever prints. It is now scoped to that one line and points at the `Archive:` line below it, so an executing agent that stops reading at that paragraph is not left with a rule the next paragraph contradicts.
