@@ -128,8 +128,13 @@ The whole thing reads roughly:
 > report it.
 >
 > Report back only: the task number, the terminal status you wrote, the
-> commit hash (or that nothing was committed), and — only if it failed — a
-> one-line reason.
+> commit hash (or that nothing was committed), — only if it failed — a
+> one-line reason, and — only if there are any — up to three one-line
+> follow-ups, each something this task leaves unrecorded on disk that would
+> otherwise be lost with your context. Write each as a slash command plus a
+> short "to …" where one fits. Anything you already wrote down — a task you
+> created, a commit you made, a status you flipped — is not a follow-up.
+> Omit the line entirely when there are none, which is the normal case.
 
 ## Review rounds inside a delegated task
 
@@ -157,23 +162,52 @@ either.
 
 The parent's side of this is deliberately empty. It passes the flags through
 and **never sees a finding**: no report, no triage table, no rejection ledger
-travels up. The four-field return contract below is unchanged by `--review` —
-a task whose loop ended in unresolved `BLOCKING` findings comes back as a
-failure with its one-line reason, like any other failure, and halts the run.
+travels up. The return contract below is unchanged by `--review` in its first
+four fields — a task whose loop ended in unresolved `BLOCKING` findings comes
+back as a failure with its one-line reason, like any other failure, and halts
+the run. The fifth field does not reopen that door: a *finding* is never a
+follow-up, and neither is a triage verdict. What may legitimately appear there
+is one thing the loop can produce and record nowhere — a finding
+`/task-iterate` deferred with the note that a follow-up task should be
+authored, where none was. That is an unwritten task, not a finding.
 
 ## What the agent returns, and what the parent keeps
 
-The return contract is exactly four things:
+The return contract is exactly five things, the fifth optional:
 
 1. the task number,
 2. the terminal status it wrote to `.claude/TASKS.md`,
 3. the commit hash — or, under NO_COMMIT, that nothing was committed,
-4. a one-line failure reason, and only when it failed.
+4. a one-line failure reason, and only when it failed,
+5. **at most three one-line follow-ups**, and only when there are any.
 
 The parent accumulates that and nothing else. No diffs, no file lists, no
 narrative, no "surprises worth mentioning" — an agent with something to say
 says it in the failure line, and a task that needs the user's attention is a
 task that stopped. After a fifty-task run the parent holds fifty short rows.
+
+**The fifth field is narrow on purpose.** It exists for one thing the other
+four cannot carry: something this task leaves **unrecorded on disk** that
+would otherwise die with the agent's context. The same exclusion rule
+`/follow-ups` itself states applies here — work already tracked on disk is
+not a follow-up, so a task the agent created, a commit it made and a status
+it flipped are all excluded, and the test is whether what is written down
+leads a later session to it. That is why the field is **empty on almost every
+task**: an agent that did its work and wrote it down has nothing to add.
+
+Three bounds keep it from becoming the narrative channel the other four fields
+refuse to be. **One line each**, written as a slash command plus a short
+"to …" where one fits, the way `/follow-ups` writes an item. **At most three**
+— an agent with more than three unrecorded things did not finish its task.
+**Omitted entirely when there are none**, so the common case costs nothing and
+a fifty-task run still holds fifty short rows.
+
+The parent does not act on them, does not judge them and does not ask about
+them mid-run. It records them beside the other four fields and they feed
+exactly one place: the closing `/follow-ups` call in SKILL.md's CLOSING THE
+RUN. A follow-up line is the agent's claim, not the parent's finding — the
+parent never opened the task and is in no position to verify it, which is also
+why it is never a reason to halt the run.
 
 ## Between delegated tasks
 

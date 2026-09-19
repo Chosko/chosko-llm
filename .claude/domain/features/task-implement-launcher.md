@@ -76,7 +76,9 @@ Implement task <n> from this project's backlog using /task-implement.
 Flags for this run: <resolved flag list>.
 Read the task body, CLAUDE.md, and .claude/context/ yourself — you have not
 been given them. Report back only: task number, terminal status, commit hash
-if you committed, and a one-line failure reason if you did not.
+if you committed, a one-line failure reason if you did not, and — only if
+there are any — up to three one-line follow-ups this task leaves unrecorded
+on disk.
 ```
 
 The prompt is O(1) in the number of tasks and O(1) in task size. A fifty-task
@@ -97,9 +99,14 @@ delegated flow and the manual flow stop being two things that can drift apart.
 
 ### What the parent accumulates
 
-Per returned agent: task number, terminal status, commit hash, and a one-line
-failure reason if it failed. Nothing else. The parent's context after a
-fifty-task run is fifty short rows.
+Per returned agent: task number, terminal status, commit hash, a one-line
+failure reason if it failed, and at most three one-line follow-ups if it has
+any. Nothing else. The parent's context after a fifty-task run is still fifty
+short rows, because the fifth field is empty on almost every task: it carries
+only what a task left **unrecorded on disk**, and an agent that did its work
+and wrote it down has nothing to add. One line each, at most three, omitted
+when there are none — three bounds chosen so the field cannot become the
+narrative channel the other four refuse to be.
 
 Failure handling is unchanged: a failed agent stops the run without spawning
 the next, and the parent reports which tasks completed with hashes, which failed
@@ -107,8 +114,11 @@ and what the agent said, and which were never attempted.
 
 Those rows are also what the run's closing `/follow-ups` call reads, alongside
 the parent's own conversation: the per-agent result reports are already in
-hand, so the call is not skipped under `--agents` and opens nothing new — the
-four-field return contract is unchanged by it. Where the user then asks to
+hand, so the call is not skipped under `--agents` and opens nothing new. The
+fifth field exists for that call and feeds nothing else — the parent records
+it, never acts on it mid-run, and never verifies it, since it did not open the
+task and is in no position to. A follow-up line is therefore never a reason to
+halt a run. Where the user then asks to
 execute or plan a listed follow-up that came from a delegated agent, the parent
 may forward it to that same agent where that is convenient. Judgement, not a
 rule, and not a new relay protocol.

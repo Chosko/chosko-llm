@@ -2,6 +2,13 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.56.0 — 2026-09-19
+
+- **/task-implement --agents**: the per-agent return contract gains a fifth, optional field — **at most three one-line follow-ups**. Each agent may now report what its task left *unrecorded on disk* and would otherwise lose with its context, written the way `/follow-ups` writes an item: a slash command plus a short "to …" where one fits. This is what makes the run's closing `/follow-ups` call worth anything in a delegated run; before it, the four fields carried no narrative and an agent's "this left something behind" died with the agent.
+- The field is deliberately narrow, and empty on almost every task. The same exclusion rule `/follow-ups` states applies: work already tracked on disk is not a follow-up, so a task the agent created, a commit it made and a status it flipped are all excluded. Three bounds keep it from becoming the narrative channel the other four fields refuse to be — one line each, at most three, and omitted entirely when there are none. A fifty-task run still leaves the parent holding fifty short rows.
+- The parent records the lines, folds them into the closing list attributed to the task they came from, and does nothing else with them: it never acts on one mid-run, never re-words one into a judgement it cannot support, and never verifies one — it did not open the task. A follow-up line is never a reason to halt a run.
+- `--review` is unchanged: a finding is still never a follow-up and no report, triage table or rejection ledger travels up. The one thing from a review loop that legitimately reaches the new field is a deferral `/task-iterate` noted should become a task, where none was authored — an unwritten task, not a finding.
+
 ## 1.55.2 — 2026-09-19
 
 - **/task-implement**'s frontmatter `description:` is folded onto one physical line. It had grown across ten lines, and the CLI's frontmatter parser keeps only the first — so `chosko-llm show task-implement` had been silently truncating the description at the feature-completion clause, hiding the delegation, `--review`, review-budget and closing-call paragraphs from anyone reading it there. No wording changed; only the line breaks are gone.
