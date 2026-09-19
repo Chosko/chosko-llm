@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.55.2 — 2026-09-19
+
+- **/task-implement**'s frontmatter `description:` is folded onto one physical line. It had grown across ten lines, and the CLI's frontmatter parser keeps only the first — so `chosko-llm show task-implement` had been silently truncating the description at the feature-completion clause, hiding the delegation, `--review`, review-budget and closing-call paragraphs from anyone reading it there. No wording changed; only the line breaks are gone.
+
 ## 1.55.1 — 2026-09-19
 
 - **/task-implement**'s closing-call section no longer implies that a `--agents` run's follow-up list draws much from the agents. The four-field return contract carries no narrative, so an agent's own "this left something behind" never reaches the parent; the section now says that plainly and points at the launcher's own conversation — the delegation split, tasks skipped for unmet preconditions, failure lines, declined feature slugs — as the substantive half. The return contract is unchanged.
