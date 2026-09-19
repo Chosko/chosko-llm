@@ -96,7 +96,7 @@ Preconditions: none
 
 ## 237. Call `/follow-ups` at the end of every `/runbook-run` and `/task-implement` run
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/SKILL.md, skills/task-implement/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 236

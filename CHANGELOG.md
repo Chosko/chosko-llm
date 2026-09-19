@@ -2,6 +2,13 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.55.0 — 2026-09-19
+
+- **/runbook-run** and **/task-implement** now end every run with one **/follow-ups** call, after the run's own closing report and after the last commit. A run no longer ends leaving unrecorded work visible only in the transcript.
+- It fires **once per run, never per step and never per task**, and at every point a run stops — not only at completion. For `/runbook-run` that is a `--to` / `--only` / `--steps` bound, a user-requested stop after a step (even with no bound to it) and a failure halt, as well as the runbook finishing. For `/task-implement` it is the end of the run whatever it resolved to (`<N>...`, `all`, `next`), a user-requested stop between tasks and a failure halt — and it comes *after* the feature-completion proposal, which can itself leave a slug `[PLANNED]`.
+- In `/runbook-run`'s default spawned mode the orchestrator's reading covers the step subagents' result reports as well as its own conversation — the one carve-out in "the orchestrator never reads a child's work", and it opens no file to do it. `--inline` is unchanged. Under `/task-implement --agents` the parent likewise reads the per-agent returns it already collects, and the return contract is unchanged.
+- The call adds no commit, flips no status and runs after the index `Status:` and the final commit are already written, so it never dirties a tree a run just cleaned. Both skills declare `requires: command:follow-ups` and skip the call silently when the command is not installed — an absent optional closing step is not a run failure.
+
 ## 1.54.0 — 2026-09-19
 
 - New command **/follow-ups** — reads the current conversation and lists what would be lost if it ended now: actions proposed but never executed, outcomes never recorded on disk, decisions taken in conversation and written down nowhere. It answers with exactly `No follow-ups left` or with a numbered list, and an empty list is a guarantee — the session can be quit without information or operation loss.
