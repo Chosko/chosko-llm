@@ -127,14 +127,12 @@ The whole thing reads roughly:
 > user anything; if something genuinely needs a human decision, stop and
 > report it.
 >
+> When the task is finished, run `/follow-ups` on your own session and keep
+> its list — at most the first three items. `No follow-ups left` means none.
+>
 > Report back only: the task number, the terminal status you wrote, the
 > commit hash (or that nothing was committed), — only if it failed — a
-> one-line reason, and — only if there are any — up to three one-line
-> follow-ups, each something this task leaves unrecorded on disk that would
-> otherwise be lost with your context. Write each as a slash command plus a
-> short "to …" where one fits. Anything you already wrote down — a task you
-> created, a commit you made, a status you flipped — is not a follow-up.
-> Omit the line entirely when there are none, which is the normal case.
+> one-line reason, and that list, omitted entirely when it is empty.
 
 ## Review rounds inside a delegated task
 
@@ -165,11 +163,11 @@ and **never sees a finding**: no report, no triage table, no rejection ledger
 travels up. The return contract below is unchanged by `--review` in its first
 four fields — a task whose loop ended in unresolved `BLOCKING` findings comes
 back as a failure with its one-line reason, like any other failure, and halts
-the run. The fifth field does not reopen that door: a *finding* is never a
-follow-up, and neither is a triage verdict. What may legitimately appear there
-is one thing the loop can produce and record nowhere — a finding
-`/task-iterate` deferred with the note that a follow-up task should be
-authored, where none was. That is an unwritten task, not a finding.
+the run. The fifth field does not reopen that door, and needs no rule here to
+stop it: `/follow-ups`' own exclusion rule already does, since a finding is not
+an unrecorded piece of work. The one thing from a loop that its reading does
+catch is a deferral `/task-iterate` noted should become a task, where none was
+authored — an unwritten task, not a finding.
 
 ## What the agent returns, and what the parent keeps
 
@@ -186,21 +184,24 @@ narrative, no "surprises worth mentioning" — an agent with something to say
 says it in the failure line, and a task that needs the user's attention is a
 task that stopped. After a fifty-task run the parent holds fifty short rows.
 
-**The fifth field is narrow on purpose.** It exists for one thing the other
-four cannot carry: something this task leaves **unrecorded on disk** that
-would otherwise die with the agent's context. The same exclusion rule
-`/follow-ups` itself states applies here — work already tracked on disk is
-not a follow-up, so a task the agent created, a commit it made and a status
-it flipped are all excluded, and the test is whether what is written down
-leads a later session to it. That is why the field is **empty on almost every
-task**: an agent that did its work and wrote it down has nothing to add.
+**The fifth field is `/follow-ups`' output, not a format of its own.** The
+agent runs the command on its own session — which for a delegated agent is
+exactly the one task — and returns its list. What counts as a follow-up, what
+is excluded because it is already tracked on disk, and how an item is written
+are all that command's, and are **not restated here**: a second copy is a copy
+that will drift, and this file is not its authority. The agent has the command
+installed, because this skill declares `requires: command:follow-ups`.
 
-Three bounds keep it from becoming the narrative channel the other four fields
-refuse to be. **One line each**, written as a slash command plus a short
-"to …" where one fits, the way `/follow-ups` writes an item. **At most three**
-— an agent with more than three unrecorded things did not finish its task.
-**Omitted entirely when there are none**, so the common case costs nothing and
-a fifty-task run still holds fifty short rows.
+That is also why the field is empty on almost every task. `/follow-ups`'
+exclusion rule does the work: an agent that did its task and wrote it down
+answers `No follow-ups left`, and the field is omitted.
+
+Two bounds belong to this channel rather than to the command, and only these
+two. **At most three items** — the command imposes no cap, and this one exists
+to protect the parent's context, not to redefine a follow-up; an agent with
+more than three unrecorded things did not finish its task. **Omitted entirely
+when the list is empty**, so the common case costs nothing and a fifty-task run
+still holds fifty short rows.
 
 The parent does not act on them, does not judge them and does not ask about
 them mid-run. It records them beside the other four fields and they feed

@@ -2,6 +2,12 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.56.1 — 2026-09-19
+
+- The `--agents` return contract's fifth field is now **`/follow-ups`' output** rather than a bespoke format. Each delegated agent runs the command on its own session — which for a delegated agent is exactly the one task — and returns its list, capped at three items. 1.56.0 had restated the command's reading rule, its exclusion rule and its item format inside the contract; those are now stated once, in `commands/follow-ups.md`, and cited from the contract. A second copy is a copy that would drift.
+- Only two bounds remain the channel's own, and they are named as such: the cap of three, which protects the parent's context rather than redefining a follow-up, and omission when the list is empty. The `--review` carve-out also got shorter — no rule is needed to keep findings out of the field, because the command's own exclusion rule already does.
+- `/task-implement`'s DO NOT list now draws the line explicitly: a delegated agent running `/follow-ups` on its own session is **not** the run's closing call, which is still once per run in the parent, after the closing report. It produces one of that call's inputs, in a session the parent never sees, and emits nothing to the user. A second bullet forbids restating what counts as a follow-up anywhere in the skill.
+
 ## 1.56.0 — 2026-09-19
 
 - **/task-implement --agents**: the per-agent return contract gains a fifth, optional field — **at most three one-line follow-ups**. Each agent may now report what its task left *unrecorded on disk* and would otherwise lose with its context, written the way `/follow-ups` writes an item: a slash command plus a short "to …" where one fits. This is what makes the run's closing `/follow-ups` call worth anything in a delegated run; before it, the four fields carried no narrative and an agent's "this left something behind" died with the agent.

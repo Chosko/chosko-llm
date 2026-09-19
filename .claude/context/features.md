@@ -411,11 +411,16 @@ Currently shipped:
   DIRTY_FOLD_UNTRACKED, non-interactivity notice) + instruction to read
   body, CLAUDE.md, context layer itself; keeps exactly five values per
   return, the fifth optional (task number, terminal status, commit hash or
-  nothing-committed, one-line failure reason only on failure, and at most
-  three one-line follow-ups — only what the task left unrecorded on disk,
-  omitted entirely when there are none, which is almost every task; they
-  feed the run's closing `/follow-ups` call and nothing else, and the parent
-  neither acts on nor verifies one). Prompt O(1) in batch size and
+  nothing-committed, one-line failure reason only on failure, and the list
+  `/follow-ups` returns when the agent runs it on its own session, capped at
+  three items and omitted when empty, which is almost every task). The field
+  is the command's output, **not a format of its own** — what counts, what is
+  excluded and how an item is written are `commands/follow-ups.md`'s and are
+  deliberately not restated in either `delegated-runs.md` or SKILL.md; only
+  the cap and the omit-when-empty belong to the channel. They feed the run's
+  closing `/follow-ups` call and nothing else, and the parent neither acts on
+  nor verifies one. An agent's own call is not the run's closing call — that
+  stays once per run, in the parent. Prompt O(1) in batch size and
   in task size, so parent's context no longer grows with batch. Tasks
   parent keeps still get body read in Step 1, unchanged. Commits each task
   separately; `--no-commit` runs full sequence but skips
@@ -479,9 +484,10 @@ Currently shipped:
   its own reviewer, measuring its own diff (launcher → implementor →
   reviewer; the launcher measures nothing); the return contract's first four
   fields are unchanged and no finding travels up to the parent — the fifth
-  does not reopen that door either, since a finding is never a follow-up and
-  the one thing that legitimately appears there is a deferral `/task-iterate`
-  noted should become a task and that never did.
+  does not reopen that door either, and needs no rule of its own to stop it,
+  since `/follow-ups`' exclusion rule already does: a finding is not an
+  unrecorded piece of work. What its reading does catch is a deferral
+  `/task-iterate` noted should become a task and that never did.
 - `skills/task-review/` — audits a diff against the acceptance criteria of
   the task that produced it and reports structured findings. Exists beside
   Claude Code's built-in `/code-review` because of that one difference:
