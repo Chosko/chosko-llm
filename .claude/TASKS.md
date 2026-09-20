@@ -132,7 +132,7 @@ Preconditions: none
 
 ## 241. Rewrite the pipeline-core descriptions to the contract; hide the two reference libraries
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-add.md, commands/task-list.md, commands/task-setup.md, commands/follow-ups.md, commands/production-status.md, commands/pipeline-check.md, commands/pipeline-patch.md, commands/domain-setup.md, skills/task-clean/SKILL.md, skills/task-implement/SKILL.md, skills/task-review/SKILL.md, skills/task-iterate/SKILL.md, skills/task-engine/SKILL.md, skills/pipeline-revise/SKILL.md, skills/pipeline-suggest/SKILL.md, skills/pipeline-engine/SKILL.md, skills/production-plan/SKILL.md, skills/product-design/SKILL.md, skills/product-roadmap/SKILL.md, skills/architect/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 240

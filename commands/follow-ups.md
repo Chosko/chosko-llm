@@ -1,14 +1,19 @@
 ---
 name: follow-ups
-version: 0.1.0
+version: 0.1.1
 type: command
-description: List what this conversation would lose if it ended now — actions proposed but never executed, outcomes never recorded on disk, decisions taken in conversation and written down nowhere. Answers with exactly `No follow-ups left`, or with a numbered list, each item written as a slash command plus a short "to …" explanation wherever a command fits. Work already tracked on disk is never a follow-up; a task created in this conversation but not yet appended to the running runbook is. Takes no arguments and is read-only — opens no project file, writes nothing, commits nothing, and invokes no other command. The numbering is the handle: the user may reply by number, and acting on a number is ordinary conversation, not something this command implements.
+description: List what this conversation would lose if it ended now — actions proposed but never executed, outcomes never recorded on disk, decisions written down nowhere — as a numbered list, or exactly `No follow-ups left`. Use it before a session ends, or when a run stopped early.
 ---
 
 # /follow-ups
 # Global command: read this conversation and list what it would lose if it
 # ended now. Read-only — no file is opened, nothing is written, nothing is
-# invoked. The answer is `No follow-ups left` or a numbered list.
+# invoked. Takes no arguments. The answer is `No follow-ups left` or a
+# numbered list, each item a slash command plus a short "to …" explanation
+# wherever a command fits. Work already tracked on disk is never a
+# follow-up. The numbering is the handle: the user may reply by number, and
+# acting on a number is ordinary conversation, not something this command
+# implements.
 # Usage: /follow-ups
 
 GOAL

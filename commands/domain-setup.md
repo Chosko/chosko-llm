@@ -1,8 +1,9 @@
 ---
 name: domain-setup
-version: 0.2.3
+version: 0.2.4
 type: command
-description: Initialize the project's domain knowledge layer — creates .claude/domain/, .claude/domain/features/, a .claude/domain/INDEX.md that indexes any pre-existing domain docs, the .claude/FEATURES.md feature index, and a CLAUDE.md pointer to the domain index. Idempotent and re-runnable on projects that already have hand-written domain docs. Authoring command — leaves everything uncommitted for review by default; pass --commit to commit (and push) the scaffolding, or --commit --no-push to commit without pushing.
+description: Initialize the project's domain knowledge layer — creates .claude/domain/ with its features/ folder and INDEX.md, the .claude/FEATURES.md feature index, and a CLAUDE.md pointer to the domain index. Run it once before any other pipeline command; stage 0 of the pipeline: scaffolds the layer every later stage writes into.
+disable-model-invocation: true
 ---
 
 # /domain-setup
@@ -12,7 +13,8 @@ description: Initialize the project's domain knowledge layer — creates .claude
 # feature index, and a CLAUDE.md pointer at the domain index. Idempotent: a
 # re-run leaves existing artifacts untouched and only creates the missing
 # ones. Safe on a project that already has hand-written domain docs — those
-# get indexed rather than replaced.
+# get indexed rather than replaced. Authoring command — leaves everything
+# uncommitted for review unless `--commit` is passed.
 # Usage: /domain-setup                     (leaves the scaffolding uncommitted)
 # Usage: /domain-setup --commit            (commit and push the scaffolding this run wrote)
 # Usage: /domain-setup --commit --no-push  (commit locally, skip the push)

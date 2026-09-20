@@ -1,8 +1,9 @@
 ---
 name: task-engine
-version: 0.5.5
+version: 0.5.6
 type: skill
-description: Reference library for the task-* features — one authority per rule they share. Eight files under references/ own backlog resolution, the TASKS.md schema, the task archive and the eligibility clause by which next / all honour Preconditions:, the status vocabulary and its transitions, Target: values and the delegation guard, [STALE] handling, the dirty-tree prompt protocol, commit/push gating with --no-commit / --no-push, the review cost controls behind --review-model / --review-effort, and the protocol for amending one existing task. NOT a skill the user invokes and never a skill to suggest — it takes no arguments, runs nothing, and produces no output; /task-add, /task-list, /task-clean, /task-implement and /task-review read its files by path while they run, the pipeline revision surfaces /pipeline-patch and /pipeline-revise read references/amend.md by path, and only they should ever open it.
+description: Reference library for the task-* features — one authority per rule they share, under references/; read by path by the task-* commands and skills and by the pipeline revision surfaces, never invoked.
+disable-model-invocation: true
 ---
 
 # task-engine

@@ -2,6 +2,13 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.58.1 — 2026-09-20
+
+- **Twenty pipeline-core descriptions rewritten to the description contract** (`task-add`, `task-list`, `task-setup`, `task-clean`, `task-implement`, `task-review`, `task-iterate`, `follow-ups`, `production-status`, `pipeline-check`, `pipeline-patch`, `pipeline-revise`, `pipeline-suggest`, `domain-setup`, `product-design`, `product-roadmap`, `architect`, `production-plan`, `task-engine`, `pipeline-engine`): each now says what the feature does and when to use it in at most 60 words, `pipeline-suggest` keeps its trigger phrases first and its "Not for" list last. Together they drop from ~22,000 to ~6,000 characters of system-prompt text per session.
+- Every flag, refusal, read-only contract and commit default a description no longer carries now sits in that body's leading `#` header, which `chosko-llm show` prints and which loads only when the feature is invoked. Behaviour is unchanged.
+- Each stage feature names its place in the pipeline in exactly one clause ("stage 3 of the pipeline: turns a design section into feature documents; its output is /task-add's input"); the "sits between X and Y" prose that six descriptions repeated is gone.
+- **`task-engine`, `pipeline-engine` and `/domain-setup` carry `disable-model-invocation: true`.** The two reference libraries are read by path and never invoked, and the scaffold is always started by hand, so their descriptions leave the model's context entirely; all three stay listed and typeable. `task-review` and `task-iterate` stay model-invocable, since `/task-implement --review` spawns them by name.
+
 ## 1.58.0 — 2026-09-20
 
 - **`chosko-llm show`** prints the body's leading `#` header — the `# /name` / `# Usage:` block that carries a feature's flags and contracts — under the description in every view; `--content` still prints the full body instead, and a body with no header prints nothing extra.

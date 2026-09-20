@@ -1,8 +1,9 @@
 ---
 name: pipeline-engine
-version: 0.2.14
+version: 0.2.15
 type: skill
-description: Reference library for the pipeline as a whole — one authority per rule the pipeline-revision features share. Four files under references/ own the project probe and the one verdict line every consumer prints, the graph of how the pipeline's indexes point at each other, the routing table of what each pipeline feature consumes, produces and owns and where each owner's amend entry is, and the catalogue of drift findings. NOT a skill the user invokes and never a skill to suggest — it takes no arguments, runs nothing, and produces no output; /pipeline-check, /pipeline-patch and pipeline-revise read its files by path while they run, and only the features that declare requires: skill:pipeline-engine should ever open it.
+description: Reference library for the pipeline as a whole — one authority per rule the pipeline features share, under references/ (the project probe and verdict line, the index graph, the routing table, the drift catalogue); read by path by the pipeline-* features, never invoked.
+disable-model-invocation: true
 ---
 
 # pipeline-engine

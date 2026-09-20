@@ -1,16 +1,25 @@
 ---
 name: production-plan
-version: 0.2.0
+version: 0.2.1
 type: skill
-description: Write the production plan into .claude/PLAN.md — a third index beside TASKS.md and FEATURES.md recording which low-level feature belongs to which milestone, in what order, and after what. The feature-level WHEN of the pipeline, sitting between /architect and /task-add. Inherits each feature's milestone from the parenthetical on its FEATURES.md Source: line, turns each feature document's Dependencies prose into a confirmed edge list, and refuses the two arrangements that cannot be built — a dependency cycle, and a feature scheduled before something it needs. Re-runnable: a later run reconciles the plan against the current FEATURES.md and roadmap behind one approval gate. Requires /domain-setup; a roadmap is optional — without one every feature lands in Unscheduled and dependency ordering still works. Sole writer of PLAN.md; reads FEATURES.md, the feature documents, the roadmap and TASKS.md and writes none of them. Commits and pushes exactly what the run wrote by default; pass --no-commit to write everything and run no git command, or --no-push to commit without pushing.
+description: Write the production plan into .claude/PLAN.md — which low-level feature belongs to which milestone, in what order and after what — confirming each feature's dependency edges with the user. Use it once features are architected and before their tasks are written; stage 4 of the pipeline: sequences feature documents into a plan; its output is what /production-status reads.
 ---
 
 # /production-plan
 # Global skill: decide which low-level feature belongs to which milestone, in
 # what order, and after what — and write it down as `.claude/PLAN.md`, a
-# third index beside `TASKS.md` and `FEATURES.md`. Sits between `/architect`
-# (how each feature is built) and `/task-add` (what to build next), and
-# supplies the feature-level WHEN neither of them covers.
+# third index beside `TASKS.md` and `FEATURES.md`. Stage 4 of the pipeline:
+# sequences the feature documents `/architect` wrote, ahead of `/task-add`.
+# Inherits each feature's milestone from the parenthetical on its
+# `FEATURES.md` `Source:` line, turns each feature document's Dependencies
+# prose into a confirmed edge list, and refuses a dependency cycle and a
+# feature scheduled before something it needs. Re-runnable: a later run
+# reconciles the plan against the current `FEATURES.md` and roadmap behind
+# one approval gate. Requires `/domain-setup`; a roadmap is optional —
+# without one every feature lands in Unscheduled and dependency ordering
+# still works. Sole writer of `PLAN.md`; reads `FEATURES.md`, the feature
+# documents, the roadmap and `TASKS.md` and writes none of them. Commits and
+# pushes exactly what the run wrote by default.
 # Usage: /production-plan                        (build or reconcile the plan)
 #        /production-plan <free-form context>    (placements, orderings, what is active now)
 #        /production-plan --no-commit            (write the plan, run no git command)

@@ -1,17 +1,24 @@
 ---
 name: product-roadmap
-version: 0.3.0
+version: 0.3.1
 type: skill
-description: Write the product's roadmap into .claude/domain/product-roadmap.md — an ordered list of milestones, each with a goal, exit criteria, rationale, and the scope slices saying which share of a high-level feature it takes on. The product-level WHEN of the pipeline, sitting between /product-design and /architect. Asks whether you already have an ordering in mind before drafting one, so a strategy you arrived with steers the roadmap instead of arguing with a draft, and records that strategic premise in the document. Usable from a bare description when product-design.md doesn't exist yet, and re-runnable: the document is its own resume state, so a later run proposes changes against what is already there. Reads .claude/FEATURES.md and never writes it, and carries no milestone status — that belongs to the plan, not the roadmap. Requires /domain-setup. Commits and pushes exactly what the run wrote by default; pass --no-commit to write everything and run no git command, or --no-push to commit without pushing.
+description: Write the product's roadmap into .claude/domain/product-roadmap.md — ordered milestones, each with a goal, exit criteria, rationale and the scope slices it takes from each high-level feature. Use it once the design exists, or from a bare description, and re-run it to revise; stage 2 of the pipeline: turns the design into ordered milestones; its output is /architect's input.
 ---
 
 # /product-roadmap
 # Global skill: decide, with the user, the order in which the product gets
 # built, and write it down as `.claude/domain/product-roadmap.md` —
 # milestones with goals and exit criteria, and the scope slices that say
-# which share of each high-level feature a milestone takes on. Sits between
-# `/product-design` (what to build) and `/architect` (how to build it), and
-# supplies the WHEN neither of them covers.
+# which share of each high-level feature a milestone takes on. Stage 2 of
+# the pipeline: orders what `/product-design` described, ahead of
+# `/architect`. Asks whether you already have an ordering in mind before
+# drafting one, so a strategy you arrived with steers the roadmap instead of
+# arguing with a draft, and records that premise in the document. Usable
+# from a bare description when `product-design.md` doesn't exist yet, and
+# re-runnable: the document is its own resume state. Reads
+# `.claude/FEATURES.md` and never writes it, and carries no milestone status
+# — that belongs to the plan. Requires `/domain-setup`. Commits and pushes
+# exactly what the run wrote by default.
 # Usage: /product-roadmap                        (read the design, draft or revise the roadmap)
 #        /product-roadmap <free-form context>    (what the next release is about, constraints, deadlines)
 #        /product-roadmap --no-commit            (write the roadmap, run no git command)

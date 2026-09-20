@@ -1,8 +1,8 @@
 ---
 name: pipeline-revise
-version: 0.6.1
+version: 0.6.2
 type: skill
-description: Revise work that is already planned — change, insert into, remove from or reorder a feature document, a task or a runbook step — through the owners of every artifact the change reaches. Probes, resolves an anchor (feature=<slug>, task=<N> or runbook=<id|name|id-name> step=<n>, or one the description names), classifies the request into exactly one branch — amend, insert, delete or reorder — and reads only that branch's file, then runs the impact walk in both directions over the pipeline's index graph, opening bodies only within the anchor's scope. /pipeline-check scoped to the anchor runs before the proposal and again after actuation, and the report shows the difference. The proposal names its tier — editorial, local or structural — the artifacts touched, the owner steps in order and the lint findings it will create or clear, behind a single gate that settles whether the change is editorial on its own when a mechanical signal decides it — insert, delete and reorder are never editorial; an amend that adds or drops an edge, changes Files: or changes scope is not, and one meeting all three editorial conditions is — stating it in one Classified: evidence line. The gate asks for a reply only when something is still open: the editorial question on a borderline wording-versus-meaning amend (marking the answer the judged tier implies, a recommendation that still needs an explicit reply), or the here-versus-runbook choice when it is offered; with neither open it shows the plan and actuates. Nothing is written before the gate. Three or fewer owner steps run in the session, one at a time, each through its owner's amend arm or command with that owner's own gate intact; at four or more steps the gate also offers to hand the plan to /runbook-create and stop, when that command is installed. Removal is [SKIP] or a struck step, never physical deletion. Writes no line any owner owns, and commits and pushes by default: every owner step runs uncommitted, and one commit at the end holds the whole revision; a sequence that stops part-way commits nothing. Pass --no-commit to leave the revision uncommitted, or --no-push to commit without pushing. For a change one owner's amend arm covers, /pipeline-patch is the cheaper tool.
+description: Revise already-planned work — change, insert into, remove from or reorder a feature document, a task or a runbook step — through the owners of every artifact the change reaches, behind one gate. Use it for a change that crosses owners or restructures the plan; for one owner's amend arm, /pipeline-patch is cheaper.
 requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run
 ---
 
@@ -11,6 +11,21 @@ requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbo
 # every artifact it reaches — feature documents, tasks, plan edges, runbook
 # steps — by walking the impact, proposing a tiered plan behind one gate, and
 # running each owner's own amend arm or command in order. Writes nothing itself.
+# Probes, resolves the anchor (or one the change names), classifies the
+# request into exactly one branch — amend, insert, delete or reorder — and
+# reads only that branch's file; walks the impact both ways over the index
+# graph, opening bodies only within the anchor's scope; runs /pipeline-check
+# on the anchor before the proposal and after actuation. The proposal names
+# its tier — editorial, local or structural — the artifacts, the owner steps
+# and the lint findings it creates or clears, with one Classified: evidence
+# line; insert, delete and reorder are never editorial. The gate asks only
+# when something is open: a borderline editorial call, or the here-versus-
+# runbook choice. Three or fewer owner steps run in the session, one at a
+# time, each with its owner's gate intact; at four or more the gate also
+# offers to hand the plan to /runbook-create when installed. Removal is
+# [SKIP] or a struck step, never physical deletion. Commits and pushes by
+# default — every owner step runs uncommitted and one commit at the end holds
+# the whole revision; a sequence that stops part-way commits nothing.
 # Usage: /pipeline-revise [<anchor>] "<change>" [--no-commit] [--no-push]
 #        anchor: feature=<slug> | task=<N> | runbook=<id|name|id-name> step=<n>
 # Examples: /pipeline-revise feature=password-auth "Data and state: sessions expire after 30 days"
