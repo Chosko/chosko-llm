@@ -2,6 +2,12 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.58.0 — 2026-09-20
+
+- **`chosko-llm show`** prints the body's leading `#` header — the `# /name` / `# Usage:` block that carries a feature's flags and contracts — under the description in every view; `--content` still prints the full body instead, and a body with no header prints nothing extra.
+- **`/runbook-clean`** no longer carries a literal ` --- ` in its description, which Claude Code truncated the description at — the model saw 145 of its 1,111 characters.
+- **`task-engine`, `pipeline-engine`, `claude-council`, `unity-mcp-skill`** open with a `#` header like every other shipped body — a two-line "read by path; not invoked" note for the two reference libraries.
+
 ## 1.57.4 — 2026-09-20
 
 - `scripts/check-home-paths.sh` now catches every spelling of an install home, not only the three literals it was written against. `$CLAUDE_HOME/skills/…`, `${CLAUDE_HOME}/…`, `${HOME}/.claude/…` and `"$HOME"/.claude/…` all passed it silently before; the bare `$CLAUDE_HOME` form is the one an author is most likely to write.

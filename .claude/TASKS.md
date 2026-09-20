@@ -123,7 +123,7 @@ Preconditions: none
 
 ## 240. Set the description contract: short what+when in frontmatter, flags in the body header
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: docs/authoring-guide.md, scripts/cmd-show.sh, commands/runbook-clean.md, skills/claude-council/SKILL.md, skills/unity-mcp-skill/SKILL.md, skills/task-engine/SKILL.md, skills/pipeline-engine/SKILL.md, .claude/skills/context-budget/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: none

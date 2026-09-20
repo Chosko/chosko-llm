@@ -85,7 +85,9 @@ done
 
 Frontmatter descriptions, first block only. A `description:` is a YAML plain
 scalar and may wrap across several lines — count the continuation lines too, or
-a paragraph-length description reads as one line's worth:
+a paragraph-length description reads as one line's worth. Four columns per
+file: path, word count, character count, and `dashes` when the text contains
+a literal ` --- ` (`-` otherwise):
 
 ```bash
 for f in commands/*.md skills/*/SKILL.md claude-md/*.md; do
@@ -93,7 +95,7 @@ for f in commands/*.md skills/*/SKILL.md claude-md/*.md; do
        fm && /^---[ \t]*$/ { exit }
        fm && /^description:/ { sub(/^description:[ \t]*/, ""); d = $0; grab = 1; next }
        fm && grab { if ($0 ~ /^[A-Za-z_-]+:/) grab = 0; else d = d " " $0 }
-       END { if (d != "") print FILENAME "\t" split(d, a, " ") }' "$f"
+       END { if (d != "") print FILENAME "\t" split(d, a, " ") "\t" length(d) "\t" (index(d, " --- ") ? "dashes" : "-") }' "$f"
 done
 ```
 
@@ -134,6 +136,8 @@ THRESHOLDS
 | supporting reference file | > 500 lines |
 | command length | > 400 lines |
 | `description:` frontmatter | > 30 words |
+| `description:` frontmatter | > 1,536 chars — the hard cap; the harness truncates there |
+| `description:` frontmatter | contains ` --- ` — the harness cuts the description at it |
 | `CLAUDE.md` chain combined | > 300 lines |
 
 `claude-md/*.md` artifacts are inventoried and counted toward the total but
@@ -145,12 +149,19 @@ suggests:** a description loads into every session whether or not the feature
 is ever invoked. A long body is paid for once, when someone runs the thing; a
 long description is a permanent per-session cost paid by every user who has
 the feature installed and never touches it. `/task-implement`'s description is
-a paragraph, and is the live example in this repo.
+a paragraph, and is the live example in this repo. The two extra signals are
+not about cost but about loss: Claude Code truncates each description at 1,536
+characters in the skill listing, and cuts one short at a literal ` --- `, so a
+description tripping either is partly invisible to the model however good it
+reads on disk. The authoring guide's `description` contract is the rule these
+three measure against.
 
 **Estimated saving per flagged item** = the excess over the threshold, priced
 at that file's own average: `(lines − threshold) × (est. tokens ÷ lines)`,
 rounded. For a `description:` flag: `(words − 30) × 1.3`. It is what trimming
-to the threshold would recover — not a recommendation to trim.
+to the threshold would recover — not a recommendation to trim. The hard-cap
+and ` --- ` flags carry no saving figure — they mark text the model never
+sees, not text it pays for — and print `—` in that column.
 
 ---
 
@@ -174,7 +185,10 @@ REPORT
    ```
 
 3. **`description:` section** — every description over 30 words: feature name,
-   word count, estimated saving. Silent when none are over.
+   word count, estimated saving. Below them, every description over 1,536
+   chars (flag `cap`, with its character count) and every one containing
+   ` --- ` (flag `---`), each on its own line with `—` for the saving.
+   Silent when none trips any of the three.
 4. **`CLAUDE.md` chain** — the files in the chain, combined line count, and
    whether it is over 300.
 5. **Totals** — total estimated tokens across the whole inventory, and the

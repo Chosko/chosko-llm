@@ -1,9 +1,15 @@
 ---
 name: unity-mcp-skill
-version: 0.1.1
+version: 0.1.2
 type: skill
 description: Orchestrate Unity Editor via MCP (Model Context Protocol) tools and resources. Use when working with Unity projects through MCP for Unity - creating/modifying GameObjects, editing scripts, managing scenes, running tests, or any Unity Editor automation. Provides best practices, tool schemas, and workflow patterns for effective Unity-MCP integration.
 ---
+
+# unity-mcp-skill
+# Global skill: operate the Unity Editor through the MCP for Unity tools and
+# resources — read the relevant mcpforunity:// resources first, then call the
+# tools, then check the Console. Loaded by Claude when a Unity project is driven
+# through mcp__UnityMCP__* tools; takes no arguments and is not invoked by name.
 
 # Unity-MCP Operator Guide
 

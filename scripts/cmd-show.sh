@@ -12,13 +12,15 @@ usage() {
 Usage: chosko-llm show <feature> [--installed | --latest | --diff] [--content] [--local | --global]
 
   Inspect a single feature: name, kind, installed/latest version, status,
-  description, and path.
+  description, path, and the body's leading '#' header (the '# /name' /
+  '# Usage:' block that carries the flags).
 
   (no flag)     Show the installed copy if installed, otherwise the latest.
   --installed   Show the installed copy (notes if it is not installed).
   --latest      Show the latest copy from the managed clone.
   --diff        Compare latest vs installed (summary; add --content for a line diff).
-  --content     Also print the body of the selected copy (or the diff).
+  --content     Print the full body of the selected copy (or the diff) in
+                place of the header block.
   --local       Inspect <cwd>/.claude instead of \$CLAUDE_HOME. Requires
                 <cwd>/CLAUDE.md to exist. statusline is reported as global-only.
   --global      Inspect \$CLAUDE_HOME (default). hook is reported as local-only.
@@ -256,6 +258,35 @@ print_latest_body() {
   esac
 }
 
+# print_header_block <file>
+# The body's leading `#`-comment header: the contiguous run of single-`#`
+# lines (`# /name`, summary, `# Usage:`, `# Examples:`) that opens the body
+# right after the frontmatter, blank lines before it skipped. It is the
+# run-time authority for the flags the description no longer carries, so
+# `show` prints it under the description. Stops at the first blank or non-`#`
+# line; `##` headings do not count. A body with no header prints nothing —
+# including the two `.sh` kinds, whose heredoc terminator follows the
+# frontmatter.
+print_header_block() {
+  local file="$1"
+  [ -f "$file" ] || return 0
+  awk 'BEGIN { seen = 0; past = 0; grab = 0 }
+    /^---[[:space:]]*$/ { if (!seen) { seen = 1; next } else if (!past) { past = 1; next } }
+    !past { next }
+    /^[[:space:]]*$/ { if (grab) exit; next }
+    /^#($|[^#])/ { grab = 1; print; next }
+    { exit }
+  ' "$file"
+}
+
+# The header comes from the copy the view shows; an installed claude-md
+# section carries no frontmatter, so its header is read from the source.
+case "$effective_view" in
+  installed) header_file="$inst_file" ;;
+  *)         header_file="$src_file" ;;
+esac
+if [ "$kind" = "claude-md" ] || [ ! -f "$header_file" ]; then header_file="$src_file"; fi
+
 # ---------- colors for metadata ----------
 kind_c=""
 case "$kind" in
@@ -288,6 +319,17 @@ printf '  Latest:      %s%s%s\n' "$latest_c" "$latest_col" "$C_RESET"
 printf '  Status:      %s%s%s\n' "$status_c" "$status" "$C_RESET"
 printf '  Description: %s\n' "${desc:-—}"
 printf '  Path:        %s\n' "$path_display"
+
+# ---------- body header (flags and contracts) ----------
+# Printed in every view unless --content is set, in which case the full body
+# (which opens with this same block) is printed below instead.
+if [ "$show_content" -ne 1 ]; then
+  header_block="$(print_header_block "$header_file")"
+  if [ -n "$header_block" ]; then
+    echo
+    printf '%s\n' "$header_block" | sed 's/^/  /'
+  fi
+fi
 
 # ---------- view-specific output ----------
 echo
