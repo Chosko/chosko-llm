@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.58.3 — 2026-09-20
+
+- **`chosko-llm help` describes what `show` prints since 1.58.0:** the `show <feature>` entry now says the command prints the body's leading `#` header — the `# /name` / `# Usage:` block that carries the flags — and that `--content` prints the full body in its place. The command itself is unchanged; only its help text had lagged.
+
 ## 1.58.2 — 2026-09-20
 
 - **The remaining eighteen descriptions rewritten to the description contract** (`runbook-create`, `runbook-list`, `runbook-describe`, `runbook-clean`, `runbook-prune`, `runbook-run`, `session-save`, `session-resume`, `context-build`, `context-update`, `context-convert`, `refactor-codebase`, `refactor-tests`, `project-setup`, `unity-mcp-setup`, `unity-mcp-skill`, `claude-council`, `runbook-suggest`): each now says what the feature does and when to use it in at most 60 words; `claude-council` and `runbook-suggest` keep their trigger phrases first and their "Not for" list last. `runbook-run`'s description drops from 4,384 characters to 253, and every one of its flags now lives in its `#` header.

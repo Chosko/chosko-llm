@@ -87,15 +87,16 @@ The contract every shipped `description` follows:
   at that token: `runbook-clean`'s once said "the surrounding `---` rules", and
   the model saw 145 of its 1,111 chars.
 - **Pipeline stage: exactly one clause.** A feature that has a stage in the
-  product pipeline names it once ("stage 4, between `/architect` and
-  `/task-add`") and does not restate it.
+  product pipeline names it once, in the shipped form — "stage 5 of the
+  pipeline: turns a feature document into tasks; its output is
+  `/task-implement`'s input" — and does not restate it.
 - **Not here:** flags, argument grammar, refusal lists, read-only contracts,
   commit/push defaults, edge cases. They live in the body header, below.
 
 Budgets are in characters and words, not tokens: the repo forbids a tokenizer
 dependency, and characters are what the harness caps on anyway. `/context-budget`
-(repo-local, see below) flags a description over 30 words, over 1,536 chars, or
-containing ` --- `.
+(repo-local, see below) flags a description over 60 words (150 for the four
+auto-trigger skills), over 1,536 chars, or containing ` --- `.
 
 ### <a id="the-body-header"></a>The body header — where the flags live
 
@@ -627,9 +628,9 @@ What that means concretely:
   a session in this repo, so a repo-local skill sharing a name with a shipped
   one would be ambiguous. Check the shipped catalogue before naming a new one.
 - **`/context-budget` is where the `description` contract gets checked.** It
-  flags a description over 30 words, over the 1,536-char hard cap, or
-  containing ` --- ` — an observation, not a gate; see § The `description`
-  contract for the rule it measures against.
+  flags a description over 60 words (150 for the four auto-trigger skills),
+  over the 1,536-char hard cap, or containing ` --- ` — an observation, not a
+  gate; see § The `description` contract for the rule it measures against.
 
 One interaction is worth recording so a later reader does not file it as a bug:
 `select_export_files` in `scripts/cmd-export.sh` selects `.claude/**/*.md`

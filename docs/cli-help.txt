@@ -16,8 +16,10 @@ Usage:
   chosko-llm ls --available           Show only features present in the managed clone.
 
   chosko-llm show <feature>           Inspect a single feature: name, kind, installed/latest
-                                      version, status, description, and path. Add --content to
-                                      also print its body.
+                                      version, status, description, path, and the body's leading
+                                      '#' header — the '# /name' / '# Usage:' block that carries
+                                      its flags. Add --content to print the full body in place of
+                                      that header.
   chosko-llm show <feature> --diff    Compare the installed copy against the managed clone.
                                       Use --diff --content for a line-by-line diff. --installed
                                       and --latest pick which copy to show.

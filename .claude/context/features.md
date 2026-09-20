@@ -1738,9 +1738,9 @@ live in the body's leading `#` header (`# /name`, summary, `# Usage:`,
 `# Examples:`), which loads only on invocation and which `cmd-show` prints
 under the description ([cmd-show.md](./cmd-show.md)). Every shipped body has
 one; the two engines' is a two-line "read by path; not invoked" note. The
-repo-local `/context-budget` flags a description over 30 words, over 1,536
-chars or containing ` --- `. Measured: rendered list 45,105 chars at v1.57.4
-→ 13,035 on disk, 9,977 model-visible.
+repo-local `/context-budget` flags a description over 60 words (150 for the
+four auto-trigger skills), over 1,536 chars or containing ` --- `. Measured:
+rendered list 45,105 chars at v1.57.4 → 13,035 on disk, 9,977 model-visible.
 
 **Loading-control keys** — three Claude Code frontmatter keys this repo may
 use; `parse_frontmatter` ignores unknown keys, so they pass through
