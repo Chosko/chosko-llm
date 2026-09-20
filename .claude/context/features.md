@@ -1778,11 +1778,12 @@ its state in versioned project document.
   in step" for the case where this does NOT apply (an optional dependency,
   which `requires:` cannot express).
 - **A shipped body cites another shipped file by a path relative to
-  itself**, never by an absolute install home. Four forms: `./<f>.md` (or
-  `./references/<f>.md` from a `SKILL.md`) within one skill;
-  `../<other>/references/<f>.md` from another skill's `SKILL.md`;
-  `../../<other>/references/<f>.md` from another skill's reference file;
-  `../skills/<other>/references/<f>.md` from a command. Never
+  itself**, never by an absolute install home. Depth decides the form — count
+  directories up to the install home, then down: `./<f>.md` (or
+  `./references/<f>.md` from a `SKILL.md`) within one skill; `../<other>/…`
+  from a file at a skill's root, `SKILL.md` and supporting files alike;
+  `../../<other>/…` from a file under a skill's `references/`;
+  `../skills/<other>/…` from a command. Never
   `${CLAUDE_HOME:-$HOME/.claude}/…`, `$HOME/.claude/…` or `~/.claude/…` —
   `chosko-llm add --local` repoints `CLAUDE_HOME` to `$PWD/.claude` at
   install time only, while the executing agent expands the variable itself

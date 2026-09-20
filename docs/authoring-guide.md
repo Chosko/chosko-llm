@@ -180,14 +180,17 @@ citing body**, never an absolute install home and never a `docs/` path.
 `requires:` guarantees the file is installed; it does nothing about a body
 that looked in the wrong place.
 
-Four forms cover every case:
+Count directories from the citing file up to the install home, then down. A
+supporting file at a skill's root sits at the same depth as its `SKILL.md`
+and takes the same form; only a file under `references/` is one level deeper.
+The target need not be under `references/`.
 
 | From | To | Form |
 | --- | --- | --- |
-| one file in a skill | another file in the same skill | `./<file>.md` — or `./references/<file>.md` from `SKILL.md` |
-| a skill's `SKILL.md` | another skill's reference | `../<other>/references/<file>.md` |
-| a skill's reference file | another skill's reference | `../../<other>/references/<file>.md` |
-| a command | a skill's reference | `../skills/<other>/references/<file>.md` |
+| a file in a skill | another file in the same skill | `./<file>.md` — or `./references/<file>.md` from `SKILL.md` |
+| a file at a skill's root | anything in another skill | `../<other>/…` |
+| a file under a skill's `references/` | anything in another skill | `../../<other>/…` |
+| a command | anything in a skill | `../skills/<other>/…` |
 
 Never `${CLAUDE_HOME:-$HOME/.claude}/skills/<name>/…`, never `$HOME/.claude`,
 never `~/.claude`. That form is broken, not merely unfashionable:

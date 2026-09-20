@@ -1,6 +1,6 @@
 ---
 name: pipeline-engine
-version: 0.2.12
+version: 0.2.13
 type: skill
 description: Reference library for the pipeline as a whole — one authority per rule the pipeline-revision features share. Four files under references/ own the project probe and the one verdict line every consumer prints, the graph of how the pipeline's indexes point at each other, the routing table of what each pipeline feature consumes, produces and owns and where each owner's amend entry is, and the catalogue of drift findings. NOT a skill the user invokes and never a skill to suggest — it takes no arguments, runs nothing, and produces no output; /pipeline-check, /pipeline-patch and pipeline-revise read its files by path while they run, and only the features that declare requires: skill:pipeline-engine should ever open it.
 ---
@@ -18,11 +18,11 @@ description: Reference library for the pipeline as a whole — one authority per
 > read it — `chosko-llm add skill:pipeline-engine` writes it under the same
 > home those features are installed into, whichever home that is. So a
 > feature names a file here by a path **relative to its own body**, never by
-> an absolute home path:
-> `../skills/pipeline-engine/references/<file>.md` from a command,
-> `../pipeline-engine/references/<file>.md` from another skill's `SKILL.md`,
-> `../../pipeline-engine/references/<file>.md` from another skill's reference
-> file, and `./<file>.md` between two files in this skill.
+> an absolute home path, counting directories up to the install home and back
+> down: `../skills/pipeline-engine/references/<file>.md` from a command,
+> `../pipeline-engine/references/<file>.md` from a file at another skill's
+> root, `../../pipeline-engine/references/<file>.md` from a file under another
+> skill's `references/`, and `./<file>.md` between two files in this skill.
 >
 > That is scope-proof by construction. `CLAUDE_HOME` still governs where
 > `install.sh` and the `scripts/cmd-*.sh` verbs *write* — including

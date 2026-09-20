@@ -11,11 +11,12 @@
 # nothing, on every --local install — and it fails silently, which is what
 # this guard turns into a caught failure.
 #
-# What it proves: no file under commands/ or skills/ joins an install-home
-# literal — `${CLAUDE_HOME:-$HOME/.claude}`, `$HOME/.claude` or `~/.claude` —
-# to a `skills/` or `commands/` path segment, whether the two sit on one line
-# or the citation is wrapped across a line break (markdown prose wraps these,
-# and a line-based grep alone would miss it).
+# What it proves: no file under commands/ or skills/ joins an install home —
+# any spelling of CLAUDE_HOME (`$CLAUDE_HOME`, `${CLAUDE_HOME}`,
+# `${CLAUDE_HOME:-...}`), any spelling of $HOME/.claude, or `~/.claude` — to a
+# `skills/` or `commands/` path segment, whether the two sit on one line or the
+# citation is wrapped across a line break (markdown prose wraps these, and a
+# line-based grep alone would miss it).
 #
 # No exemptions. A body asking whether an optional feature is installed names
 # the feature and lets Claude resolve it across every scope; it needs no path,
@@ -41,11 +42,11 @@ for dir in commands skills; do
   [ -d "$REPO_ROOT/$dir" ] || die "$REPO_ROOT/$dir does not exist."
 done
 
-# The parser contract: an offence is one of the three home literals followed
-# by a '/skills/' or '/commands/' path segment — i.e. the literal used as the
-# root of a path to another shipped file. A bare literal with no path segment
-# joined onto it is prose (or a shell assignment) and is not matched.
-home='(\$\{CLAUDE_HOME:-\$HOME/\.claude\}|\$HOME/\.claude|~/\.claude)'
+# The parser contract: an offence is an install home followed by a '/skills/'
+# or '/commands/' path segment — i.e. the home used as the root of a path to
+# another shipped file. A home with no path segment joined onto it is prose
+# (or a shell assignment) and is not matched.
+home='(\$\{CLAUDE_HOME[^}]*\}|\$CLAUDE_HOME|"?\$\{HOME\}"?/\.claude|"?\$HOME"?/\.claude|~/\.claude)'
 pattern="$home/(skills|commands)/"
 
 # Pass 1 — the citation on one line.
@@ -79,5 +80,5 @@ if [ -n "$hits" ]; then
   while IFS= read -r line; do
     log_error "${line#"$REPO_ROOT"/}"
   done <<< "$hits"
-  die "Shipped bodies must cite another shipped file by a path relative to themselves — './<file>.md' within one skill, '../<other>/references/<file>.md' from another skill's SKILL.md, '../../<other>/references/<file>.md' from another skill's reference file, '../skills/<other>/references/<file>.md' from a command. See docs/authoring-guide.md § requires:."
+  die "Shipped bodies must cite another shipped file by a path relative to themselves. Count directories from the citing file up to the install home, then down: './<file>.md' within one skill, '../<other>/...' from a file at a skill's root, '../../<other>/...' from a file under a skill's references/, '../skills/<other>/...' from a command. See docs/authoring-guide.md § requires:."
 fi

@@ -1,6 +1,6 @@
 ---
 name: claude-council
-version: 0.1.1
+version: 0.1.2
 type: skill
 description: 'Pressure-test a high-stakes decision with a structured LLM Council — five thinking-lens advisors (Red Team, First Principles, Expansionist, Outsider, Executor), anonymised peer review, forced debate when consensus looks too clean, and a dual-chairman synthesis that preserves dissent. Triggers: /claude-council, "convene the council", "run this by the council", "council this", "pressure-test this", "stress-test this", "war room this", "debate this", "torn between two options", "this is a big decision", "I need outside perspectives". Not for factual questions, coding help, debugging, quick yes/no calls, or emotional support. Suffixes: "with codex", "deep", "quick". Secondary: /claude-council outcome <sha1> <note>, /claude-council meta.'
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent, AskUserQuestion
@@ -19,16 +19,12 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent, AskUserQuestion
 > holds — the scripts and the journal sit beside this file.
 >
 > **The `bash` lines in Steps 0, 2 and 10 run from the project root, not from
-> here**, so they cannot use those paths as written. Before the first one,
-> set `SKILL_DIR` to the absolute directory this file was read from:
->
-> ```bash
-> SKILL_DIR=<the directory containing this SKILL.md>
-> ```
->
-> Every fenced `bash` block below invokes its script through `$SKILL_DIR`.
-> The scripts themselves self-locate once given a correct path, so only the
-> path handed to `bash` matters.
+> here**, so they cannot use those paths as written. Each of those blocks
+> opens with `SKILL_DIR=`; substitute the absolute directory this file was
+> read from before running it, every time, in the same command. Shell
+> variables do not survive from one block to the next. The scripts
+> self-locate once given a correct path, so only the path handed to `bash`
+> matters.
 >
 > **Prerequisite:** `jq` must be on `PATH`. The Step 10 journal append and `/claude-council meta` both require it; the Step 2 journal lookup degrades to a warning without it. Everything else runs without `jq`.
 
@@ -40,8 +36,8 @@ Run any high-stakes decision through five structured thinking lenses, a peer-rev
 
 ## Step 0 — Handle special invocations first
 
-- `/claude-council outcome <sha1> <note>` — look up the run in `./journal/council-log.jsonl` (i.e. `"$SKILL_DIR/journal/council-log.jsonl"`) by sha1 prefix, update its `outcome` field, and confirm. Done.
-- `/claude-council meta` — run `bash "$SKILL_DIR/scripts/meta_analysis.sh"` and surface the resulting amendment file path. Done. (Requires `jq`.)
+- `/claude-council outcome <sha1> <note>` — look up the run in this skill's `journal/council-log.jsonl` by sha1 prefix, update its `outcome` field, and confirm. Done.
+- `/claude-council meta` — run `bash "<this skill's directory>/scripts/meta_analysis.sh"` and surface the resulting amendment file path. Done. (Requires `jq`.)
 - Any other invocation → continue to Step 1.
 
 ---
@@ -63,6 +59,7 @@ Reject and answer directly if ANY applies:
 Escape the raw question for safe shell passing: replace all single quotes with `'\''`, then wrap in single quotes. Store as `$ESCAPED_QUESTION`. Never pass raw user text directly to bash — `$(...)`, backticks, and `\` sequences in the question would execute.
 
 ```bash
+SKILL_DIR=<the directory containing this SKILL.md>
 bash "$SKILL_DIR/scripts/journal_search.sh" "$ESCAPED_QUESTION"
 ```
 
@@ -318,6 +315,7 @@ PAYLOAD=$(jq -n \
     chairman_confidence:$chair_conf, recommendation_one_liner:$rec,
     dissent_ledger:$dissent, html_path:$html, transcript_path:$transcript,
     outcome:null}')
+SKILL_DIR=<the directory containing this SKILL.md>
 bash "$SKILL_DIR/scripts/journal_append.sh" "$PAYLOAD"
 ```
 

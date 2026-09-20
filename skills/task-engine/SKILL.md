@@ -1,6 +1,6 @@
 ---
 name: task-engine
-version: 0.5.3
+version: 0.5.4
 type: skill
 description: Reference library for the task-* features — one authority per rule they share. Eight files under references/ own backlog resolution, the TASKS.md schema, the task archive and the eligibility clause by which next / all honour Preconditions:, the status vocabulary and its transitions, Target: values and the delegation guard, [STALE] handling, the dirty-tree prompt protocol, commit/push gating with --no-commit / --no-push, the review cost controls behind --review-model / --review-effort, and the protocol for amending one existing task. NOT a skill the user invokes and never a skill to suggest — it takes no arguments, runs nothing, and produces no output; /task-add, /task-list, /task-clean, /task-implement and /task-review read its files by path while they run, the pipeline revision surfaces /pipeline-patch and /pipeline-revise read references/amend.md by path, and only they should ever open it.
 ---
@@ -20,9 +20,10 @@ description: Reference library for the task-* features — one authority per rul
 > read it — `chosko-llm add skill:task-engine` writes it under the same home
 > those features are installed into, whichever home that is. So a feature
 > names a file here by a path **relative to its own body**, never by an
-> absolute home path: `../task-engine/references/<file>.md` from another
-> skill's `SKILL.md`, `../../task-engine/references/<file>.md` from another
-> skill's reference file, `../skills/task-engine/references/<file>.md` from a
+> absolute home path, counting directories up to the install home and back
+> down: `../task-engine/references/<file>.md` from a file at another skill's
+> root, `../../task-engine/references/<file>.md` from a file under another
+> skill's `references/`, `../skills/task-engine/references/<file>.md` from a
 > command, and `./<file>.md` between two files in this skill.
 >
 > That is scope-proof by construction. `CLAUDE_HOME` still governs where
