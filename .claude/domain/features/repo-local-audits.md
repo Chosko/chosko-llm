@@ -90,7 +90,7 @@ precise number this repo cannot produce.
 | `SKILL.md` length | > 400 lines |
 | supporting reference file | > 500 lines |
 | command length | > 400 lines |
-| `description:` frontmatter | > 30 words; > 1,536 chars (the harness's hard cap); contains ` --- ` (the harness truncates there) |
+| `description:` frontmatter | > 60 words (> 150 for the four auto-trigger skills), the contract's own budgets; > 1,536 chars (the harness's hard cap); contains ` --- ` (the harness truncates there) |
 | `CLAUDE.md` chain combined | > 300 lines |
 
 ECC's observation about `description:` is the one worth carrying deliberately:
@@ -104,9 +104,11 @@ losing its tail. Every shipped description now follows the contract in
 and when to use it, front-loaded; at most 60 words / 400 chars for a feature
 invoked by name, 150 words / 1,000 chars for an auto-trigger skill; flags and
 contracts in the body's `#` header, never here. Measured on the rendered
-`- name: description` list summed over every command and skill: 45,105 chars at
-v1.57.4, 13,035 on disk once the contract landed, of which the model receives
-9,977 — the ten features carrying `disable-model-invocation: true` are never
+`- name: description` list summed over every command and skill, and read as
+approximations since the count depends on how quotes and wrapped lines are
+folded: ≈45,100 chars at v1.57.4, ≈13,000 on disk once the contract landed, of
+which the model receives ≈9,900 — the ten features carrying
+`disable-model-invocation: true` are never
 rendered.
 
 **Report** — a ranked table of the heaviest bodies with an estimated saving per
