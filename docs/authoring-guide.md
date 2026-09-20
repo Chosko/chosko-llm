@@ -210,6 +210,10 @@ The `CLAUDE_HOME` override is not being abandoned: it still governs where
 shipped *bodies* stopped trying to re-derive it at read time, which they were
 never able to do correctly.
 
+A feature you want *consulted* is named, not pathed — `/follow-ups`, the
+`claude-council` skill — and so is any check of whether an optional feature is
+installed at all; see [§ Asking whether a feature is
+installed](#asking-whether-a-feature-is-installed).
 `scripts/check-home-paths.sh` is the guard — see [§ The home-path
 guard](#the-home-path-guard) below.
 
@@ -481,11 +485,12 @@ re-applied on every re-sync:
 2. **No `~/.claude` literals.** Upstream hardcodes the install path in its
    SKILL.md; the shipped copy rewrites every one of them to the file-relative
    form above — `./scripts/…` and `./journal/…`, resolved against the skill's
-   own directory — matching the citation rule in § `requires:` and the
-   `../claude-council/SKILL.md` detection path both `council-gate.md` copies
-   use. Its install-path note says so, because those paths appear in `bash`
-   lines that run from the project root and so have to be resolved against the
-   skill's directory before they are run.
+   own directory — matching the citation rule in § `requires:`. Its
+   install-path note says so, because those paths appear in `bash` lines that
+   run from the project root and so have to be resolved against the skill's
+   directory before they are run. The two `council-gate.md` copies do not name
+   a path to this skill at all — they ask for it by name, per § Asking whether
+   a feature is installed.
 
 Upstream drift is resolved by a manual re-sync — re-fetch the tree, diff it
 against `skills/claude-council/`, re-apply those two adaptations, bump the
@@ -847,40 +852,47 @@ the four relative forms to use instead.
 Its parser contract is one line: an offence is one of the three home literals
 — `${CLAUDE_HOME:-$HOME/.claude}`, `$HOME/.claude`, `~/.claude` — followed by
 a `/skills/` or `/commands/` path segment, i.e. the literal used as the root
-of a path to another shipped file, on a line that does not carry the
-`scope-probe` marker. Both the single-line form and the two-line wrap are
-matched. A bare literal with nothing joined onto it is prose (or a shell
+of a path to another shipped file. Both the single-line form and the two-line
+wrap are matched, and there is no exemption. A bare literal with nothing joined onto it is prose (or a shell
 assignment) and is not matched either way, which is what lets the install-path
 notes and this guide explain *why* the form is wrong without tripping it.
 
-### <a id="scope-probes"></a>The one exception: a scope probe
+### <a id="asking-whether-a-feature-is-installed"></a>Asking whether a feature is installed: name it
 
-Citing a file and asking **whether a feature is installed at all** are
-different questions, and only the first has a relative answer. A scope probe
-has to look in both scopes Claude Code loads features from — a project's own
-`.claude/`, where `chosko-llm add --local` writes, and `~/.claude/`, where a
-global add writes — so one of its two paths is necessarily absolute. Marking
-that line `scope-probe` permits it:
+Citing a file and asking **whether a feature is available at all** are
+different questions, and the second has no path answer. A `requires:`
+dependency is guaranteed to sit under the same home as its dependent, so a
+relative citation is correct by construction. An **optional** dependency —
+one `requires:` cannot express, because the feature has to keep working
+without it — carries no such guarantee: it may be installed globally while
+its reader was added with `--local`, or the reverse.
 
-```
-~/.claude/skills/claude-council/SKILL.md    # scope-probe
-```
+So name it, and let Claude resolve it:
 
-The marker is deliberate, greppable, and cannot be tripped by accident. It is
-never a way to cite a file: a body that reads a shipped file still cites it
-relatively, and a `scope-probe` marker on such a line is a bug the guard
-cannot see. Exactly two lines in the repo carry it, the two `council-gate.md`
-copies, and a third should be argued for rather than added.
+> Is the **`claude-council` skill** available in this session?
 
-The probe snippet in `skills/pipeline-engine/references/probes.md` needs no
-marker — it derives its homes into shell variables, which the pattern does
-not match — but it is under the same obligation, and § *Which install home —
-both of them* in that file is where the obligation is written.
+Claude Code resolves a command or skill by name across every scope it loads
+from, which is the only question that matters. A path cannot: a relative one
+finds the feature only in the reader's own home, and an absolute one picks a
+scope and misses the other. Both fail *silently* in the case that matters —
+an optional dependency's gate is built to say nothing when the feature is
+absent, so a wrong "absent" is indistinguishable from a right one.
+
+The two `council-gate.md` copies are the worked example, and `/follow-ups`
+is the other: `/task-implement`'s delegated agents are handed that command's
+**name**, never a path to it, for the same reason.
+
+There is no marker and no guard exception. If a body seems to need an
+absolute home, it is asking the installed question and the answer is a name.
+
+The one place a home is derived at all is the probe in
+`skills/pipeline-engine/references/probes.md`: it is a shell snippet, `sh`
+cannot resolve a skill by name, and it checks both scopes. Its own file
+carries the rule it has to satisfy.
 
 It proves absence of that one shape and nothing more. Whether a relative
-citation actually resolves to a file is a reviewer's read; so is whether a
-`scope-probe` marker is honestly placed, and whether a body that derives a
-home into a shell variable looks in the right scopes. Like the other two it is
+citation actually resolves to a file is a reviewer's read, and so is whether
+the probe's shell looks in the right scopes. Like the other two it is
 repo-local: not a feature, no frontmatter, not a subcommand, installed
 nowhere.
 

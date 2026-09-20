@@ -2,6 +2,13 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.57.2 — 2026-09-20
+
+- **Fixed two defects in 1.57.1, both of the kind that fail silently.** The probe took the `routing.md` row list from whichever install home it found first while counting features across both, so a stale copy in one home dropped a feature out of the count, out of `missing:` and out of the denominator at once — the verdict line read as complete while omitting it. Row names are now unioned across both homes.
+- The claude-council gate in `/architect` and `/product-design` **asks for the skill by name** rather than by any path. A relative path found the council only when it was installed into the same home as the gate's own skill; an absolute one picked a scope and missed the other. Both failures were invisible, because the gate is built to say nothing when the council is absent — so a wrong "absent" looked exactly like a right one and the user never learned their installed skill was skipped. A name has no scope to get wrong. This is the rule `/follow-ups` already followed.
+- Because of that, `scripts/check-home-paths.sh` **no longer has the `scope-probe` exception** 1.57.1 added. It was a bare substring filter over grep's `path:line:content` output, so a skill directory named for it, or any prose mentioning it, silently disabled the guard for that line or file. Nothing needs the marker now: asking whether an optional feature is installed is a question you answer with a name.
+- `installed=` reports `unknown` when neither home holds a routing table, rather than `0/0` — which read as "nothing to install". `CLAUDE_HOME` relocates the user scope and no longer suppresses the project scope; the probe's feature test is `-f` again, not `-e`; and a change of working directory now invalidates a cached verdict, since `installed=` and `council=` answer for the directory they ran in.
+
 ## 1.57.1 — 2026-09-20
 
 - **The pipeline probe now answers for both install scopes.** `installed=` and `council=` derived a single install home and always landed on `~/.claude`, so on a project that ran `chosko-llm add --local` every pipeline feature was reported missing — from a shell standing one directory above the install that held them. In this repo the old probe printed `installed=0/0`; it now prints the features it actually finds. An explicit `CLAUDE_HOME` still wins and is then the only home checked.

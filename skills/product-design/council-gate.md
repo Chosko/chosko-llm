@@ -34,31 +34,30 @@ propagates into every feature document downstream.
 
 ## Step 1 — Detection
 
-Probe for the skill in **both** scopes Claude Code loads features from, the
-sibling path first:
+Is the **`claude-council` skill** available in this session?
 
-```
-../claude-council/SKILL.md
-~/.claude/skills/claude-council/SKILL.md    # scope-probe
-```
+Ask that by name. Do not construct a path to it — not an install home, and
+not a path relative to this file. Claude Code already resolves a skill by
+name across every scope it loads from, which is the only question that
+matters here: can this run invoke `/claude-council`?
 
-The skill is present if **either** resolves. The first is relative to this
-file, so it finds a council installed into the same home as this skill —
-the common case, global or `--local` alike, since `chosko-llm add` writes
-both into whichever home it was pointed at. The second covers the split:
-this skill installed into a project's own `.claude/` with `--local` while
-the council sits in the user-level home. Checking only the sibling would
-report an installed council as absent there, and this gate's whole contract
-is to no-op silently when it is absent — so a wrong "absent" is invisible.
+**Naming is what makes this correct, and it took two tries to get right.** A
+path relative to this file finds the council only when it was installed into
+the same home as this skill — true in the common case, false whenever one
+was added with `--local` and the other globally. An absolute home path is
+worse: it picks one scope and misses the other. Either way the failure is
+invisible, because this gate's whole contract is to say nothing when the
+council is absent — so a wrong "absent" looks exactly like a right one, and
+the user who installed the skill never learns it was skipped. A name has no
+scope to get wrong.
 
-The second line is the one kind of absolute home path a shipped body may
-carry, and the `scope-probe` marker is what permits it: it names a second
-*scope to look in*, not a file this skill ships beside. A body that reads a
-shipped file still cites it by a path relative to itself, marker or no marker.
-`pipeline-engine`'s `council` probe asks this same question the same way, and
-the two must agree.
+`pipeline-engine`'s `council` probe answers the same question — is the
+council available — but by filesystem rather than by name, because it is a
+shell snippet and `sh` cannot resolve a skill by name. Two mechanisms, one
+answer; they are expected to agree, and the probe's own file says why it is
+the exception.
 
-**If the file does not exist, stop here and say nothing.** Proceed with the
+**If the skill is not available, stop here and say nothing.** Proceed with the
 inline propose-and-recommend flow unchanged. Do not mention claude-council,
 do not suggest installing it, do not note its absence in the final report.
 An authoring run must not advertise an uninstalled optional dependency

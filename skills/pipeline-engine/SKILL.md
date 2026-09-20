@@ -1,6 +1,6 @@
 ---
 name: pipeline-engine
-version: 0.2.10
+version: 0.2.11
 type: skill
 description: Reference library for the pipeline as a whole — one authority per rule the pipeline-revision features share. Four files under references/ own the project probe and the one verdict line every consumer prints, the graph of how the pipeline's indexes point at each other, the routing table of what each pipeline feature consumes, produces and owns and where each owner's amend entry is, and the catalogue of drift findings. NOT a skill the user invokes and never a skill to suggest — it takes no arguments, runs nothing, and produces no output; /pipeline-check, /pipeline-patch and pipeline-revise read its files by path while they run, and only the features that declare requires: skill:pipeline-engine should ever open it.
 ---
@@ -31,6 +31,13 @@ description: Reference library for the pipeline as a whole — one authority per
 > `${CLAUDE_HOME:-$HOME/.claude}` itself and always lands on the global home.
 > Citing body and cited file are always siblings under one root, so a
 > relative path is correct in either scope with no probing and no fallback.
+>
+> **One file here is the exception, and says so itself.** The probe in
+> `./references/probes.md` derives both install homes in shell, because it
+> answers which features are *installed* and `sh` cannot resolve a skill by
+> name. A body that asks that question in prose names the feature instead and
+> lets Claude resolve it; a body that reads a shipped file always cites it
+> relatively. Neither is what the probe is doing.
 
 ---
 
