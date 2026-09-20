@@ -1,8 +1,8 @@
 ---
 name: task-clean
-version: 0.9.1
+version: 0.9.2
 type: skill
-description: Prune tasks in a terminal status by archiving them — remove each summary block from TASKS.md and move the task's body file to .claude/tasks/archive/<N>.md under a frozen header, so no body is ever deleted. Terminal means [DONE] and [SKIP] only; [STALE] is live work awaiting reconciliation and is never pruned by default. A prune never opens .claude/FEATURES.md — a feature keeps every task id it ever generated. Task IDs are stable; survivors are NEVER renumbered. Pass --backfill instead of a status set to recover, from git history, the bodies earlier runs deleted into the same archive. Automatically commits and pushes; pass --no-commit to leave the changes uncommitted, or --no-push to commit without pushing.
+description: Prune tasks in a terminal status from the backlog by archiving them — each summary block leaves TASKS.md and the body moves to .claude/tasks/archive/<N>.md, never deleted. Use it when finished tasks clutter the backlog; a backfill mode recovers, from git history, bodies earlier runs deleted.
 replaces: command:task-clean
 requires: skill:task-engine
 ---
@@ -12,11 +12,14 @@ requires: skill:task-engine
 # backlog by archiving them. Removes the matched task's summary block from
 # `.claude/TASKS.md` and moves the corresponding `.claude/tasks/<N>.md` body
 # file into `.claude/tasks/archive/<N>.md`, under a frozen header recording
-# the summary block it had. No body is deleted. Survivors are NOT
-# renumbered — task numbers are stable IDs across the project's lifetime,
-# so the `Last task number` counter is never decremented and pruned IDs are
-# never reused. Always reports the plan and asks for explicit confirmation
-# before writing.
+# the summary block it had. No body is deleted. Terminal means [DONE] and
+# [SKIP] only; [STALE] is live work awaiting reconciliation and is never
+# pruned by default. A prune never opens `.claude/FEATURES.md` — a feature
+# keeps every task id it ever generated. Survivors are NOT renumbered — task
+# numbers are stable IDs across the project's lifetime, so the `Last task
+# number` counter is never decremented and pruned IDs are never reused.
+# Always reports the plan and asks for explicit confirmation before writing.
+# Commits and pushes by default.
 # Usage: /task-clean
 #        /task-clean <STATUS> [<STATUS> ...]
 #        /task-clean --backfill                   (recover bodies earlier runs deleted)

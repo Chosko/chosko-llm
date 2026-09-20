@@ -1,14 +1,17 @@
 ---
 name: context-build
-version: 0.5.0
+version: 0.5.1
 type: skill
-description: Build a navigation context layer to reduce token cost in future Claude Code sessions. Flat by default; pass nested (or nested=<unit1>,<unit2>) to build a router + per-unit leaf layout instead. Pass --commit to commit and push the context layer (--commit --no-push to skip the push); default leaves it uncommitted.
+description: Build a navigation context layer under .claude/context/ — an INDEX.md plus one context file per area of the codebase — so future sessions read a map instead of the source. Use it once on a project with no layer yet; flat by default, nested on request. Restructuring a layer is /context-convert's job.
 replaces: command:context-build
 ---
 
 # /context-build
 # Global skill: introduces a navigation layer of context files to reduce token cost
-# in future Claude Code sessions on any project.
+# in future Claude Code sessions on any project. Flat by default; `nested`
+# builds a router + per-unit leaf layout instead. Refuses to convert an
+# existing layer — that is /context-convert. Authoring skill — leaves the
+# layer uncommitted unless `--commit` is passed.
 # Usage: /context-build
 # Usage with hint: /context-build "source code lives under lib/ not src/"
 # Usage nested: /context-build nested                   (router + per-unit leaves; the skill proposes the units)

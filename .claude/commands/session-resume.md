@@ -1,14 +1,17 @@
 ---
 name: session-resume
-version: 0.1.0
+version: 0.1.1
 type: command
-description: Brief this session from a handoff file under .claude/sessions/ — the newest one, the newest from a given date, or a path you name — then stop. Reports what was being built, what must not be retried and the exact next step, flags a file older than 14 days as stale before briefing, names any path the file references that no longer resolves, and hands over the deletion of the file it resumed from. Read-only: writes nothing, deletes nothing, and never starts the work it just described.
+description: Brief this session from a handoff file under .claude/sessions/ — the newest, the newest from a given date, or a path you name — reporting what was being built, what must not be retried and the next step, then stop. Use it when picking up work /session-save recorded.
 ---
 
 # /session-resume
 # Global command: load one handoff file written by `/session-save` and brief
 # the current conversation from it. Single pass — no phases, no conversation,
-# no supporting files.
+# no supporting files. Read-only: writes nothing, deletes nothing, and never
+# starts the work it just described. Flags a file older than 14 days as
+# stale before briefing, names any path the file references that no longer
+# resolves, and hands the deletion of the file it resumed from to the user.
 # Usage: /session-resume
 #        /session-resume <YYYY-MM-DD>
 #        /session-resume <path>

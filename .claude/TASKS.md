@@ -141,7 +141,7 @@ Preconditions: 240
 
 ## 242. Rewrite the runbook-suite and remaining descriptions; hide the wizards; refresh the local install
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/runbook-create.md, commands/runbook-list.md, commands/runbook-describe.md, commands/runbook-clean.md, commands/runbook-prune.md, commands/session-save.md, commands/session-resume.md, commands/refactor-codebase.md, commands/refactor-tests.md, commands/project-setup.md, commands/unity-mcp-setup.md, skills/runbook-run/SKILL.md, skills/context-build/SKILL.md, skills/context-update/SKILL.md, skills/context-convert/SKILL.md, skills/unity-mcp-skill/SKILL.md, skills/claude-council/SKILL.md, skills/runbook-suggest/SKILL.md, .claude/commands/, .claude/skills/, VERSION, CHANGELOG.md
 Preconditions: 240

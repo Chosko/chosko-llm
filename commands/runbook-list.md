@@ -1,8 +1,8 @@
 ---
 name: runbook-list
-version: 0.2.1
+version: 0.2.2
 type: command
-description: Print the project's runbooks as a compact listing — id, status, name, steps done over total, creation date, source and the runbook's one-line title — one line each, with the halt reason printed as a continuation line under any failed runbook and a trailing summary counting the runbooks by status. The id is the shorthand every other runbook- command accepts in place of a name; a block written before ids prints `-` in that column and is left alone, since backfilling belongs to a command that writes the index. Takes an optional status filter, matched without brackets and case-insensitively; an unknown status names the valid ones rather than printing nothing. A missing or empty index is not an error. Read-only — reads .claude/RUNBOOKS.md and nothing else, never opens a file under .claude/runbooks/, runs no shell command, and corrects no status however wrong it looks.
+description: Print the project's runbooks as a compact listing — id, status, name, progress, source and title, one line each — optionally filtered by status. Use it to see which runbooks are pending, running, done or failed.
 requires: skill:runbook-run
 ---
 
@@ -11,7 +11,12 @@ requires: skill:runbook-run
 # status, name, progress, provenance and one-line title — optionally filtered
 # by status. Read-only — never modifies any file. Reads
 # `.claude/RUNBOOKS.md`, and nothing else; the runbook bodies under
-# `.claude/runbooks/` are NOT opened by this command.
+# `.claude/runbooks/` are NOT opened by this command. Runs no shell command
+# and corrects no status however wrong it looks. The status filter is
+# matched without brackets and case-insensitively; an unknown status names
+# the valid ones. A failed runbook's halt reason prints as a continuation
+# line; a block written before ids prints `-` in the id column and is left
+# alone. A missing or empty index is not an error.
 # Usage: /runbook-list
 #        /runbook-list <STATUS>
 # Examples: /runbook-list

@@ -1,8 +1,9 @@
 ---
 name: runbook-clean
-version: 0.2.3
+version: 0.2.4
 type: command
-description: Prune finished runbooks — delete each body file under .claude/runbooks/ and remove its .claude/RUNBOOKS.md index block together with the horizontal rules around it. With no argument the plan is every [DONE] runbook; with runbooks given as `<id>`, `<name>` or `<id>-<name>`, exactly those, resolved by the runbook schema's rule. Each body is deleted at whatever path its index block's File: line holds, and is never renamed. Survivors are never renumbered and the counter never moves down, so a pruned id is never handed out again. Only [DONE] is eligible — [PENDING] is unstarted work, [RUNNING] is a run someone is in the middle of, and [FAILED] is a halt that still needs a decision — and there is no --force and no status argument widening the set. A named runbook that is not [DONE] is refused by name with its actual status, an unknown name aborts the whole run before anything is deleted, and an empty plan says so and stops without asking. Always plans and confirms before writing. Automatically commits and pushes the removals; pass --no-commit to leave them uncommitted, or --no-push to commit without pushing.
+description: Prune finished runbooks — delete each [DONE] runbook's body under .claude/runbooks/ and remove its .claude/RUNBOOKS.md index block, every finished runbook by default or exactly the ones named. Use it once a runbook's work has landed and its record is no longer needed.
+disable-model-invocation: true
 requires: skill:runbook-run
 ---
 
@@ -11,7 +12,14 @@ requires: skill:runbook-run
 # runbook store. Deletes the matched runbook's body file at the path its
 # index block's `File:` line holds and removes that block from
 # `.claude/RUNBOOKS.md`. Always reports the plan and asks for explicit
-# confirmation before writing or deleting anything.
+# confirmation before writing or deleting anything. Only [DONE] is eligible
+# — [PENDING], [RUNNING] and [FAILED] never are — and there is no `--force`
+# and no status argument widening the set. A named runbook that is not
+# [DONE] is refused by name with its actual status; an unknown name aborts
+# the whole run before anything is deleted; an empty plan says so and stops.
+# A body is deleted at whatever path its `File:` line holds and never
+# renamed; survivors are never renumbered and the counter never moves down.
+# Commits and pushes the removals by default.
 # Usage: /runbook-clean
 #        /runbook-clean <id|name|id-name> [<id|name|id-name> ...]
 #        /runbook-clean [<id|name|id-name> ...] --no-commit   (delete, skip the commit and push)

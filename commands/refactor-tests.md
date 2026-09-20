@@ -1,8 +1,9 @@
 ---
 name: refactor-tests
-version: 0.3.1
+version: 0.3.2
 type: command
-description: Split oversized test files into smaller, focused files — runs the test suite before and after each split to keep the baseline green. Pass --commit to commit and push the splits (--commit --no-push to skip the push); default leaves them uncommitted.
+description: Split oversized test files into smaller, focused files, running the test suite before and after each split so the baseline stays green. Use it when a test file has grown past a readable size; splitting only — no renaming, deduplication, import sorting or constant extraction.
+disable-model-invocation: true
 ---
 
 # /refactor-tests

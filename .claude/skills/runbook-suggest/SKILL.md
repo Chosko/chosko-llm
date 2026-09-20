@@ -1,15 +1,16 @@
 ---
 name: runbook-suggest
-version: 0.1.0
+version: 0.1.1
 type: skill
-description: 'Suggest capturing the follow-up actions of a conversation as a runbook, before the session that produced them closes. Trigger whenever a conversation produces an ordered list of follow-up actions meant for later, separate sessions — the tail of an /architect, /product-design or /product-roadmap run, a "next steps" or "landing prompts" list, "do these in order", "here is what to do next" — and there are three or more actions, or two or more with an ordering constraint, or any action that depends on decisions written down nowhere but this conversation. Emits one or two lines pointing at /runbook-create and stops; asks nothing, reads nothing, writes nothing, and creates no runbook. Not for: a single follow-up action; a list of things already done; a checklist this session is about to work through itself; an enumeration inside an explanation; a two-step list of simple prompts; or a list of tasks that belongs in the backlog, which is /task-add.'
+description: 'Suggest capturing the follow-up actions of a conversation as a runbook, before the session that produced them closes. Trigger whenever a conversation produces an ordered list of follow-up actions for later sessions — the tail of an /architect or /product-design run, a "next steps" list, "do these in order" — and there are three or more actions, or two with an ordering constraint, or any that depends on a decision written down nowhere but this conversation. Emits one or two lines naming /runbook-create and stops. Not for: a single action; things already done; a checklist this session will work through itself; an enumeration inside an explanation; a two-step list of simple prompts; or tasks that belong in the backlog, which is /task-add.'
 requires: command:runbook-create
 ---
 
 # /runbook-suggest
 # Global skill: when a conversation ends with an ordered list of follow-up
 # actions meant for later sessions, say once that /runbook-create can capture
-# them. Not invoked by the user — selected from the description above.
+# them. Not invoked by the user — selected from the description above. Asks
+# nothing, reads nothing, writes nothing, and creates no runbook.
 
 **The description is the mechanism.** Claude Code picks a skill from its
 `description`, so there is no hook, no `Stop` handler and no event

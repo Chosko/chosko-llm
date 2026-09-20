@@ -1,8 +1,9 @@
 ---
 name: task-setup
-version: 2.0.1
+version: 2.0.2
 type: command
 description: Initialize the project's task backlog — creates .claude/TASKS.md, the .claude/tasks/ directory and the test-dispatch wrappers under .claude/external/. Run it once on a project before its first /task-add; a re-run only creates what is missing.
+disable-model-invocation: true
 ---
 
 # /task-setup

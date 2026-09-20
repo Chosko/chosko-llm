@@ -1,8 +1,8 @@
 ---
 name: architect
-version: 0.12.4
+version: 0.12.5
 type: skill
-description: Turn one or more high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md — the bridge between /product-design and /task-add. Grounds the architecture in the project's recorded technical-direction.md or existing code, or proposes a tech stack when there is neither. Runs from a product-design section, named features, or a bare prompt with no design documents at all. On a project whose .claude/domain/product-roadmap.md slices the target section, it switches per target into slice mode: it architects one milestone's scope slice rather than the whole section, turns the slice's exclusions into the document's non-goals, and records the milestone as a parenthetical on the FEATURES.md Source: line; pass --no-slices to force traditional resolution. Re-architecting a feature that already has an entry triggers an iterate guard: refuses outright while any of its tasks is [IN PROGRESS], otherwise asks, then flips surviving tasks to [STALE] and the feature to [ITERATED] — from [PLANNED] or from [DONE] alike, and with no ask when there are no tasks left to invalidate. The amend form — /architect amend feature=<slug> followed by the quoted change — makes a targeted change to the named sections of one feature document without the clarify or architecture phases, behind one gate: a precision guard marks [STALE] only the tasks the change touches, refuses only when a touched task is [IN PROGRESS], and settles whether the change is editorial on its own when the evidence is mechanical — a task touched on its summary block or a nameable added scope item is not editorial; no task touched, no scope added and no contract text changed is editorial — stating it in one Classified: evidence line and writing without a reply; it asks only when the call rests on judgement (a task body read, a borderline scope call, findings that point different ways), marking a recommended answer that still needs an explicit reply. Requires /domain-setup. At a genuine design fork it offers to convene claude-council when that skill is installed, and is silent when it is not. Commits and pushes exactly the paths the run wrote by default; pass --no-commit to write everything and run no git command, or --no-push to commit without pushing.
+description: Turn high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md and grounded in the technical direction or the existing code. Use it from a design section, named features or a bare prompt, or to amend an existing document; stage 3 of the pipeline: turns a design section into feature documents; its output is /task-add's input.
 ---
 
 # /architect
@@ -10,7 +10,23 @@ description: Turn one or more high-level features into low-level feature documen
 # features and write it down as low-level feature documentation under
 # `.claude/domain/features/`, indexed in `.claude/FEATURES.md`. Stage 3 of
 # the product pipeline: consumes a high-level feature (or a bare prompt) and
-# produces the document `/task-add feature=<slug>` turns into tasks.
+# produces the document `/task-add feature=<slug>` turns into tasks. Grounds
+# the architecture in `technical-direction.md` or the existing code, or
+# proposes a stack when there is neither. On a roadmapped project switches
+# per target into slice mode — one milestone's scope slice, its exclusions
+# as non-goals, the milestone recorded on the `FEATURES.md` `Source:` line —
+# unless `--no-slices` is passed. Re-architecting a feature that already has
+# an entry runs an iterate guard: refuses outright while any of its tasks is
+# [IN PROGRESS], otherwise asks, then flips surviving tasks [STALE] and the
+# feature [ITERATED], with no ask when no task is left to invalidate. The
+# amend form changes the named sections of one document behind one gate: a
+# precision guard marks [STALE] only the tasks the change touches, refuses
+# only when a touched task is [IN PROGRESS], settles the editorial call on
+# mechanical evidence in one Classified: line, and asks only when the call
+# rests on judgement. Requires `/domain-setup`. At a genuine design fork
+# offers to convene claude-council when that skill is installed, and is
+# silent when it is not. Commits and pushes exactly the paths the run wrote
+# by default.
 # Usage: /architect                        (read product-design.md, ask which feature)
 #        /architect <feature name> [...]   (architect the named feature(s))
 #        /architect <free-form description of what to build>

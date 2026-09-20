@@ -1,18 +1,21 @@
 ---
 name: task-setup
-version: 2.0.0
+version: 2.0.2
 type: command
-description: Initialize the project's task backlog — creates .claude/TASKS.md, the .claude/tasks/ directory, and the project's test-dispatch convention under .claude/external/ (run-affected-tests.sh, run-full-tests.sh). Authoring command — leaves everything uncommitted for review by default; pass --commit to commit (and push) the scaffolding, or --commit --no-push to commit without pushing.
+description: Initialize the project's task backlog — creates .claude/TASKS.md, the .claude/tasks/ directory and the test-dispatch wrappers under .claude/external/. Run it once on a project before its first /task-add; a re-run only creates what is missing.
+disable-model-invocation: true
 ---
 
 # /task-setup
 # Global command: initialize the project's task backlog. Creates the
 # `.claude/TASKS.md` index file, the `.claude/tasks/` directory where
 # per-task body files live, and the project's test-dispatch convention
-# under `.claude/external/` — two thin test-runner wrapper scripts that
-# give the project one stable way to run its affected and full test
-# suites. Idempotent: a re-run leaves existing artifacts untouched and
-# only creates the missing ones.
+# under `.claude/external/` — two thin test-runner wrapper scripts
+# (`run-affected-tests.sh`, `run-full-tests.sh`) that give the project one
+# stable way to run its affected and full test suites. Idempotent: a re-run
+# leaves existing artifacts untouched and only creates the missing ones.
+# Authoring command — leaves everything uncommitted for review unless
+# `--commit` is passed.
 # Usage: /task-setup                     (leaves the scaffolding uncommitted)
 # Usage: /task-setup --commit            (commit and push the scaffolding this run wrote)
 # Usage: /task-setup --commit --no-push  (commit locally, skip the push)

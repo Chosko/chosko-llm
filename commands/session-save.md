@@ -1,18 +1,22 @@
 ---
 name: session-save
-version: 0.2.1
+version: 0.2.2
 type: command
-description: Capture what this conversation knows — what was tried, what failed, what was deliberately not tried, which files are half-finished, and the exact next step — into a timestamped handoff file under .claude/sessions/, written in full nine-section form or shrunk to a pointer when the work already has its own resume artifact. Never rewrites a file in place. Commits and pushes the handoff it wrote by default, since a handoff usually crosses machines; pass --no-commit to leave it uncommitted, or --no-push to commit without pushing. --commit is accepted and changes nothing.
+description: Capture what this conversation knows — what was tried, what failed, what was left alone on purpose, which files are half-finished and the exact next step — into a timestamped handoff file under .claude/sessions/. Use it before a conversation ends with work in flight.
 ---
 
 # /session-save
 # Global command: write a per-project handoff file so the state of an
 # in-flight conversation survives the end of that conversation. Single pass —
-# no phases, no conversation, no supporting files.
+# no phases, no conversation, no supporting files. Writes the handoff in
+# full nine-section form, or shrunk to a pointer when the work already has
+# its own resume artifact; never rewrites a file in place. Commits and
+# pushes the handoff by default, since a handoff usually crosses machines.
 # Usage: /session-save
 #        /session-save <slug>
 #        /session-save [<slug>] --no-commit  (write the handoff, skip the commit and push)
 #        /session-save [<slug>] --no-push    (commit as usual, skip the push)
+#        /session-save [<slug>] --commit     (accepted; changes nothing — the default already commits)
 # Examples: /session-save
 #           /session-save ecc-import-architecture
 

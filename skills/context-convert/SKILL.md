@@ -1,8 +1,8 @@
 ---
 name: context-convert
-version: 0.1.0
+version: 0.1.1
 type: skill
-description: Convert an existing navigation context layer between the flat layout (one INDEX.md with every context file beside it) and the nested layout (a router INDEX plus per-unit leaves). Direction is inferred from the layer's Layout marker and can be forced with to=nested / to=flat; pass nested=<unit1>,<unit2> to name the units. Plan-first — reports the full move plan and stops for approval unless -y is passed. Pass --commit to commit and push the conversion (--commit --no-push to skip the push); default leaves it uncommitted.
+description: Convert an existing navigation context layer between the flat layout (one INDEX.md with every context file beside it) and the nested layout (a router INDEX plus per-unit leaves), moving content, never rewriting it. Use it when a layer has outgrown one layout or shrunk out of the other.
 ---
 
 # /context-convert
