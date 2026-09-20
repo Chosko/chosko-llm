@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 239
+Last task number: 243
 
 ---
 
@@ -118,3 +118,39 @@ Status: [DONE]
 Target: claude
 Files: docs/authoring-guide.md, scripts/check-home-paths.sh, CLAUDE.md, README.md, commands/pipeline-check.md, commands/pipeline-patch.md, commands/runbook-clean.md, commands/runbook-create.md, commands/runbook-describe.md, commands/runbook-list.md, commands/runbook-prune.md, commands/task-add.md, commands/task-list.md, skills/architect/council-gate.md, skills/claude-council/SKILL.md, skills/pipeline-engine/SKILL.md, skills/pipeline-engine/references/graph.md, skills/pipeline-engine/references/lint.md, skills/pipeline-engine/references/probes.md, skills/pipeline-revise/SKILL.md, skills/pipeline-revise/amend.md, skills/pipeline-revise/delete.md, skills/pipeline-revise/insert.md, skills/pipeline-revise/reorder.md, skills/product-design/council-gate.md, skills/runbook-run/SKILL.md, skills/runbook-run/references/runbook-schema.md, skills/runbook-run/references/step-amend.md, skills/task-clean/SKILL.md, skills/task-clean/backfill.md, skills/task-engine/SKILL.md, skills/task-engine/references/amend.md, skills/task-engine/references/commit.md, skills/task-engine/references/resolution.md, skills/task-engine/references/stale.md, skills/task-engine/references/status.md, skills/task-engine/references/tree.md, skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, skills/task-implement/review-rounds.md, skills/task-review/SKILL.md, .claude/domain/features/shared-phase-engine.md, .claude/domain/features/runbook-suite.md, .claude/domain/features/pipeline-engine.md, .claude/context/features.md, .claude/context/INDEX.md, VERSION, CHANGELOG.md
 Preconditions: none
+
+---
+
+## 240. Set the description contract: short what+when in frontmatter, flags in the body header
+
+Status: [MISSING]
+Target: claude
+Files: docs/authoring-guide.md, scripts/cmd-show.sh, commands/runbook-clean.md, skills/claude-council/SKILL.md, skills/unity-mcp-skill/SKILL.md, skills/task-engine/SKILL.md, skills/pipeline-engine/SKILL.md, .claude/skills/context-budget/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 241. Rewrite the pipeline-core descriptions to the contract; hide the two reference libraries
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-add.md, commands/task-list.md, commands/task-setup.md, commands/follow-ups.md, commands/production-status.md, commands/pipeline-check.md, commands/pipeline-patch.md, commands/domain-setup.md, skills/task-clean/SKILL.md, skills/task-implement/SKILL.md, skills/task-review/SKILL.md, skills/task-iterate/SKILL.md, skills/task-engine/SKILL.md, skills/pipeline-revise/SKILL.md, skills/pipeline-suggest/SKILL.md, skills/pipeline-engine/SKILL.md, skills/production-plan/SKILL.md, skills/product-design/SKILL.md, skills/product-roadmap/SKILL.md, skills/architect/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: 240
+
+---
+
+## 242. Rewrite the runbook-suite and remaining descriptions; hide the wizards; refresh the local install
+
+Status: [MISSING]
+Target: claude
+Files: commands/runbook-create.md, commands/runbook-list.md, commands/runbook-describe.md, commands/runbook-clean.md, commands/runbook-prune.md, commands/session-save.md, commands/session-resume.md, commands/refactor-codebase.md, commands/refactor-tests.md, commands/project-setup.md, commands/unity-mcp-setup.md, skills/runbook-run/SKILL.md, skills/context-build/SKILL.md, skills/context-update/SKILL.md, skills/context-convert/SKILL.md, skills/unity-mcp-skill/SKILL.md, skills/claude-council/SKILL.md, skills/runbook-suggest/SKILL.md, .claude/commands/, .claude/skills/, VERSION, CHANGELOG.md
+Preconditions: 240
+
+---
+
+## 243. Document the description contract and the hidden-feature set
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/reference.md, .claude/domain/features/repo-local-audits.md, .claude/domain/features/pipeline-suggest.md, .claude/domain/features/shared-phase-engine.md, .claude/context/features.md, .claude/context/cmd-show.md, .claude/context/INDEX.md
+Preconditions: 241, 242
