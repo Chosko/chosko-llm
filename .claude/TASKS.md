@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 243
+Last task number: 244
 
 ---
 
@@ -154,3 +154,12 @@ Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, .claude/domain/features/repo-local-audits.md, .claude/domain/features/pipeline-suggest.md, .claude/domain/features/shared-phase-engine.md, .claude/context/features.md, .claude/context/cmd-show.md, .claude/context/INDEX.md
 Preconditions: 241, 242
+
+---
+
+## 244. Make `/runbook-run` quiet between steps and exhaustive in its closing report
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/SKILL.md, docs/reference.md, .claude/domain/features/runbook-suite.md, .claude/context/features.md, VERSION, CHANGELOG.md
+Preconditions: 242
