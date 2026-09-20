@@ -63,11 +63,14 @@ file beside a `SKILL.md` ships with it. A command is a single `.md` file and can
 carry nothing. The engine therefore lives in a skill folder, and the other
 features reach it by path.
 
-That path is stable and already has precedent in this repo: the vendored
-`claude-council` skill opens by naming its own install location as
-`${CLAUDE_HOME:-$HOME/.claude}/skills/claude-council/`. The same form works
-here, and it respects the `CLAUDE_HOME` override rule rather than hardcoding
-`~/.claude`.
+That path is written **relative to the citing body**, never as an absolute
+install home. `--local` repoints the whole home to `$PWD/.claude`, and
+`cmd-add` installs a `requires:` dependency into that same home, so citing
+body and cited file are always siblings under one root — whichever root it is.
+A relative path is therefore correct by construction in both scopes, where an
+absolute one is correct in neither: the executing agent expands
+`${CLAUDE_HOME:-$HOME/.claude}` itself and always lands on the global home.
+The vendored `claude-council` skill uses the same form for its own files.
 
 New feature `skills/task-engine/`:
 
@@ -98,7 +101,7 @@ genuinely unique to it, and replaces its restatements with a reference:
 
 ```markdown
 Task resolution follows
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`.
+`../skills/task-engine/references/resolution.md`.
 This command additionally skips tasks whose status is terminal.
 ```
 
@@ -208,8 +211,10 @@ Hard contracts:
 - The refactor changes no observable behaviour of any `task-*` feature.
 - Every rule extracted appears in exactly one reference file.
 - Dependency resolution is one level deep, unversioned, and non-transitive.
-- Shipped bodies reference `${CLAUDE_HOME:-...}` paths, never `~/.claude`, and
-  never `docs/` — that rule is unchanged and this feature must not weaken it.
+- Shipped bodies cite another shipped file by a path relative to themselves,
+  never by an absolute install home and never under `docs/` — that rule is
+  unchanged and this feature must not weaken it.
+  `scripts/check-home-paths.sh` guards it.
 
 ## Dependencies
 

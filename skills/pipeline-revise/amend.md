@@ -75,13 +75,13 @@ Fixed, and upstream first. A step is in the sequence when the walk reached
 its artifact and the tier keeps it; the order never changes.
 
 1. **A design decision** — `/product-design`'s amend arm,
-   `${CLAUDE_HOME:-$HOME/.claude}/skills/product-design/resuming.md` § 6,
+   `../product-design/resuming.md` § 6,
    reached by re-running `/product-design` on a completed design process and
    choosing its amend arm. On a process that is not complete the arm is not
    offered — an owner refusing, under `./SKILL.md`'s failure contract.
 2. **Each feature document** — `/architect amend feature=<slug> "<change>"`,
    executed from its arm,
-   `${CLAUDE_HOME:-$HOME/.claude}/skills/architect/amend.md`, by path. One
+   `../architect/amend.md`, by path. One
    step per feature, in `.claude/FEATURES.md` order. Never the full
    `/architect`: the arm's precision guard stales only the tasks the change
    touches, where the blanket guard would stale every one.
@@ -89,7 +89,7 @@ its artifact and the tier keeps it; the order never changes.
    gate, because which one runs depends on step 2's answer, which the gate
    cannot know:
    - **(a) Per-task amends** — each task's body and summary fields through
-     `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/amend.md`,
+     `../task-engine/references/amend.md`,
      one step per task, in `.claude/TASKS.md` appearance order. A
      `Preconditions:` edge is added or dropped here, on the dependent's own
      line, the drop narrated in its `## Decisions` — that arm's rule. The
@@ -128,13 +128,13 @@ its artifact and the tier keeps it; the order never changes.
    rewrites. Under form (a) they ride the per-task amends that need them.
 
    **What staling does.** A `[STALE]` task is not blocked:
-   `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/stale.md`
+   `../task-engine/references/stale.md`
    § *Implementing a stale task* — it is implementable on the user's explicit
    say-so; a single-task `/task-implement` run warns and asks, and the batch
    selectors skip it. Where the gate states step 2's staling, it says so in
    those terms and never implies a stale task cannot be implemented.
 4. **Each runbook step** — through
-   `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/step-amend.md`,
+   `../runbook-run/references/step-amend.md`,
    one step per runbook step: a dated `Context:` fact, or, for a wrong prompt,
    that file's strike and corrected insert.
 

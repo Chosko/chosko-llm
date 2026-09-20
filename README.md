@@ -515,6 +515,7 @@ A `VERSION` bump without a matching `CHANGELOG.md` section is an incomplete chan
 | `scripts/cmd-*.sh`           | One file per CLI subcommand. The proxy delegates here.                   |
 | `scripts/check-changelog.sh` | Authoring-time guard: fails when a `VERSION` bump has no matching `CHANGELOG.md` section. Not a subcommand; run it by hand. |
 | `scripts/check-routing.sh`   | Authoring-time guard: fails when a row of the pipeline routing table (`skills/pipeline-engine/references/routing.md`) names no shipped feature, or a feature declaring `requires: skill:pipeline-engine` has no row. Not a subcommand; run it by hand. |
+| `scripts/check-home-paths.sh` | Authoring-time guard: fails when a body under `commands/` or `skills/` cites another shipped file by an absolute install home (`${CLAUDE_HOME:-$HOME/.claude}`, `$HOME/.claude`, `~/.claude`) instead of a path relative to itself — the form that silently misses every `--local` install. Catches the two-line wrap too, and has no exemptions. Not a subcommand; run it by hand. |
 | `commands/<name>.md`         | A Claude Code command. Frontmatter required.                             |
 | `skills/<name>/SKILL.md`     | A Claude Code skill. Frontmatter required.                               |
 | `claude-md/<name>.md`        | A CLAUDE.md snippet feature, merged into the user's CLAUDE.md.           |

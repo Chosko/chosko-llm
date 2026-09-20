@@ -196,8 +196,10 @@ Currently shipped:
   authored in the engine rather than extracted, and read by NO `task-*`
   feature — only by whatever amends a single task, by path: `/pipeline-patch`
   and `pipeline-revise`). A
-  consumer cites the file by
-  `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/<f>.md`
+  consumer cites the file by a path **relative to the citing body** —
+  `../skills/task-engine/references/<f>.md` from a command,
+  `../task-engine/references/<f>.md` from another skill's `SKILL.md`,
+  `../../task-engine/references/<f>.md` from another skill's reference file —
   and states only its own deviations. Installed like any other skill
   (`cp -R` of the folder), which is exactly why the engine had to be a
   skill and not a command — see
@@ -419,9 +421,10 @@ Currently shipped:
   deliberately not restated in either `delegated-runs.md` or SKILL.md,
   leaving only the cap and the omit-when-empty to the channel. **Named, never
   pathed**: `--local` installs into `$PWD/.claude` rather than the global
-  home, so a shipped body citing
-  `${CLAUDE_HOME:-$HOME/.claude}/commands/follow-ups.md` would miss every
-  local install; the command's name resolves in both scopes.
+  home, so a shipped body naming the command by an absolute install home
+  would miss every local install; a relative path would resolve, but the agent
+  is handed a prompt rather than a file and has no anchor to resolve one
+  against, so the command's **name** is what resolves in both scopes.
   **Reads the rules, never invokes the command** — invoking would be the
   per-task call the DO NOT list forbids, and a read degrades where an
   invocation would not: no file to read means skip the field silently, the
@@ -636,8 +639,10 @@ Currently shipped:
   delegates the decision to the claude-council skill this repo ships
   (vendored under `skills/claude-council/`, opt-in — installed only when the
   user runs `chosko-llm add skill:claude-council`)
-  (detected at `${CLAUDE_HOME:-$HOME/.claude}/skills/claude-council/SKILL.md`,
-  silent and no-op when absent), invoked with no mode argument so
+  (detected **by name** — "is the `claude-council` skill available" — never by
+  a path, since a path picks one install scope and misses the other while the
+  gate's silence makes a wrong "absent" invisible; silent and no-op when
+  absent), invoked with no mode argument so
   claude-council's own Quick/Standard/Deep triage applies. The brownfield
   branch is excluded — confirm-and-record over an existing stack is not a
   fork. Dissent folds into `product-design.md`'s design decisions; the
@@ -887,7 +892,10 @@ Currently shipped:
   Two vendoring adaptations, re-applied on every upstream re-sync:
   frontmatter pinned (upstream's `|` block-scalar `description` breaks
   `parse_frontmatter`; `version` and `type` were absent), and every
-  `~/.claude` literal replaced by `${CLAUDE_HOME:-$HOME/.claude}`. Ships
+  `~/.claude` literal replaced by the file-relative form (`./scripts/…`,
+  `./journal/…`, resolved against the skill's own directory — its
+  install-path note says so, because those paths appear in `bash` lines run
+  from the project root). Ships
   but is **opt-in** — installed only by
   `chosko-llm add skill:claude-council`, which is exactly the path both
   `council-gate.md` copies detect, so an uninstalled council still makes
@@ -984,13 +992,15 @@ Currently shipped:
   naming a finished task (needs a body read); absent index drops its
   findings, malformed block is its own `ERROR`; no rule reads a body or
   probes `.claude/tasks/archive/`). Consumers cite
-  `${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/references/<f>.md`
-  and state only deviations. Three consumers: `/pipeline-check`,
+  `../skills/pipeline-engine/references/<f>.md` (from a command) or
+  `../pipeline-engine/references/<f>.md` (from another skill's `SKILL.md`),
+  relative to the citing body, and state only deviations. Three consumers: `/pipeline-check`,
   `/pipeline-patch`, `pipeline-revise`. A fourth feature, `pipeline-suggest`,
   declares `requires: skill:pipeline-engine` but reads none of the four files
   — installation only, and it buys the skill a routing row. Routing
   table kept honest by repo-local `scripts/check-routing.sh` (sibling of
-  `check-changelog.sh`; not a feature, no frontmatter, installed nowhere):
+  `check-changelog.sh` and `check-home-paths.sh`; not a feature, no
+  frontmatter, installed nowhere):
   two existence invariants — every row names a `commands/<n>.md` or
   `skills/<n>/SKILL.md` in this repo; every shipped feature declaring
   `requires: skill:pipeline-engine` has a row. Row shape (line beginning
@@ -1302,8 +1312,8 @@ Currently shipped:
   verbatim into every spawned prompt — three placeholders, `<RUNBOOK>`, `<N>`
   and `<FILE>` (the body's `File:` path, for the never-edit rule; relay file
   names stay built from `<RUNBOOK>`/`<N>`),
-  and it now carries the `SPAWN REQUEST` rule), both cited by the other three by
-  `${CLAUDE_HOME:-$HOME/.claude}/...` path. A third, `references/inline-contract.md`,
+  and it now carries the `SPAWN REQUEST` rule), both cited by the other three
+  by a `./references/<f>.md` path relative to the citing body. A third, `references/inline-contract.md`,
   holds the fixed inline rule set that replaces the OPERATING RULES under
   `--inline`, read only when that flag is passed. A fourth, `references/step-amend.md`
   (amending one pending step: strike it as `[x]` with a `Done:` line opening
@@ -1767,6 +1777,44 @@ its state in versioned project document.
   `../../docs/authoring-guide.md` § "Keeping the two `council-gate.md` copies
   in step" for the case where this does NOT apply (an optional dependency,
   which `requires:` cannot express).
+- **A shipped body cites another shipped file by a path relative to
+  itself**, never by an absolute install home. Depth decides the form — count
+  directories up to the install home, then down: `./<f>.md` (or
+  `./references/<f>.md` from a `SKILL.md`) within one skill; `../<other>/…`
+  from a file at a skill's root, `SKILL.md` and supporting files alike;
+  `../../<other>/…` from a file under a skill's `references/`;
+  `../skills/<other>/…` from a command. Never
+  `${CLAUDE_HOME:-$HOME/.claude}/…`, `$HOME/.claude/…` or `~/.claude/…` —
+  `chosko-llm add --local` repoints `CLAUDE_HOME` to `$PWD/.claude` at
+  install time only, while the executing agent expands the variable itself
+  at read time and always lands on the global home, so an absolute citation
+  reads a different copy or nothing on every `--local` install, silently.
+  Relative is correct by construction: `--local` repoints the whole home and
+  `cmd-add` installs `requires:` dependencies into that same home, so citing
+  body and cited file are always siblings under one root. `CLAUDE_HOME`
+  still governs where `install.sh` and every `scripts/cmd-*.sh` **writes** —
+  only shipped bodies stopped re-deriving it.
+- **`scripts/check-home-paths.sh` guards that.** Repo-local, sibling of
+  `check-changelog.sh` and `check-routing.sh`; not a feature, no frontmatter,
+  installed nowhere. Silent on success, non-zero naming each offending file
+  and line. Parser contract: an offence is one of the three home literals
+  followed immediately by `/skills/` or `/commands/`; a bare literal with
+  nothing joined onto it is prose or a shell assignment and is not matched,
+  which is what lets the install-path notes explain why the form is wrong.
+  **No exceptions.** A body asking whether an *optional* feature is installed
+  names it ("is the `claude-council` skill available") and lets Claude resolve
+  it across every scope; a path picks one scope and misses the other, and the
+  gate's own silence makes a wrong "absent" invisible. Both `council-gate.md`
+  copies work this way, as `/follow-ups` already did. `probes.md`'s
+  `installed`/`council` probes are the one place a home is derived at all —
+  shell cannot resolve a skill by name — and they check both scopes and union
+  the `routing.md` row names across them, so neither a `--local` install nor a
+  stale copy in one home can silently shrink the answer; see `probes.md`
+  § *Which install home — both of them*. Proves absence of that one shape only
+  — not that a relative citation resolves, and not that the probe's shell
+  looks in the right scopes.
+  No CI and no pre-commit hook, so `CLAUDE.md` § Versioning plus each task's
+  acceptance criteria are the whole enforcement mechanism.
 - **No state file.** Versions live in frontmatter; what's installed is
   whatever exists under `$CLAUDE_HOME`. See `../../CLAUDE.md` hard rules.
 

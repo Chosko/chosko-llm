@@ -31,11 +31,11 @@ from the absence itself; no reader checks whether the archived file is there.
 ## Where the schemas live
 
 - `TASKS.md`'s summary block and `Last task number:` —
-  `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`
+  `../../task-engine/references/resolution.md`
   § *Index file format*; the archive and the archived-and-terminal rule — the
   same file, § *The archive*.
 - `RUNBOOKS.md`'s index block, the runbook body and the `Steps:` counter —
-  `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`.
+  `../../runbook-run/references/runbook-schema.md`.
 - `PLAN.md` — `/production-status`'s body, § *READING THE INPUTS*, which
   parses it and never rewrites it.
 - A `FEATURES.md` entry — `/architect`'s, which writes it.
@@ -111,7 +111,7 @@ ids that no longer have a block, which it alone still names.
 - **Direction.** Feature → every task it generated.
 - **Resolution.** **An id on a `Tasks:` line with no summary block in
   `TASKS.md` is archived and terminal, not dangling.** The rule's authority is
-  `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`
+  `../../task-engine/references/resolution.md`
   § *The archive*. What this edge does with it: such an id resolves to a
   terminal task without anything being read, is never reported, and counts as
   resolved wherever an edge asks whether a feature's work is finished. A
@@ -141,7 +141,7 @@ ids that no longer have a block, which it alone still names.
 - **Direction.** Dependent task → each task it waits on.
 - **Resolution.** An id with a block resolves to that task. An id with no
   block resolves by the archive rule
-  (`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`
+  (`../../task-engine/references/resolution.md`
   § *The archive*) to archived and terminal — a satisfied precondition — when
   it is at or below `Last task number:`. An id **above** the counter was never
   assigned, so it was never archived either: it resolves to nothing, and is

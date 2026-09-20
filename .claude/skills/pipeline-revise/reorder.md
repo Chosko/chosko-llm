@@ -30,7 +30,7 @@ for the replacement at the new one.
   `./delete.md`; then insert a replacement carrying its spec at the new
   position, per `./insert.md`. Ids are never renumbered and no block moves:
   ids are stable and order is appearance order, per
-  `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`
+  `../task-engine/references/resolution.md`
   § *Index file format* — so a move is a new id at the new place.
 - **A runbook step** — the same shape: strike it, with a reason naming the
   reorder, per `./delete.md`; then a positional insert at the new place, per

@@ -1,6 +1,6 @@
 ---
 name: runbook-prune
-version: 0.1.0
+version: 0.1.1
 type: command
 description: Prune the finished steps out of one runbook — remove every [x] step, heading through prompt block, and record the removed ids on the body header's Archive: line so nothing that referred to them dangles. Takes one runbook as `<id>`, `<name>` or `<id>-<name>`, resolved by the runbook schema's rule. An id in Archive: counts as [x], so a surviving Depends on: naming a pruned step still resolves and the index's Steps: count keeps counting archived ids toward both halves — a runbook pruned to nothing reads 7/7, not 0/0. Only [x] is removed; [ ], [~] and [!] are never touched, and a struck step is [x] like any other. A body with no Last step number: line is backfilled to the highest id present — counting the steps about to go — before anything is deleted, so a prune can never lower the next append's id; the counter is otherwise never touched, which is why pruning the highest-numbered step is legal. Refuses a [RUNNING] runbook and one with a [~] step; any other status may be pruned. A runbook with no [x] steps says so and stops. Always plans and confirms before writing. Commits and pushes by default; pass --no-commit to leave the changes uncommitted, or --no-push to commit without pushing.
 requires: skill:runbook-run
@@ -61,7 +61,7 @@ THE ARTIFACT
 
 The body schema — its header fields, the shape of a step, the four step
 markers, the four-status vocabulary and the index block — is specified in
-`${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`.
+`../skills/runbook-run/references/runbook-schema.md`.
 Read it before parsing anything. **None of it is restated here**: a pruner whose
 idea of a step's shape has drifted from the runner's removes the wrong lines, in
 a file nothing else will re-derive.
@@ -366,7 +366,7 @@ DO NOT:
   or narrowing the set. The set is every `[x]` step in the one named runbook.
 - Restate the body schema, the step markers, the status vocabulary or the index
   block's shape in this body. They are
-  `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`,
+  `../skills/runbook-run/references/runbook-schema.md`,
   cited and never copied.
 - Touch `.claude/TASKS.md`, `.claude/FEATURES.md`, or any file outside the one
   body and `.claude/RUNBOOKS.md`.

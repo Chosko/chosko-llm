@@ -1,6 +1,6 @@
 ---
 name: runbook-run
-version: 0.13.1
+version: 0.13.3
 type: skill
 description: Execute a runbook — an ordered list of self-contained prompts under .claude/runbooks/<id>-<name>.md, opened at the path its index block's File: line holds — by walking it top to bottom (list position is the order; a step's number is a stable id, not its position), by default spawning one fresh subagent per step, relaying that subagent's questions to the user and the user's answers back to the same subagent, recording what each step actually did in a Done: line, and committing the runbook and its .claude/RUNBOOKS.md index after every step. Steps run one at a time, never in parallel. In the default mode the orchestrator reads only CLAUDE.md, the runbook and the index, writes only the runbook and the index, and never does a step's work — every other change in the tree is made by a subagent, and it never reviews or second-guesses one. The one opt-in exception is --inline, under which the orchestrating session executes each selected step itself: bookkeeping (selection, markers, Done: lines, the index, fact propagation, commit cadence) is unchanged and records nothing about the mode, while an execution phase replaces spawn-and-wait under a fixed inline rule set in references/inline-contract.md (the brief is the authority, records win over memory, facts are still written down, questions are asked directly, a wanted child is spawned one level down and never done inline); --inline is refused beside --relay-spawns or --model, and the header Model: is not applied. Usage: /runbook-run <id|name|id-name> — the numeric id the index assigns each runbook, its kebab-case name, or the two joined as in its body's file name, resolved by the schema's rule — with --from N to begin selection at step N, --to N to stop after step N (the two compose into --from X --to Y, an inclusive range), --only N to run exactly one step, --steps N to run at most N steps in this run and then stop the way a --to bound does (composes with --from, refused beside --to or --only), --model <model> to override the runbook's header model for this run, --inline to execute the selected steps in this session instead of in subagents (composes with every selection and commit flag), --relay-spawns to force the spawn relay for a whole run, and --no-commit / --no-push with their usual meanings. Where a subagent cannot spawn a subagent — cloud sessions among them — a step's agent ends its turn with SPAWN REQUEST naming a prompt file and a result file under the OS temp dir; the orchestrator spawns that child at its own nesting level, waits for it, and tells the caller the result is ready, without ever opening either file. A legacy body at .claude/runbooks/<name>.md is renamed to <id>-<name>.md lazily, in Resolve and in the run's first step commit, never while the runbook is [RUNNING], per references/body-migration.md, which is read only when that check fires. Also carries, in references/, the files the rest of the runbook suite and the pipeline revision surfaces read by path: runbook-schema.md (the asset kind — store, File: as the body's path, the three-form id|name|id-name resolution rule and the migration check, body schema, step markers, status vocabulary, the optional per-step Needs: field, the index block with its id and Last runbook number: counter, and the backfill an index written before ids gets from the first command that writes it), subagent-contract.md (the OPERATING RULES block pasted verbatim into every spawned prompt, with its three placeholders <RUNBOOK>, <N> and <FILE>), body-migration.md (the lazy rename protocol, read only by /runbook-run and /runbook-create --append) and step-amend.md (the rules for amending one pending step — strike it as [x] with a Done: line opening struck and no commit sha, never deleted or renumbered; insert through /runbook-create --append --before / --after; add dated Context: facts — with the prompt block immutable, so a wrong prompt is struck and a corrected step inserted, and a [RUNNING] runbook accepting changes only after its current step). Every run ends with one /follow-ups call — after the closing report and after the last commit, at completion, at a --to / --only / --steps bound, at a user-requested stop and at a failure halt alike — reading the step subagents' result reports as well as the orchestrator's own conversation; the call is skipped silently when /follow-ups is not installed.
 requires: command:follow-ups
@@ -42,28 +42,40 @@ spawn-and-wait, and everything else — selection, markers, `Done:` lines, the
 index, fact propagation, commit cadence — is exactly as above. See THE INLINE
 MODE.
 
-> **Install path assumption:** this skill assumes installation at
-> `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/`, where
-> `chosko-llm add skill:runbook-run` writes it. The two reference files this
+> **Install path assumption:** this skill installs beside the features that
+> read it — `chosko-llm add skill:runbook-run` writes it under the same home
+> those features are installed into, whichever home that is. The two
+> reference files this
 > body reads are
-> `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`
+> `./references/runbook-schema.md`
 > and
-> `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/subagent-contract.md`.
+> `./references/subagent-contract.md`.
 > A third,
-> `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/inline-contract.md`,
+> `./references/inline-contract.md`,
 > is read **only when `--inline` is passed** — it holds the inline rule set
 > that replaces the subagent contract's OPERATING RULES under that flag — so a
 > default run never loads it.
 > Another,
-> `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/body-migration.md`,
+> `./references/body-migration.md`,
 > is read **only when the migration check fires** in step 1 — a legacy body
 > to rename — so a run with nothing to migrate never loads it.
 > A fifth,
-> `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/step-amend.md`,
+> `./references/step-amend.md`,
 > sits beside them: this body never reads it — it holds the rules for
 > amending one step, read by path by whatever amends one.
-> Never a hardcoded home path — the `CLAUDE_HOME` override has to keep
-> working.
+>
+> Every one of those paths is **relative to the citing body**, never an
+> absolute home path — `./references/<file>.md` from this body,
+> `../runbook-run/references/<file>.md` from a file at another skill's root,
+> `../../runbook-run/references/<file>.md` from a file under another skill's
+> `references/`, and `../skills/runbook-run/…` from a command. That is scope-proof by construction.
+> `CLAUDE_HOME` still governs where `install.sh` and the `scripts/cmd-*.sh`
+> verbs *write* — including `--local`, which repoints the whole home to
+> `$PWD/.claude` — but a shipped body cannot re-derive it at run time,
+> because the executing agent expands `${CLAUDE_HOME:-$HOME/.claude}` itself
+> and always lands on the global home. Citing body and cited file are always
+> siblings under one root, so a relative path is correct in either scope with
+> no probing and no fallback.
 
 ---
 
@@ -182,7 +194,7 @@ stop. Doing nothing quietly is indistinguishable from a bug.
 
 The store, the body schema, the four step markers and the `Done:` line, the
 four-status vocabulary, and the index block are all specified in
-`${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`.
+`./references/runbook-schema.md`.
 Read it before parsing or writing either file. Nothing about the artifact is
 restated here — a second copy is the copy that drifts.
 
@@ -229,7 +241,7 @@ another machine's `[RUNNING]` or a changed `File:` — and re-apply the stops
 above to it. Then, on a runbook that is not `[RUNNING]`, and before step 4
 first marks it `[RUNNING]`, apply the check in `runbook-schema.md` § *The
 store*: when the file name in `File:` does not begin with `<id>-`, read
-`${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/body-migration.md`
+`./references/body-migration.md`
 and migrate the body as it says. On no hit, that file is never opened. A
 `[RUNNING]` runbook — a resume — never migrates. Do not migrate under a
 condition that stops the run.
@@ -239,7 +251,7 @@ migration — is **the resolved path**, and the run uses it for its whole life:
 every re-read, every write and every commit. Step 1 is not redone mid-run.
 
 Under `--inline`, read
-`${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/inline-contract.md`
+`./references/inline-contract.md`
 here, once, and give the run's opening line — see THE INLINE MODE
 § *The opening line*.
 
@@ -412,7 +424,7 @@ The session assembles the same brief THE SPAWNED PROMPT describes — parts 1–
 preamble, `Companion:` background, `## Do not re-propose`, `Context:`, the
 verbatim prompt block — and works through it in that order. In place of part
 6, the OPERATING RULES, it follows the fixed rule set in
-`${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/inline-contract.md`,
+`./references/inline-contract.md`,
 read once in step 1. Nothing else in the brief changes; the prompt block is
 still verbatim and still immutable.
 
@@ -487,7 +499,7 @@ outside this rule: one is verbatim, the other fixed text.
    never "improved". If it is a bare slash command, it is passed as a bare
    slash command.
 6. **OPERATING RULES.** Verbatim from
-   `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/subagent-contract.md`,
+   `./references/subagent-contract.md`,
    with only its three placeholders filled in: `<RUNBOOK>` with the runbook's
    name, `<N>` with the step id, and `<FILE>` with the resolved path from
    step 1. It is fixed text and goes last.

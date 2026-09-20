@@ -54,9 +54,14 @@ Deliberately out:
 Built on the existing markdown-prompt stack per `technical-direction.md`. A
 shared file can only ship inside a skill folder, so the engine is a skill,
 non-invocable in the same way `task-engine` is, and its consumers declare
-`requires: skill:pipeline-engine`. Every consumer reads it at the
-`${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/references/` path and
-never a `docs/` path.
+`requires: skill:pipeline-engine`. Every consumer reads it at a
+`pipeline-engine/references/` path written relative to the consumer's own body
+— `../skills/pipeline-engine/references/<file>.md` from a command,
+`../pipeline-engine/references/<file>.md` from another skill's `SKILL.md` —
+never an absolute install home and never a `docs/` path. A body asking
+whether an *optional* feature is installed names the feature instead and lets
+Claude resolve it across every scope — a path would pick one scope and miss
+the other, invisibly, which is what the council gates once did.
 
 ### The reference files
 
@@ -64,7 +69,13 @@ never a `docs/` path.
   pipeline setup: feature index present, backlog present, roadmap present and
   sliced, plan present, runbook index present, council skill installed, the
   testing-policy marker in CLAUDE.md, and which pipeline features are
-  installed under `CLAUDE_HOME`. The file fixes a one-line verdict format that
+  installed — counted across **both** scopes Claude Code loads from, the
+  project's `.claude/` and the user scope (`CLAUDE_HOME` when set, else
+  `~/.claude`), with the `routing.md` row names unioned across the two so a
+  stale copy in one cannot silently shrink the count; `unknown` when neither
+  holds a routing table. The probe is the one shipped body that derives an
+  install home at all, because it is shell and `sh` cannot resolve a skill by
+  name. The file fixes a one-line verdict format that
   every consumer prints identically, and the reuse rule: a verdict already in
   the conversation is reused unless a pipeline writer has run since, and the
   file names the writers that invalidate it. Subagents re-probe, since they

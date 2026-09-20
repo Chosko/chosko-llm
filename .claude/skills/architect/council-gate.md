@@ -29,16 +29,12 @@ exactly as it would have.
 
 ## Step 1 — Detection
 
-Probe for the skill:
+Is the **`claude-council` skill** available in this session?
 
-```
-${CLAUDE_HOME:-$HOME/.claude}/skills/claude-council/SKILL.md
-```
+Ask by name. Never build a path to it — a path finds the skill only in one
+install scope, and this gate's silence makes a wrong "absent" invisible.
 
-Honor `CLAUDE_HOME` when it is set — never hardcode `~/.claude`; this repo's
-scripts resolve paths that way and a shipped body must not disagree with them.
-
-**If the file does not exist, stop here and say nothing.** Proceed with the
+**If the skill is not available, stop here and say nothing.** Proceed with the
 inline propose-and-recommend flow unchanged. Do not mention claude-council,
 do not suggest installing it, do not note its absence in the closing report.
 An authoring run must not advertise an uninstalled optional dependency

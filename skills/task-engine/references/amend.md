@@ -29,7 +29,7 @@ body.
 - **The task id** `<N>`.
 - **The change** — what to alter, in words.
 - `.claude/TASKS.md` — task `<N>`'s summary block, parsed per
-  `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`
+  `./resolution.md`
   § *Parsing the index*; and, for the gate, the blocks of any task its
   `Preconditions:` names or whose `Preconditions:` names it.
 - `.claude/tasks/<N>.md` — this task's body and no other, opened per
@@ -51,14 +51,14 @@ with nothing written.
 
    - `[DONE]` or `[SKIP]` → refuse. Completed or abandoned work is never
      touched; follow-up work is a new task —
-     `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/status.md`
+     `./status.md`
      § *Transitions*.
    - An id with no summary block is archived and terminal, per
      `resolution.md` § *The archive* → refuse on the same ground, and open
      nothing under `.claude/tasks/archive/`.
    - `[STALE]` → may be amended. The amendment never clears the tag — that
      is reconciliation's, per
-     `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/stale.md`
+     `./stale.md`
      § *Clearing it* — and the report says the task is still `[STALE]`.
 2. **The change leaves the feature's promise alone.** On a task carrying
    `Feature: <slug>`, read the feature document and ask whether the change
@@ -86,7 +86,7 @@ own `Target:` line.
 | `## Acceptance criteria` | Rewritten in place: bullets added, reworded or removed. |
 | `## Hints` | Rewritten in place. |
 | `## Decisions` | Added to. An existing bullet is rewritten only when the change reverses it, and the rewrite then carries the reason for the reversal — a decision is the task's written reason, and deleting one silently loses it. |
-| `## Manual interventions` | Added, rewritten or removed only together with `Target:`, under the pairing rule in `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/targets.md`. |
+| `## Manual interventions` | Added, rewritten or removed only together with `Target:`, under the pairing rule in `./targets.md`. |
 | Title line `# Task <N> — <Title>` | Changes only when the summary block's title does, to the same text. |
 
 **Owned documents.** A change that adds a path owned by another pipeline
@@ -182,7 +182,7 @@ Nothing else: no other task's block or body, no feature document, no
 
 Committing is the consumer's. When it commits, it stages those paths by
 explicit path as one unit of work, per
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`
+`./commit.md`
 § *Staging* and § *One commit per unit of work*.
 
 ## The closing report line

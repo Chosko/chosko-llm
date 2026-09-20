@@ -67,9 +67,9 @@ When a task is requested explicitly by number and its status is `[DONE]`,
 `[SKIP]`, or `[IN PROGRESS]`, ask whether to skip or override. If it's
 `[STALE]` and was requested explicitly by number, apply the stale protocol
 in
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/stale.md`.
+`./stale.md`.
 A batch selector skips all of those statuses instead of asking — see
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`.
+`./resolution.md`.
 
 ## Accepting a status argument
 

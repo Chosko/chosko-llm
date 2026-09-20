@@ -36,7 +36,7 @@ spawn the next agent until the previous one's result is in hand.
 Not every task can be delegated. Which ones may never be, why, and the
 announcement that names the split before the first task starts are the
 delegation guard in
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/targets.md`
+`../task-engine/references/targets.md`
 § *The delegation guard*.
 
 The parent implements those tasks itself, in the list's original order,
@@ -98,7 +98,7 @@ It carries four things:
      made in PRE-FLIGHT, plus the note that a tree dirtied by this run's own
      earlier tasks is expected, so the agent must not re-run the prompt
      protocol in
-     `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/tree.md`;
+     `../task-engine/references/tree.md`;
    - the notice that it runs non-interactively: it cannot ask the user
      anything, and if it hits something that genuinely needs a human
      decision it must stop and report that rather than guess or wait.
@@ -192,11 +192,12 @@ The agent reads that command's own body and applies what it finds there to its
 own session — which, for a delegated agent, is exactly the one task.
 
 **The agent is told the command's name, never a path to it.** `--local`
-installs a feature into `$PWD/.claude` instead of the global home, so no path
-written into a shipped body resolves in both scopes — a body that named
-`${CLAUDE_HOME:-$HOME/.claude}/commands/follow-ups.md` would silently miss
-every `--local` install and report no follow-ups on a project that has the
-command. The name is what resolves wherever the command actually lives. What counts as a follow-up, what is excluded because it
+installs a feature into `$PWD/.claude` instead of the global home, so a body
+that named the command by an absolute home path would silently miss every
+`--local` install and report no follow-ups on a project that has the command.
+A path relative to this body would resolve in both scopes, but the agent is
+handed a prompt rather than this file, so it has no anchor to resolve one
+against. The name is what resolves wherever the command actually lives. What counts as a follow-up, what is excluded because it
 is already tracked on disk, and how an item is written are all that command's,
 and are **not restated here**: a second copy is a copy that will drift, and
 this file is not its authority.

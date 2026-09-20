@@ -117,7 +117,7 @@ to fix up installs that predate the rename; once everyone has run
 `replaces:` will delete a genuinely new artifact if someone later reuses the old
 name for the old kind.
 
-### `requires:` — the optional dependency field
+### <a id="requires"></a>`requires:` — the optional dependency field
 
 A feature body that reads a file inside another installed feature — the way the
 `task-*` suite reads `skills/task-engine/references/*.md` — breaks the moment
@@ -175,10 +175,50 @@ Three limits, all deliberate:
   cycle detection — the moment a dependency needs one, it has outgrown this
   repo's rules.
 
-Write the path the dependent actually reads as
-`${CLAUDE_HOME:-$HOME/.claude}/skills/<name>/…`, never `~/.claude` and never a
-`docs/` path. `requires:` guarantees the file is installed; it does nothing
-about a body that looked in the wrong place.
+**Write the path the dependent actually reads as a path relative to the
+citing body**, never an absolute install home and never a `docs/` path.
+`requires:` guarantees the file is installed; it does nothing about a body
+that looked in the wrong place.
+
+Count directories from the citing file up to the install home, then down. A
+supporting file at a skill's root sits at the same depth as its `SKILL.md`
+and takes the same form; only a file under `references/` is one level deeper.
+The target need not be under `references/`.
+
+| From | To | Form |
+| --- | --- | --- |
+| a file in a skill | another file in the same skill | `./<file>.md` — or `./references/<file>.md` from `SKILL.md` |
+| a file at a skill's root | anything in another skill | `../<other>/…` |
+| a file under a skill's `references/` | anything in another skill | `../../<other>/…` |
+| a command | anything in a skill | `../skills/<other>/…` |
+
+Never `${CLAUDE_HOME:-$HOME/.claude}/skills/<name>/…`, never `$HOME/.claude`,
+never `~/.claude`. That form is broken, not merely unfashionable:
+`chosko-llm add --local` repoints `CLAUDE_HOME` to `$PWD/.claude` for the
+duration of the install (`scripts/lib.sh`), but the *executing agent* expands
+`${CLAUDE_HOME:-$HOME/.claude}` itself at run time and always lands on the
+global home. A `--local` install therefore reads a different copy of the file,
+or none at all, and says nothing about it.
+
+The relative form is scope-proof by construction rather than by luck.
+`--local` repoints the whole home, and `cmd-add` installs a `requires:`
+dependency into that same home, so citing body and cited file are always
+siblings under one root — whichever root it is. No probing, no fallback, no
+second path to keep in step. It also extends the `./<file>.md` idiom the
+`task-implement` and `pipeline-revise` skills already use for their own
+supporting files, rather than introducing a second convention.
+
+The `CLAUDE_HOME` override is not being abandoned: it still governs where
+`install.sh` and every `scripts/cmd-*.sh` verb **writes**. What changed is that
+shipped *bodies* stopped trying to re-derive it at read time, which they were
+never able to do correctly.
+
+A feature you want *consulted* is named, not pathed — `/follow-ups`, the
+`claude-council` skill — and so is any check of whether an optional feature is
+installed at all; see [§ Asking whether a feature is
+installed](#asking-whether-a-feature-is-installed).
+`scripts/check-home-paths.sh` is the guard — see [§ The home-path
+guard](#the-home-path-guard) below.
 
 ## <a id="commands"></a>Authoring a command
 
@@ -446,9 +486,14 @@ re-applied on every re-sync:
    `type`. Keep it free of apostrophes: a YAML single-quoted scalar escapes
    `'` as `''`, and the naive quote-strip leaves that visible.
 2. **No `~/.claude` literals.** Upstream hardcodes the install path in its
-   SKILL.md; the shipped copy uses `${CLAUDE_HOME:-$HOME/.claude}/skills/
-   claude-council/…` throughout, matching the repo's env-override rule and the
-   detection path both `council-gate.md` copies already use.
+   SKILL.md; the shipped copy rewrites every one of them to the file-relative
+   form above — `./scripts/…` and `./journal/…`, resolved against the skill's
+   own directory — matching the citation rule in § `requires:`. Its
+   install-path note says so, because those paths appear in `bash` lines that
+   run from the project root and so have to be resolved against the skill's
+   directory before they are run. The two `council-gate.md` copies do not name
+   a path to this skill at all — they ask for it by name, per § Asking whether
+   a feature is installed.
 
 Upstream drift is resolved by a manual re-sync — re-fetch the tree, diff it
 against `skills/claude-council/`, re-apply those two adaptations, bump the
@@ -759,9 +804,9 @@ working repo — so it is not a subcommand either: `bin/chosko-llm` dispatches
 only its known subcommand list, and `chosko-llm check-changelog` is an unknown
 subcommand.
 
-## The routing guard
+## <a id="the-routing-guard"></a>The routing guard
 
-`check-changelog.sh` has one sibling authoring-time guard:
+`check-changelog.sh` has two sibling authoring-time guards. The first is
 `scripts/check-routing.sh`. It keeps the pipeline routing table,
 `skills/pipeline-engine/references/routing.md` (the ownership authority the
 pipeline's revision features read), honest about existence. Run it whenever
@@ -790,6 +835,62 @@ It proves existence and nothing more. Whether a row's cells are *true*, and
 whether a pipeline feature that doesn't read the engine has a row at all, are
 questions of meaning and stay a reviewer's job. Like `check-changelog.sh` it is
 repo-local: not a feature, no frontmatter, not a subcommand, installed nowhere.
+
+## <a id="the-home-path-guard"></a>The home-path guard
+
+The second sibling guard is `scripts/check-home-paths.sh`. It keeps the
+citation rule in § [`requires:`](#requires) honest: a shipped body names
+another shipped file by a path relative to itself, never by an absolute
+install home. Run it whenever you edit a body under `commands/` or `skills/`:
+
+```sh
+./scripts/check-home-paths.sh
+```
+
+It takes no arguments, reads only the files under `commands/` and `skills/`,
+writes nothing, and exits 0 **in silence** when every body is clean.
+Otherwise it exits non-zero after naming each offending file and line, plus
+the four relative forms to use instead.
+
+Its parser contract is one line: an offence is one of the three home literals
+— `${CLAUDE_HOME:-$HOME/.claude}`, `$HOME/.claude`, `~/.claude` — followed by
+a `/skills/` or `/commands/` path segment, i.e. the literal used as the root
+of a path to another shipped file. Both the single-line form and the two-line
+wrap are matched, and there is no exemption. A bare literal with nothing joined onto it is prose (or a shell
+assignment) and is not matched either way, which is what lets the install-path
+notes and this guide explain *why* the form is wrong without tripping it.
+
+### <a id="asking-whether-a-feature-is-installed"></a>Asking whether a feature is installed: name it
+
+Citing a file and asking **whether a feature is available at all** are
+different questions, and the second has no path answer.
+
+A `requires:` dependency installs under the same home as its dependent, so a
+relative citation is correct by construction. An **optional** dependency —
+one `requires:` cannot express, because the feature has to keep working
+without it — carries no such guarantee: it may sit in the user scope while
+its reader was added with `--local`, or the reverse. Name it instead:
+
+> Is the **`claude-council` skill** available in this session?
+
+Claude Code resolves a command or skill by name across every scope it loads
+from. A path cannot: relative finds the feature only in the reader's own
+home, absolute picks one scope and misses the other. Both fail silently,
+since an optional dependency's gate says nothing when the feature is absent.
+
+The two `council-gate.md` copies work this way, as does `/follow-ups` —
+`/task-implement`'s delegated agents are handed that command's name, never a
+path. There are no exemptions in the guard: a body that seems to need an
+absolute home is asking the installed question, and the answer is a name.
+
+The one place a home is derived is the probe in
+`skills/pipeline-engine/references/probes.md`, a shell snippet that checks
+both scopes; its own file carries the rule.
+
+The guard proves absence of that one shape and nothing more. Whether a
+relative citation resolves, and whether the probe's shell looks in the right
+scopes, are a reviewer's read. Like the other two it is repo-local: not a
+feature, no frontmatter, not a subcommand, installed nowhere.
 
 ## Commit-and-push convention
 

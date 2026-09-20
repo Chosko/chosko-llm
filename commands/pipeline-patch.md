@@ -1,6 +1,6 @@
 ---
 name: pipeline-patch
-version: 0.3.0
+version: 0.3.1
 type: command
 description: Apply a change that touches exactly one feature document, task or runbook step through that owner's amend arm, then re-check it — or refuse. From a required anchor (feature=<slug>, task=<N> or runbook=<id|name|id-name> step=<n>) it probes, walks the pipeline's graph reading only the indexes — FEATURES.md, TASKS.md, PLAN.md, RUNBOOKS.md, never a task body, feature document or runbook body — and counts the owners the change would touch. The single-owner rule is a count plus a closed checklist, never a judgement: exactly one owner and none of five structural signals (more than one owner, a dependency edge changing, scope added that no task covers, a deletion that crosses artifacts, a reorder of existing entries) loads that owner's amend arm by path, runs it with its own gate and without committing, and runs /pipeline-check scoped to the anchor. Anything else is refused in one line naming /pipeline-revise and the signal that triggered it — no escalation, no second question, nothing written. Writes no line of its own, and commits and pushes by default: one commit at the end holding exactly the paths the arm wrote, the arm's closing report line as the subject. Pass --no-commit to leave the patch uncommitted, or --no-push to commit without pushing.
 requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run
@@ -36,14 +36,14 @@ THE ENGINE AND THE ARMS
 What this command knows about the pipeline is `pipeline-engine`'s, read by
 path:
 
-- `${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/references/probes.md`
+- `../skills/pipeline-engine/references/probes.md`
   — the probe, its verdict line and the reuse rule;
-- `${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/references/graph.md`
+- `../skills/pipeline-engine/references/graph.md`
   — the edges between the indexes, every one read off an index line;
-- `${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/references/routing.md`
+- `../skills/pipeline-engine/references/routing.md`
   — which owner a line belongs to, and, in its Amend column, the arm a
   revision routes through;
-- `${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/references/lint.md`
+- `../skills/pipeline-engine/references/lint.md`
   — the findings the closing check reports.
 
 The three owners this command can patch, and the arm `routing.md`'s Amend
@@ -51,9 +51,9 @@ column gives each:
 
 | Owner | Arm, loaded by path |
 | --- | --- |
-| a feature document | `/architect amend` — `${CLAUDE_HOME:-$HOME/.claude}/skills/architect/amend.md` |
-| a task | `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/amend.md` |
-| a runbook step | `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/step-amend.md` — a strike, a `Context:` fact, or an insert through `/runbook-create --append` |
+| a feature document | `/architect amend` — `../skills/architect/amend.md` |
+| a task | `../skills/task-engine/references/amend.md` |
+| a runbook step | `../skills/runbook-run/references/step-amend.md` — a strike, a `Context:` fact, or an insert through `/runbook-create --append` |
 
 This command restates no probe, no edge, no finding and no arm's rule.
 
@@ -92,12 +92,12 @@ WORKFLOW
      index, stops listing the slugs that exist (or saying there are none).
    - `task=<N>` — a summary block in `.claude/TASKS.md`. An id at or below
      `Last task number:` with no block is archived and terminal, per
-     `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`
+     `../skills/task-engine/references/resolution.md`
      § *The archive*; one above it was never assigned. Either way stop, say
      which, and list the live tasks, id and title.
    - `runbook=<id|name|id-name> step=<n>` — a block in `.claude/RUNBOOKS.md`, by id,
      name or `<id>-<name>`, per
-     `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`
+     `../skills/runbook-run/references/runbook-schema.md`
      § *Resolving a runbook argument*; one that does not resolve stops listing
      the runbooks. The step is
      resolved by the arm, which lists the runbook's steps for an unknown id —
@@ -218,7 +218,7 @@ COMMITTING
 This command owns the run's commit. A patch is one unit of work, so it lands
 as exactly one commit, made at the end — never one per owner write, and never
 by the arm. Commit and push gating is
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`.
+`../skills/task-engine/references/commit.md`.
 
 - **Pull at start** — once per run, after the anchor resolves and before the
   walk (WORKFLOW step 2), unless `--no-commit` or `--no-push`. A conflict

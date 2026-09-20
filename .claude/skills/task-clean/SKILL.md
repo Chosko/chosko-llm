@@ -1,6 +1,6 @@
 ---
 name: task-clean
-version: 0.9.0
+version: 0.9.1
 type: skill
 description: Prune tasks in a terminal status by archiving them — remove each summary block from TASKS.md and move the task's body file to .claude/tasks/archive/<N>.md under a frozen header, so no body is ever deleted. Terminal means [DONE] and [SKIP] only; [STALE] is live work awaiting reconciliation and is never pruned by default. A prune never opens .claude/FEATURES.md — a feature keeps every task id it ever generated. Task IDs are stable; survivors are NEVER renumbered. Pass --backfill instead of a status set to recover, from git history, the bodies earlier runs deleted into the same archive. Automatically commits and pushes; pass --no-commit to leave the changes uncommitted, or --no-push to commit without pushing.
 replaces: command:task-clean
@@ -41,7 +41,7 @@ $ARGUMENTS
 
 ARGUMENT NOTE — the `--no-commit` and `--no-push` flags, and everything they
 gate, are
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`.
+`../task-engine/references/commit.md`.
 Scan `$ARGUMENTS` for them before PHASE 1 and strip whichever appear.
 
 Also scan for `--backfill`. When it appears, set BACKFILL = true and strip
@@ -60,7 +60,7 @@ has run, and follow it in place of PHASE 1 through PHASE 3.
 LOCATING THE BACKLOG
 
 Backlog resolution follows
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`,
+`../task-engine/references/resolution.md`,
 whose `/task-clean` note carries every way this skill departs from it: the
 wording of the not-initialised stop, the fields it parses out of each summary
 block, the single reason it opens a body file — probing that the file
@@ -77,7 +77,7 @@ WHICH STATUSES COUNT AS "TERMINAL"
 
 The status vocabulary, which of the tags are terminal, and how a status
 argument is accepted are
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/status.md`. Its
+`../task-engine/references/status.md`. Its
 `/task-clean` note carries what this skill does with them.
 
 Here a status is a prune set — never a display filter, never a task selector
@@ -91,7 +91,7 @@ that it was pruned live.
 
 `[STALE]` is never in the default set. What it means, and why it is live work
 awaiting reconciliation rather than abandoned work, are
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/stale.md`; when
+`../task-engine/references/stale.md`; when
 the user names it explicitly, say all of that in the plan and confirm before
 applying.
 
@@ -223,7 +223,7 @@ PHASE 3 — COMMIT AND PUSH
 
 Commit and push gating — the flags, pull-at-start, staging, one commit per
 prune, the push protocol, and what to do when a commit or a push fails — is
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`. Its
+`../task-engine/references/commit.md`. Its
 `/task-clean` note carries this skill's own specifics: the commit message
 form, the exact path list PHASE 2 leaves to stage — `.claude/TASKS.md` plus
 each archived file, PHASE 2's `git mv` having already staged both halves of

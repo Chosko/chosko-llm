@@ -1,6 +1,6 @@
 ---
 name: runbook-describe
-version: 0.3.1
+version: 0.3.2
 type: command
 description: Print a compact summary of one runbook — a little more than its /runbook-list line and far less than its body. The index heading line (id, status, name, progress, title), one header line with Created, Source and Model, an archived-ids line printed only when the body carries an Archive: line, then one line per step with its marker, number and title, its dependencies when it has any and its Needs value when an authored one is not agent, plus at most one short done line per step that a run finished or failed, and a closing by-marker count that counts every archived id as done and as present, naming the steps that need a person. Takes the runbook as the numeric id the index assigns it, its kebab-case name, or `<id>-<name>`, and reads the body at the index block's File: path. Reads the index and pulls only the lines it prints from that one runbook's body by targeted line extraction — never a full read of the body, never a step prompt, never a task body, never another runbook. Task ids in a Done line are printed as written and never followed. Writes nothing, runs no shell command including git, and corrects no status, count or marker however wrong it looks against the body.
 requires: skill:runbook-run
@@ -37,7 +37,7 @@ THE ARTIFACT
 The store, the body schema, the four step markers, the `Done:` line, the
 `Needs:` field, the four-status vocabulary, the index block and the id are all
 specified in
-`${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`.
+`../skills/runbook-run/references/runbook-schema.md`.
 Read it before parsing either file. **Nothing about the artifact is restated
 here** — a second copy is the copy that drifts, and a describe whose idea of
 the markers has drifted from the runner's describes a runbook nobody has.
@@ -257,7 +257,7 @@ DO NOT:
   never corrected: no file is written and no shell is run.
 - Restate the body schema, the markers, the `Needs:` values, the status
   vocabulary or the index block in this body. They are
-  `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`,
+  `../skills/runbook-run/references/runbook-schema.md`,
   cited and never copied.
 - Treat a missing or empty `.claude/RUNBOOKS.md` as an error, create it, or
   suggest running a setup command.

@@ -107,11 +107,10 @@ failure reason if it failed, and at most three follow-ups derived by applying
 that command's rules rather than defining a format of its own: what counts as
 a follow-up and what is excluded are stated once, in the command's own body,
 and deliberately not restated in the contract, so the two cannot drift apart.
-The agent is handed the command's **name and never a path** — `--local`
-installs into `$PWD/.claude` instead of the global home, so no path written
-into a shipped body resolves in both scopes, and one that named the global
-`commands/follow-ups.md` would silently report no follow-ups on every project
-that installed the command locally.
+The agent is handed the command's **name and never a path** — it receives a
+prompt rather than this file, so it has no anchor to resolve a relative path
+against, and an absolute one would silently report no follow-ups on every
+project that installed the command locally.
 
 The agent **reads** those rules rather than invoking the command, which buys
 two things. Invoking would be a per-task `/follow-ups` call, and the rule that

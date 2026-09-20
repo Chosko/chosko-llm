@@ -13,7 +13,7 @@ suggests it — in the register `/pipeline-check` keeps for a one-off check:
 the user asks for it when they want it, and nothing else ever starts it.
 
 The archived-file form and what an id absent from `TASKS.md` means are
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`
+`../task-engine/references/resolution.md`
 § *The archive*. This file states only how backfill fills that form from
 history, and the one place it departs from it.
 
@@ -168,7 +168,7 @@ After the report, continue to PHASE B3.
 ## PHASE B3 — COMMIT AND PUSH
 
 Commit and push gating is
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`,
+`../task-engine/references/commit.md`,
 exactly as for a prune. Its `/task-clean` note carries backfill's own
 specifics: the commit message form, the archive paths it stages, and that
 `.claude/FEATURES.md` joins them when a `Tasks:` line was restored. Once

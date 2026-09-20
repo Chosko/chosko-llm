@@ -406,9 +406,12 @@ synthesises a verdict preserving minority dissent. Shipping is not installing:
 it reaches the user's Claude home only when they run
 `chosko-llm add skill:claude-council`.
 
-**It is optional delegation, not a dependency.** The pipeline detects the skill
-at `${CLAUDE_HOME:-$HOME/.claude}/skills/claude-council/SKILL.md`. When it is
-absent, both stages proceed with their inline propose-and-recommend flow and
+**It is optional delegation, not a dependency.** The two gates detect the skill
+**by name** — is `claude-council` available in this session — never by a path:
+Claude Code already resolves a skill across every scope it loads from, while a
+path picks one scope and misses the other. (`pipeline-engine`'s `council`
+probe answers the same question by filesystem, across both scopes, because it
+is shell.) When it is absent, both stages proceed with their inline propose-and-recommend flow and
 say nothing — an authoring run must not advertise an uninstalled optional
 dependency mid-flight. Nothing here reimplements the framework — the gate
 delegates, it does not re-derive. The "no new dependencies" rule governs this
