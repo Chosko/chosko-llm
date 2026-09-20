@@ -253,11 +253,12 @@ Hard contracts:
   outside `task-*`, and a future `refactor-*` migration might want them without
   taking `stale.md`. Splitting later is cheap; starting split is speculative.
   Still open; nothing in the migration decided it either way.
-- **Does a non-invocable skill confuse the harness?** Still open, and now
-  explicitly unverified. The mitigation shipped as designed — `task-engine`'s
-  `description` opens by saying it is not a skill to invoke or suggest, and the
-  body repeats it for an agent that opens the file without reading frontmatter
-  — but no observation of real skill-selection behaviour has been made, because
-  the engine has not yet been installed on a machine where that could be
-  watched. Treat "the description is enough" as an assumption the suite already
-  depends on, not as a finding.
+- **Does a non-invocable skill confuse the harness?** Settled by construction
+  since v1.58.1, not by observation. The mitigation is no longer description
+  prose: `task-engine`'s frontmatter carries `disable-model-invocation: true`,
+  which keeps its `description` out of the model's context altogether, and the
+  body opens with a two-line "read by path; not invoked" `#` header for an
+  agent that opens the file directly. A description the harness never receives
+  cannot be matched by skill selection, so the question the prose could only
+  answer with an assumption is closed by the mechanism. The skill stays listed
+  and typeable; nothing about how its consumers read it by path changes.
