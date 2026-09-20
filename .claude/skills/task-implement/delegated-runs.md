@@ -36,7 +36,7 @@ spawn the next agent until the previous one's result is in hand.
 Not every task can be delegated. Which ones may never be, why, and the
 announcement that names the split before the first task starts are the
 delegation guard in
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/targets.md`
+`../task-engine/references/targets.md`
 § *The delegation guard*.
 
 The parent implements those tasks itself, in the list's original order,
@@ -98,7 +98,7 @@ It carries four things:
      made in PRE-FLIGHT, plus the note that a tree dirtied by this run's own
      earlier tasks is expected, so the agent must not re-run the prompt
      protocol in
-     `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/tree.md`;
+     `../task-engine/references/tree.md`;
    - the notice that it runs non-interactively: it cannot ask the user
      anything, and if it hits something that genuinely needs a human
      decision it must stop and report that rather than guess or wait.
@@ -127,9 +127,15 @@ The whole thing reads roughly:
 > user anything; if something genuinely needs a human decision, stop and
 > report it.
 >
+> When the task is finished, read the `/follow-ups` command's own body — it
+> states what counts as a follow-up, what is excluded, and how an item is
+> written — and apply its rules to this session, keeping at most three items.
+> Do not invoke the command. If it is not available to you, skip this and
+> report nothing for it.
+>
 > Report back only: the task number, the terminal status you wrote, the
-> commit hash (or that nothing was committed), and — only if it failed — a
-> one-line reason.
+> commit hash (or that nothing was committed), — only if it failed — a
+> one-line reason, and that list, omitted entirely when it is empty.
 
 ## Review rounds inside a delegated task
 
@@ -157,23 +163,71 @@ either.
 
 The parent's side of this is deliberately empty. It passes the flags through
 and **never sees a finding**: no report, no triage table, no rejection ledger
-travels up. The four-field return contract below is unchanged by `--review` —
-a task whose loop ended in unresolved `BLOCKING` findings comes back as a
-failure with its one-line reason, like any other failure, and halts the run.
+travels up. The return contract below is unchanged by `--review` in its first
+four fields — a task whose loop ended in unresolved `BLOCKING` findings comes
+back as a failure with its one-line reason, like any other failure, and halts
+the run. The fifth field does not reopen that door, and needs no rule here to
+stop it: `/follow-ups`' own exclusion rule already does, since a finding is not
+an unrecorded piece of work. The one thing from a loop that its reading does
+catch is a deferral `/task-iterate` noted should become a task, where none was
+authored — an unwritten task, not a finding.
 
 ## What the agent returns, and what the parent keeps
 
-The return contract is exactly four things:
+The return contract is exactly five things, the fifth optional:
 
 1. the task number,
 2. the terminal status it wrote to `.claude/TASKS.md`,
 3. the commit hash — or, under NO_COMMIT, that nothing was committed,
-4. a one-line failure reason, and only when it failed.
+4. a one-line failure reason, and only when it failed,
+5. **at most three one-line follow-ups**, and only when there are any.
 
 The parent accumulates that and nothing else. No diffs, no file lists, no
 narrative, no "surprises worth mentioning" — an agent with something to say
 says it in the failure line, and a task that needs the user's attention is a
 task that stopped. After a fifty-task run the parent holds fifty short rows.
+
+**The fifth field applies `/follow-ups`' rules; it does not define its own.**
+The agent reads that command's own body and applies what it finds there to its
+own session — which, for a delegated agent, is exactly the one task.
+
+**The agent is told the command's name, never a path to it.** `--local`
+installs a feature into `$PWD/.claude` instead of the global home, so a body
+that named the command by an absolute home path would silently miss every
+`--local` install and report no follow-ups on a project that has the command.
+A path relative to this body would resolve in both scopes, but the agent is
+handed a prompt rather than this file, so it has no anchor to resolve one
+against. The name is what resolves wherever the command actually lives. What counts as a follow-up, what is excluded because it
+is already tracked on disk, and how an item is written are all that command's,
+and are **not restated here**: a second copy is a copy that will drift, and
+this file is not its authority.
+
+**It reads the rules rather than invoking the command**, for two reasons.
+Invoking it would be a per-task `/follow-ups` call, which SKILL.md's DO NOT
+list forbids — the run's closing call is once, in the parent. And a read
+degrades where an invocation would not: `requires: command:follow-ups` means
+the command is normally installed, but a user who removed it by hand leaves
+the agent nothing to read, and the rule there is the same silent skip the
+closing call makes — omit the field, report nothing about it, and do not fail
+the task. An absent optional field is not a failed task.
+
+That is also why the field is empty on almost every task: the command's
+exclusion rule does the work, and an agent that did its task and wrote it down
+has nothing that qualifies.
+
+Two bounds belong to this channel rather than to the command, and only these
+two. **At most three items** — the command imposes no cap, and this one exists
+to protect the parent's context, not to redefine a follow-up; an agent with
+more than three unrecorded things did not finish its task. **Omitted entirely
+when the list is empty**, so the common case costs nothing and a fifty-task run
+still holds fifty short rows.
+
+The parent does not act on them, does not judge them and does not ask about
+them mid-run. It records them beside the other four fields and they feed
+exactly one place: the closing `/follow-ups` call in SKILL.md's CLOSING THE
+RUN. A follow-up line is the agent's claim, not the parent's finding — the
+parent never opened the task and is in no position to verify it, which is also
+why it is never a reason to halt the run.
 
 ## Between delegated tasks
 

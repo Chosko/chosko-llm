@@ -48,11 +48,11 @@ and the tier keeps it.
 **A task.**
 
 1. **The promise** — `/architect amend feature=<slug> "<withdraw the promise>"`,
-   executed from `${CLAUDE_HOME:-$HOME/.claude}/skills/architect/amend.md` by
+   executed from `../architect/amend.md` by
    path, when the feature document promises the deleted scope.
 2. **The removal** — `Status: [SKIP]` with a dated reason in the task's
    `## Decisions`, through
-   `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/amend.md`
+   `../task-engine/references/amend.md`
    § *Deleting a live task*.
 3. **Each successor's edge** — dropped through the same reference, on the
    successor's own `Preconditions:` line. The drop is named in that task's
@@ -62,7 +62,7 @@ and the tier keeps it.
 
 **A runbook step.** The strike alone: marker `[x]` with a `Done:` line opening
 `struck — <reason>` and no commit sha, through
-`${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/step-amend.md`
+`../runbook-run/references/step-amend.md`
 § *Strike*. A step is never deleted and never renumbered.
 
 **A feature.** `[SKIP]` on every one of its live tasks — step 2 for each, in

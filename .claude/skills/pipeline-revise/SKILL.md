@@ -1,6 +1,6 @@
 ---
 name: pipeline-revise
-version: 0.6.0
+version: 0.6.1
 type: skill
 description: Revise work that is already planned — change, insert into, remove from or reorder a feature document, a task or a runbook step — through the owners of every artifact the change reaches. Probes, resolves an anchor (feature=<slug>, task=<N> or runbook=<id|name|id-name> step=<n>, or one the description names), classifies the request into exactly one branch — amend, insert, delete or reorder — and reads only that branch's file, then runs the impact walk in both directions over the pipeline's index graph, opening bodies only within the anchor's scope. /pipeline-check scoped to the anchor runs before the proposal and again after actuation, and the report shows the difference. The proposal names its tier — editorial, local or structural — the artifacts touched, the owner steps in order and the lint findings it will create or clear, behind a single gate that settles whether the change is editorial on its own when a mechanical signal decides it — insert, delete and reorder are never editorial; an amend that adds or drops an edge, changes Files: or changes scope is not, and one meeting all three editorial conditions is — stating it in one Classified: evidence line. The gate asks for a reply only when something is still open: the editorial question on a borderline wording-versus-meaning amend (marking the answer the judged tier implies, a recommendation that still needs an explicit reply), or the here-versus-runbook choice when it is offered; with neither open it shows the plan and actuates. Nothing is written before the gate. Three or fewer owner steps run in the session, one at a time, each through its owner's amend arm or command with that owner's own gate intact; at four or more steps the gate also offers to hand the plan to /runbook-create and stop, when that command is installed. Removal is [SKIP] or a struck step, never physical deletion. Writes no line any owner owns, and commits and pushes by default: every owner step runs uncommitted, and one commit at the end holds the whole revision; a sequence that stops part-way commits nothing. Pass --no-commit to leave the revision uncommitted, or --no-push to commit without pushing. For a change one owner's amend arm covers, /pipeline-patch is the cheaper tool.
 requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run
@@ -38,15 +38,15 @@ THE ENGINE AND THE OWNERS
 What this skill knows about the pipeline as a whole is `pipeline-engine`'s,
 read by path:
 
-- `${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/references/probes.md`
+- `../pipeline-engine/references/probes.md`
   — the probe, its verdict line and the reuse rule;
-- `${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/references/graph.md`
+- `../pipeline-engine/references/graph.md`
   — the edges between the indexes, and **the impact walk's only traversal
   input**;
-- `${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/references/routing.md`
+- `../pipeline-engine/references/routing.md`
   — which owner each line belongs to, and, in its Amend column, the entry a
   revision routes through;
-- `${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/references/lint.md`
+- `../pipeline-engine/references/lint.md`
   — the findings the verification bracket compares.
 
 Every write goes through an owner: the amend arm `routing.md`'s Amend column
@@ -112,11 +112,11 @@ also where step 6 reads which owners are installed.
   (or that the project has no feature index).
 - `task=<N>` — a summary block `## <N>.` in `.claude/TASKS.md`. An id at or
   below `Last task number:` with no block is archived and terminal, per
-  `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`
+  `../task-engine/references/resolution.md`
   § *The archive*; one above it was never assigned. Either way there is no live
   task to revise: stop, say which, and list the live tasks, id and title.
 - `runbook=<id|name|id-name> step=<n>` — the runbook resolved by
-  `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`
+  `../runbook-run/references/runbook-schema.md`
   § *Resolving a runbook argument* — id, name or `<id>-<name>`; one that does
   not resolve stops listing the runbooks in `.claude/RUNBOOKS.md`. The step by id in its body — the anchor's target
   artifact, read here; an unknown id stops listing the runbook's steps, id,
@@ -186,7 +186,7 @@ proposal is built, so the plan starts from the true state:
   ties a runbook to a slug, so the command has no runbook scope.
 
 When `/pipeline-check` is not installed, evaluate
-`${CLAUDE_HOME:-$HOME/.claude}/skills/pipeline-engine/references/lint.md`
+`../pipeline-engine/references/lint.md`
 directly over the indexes and keep the findings whose identifier is the anchor
 or an entry the walk reached, rendered from their templates unchanged. Keep
 the findings: step 9 compares against them.
@@ -384,7 +384,7 @@ COMMITTING
 This skill owns the run's commit. A revision is one unit of work, so it lands
 as exactly one commit, made at the end — never one per owner step. Commit and
 push gating is
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`.
+`../task-engine/references/commit.md`.
 
 - **Pull at start** — once per run, after the anchor resolves and before the
   walk (WORKFLOW step 2), unless `--no-commit` or `--no-push`. A conflict

@@ -57,7 +57,7 @@ Make no empty commit: if the run wrote nothing, commit nothing.
 
 The one sanctioned use of `git add -u` is the dirty-tree fold, and only when
 the user explicitly chose to include their pre-existing changes — see
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/tree.md`.
+`./tree.md`.
 
 ## One commit per unit of work
 

@@ -1,6 +1,6 @@
 ---
 name: runbook-clean
-version: 0.2.1
+version: 0.2.2
 type: command
 description: Prune finished runbooks — delete each body file under .claude/runbooks/ and remove its .claude/RUNBOOKS.md index block, including the surrounding --- rules. With no argument the plan is every [DONE] runbook; with runbooks given as `<id>`, `<name>` or `<id>-<name>`, exactly those, resolved by the runbook schema's rule. Each body is deleted at whatever path its index block's File: line holds, and is never renamed. Survivors are never renumbered and the counter never moves down, so a pruned id is never handed out again. Only [DONE] is eligible — [PENDING] is unstarted work, [RUNNING] is a run someone is in the middle of, and [FAILED] is a halt that still needs a decision — and there is no --force and no status argument widening the set. A named runbook that is not [DONE] is refused by name with its actual status, an unknown name aborts the whole run before anything is deleted, and an empty plan says so and stops without asking. Always plans and confirms before writing. Automatically commits and pushes the removals; pass --no-commit to leave them uncommitted, or --no-push to commit without pushing.
 requires: skill:runbook-run
@@ -62,7 +62,7 @@ THE ARTIFACT
 
 The four-status vocabulary and the shape of an index block — its five fields
 and the conditional `Failed at:` line — are specified in
-`${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`.
+`../skills/runbook-run/references/runbook-schema.md`.
 Read it before parsing the index. **Neither is restated here** — a second copy
 is the copy that drifts, and a pruner whose idea of the status set has drifted
 from the runner's deletes the wrong thing.
@@ -316,7 +316,7 @@ DO NOT:
   goes. An empty index is its title line; the directory stays.
 - Restate the status vocabulary or the index block's shape in this body. They
   are
-  `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`,
+  `../skills/runbook-run/references/runbook-schema.md`,
   cited and never copied.
 - Touch `.claude/TASKS.md`, `.claude/FEATURES.md`, or any file outside
   `.claude/runbooks/` and `.claude/RUNBOOKS.md`. Runbooks carry no cross-store

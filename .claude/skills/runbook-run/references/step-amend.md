@@ -17,7 +17,7 @@ insert, which is performed by running `/runbook-create --append` itself.
 ## Inputs
 
 - **The runbook** — an id, a name or `<id>-<name>`, resolved by
-  `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`
+  `./runbook-schema.md`
   § *The store*'s resolution rule. An unknown argument lists the runbooks that
   do exist and stops; a compound whose halves disagree, or an ambiguity, is
   reported as that rule says and stops.

@@ -237,7 +237,7 @@ waits on, which is what lets a reader see the loop.
 
 `[STALE]` tasks are skipped by `all` and `next` because each one needs a
 per-task judgment call and a batch run should not stop to ask — see
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/stale.md`.
+`./stale.md`.
 When the resolved list skips any, name them: "Skipped N stale task(s): 12,
 14 — implement them explicitly by number to decide each one." A stale task
 requested explicitly by number is not skipped.
@@ -245,11 +245,11 @@ requested explicitly by number is not skipped.
 For `all` and `next`, after resolving the list, check each resolved task's
 `Target:` field in its TASKS.md summary block and warn when the run will
 need the user present — see
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/targets.md`.
+`./targets.md`.
 
 Which statuses a resolved task may carry, and what to do when an explicitly
 requested task carries another one, is
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/status.md`.
+`./status.md`.
 
 ---
 

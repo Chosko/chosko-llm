@@ -1,14 +1,9 @@
 ---
 name: task-implement
-version: 1.5.2
+version: 1.7.4
 type: skill
-description: Implement one or more tasks from the project's task backlog end-to-end using a tests-first sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits and pushes each task separately; pass --no-commit to skip the per-task commits (and pushes), or --no-push to keep committing without pushing. Supports `next` to implement the first eligible task. `next` and `all` honour `Preconditions:` — a task is picked only once every task it names is `[DONE]` or `[SKIP]`, `all` orders its list so nothing runs ahead of what it waits on and names by id any task left blocked, and between tasks an `all` run skips, with one line, a task whose preconditions no longer hold; a task named by number is never blocked. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd|skip-tests-unattended` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time. In skip-tests mode, pass `-y` to suppress the per-task "Proceed?" confirmation for that run; the `skip-tests-unattended` marker value makes that the default for every run without needing `-y`. On a run resolving to 2+ tasks, offers to implement each task in a fresh subagent so later tasks don't inherit earlier ones' context — agents run one at a time, never in parallel, and `claude+human` / `human` / explicitly-requested `[STALE]` tasks stay in the parent conversation because they need the user present; pass `--agents` / `--no-agents` to pre-answer. On such a run the parent is a launcher: it evaluates the delegation guard from the `TASKS.md` summary blocks alone, never opens a delegated task's body, hands every agent the same fixed-size prompt carrying only the task number and the run's resolved flags, and keeps only the task number, terminal status, commit hash and one-line failure reason each agent returns — so the parent's context no longer grows with the size of the batch. Pass `--review` (optionally `--rounds N`, default 1) to have each task reviewed before it is committed: after the full test suite and before the status flip, the run spawns `/task-review` as a subagent so the review happens in a context that did not write the code, waits for its findings, and runs `/task-iterate` in the session to triage and apply them — the fixes ride in the task's own single commit, later rounds re-review only what the last iterate changed and only while `BLOCKING` findings remain, rejected findings may not be re-raised, and unresolved `BLOCKING` findings after the last round stop the run with the tree uncommitted and the task `[IN PROGRESS]`; without the flag nothing about the run changes. The spawned reviewer's cost is steerable with `--review-model <name>|same|auto` and `--review-effort shallow|standard|deep|same|auto` (both default `auto`, both require `--review`): `auto` picks the model and the read budget deterministically per task from that task's own diff, so an ordinary task gets a Sonnet reviewer and only a heavy one gets Opus, while `same` on either axis restores the inherit-the-implementer behaviour. When a `Feature:`-tagged task
-lands `[DONE]` and leaves every task for that feature `[DONE]`/`[SKIP]`,
-records it as a completion candidate and, once at the very end of the run
-(batched across the whole run, never per-task), proposes flipping that
-feature's `FEATURES.md` `Status:` from `[PLANNED]` to `[DONE]` — the user
-decides, per feature; declined or unnamed slugs stay `[PLANNED]`.
-requires: skill:task-engine
+description: Implement one or more tasks from the project's task backlog end-to-end using a tests-first sequence. On a dirty working tree, prompts the user (proceed-uncommitted / proceed-and-fold-into-commit / commit-first / abort) instead of hard-aborting. Reads the task body as primary context and fans out to CLAUDE.md / .claude/context/ as needed. Supports human-in-the-loop tasks: target claude+human pauses at declared Manual interventions checkpoints and verifies each outcome; target human runs as a guided walkthrough. On Unity projects whose CLAUDE.md declares a Unity MCP plugin and whose mcp__UnityMCP__* tools are connected this session, those checkpoints can instead be driven by Claude in the editor (checking the Console, performing editor actions, then handing the user a verification) — opt-outable per run; when MCP isn't connected the standard manual protocol is used unchanged. Commits and pushes each task separately; pass --no-commit to skip the per-task commits (and pushes), or --no-push to keep committing without pushing. Supports `next` to implement the first eligible task. `next` and `all` honour `Preconditions:` — a task is picked only once every task it names is `[DONE]` or `[SKIP]`, `all` orders its list so nothing runs ahead of what it waits on and names by id any task left blocked, and between tasks an `all` run skips, with one line, a task whose preconditions no longer hold; a task named by number is never blocked. On a `[STALE]` task — one whose originating feature was re-architected — warns naming the feature and lets the user implement anyway or stop; `all`/`next` skip stale tasks rather than deciding for the user. Honors a `Testing policy for /task-implement: skip-tests|full-tdd|skip-tests-unattended` marker in CLAUDE.md so a project's no-test-suite decision persists across runs instead of being asked every time. In skip-tests mode, pass `-y` to suppress the per-task "Proceed?" confirmation for that run; the `skip-tests-unattended` marker value makes that the default for every run without needing `-y`. On a run resolving to 2+ tasks, offers to implement each task in a fresh subagent so later tasks don't inherit earlier ones' context — agents run one at a time, never in parallel, and `claude+human` / `human` / explicitly-requested `[STALE]` tasks stay in the parent conversation because they need the user present; pass `--agents` / `--no-agents` to pre-answer. On such a run the parent is a launcher: it evaluates the delegation guard from the `TASKS.md` summary blocks alone, never opens a delegated task's body, hands every agent the same fixed-size prompt carrying only the task number and the run's resolved flags, and keeps only the task number, terminal status, commit hash, one-line failure reason and a list of at most three follow-ups each agent returns — so the parent's context no longer grows with the size of the batch. Pass `--review` (optionally `--rounds N`, default 1) to have each task reviewed before it is committed: after the full test suite and before the status flip, the run spawns `/task-review` as a subagent so the review happens in a context that did not write the code, waits for its findings, and runs `/task-iterate` in the session to triage and apply them — the fixes ride in the task's own single commit, later rounds re-review only what the last iterate changed and only while `BLOCKING` findings remain, rejected findings may not be re-raised, and unresolved `BLOCKING` findings after the last round stop the run with the tree uncommitted and the task `[IN PROGRESS]`; without the flag nothing about the run changes. The spawned reviewer's cost is steerable with `--review-model <name>|same|auto` and `--review-effort shallow|standard|deep|same|auto` (both default `auto`, both require `--review`): `auto` picks the model and the read budget deterministically per task from that task's own diff, so an ordinary task gets a Sonnet reviewer and only a heavy one gets Opus, while `same` on either axis restores the inherit-the-implementer behaviour. When a `Feature:`-tagged task lands `[DONE]` and leaves every task for that feature `[DONE]`/`[SKIP]`, records it as a completion candidate and, once at the very end of the run (batched across the whole run, never per-task), proposes flipping that feature's `FEATURES.md` `Status:` from `[PLANNED]` to `[DONE]` — the user decides, per feature; declined or unnamed slugs stay `[PLANNED]`. Every run then ends with one /follow-ups call — after the closing report and after the feature-completion proposal, at completion, at a user-requested stop between tasks and at a failure halt alike, reading under --agents the follow-ups each agent derived for its own session by applying /follow-ups' rules without invoking it, and skipped silently where that command is not installed; the call is skipped silently when /follow-ups is not installed.
+requires: skill:task-engine, command:follow-ups
 ---
 
 # /task-implement
@@ -70,6 +65,9 @@ that feature to reach `[DONE]`/`[SKIP]`, the run notes the feature as a
 completion candidate but proposes nothing until every requested task is
 done — once, for the whole batch. See FEATURE COMPLETION below.
 
+However the run ends, its last act is one `/follow-ups` call — see CLOSING
+THE RUN below.
+
 $ARGUMENTS
 
 ---
@@ -78,7 +76,7 @@ SHARED RULES (the `task-engine`)
 
 Seven rules this skill shares with the rest of the `task-*` suite have exactly
 one authority each, under
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/`:
+`../task-engine/references/`:
 `resolution.md` (where the backlog lives and how a run resolves its task
 list), `status.md` (the status vocabulary), `targets.md` (the `Target:`
 values and the delegation guard), `stale.md` (`[STALE]`), `tree.md` (the
@@ -124,7 +122,7 @@ strip whichever appear; what is left is the task selector.
 
 The `--no-commit` and `--no-push` flags, their mutual exclusion with
 `--commit`, and everything they gate are
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`.
+`../task-engine/references/commit.md`.
 Here NO_COMMIT true means the run performs the full test sequence and the
 `Status:` flips but skips the per-task commit in Step 7 (see that step and
 BETWEEN TASKS); false — the default — commits each task separately as
@@ -175,7 +173,7 @@ pair, and strip whichever appear:
 Both `--review-*` flags are strings here and nothing more: what their values
 mean, how `auto` resolves, and what each effort level permits the reviewer to
 read are
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/review-budget.md`,
+`../task-engine/references/review-budget.md`,
 which `./review-rounds.md` reads when REVIEW is true. Parsing does not
 resolve them and this file does not restate that protocol.
 
@@ -191,7 +189,7 @@ selectors honour, which statuses and which blocked tasks a batch selector
 skips, the one-line resolution report each prints without asking for
 confirmation, the naming of skipped stale tasks, and the empty-argument
 stop — are
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`
+`../task-engine/references/resolution.md`
 § *Selectors*. This skill is the only consumer that has them, so that
 section is written in its words. Its one departure is the precondition
 re-check in BETWEEN TASKS step 2, on a run resolved by `all`.
@@ -201,14 +199,14 @@ through STALE TASKS below.
 
 The human-intervention warning appended to an `all` / `next` resolution
 report is
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/targets.md`.
+`../task-engine/references/targets.md`.
 
 ---
 
 LOCATING THE BACKLOG
 
 Backlog resolution follows
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/resolution.md`,
+`../task-engine/references/resolution.md`,
 whose `/task-implement` note carries every way this skill departs from it:
 the wording of the not-initialised stop, that the selectors above are its
 argument form, and the precondition re-check in BETWEEN TASKS step 2. Its § *Opening a per-task body file* is the rule that a
@@ -281,7 +279,7 @@ STALE TASKS
 What `[STALE]` means, who sets and clears it, and the implement-anyway /
 stop warning to put to the user before touching such a task — including
 where the feature slug comes from and what each answer does — are
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/stale.md`
+`../task-engine/references/stale.md`
 § *Implementing a stale task*. That protocol is this skill's own, quoted
 there verbatim, and its `/task-implement` note carries the rest of this
 skill's half: the choice is always the user's, a stale task is never
@@ -338,7 +336,7 @@ mode without per-task confirmations.
 PRE-FLIGHT CHECKS (before any task)
 
 1. **Working-tree check.** Run the dirty-tree protocol from
-   `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/tree.md`:
+   `../task-engine/references/tree.md`:
    `git status --porcelain` once, silent continuation on a clean tree, its
    prompt when the output is non-empty. It sets DIRTY_FOLD and
    DIRTY_FOLD_UNTRACKED, which Step 7 consumes, and may halt the run. That
@@ -363,7 +361,7 @@ PRE-FLIGHT CHECKS (before any task)
      re-implement the task. `all` and `next` resolve from blocks that
      exist, so they never meet such an ID.
    - Confirm its status is implementable.
-     `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/status.md`
+     `../task-engine/references/status.md`
      § *Implementable* is which statuses those are and what to do when a
      task requested explicitly by number carries another one — including
      the `[STALE]` hand-off to STALE TASKS above. (For `all` and `next`,
@@ -403,7 +401,7 @@ PRE-FLIGHT CHECKS (before any task)
    If DELEGATE is true, read `./delegated-runs.md` now and follow it for
    the rest of the run. Which tasks may never be handed to a subagent is
    the delegation guard in
-   `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/targets.md`;
+   `../task-engine/references/targets.md`;
    `./delegated-runs.md` governs how the resulting split is announced and
    executed. For every task that IS delegated, the parent acts as a
    launcher: it hands the agent a fixed-size prompt built from the run's
@@ -422,7 +420,7 @@ PRE-FLIGHT CHECKS (before any task)
    and which run in this conversation (see `./delegated-runs.md`).
 
 5. **Pull at start**, per
-   `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`
+   `../task-engine/references/commit.md`
    § *Pull at start* — here that means once per invocation, before the
    first task's work begins, with each task's own re-sync happening right
    before that task's push (Step 7).
@@ -454,7 +452,7 @@ Hold its contents in mind for the rest of the per-task workflow.
 The three `Target:` values and what each means at implementation time —
 including announcing a `claude+human` task's checkpoints up front and
 running a `human` task as a guided walkthrough — are
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/targets.md`
+`../task-engine/references/targets.md`
 § *At implementation time*. If the target is `claude+human` or `human`,
 read `./human-in-loop.md` now and follow it for the rest of this task; it
 carries a gate that decides whether the manual checkpoints can be driven
@@ -536,7 +534,7 @@ FAILURE HANDLING: the tree stays uncommitted and this task stays
 Use the Edit tool to update this task's `Status:` line in
 `.claude/TASKS.md`. Which terminal statuses this skill may write, and
 when, is
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/status.md` —
+`../task-engine/references/status.md` —
 its `/task-implement` note carries this skill's half: it is the only
 consumer that writes `[IN PROGRESS]` and `[DONE]`, `[PARTIAL]` is used
 only for a sub-requirement discovered during implementation that belongs
@@ -554,7 +552,7 @@ below before moving to Step 7.
 Commit and push gating — the flags, staging by explicit path, how many
 commits a unit of work produces, the push protocol, and what to do when a
 commit or a push fails — is
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`.
+`../task-engine/references/commit.md`.
 Its `/task-implement` note carries this skill's own specifics: one commit
 and one push per task immediately after that task's commit, the commit
 message format and its skip-tests parenthetical, exactly what this step
@@ -683,6 +681,66 @@ longer `[PLANNED]`).
 
 ---
 
+CLOSING THE RUN
+
+**Every run ends with one `/follow-ups` call.** It fires **once per run —
+never per task** — after the run's own closing report is printed, and it is
+the last thing the run does.
+
+It fires **after** the FEATURE COMPLETION proposal, never before. That
+proposal can itself leave something unresolved — a slug the user declined
+stays `[PLANNED]` — and a follow-up list drawn before it would miss exactly
+that.
+
+It fires at every point a run stops, not only at completion:
+
+- after the last task in the run, whatever the run resolved to
+  (`<N>...`, `all`, `next`);
+- at a failure halt, per FAILURE HANDLING — including a `--review` loop that
+  ended with unresolved `BLOCKING` findings;
+- when the user asks to stop between tasks.
+
+A single-task run is not a special case: the end of the one task is the end
+of the run.
+
+**Under `--agents`.** The closing call is not skipped in a delegated run. The
+parent's reading covers the per-agent result reports it already collects — the
+five-field returns in `./delegated-runs.md` — as well as its own conversation.
+It opens nothing new to do it.
+
+The fifth field is what makes that reading worth anything: before returning,
+each agent reads the `/follow-ups` command's own body and applies its rules to
+its own session, handing back at most three items. The agent is given the
+command's **name and never a path** — `--local` puts a feature somewhere no
+path in a shipped body would find it — and it reads the rules rather than
+invoking the command, so the run's closing call stays the only one. Where the
+command is unavailable it skips the field silently instead of failing. Nothing here or in `./delegated-runs.md` restates what
+counts as a follow-up. Fold the lines it does return into the run's list,
+attributed to the task they came from. They are the agent's claim and the parent never saw
+the work, so pass them through as stated — do not re-word them into a
+judgement the parent cannot support, and do not drop one because it looks
+unlikely. Most tasks return none; that is the field working, not failing.
+
+The rest of the list still comes from the launcher's own conversation — the
+delegation split, tasks skipped for unmet preconditions, failure lines,
+declined feature slugs. Where the user then asks to execute or plan a listed
+follow-up that came from a delegated agent, forwarding it to that same agent
+is often the convenient thing to do, and is allowed. Judgement, not a rule —
+this is not a new relay protocol.
+
+**It changes no bookkeeping.** The call adds no commit and flips no status.
+It runs after every per-task commit, after any FEATURE COMPLETION commit, and
+after the closing report, so it never dirties a tree the run just cleaned and
+never touches the one-commit-per-task rule.
+
+**When `/follow-ups` is not installed, skip the call silently.** The
+frontmatter declares `requires: command:follow-ups`, so the dependency
+helpers install it alongside this skill; a user who removed it by hand gets
+no message and no error. An absent optional closing step is not a run
+failure.
+
+---
+
 FAILURE HANDLING
 
 If any step fails in a way you cannot resolve:
@@ -694,6 +752,9 @@ If any step fails in a way you cannot resolve:
 - Report clearly what failed, what you tried, and what the user might
   want to do next (revert with `git restore`, fix manually, edit the
   task spec).
+- Then make the closing `/follow-ups` call, per CLOSING THE RUN. A halted
+  run is a run that ended, and it is the one most likely to strand
+  unrecorded work.
 
 A failure inside a delegated task is not a special case: the parent stops
 the run without spawning the next agent, and reports which tasks completed
@@ -773,3 +834,12 @@ DO NOT:
 - Restate the `auto` tier table or the read-budget table anywhere in this
   skill. `review-budget.md` is their single authority; a second copy is a
   copy that will drift.
+- Call `/follow-ups` per task, in this session or in a delegated agent. It is
+  once per run, after the closing report and after the FEATURE COMPLETION
+  proposal — see CLOSING THE RUN. An agent populating the fifth return field
+  *reads* that command's rules and applies them; it does not invoke it.
+- Restate what counts as a follow-up, what is excluded, or how an item is
+  written — here or in `./delegated-runs.md`. The `/follow-ups` command's own
+  body is their single authority; a second copy is a copy that will drift.
+- Skip the closing call because the run was stopped by the user between
+  tasks or halted on a failure. Those are the runs that most need it.

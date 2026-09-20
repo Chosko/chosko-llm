@@ -1,6 +1,6 @@
 ---
 name: runbook-list
-version: 0.2.0
+version: 0.2.1
 type: command
 description: Print the project's runbooks as a compact listing — id, status, name, steps done over total, creation date, source and the runbook's one-line title — one line each, with the halt reason printed as a continuation line under any failed runbook and a trailing summary counting the runbooks by status. The id is the shorthand every other runbook- command accepts in place of a name; a block written before ids prints `-` in that column and is left alone, since backfilling belongs to a command that writes the index. Takes an optional status filter, matched without brackets and case-insensitively; an unknown status names the valid ones rather than printing nothing. A missing or empty index is not an error. Read-only — reads .claude/RUNBOOKS.md and nothing else, never opens a file under .claude/runbooks/, runs no shell command, and corrects no status however wrong it looks.
 requires: skill:runbook-run
@@ -35,7 +35,7 @@ THE ARTIFACT
 
 The four-status vocabulary and the shape of an index block — its five fields
 and the conditional `Failed at:` line — are specified in
-`${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`.
+`../skills/runbook-run/references/runbook-schema.md`.
 Read it before parsing the index. **Neither is restated here** — a second
 copy is the copy that drifts, and a listing whose idea of the status set has
 drifted from the runner's is worse than no listing.
@@ -173,7 +173,7 @@ DO NOT:
   prose is fine; editing it is not.
 - Restate the status vocabulary or the index block's shape in this body.
   They are
-  `${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/runbook-schema.md`,
+  `../skills/runbook-run/references/runbook-schema.md`,
   cited and never copied.
 - Print the `↳` continuation for anything other than a `[FAILED]` runbook.
 - Print a runbook's `File:` path, its step titles, its prompts, or any

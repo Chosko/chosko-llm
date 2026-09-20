@@ -72,7 +72,7 @@ ARGUMENT PARSING hands this loop two strings, REVIEW_MODEL and REVIEW_EFFORT,
 each a name, `same`, or `auto` — the default for both. Their values, the
 deterministic `auto` tier table behind those defaults, the read budget behind
 the effort axis, and the reporting rules that keep both auditable are
-`${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/review-budget.md`.
+`../task-engine/references/review-budget.md`.
 Read it once, here, at the same point this file is read. **It is the single
 authority and neither table is restated here** — resolve against the file, not
 against a remembered copy of it.
@@ -246,7 +246,7 @@ output.
   fixes, and is not pushed.
 - **Commit count.** Unchanged by this loop. How many commits a reviewed task
   produces, and why `/task-iterate` commits nothing inside a round, are
-  `${CLAUDE_HOME:-$HOME/.claude}/skills/task-engine/references/commit.md`'s
+  `../task-engine/references/commit.md`'s
   `/task-implement` note.
 - **Batch runs.** `--review`, `--rounds N`, `--review-model` and
   `--review-effort` ride through to each implementor agent as part of the

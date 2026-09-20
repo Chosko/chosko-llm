@@ -45,7 +45,7 @@ that legacy value **stays correct**: the file is where `File:` says it is.
 
 **The migration check.** A command that is writing a runbook, and whose block's
 `File:` file name does not begin with `<id>-`, has a body to migrate, per
-`${CLAUDE_HOME:-$HOME/.claude}/skills/runbook-run/references/body-migration.md`.
+`./body-migration.md`.
 
 ### Resolving a runbook argument
 
