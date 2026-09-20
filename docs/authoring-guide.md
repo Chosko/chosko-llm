@@ -845,24 +845,44 @@ Otherwise it exits non-zero after naming each offending file and line, plus
 the four relative forms to use instead.
 
 Its parser contract is one line: an offence is one of the three home literals
-— `${CLAUDE_HOME:-$HOME/.claude}`, `$HOME/.claude`, `~/.claude` — followed
-immediately by a `/skills/` or `/commands/` path segment, i.e. the literal
-used as the root of a path to another shipped file. A bare literal with
-nothing joined onto it is prose (or a shell assignment) and is not matched,
-which is what lets the three install-path notes and this guide explain *why*
-the form is wrong without tripping it.
+— `${CLAUDE_HOME:-$HOME/.claude}`, `$HOME/.claude`, `~/.claude` — followed by
+a `/skills/` or `/commands/` path segment, i.e. the literal used as the root
+of a path to another shipped file, on a line that does not carry the
+`scope-probe` marker. Both the single-line form and the two-line wrap are
+matched. A bare literal with nothing joined onto it is prose (or a shell
+assignment) and is not matched either way, which is what lets the install-path
+notes and this guide explain *why* the form is wrong without tripping it.
+
+### <a id="scope-probes"></a>The one exception: a scope probe
+
+Citing a file and asking **whether a feature is installed at all** are
+different questions, and only the first has a relative answer. A scope probe
+has to look in both scopes Claude Code loads features from — a project's own
+`.claude/`, where `chosko-llm add --local` writes, and `~/.claude/`, where a
+global add writes — so one of its two paths is necessarily absolute. Marking
+that line `scope-probe` permits it:
+
+```
+~/.claude/skills/claude-council/SKILL.md    # scope-probe
+```
+
+The marker is deliberate, greppable, and cannot be tripped by accident. It is
+never a way to cite a file: a body that reads a shipped file still cites it
+relatively, and a `scope-probe` marker on such a line is a bug the guard
+cannot see. Exactly two lines in the repo carry it, the two `council-gate.md`
+copies, and a third should be argued for rather than added.
+
+The probe snippet in `skills/pipeline-engine/references/probes.md` needs no
+marker — it derives its homes into shell variables, which the pattern does
+not match — but it is under the same obligation, and § *Which install home —
+both of them* in that file is where the obligation is written.
 
 It proves absence of that one shape and nothing more. Whether a relative
-citation actually resolves to a file is a reviewer's read, and so is a body
-that assigns the home to a shell variable and joins a path onto that variable
-— `probes.md`'s `installed` and `council` probes are the repo's one such case,
-they run from the project root where there is no citing body to be relative
-to, and they stay bound to the global home. That is the behaviour as it
-stands, not a decision this guard makes: under `--local` those two probes
-answer for the global home and so can report a locally installed feature as
-missing. Nothing in this repo has settled whether that should change; the
-guard simply does not police it. Like the other two it is repo-local: not a
-feature, no frontmatter, not a subcommand, installed nowhere.
+citation actually resolves to a file is a reviewer's read; so is whether a
+`scope-probe` marker is honestly placed, and whether a body that derives a
+home into a shell variable looks in the right scopes. Like the other two it is
+repo-local: not a feature, no frontmatter, not a subcommand, installed
+nowhere.
 
 ## Commit-and-push convention
 

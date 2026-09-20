@@ -38,9 +38,9 @@ root, with the result shape the verdict line prints.
 | `roadmap` | `.claude/domain/product-roadmap.md` exists, and whether any line of it begins `Covers:` — a milestone carrying scope slices. | `none` \| `unsliced` \| `sliced` |
 | `plan` | `.claude/PLAN.md` exists. | `yes` \| `no` |
 | `runbooks` | `.claude/RUNBOOKS.md` exists. | `yes` \| `no` |
-| `council` | `$H/skills/claude-council/SKILL.md` exists, `$H` being the install home the snippet below derives — the path the council gates of `/architect` and `/product-design` probe. | `yes` \| `no` |
+| `council` | `skills/claude-council/SKILL.md` exists under either install home (see below) — the same question the council gates of `/architect` and `/product-design` ask. | `yes` \| `no` |
 | `testing` | The project's `CLAUDE.md` carries a line `Testing policy for /task-implement: <value>`, and its value. The marker and its values are `/task-implement`'s; the probe reads the value and interprets nothing. | the value, or `none` |
-| `installed` | Which pipeline features are installed under `${CLAUDE_HOME:-$HOME/.claude}` — each feature a row of `routing.md` names, found as `commands/<name>.md` or `skills/<name>/SKILL.md`, either kind. | `<found>/<rows>`, plus ` (missing: <name>, …)` when any is absent |
+| `installed` | Which pipeline features are installed under either install home — each feature a row of `routing.md` names, found as `commands/<name>.md` or `skills/<name>/SKILL.md`, either kind. | `<found>/<rows>`, plus ` (missing: <name>, …)` when any is absent |
 
 `sliced` follows `/architect`'s own reading of a roadmap: a roadmap with no
 `Covers:` line is one it architects against in traditional mode.
@@ -53,6 +53,31 @@ that is the archive's whole guarantee
 pipeline decision turns on whether the archive exists: an id absent from
 `TASKS.md` resolves from the absence alone.
 
+## Which install home — both of them
+
+Two probes ask whether a *feature* is installed rather than whether a project
+file exists: `council` and `installed`. They answer for **both scopes Claude
+Code loads features from** — the project's own `.claude/`, where `chosko-llm
+add --local` writes, and `~/.claude/`, where a global add writes — and a
+feature present in either is installed.
+
+Checking one scope would be wrong in the other, and not visibly: a project
+that installed the pipeline suite with `--local` would have every one of its
+features reported missing, one directory below the shell that is asking. The
+probe cannot pick the right scope because there is no right one — Claude Code
+reads both, so the honest answer is the union.
+
+This is the one place a shipped body derives an install home in shell, and it
+is why the home-path guard's parser contract stops at citations rather than at
+home literals: a body that *reads* a shipped file still cites it by a path
+relative to itself, and only a body asking whether a feature is installed may
+name a home at all. The two `council-gate.md` copies of `/architect` and
+`/product-design` ask the same question without a shell, and mark their
+absolute line `scope-probe` to say so.
+
+A `CLAUDE_HOME` set in the environment overrides both defaults and is then the
+only home checked, which is what that variable has always meant.
+
 ## Running it
 
 The probe is one shell invocation — the one shell use a read-only consumer is
@@ -60,7 +85,17 @@ allowed. This is its reference form; a consumer runs it as written, from the
 project root:
 
 ```sh
-H="${CLAUDE_HOME:-$HOME/.claude}"
+# Install homes: an explicit CLAUDE_HOME wins, else both scopes are checked.
+if [ -n "${CLAUDE_HOME:-}" ]; then H1="$CLAUDE_HOME"; H2=""
+else H1="$PWD/.claude"; H2="$HOME/.claude"; fi
+# have <rel> [<rel>…] — true when any home holds any of the paths.
+have() {
+  for r in "$@"; do
+    [ -e "$H1/$r" ] && return 0
+    [ -n "$H2" ] && [ -e "$H2/$r" ] && return 0
+  done
+  return 1
+}
 yn() { if [ -e "$1" ]; then echo yes; else echo no; fi; }
 features=$(yn .claude/FEATURES.md)
 if [ -f .claude/TASKS.md ] && [ -d .claude/tasks ]; then backlog=yes
@@ -73,15 +108,24 @@ if [ -f .claude/domain/product-roadmap.md ]; then
 fi
 plan=$(yn .claude/PLAN.md)
 runbooks=$(yn .claude/RUNBOOKS.md)
-council=$(yn "$H/skills/claude-council/SKILL.md")
+council=no; have skills/claude-council/SKILL.md && council=yes
 testing=$(sed -n 's/^Testing policy for \/task-implement: *\([a-z-][a-z-]*\).*$/\1/p' CLAUDE.md 2>/dev/null | head -n 1)
 [ -n "$testing" ] || testing=none
-found=0; rows=0; missing=
-for f in $(sed -n 's/^| `\/\{0,1\}\([^`]*\)`.*$/\1/p' "$H/skills/pipeline-engine/references/routing.md" 2>/dev/null); do
-  rows=$((rows + 1))
-  if [ -f "$H/commands/$f.md" ] || [ -f "$H/skills/$f/SKILL.md" ]; then found=$((found + 1))
-  else missing="$missing${missing:+, }$f"; fi
+routing=
+for h in "$H1" "$H2"; do
+  [ -n "$h" ] || continue
+  if [ -f "$h/skills/pipeline-engine/references/routing.md" ]; then
+    routing="$h/skills/pipeline-engine/references/routing.md"; break
+  fi
 done
+found=0; rows=0; missing=
+if [ -n "$routing" ]; then
+  for f in $(sed -n 's/^| `\/\{0,1\}\([^`]*\)`.*$/\1/p' "$routing"); do
+    rows=$((rows + 1))
+    if have "commands/$f.md" "skills/$f/SKILL.md"; then found=$((found + 1))
+    else missing="$missing${missing:+, }$f"; fi
+  done
+fi
 echo "Pipeline: features=$features backlog=$backlog roadmap=$roadmap plan=$plan runbooks=$runbooks council=$council testing=$testing installed=$found/$rows${missing:+ (missing: $missing)}"
 ```
 

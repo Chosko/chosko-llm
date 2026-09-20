@@ -639,8 +639,9 @@ Currently shipped:
   delegates the decision to the claude-council skill this repo ships
   (vendored under `skills/claude-council/`, opt-in — installed only when the
   user runs `chosko-llm add skill:claude-council`)
-  (detected at `../claude-council/SKILL.md`, relative to each
-  `council-gate.md`; silent and no-op when absent), invoked with no mode argument so
+  (detected in both scopes — `../claude-council/SKILL.md` relative to each
+  `council-gate.md`, plus the user-level home on a `scope-probe`-marked line,
+  so a split install is not read as absent; silent and no-op when absent), invoked with no mode argument so
   claude-council's own Quick/Standard/Deep triage applies. The brownfield
   branch is excluded — confirm-and-record over an existing stack is not a
   fork. Dissent folds into `product-design.md`'s design decisions; the
@@ -1798,14 +1799,18 @@ its state in versioned project document.
   followed immediately by `/skills/` or `/commands/`; a bare literal with
   nothing joined onto it is prose or a shell assignment and is not matched,
   which is what lets the install-path notes explain why the form is wrong.
+  One exception, marked: a **scope probe** — a body asking whether a feature
+  is *installed* must check both scopes Claude Code loads from (a project's
+  own `.claude/`, where `--local` writes, and `~/.claude/`), so one path is
+  necessarily absolute; a line carrying the `scope-probe` marker is permitted.
+  Exactly two lines carry it, the two `council-gate.md` copies. Never a way to
+  cite a file. `probes.md`'s `installed`/`council` probes need no marker —
+  they derive both homes into shell variables, which the pattern does not
+  match — and answer for the union, so a `--local` install is no longer
+  reported missing; see `probes.md` § *Which install home — both of them*.
   Proves absence of that one shape only — not that a relative citation
-  resolves, and not a body that assigns the home to a shell variable and
-  joins a path onto it. `probes.md`'s `installed` and `council` probes are
-  the repo's one such case: they run from the project root where there is no
-  citing body to be relative to, and stay bound to the global home — so under
-  `--local` they answer for the global home and can report a locally installed
-  feature as missing. Behaviour as it stands, not a decision the guard makes;
-  unsettled, and a candidate follow-up.
+  resolves, not that a `scope-probe` marker is honest, and not that a
+  variable-derived home looks in the right scopes.
   No CI and no pre-commit hook, so `CLAUDE.md` § Versioning plus each task's
   acceptance criteria are the whole enforcement mechanism.
 - **No state file.** Versions live in frontmatter; what's installed is

@@ -34,17 +34,29 @@ propagates into every feature document downstream.
 
 ## Step 1 — Detection
 
-Probe for the skill:
+Probe for the skill in **both** scopes Claude Code loads features from, the
+sibling path first:
 
 ```
 ../claude-council/SKILL.md
+~/.claude/skills/claude-council/SKILL.md    # scope-probe
 ```
 
-That path is relative to this file, so it resolves under a `--local` install
-as well as a global one — the two skills are always siblings under whichever
-home `chosko-llm add` wrote them into. Never re-derive an absolute home path
-here: a shipped body cannot expand `CLAUDE_HOME` at run time and would land on
-the global home whatever the install scope.
+The skill is present if **either** resolves. The first is relative to this
+file, so it finds a council installed into the same home as this skill —
+the common case, global or `--local` alike, since `chosko-llm add` writes
+both into whichever home it was pointed at. The second covers the split:
+this skill installed into a project's own `.claude/` with `--local` while
+the council sits in the user-level home. Checking only the sibling would
+report an installed council as absent there, and this gate's whole contract
+is to no-op silently when it is absent — so a wrong "absent" is invisible.
+
+The second line is the one kind of absolute home path a shipped body may
+carry, and the `scope-probe` marker is what permits it: it names a second
+*scope to look in*, not a file this skill ships beside. A body that reads a
+shipped file still cites it by a path relative to itself, marker or no marker.
+`pipeline-engine`'s `council` probe asks this same question the same way, and
+the two must agree.
 
 **If the file does not exist, stop here and say nothing.** Proceed with the
 inline propose-and-recommend flow unchanged. Do not mention claude-council,

@@ -17,16 +17,24 @@
 # or the citation is wrapped across a line break (markdown prose wraps these,
 # and a line-based grep alone would miss it).
 #
+# The one exception, and it is narrow: a SCOPE PROBE — a body asking whether a
+# feature is installed at all, which has to look in both scopes Claude Code
+# loads from and so cannot be relative to anything. A matching line carrying
+# the marker `scope-probe` is permitted. The marker is deliberate, greppable
+# and cannot be tripped by accident; it is never a way to cite a file.
+# `skills/{architect,product-design}/council-gate.md` are the only two lines
+# that carry it. The probe snippet in
+# skills/pipeline-engine/references/probes.md needs no marker: it derives its
+# homes into shell variables, which this pattern does not match.
+#
 # What it cannot prove: that a relative citation actually resolves to a file
 # (that is a human's read, and the acceptance criteria of whatever task wrote
 # it); that a citation wrapped across THREE or more lines is caught, since the
-# wrap pass uses a two-line window; nor that a body which assigns the home to a
-# shell variable and joins a path onto that variable is scope-correct. The
-# `installed` and `council` probes in
-# skills/pipeline-engine/references/probes.md are the repo's one case of that
-# last kind: they run from the project root, where there is no citing body to
-# be relative to, so they stay bound to the global home. That is current
-# behaviour this guard does not police, not a decision this guard makes.
+# wrap pass uses a two-line window; that a `scope-probe` marker is honestly
+# placed; nor that a body which derives an install home into a shell variable
+# and joins a path onto it looks in the right scopes. That last one is a
+# reviewer's read: probes.md § "Which install home — both of them" is where
+# the rule it has to satisfy is written.
 #
 # Repo-local and authoring-time only: not a feature, no frontmatter, invisible
 # to every CLI verb, installed nowhere.
@@ -43,13 +51,16 @@ done
 
 # The parser contract: an offence is one of the three home literals followed
 # by a '/skills/' or '/commands/' path segment — i.e. the literal used as the
-# root of a path to another shipped file. A bare literal with no path segment
-# joined onto it is prose (or a shell assignment) and is not matched.
+# root of a path to another shipped file — on a line that does NOT carry the
+# `scope-probe` marker. A bare literal with no path segment joined onto it is
+# prose (or a shell assignment) and is not matched either way.
 home='(\$\{CLAUDE_HOME:-\$HOME/\.claude\}|\$HOME/\.claude|~/\.claude)'
 pattern="$home/(skills|commands)/"
+exempt='scope-probe'
 
 # Pass 1 — the citation on one line.
-hits="$(grep -rnE "$pattern" "$REPO_ROOT/commands" "$REPO_ROOT/skills" || true)"
+hits="$(grep -rnE "$pattern" "$REPO_ROOT/commands" "$REPO_ROOT/skills" \
+  | grep -vE "$exempt" || true)"
 
 # Pass 2 — the same citation wrapped across a line break. Markdown prose wraps
 # long paths, and pass 1 sees one line at a time, so a wrap would slip through
@@ -59,14 +70,15 @@ hits="$(grep -rnE "$pattern" "$REPO_ROOT/commands" "$REPO_ROOT/skills" || true)"
 # offence reported against the line the literal starts on.
 wrapped="$(
   find "$REPO_ROOT/commands" "$REPO_ROOT/skills" -type f -print0 \
-    | xargs -0 awk -v pat="$pattern" '
+    | xargs -0 awk -v pat="$pattern" -v exempt="$exempt" '
         FNR == 1 { prev = ""; prevno = 0 }
         {
           cur = $0
           cont = cur
           sub(/^[[:space:]]*>?[[:space:]]*/, "", cont)
-          if (prev != "" && (prev cont) ~ pat && prev !~ pat && cur !~ pat)
-            printf "%s:%d:%s\n", FILENAME, prevno, prev cont
+          joined = prev cont
+          if (prev != "" && joined ~ pat && prev !~ pat && cur !~ pat && joined !~ exempt)
+            printf "%s:%d:%s\n", FILENAME, prevno, joined
           prev = cur; prevno = FNR
         }' || true
 )"

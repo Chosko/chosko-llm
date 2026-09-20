@@ -2,6 +2,12 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.57.1 — 2026-09-20
+
+- **The pipeline probe now answers for both install scopes.** `installed=` and `council=` derived a single install home and always landed on `~/.claude`, so on a project that ran `chosko-llm add --local` every pipeline feature was reported missing — from a shell standing one directory above the install that held them. In this repo the old probe printed `installed=0/0`; it now prints the features it actually finds. An explicit `CLAUDE_HOME` still wins and is then the only home checked.
+- The claude-council detection gate in `/architect` and `/product-design` checks both scopes for the same reason. It previously looked only beside itself, so a council installed globally next to a `--local` skill read as absent — and this gate is built to no-op silently when the council is absent, which made a wrong answer invisible.
+- `scripts/check-home-paths.sh` gains one narrow, marked exception for exactly that case: asking whether a feature is *installed* has to look in both scopes, so one path is necessarily absolute. A line carrying the `scope-probe` marker is permitted; it is never a way to cite a file, and two lines in the repo carry it.
+
 ## 1.57.0 — 2026-09-19
 
 - **Every shipped body now cites another shipped file by a path relative to itself**, replacing all 134 absolute-home citations across 37 commands and skills. The old form — `${CLAUDE_HOME:-$HOME/.claude}/skills/<name>/…` — never resolved for a `--local` install: `chosko-llm add --local` repoints `CLAUDE_HOME` to `$PWD/.claude` for the duration of the install, but the executing agent expands the variable itself at read time and always lands on the global home. A project that installed the `task-*`, `runbook-*` or `pipeline-*` suites locally was therefore reading a different copy of every reference file, or none at all — and it failed silently, because a missing file is a legitimate skip.
