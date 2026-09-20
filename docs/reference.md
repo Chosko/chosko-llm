@@ -771,9 +771,13 @@ names the pipeline command that fits in a line or two, and stops. The
 conversation carries on exactly as it would have.
 
 **When it fires.** Its description is the whole trigger: there is no hook,
-no event registration and no flag. It fires on a free-form request to build,
-change, fix, remove or sequence work that doesn't already name a slash
-command. It stays out of the way for:
+no event registration and no flag. Like every skill Claude selects on its
+own, that description is written to the auto-trigger budget — at most 150
+words / 1,000 characters, well under the 1,536 at which Claude Code
+truncates a description — with the trigger phrases first and the "Not for"
+list last, so a cut would lose the exclusions before the triggers. It fires
+on a free-form request to build, change, fix, remove or sequence work that
+doesn't already name a slash command. It stays out of the way for:
 
 - a question;
 - a request that names a command;
@@ -994,7 +998,11 @@ dirty-tree prompt, how commits and pushes are gated, and the review cost
 controls behind `--review-model` / `--review-effort`) live once, in the
 `task-engine` skill, and each feature references them instead of restating
 them. `task-engine` is not a command you invoke; it is a reference library
-the others read while they run. `/task-add`, `/task-list`, `/task-clean`,
+the others read while they run, and it carries
+`disable-model-invocation: true`, so its description never reaches the
+model and it is never suggested — it stays listed and typeable, and its
+body opens with a two-line "read by path; not invoked" header, which is
+what `chosko-llm show task-engine` prints. `/task-add`, `/task-list`, `/task-clean`,
 `/task-implement` and `/task-review` all declare
 `requires: skill:task-engine`, so installing any one of them installs the
 engine too, and `chosko-llm rm skill:task-engine` refuses while any of them
@@ -1035,8 +1043,10 @@ Four reference files, each the single authority for its rule:
 - `references/lint.md` — the drift catalogue `/pipeline-check` evaluates.
 
 Like `task-engine`, `pipeline-engine` is **not invocable**: it takes no
-arguments, runs nothing and produces no output, and nothing should suggest
-it. It's a reference library that other features read while they run.
+arguments, runs nothing and produces no output, and it carries the same
+`disable-model-invocation: true`, so nothing can suggest it — its
+description stays out of the model's context altogether. It's a reference
+library that other features read while they run.
 `/pipeline-check`, `/pipeline-patch`, `/pipeline-revise` and
 `pipeline-suggest` declare `requires: skill:pipeline-engine`, so installing
 any of them installs the engine too, and `chosko-llm rm skill:pipeline-engine`
@@ -1158,8 +1168,9 @@ that has none of the conversation the prompts came out of.
   The pair to `/runbook-prune`: prune removes finished *steps* from a live
   runbook, clean removes finished *runbooks*.
 - `runbook-suggest` — a skill nobody invokes. It fires on its own description
-  when a conversation produces a list worth capturing, points at
-  `/runbook-create` in one line, and stops.
+  (written to the auto-trigger budget: trigger phrases first, "Not for" list
+  last, at most 150 words) when a conversation produces a list worth
+  capturing, points at `/runbook-create` in one line, and stops.
 
 Every command that takes a runbook takes it in any of three forms: its
 **id** (a bare number, as with tasks), its name, or the two joined as
@@ -1563,10 +1574,36 @@ because they don't allocate a TTY.
 chosko-llm ls                  # all features: installed vs available versions
 chosko-llm ls --installed      # only what's installed
 chosko-llm ls --available      # only what's in the managed clone
-chosko-llm show <feature>      # inspect one feature in detail
+chosko-llm show <feature>      # inspect one feature: metadata, description, body header
 chosko-llm show <feature> --diff --content   # preview changes before updating
 chosko-llm --version           # print the installed version (also: -v, version)
 ```
+
+`show` prints, under the description, the body's leading `#` header — the
+`# /name` / `# Usage:` block every shipped body opens with, right after the
+frontmatter. That header is where a feature's flags, refusals, read-only
+contracts and commit defaults live, because the `description` is short by
+contract: Claude Code injects every installed description into the system
+prompt at session start and truncates each at 1,536 characters, so each one
+says what the feature does and when to use it in at most 60 words (150 for
+the four skills Claude selects on its own), and nothing else. The header
+loads only when the feature is invoked, so `show` is how a human reads the
+flags without paying for them every session. `--content` prints the full
+body in place of the header; a body with no header (the two `.sh` kinds)
+prints nothing extra.
+
+Ten features are **hidden from the model by design**: they carry
+`disable-model-invocation: true`, so their descriptions never enter the
+model's context, though each stays listed here and typeable as `/<name>`.
+They are the two reference libraries, `task-engine` and `pipeline-engine`,
+which other features read by path and nobody invokes, and eight one-shot
+wizards and housekeeping commands nobody would want suggested unprompted:
+`/project-setup`, `/task-setup`, `/domain-setup`, `/unity-mcp-setup`,
+`/refactor-codebase`, `/refactor-tests`, `/runbook-prune` and
+`/runbook-clean`. One more is scoped rather than hidden: `unity-mcp-skill`
+carries a `paths:` filter (`Assets/**`, `ProjectSettings/**`,
+`Packages/**`), so it loads only in a Unity project. `ls` and `show` treat
+all of them like any other feature.
 
 ### Installing and removing
 

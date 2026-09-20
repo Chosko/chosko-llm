@@ -91,8 +91,11 @@ features cite it by path and state only what they do differently.
 
 `SKILL.md` exists because `cmd-add` requires it — it needs versioned
 frontmatter to be installable — and it carries the map of which reference file
-covers what. It is not a skill the user invokes, which its `description` says
-plainly so it does not surface as a suggestion.
+covers what. It is not a skill the user invokes: it carries
+`disable-model-invocation: true`, which keeps its `description` out of the
+model's context and so out of skill selection altogether, while the skill
+stays listed and typeable. Its body header repeats the "read by path; not
+invoked" note for an agent that opens the file without reading frontmatter.
 
 ### What the consumers become
 

@@ -445,7 +445,7 @@ filesystem is the only state; there is no lockfile.
 
 ```sh
 chosko-llm ls                     # every feature: installed vs available version
-chosko-llm show <feature>         # inspect one (--diff --content previews an update)
+chosko-llm show <feature>         # inspect one: description + the body's `#` header (its flags); --diff --content previews an update
 chosko-llm add <feature> ...      # install (pulls in anything it requires:)
 chosko-llm add --all              # install everything
 chosko-llm rm <feature>           # remove (refuses while something still requires it)
@@ -495,6 +495,10 @@ cd chosko-llm
 - New skill → folder with a `SKILL.md` under `skills/`. See [docs/authoring-guide.md](docs/authoring-guide.md#skills).
 
 Every feature requires YAML frontmatter (`name`, `version`, `type`, `description`). `add` and `update` refuse to install a file missing a `version` field. Three keys are optional: `replaces: <kind>:<name>` on a feature that changed kind, `requires: <kind>:<name>[, …]` on a feature whose body reads a file inside another installed feature, and the hook-only `event:` (required there) / `matcher:` pair.
+
+**The `description` is short by contract.** Claude Code injects every installed feature's `description` into the system prompt at session start and truncates each at 1,536 characters, so a description is a cost every session pays whether or not the feature is invoked. Each one says what the feature does and when to use it, front-loaded: at most 60 words / 400 characters for a feature you invoke by name, 150 words / 1,000 characters for the four skills Claude selects on its own (`claude-council`, `runbook-suggest`, `pipeline-suggest`, `unity-mcp-skill`), trigger phrases first and any "Not for" list last, never a literal ` --- `. Flags, refusals, read-only contracts and commit defaults live in the body's leading `#` header instead, which loads only when the feature runs and which `chosko-llm show` prints under the description. The full contract is in [docs/authoring-guide.md](docs/authoring-guide.md#the-description-contract).
+
+**Some features are hidden from the model by design.** Ten carry `disable-model-invocation: true` — the two reference libraries `task-engine` and `pipeline-engine`, and the wizards and housekeeping commands `/project-setup`, `/task-setup`, `/domain-setup`, `/unity-mcp-setup`, `/refactor-codebase`, `/refactor-tests`, `/runbook-prune`, `/runbook-clean`. Each stays listed and typeable, but its description never enters the model's context, since none is useful to suggest unprompted. `unity-mcp-skill` carries a `paths:` filter (`Assets/**`, `ProjectSettings/**`, `Packages/**`) so it loads only in a Unity project. `parse_frontmatter` ignores keys it does not know, so these pass through `add` / `update` untouched.
 
 **Versioning.** There are two version axes. The per-feature `version:` frontmatter versions a single command or skill (and gates `add` / `update`). The root `VERSION` file is the repo-level stamp that `install.sh` reports: bump it on every shipped change, patch for fixes, minor for a new feature, major for a breaking CLI change. A feature change bumps both.
 

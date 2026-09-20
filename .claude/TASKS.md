@@ -150,7 +150,7 @@ Preconditions: 240
 
 ## 243. Document the description contract and the hidden-feature set
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, .claude/domain/features/repo-local-audits.md, .claude/domain/features/pipeline-suggest.md, .claude/domain/features/shared-phase-engine.md, .claude/context/features.md, .claude/context/cmd-show.md, .claude/context/INDEX.md
 Preconditions: 241, 242

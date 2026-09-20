@@ -61,7 +61,11 @@ request does not already name a slash command. Its "not for" list is longer
 than its "for" list, deliberately: not for a question, not for a request that
 names a command, not for "just do it" or "directly", not for work already
 under way in a `/task-implement` run, not for an enumeration inside an
-explanation, not for a follow-up list, which `runbook-suggest` owns.
+explanation, not for a follow-up list, which `runbook-suggest` owns. The
+whole of it fits the auto-trigger budget — at most 150 words / 1,000
+characters, under the 1,536 at which Claude Code truncates a description —
+and is ordered trigger-first, "Not for"-last, so that if the harness ever
+cuts it, what is lost is an exclusion and never a trigger.
 
 ### The gate
 
