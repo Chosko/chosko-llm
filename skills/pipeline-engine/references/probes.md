@@ -55,37 +55,26 @@ pipeline decision turns on whether the archive exists: an id absent from
 
 ## Which install home — both of them
 
-Two probes ask whether a *feature* is installed rather than whether a project
-file exists: `council` and `installed`. They answer for **both scopes Claude
-Code loads features from** — the project's own `.claude/`, where `chosko-llm
-add --local` writes, and `~/.claude/`, where a global add writes — and a
-feature present in either is installed.
+`council` and `installed` ask whether a *feature* is installed, not whether a
+project file exists. Both answer for **both scopes Claude Code loads features
+from**: the project's own `.claude/`, where `chosko-llm add --local` writes,
+and the user scope — `CLAUDE_HOME` when set, else `~/.claude/`. A feature
+present in either is installed. `CLAUDE_HOME` relocates the user scope only;
+it never replaces the project scope.
 
-Checking one scope would be wrong in the other, and not visibly: a project
-that installed the pipeline suite with `--local` would have every one of its
-features reported missing, one directory below the shell that is asking. The
-probe cannot pick the right scope because there is no right one — Claude Code
-reads both, so the honest answer is the union. `CLAUDE_HOME` relocates the
-*user* scope (it is Claude Code's user directory, per `chosko-llm help`); it
-never replaces the project scope, so setting it narrows nothing.
-
-**The row list is unioned too, and that is not the same question.** `council`
-and `installed` ask whether a *feature* is present; the row list asks which
-features to ask about. Reading `routing.md` from whichever home is found first
-would let a stale copy in one home shrink the universe silently — a feature
-missing from that copy is not counted, not reported in `missing:`, and not in
-the denominator, so the verdict line looks complete while omitting it. Both
-copies are read and the names merged.
-
-**Why this is shell's problem and nobody else's.** A shipped body that reads
-another shipped file names it by a path relative to itself, and one asking
-whether an *optional* feature is installed names the feature and lets Claude
-resolve it. Neither needs an install home. This probe is shell: `sh` cannot
-resolve a skill by name, so it is the one place a home is derived at all.
+**`routing.md`'s row list is unioned across both homes too.** That is a
+different question — which features to ask about, not whether one is present
+— and taking it from whichever home is found first lets a stale copy drop a
+feature from the count, from `missing:` and from the denominator at once,
+leaving a verdict line that looks complete.
 
 **`installed=unknown` is not `0/0`.** With no `routing.md` in either home
-there is no row list, so the probe says it does not know rather than printing
-a total of zero that reads as "nothing to install".
+there is no row list, and a zero total would read as "nothing to install".
+
+This probe is the one shipped body that derives an install home at all,
+because `sh` cannot resolve a skill by name. Elsewhere, a body reading a
+shipped file cites it relative to itself, and a body asking whether an
+optional feature is installed names the feature.
 
 ## Running it
 

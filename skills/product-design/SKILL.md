@@ -1,6 +1,6 @@
 ---
 name: product-design
-version: 0.7.3
+version: 0.7.4
 type: skill
 description: Brainstorm and design a product from the ground up with the user, producing high-level design documentation under .claude/domain/ — a product design doc whose features are described from the user-experience angle, a technical direction (stack, topology, data, hosting) that /architect adopts, plus an optional business model. Resumable across sessions: the state lives in design-process.md, not in conversation history, and every phase transition rewrites the stage marker before the phase ends. That state file shrinks rather than grows — every round that ends, the first completion and each later amendment alike, compresses it by deleting; once the process is complete a re-run also offers an amend path that edits a decision directly without re-running phases. Works greenfield or brownfield (detected by reading the repo). Its output is /architect's input. Requires /domain-setup to have run. At a genuine greenfield technical fork it offers to convene claude-council when that skill is installed, and is silent when it is not. Commits and pushes exactly the documents the run wrote by default; pass --no-commit to write everything and run no git command, or --no-push to commit without pushing.
 ---

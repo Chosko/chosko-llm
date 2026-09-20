@@ -860,41 +860,34 @@ notes and this guide explain *why* the form is wrong without tripping it.
 ### <a id="asking-whether-a-feature-is-installed"></a>Asking whether a feature is installed: name it
 
 Citing a file and asking **whether a feature is available at all** are
-different questions, and the second has no path answer. A `requires:`
-dependency is guaranteed to sit under the same home as its dependent, so a
+different questions, and the second has no path answer.
+
+A `requires:` dependency installs under the same home as its dependent, so a
 relative citation is correct by construction. An **optional** dependency —
 one `requires:` cannot express, because the feature has to keep working
-without it — carries no such guarantee: it may be installed globally while
-its reader was added with `--local`, or the reverse.
-
-So name it, and let Claude resolve it:
+without it — carries no such guarantee: it may sit in the user scope while
+its reader was added with `--local`, or the reverse. Name it instead:
 
 > Is the **`claude-council` skill** available in this session?
 
 Claude Code resolves a command or skill by name across every scope it loads
-from, which is the only question that matters. A path cannot: a relative one
-finds the feature only in the reader's own home, and an absolute one picks a
-scope and misses the other. Both fail *silently* in the case that matters —
-an optional dependency's gate is built to say nothing when the feature is
-absent, so a wrong "absent" is indistinguishable from a right one.
+from. A path cannot: relative finds the feature only in the reader's own
+home, absolute picks one scope and misses the other. Both fail silently,
+since an optional dependency's gate says nothing when the feature is absent.
 
-The two `council-gate.md` copies are the worked example, and `/follow-ups`
-is the other: `/task-implement`'s delegated agents are handed that command's
-**name**, never a path to it, for the same reason.
+The two `council-gate.md` copies work this way, as does `/follow-ups` —
+`/task-implement`'s delegated agents are handed that command's name, never a
+path. There are no exemptions in the guard: a body that seems to need an
+absolute home is asking the installed question, and the answer is a name.
 
-There is no marker and no guard exception. If a body seems to need an
-absolute home, it is asking the installed question and the answer is a name.
+The one place a home is derived is the probe in
+`skills/pipeline-engine/references/probes.md`, a shell snippet that checks
+both scopes; its own file carries the rule.
 
-The one place a home is derived at all is the probe in
-`skills/pipeline-engine/references/probes.md`: it is a shell snippet, `sh`
-cannot resolve a skill by name, and it checks both scopes. Its own file
-carries the rule it has to satisfy.
-
-It proves absence of that one shape and nothing more. Whether a relative
-citation actually resolves to a file is a reviewer's read, and so is whether
-the probe's shell looks in the right scopes. Like the other two it is
-repo-local: not a feature, no frontmatter, not a subcommand, installed
-nowhere.
+The guard proves absence of that one shape and nothing more. Whether a
+relative citation resolves, and whether the probe's shell looks in the right
+scopes, are a reviewer's read. Like the other two it is repo-local: not a
+feature, no frontmatter, not a subcommand, installed nowhere.
 
 ## Commit-and-push convention
 

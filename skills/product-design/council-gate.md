@@ -36,26 +36,8 @@ propagates into every feature document downstream.
 
 Is the **`claude-council` skill** available in this session?
 
-Ask that by name. Do not construct a path to it — not an install home, and
-not a path relative to this file. Claude Code already resolves a skill by
-name across every scope it loads from, which is the only question that
-matters here: can this run invoke `/claude-council`?
-
-**Naming is what makes this correct, and it took two tries to get right.** A
-path relative to this file finds the council only when it was installed into
-the same home as this skill — true in the common case, false whenever one
-was added with `--local` and the other globally. An absolute home path is
-worse: it picks one scope and misses the other. Either way the failure is
-invisible, because this gate's whole contract is to say nothing when the
-council is absent — so a wrong "absent" looks exactly like a right one, and
-the user who installed the skill never learns it was skipped. A name has no
-scope to get wrong.
-
-`pipeline-engine`'s `council` probe answers the same question — is the
-council available — but by filesystem rather than by name, because it is a
-shell snippet and `sh` cannot resolve a skill by name. Two mechanisms, one
-answer; they are expected to agree, and the probe's own file says why it is
-the exception.
+Ask by name. Never build a path to it — a path finds the skill only in one
+install scope, and this gate's silence makes a wrong "absent" invisible.
 
 **If the skill is not available, stop here and say nothing.** Proceed with the
 inline propose-and-recommend flow unchanged. Do not mention claude-council,

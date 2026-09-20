@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.57.3 — 2026-09-20
+
+- Trimmed the prose in the bodies 1.57.2 touched: the two `council-gate.md` copies, `probes.md` and `pipeline-engine`'s `SKILL.md` now state the rule without narrating how it was arrived at. Behaviour is unchanged; the four bodies are 24 lines shorter than before 1.57.2, and a shipped body's prose is loaded into every run that reads it.
+
 ## 1.57.2 — 2026-09-20
 
 - **Fixed two defects in 1.57.1, both of the kind that fail silently.** The probe took the `routing.md` row list from whichever install home it found first while counting features across both, so a stale copy in one home dropped a feature out of the count, out of `missing:` and out of the denominator at once — the verdict line read as complete while omitting it. Row names are now unioned across both homes.

@@ -17,21 +17,16 @@
 # or the citation is wrapped across a line break (markdown prose wraps these,
 # and a line-based grep alone would miss it).
 #
-# There is NO exception, deliberately. An earlier revision permitted a marked
-# `scope-probe` line for a body asking whether an optional feature was
-# installed; that need is gone. Such a body now names the feature and lets
-# Claude resolve it across every scope, which is both correct and shorter than
-# any path. If you find yourself wanting the marker back, the answer is a
-# name.
+# No exemptions. A body asking whether an optional feature is installed names
+# the feature and lets Claude resolve it across every scope; it needs no path,
+# so it needs no marker here.
 #
-# What it cannot prove: that a relative citation actually resolves to a file
-# (that is a human's read, and the acceptance criteria of whatever task wrote
-# it); that a citation wrapped across THREE or more lines is caught, since the
-# wrap pass uses a two-line window; nor that a body which derives an install
-# home into a shell variable and joins a path onto it looks in the right
-# scopes. The probe in skills/pipeline-engine/references/probes.md is the
-# repo's one case of that last kind — `sh` cannot resolve a skill by name — and
-# what it has to satisfy is written in its own file.
+# What it cannot prove: that a relative citation actually resolves to a file;
+# that a citation wrapped across THREE or more lines is caught, since the wrap
+# pass uses a two-line window; nor that a body deriving an install home into a
+# shell variable looks in the right scopes. The probe in
+# skills/pipeline-engine/references/probes.md is the repo's one case of that
+# last kind, and its own file states what it has to satisfy.
 #
 # Repo-local and authoring-time only: not a feature, no frontmatter, invisible
 # to every CLI verb, installed nowhere.
