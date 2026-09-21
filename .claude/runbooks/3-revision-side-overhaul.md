@@ -4,7 +4,7 @@ Created: 2026-09-21 · Source: conversation (tasks 247–253 authored this sessi
 Last step number: 11
 Sequencing: Steps 8–11 run last so each body is consolidated once, after every implementation step that edits it.
 
-## [ ] 1. Implement 247 — editing discipline claude-md
+## [x] 1. Implement 247 — editing discipline claude-md
 
 Depends on: none
 
@@ -13,6 +13,8 @@ Context: none
 ```prompt
 /task-implement 247 --review
 ```
+
+Done: 2026-09-21, commit `565509d` (12 files, +146/-57). Decision: `skills/architect/SKILL.md` bumped to 0.12.6 too, since the template is installed as part of the skill folder.
 
 ## [ ] 2. Implement 249 — /task-add design-change question
 
