@@ -125,7 +125,7 @@ Context: none
 
 Done: 2026-09-21, commit `07868b4` (3 files, +59/-134). Decision: `version:` bumped to 2.5.5 with `VERSION` 1.66.1 and a CHANGELOG section, although `/doc-consolidate` leaves frontmatter untouched — `cmd-update` is version-aware, so an unbumped body never reaches a user.
 
-## [ ] 9. Consolidate skills/runbook-run/SKILL.md
+## [x] 9. Consolidate skills/runbook-run/SKILL.md
 
 Depends on: 5
 
@@ -136,12 +136,15 @@ Context:
 /doc-consolidate skills/runbook-run/SKILL.md --commit
 ```
 
+Done: 2026-09-21, commit `ecf962d` (3 files, +101/-201). Decision: the nested-runbook refusal now gives one reason, at THE EXECUTION LOOP step 5 — refused for the orchestration it duplicates, not for the depth it costs; the depth-based reason is gone.
+
 ## [ ] 10. Consolidate skills/task-implement/SKILL.md
 
 Depends on: 5, 6
 
 Context:
 - 2026-09-21 (from step 8): `/doc-consolidate` leaves frontmatter untouched and its COMMITTING section stages "exactly the files written", but on this repo a shipped body ships only with a `version:` bump, a root `VERSION` bump and a CHANGELOG section in the same commit — step 8 did that, and each consolidation step does the same.
+- 2026-09-21 (from step 9): a consolidation commit over 200 changed lines carries the `Co-Authored-By` and `Claude-Session` trailers per the global commit style — check `git diff --cached --shortstat` rather than copying step 8's trailer-less shape.
 
 ```prompt
 /doc-consolidate skills/task-implement/SKILL.md --commit
@@ -153,6 +156,7 @@ Depends on: 5, 7
 
 Context:
 - 2026-09-21 (from step 8): `/doc-consolidate` leaves frontmatter untouched and its COMMITTING section stages "exactly the files written", but on this repo a shipped body ships only with a `version:` bump, a root `VERSION` bump and a CHANGELOG section in the same commit — step 8 did that, and each consolidation step does the same.
+- 2026-09-21 (from step 9): a consolidation commit over 200 changed lines carries the `Co-Authored-By` and `Claude-Session` trailers per the global commit style — check `git diff --cached --shortstat` rather than copying step 8's trailer-less shape.
 
 ```prompt
 /doc-consolidate commands/runbook-create.md --commit
