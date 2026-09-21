@@ -52,7 +52,7 @@ Context: none
 
 Done: 2026-09-21, commit `35ef556` (18 files, +459/-85). Wrong premise: task 252 asked for a roadmap owner step in `/pipeline-revise`'s sequences, but no branch file reaches `product-roadmap.md`; the clause is void until step 7's change sets can name a roadmap item.
 
-## [~] 5. Implement 248 — /doc-consolidate
+## [x] 5. Implement 248 — /doc-consolidate
 
 Depends on: 1
 
@@ -62,7 +62,9 @@ Context: none
 /task-implement 248 --review
 ```
 
-## [ ] 6. Implement 250 — two-group report, consequential edits
+Done: 2026-09-21, commit `7fc1fd4` (8 files, +300/-3). Decision: ships with `disable-model-invocation: true` like the two `/refactor-*` features, and names the schema-owning skills instead of pathing into them, so it installs alone.
+
+## [~] 6. Implement 250 — two-group report, consequential edits
 
 Depends on: 2
 
