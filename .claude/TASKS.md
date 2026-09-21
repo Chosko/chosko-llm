@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 254
+Last task number: 255
 
 ---
 
@@ -252,4 +252,13 @@ Preconditions: 251, 252
 Status: [MISSING]
 Target: claude
 Files: commands/task-add.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 255. Give `/runbook-run`'s closing report the two groups, and number every closing report's Needs you items
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/SKILL.md, skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, skills/task-review/SKILL.md, docs/reference.md, .claude/domain/task-workflow.md, .claude/domain/features/runbook-suite.md, .claude/domain/features/task-peer-review.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none
