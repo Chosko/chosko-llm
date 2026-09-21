@@ -1,6 +1,6 @@
 ---
 name: follow-ups
-version: 0.1.1
+version: 0.1.2
 type: command
 description: List what this conversation would lose if it ended now — actions proposed but never executed, outcomes never recorded on disk, decisions written down nowhere — as a numbered list, or exactly `No follow-ups left`. Use it before a session ends, or when a run stopped early.
 ---
@@ -8,12 +8,12 @@ description: List what this conversation would lose if it ended now — actions 
 # /follow-ups
 # Global command: read this conversation and list what it would lose if it
 # ended now. Read-only — no file is opened, nothing is written, nothing is
-# invoked. Takes no arguments. The answer is `No follow-ups left` or a
-# numbered list, each item a slash command plus a short "to …" explanation
-# wherever a command fits. Work already tracked on disk is never a
-# follow-up. The numbering is the handle: the user may reply by number, and
-# acting on a number is ordinary conversation, not something this command
-# implements.
+# invoked. Takes no arguments. The answer is the bare line `No follow-ups
+# left`, or a numbered list under a `Follow-ups` heading, each item a slash
+# command plus a short "to …" explanation wherever a command fits. Work
+# already tracked on disk is never a follow-up. The numbering is the handle:
+# the user may reply by number, and acting on a number is ordinary
+# conversation, not something this command implements.
 # Usage: /follow-ups
 
 GOAL
@@ -45,8 +45,11 @@ down"; it is "does what is written down lead a later session to it".
 THE OUTPUT
 Exactly one of:
 
-- the single line `No follow-ups left`; or
-- a numbered list, one follow-up per item.
+- the single line `No follow-ups left`, bare — no heading above it, because a
+  heading over one fixed line adds nothing and other bodies match that line
+  exactly; or
+- the heading `Follow-ups`, then a numbered list, one follow-up per item, so
+  a reader scanning a long turn sees where the list starts.
 
 Nothing else — no preamble, no summary of the conversation, no closing
 offer.
@@ -55,6 +58,8 @@ Write each item as a slash command plus a short "to …" explanation wherever
 a command fits the follow-up:
 
 ```
+## Follow-ups
+
 1. /task-add feature=password-auth to reconcile tasks 12 and 14, which went
    stale after the amendment
 2. /runbook-create --append to put task 31 into the runbook this session is
