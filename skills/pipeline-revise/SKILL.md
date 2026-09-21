@@ -1,9 +1,9 @@
 ---
 name: pipeline-revise
-version: 0.6.3
+version: 0.6.4
 type: skill
 description: Revise already-planned work — change, insert into, remove from or reorder a feature document, a task or a runbook step — through the owners of every artifact the change reaches, behind one gate. Use it for a change that crosses owners or restructures the plan; for one owner's amend arm, /pipeline-patch is cheaper.
-requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run
+requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run, skill:product-design, skill:production-plan
 ---
 
 # /pipeline-revise

@@ -107,34 +107,14 @@ invalidated by restarting the process.
 
 ## 6. On amend (C)
 
-Offered only when the marker says the process is complete. This is the
-entry point for a targeted change that does not warrant re-running phases:
-one decision moved, one feature description corrected, one technical axis
-re-decided.
-
-1. Establish what is changing and why, conversationally — same register as
-   the phases: contribute, don't just extract. Say which document the
-   change lands in before editing it.
-2. Edit the relevant document(s) **directly** — `product-design.md`,
-   `technical-direction.md`, or `business-model.md` — in the same
-   documentational register they were written in. Add every path touched to
-   `WRITTEN`. Do not create tasks, `FEATURES.md` entries, or anything under
-   `.claude/domain/features/`; the DO NOTs in SKILL.md apply unchanged.
-3. Do not touch the phase table and do not move the stage marker off
-   process-complete. An amendment is not a phase; the process stays
-   complete.
-4. **Before the session ends, compress `design-process.md`** exactly as
-   PHASE 7 does — see `./document-templates.md`'s "This file shrinks; it
-   does not grow". If the amendment produced durable WHY that would
-   otherwise be lost, it becomes **one terse line** under **Decisions worth
-   keeping**, and any entry it supersedes is deleted outright rather than
-   marked. Rewrite **Current stage** rather than appending to it. An
-   amendment must leave the file the same size and shape it found it in —
-   not larger.
-5. Report what changed, in which document, and that `design-process.md` was
-   compressed. Committing behaves as it does everywhere else in this skill:
-   stage exactly `WRITTEN`, or, under `--no-commit`, leave everything
-   uncommitted.
+Offered only when the marker says the process is complete. Establish what is
+changing and why, conversationally — same register as the phases:
+contribute, don't just extract — until the change can be stated as one
+sentence naming the document and section it lands in. Then run `./amend.md`
+with that sentence as its `<change>`: it pins, drafts, gates, writes and
+compresses `design-process.md`, and its report and committing are the arm's.
+The direct `amend "<change>"` argument form reaches the same file without
+this menu.
 
 ---
 

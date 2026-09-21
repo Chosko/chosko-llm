@@ -592,7 +592,11 @@ Currently shipped:
 - `skills/product-design/` — designs product top-down with user, writes
   result into domain layer: `design-process.md` (state
   file), `product-design.md`, `technical-direction.md`, and — only when
-  user opts in — `business-model.md`. Eight phases: PHASE 0 gates on
+  user opts in — `business-model.md`. `amend.md`: the `amend "<change>"`
+  form and the resume menu's arm C — one pinned change to a named section
+  of one document on a complete design, one before → after gate, no phase,
+  `design-process.md` compressed; headless when a revision surface passes
+  its draft in and it matches. Eight phases: PHASE 0 gates on
   `/domain-setup` having run, auto-detects resume; PHASE 1 orients
   (greenfield vs. brownfield, read from CLAUDE.md/README/context
   layer/source tree), stubs documents plus their
@@ -659,7 +663,11 @@ Currently shipped:
   `/product-design` and `/architect`. Writes one document,
   `.claude/domain/product-roadmap.md`, plus its `.claude/domain/INDEX.md`
   row, and nothing else — never `FEATURES.md`, `PLAN.md`, `TASKS.md`, or
-  `product-design.md`. Preamble carries `Strategy:` paragraph — premise whole
+  `product-design.md`. `amend.md`: the `amend "<change>"` form — one pinned
+  change to named milestone lines (`Strategy:`, `Goal:`, `Exit criteria:`,
+  `Rationale:`, `Covers:`, `Not now`), one before → after gate, no
+  conversation, refuses an unpinnable change; headless when a revision
+  surface passes its draft in and it matches. Preamble carries `Strategy:` paragraph — premise whole
   order rests on, global where `Rationale:` is local (why the sequence runs
   this way vs. why one milestone precedes next), labelled so revision can
   locate it. Then ordered milestone blocks keyed by stable kebab-case
@@ -818,7 +826,11 @@ Currently shipped:
   `/architect` and `/task-add`. Sole writer of `.claude/PLAN.md`, a third
   index beside `TASKS.md` and `FEATURES.md`, and writes NOTHING else — never
   `FEATURES.md`, `TASKS.md`, feature docs, `product-roadmap.md`,
-  `product-design.md`, or the domain `INDEX.md`. Schema: `Roadmap:` (or
+  `product-design.md`, or the domain `INDEX.md`. `amend.md`: the
+  `amend "<change>"` form — `reconciling.md`'s diff narrowed to the
+  features, edges or milestones the change names, PHASE 2 validation
+  intact, one diff gate; headless when a revision surface passes its draft
+  in and it matches. Schema: `Roadmap:` (or
   `none`) and informational `Last reconciled:` headers; one block per
   milestone carrying `Status:`, derived `Covers:` and ordered `Features:`; an
   `Unscheduled` block (`Features:` only, written even when empty); and ONE

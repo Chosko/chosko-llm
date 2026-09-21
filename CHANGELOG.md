@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.62.0 — 2026-09-21
+
+- **Three owners gain a direct amend arm:** `/product-roadmap amend "<change>"` edits named milestone lines (`Goal:`, `Exit criteria:`, `Rationale:`, `Covers:`, the `Strategy:` paragraph, `Not now`) behind one before → after gate and refuses a change it cannot pin; `/production-plan amend "<change>"` reconciles `PLAN.md` for the features, edges or milestones the change names and nothing else, with the cycle and later-milestone refusals intact; `/product-design amend "<change>"` reaches the finished design's amend arm directly, without the resume menu, and compresses `design-process.md` as before.
+- **Every arm is headless-capable:** a revision surface that drafted the edit at plan time passes it in, and the arm writes without a second gate when its own draft matches, showing the difference as its gate when it does not. `/pipeline-revise` routes its design, roadmap and plan steps through these arms.
+
 ## 1.61.0 — 2026-09-21
 
 - **`/architect amend` takes several features at once:** `amend feature=<slug>,<slug>,... "<change>"` scopes the change and runs the precision guard per feature, renders one gate with a section per feature, drafts the `product-design.md` upstream edit once, drops a feature whose touched task is `[IN PROGRESS]` while the rest proceed, and makes one commit.

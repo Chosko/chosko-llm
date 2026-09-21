@@ -131,7 +131,12 @@ Designing a product takes more than one sitting, so the process is
 **resumable**: its state lives in `.claude/domain/design-process.md`, not in
 the conversation. Run `/product-design` again weeks later and it tells you
 where the last session stopped and offers to pick up there. There's no flag
-to remember. Before it stops after write-back, it also sweeps the
+to remember. On a finished design, `/product-design amend "<change>"` makes
+one pinned change to a named section of `product-design.md`,
+`technical-direction.md` or `business-model.md` behind one before → after
+gate, runs no phase, and compresses `design-process.md` on the way out; the
+resume menu's amend arm reaches the same thing. Before it stops after
+write-back, it also sweeps the
 conversation for anything the written documents don't yet cover and folds
 it in automatically, so detail raised in the interview doesn't quietly die
 with the session.
@@ -174,9 +179,14 @@ points you at `/architect <slug>` rather than changing anything downstream.
 Requires `/domain-setup`. `product-design.md` is optional: you can draft a
 roadmap from a bare description. Re-run it whenever the plan moves. The
 document is its own resume state, so a later run proposes changes against
-what's already there, behind the same single approval gate. Commits and
-pushes what the run wrote by default; `--no-commit` writes everything and
-runs no git command, `--no-push` commits without pushing.
+what's already there, behind the same single approval gate. For one change
+that names its milestone and line — an exit criterion reworded, a `Covers:`
+bullet dropped, the `Strategy:` paragraph corrected — `/product-roadmap amend
+"<change>"` edits those lines behind one before → after gate with no
+roadmap conversation, and refuses a change it can't pin to named lines, such
+as adding or reordering a milestone. Commits and pushes what the run wrote by
+default; `--no-commit` writes everything and runs no git command,
+`--no-push` commits without pushing.
 
 ### `/architect`
 
@@ -380,11 +390,15 @@ Requires `/domain-setup` and at least one architected feature. A roadmap is
 **optional**: without one everything lands in `Unscheduled` and the dependency
 ordering still works. Re-run it whenever features or milestones move; it
 reconciles against the current `FEATURES.md` and roadmap behind the same
-single approval gate, keeping the orderings and edges you set. It is the sole
-writer of `PLAN.md` and reads `FEATURES.md`, the feature documents, the
-roadmap and `TASKS.md` without writing any of them. Commits and pushes what
-the run wrote by default; `--no-commit` writes everything and runs no git
-command, `--no-push` commits without pushing.
+single approval gate, keeping the orderings and edges you set. For one
+change — a feature to place, move or unschedule, an edge to add or drop, a
+milestone status to move — `/production-plan amend "<change>"` reconciles
+only what the change names, behind one line-by-line diff gate, with the
+cycle and later-milestone refusals intact. It is the sole writer of
+`PLAN.md` and reads `FEATURES.md`, the feature documents, the roadmap and
+`TASKS.md` without writing any of them. Commits and pushes what the run
+wrote by default; `--no-commit` writes everything and runs no git command,
+`--no-push` commits without pushing.
 
 ### `/production-status`
 
@@ -1058,9 +1072,11 @@ Four reference files, each the single authority for its rule:
   `skills/architect/amend.md` for `/architect`,
   `skills/task-engine/references/amend.md` for `/task-add`'s task lines,
   `skills/runbook-run/references/step-amend.md` for both runbook writers,
-  and the resume menu's amend arm for `/product-design`. `/product-roadmap`
-  and `/production-plan` have none by design, because each one diffs and
-  proposes on every run. Every other feature's entry is `—`;
+  and `skills/<owner>/amend.md` for `/product-design`, `/product-roadmap`
+  and `/production-plan`. Every one of those arms is headless-capable: a
+  revision surface that drafted the edit at plan time passes it in, and the
+  arm writes without a second gate when its own draft matches. Every other
+  feature's entry is `—`;
 - `references/lint.md` — the drift catalogue `/pipeline-check` evaluates.
 
 Like `task-engine`, `pipeline-engine` is **not invocable**: it takes no

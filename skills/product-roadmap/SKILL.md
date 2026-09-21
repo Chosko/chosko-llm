@@ -1,6 +1,6 @@
 ---
 name: product-roadmap
-version: 0.3.1
+version: 0.4.0
 type: skill
 description: Write the product's roadmap into .claude/domain/product-roadmap.md — ordered milestones, each with a goal, exit criteria, rationale and the scope slices it takes from each high-level feature. Use it once the design exists, or from a bare description, and re-run it to revise; stage 2 of the pipeline: turns the design into ordered milestones; its output is /architect's input.
 ---
@@ -21,6 +21,7 @@ description: Write the product's roadmap into .claude/domain/product-roadmap.md 
 # exactly what the run wrote by default.
 # Usage: /product-roadmap                        (read the design, draft or revise the roadmap)
 #        /product-roadmap <free-form context>    (what the next release is about, constraints, deadlines)
+#        /product-roadmap amend "<change>"       (one pinned change to named milestone lines, no conversation)
 #        /product-roadmap --no-commit            (write the roadmap, run no git command)
 #        /product-roadmap --no-push              (commit the roadmap, skip the push)
 
@@ -47,11 +48,14 @@ $ARGUMENTS
 
 ---
 
-SUPPORTING FILES
+SUPPORTING FILES (read on demand — not up front)
 
-None. This skill ships `SKILL.md` and nothing else: it is one document with
-one schema, and every run needs the whole of it, so there is no cheap path a
-split would protect.
+| Read this file | Exactly when |
+| -------------- | ------------ |
+| `./amend.md` | ARGUMENT PARSING recognised `amend "<change>"`. Read once the gate has passed; it carries the whole amend path and replaces every phase for the run. |
+
+A full run reads nothing but `SKILL.md`: it is one document with one schema,
+and every full run needs the whole of it.
 
 ---
 
@@ -70,10 +74,18 @@ matters when COMMIT is true: it skips the pull-at-start / re-sync / push
 steps of the commit-and-push protocol (docs/authoring-guide.md) while still
 committing as always.
 
-Whatever remains is free-form context about the release being planned —
-what the next milestone is meant to achieve, a constraint, a deadline, a
-feature the user wants pulled forward or pushed back. Fold it into PHASE 1
-rather than treating it as a command.
+Then check whether what remains opens with the literal token `amend`
+followed by a quoted change. If so, set AMEND = true: the change is the
+quoted string, and a missing one stops the run with
+`amend needs the change to make, e.g. /product-roadmap amend "m2-teams Exit criteria: drop the SSO bullet".`
+Once the gate has passed and the pull-at-start has run, read `./amend.md`
+and follow it for the rest of the run; no phase runs, and the run ends with
+COMMIT AND PUSH as any other does.
+
+Otherwise, whatever remains is free-form context about the release being
+planned — what the next milestone is meant to achieve, a constraint, a
+deadline, a feature the user wants pulled forward or pushed back. Fold it
+into PHASE 1 rather than treating it as a command.
 
 When that context carries an **ordering** — a first release, a sequence, a
 "before" or "after", something explicitly deferred — the user's strategy has

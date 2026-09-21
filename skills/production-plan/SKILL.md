@@ -1,6 +1,6 @@
 ---
 name: production-plan
-version: 0.2.1
+version: 0.3.0
 type: skill
 description: Write the production plan into .claude/PLAN.md — which low-level feature belongs to which milestone, in what order and after what — confirming each feature's dependency edges with the user. Use it once features are architected and before their tasks are written; stage 4 of the pipeline: sequences feature documents into a plan; its output is what /production-status reads.
 ---
@@ -22,6 +22,7 @@ description: Write the production plan into .claude/PLAN.md — which low-level 
 # pushes exactly what the run wrote by default.
 # Usage: /production-plan                        (build or reconcile the plan)
 #        /production-plan <free-form context>    (placements, orderings, what is active now)
+#        /production-plan amend "<change>"       (reconcile only the features, edges or milestones the change names)
 #        /production-plan --no-commit            (write the plan, run no git command)
 #        /production-plan --no-push              (commit the plan, skip the push)
 
@@ -53,6 +54,7 @@ SUPPORTING FILES (read on demand — not up front)
 | Read this file | Exactly when |
 | -------------- | ------------ |
 | `./reconciling.md` | PHASE 0 finds `.claude/PLAN.md` already exists. Read before PHASE 1 — it carries the five-situation re-run protocol. |
+| `./amend.md` | ARGUMENT PARSING recognised `amend "<change>"`. Read once PHASE 0's gate has passed; it carries the whole amend path — a reconciliation narrowed to what the change names — and replaces every phase for the run. |
 
 A first run — no `PLAN.md` yet — reads neither this table's file nor
 anything else beyond `SKILL.md`. The `PLAN.md` schema below is needed by
@@ -74,10 +76,19 @@ Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
 matters when COMMIT is true: it skips the pull-at-start / re-sync / push
 steps of the commit-and-push protocol while still committing as always.
 
-Whatever remains is free-form context about the plan — a feature the user
-wants placed in a particular milestone, an ordering they want, which
-milestone is being built now, a milestone they consider shipped. Fold it
-into PHASE 1 rather than treating it as a command.
+Then check whether what remains opens with the literal token `amend`
+followed by a quoted change. If so, set AMEND = true: the change is the
+quoted string, and a missing one stops the run with
+`amend needs the change to make, e.g. /production-plan amend "unschedule crawler-opt-out-page".`
+Once PHASE 0's gate has passed and the pull-at-start has run, read
+`./amend.md` and follow it for the rest of the run; no phase runs — the arm
+carries what it needs of PHASE 0's read and PHASE 2's validation — and the
+run ends with COMMIT AND PUSH as any other does.
+
+Otherwise, whatever remains is free-form context about the plan — a feature
+the user wants placed in a particular milestone, an ordering they want,
+which milestone is being built now, a milestone they consider shipped. Fold
+it into PHASE 1 rather than treating it as a command.
 
 Maintain a `WRITTEN` list of every path this invocation wrote. It drives the
 final report and the optional commit.

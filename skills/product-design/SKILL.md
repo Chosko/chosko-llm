@@ -1,6 +1,6 @@
 ---
 name: product-design
-version: 0.7.5
+version: 0.8.0
 type: skill
 description: Design a product from the ground up with the user, writing the product design, the technical direction and an optional business model under .claude/domain/, resumable across sessions. Use it on a greenfield or brownfield product before anything is architected; stage 1 of the pipeline: turns a product idea into design documents; its output is /architect's input.
 ---
@@ -24,6 +24,7 @@ description: Design a product from the ground up with the user, writing the prod
 #        /product-design --no-commit        (write the documents, run no git command)
 #        /product-design --no-push          (commit the documents, skip the push)
 #        /product-design <free-form context about the product>
+#        /product-design amend "<change>"   (one pinned change to a finished design's documents, no phases)
 
 GOAL
 Produce the high-level design of a product: what it is, who it is for, how
@@ -63,6 +64,7 @@ SUPPORTING FILES (read on demand — not up front)
 | `./business-model.md` | The user opted into business modelling — read before the business-model questions in PHASE 2 and before writing `business-model.md` in PHASE 3. |
 | `./technical-direction.md` | Start of PHASE 6, and again before PHASE 7 writes `technical-direction.md`. |
 | `./resuming.md` | PHASE 0 found an existing `.claude/domain/design-process.md`. |
+| `./amend.md` | ARGUMENT PARSING recognised `amend "<change>"`, or `./resuming.md`'s menu chose its amend arm. It carries the whole amend path and replaces every phase for the run. |
 | `./council-gate.md` | PHASE 6 reaches a genuine technical fork on the GREENFIELD branch — a real trade-off with nameable stakes, expensive to reverse once features are architected against it. Never on the brownfield branch, and never when the blocker is a missing fact. |
 
 Do not read a supporting file speculatively. A greenfield first run with no
@@ -86,6 +88,15 @@ Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
 matters when COMMIT is true: it skips the pull-at-start / re-sync / push
 steps of the commit-and-push protocol (docs/authoring-guide.md) while
 still committing as always.
+
+Then check whether the remaining text opens with the literal token `amend`
+followed by a quoted change. If so, set AMEND = true: the change is the
+quoted string, and a missing one stops the run with
+`amend needs the change to make, e.g. /product-design amend "Authentication: drop the SSO provider".`
+Once PHASE 0's gate has passed and the pull-at-start has run, read
+`./amend.md` and follow it for the rest of the run — PHASE 0's resume probe
+and every phase are skipped — and the run ends with COMMIT AND PUSH as any
+other does.
 
 There is no `resume` argument. Weeks pass between sessions and a flag would
 not be remembered; `design-process.md` already exists and is the anchor.

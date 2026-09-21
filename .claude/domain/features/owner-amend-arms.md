@@ -19,11 +19,11 @@ is the pattern `task-engine` already proved: the rule lives in one file in the
 owner's folder, and a consumer reads that file by path. Here the file is the
 owner's amend arm.
 
-`/product-design` already has one — the "amend a decision" arm in its
-resuming file. `/production-plan` and `/product-roadmap` are already
-reconciliation-first and need none. Three owners lack one: `/architect` for
-feature documents, the task suite for a single task, and the runbook suite for
-a single step. Serves Claude-as-operator, who executes the arm, and the
+Every owner has one: `/architect` for feature documents, the task suite for a
+single task, the runbook suite for a single step, and `/product-design`,
+`/product-roadmap` and `/production-plan` each in its own `amend.md`, reached
+as `<owner> amend "<change>"` — `/product-design`'s from the resume menu too.
+Serves Claude-as-operator, who executes the arm, and the
 director, who gets a precision guard in place of a blanket one.
 
 ## Scope and non-goals
@@ -38,10 +38,13 @@ Deliberately out:
 - **New writers.** Every amend file is owned by the artifact's existing owner
   and lives in its folder. The patcher and the reviser execute it; they do not
   own it. The who-writes-what table in the product workflow gains no row.
-- **Amend arms for `/production-plan`, `/product-roadmap` or
-  `/product-design`.** The first two are already diff-and-propose on every
-  run; the third has its arm. The routing table records where each owner's
-  amend entry is, and that is enough.
+- **A second gate inside an arm a revision surface drives.** Every arm —
+  `/architect`'s, `/product-design`'s, `/product-roadmap`'s,
+  `/production-plan`'s — is headless-capable: its one decision is a closed
+  rule over its reads, so a consumer may draft the edit before the arm runs
+  and pass it in, and the arm writes without waiting when the draft matches
+  what it would have drafted, showing the difference as its gate otherwise.
+  The routing table records where each owner's amend entry is.
 - **Editing `[DONE]` work.** No amend arm reopens a done task or rewrites a
   ticked runbook step. Follow-up work is a new task or a new step, as today.
 - **Asking the editorial question when the evidence already settles it.**

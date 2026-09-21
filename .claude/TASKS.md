@@ -231,9 +231,9 @@ Preconditions: none
 
 ## 252. Direct, headless-capable amend arms for `/product-roadmap`, `/production-plan` and `/product-design`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
-Files: skills/product-roadmap/SKILL.md, skills/product-roadmap/amend.md, skills/production-plan/SKILL.md, skills/production-plan/amend.md, skills/product-design/SKILL.md, skills/product-design/amend.md, skills/product-design/resuming.md, skills/pipeline-engine/references/routing.md, skills/pipeline-revise/amend.md, skills/pipeline-revise/delete.md, .claude/domain/features/owner-amend-arms.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
+Files: skills/product-roadmap/SKILL.md, skills/product-roadmap/amend.md, skills/production-plan/SKILL.md, skills/production-plan/amend.md, skills/product-design/SKILL.md, skills/product-design/amend.md, skills/product-design/resuming.md, skills/pipeline-engine/SKILL.md, skills/pipeline-engine/references/routing.md, skills/pipeline-revise/SKILL.md, skills/pipeline-revise/amend.md, skills/pipeline-revise/delete.md, .claude/domain/features/owner-amend-arms.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none
 
 ---

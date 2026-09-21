@@ -74,11 +74,10 @@ from each as above.
 Fixed, and upstream first. A step is in the sequence when the walk reached
 its artifact and the tier keeps it; the order never changes.
 
-1. **A design decision** — `/product-design`'s amend arm,
-   `../product-design/resuming.md` § 6,
-   reached by re-running `/product-design` on a completed design process and
-   choosing its amend arm. On a process that is not complete the arm is not
-   offered — an owner refusing, under `./SKILL.md`'s failure contract.
+1. **A design decision** — `/product-design amend "<change>"`, executed
+   from its arm, `../product-design/amend.md`, by path. On a design process
+   that is not complete the arm refuses — an owner refusing, under
+   `./SKILL.md`'s failure contract.
 2. **Each feature document** — `/architect amend feature=<slug> "<change>"`,
    executed from its arm,
    `../architect/amend.md`, by path. One
@@ -150,7 +149,7 @@ scope, in one owner step.
 
 The `PLAN.md` lines the walk reaches are named in the proposal and written by
 no step here. When the change moves a feature's `## Dependencies`, the report
-names `/production-plan` as the follow-up.
+names `/production-plan amend "<the edge that moved>"` as the follow-up.
 
 ## Tier
 
