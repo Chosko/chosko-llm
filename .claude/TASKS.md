@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 253
+Last task number: 254
 
 ---
 
@@ -213,7 +213,7 @@ Preconditions: none
 
 ## 250. Two-group closing report for `/task-implement` and `/task-review`; consequential edits are in scope, untraceable doc edits are a finding
 
-Status: [MISSING]
+Status: [IN PROGRESS]
 Target: claude
 Files: skills/task-implement/SKILL.md, skills/task-implement/review-rounds.md, skills/task-review/SKILL.md, .claude/domain/task-workflow.md, .claude/domain/features/task-peer-review.md, .claude/context/features.md, docs/reference.md, VERSION, CHANGELOG.md
 Preconditions: 249
@@ -244,3 +244,12 @@ Status: [MISSING]
 Target: claude
 Files: skills/pipeline-revise/SKILL.md, skills/pipeline-revise/amend.md, skills/pipeline-revise/insert.md, skills/pipeline-revise/delete.md, skills/pipeline-revise/reorder.md, commands/pipeline-patch.md, skills/pipeline-engine/SKILL.md, skills/pipeline-engine/references/lint.md, skills/pipeline-engine/references/routing.md, skills/pipeline-suggest/SKILL.md, commands/pipeline-check.md, commands/runbook-create.md, commands/task-add.md, skills/architect/amend.md, skills/task-engine/SKILL.md, docs/reference.md, docs/authoring-guide.md, README.md, .claude/domain/features/pipeline-revision.md, .claude/domain/features/pipeline-suggest.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: 251, 252
+
+---
+
+## 254. Render `/task-add`'s approval plan as a digest: heading, target, goal, decisions
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-add.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
+Preconditions: none
