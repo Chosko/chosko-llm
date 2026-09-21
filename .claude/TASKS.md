@@ -159,7 +159,7 @@ Preconditions: 241, 242
 
 ## 244. Make `/runbook-run` quiet between steps and exhaustive in its closing report
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/SKILL.md, docs/reference.md, .claude/domain/features/runbook-suite.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: 242

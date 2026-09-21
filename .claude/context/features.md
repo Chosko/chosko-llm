@@ -1405,6 +1405,14 @@ Currently shipped:
   marking `[RUNNING]`, runs the migration check — a hit reads
   `body-migration.md` and the run uses the new path for its whole life; a
   resume of an already-`[RUNNING]` runbook never migrates.
+  **Chat contract**: quiet between steps — one line per step at its end
+  (`Step 4 done (abc1234). Starting step 5.`, or the failure line), no
+  narration of spawn/wait/classify/`Done:`/commit, relayed questions and
+  spawn-relay lines still verbatim — with the **closing report as the record of
+  the run**, short but exhaustive, one entry per step from the `Done:` line and
+  the report already in hand, printed the same at completion, at a bound and at
+  a failure halt; nothing extra read for it; no opt-out flag; `--inline`
+  unchanged.
   **Commit convention: one commit per completed step**, staging exactly the
   runbook (its `File:` path; both old and new path on the step that migrated
   it) and the index, then push; `--no-commit`/`--no-push` usual meanings.

@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.58.4 — 2026-09-21
+
+- **`/runbook-run` is quiet between steps:** it now prints one line per step at that step's end — `Step 4 done (abc1234). Starting step 5.`, or the failure line — and no longer narrates spawning, waiting, classifying a result, writing the `Done:` line or committing. Relayed `QUESTIONS FOR USER` blocks and the spawn relay's lines still come through verbatim, so a run that needs an answer still asks for it at once. The same holds under `--inline`.
+- **The closing report is now the record of the run:** short but exhaustive, one entry per step — outcome, commit sha and diffstat, what changed in one line, any decision or wrong premise the agent flagged, and any question relayed with its answer — followed by whatever remains outside the range. It reads that way at completion, at a `--to` / `--only` / `--steps` bound and at a failure halt alike, and is built from the `Done:` lines and step reports already in hand: the orchestrator opens no file it did not open before.
+
 ## 1.58.3 — 2026-09-20
 
 - **`chosko-llm help` describes what `show` prints since 1.58.0:** the `show <feature>` entry now says the command prints the body's leading `#` header — the `# /name` / `# Usage:` block that carries the flags — and that `--content` prints the full body in its place. The command itself is unchanged; only its help text had lagged.

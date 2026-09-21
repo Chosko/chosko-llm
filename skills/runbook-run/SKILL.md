@@ -1,6 +1,6 @@
 ---
 name: runbook-run
-version: 0.13.4
+version: 0.13.5
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user, recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
 requires: command:follow-ups
@@ -13,7 +13,9 @@ requires: command:follow-ups
 # one at a time, never in parallel; list position is the order, a step's
 # number a stable id. In the default mode the orchestrator reads only
 # CLAUDE.md, the runbook and the index, writes only the runbook and the
-# index, and never does a step's work or second-guesses a subagent. Under
+# index, and never does a step's work or second-guesses a subagent. It is
+# quiet between steps — one line per step, no narration — and its closing
+# report is the record of the run. Under
 # --inline this session executes each selected step itself under the fixed
 # rule set in `references/inline-contract.md`, with the bookkeeping
 # unchanged; --inline is refused beside --relay-spawns or --model, and the
@@ -124,6 +126,21 @@ diff, or second-guess its commit. Under `--inline` it classifies on the
 session's own stated outcome and never re-inspects the session's own diff.
 Review is `/task-review`'s job and is
 invoked, when it is wanted, from inside a step's own prompt.
+
+---
+
+## CHAT OUTPUT
+
+**Quiet between steps, exhaustive at the end.** While the loop runs, print one
+line per step, at that step's end and nowhere else — `Step 4 done (abc1234).
+Starting step 5.`, or the failure line the halt already calls for. Do not
+narrate spawning, waiting, classifying a result, writing a `Done:` line or
+committing: those happen every step, and the fragments are hard to read back
+once the run is over. Two things are never suppressed and go through exactly as
+today: a relayed `QUESTIONS FOR USER` block, verbatim, because a run that needs
+an answer asks for it at once, and the spawn relay's own lines. The record of
+the run is the closing report, not the transcript above it. The same rule holds
+under `--inline`.
 
 ---
 
@@ -382,23 +399,28 @@ Commit the runbook and the index per COMMIT CADENCE, then loop back to step 2
 and re-read the body.
 
 When no `[ ]` steps remain — every step is `[x]` — set the index `Status:` to
-`[DONE]`, commit, and report: the runbook name, the number of steps, and a
-one-line-per-step summary of what each `Done:` line records.
+`[DONE]`, commit, and report: the runbook name, the number of steps, and one
+entry per step. The report is **short but exhaustive**, and every entry is
+drawn from that step's `Done:` line and the step's own report, both already in
+hand: the outcome, the commit sha and its diffstat, what changed in one line,
+any decision or wrong premise the agent flagged, and any question relayed with
+the answer given. Nothing is re-derived for it — the orchestrator opens no file
+here that it does not open anywhere else.
 
 **Reaching a `--to` bound is not completion.** When the selected step was the
 last one in range, stop there instead of looping, and set the index back to
 `[PENDING]` unless every step in the *whole* runbook is now `[x]` — a bounded
 run leaves work behind by design, and marking that `[DONE]` would be a lie. The
-report says the same thing: which range ran, a line per step as above, and which
-steps remain outside it. `--only N` stops this way too; it is the bound `--to N`
-doing it.
+report says the same thing: which range ran, the same short-but-exhaustive
+entry per step as above, and which steps remain outside it. `--only N` stops
+this way too; it is the bound `--to N` doing it.
 
 **Reaching the `--steps` count is not completion either.** When the step just
 committed is the N-th step executed in this run, stop there instead of looping,
 exactly as at a `--to` bound: set the index back to `[PENDING]` unless every
 step in the whole runbook is now `[x]` (then it is `[DONE]` by the completion
-rule above), and report how many steps ran, a line per step as above, and which
-steps remain.
+rule above), and report how many steps ran, the same short-but-exhaustive entry
+per step as above, and which steps remain.
 
 Whichever of those three ended the run, the closing report is not the last
 thing the run does — CLOSING THE RUN is.
@@ -564,7 +586,8 @@ propagate facts (below).
 
 Do not retry the step, do not attempt the work yourself, and do not continue
 to the next step. Report to the user: which step failed, the reason, what the
-agent said, and which steps were never started. Then make the closing
+agent said, the same short-but-exhaustive entry for each step that did complete
+before it, and which steps were never started. Then make the closing
 call — a halted run is a run that ended, and it is the one most likely to
 strand unrecorded work. See CLOSING THE RUN.
 

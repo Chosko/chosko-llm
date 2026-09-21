@@ -1226,6 +1226,12 @@ line — the date, the commit sha and its diffstat, with a decision or wrong
 premise added only when a later reader would be misled without it — then commits the runbook and the index: one commit per
 completed step. The `[~]` marker is never committed, so finding one in your
 tree is the signal that this is the tree an interrupted run left behind.
+Between steps it stays quiet — one line per step at its end, `Step 4 done
+(abc1234). Starting step 5.`, with relayed questions and spawn-relay lines
+still coming straight through — because the record of the run is the closing
+report at the end of it: short but exhaustive, one entry per step drawn from
+the `Done:` line and the step's report, and printed the same way whether the
+run completed, stopped at a bound or halted on a failure.
 
 **When a step needs a subagent of its own.** In some environments, cloud
 sessions among them, a subagent can't spawn a subagent, which breaks any step

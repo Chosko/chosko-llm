@@ -451,6 +451,21 @@ step's work — are **default-mode contracts**. Under `--inline` they apply as
    the run just cleaned, and it is skipped silently when `/follow-ups` is not
    installed.
 
+**The chat contract.** Between steps the run says one line per step at that
+step's end — `Step 4 done (abc1234). Starting step 5.`, or the failure line —
+and narrates nothing else: not the spawn, the wait, the classification, the
+`Done:` write or the commit. Relayed `QUESTIONS FOR USER` blocks and the spawn
+relay's lines are never suppressed, because a run that needs an answer has to
+ask for it at once; quiet applies to narration only. The **closing report is
+the record of the run** instead, short but exhaustive — one entry per step
+(outcome, commit sha and diffstat, what changed in one line, any decision or
+wrong premise the agent flagged, any question relayed with its answer),
+followed by what remains outside the range — and it reads the same way at
+completion, at a bound and at a failure halt. It costs no extra reading: the
+`Done:` lines and the step reports are already in hand, so the read scope is
+untouched. There is no opt-out flag, and `--inline` changes none of it: a user
+who wants live detail has the per-step commits.
+
 **The spawned prompt**, assembled in this order so the operating rules are the
 last thing the agent reads. Parts 1–4 are the only text the orchestrator
 writes, and they are bound by a brevity rule: they never restate anything the
