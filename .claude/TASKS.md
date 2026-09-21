@@ -263,6 +263,8 @@ Target: claude
 Files: skills/runbook-run/SKILL.md, skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, skills/task-review/SKILL.md, docs/reference.md, .claude/domain/task-workflow.md, .claude/domain/features/runbook-suite.md, .claude/domain/features/task-peer-review.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none
 
+---
+
 ## 256. `/doc-consolidate`: one gate per run, judgement calls only, auto-approved when there are none
 
 Status: [MISSING]
