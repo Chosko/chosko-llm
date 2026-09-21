@@ -1391,7 +1391,8 @@ What would this conversation lose if it ended right now?
 
 `/follow-ups` reads the session — and nothing else, no project file — and
 answers with exactly one of two things: the single line `No follow-ups left`,
-or a numbered list. The empty answer is a guarantee rather than a shrug: the
+bare, or a numbered list under a `Follow-ups` heading. The empty answer is a
+guarantee rather than a shrug: the
 conversation can be quit with no information and no operation left behind.
 
 Three kinds of thing count. An **action proposed but never executed** —

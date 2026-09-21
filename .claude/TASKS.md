@@ -276,7 +276,7 @@ Preconditions: none
 
 ## 257. `/follow-ups` renders its list under a `Follow-ups` heading
 
-Status: [IN PROGRESS]
+Status: [DONE]
 Target: claude
 Files: commands/follow-ups.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none

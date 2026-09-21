@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.67.1 — 2026-09-22
+
+- **`/follow-ups` puts its list under a `Follow-ups` heading**, so a reader scanning a long turn — the tail of a `/task-implement` or `/runbook-run` run, where the call always fires — sees where the list starts. The `No follow-ups left` answer stays exactly as it was, one bare line, since other bodies match on it.
+
 ## 1.67.0 — 2026-09-21
 
 - **`/doc-consolidate` asks once, about the handful of entries that need you.** It now classifies every section of every file before anything is asked, writes the full per-section ledgers to one file in the session scratchpad and prints its path, then stops at a single gate listing only the judgement calls — a superseded pair whose two versions state different rules, a drop or merge that would change what the document says rather than where it says it — as one numbered list across every file, with a count line per file. Answer `all` to approve, numbers to overrule those entries, `ledger` to see the ledgers in chat. Duplicates, restatements, historical tails and meaning-preserving merges are settled by the rules and never asked about, so a run with no judgement calls goes straight to the rewrite; the verifier remains the proof that nothing was lost. An eighteen-ledger wall on a large folder is now one short list.

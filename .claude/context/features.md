@@ -1702,8 +1702,9 @@ Currently shipped:
   would lose if it ended now: actions proposed but never executed, outcomes
   never recorded on disk, decisions taken in conversation and written down
   nowhere. Output is exactly one of the single line `No follow-ups left` (a
-  guarantee, not a shrug) or a numbered list, each item a slash command plus a
-  short "to …" wherever one fits. **Command not skill** — the inverse of
+  guarantee, not a shrug, and bare — no heading) or a numbered list under a
+  `Follow-ups` heading, each item a slash command plus a short "to …" wherever
+  one fits. **Command not skill** — the inverse of
   `skills/runbook-suggest/`, which fires from its description and is never
   invoked: this one is invoked by name and fires from nothing. The two are
   complementary and deliberately unwired — a `/follow-ups` list of 3+ ordered
