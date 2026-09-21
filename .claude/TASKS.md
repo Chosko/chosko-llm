@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 245
+Last task number: 246
 
 ---
 
@@ -172,3 +172,12 @@ Status: [MISSING]
 Target: claude
 Files: skills/runbook-run/SKILL.md, skills/runbook-run/references/subagent-contract.md, docs/reference.md, .claude/domain/features/runbook-suite.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: 244
+
+---
+
+## 246. Defer the feature-flip proposal to the outermost run
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, skills/runbook-run/SKILL.md, skills/runbook-run/references/subagent-contract.md, .claude/domain/task-workflow.md, .claude/domain/features/task-implement-launcher.md, .claude/domain/features/runbook-suite.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
+Preconditions: 245
