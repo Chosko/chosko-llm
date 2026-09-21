@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.66.4 — 2026-09-21
+
+- **`/runbook-create`'s body is consolidated:** the same rules, stated once each. The runbook-argument errors, the name-collision rule and the already-taken target path are cited from the runbook schema and the body-migration reference instead of restated, the two backfill paragraphs are one, the `[RUNNING]`-never-migrated rule is stated once at the migration check, and the DO NOT list is gone — every bullet in it negated a sentence the body already carried, and the two rules that lived only there (never a branch or a tag; no git command under `--no-commit` bar the migration move) are now in PHASE 6. One stale statement is corrected: a nested runbook is refused for the orchestration it duplicates, not for the depth it costs, which is the reason `/runbook-run` already gives. Nothing about how the command behaves changed.
+
 ## 1.66.3 — 2026-09-21
 
 - **`/task-implement`'s body is consolidated:** the same rules, stated once each. GOAL now points at the sections that own the failure, feature-completion and follow-up rules instead of restating them, the DOC_ONLY determination is stated where it is made rather than three times, the dirty-tree and body-read rules are left to the `task-engine` files that own them, and the DO NOT list keeps only the three prohibitions neither the body nor a file it cites already states. One stale statement is corrected: a delegated agent's return contract is six fields, so PRE-FLIGHT now cites the contract rather than naming a count that had drifted. Nothing about how the skill behaves changed.
