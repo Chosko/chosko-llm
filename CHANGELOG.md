@@ -2,6 +2,12 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.64.0 — 2026-09-21
+
+- **`/task-implement`'s closing report has two groups:** *Needs you* first, every item waiting on a decision at whatever length it needs; then *For the record*, one line per item in the fixed shape `<what deviated> — <why> — <resolved by whom>` — a criterion overshot and accepted by the reviewer, a wrong premise in a body, a consequential edit outside the task's files. Nothing in the second group is a question. `/task-review`'s report closes the same way.
+- **Consequential edits are in scope:** a passage that an approved change made stale is updated by the implementer in whatever file owns it, in the task's commit, and reported in one line — never asked about, never left as a follow-up, never knowingly wrong. New meaning in an owned document stays untouched and is named as a precise follow-up (`/architect amend feature=<slug> "…"`).
+- **`/task-review` flags an untraceable documentation edit:** an edit that introduces a decision the task never approved — not a criterion, not an agreed design change in its Decisions, not a consequential edit — is an `IMPORTANT` finding naming the sentence. Ownership guards decisions, never consistency; this check-after is what replaces asking before.
+
 ## 1.63.0 — 2026-09-21
 
 - **New `/doc-consolidate`:** rewrites a rules document — a command or skill body, a feature document, a context file, a `CLAUDE.md` — or every document under a folder, under `claude-md:editing-discipline`, keeping every rule it stated. It shows a per-section ledger of only what it drops or merges (a superseded sentence beside its replacement, historical sentences under a count, duplicates with the surviving copy's location), gates per section or once per file, and then has a fresh-context verifier that sees only the old and new text list every rule the rewrite lost; the run ends only when that list is restored or accepted. On a folder it resolves a rule stated in several files to one owner cited from the rest. Meaning-preserving, never a style compressor; frontmatter, body headers and schema sections stay in place; line counts are reported as an observation, never a target. Uncommitted by default, `--commit` to commit and push.

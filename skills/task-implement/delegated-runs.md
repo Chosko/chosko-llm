@@ -136,7 +136,10 @@ The whole thing reads roughly:
 >
 > Report back only: the task number, the terminal status you wrote, the
 > commit hash (or that nothing was committed), — only if it failed — a
-> one-line reason, and that list, omitted entirely when it is empty.
+> one-line reason, that list, omitted entirely when it is empty, and at most
+> three *For the record* lines — `<what deviated> — <why> — <resolved by
+> whom>`: a criterion overshot, a wrong premise in the body, a consequential
+> edit outside `Files:` — omitted entirely when there are none.
 
 ## Review rounds inside a delegated task
 
@@ -175,18 +178,22 @@ authored — an unwritten task, not a finding.
 
 ## What the agent returns, and what the parent keeps
 
-The return contract is exactly five things, the fifth optional:
+The return contract is exactly six things, the last two optional:
 
 1. the task number,
 2. the terminal status it wrote to `.claude/TASKS.md`,
 3. the commit hash — or, under NO_COMMIT, that nothing was committed,
 4. a one-line failure reason, and only when it failed,
-5. **at most three one-line follow-ups**, and only when there are any.
+5. **at most three one-line follow-ups**, and only when there are any,
+6. **at most three *For the record* lines**, in SKILL.md's THE CLOSING
+   REPORT shape, and only when there are any.
 
 The parent accumulates that and nothing else. No diffs, no file lists, no
-narrative, no "surprises worth mentioning" — an agent with something to say
-says it in the failure line, and a task that needs the user's attention is a
-task that stopped. After a fifty-task run the parent holds fifty short rows.
+narrative — a deviation worth keeping is one bounded line in the sixth
+field, an agent with more to say says it in the failure line, and a task
+that needs the user's attention is a task that stopped. After a fifty-task
+run the parent holds fifty short rows, and its closing report's *For the
+record* group is those sixth fields, attributed to their tasks.
 
 **The fifth field applies `/follow-ups`' rules; it does not define its own.**
 The agent reads that command's own body and applies what it finds there to its

@@ -917,6 +917,23 @@ standard manual protocol runs unchanged.
 Commits and pushes once per task (`--no-commit` to skip both, `--no-push` to
 commit without pushing).
 
+An implementer that finds a passage its own approved change made stale
+updates it — a *consequential edit*: the passage brought into agreement with
+the change, no meaning added — in whatever file owns it, in the task's
+commit, and says so in one line. It never asks, and never leaves a document
+knowingly wrong. What it does not do is decide: a passage that would need
+new meaning in a document another command owns stays untouched and is named
+as a precise follow-up, the command and the passages. `/task-review`'s
+traceability finding is the check behind that freedom.
+
+The closing report has two groups, in this order. **Needs you** holds every
+item waiting on a decision — an unresolved blocking finding, a feature flip,
+a follow-up naming an owner's command — at whatever length it needs. **For
+the record** holds one line per item in a fixed shape, `what deviated — why
+— resolved by whom`: a criterion overshot and accepted by the reviewer, a
+wrong premise in a task body, a consequential edit outside the task's files.
+Nothing in that group is a question, and nothing in it runs past one line.
+
 Every run ends with one [`/follow-ups`](#follow-ups) call, once for the whole
 run and after the feature-completion proposal — at a stop you asked for
 between tasks and at a failure halt as much as at the end of the last task.
@@ -934,7 +951,11 @@ overrides), a PR number or URL reviews that pull request through `gh`.
 It reports only findings it holds at 80% confidence or better, each citing a
 `file:line` and a concrete failure mode, at `BLOCKING` / `IMPORTANT` /
 `ADVISORY`. An unmet acceptance criterion is always blocking, and finding
-nothing is a valid, complete review.
+nothing is a valid, complete review. On a diff that edits documentation it
+also flags an edit not traceable to the task — one that introduces a
+decision the task never approved, whether or not it is dressed as a
+consequence. Its report closes in the same two groups as
+`/task-implement`'s: *Needs you*, then *For the record*.
 
 A run spawned by `/task-implement --review` may carry a **read budget**
 naming a tier (`shallow` / `standard` / `deep`), and it honours it: the

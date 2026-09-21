@@ -122,13 +122,23 @@ already carries — rather than becoming a reason to run something.
 unmet acceptance criterion), `IMPORTANT` (missing coverage, real quality
 problems), `ADVISORY` (suggestions; reported once, never re-reviewed).
 Acceptance-criteria failures are always BLOCKING — that is the point of reading
-the task.
+the task. Two findings the reviewer raises on documentation edits: stratification
+against `claude-md:editing-discipline`, and a documentation edit not traceable to
+the task — its criteria, an agreed design change in its Decisions, or a
+consequential edit that adds no meaning. Ownership guards decisions, never
+consistency: the check-after finding is what lets the implementer make
+consequential edits in any file without asking.
 
 **Output.** Findings carry stable ids so `/task-iterate` can reference them and
 rejections can stick across rounds: `R<round>-<n>`, e.g. `R1-3`. Each finding is
 id, severity, `file:line`, the claim in one sentence, the failure scenario, and
 a suggested fix. The report also carries a per-criterion verdict — met, not
-met, or unverifiable — and a one-line overall verdict.
+met, or unverifiable — a one-line overall verdict, and a closing section in
+two groups: *Needs you* (what the caller must decide, any length) then *For
+the record* (one line per item, `<what deviated> — <why> — <resolved by
+whom>`). `/task-implement`'s own closing report has the same two groups, so a
+run's end and a review's end read alike and nothing in the second group is
+ever a question.
 
 **Output destination** depends on how the skill was invoked:
 

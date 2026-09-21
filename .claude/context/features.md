@@ -437,7 +437,13 @@ Currently shipped:
   `[PLANNED]` to `[DONE]` — user decides per feature, one commit covers
   every flip approved. Non-interactive run (delegated agent, `/runbook-run`
   step) never proposes: names candidates in its closing report, outermost run
-  asks.
+  asks. THE CLOSING REPORT: two groups, **Needs you** (items awaiting a
+  decision, any length) then **For the record** (one line each,
+  `<what deviated> — <why> — <resolved by whom>`); an empty group prints
+  `none`. Consequential edits — a passage brought into agreement with an
+  approved change, no meaning added — are in scope in any file, same commit,
+  reported For the record; new meaning in an owned document goes under Needs
+  you as a precise `/architect amend` follow-up.
   `--review` (with optional `--rounds N`, default 1) runs a review/iterate
   loop per task. Availability gate first: both `task-review` and
   `task-iterate` must be present in the session or the run stops BEFORE any
@@ -496,7 +502,10 @@ Currently shipped:
   unrecorded piece of work. What its reading does catch is a deferral
   `/task-iterate` noted should become a task and that never did.
 - `skills/task-review/` — audits a diff against the acceptance criteria of
-  the task that produced it and reports structured findings. Exists beside
+  the task that produced it and reports structured findings; on a
+  documentation diff also an untraceable documentation edit (a decision the
+  task never approved, `IMPORTANT` by default); report closes in the two
+  groups Needs you / For the record. Exists beside
   Claude Code's built-in `/code-review` because of that one difference:
   generic review asks *is this good code*, this asks *does this satisfy task
   N's criteria*; where the two overlap it defers to the built-in rather than

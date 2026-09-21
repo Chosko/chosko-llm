@@ -213,9 +213,9 @@ Preconditions: none
 
 ## 250. Two-group closing report for `/task-implement` and `/task-review`; consequential edits are in scope, untraceable doc edits are a finding
 
-Status: [IN PROGRESS]
+Status: [DONE]
 Target: claude
-Files: skills/task-implement/SKILL.md, skills/task-implement/review-rounds.md, skills/task-review/SKILL.md, .claude/domain/task-workflow.md, .claude/domain/features/task-peer-review.md, .claude/context/features.md, docs/reference.md, VERSION, CHANGELOG.md
+Files: skills/task-implement/SKILL.md, skills/task-implement/review-rounds.md, skills/task-implement/delegated-runs.md, skills/task-review/SKILL.md, commands/task-add.md, .claude/domain/task-workflow.md, .claude/domain/features/task-peer-review.md, .claude/context/features.md, docs/reference.md, VERSION, CHANGELOG.md
 Preconditions: 249
 
 ---

@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.7.7
+version: 1.8.0
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups
@@ -73,9 +73,9 @@ about the run changes.
 
 If any step fails and cannot be resolved by fixing the code, stop the entire
 run and report. Do not proceed to subsequent tasks. Do not commit a broken
-task. Under `--no-commit`, when the run completes, end with a reminder that
-nothing was committed — every task's changes sit in the working tree for the
-user to review and commit.
+task. Under `--no-commit`, when the run completes, the closing report
+records that nothing was committed — every task's changes sit in the working
+tree for the user to review and commit.
 
 When a completed task carries a `Feature:` line and it was the last task for
 that feature to reach `[DONE]`/`[SKIP]`, the run notes the feature as a
@@ -243,12 +243,19 @@ spec; the project's context layer provides conventions and patterns.
 Use judgment about how much to read — the body's Hints point to the
 right files.
 
-A Hint naming a document another pipeline command owns is an edit target
-only for the design change the body's `## Decisions` records as agreed, and
-the points it records as settled: update every passage of that document that
-states the old design, and introduce no meaning beyond the agreed change. A
-further design decision met at implementation time is not covered — stop and
-say so; `/task-add` is where the agreement is asked for.
+**Consequential edits are in scope.** An edit that only makes a passage
+agree with a change already approved — by the task body, a user reply or a
+gate — and changes no meaning beyond it is this task's to make, in whatever
+file owns the passage, in this task's commit, whether or not the file is on
+`Files:`; it is never asked about and never left as a follow-up, and it is
+reported under *For the record* (THE CLOSING REPORT). That is how a Hint
+naming a document another pipeline command owns is edited: for the design
+change the body's `## Decisions` records as agreed and the points it records
+as settled, every passage stating the old design is updated. A passage whose
+update would introduce new meaning in an owned document stays untouched and
+goes under *Needs you* as a precise follow-up — the command, the anchor and
+the passages, `/architect amend feature=<slug> "<change>"` — never a vague
+pointer at the owner.
 
 If the body carries sections that do not match that schema — a `Context
 bundle` / `Implementation steps` pair, or the older `Description` /
@@ -579,8 +586,8 @@ COMPLETION flip — and why a push failure here is not an ordinary failure.
 If NO_COMMIT is true, do not commit (or push) this task. Leave all files
 modified by this task — including the `.claude/TASKS.md` status flip —
 uncommitted in the working tree, and move on to the next task (or the
-final report). The changes from each task accumulate uncommitted across
-the run; the final report reminds the user that nothing was committed.
+closing report). The changes from each task accumulate uncommitted across
+the run; the closing report records that nothing was committed.
 Skip the rest of this step.
 
 Otherwise (the default), stage this task's own paths, commit once, report
@@ -699,6 +706,40 @@ that status, and it never overwrites a status a human already set —
 including a feature a human already marked `[DONE]` by hand, which never
 becomes a candidate in the first place (its `FEATURES.md` status is no
 longer `[PLANNED]`).
+
+---
+
+THE CLOSING REPORT
+
+Every run ends with one closing report — at completion, at a failure halt
+and at a stop the user asked for alike — in two groups, in this order, each
+under its heading:
+
+- **Needs you** — every item waiting on a decision, as long as it needs to
+  be: an unresolved `BLOCKING` finding, a task left `[IN PROGRESS]` and why,
+  a follow-up naming an owner's command with its anchor and passages, a
+  precondition that no longer held.
+- **For the record** — one line per item, in exactly this shape:
+  `<what deviated> — <why> — <resolved by whom>`. A criterion overshot, a
+  wrong premise or cross-reference in the body, a consequential edit outside
+  `Files:`, a deliberate departure from the body, the `--no-commit` reminder
+  that nothing was committed. The one line in another shape is the review
+  pair, `./review-rounds.md` § *Reporting the resolved pair*. No item in this
+  group runs past one line, and none is a question.
+
+An empty group prints its heading and `none`. Two lines in the second
+group's shape:
+
+```
+Task 245 asked ~25 net lines across two files — the mandated block needed 19 — +31, reviewer approved.
+Body criterion 2 cited loop step 6, which is Wait — the form lives in SPAWNED PROMPT part 6 — edit cites the right one, reviewer confirmed.
+```
+
+Order at the end of a run: the FEATURE COMPLETION proposal first, then this
+report — a slug declined there is a *Needs you* item — then CLOSING THE
+RUN's `/follow-ups` call. Under `--agents`, the parent renders the report
+from the per-agent returns it holds: each agent's sixth field is its *For
+the record* lines, attributed to its task (`./delegated-runs.md`).
 
 ---
 

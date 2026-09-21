@@ -211,8 +211,9 @@ later round's spawn prompt, whole.
 
 ## Reporting the resolved pair
 
-Report the pair **once per task**, alongside the round summary, in the shape
-`review-budget.md` documents:
+Report the pair **once per task**, as its own *For the record* line in the
+closing report, in the shape `review-budget.md` documents rather than that
+group's fixed one:
 
 ```
 Review: sonnet / standard (auto — 210 lines, 4 files, code)
@@ -227,9 +228,10 @@ output.
 
 ## When the loop ends
 
-- **No unresolved `BLOCKING` findings.** Continue to Step 6 normally. Report
-  the rounds run and the triage outcome in one or two lines — the per-finding
-  detail belongs to `/task-iterate`'s output, not to the run's summary.
+- **No unresolved `BLOCKING` findings.** Continue to Step 6 normally. The
+  rounds run and the triage outcome become one *For the record* line in the
+  closing report — the per-finding detail belongs to `/task-iterate`'s
+  output, not to the run's summary.
 - **Unresolved `BLOCKING` findings after the last round** (the cap was hit,
   or the last round's iterate deferred, rejected or abandoned a blocking
   finding). Stop the entire run per FAILURE HANDLING: report the unresolved

@@ -1,6 +1,6 @@
 ---
 name: task-review
-version: 0.3.0
+version: 0.4.0
 type: skill
 description: Audit a diff against the acceptance criteria of the task that produced it and report structured findings, each cited to a file:line with a BLOCKING, IMPORTANT or ADVISORY severity. Use it on an uncommitted tree, a branch or a pull request before the work is accepted; /task-implement's review rounds spawn it as a fresh-context reviewer.
 requires: skill:task-engine
@@ -252,6 +252,16 @@ there are two. The rule it enforces is `claude-md:editing-discipline`, in the
 project's `CLAUDE.md`. The size of a diff is never a finding: a large diff is
 not stratified, and a small one is not clean.
 
+**An untraceable documentation edit is a finding.** Every edit the diff
+makes to a documentation or design file traces to the task: the body's
+criteria, a design change its `## Decisions` records as agreed, or a
+consequential edit — a passage brought into agreement with the approved
+change, no meaning added. An edit that introduces a decision the task never
+approved, in a file another command owns or not, is reported `IMPORTANT` by
+default — `BLOCKING` where it also leaves an acceptance criterion unmet —
+naming the sentence and what it decides; presented as a consequence, it is
+still the finding.
+
 ---
 
 ## THE REPORT
@@ -279,7 +289,13 @@ The report as a whole:
   would settle it). Quote or paraphrase each criterion so the verdict is
   readable without the task body open;
 - the findings, BLOCKING first;
-- **one line of overall verdict.**
+- **one line of overall verdict**;
+- a closing section in two groups, in this order: **Needs you** — what the
+  caller must decide, an `unverifiable` criterion and what would settle it
+  among them — at whatever length; then **For the record** — one line per
+  item, `<what deviated> — <why> — <resolved by whom>`: a cap that bound, a
+  wrong cross-reference in the body, a guard's pre-existing noise. An empty
+  group prints its heading and `none`.
 
 A `not met` criterion must have a BLOCKING finding pointing at it, and every
 BLOCKING finding about a criterion must appear in that criterion's verdict.
