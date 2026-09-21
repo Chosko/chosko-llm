@@ -1,7 +1,7 @@
 # Runbook: revision-side-overhaul
 
 Created: 2026-09-21 · Source: conversation (tasks 247–253 authored this session) · Model: opus
-Last step number: 11
+Last step number: 12
 Sequencing: Steps 8–11 run last so each body is consolidated once, after every implementation step that edits it.
 
 ## [x] 1. Implement 247 — editing discipline claude-md
@@ -64,7 +64,7 @@ Context: none
 
 Done: 2026-09-21, commit `7fc1fd4` (8 files, +300/-3). Decision: ships with `disable-model-invocation: true` like the two `/refactor-*` features, and names the schema-owning skills instead of pathing into them, so it installs alone.
 
-## [~] 6. Implement 250 — two-group report, consequential edits
+## [x] 6. Implement 250 — two-group report, consequential edits
 
 Depends on: 2
 
@@ -74,7 +74,9 @@ Context: none
 /task-implement 250 --review
 ```
 
-## [ ] 7. Implement 253 — change-set /pipeline-revise, patch retired
+Done: 2026-09-21, commit `a735c9f` (12 files, +150/-37). Decision: end-of-run order is FEATURE COMPLETION proposal, closing report, `/follow-ups`; delegated agents return a bounded sixth field of *For the record* lines. Wrong premise: `/runbook-run`'s closing report has no Needs you / For the record groups; aligning it is a follow-up.
+
+## [~] 7. Implement 253 — change-set /pipeline-revise, patch retired
 
 Depends on: 3, 4
 
@@ -83,6 +85,16 @@ Context:
 
 ```prompt
 /task-implement 253 --review
+```
+
+## [ ] 12. Implement 254 — /task-add approval digest
+
+Depends on: 2
+
+Context: none
+
+```prompt
+/task-implement 254 --review
 ```
 
 ## [ ] 8. Consolidate commands/task-add.md
