@@ -40,7 +40,7 @@ Context: none
 
 Done: 2026-09-21, commit `d76ccb1` (13 files, +283/-234). Decision: on a multi-feature ask, an asked feature the reply leaves unnamed is Stop for that feature, never its marked letter; a missing `Doc:` stops the whole run.
 
-## [ ] 4. Implement 252 — three headless amend arms
+## [x] 4. Implement 252 — three headless amend arms
 
 Depends on: none
 
@@ -50,7 +50,9 @@ Context: none
 /task-implement 252 --review
 ```
 
-## [ ] 5. Implement 248 — /doc-consolidate
+Done: 2026-09-21, commit `35ef556` (18 files, +459/-85). Wrong premise: task 252 asked for a roadmap owner step in `/pipeline-revise`'s sequences, but no branch file reaches `product-roadmap.md`; the clause is void until step 7's change sets can name a roadmap item.
+
+## [~] 5. Implement 248 — /doc-consolidate
 
 Depends on: 1
 
@@ -74,7 +76,8 @@ Context: none
 
 Depends on: 3, 4
 
-Context: none
+Context:
+- 2026-09-21 (from step 4): `/product-roadmap amend` (`../product-roadmap/amend.md`) has no consumer in the branch files yet — no owner sequence reaches `product-roadmap.md`. A change-set item that names a milestone is where a roadmap owner step first exists; route it through that arm.
 
 ```prompt
 /task-implement 253 --review
