@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.8.0
+version: 1.8.1
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups
@@ -732,7 +732,7 @@ group's shape:
 
 ```
 Task 245 asked ~25 net lines across two files — the mandated block needed 19 — +31, reviewer approved.
-Body criterion 2 cited loop step 6, which is Wait — the form lives in SPAWNED PROMPT part 6 — edit cites the right one, reviewer confirmed.
+Body Hints named ./test-runner.md for the policy marker — the marker's rule is RESOLVING THE TEST RUNNER step 0 — edit cites the right one, reviewer confirmed.
 ```
 
 Order at the end of a run: the FEATURE COMPLETION proposal first, then this
@@ -767,7 +767,7 @@ of the run.
 
 **Under `--agents`.** The closing call is not skipped in a delegated run. The
 parent's reading covers the per-agent result reports it already collects — the
-five-field returns in `./delegated-runs.md` — as well as its own conversation.
+six-field returns in `./delegated-runs.md` — as well as its own conversation.
 It opens nothing new to do it.
 
 The fifth field is what makes that reading worth anything: before returning,

@@ -11,11 +11,12 @@ the arm it delegates to.
 ## Applies when
 
 Something that already exists changes, and nothing is added, removed or
-moved: a design decision in `product-design.md`, a section of a feature
-document, a task's body or summary fields, a `Preconditions:` edge added to or
-dropped from a task that stays where it is, a fact about a pending runbook
-step, or a step's prompt — which `step-amend.md` turns into a strike and a
-corrected insert itself, and which is still one amend here.
+moved: a design decision in `product-design.md`, a milestone's lines in
+`product-roadmap.md`, a section of a feature document, a task's body or
+summary fields, a `Preconditions:` edge added to or dropped from a task that
+stays where it is, a fact about a pending runbook step, or a step's prompt —
+which `step-amend.md` turns into a strike and a corrected insert itself, and
+which is still one amend here.
 
 A change that moves an entry is `./reorder.md`'s; one that makes a new entry
 is `./insert.md`'s; one that ends an entry is `./delete.md`'s.
@@ -24,7 +25,11 @@ is `./insert.md`'s; one that ends an entry is `./delete.md`'s.
 
 Over `graph.md`'s edges, named by id.
 
-**Top-down** — from a design section or a feature document:
+**Top-down** — from a milestone, a design section or a feature document:
+
+- a milestone → the design sections its `Covers:` slices name, and from each
+  as below; a change to a `Goal:`, `Exit criteria:` or `Rationale:` line
+  alone reaches nothing downstream and is the roadmap step by itself;
 
 - a design section → every feature whose `Source:` names it (E1), and each
   one's document (E2);
@@ -77,7 +82,10 @@ its artifact and the tier keeps it; the order never changes.
 1. **A design decision** — `/product-design amend "<change>"`, executed
    from its arm, `../product-design/amend.md`, by path. On a design process
    that is not complete the arm refuses — an owner refusing, under
-   `./SKILL.md`'s failure contract.
+   `./SKILL.md`'s failure contract. **A milestone's lines** —
+   `/product-roadmap amend "<change>"`, executed from its arm,
+   `../product-roadmap/amend.md`, by path — take the same position, after
+   the design decision and before every feature document.
 2. **Each feature document** — `/architect amend feature=<slug> "<change>"`,
    executed from its arm,
    `../architect/amend.md`, by path. One

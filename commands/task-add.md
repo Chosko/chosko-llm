@@ -1,6 +1,6 @@
 ---
 name: task-add
-version: 2.5.2
+version: 2.5.3
 type: command
 description: Plan one new task with the user and write it to the backlog — a summary block in TASKS.md plus a body file — from a prose description or from an /architect feature document. Use it for any new unit of work; stage 5 of the pipeline: turns a feature document into tasks; its output is /task-implement's input.
 requires: skill:task-engine
@@ -891,7 +891,7 @@ as the open questions, redraft, and re-present the plan at the same gate.
 - **Agreement does not make this command a writer.** `/task-add` never edits
   an owned document itself; the agreement authorises the *implementer of the
   task it drafts*, at implementation time. One writer per artifact holds for
-  the pipeline commands exactly as before.
+  the pipeline commands.
 - A body rewritten — reconciliation here, or an amendment under
   `../skills/task-engine/references/amend.md` — re-runs the check only on
   the points the rewrite adds; an agreement already recorded in

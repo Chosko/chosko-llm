@@ -1807,9 +1807,10 @@ use; `parse_frontmatter` ignores unknown keys, so they pass through
 `add` / `update` untouched and are never a rejection path:
 - `disable-model-invocation: true` (commands, skills) — description kept
   out of the model's context; only the user invokes it, by typing
-  `/<name>`; stays listed and typeable. **Carried by ten features:** the two
-  reference libraries `skills/task-engine/`, `skills/pipeline-engine/`, and
-  eight wizards / housekeeping commands never worth suggesting unprompted —
+  `/<name>`; stays listed and typeable. **Carried by eleven features:** the
+  two reference libraries `skills/task-engine/`, `skills/pipeline-engine/`,
+  the authoring skill `skills/doc-consolidate/`, and eight wizards /
+  housekeeping commands never worth suggesting unprompted —
   `commands/project-setup.md`, `commands/task-setup.md`,
   `commands/domain-setup.md`, `commands/unity-mcp-setup.md`,
   `commands/refactor-codebase.md`, `commands/refactor-tests.md`,

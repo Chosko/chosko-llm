@@ -1,6 +1,6 @@
 ---
 name: pipeline-revise
-version: 1.0.0
+version: 1.0.1
 type: skill
 description: Revise already-planned work — a set of changes to feature documents, tasks, plan edges and runbook steps — through the owners of every artifact they reach, as one numbered plan behind one gate. Use it for any change to work that is already planned, from one wording fix to a list of amendments, deletions, insertions and reorders.
 requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run, skill:product-design, skill:production-plan, skill:product-roadmap
@@ -205,9 +205,10 @@ edit one `/product-design amend`; the runbook steps of one runbook are one
 strike or add a `Context:` fact.
 
 *Order.* Upstream first, as every branch file orders its own sequence, and
-across items: design decision, then feature documents, then task amends,
-then removals (`[SKIP]`), then task insertions and `/task-add`
-reconciliation, then the plan, then runbook strikes, facts and insertions.
+across items: design decision, then the roadmap, then feature documents,
+then task amends, then removals (`[SKIP]`), then task insertions and
+`/task-add` reconciliation, then the plan, then runbook strikes, facts and
+insertions.
 A step whose input is another step's output — a runbook step for a task an
 earlier step creates — comes after it, whatever the kinds say. The user
 moves steps at the gate; the plan states this order once.
@@ -233,8 +234,11 @@ Such a step is tagged **headless**: it runs with the decision carried in
 and asks nothing. A `/task-add` create or reconcile step — the one owner
 whose work is drafting — is tagged **GATED** with one `Will ask:` line
 naming what it will ask (approve the drafted bodies; the design-change
-question; the orphan question). Gated steps sort last wherever the order
-above allows, so every headless write lands before the first stop.
+question; the orphan question); so is a task amend whose draft adds a point
+at which the task diverges from a document another command owns, since that
+design-change question is answered only at the arm's own gate. Gated steps
+sort last wherever the order above allows, so every headless write lands
+before the first stop.
 
 A reconciliation step is conditional and shows its evidence: `because step
 1 stales 12, 14`, or `because step 1 adds scope no task covers`; when step

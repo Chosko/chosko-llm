@@ -1,6 +1,6 @@
 ---
 name: doc-consolidate
-version: 0.1.0
+version: 0.1.1
 type: skill
 description: Rewrite a rules document — a command or skill body, a feature document, a context file, a CLAUDE.md — or every document under a folder, under the editing discipline, dropping superseded, historical, duplicated and restated statements without changing what it means. Use it on a document that has stratified.
 disable-model-invocation: true
@@ -41,8 +41,10 @@ $ARGUMENTS
 THE RULES IT APPLIES
 
 The nine rules of `claude-md:editing-discipline`, read from the project's
-`CLAUDE.md` where they are installed, or from the feature's own text when a
-project has not installed it. This skill restates none of them. What it
+`CLAUDE.md`, where the feature installs them. A project whose `CLAUDE.md`
+carries no such section stops here, before anything is read:
+`/doc-consolidate needs claude-md:editing-discipline in this project's CLAUDE.md — chosko-llm add claude-md:editing-discipline --local, then re-run.`
+This skill restates none of the rules. What it
 adds is a procedure for applying them to a document that already violates
 them, with a proof at the end.
 

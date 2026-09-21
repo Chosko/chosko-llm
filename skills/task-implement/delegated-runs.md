@@ -12,7 +12,7 @@ full window, and the parent keeps only the run-level bookkeeping.
 That only works if the parent stays small too. On a delegated run the parent
 is a **launcher**, not an orchestrator: it resolves the task list, evaluates
 the delegation guard from the `TASKS.md` summary blocks it has already read,
-hands every agent the same fixed-size prompt, and records four short values
+hands every agent the same fixed-size prompt, and records six short values
 per return. It never reads the task it is handing over. A parent that read
 each body to compose an accurate hand-off would spend exactly the context
 the delegation exists to save, and the agent is about to read that body

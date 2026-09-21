@@ -163,7 +163,9 @@ unclear reply or EOF writes nothing.
 and sections at its own gate passes them in — compare it with the draft this
 arm produced from the same reads. When they match, write without waiting:
 the consumer's gate already approved this edit. When they differ, render the
-difference as the gate and wait.
+difference as the gate and wait. An owned-document design-change question
+survives a passed-in draft: it is asked here and always waits, whatever the
+draft, because only an explicit answer writes an agreement.
 
 ## What is written
 

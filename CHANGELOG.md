@@ -2,6 +2,13 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.65.1 — 2026-09-21
+
+- **`/pipeline-revise` covers a roadmap item end to end:** the amend branch names a milestone's lines among what it applies to, walks from a milestone through its `Covers:` slices, and the merged sequence runs the roadmap step ahead of the feature documents.
+- **A design-change question always waits:** a task amend whose draft adds a point diverging from a document another command owns is a GATED step in `/pipeline-revise`, and the task amend arm asks the question at its own gate whatever draft was passed in — an agreement is written only on an explicit answer.
+- **`/doc-consolidate` requires the discipline installed:** on a project whose `CLAUDE.md` carries no `claude-md:editing-discipline` section it stops with the install command instead of running with no rules.
+- Stale counts corrected: delegated agents return six fields, eleven features carry `disable-model-invocation`.
+
 ## 1.65.0 — 2026-09-21
 
 - **`/pipeline-revise` takes a change set:** `/pipeline-revise "<change set>"` accepts free-form text describing several changes, or a pasted numbered list in `/follow-ups`' shape, with the old `<anchor> "<change>"` form still accepted for one item and a milestone nameable as an anchor. Each item is classified and walked; the items merge into one owner sequence — several sections of one feature document are one `/architect amend`, several documents one multi-slug run, every roadmap, plan or design edit one arm run — ordered upstream first. Every decision an owner's arm makes by a closed rule over its reads is made at plan time and shown on its step, tagged `headless`; a `/task-add` step is tagged `GATED` with one `Will ask:` line and sorts last. One plan gate, which always waits: `go`, `all but N`, `N as runbook step`, `N after M`, `stop`, and any edit re-renders the plan. What execution surfaces beyond the plan goes to one closing follow-up gate in the same shape, never written on its own. One commit at the end holds the whole revision, deferred-step runbooks included.

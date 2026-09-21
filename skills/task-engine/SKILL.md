@@ -1,6 +1,6 @@
 ---
 name: task-engine
-version: 0.5.8
+version: 0.5.9
 type: skill
 description: Reference library for the task-* features — one authority per rule they share, under references/; read by path by the task-* commands and skills and by the pipeline revision surface, never invoked.
 disable-model-invocation: true
