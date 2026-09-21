@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.66.2 — 2026-09-21
+
+- **`/runbook-run`'s body is consolidated:** the same rules, stated once each. The five reference files are now one table saying when each is read, the `[~]`-is-never-committed rule is stated in COMMIT CADENCE and cited from the three places that repeated it, the `Done:` line's form and exclusions are cited from the runbook schema instead of restated, and the DO NOT list keeps only the two prohibitions the body does not already state. One disagreement inside the body is resolved: a nested runbook is refused for the orchestration it duplicates, not for the depth it costs, and that is the reason the refusal now gives. Nothing about how the skill behaves changed.
+
 ## 1.66.1 — 2026-09-21
 
 - **`/task-add`'s body is consolidated:** the same rules, stated once each. The historical asides about what the free-form path used to do are gone, `--short`'s effects are stated in the phases they apply to rather than repeated in the argument note, the one-approval-gate rule is stated once, and the DO NOT list keeps only the three prohibitions the body does not already state. Nothing about how the command behaves changed.
