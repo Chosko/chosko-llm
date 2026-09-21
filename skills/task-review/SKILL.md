@@ -1,6 +1,6 @@
 ---
 name: task-review
-version: 0.2.4
+version: 0.3.0
 type: skill
 description: Audit a diff against the acceptance criteria of the task that produced it and report structured findings, each cited to a file:line with a BLOCKING, IMPORTANT or ADVISORY severity. Use it on an uncommitted tree, a branch or a pull request before the work is accepted; /task-implement's review rounds spawn it as a fresh-context reviewer.
 requires: skill:task-engine
@@ -10,8 +10,10 @@ requires: skill:task-engine
 # Global skill: audit a diff against the acceptance criteria of the task that
 # produced it, and report structured findings. One reviewer, one pass, no
 # fan-out. Every finding passes a confidence gate — 80% or better, a
-# file:line and a concrete failure mode — and an unmet acceptance criterion
-# is always BLOCKING; no findings is a valid, complete result. The task
+# file:line and a concrete failure mode — an unmet acceptance criterion is
+# always BLOCKING, and stratification in a rules document (history in the
+# body, a duplicate statement, an old sentence left beside its replacement)
+# is a finding; no findings is a valid, complete result. The task
 # resolves from task=<n>, the branch name, the PR title or the most recently
 # modified .claude/tasks file, and an unresolvable task stops the run rather
 # than degrading into a generic code review. Read-only — edits no source,
@@ -239,6 +241,16 @@ Exactly three tiers. Do not invent a fourth, and do not qualify one.
 **An unmet acceptance criterion is always BLOCKING**, whatever its size.
 Checking the criteria is the point of reading the task; a criterion the diff
 does not satisfy is the one failure this skill exists to catch.
+
+**Stratification is a finding.** In a diff that edits a rules document — a
+`CLAUDE.md`, a command or skill body, a feature document, a context file — a
+sentence carrying history ("previously", "no longer", a date or task id as
+provenance), a statement already made elsewhere in the same document or in a
+file it cites, or an old sentence left standing beside the new one that
+supersedes it is reported, `IMPORTANT` by default, citing both lines when
+there are two. The rule it enforces is `claude-md:editing-discipline`, in the
+project's `CLAUDE.md`. The size of a diff is never a finding: a large diff is
+not stratified, and a small one is not clean.
 
 ---
 

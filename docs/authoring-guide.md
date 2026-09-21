@@ -447,47 +447,32 @@ body-only change stays silent. Treat such a move as at least a **minor** bump,
 and expect every user of the hook to edit their `settings.json` — the update
 cannot do it for them.
 
-## Tool discipline is global — do not restate it
+## Global rules ship as `claude-md` — cite them, never restate them
 
-Do **not** add a `TOOL DISCIPLINE` block to a command or skill. The
-`claude-md:tool-usage-policy` feature is merged into the user's global
-`CLAUDE.md`, so it is already in force in every session: Read over `cat`,
-Edit/Write over shell redirection, and matching the command syntax to the
-shell tool you call. Seven near-identical copies of that policy cost tokens
-on every invocation and drift apart; one artifact that ships into context
-does not.
+Every shipped body is edited under `claude-md/editing-discipline.md`, whose
+rule 4 — one rule, one place; everywhere else cites it by path — is what this
+section applies to the three rules that are global by construction:
 
-Soft dependency: installing `claude-md:tool-usage-policy` is the recommended
-baseline for all commands and skills in this repo.
+- **Tool discipline** is `claude-md:tool-usage-policy`, merged into the user's
+  global `CLAUDE.md` and in force in every session. No `TOOL DISCIPLINE` block
+  in a command or skill. Installing it is the recommended baseline for every
+  feature in this repo.
+- **Question delivery in a cloud session** is `hook:remote-session-protocol`.
+  Write approval gates as "ask the user" or "stop for approval" and never call
+  `AskUserQuestion` by name; the hook decides the delivery per session, and a
+  body that hardcodes either one defeats it.
+- **Commit message shape** is `claude-md:git-commit-style`. A feature body
+  never teaches what a message looks like. It may still specify its own
+  prescribed message form — the `Task <N>: …`, `Add task <N>: …` and
+  `task-clean: archive tasks …` templates in
+  `skills/task-engine/references/commit.md` — and commit hygiene (staging by
+  explicit path, one commit per unit of work, the pull → re-sync → push
+  protocol) stays in that file too.
 
-The same applies to `hook:remote-session-protocol`: do not teach a command or
-skill how to ask questions in a cloud session, and do not have one call
-`AskUserQuestion` by name. Write approval gates the way they are written today
-— "ask the user", "stop for approval" — and let the hook decide the delivery,
-text batch or question UI, per session. A command that hardcodes either one
-defeats it. The hook costs nothing when it is not firing, which is the reason
-it is a hook and not a `CLAUDE.md` section.
-
-What *does* belong in a command is a constraint specific to **that** command
-— e.g. "this is the only phase that shells out", or "never use the Write tool
-on an existing body file". Put such a line in the section it governs, not in
-a standalone block at the top.
-
-## Commit message shape is global — do not restate it
-
-Do **not** teach a command or skill what a commit message should look like.
-The `claude-md:git-commit-style` feature is merged into the user's global
-`CLAUDE.md`, so the shape — short imperative subject, optional 2–3 line body,
-`Co-Authored-By` / `Claude-Session` trailers only on commits of 5+ files or
-200+ changed lines — is already in force in every session. A feature body that
-restates it is one more copy to drift.
-
-What a feature *may* still specify is its own prescribed message form — the
-`Task <N>: …`, `Add task <N>: …` and `task-clean: archive tasks …` templates in
-`skills/task-engine/references/commit.md` are exactly that, and the snippet
-defers to them by name. Commit *hygiene* — staging by explicit path, one
-commit per unit of work, the pull → re-sync → push protocol — stays in
-`skills/task-engine/references/commit.md` too; it is not in the snippet.
+What does belong in a body is a constraint specific to **that** feature —
+"this is the only phase that shells out", "never use the Write tool on an
+existing body file" — placed in the section it governs, not in a standalone
+block at the top.
 
 ## Keeping the two `council-gate.md` copies in step
 

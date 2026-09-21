@@ -1,6 +1,6 @@
 ---
 name: architect
-version: 0.12.5
+version: 0.12.6
 type: skill
 description: Turn high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md and grounded in the technical direction or the existing code. Use it from a design section, named features or a bare prompt, or to amend an existing document; stage 3 of the pipeline: turns a design section into feature documents; its output is /task-add's input.
 ---

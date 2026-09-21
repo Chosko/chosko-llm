@@ -84,10 +84,11 @@ Two things this document must not contain, however tempting:
   produces that against the code as it then stands, which is the only time
   it can be correct.
 
-If the feature is being re-architected, update this document in place. Keep
-its slug and its heading; rewrite the sections whose design changed. Do not
-create a second document, and do not append a changelog — the design is the
-current truth, and the history lives in VCS.
+A re-architected feature keeps this one document, its slug and its heading;
+the sections whose design changed are rewritten in place. Never a second
+document. The rest — the design is the current state, history stays out of
+the body — is the editing discipline every rules document is written under
+(`claude-md:editing-discipline`, in the project's `CLAUDE.md`).
 
 ---
 

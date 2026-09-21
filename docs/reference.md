@@ -1548,6 +1548,13 @@ so your own content around it is preserved.
 - `claude-md:tool-usage-policy` — use Claude Code's built-in Read / Write /
   Edit / Glob / Grep tools for file operations rather than shell commands,
   and never mix PowerShell syntax into the Bash tool or vice versa.
+- `claude-md:editing-discipline` — nine rules for editing a rules document
+  (a CLAUDE.md, a command or skill body, a feature document, a context
+  file): supersede the old sentence instead of appending beside it, keep
+  history out of the body, state the rule rather than the decision, cite
+  instead of paraphrasing, and carry a change's consequences into every
+  passage it makes stale, whoever owns the file. `/task-review` reports
+  stratification against it.
 
 ### `statusline:session-statusline`
 

@@ -186,9 +186,9 @@ Preconditions: 245
 
 ## 247. Ship `claude-md:editing-discipline` and cite it from the authoring guide, the feature template and `/task-review`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
-Files: claude-md/editing-discipline.md, CLAUDE.md, docs/authoring-guide.md, skills/architect/feature-doc-template.md, skills/task-review/SKILL.md, docs/reference.md, README.md, .claude/context/features.md, VERSION, CHANGELOG.md
+Files: claude-md/editing-discipline.md, CLAUDE.md, docs/authoring-guide.md, skills/architect/feature-doc-template.md, skills/architect/SKILL.md, skills/task-review/SKILL.md, docs/reference.md, README.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none
 
 ---
