@@ -24,7 +24,14 @@ is padded to `STATUS_WIDTH` (18, one wider than `migration pending`) so
 `REQUIRES` can be last and unpadded (task 152). `REQUIRES` is the row's
 comma-separated kind-prefixed specs as declared (`skill:task-engine`), or a
 dimmed `—` when none. Missing values render `—`. Installed file w/ no
-`version` frontmatter shows `unversioned`. Rows print as one sequence ordered ascending by
+`version` frontmatter shows `unversioned`. A `$CLAUDE_HOME/skills/<dir>`
+holding no `SKILL.md` — Claude Code's account-synced bucket `skills/synced/`
+is the case in the wild — is installed but **unmanaged**, not missing: the row
+renders `unversioned` / `—` / `local only`, and being `local only` it is never
+counted installable and never named in the footer `add` hint. It reuses the
+existing `local only` status; the vocabulary does not grow. The predicate is
+`lib.sh::skill_dir_is_managed` (`SKILL.md` present) and its name-keyed
+wrapper `skill_is_unmanaged`. Rows print as one sequence ordered ascending by
 feature name, not grouped by kind (task 153); two rows sharing a name break
 the tie on kind rank — command, skill, claude-md, statusline, hook. On
 interactive terminal, suggestions block follows
@@ -63,7 +70,10 @@ rows read `claudemd_target_path` (task 103, in `lib.sh`) instead of a hardcoded
   untouched. Names deduped across two homes (managed clone + `$CLAUDE_HOME`);
   claude-md "installed" state detected by managed section markers in
   `$CLAUDE_HOME/CLAUDE.md`, not a file; statusline plain file check like
-  commands/skills.
+  commands/skills. Pass 1 also sets the parallel `r_unmg` flag for a skills
+  directory with no `SKILL.md`, which pass 3 renders as `unversioned`; the test
+  runs only on rows that already lack an installed `SKILL.md`, and it forks
+  nothing — two `[` builtins inside `skill_is_unmanaged`.
 - **The fork budget is the design constraint (task 163).** On Git Bash for
   Windows — this CLI's primary platform — a fork costs ~12 ms and a fork plus
   exec ~20 ms. At ~34 features `ls` was spending 217 processes and 5.4 s; after

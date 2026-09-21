@@ -57,6 +57,16 @@ than one view flag, or unresolvable/ambiguous name.
   so local-only installs inspectable. Keep its `command:`/`skill:`/
   `claude-md:`/`statusline:`/`hook:` prefix parsing and 5-way ambiguity in sync with
   resolvers in `lib.sh` and `cmd-rm.sh`.
+- **An unmanaged skills directory resolves too.** A
+  `$CLAUDE_HOME/skills/<dir>` with no `SKILL.md` (Claude Code's
+  `skills/synced/` bucket) sets `has_skill` via
+  `lib.sh::skill_is_unmanaged`, then the local `unmanaged` flag: columns match
+  the `ls` row (`unversioned` / `—` / `local only`), `Path:` is the directory,
+  and the footer states that this CLI does not manage it and `rm` refuses it.
+  The flag also suppresses every read of the absent `SKILL.md` — version,
+  description, body — and the `--content` hint. `ls`'s footer always ends with
+  `Run 'chosko-llm show <feature>'`, so a row `show` rejected would be a dead
+  end.
 - **Status vocabulary mirrors `cmd-ls`** exactly: `up-to-date` / `updatable`
   / `not installed` / `local only` / `superseded` / `migration pending`,
   same color mapping (`superseded` `C_MAGENTA`, `migration pending`

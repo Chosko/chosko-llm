@@ -347,6 +347,29 @@ inst_skill_dir()    { local p; feature_path_var p "$CLAUDE_HOME" skill-dir "$1";
 inst_statusline_path() { local p; feature_path_var p "$CLAUDE_HOME" statusline "$1"; printf '%s' "$p"; }
 inst_hook_path()       { local p; feature_path_var p "$CLAUDE_HOME" hook       "$1"; printf '%s' "$p"; }
 
+# skill_dir_is_managed <skill-dir>
+# Returns 0 when that directory is a skill this CLI manages: a `SKILL.md` sits
+# in it. This is the ONE place that test is written. A skills directory without
+# one is installed but unmanaged — Claude Code keeps its account-synced skills
+# in `skills/synced/<bucket-id>/`, a directory holding no `SKILL.md` of its own
+# — so `ls` lists it, `show` inspects it, `update` and `upgrade` pass over it,
+# and `add` and `rm` refuse it. Testing `[ -d ]` instead is what once made
+# `rm -rf` reachable for a directory full of the user's synced skills.
+skill_dir_is_managed() {
+  [ -f "$1/SKILL.md" ]
+}
+
+# skill_is_unmanaged <name>
+# The name-keyed form of the predicate above, for the consumers that hold a
+# feature name rather than a path: returns 0 when `skills/<name>` exists under
+# $CLAUDE_HOME and skill_dir_is_managed says no. It delegates rather than
+# repeating the test.
+skill_is_unmanaged() {
+  local p
+  feature_path_var p "$CLAUDE_HOME" skill-dir "$1" || return 1
+  [ -d "$p" ] && ! skill_dir_is_managed "$p"
+}
+
 # hook_settings_path
 # The settings.json a hook's wiring belongs in. Hooks are local-only, so this
 # is always <cwd>/.claude/settings.json — the file that travels with the repo.
@@ -676,7 +699,7 @@ artifact_is_installed() {
   local p
   case "$1" in
     command)    feature_path_var p "$CLAUDE_HOME" command    "$2" && [ -f "$p" ] ;;
-    skill)      feature_path_var p "$CLAUDE_HOME" skill-dir  "$2" && [ -d "$p" ] ;;
+    skill)      feature_path_var p "$CLAUDE_HOME" skill-dir  "$2" && skill_dir_is_managed "$p" ;;
     claude-md)  claudemd_is_installed "$2" ;;
     statusline) feature_path_var p "$CLAUDE_HOME" statusline "$2" && [ -f "$p" ] ;;
     hook)       feature_path_var p "$CLAUDE_HOME" hook       "$2" && [ -f "$p" ] ;;

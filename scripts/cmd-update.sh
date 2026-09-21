@@ -62,6 +62,11 @@ update_one() {
       dst_dir="$(inst_skill_dir "$name")"
       [ -f "$src_skill" ] || die "No source for skill '$name' at $src_skill"
       require_versioned_source "$src_skill"
+      # A clone feature sharing an unmanaged directory's name must not reach the
+      # rm -rf below: `update <name>` would delete what `rm` refuses to.
+      if [ -d "$dst_dir" ] && ! skill_dir_is_managed "$dst_dir"; then
+        die "Skill '$name' ($dst_dir) holds no SKILL.md, so chosko-llm does not manage it — refusing to overwrite it. Move the directory aside first."
+      fi
       mkdir -p "$(dirname "$dst_dir")"
       [ -d "$dst_dir" ] && rm -rf "$dst_dir"
       cp -R "$src_dir" "$dst_dir"
@@ -192,6 +197,10 @@ if [ "$1" = "--all" ]; then
     for d in "$CLAUDE_HOME"/skills/*/; do
       [ -e "$d" ] || continue
       base="$(basename "$d")"
+      # A directory with no SKILL.md is not a feature this CLI manages, so a
+      # sweep over everything installed passes over it in silence — a warning
+      # per unmanaged directory is noise, not news.
+      skill_dir_is_managed "${d%/}" || continue
       if [ -f "$(src_skill_path "$base")" ]; then
         inst_skill="$(inst_skill_path "$base")"
         src_skill="$(src_skill_path "$base")"

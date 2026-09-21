@@ -312,6 +312,15 @@ LOCAL-ONLY kind (see `scope_supports_kind` above).
   hook was not already installed (re-copying a script cannot re-wire JSON).
 
 ### Feature kind
+- `skill_dir_is_managed <skill-dir>` → 0 when `SKILL.md` sits in that
+  directory. **The one place the "is this a skill we manage" test is written.**
+  A `skills/<dir>` without one — Claude Code's account-synced bucket
+  `skills/synced/` — is installed but unmanaged: listed by `ls`, inspectable by
+  `show`, passed over by `update --all` and `upgrade`, refused by `rm` (even
+  under `--force`), by `update <name>` and by `add <name>`.
+- `skill_is_unmanaged <name>` → the name-keyed wrapper: directory present under
+  `$CLAUDE_HOME` and `skill_dir_is_managed` says no. Delegates, never repeats
+  the test.
 - `feature_kind <name>` → `command | skill | both | none` (checks managed clone).
 - `installed_kind <name>` → same, checks `$CLAUDE_HOME`.
 - `resolve_feature <spec>` — accepts `<name>`, `command:<name>`,
@@ -335,6 +344,9 @@ fact rides same `git pull` as rename.
   non-zero if no recognized prefix. A printing wrapper over `split_kind_spec`
   since task 163; its name predates both extra callers.
 - `artifact_is_installed <kind> <name>` → 0 if installed under `$CLAUDE_HOME`.
+  Its `skill` arm calls `skill_dir_is_managed` (§ Feature kind), not `[ -d ]`,
+  which is what keeps `apply_replaces` → `remove_installed_artifact` from
+  `rm -rf`ing an unmanaged directory.
 - `remove_installed_artifact <kind> <name>` → deletes with `cmd-rm` semantics
   per kind (`rm -f` command/statusline/hook, `rm -rf` skill, `remove_section`
   claude-md).

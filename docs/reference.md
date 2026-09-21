@@ -1723,6 +1723,15 @@ installed feature still declares in `requires:`, naming every dependent,
 unless you pass `--force` (which removes it anyway and warns about what you
 just broke). `add --all` needs neither, since it installs everything.
 
+One kind of directory is off limits to all of them. Claude Code keeps your
+account-synced skills in `~/.claude/skills/synced/`, which holds no
+`SKILL.md`, and any directory like it is installed but **not managed by this
+CLI**: `ls` lists it as `unversioned` / `local only`, `show` reports it and
+names its path, `update --all` and `upgrade` pass over it in silence, and
+`add`, `update <name>` and `rm` all refuse it rather than overwrite or delete
+it — `--force` overrides the dependents guard, not this one. Move such a
+directory aside yourself if you really mean to replace it.
+
 ### Keeping up to date
 
 ```sh

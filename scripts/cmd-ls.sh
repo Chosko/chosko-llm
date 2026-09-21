@@ -367,8 +367,8 @@ list_all() {
 
   # Pass 1 — enumerate the rows, and with them every frontmatter file the
   # listing will need to read.
-  local r_kind=() r_name=() r_inst=() r_src=() files=()
-  local kind name inst_file src_file
+  local r_kind=() r_name=() r_inst=() r_src=() r_unmg=() files=()
+  local kind name inst_file src_file unmg
   for kind in "${kinds[@]}"; do
     collect_names "$kind"
     for name in ${NAMES[@]+"${NAMES[@]}"}; do
@@ -390,6 +390,14 @@ list_all() {
           inst_file=""
         fi
       fi
+      # A skills directory with no SKILL.md is installed but unmanaged (the
+      # predicate is lib.sh's). It is a row, not a missing feature — pass 3
+      # renders it `unversioned` / `local only`. Only rows that already lack an
+      # installed SKILL.md reach the test, and it forks nothing.
+      unmg=0
+      if [ "$kind" = skill ] && [ -z "$inst_file" ] && skill_is_unmanaged "$name"; then
+        unmg=1
+      fi
       feature_path_var src_file "$CHOSKO_LLM_HOME" "$kind" "$name"
       if [ -f "$src_file" ]; then
         if [ -r "$src_file" ]; then files+=("$src_file"); fi
@@ -397,7 +405,7 @@ list_all() {
         src_file=""
       fi
       r_kind+=("$kind"); r_name+=("$name")
-      r_inst+=("$inst_file"); r_src+=("$src_file")
+      r_inst+=("$inst_file"); r_src+=("$src_file"); r_unmg+=("$unmg")
     done
   done
 
@@ -433,6 +441,8 @@ list_all() {
     elif [ -n "$inst_file" ]; then
       fm_vars inst_ver inst_req "$inst_file" || true
       inst_col="${inst_ver:-unversioned}"
+    elif [ "${r_unmg[i]}" -eq 1 ]; then
+      inst_col="unversioned"
     else
       inst_col="—"
     fi

@@ -248,6 +248,11 @@ add_one() {
         src_skill="$(src_skill_path "$name")"
         dst_dir="$(inst_skill_dir "$name")"
         if [ -e "$dst_dir" ]; then
+          # An unmanaged directory is not an installed feature, so pointing at
+          # `update` would send the user somewhere that refuses them too.
+          if skill_is_unmanaged "$name"; then
+            die "$dst_dir exists and holds no SKILL.md, so chosko-llm does not manage it — move it aside before installing skill '$name'."
+          fi
           die "Skill '$name' is already installed at $dst_dir. Use 'chosko-llm update $name' to refresh."
         fi
         mkdir -p "$(dirname "$dst_dir")"

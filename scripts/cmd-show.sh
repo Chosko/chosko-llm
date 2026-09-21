@@ -70,7 +70,10 @@ resolve_show_feature() {
 
   local has_cmd=0 has_skill=0 has_cm=0 has_sl=0 has_hook=0
   if [ -f "$(src_command_path "$name")" ] || [ -f "$(inst_command_path "$name")" ]; then has_cmd=1; fi
-  if [ -f "$(src_skill_path "$name")" ]   || [ -f "$(inst_skill_path "$name")" ];   then has_skill=1; fi
+  # An installed skills directory with no SKILL.md resolves too: `ls` lists it,
+  # so `show` must not be a dead end for the one row it prints.
+  if [ -f "$(src_skill_path "$name")" ]   || [ -f "$(inst_skill_path "$name")" ] \
+     || skill_is_unmanaged "$name";        then has_skill=1; fi
   if [ -f "$(src_claudemd_path "$name")" ] || claudemd_is_installed "$name";         then has_cm=1; fi
   if [ -f "$(src_statusline_path "$name")" ] || [ -f "$(inst_statusline_path "$name")" ]; then has_sl=1; fi
   if [ -f "$(src_hook_path "$name")" ] || [ -f "$(inst_hook_path "$name")" ]; then has_hook=1; fi
@@ -127,6 +130,9 @@ name="${resolved[1]}"
 # Resolve source/installed file paths and existence per kind.
 src_exists=0
 inst_exists=0
+# Set only for a skills directory this CLI does not manage — installed, with no
+# SKILL.md to read a version, a description or a body from.
+unmanaged=0
 case "$kind" in
   command)
     src_file="$(src_command_path "$name")"
@@ -138,7 +144,12 @@ case "$kind" in
     src_file="$(src_skill_path "$name")"
     inst_file="$(inst_skill_path "$name")"
     [ -f "$src_file" ]  && src_exists=1  || true
-    [ -f "$inst_file" ] && inst_exists=1 || true
+    if [ -f "$inst_file" ]; then
+      inst_exists=1
+    elif skill_is_unmanaged "$name"; then
+      inst_exists=1
+      unmanaged=1
+    fi
     ;;
   claude-md)
     src_file="$(src_claudemd_path "$name")"
@@ -167,7 +178,7 @@ if [ "$src_exists" -eq 1 ]; then src_ver="$(read_frontmatter_field "$src_file" v
 if [ "$inst_exists" -eq 1 ]; then
   if [ "$kind" = "claude-md" ]; then
     inst_ver="$(claudemd_installed_version "$name" || true)"
-  else
+  elif [ "$unmanaged" -eq 0 ]; then
     inst_ver="$(read_frontmatter_field "$inst_file" version || true)"
   fi
 fi
@@ -207,7 +218,7 @@ fi
 src_desc=""
 inst_desc=""
 if [ "$src_exists" -eq 1 ]; then src_desc="$(read_frontmatter_field "$src_file" description || true)"; fi
-if [ "$kind" != "claude-md" ] && [ "$inst_exists" -eq 1 ]; then
+if [ "$kind" != "claude-md" ] && [ "$inst_exists" -eq 1 ] && [ "$unmanaged" -eq 0 ]; then
   inst_desc="$(read_frontmatter_field "$inst_file" description || true)"
 fi
 
@@ -335,7 +346,9 @@ fi
 echo
 case "$effective_view" in
   installed)
-    if [ "$inst_exists" -ne 1 ]; then
+    if [ "$unmanaged" -eq 1 ]; then
+      : # No SKILL.md, so no body in any view — the footer says why, once.
+    elif [ "$inst_exists" -ne 1 ]; then
       printf 'This feature is not installed — nothing to show for --installed.\n'
     elif [ "$show_content" -eq 1 ]; then
       printf -- '--- installed content ---\n'
@@ -376,6 +389,9 @@ if [ "$kind" = statusline ] && scope_is_local; then
   printf '%sstatusline scripts are global-only; re-run without --local to inspect the installed copy.%s\n' "$C_CYAN" "$C_RESET"
 elif [ "$kind" = hook ] && ! scope_is_local; then
   printf '%shooks are local-only; re-run with --local from a project root to inspect the installed copy.%s\n' "$C_CYAN" "$C_RESET"
+elif [ "$unmanaged" -eq 1 ]; then
+  printf '%sThis directory holds no SKILL.md, so chosko-llm does not manage it: `update --all` and `upgrade` pass over it, and `rm skill:%s` refuses to delete it.%s\n' \
+    "$C_CYAN" "$name" "$C_RESET"
 else
   case "$status" in
     "not installed")
@@ -405,7 +421,7 @@ else
   esac
 fi
 
-if [ "$show_content" -ne 1 ]; then
+if [ "$show_content" -ne 1 ] && [ "$unmanaged" -eq 0 ]; then
   if [ "$effective_view" = "diff" ]; then
     printf 'Pass --content to see the line-by-line diff.\n'
   else

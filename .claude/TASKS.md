@@ -285,7 +285,7 @@ Preconditions: none
 
 ## 258. `chosko-llm`: a `skills/<dir>` with no `SKILL.md` is unmanaged, not a missing feature
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/lib.sh, scripts/cmd-ls.sh, scripts/cmd-show.sh, scripts/cmd-rm.sh, scripts/cmd-update.sh, .claude/context/cmd-ls.md, .claude/context/cmd-show.md, .claude/context/shared-lib.md, VERSION, CHANGELOG.md
 Preconditions: none

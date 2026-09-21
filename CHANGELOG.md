@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.67.2 — 2026-09-22
+
+- **A `skills/<dir>` with no `SKILL.md` is unmanaged, not a missing feature.** Claude Code keeps account-synced skills in `~/.claude/skills/synced/`, a directory holding no `SKILL.md`, and every enumeration here tested only that a directory existed — so `ls` printed it as `not installed`, `show` died on it, `update --all` warned about it, and `rm skill:synced` would have `rm -rf`'d the user's synced skills. One predicate in `lib.sh` now decides it (`SKILL.md` present) and every command agrees: `ls` renders the row `unversioned` / `local only`, `show` reports it and names the directory, `update --all` passes over it in silence, and `rm`, `update <name>` and `add <name>` each refuse it with a message naming why — `--force` overrides the dependents guard, not this one. `artifact_is_installed` uses the same predicate, so the `replaces:` migration path can no longer delete such a directory either. Homes with no unmanaged directories see no change.
+
 ## 1.67.1 — 2026-09-22
 
 - **`/follow-ups` puts its list under a `Follow-ups` heading**, so a reader scanning a long turn — the tail of a `/task-implement` or `/runbook-run` run, where the call always fires — sees where the list starts. The `No follow-ups left` answer stays exactly as it was, one bare line, since other bodies match on it.

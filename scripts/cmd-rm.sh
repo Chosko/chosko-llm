@@ -59,7 +59,10 @@ resolve_installed() {
   fi
   local has_cmd=0 has_skill=0 has_cm=0 has_sl=0 has_hook=0
   [ -f "$(inst_command_path "$name")" ] && has_cmd=1
-  [ -f "$(inst_skill_path   "$name")" ] && has_skill=1
+  # An unmanaged skills directory resolves here too, so the bare name reaches
+  # the refusal below instead of dying "not installed" — which would contradict
+  # `ls` and `show`, both of which call it installed.
+  { [ -f "$(inst_skill_path "$name")" ] || skill_is_unmanaged "$name"; } && has_skill=1
   claudemd_is_installed "$name" && has_cm=1 || true
   [ -f "$(inst_statusline_path "$name")" ] && has_sl=1
   [ -f "$(inst_hook_path "$name")" ] && has_hook=1
@@ -143,6 +146,10 @@ case "$kind" in
   skill)
     target="$(inst_skill_dir "$name")"
     [ -d "$target" ] || die "Skill '$name' is not installed."
+    # --force overrides the dependents guard above, never this one: the
+    # directory is not ours to delete, whatever the caller insists.
+    skill_dir_is_managed "$target" \
+      || die "Skill '$name' ($target) holds no SKILL.md, so chosko-llm does not manage it — refusing to delete it. Remove the directory yourself if that is what you mean."
     rm -rf "$target"
     log_success "Removed skill '$name' ($target) (scope: $CHOSKO_LLM_SCOPE)"
     ;;
