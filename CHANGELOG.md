@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.65.2 — 2026-09-21
+
+- **`/task-add`'s approval plan is a digest:** per task it shows the heading, `Target:`, the goal, the decisions when there are any, and `## Manual interventions` in full when the task needs you at the keyboard — plus one `Order:` line on a split and the `Placement:` line under `--before` / `--after`. The summary block's fields, the acceptance criteria and the hints are still authored in full and written to the files, and the report after the write names the ids, both paths and the counter advance.
+
 ## 1.65.1 — 2026-09-21
 
 - **`/pipeline-revise` covers a roadmap item end to end:** the amend branch names a milestone's lines among what it applies to, walks from a milestone through its `Covers:` slices, and the merged sequence runs the roadmap step ahead of the feature documents.

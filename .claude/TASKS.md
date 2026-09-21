@@ -249,7 +249,7 @@ Preconditions: 251, 252
 
 ## 254. Render `/task-add`'s approval plan as a digest: heading, target, goal, decisions
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-add.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none

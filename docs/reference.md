@@ -524,6 +524,14 @@ implementation. It may propose splitting the description into several tasks
 when that gives better units (independent deliverables, or one task that's
 too large); pass `--no-split` to always get exactly one task.
 
+The plan you approve is a **digest**: per task, its heading, `Target:`, the
+goal, the decisions when it has any, and `## Manual interventions` in full
+when the task needs you at the keyboard — plus one `Order:` line on a split
+and one `Placement:` line under `--before` / `--after`. The task is drafted
+in full all the same; the acceptance criteria, the hints and the summary
+block's fields go straight to the files, and the report after the write
+names the ids, both paths and the counter advance.
+
 `/task-add feature=<slug>` plans from an `/architect` feature document
 instead of a description. The document is the input, so you don't re-explain
 the work in prose; a feature usually becomes several tasks. Run it again after

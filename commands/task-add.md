@@ -1,6 +1,6 @@
 ---
 name: task-add
-version: 2.5.3
+version: 2.5.4
 type: command
 description: Plan one new task with the user and write it to the backlog — a summary block in TASKS.md plus a body file — from a prose description or from an /architect feature document. Use it for any new unit of work; stage 5 of the pipeline: turns a feature document into tasks; its output is /task-implement's input.
 requires: skill:task-engine
@@ -472,90 +472,63 @@ Then, when that feature already has tasks and SINGLE is false, render a
 RECONCILIATION section BEFORE the new drafts (see RECONCILIATION below). One approval covers the
 reconciliation and the new tasks together — there is no second gate.
 
-When SPLIT is none (the common case), render the single-task plan exactly
-as before:
+The plan is a **digest** of what was drafted, not the draft itself: the
+heading, the target, the goal, the decisions, and the manual interventions
+when there are any. Those are what the user can weigh before the task
+exists. Everything else — the summary block's fields, the acceptance
+criteria, the Hints — is drafted in full exactly as PER-TASK BODY FILE
+FORMAT specifies and written by PHASE 4, whose report names the task ID(s),
+both paths and the counter advance.
+
+When SPLIT is none (the common case), render one digest:
 
 ```
 PLAN — new task
 
-Index file: .claude/TASKS.md
-Body file:  .claude/tasks/<N>.md   (N = previous Last + 1)
+## <N>. <Title>
 
-Counter update: Last task number  K → N
+Target: <claude|claude+human|human>
 
-Draft summary block:
-  ---
+## Goal
+…
 
-  ## <N>. <Title>
+## Decisions              ← omit section if no non-obvious choices
+- …
 
-  Status: [MISSING]
-  Target: <claude|claude+human|human>
-  Files: <comma-separated list>
-  Preconditions: <preconds or "none">
-
-Draft body:
-  # Task <N> — <Title>
-
-  Target: <claude|claude+human|human>
-
-  ## Goal
-  …
-
-  ## Acceptance criteria
-  - …
-
-  ## Decisions              ← omit section if no non-obvious choices
-  - …
-
-  ## Manual interventions   ← only when Target is claude+human or human
-  …
-
-  ## Hints
-  - …
+## Manual interventions   ← only when Target is claude+human or human;
+…                           rendered in full when it is
 ```
 
 **When SHORT is true** (SPLIT is always none in this mode, per PHASE 1.5),
-the draft body omits `## Acceptance criteria` and `## Hints` entirely and
-keeps `## Goal` to 1–3 sentences — see PER-TASK BODY FILE FORMAT — `--short`
-mode above. `## Decisions` remains conditional as usual.
+the digest has the same shape and is simply shorter: the body PHASE 4 writes
+omits `## Acceptance criteria` and `## Hints` entirely and keeps `## Goal`
+to 1–3 sentences — see PER-TASK BODY FILE FORMAT — `--short` mode above.
+`## Decisions` remains conditional as usual.
 
-When SPLIT is set (multiple parts), render every part's full draft in one
-message, using sequential IDs starting at `previous Last + 1`:
+When SPLIT is set (multiple parts), render one digest per part in write
+order, in one message, using sequential IDs starting at `previous Last + 1`,
+under a single `Order:` line naming those IDs in that order — the sequence
+the parts land in is itself being approved:
 
 ```
 PLAN — N new tasks (split)
 
-Index file: .claude/TASKS.md
-Body files: .claude/tasks/<N>.md .. .claude/tasks/<N+k-1>.md
+Order: <N>, <N+1>, … <N+k-1>
 
-Counter update: Last task number  K → K+k
+Part 1/k
 
-Part 1/k — Draft summary block:
-  ---
+## <N>. <Title>
 
-  ## <N>. <Title>
+Target: <claude|claude+human|human>
 
-  Status: [MISSING]
-  Target: <claude|claude+human|human>
-  Files: <comma-separated list>
-  Preconditions: <earlier part's ID(s), or "none">
+## Goal
+…
 
-Part 1/k — Draft body:
-  # Task <N> — <Title>
+## Decisions              ← omit section if no non-obvious choices
+- …
 
-  Target: <claude|claude+human|human>
-
-  ## Goal
-  …
-
-  ## Acceptance criteria
-  - …
-
-  ## Decisions              ← omit section if no non-obvious choices
-  - …
-
-  ## Hints
-  - …
+## Manual interventions   ← only when Target is claude+human or human;
+…                           rendered in full when it is
 
 ... (repeat for each remaining part) ...
 ```
@@ -567,14 +540,16 @@ content, and DESIGN-CHANGE CHECK for the question that accompanies it when
 it diverges from an owned document. Skip this entirely on a
 reconciliation-only run that drafts zero new tasks.
 
-When PLACE is set, add one line under the counter update, so the position —
-and, under `--before`, the edit to the anchor task — is approved with the
-rest:
+When PLACE is set, add one line at the top of the plan, under the heading
+and any `Order:` line, so the position — and, under `--before`, the edit to
+the anchor task — is approved with the rest:
 
 ```
 Placement:  before task <ANCHOR> — task <ANCHOR> Preconditions: <old> → <new>
             (or: after task <ANCHOR> — new task waits on <ANCHOR>)
 ```
+
+That line and `Order:` are the only wiring the gate shows.
 
 Before the closing prompt, render the design-change question for every
 drafted task that diverges from an owned document — see DESIGN-CHANGE CHECK.

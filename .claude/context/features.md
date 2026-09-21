@@ -228,7 +228,15 @@ Currently shipped:
   `Plan feature`). **Orphan question**: a free-form run (not `--short`) on a
   project with `.claude/FEATURES.md` asks inside PHASE 3's existing gate
   whether the task belongs to a `[PLANNED]` feature, none the default; a
-  slug takes the `--single` path. No `FEATURES.md` → nothing asked. Default body schema (target: claude) contains
+  slug takes the `--single` path. No `FEATURES.md` → nothing asked.
+  **Approval digest**: PHASE 3 renders per task only the `## <N>. <Title>`
+  heading, `Target:`, `## Goal`, `## Decisions` when present and
+  `## Manual interventions` in full when the target is `claude+human` /
+  `human` — plus one `Order:` line on a split and the `Placement:` line
+  under `--before` / `--after`, the only wiring the gate shows. The summary
+  block's fields, the acceptance criteria and the Hints are authored in full
+  and written by PHASE 4, whose report names the IDs, both paths and the
+  counter advance. Default body schema (target: claude) contains
   Goal, Acceptance criteria, Decisions (when applicable), Hints.
   When work includes steps
   only human can perform in external tool (e.g. Unity editor),
