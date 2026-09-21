@@ -113,7 +113,7 @@ Context: none
 
 Done: 2026-09-21, commit `dc58f43` (12 files, +154/-81). Wrong premise: task 255 asked to number the sixth return field in `delegated-runs.md`, but that field carries only For the record lines, which are never numbered; only its wording changed.
 
-## [ ] 8. Consolidate commands/task-add.md
+## [x] 8. Consolidate commands/task-add.md
 
 Depends on: 2, 5, 7
 
@@ -123,11 +123,14 @@ Context: none
 /doc-consolidate commands/task-add.md --commit
 ```
 
+Done: 2026-09-21, commit `07868b4` (3 files, +59/-134). Decision: `version:` bumped to 2.5.5 with `VERSION` 1.66.1 and a CHANGELOG section, although `/doc-consolidate` leaves frontmatter untouched — `cmd-update` is version-aware, so an unbumped body never reaches a user.
+
 ## [ ] 9. Consolidate skills/runbook-run/SKILL.md
 
 Depends on: 5
 
-Context: none
+Context:
+- 2026-09-21 (from step 8): `/doc-consolidate` leaves frontmatter untouched and its COMMITTING section stages "exactly the files written", but on this repo a shipped body ships only with a `version:` bump, a root `VERSION` bump and a CHANGELOG section in the same commit — step 8 did that, and each consolidation step does the same.
 
 ```prompt
 /doc-consolidate skills/runbook-run/SKILL.md --commit
@@ -137,7 +140,8 @@ Context: none
 
 Depends on: 5, 6
 
-Context: none
+Context:
+- 2026-09-21 (from step 8): `/doc-consolidate` leaves frontmatter untouched and its COMMITTING section stages "exactly the files written", but on this repo a shipped body ships only with a `version:` bump, a root `VERSION` bump and a CHANGELOG section in the same commit — step 8 did that, and each consolidation step does the same.
 
 ```prompt
 /doc-consolidate skills/task-implement/SKILL.md --commit
@@ -147,7 +151,8 @@ Context: none
 
 Depends on: 5, 7
 
-Context: none
+Context:
+- 2026-09-21 (from step 8): `/doc-consolidate` leaves frontmatter untouched and its COMMITTING section stages "exactly the files written", but on this repo a shipped body ships only with a `version:` bump, a root `VERSION` bump and a CHANGELOG section in the same commit — step 8 did that, and each consolidation step does the same.
 
 ```prompt
 /doc-consolidate commands/runbook-create.md --commit
