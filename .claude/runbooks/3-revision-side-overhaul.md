@@ -101,7 +101,7 @@ Context: none
 
 Done: 2026-09-21, commit `e5018b9` (6 files, +64/-69). Wrong premise: task 254's criterion 7 names an OWNERSHIP PRE-AUTHORISATION section of `commands/task-add.md`; no such heading exists — the section it describes is DESIGN-CHANGE CHECK.
 
-## [ ] 13. Implement 255 — closing reports: two groups in /runbook-run, numbered Needs you
+## [x] 13. Implement 255 — closing reports: two groups in /runbook-run, numbered Needs you
 
 Depends on: 6
 
@@ -110,6 +110,8 @@ Context: none
 ```prompt
 /task-implement 255 --review
 ```
+
+Done: 2026-09-21, commit `dc58f43` (12 files, +154/-81). Wrong premise: task 255 asked to number the sixth return field in `delegated-runs.md`, but that field carries only For the record lines, which are never numbered; only its wording changed.
 
 ## [ ] 8. Consolidate commands/task-add.md
 
