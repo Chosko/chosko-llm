@@ -267,7 +267,7 @@ Preconditions: none
 
 ## 256. `/doc-consolidate`: one gate per run, judgement calls only, auto-approved when there are none
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/doc-consolidate/SKILL.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none

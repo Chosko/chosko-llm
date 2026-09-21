@@ -1734,8 +1734,12 @@ Currently shipped:
 - `skills/doc-consolidate/` — rewrites a rules document (or every `.md`
   under a folder) under `claude-md:editing-discipline`, meaning-preserving:
   classifies each normative statement kept / superseded / historical /
-  duplicate / restated / merged, renders a per-section ledger of drops and
-  merges only, gates per section (or once per file), rewrites, then spawns
+  duplicate / restated / merged — every section of every file up front —
+  writes the per-section ledgers of drops and merges only to one scratchpad
+  file whose path it prints, then gates once per run on the judgement calls
+  alone (entries the rules can't settle) as a numbered list plus a count line
+  per file: `all` approves, numbers overrule, `ledger` prints them; no
+  judgement calls means no gate. Rewrites, then spawns
   the fresh-context verifier in `verifier.md` (old + new text, no ledger)
   whose LOST list must be restored or accepted before the run ends; on a
   folder resolves cross-file duplicates with `rule-overlap`'s collection

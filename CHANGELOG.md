@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.67.0 — 2026-09-21
+
+- **`/doc-consolidate` asks once, about the handful of entries that need you.** It now classifies every section of every file before anything is asked, writes the full per-section ledgers to one file in the session scratchpad and prints its path, then stops at a single gate listing only the judgement calls — a superseded pair whose two versions state different rules, a drop or merge that would change what the document says rather than where it says it — as one numbered list across every file, with a count line per file. Answer `all` to approve, numbers to overrule those entries, `ledger` to see the ledgers in chat. Duplicates, restatements, historical tails and meaning-preserving merges are settled by the rules and never asked about, so a run with no judgement calls goes straight to the rewrite; the verifier remains the proof that nothing was lost. An eighteen-ledger wall on a large folder is now one short list.
+
 ## 1.66.4 — 2026-09-21
 
 - **`/runbook-create`'s body is consolidated:** the same rules, stated once each. The runbook-argument errors, the name-collision rule and the already-taken target path are cited from the runbook schema and the body-migration reference instead of restated, the two backfill paragraphs are one, the `[RUNNING]`-never-migrated rule is stated once at the migration check, and the DO NOT list is gone — every bullet in it negated a sentence the body already carried, and the two rules that lived only there (never a branch or a tag; no git command under `--no-commit` bar the migration move) are now in PHASE 6. One stale statement is corrected: a nested runbook is refused for the orchestration it duplicates, not for the depth it costs, which is the reason `/runbook-run` already gives. Nothing about how the command behaves changed.

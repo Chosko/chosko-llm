@@ -1551,11 +1551,24 @@ Rewrites a rules document — a command or skill body, a feature document, a
 context file, a `CLAUDE.md` — under `claude-md:editing-discipline`, and
 proves it lost nothing. `/doc-consolidate <path>` takes a file, or a folder
 consolidated file by file. It classifies every normative statement as kept,
-superseded, historical, duplicate, restated or merged, and shows you, per
-section, a ledger of only what it will drop or merge — a superseded sentence
-beside the one that replaced it, historical sentences grouped under a count,
-a duplicate with where the surviving copy lives. You approve per section, or
-once for the file. Kept statements are never listed: they are the new text.
+superseded, historical, duplicate, restated or merged — every section of
+every file, before it asks you anything — and writes the full per-section
+ledgers of what it will drop or merge (a superseded sentence beside the one
+that replaced it, historical sentences grouped under a count, a duplicate
+with where the surviving copy lives) to one file in the session's scratchpad,
+whose path it prints. Kept statements are never listed: they are the new
+text.
+
+Then it stops once, at a single gate, and shows you only the judgement calls
+— the entries the discipline's rules cannot settle: a superseded pair whose
+two versions state different rules, a drop or merge that would change what
+the document says rather than where it says it. They come as one numbered
+list across every file, each with its options and a recommendation, plus a
+count line per file. You answer once: `all` approves, numbers overrule and
+keep those entries as they were, `ledger` prints the ledgers in chat. A run
+whose classification found no judgement call asks nothing and goes straight
+to the rewrite — the rules settled everything, and the verifier is what
+proves nothing was lost.
 
 After the rewrite an independent verifier — a fresh subagent that sees the
 old and the new text and nothing else, not even the ledger — lists every

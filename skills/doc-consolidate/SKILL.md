@@ -1,6 +1,6 @@
 ---
 name: doc-consolidate
-version: 0.1.1
+version: 0.2.0
 type: skill
 description: Rewrite a rules document — a command or skill body, a feature document, a context file, a CLAUDE.md — or every document under a folder, under the editing discipline, dropping superseded, historical, duplicated and restated statements without changing what it means. Use it on a document that has stratified.
 disable-model-invocation: true
@@ -11,9 +11,12 @@ disable-model-invocation: true
 # under `claude-md:editing-discipline`: remove statements that are
 # superseded, historical, duplicated or restated, merge overlapping ones, and
 # keep every rule the document carried. Meaning-preserving, never a style
-# compressor. Plan-first: the ledger shown before a section is rewritten
-# lists only what is dropped or merged, never what is kept, and the user
-# approves per section (or once for a file). After the rewrite an
+# compressor. Plan-first: every section of every file is classified before
+# anything is written, the full per-section ledgers — only what is dropped or
+# merged, never what is kept — go to a file in the session's scratchpad, and
+# the run stops once, at a single gate listing only the entries the
+# discipline's rules cannot settle; a run with none of those asks nothing.
+# After the rewrite an
 # independent verifier with fresh context reads old and new and lists every
 # normative statement present in the old text and absent from the new; the
 # run ends only when that list is empty or every item on it was restored or
@@ -105,7 +108,11 @@ prerequisite.
 
 ---
 
-WORKFLOW, per file
+WORKFLOW
+
+Steps 1 and 2 run per file, in path order. Steps 3 and 4 run once for the
+whole run, across every file it covers. Step 5 runs per file again, and steps
+6 and 7 close the run.
 
 **1. Read.** The whole file, once. On a shipped body, also read the
 frontmatter's `requires:` and the files the body cites by relative path, so
@@ -130,8 +137,9 @@ do, or what holds — as one of:
 Everything not normative — an example, a template, a heading, a rendered
 block — is kept as it is.
 
-**3. The ledger, per section.** For each `##` section (or the whole file,
-when it has none or fewer than four), render before rewriting:
+**3. The ledgers.** Classify every section of every file the run covers
+before anything is asked and before anything is written. For each `##`
+section (or the whole file, when it has none or fewer than four), render:
 
 ```
 § <section> — <n> statements, <k> kept
@@ -152,17 +160,53 @@ Merged:
 ```
 
 Kept statements are never listed: they are the new text. A section with
-nothing to drop or merge prints one line, `§ <section> — nothing to
-consolidate`, and is not asked about.
+nothing to drop or merge takes one line, `§ <section> — nothing to
+consolidate`.
 
-**4. The gate.** After each section's ledger, wait: `Rewrite § <section>?`
-The user may also answer once for the file — `all` — after which the
-remaining sections' ledgers are rendered and rewritten without further
-asking. A superseded or merged entry the user overrules is kept as it was.
-Silence, an unclear reply or EOF leaves the section untouched. Nothing is
-written before the first approval.
+Every file's ledgers go to one file in the session's scratchpad directory,
+never inside the repository, under a name of its own so that it cannot
+collide with the copies of the old text step 5 writes there. Print its path
+once — `Ledgers: <path>` — and nothing else of them in chat.
 
-**5. Rewrite and verify.** Rewrite the approved sections under rule 7 of
+**Judgement calls.** An entry is a **judgement call** when the discipline's
+rules cannot settle it mechanically: a superseded pair whose two versions
+disagree on the rule rather than on its wording; a drop or a merge that
+changes what the document says rather than where it says it. A duplicate
+whose surviving copy the ledger names, a restated rule sitting beside its
+citation, a historical tail, a rule-6 DO NOT bullet and a meaning-preserving
+merge are never judgement calls — the rules settle each of them, and the
+verifier in step 5 is the check that they were settled right.
+
+**4. The gate — once per run.** Present every judgement call across every
+file and section as one numbered list, each a short block naming the file and
+the section, the entry, the options and a recommendation:
+
+```
+1. skills/foo/SKILL.md § The gate — superseded pair, versions disagree
+   old: <the sentence>
+   new: <the sentence that supersedes it>
+   They state two different rules, not one rule twice.
+   Options: keep the later one | keep both | keep the older one
+   Recommendation: keep the later one — <one clause>
+```
+
+Then one count line per file:
+
+```
+<path>: <n> statements, <k> kept, <d> dropped, <m> merged
+```
+
+The user answers once, for the whole run. `all` approves every judgement
+call as recommended. Numbers overrule — each number named keeps that entry
+as it was, and every call not named is approved. `ledger` prints the ledgers
+in chat and re-asks. Silence, an unclear reply or EOF writes nothing: no file
+is rewritten and the run ends.
+
+**A run with no judgement calls is not gated.** Print the count lines and the
+ledger path and continue to step 5 without asking — the rules settled every
+entry, and the verifier is what proves nothing was lost.
+
+**5. Rewrite and verify.** Rewrite each file's sections under rule 7 of
 the discipline — the section as if written fresh with its kept statements
 and merged sentences in, in the document's own register — and write the
 file. Then spawn the verifier: one subagent with fresh context, model the
