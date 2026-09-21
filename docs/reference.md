@@ -17,9 +17,9 @@ features (those that advance a backlog) commit and push by default and take
 write documents but follow the second convention: their output is written
 once and read again by the next session, usually on another machine. So do
 `/runbook-create` and `/session-save`, for the same reason. Each still accepts
-`--commit`, now as a silent no-op. `/pipeline-patch` and `/pipeline-revise`
-commit by default too, but own the commit: every owner step they run stays
-uncommitted, and the whole change lands as one commit at the end.
+`--commit`, now as a silent no-op. `/pipeline-revise` commits by default too,
+but owns the commit: every owner step it runs stays uncommitted, and the whole
+revision lands as one commit at the end.
 
 ---
 
@@ -466,22 +466,21 @@ The catalogue is closed. It has eleven findings and no others:
 
 | Severity | Finding | Fix it names |
 | --- | --- | --- |
-| `ERROR` | a task's `Feature:` slug has no entry in `FEATURES.md` | `/pipeline-patch` |
-| `WARNING` | a task has no `Feature:` line, on a project that has a `FEATURES.md` | `/pipeline-patch` |
-| `ERROR` | a `Preconditions:` id was never assigned (it is above `Last task number:`) | `/pipeline-patch` |
-| `ERROR` | a `Preconditions:` id names a `[SKIP]` task | `/pipeline-patch` |
+| `ERROR` | a task's `Feature:` slug has no entry in `FEATURES.md` | `/pipeline-revise` |
+| `WARNING` | a task has no `Feature:` line, on a project that has a `FEATURES.md` | `/pipeline-revise` |
+| `ERROR` | a `Preconditions:` id was never assigned (it is above `Last task number:`) | `/pipeline-revise` |
+| `ERROR` | a `Preconditions:` id names a `[SKIP]` task | `/pipeline-revise` |
 | `ERROR` | a precondition cycle | `/pipeline-revise` |
 | `WARNING` | an `[ITERATED]` feature, whose backlog hasn't been re-planned | `/task-add feature=<slug>` |
 | `WARNING` | a `[STALE]` task | `/pipeline-revise` |
 | `WARNING` | a `FEATURES.md` slug that appears nowhere in `PLAN.md` | `/production-plan` |
-| `ERROR` | a `PLAN.md` line naming a slug that isn't in `FEATURES.md` | `/pipeline-patch` |
-| `WARNING` | a runbook still `[PENDING]` with every step done (`Steps: <n>/<n>`) | `/pipeline-patch` |
+| `ERROR` | a `PLAN.md` line naming a slug that isn't in `FEATURES.md` | `/pipeline-revise` |
+| `WARNING` | a runbook still `[PENDING]` with every step done (`Steps: <n>/<n>`) | `/pipeline-revise` |
 | `WARNING` | a `[PLANNED]` feature whose every task is `[DONE]`, `[SKIP]` or archived | `flip to [DONE]` |
 
 `ERROR` means something a pipeline command will act on wrongly if it's left;
 `WARNING` means a legal state that needs its owner's attention.
-`/pipeline-patch` and `/pipeline-revise` are the pipeline's revision
-commands; see [`/pipeline-patch`](#pipeline-patch) and
+`/pipeline-revise` is the pipeline's one revision surface; see
 [`/pipeline-revise`](#pipeline-revise) below.
 
 Two things are deliberately **not** findings. A feature's `Tasks:` id with no
@@ -554,7 +553,7 @@ feature's `Tasks:` line; nothing else about the feature changes. No
 reconciliation runs over its other tasks, its status stays `[PLANNED]`, and
 no documentation task is added. The feature document isn't updated either,
 and the report says so in one closing line naming
-`/pipeline-patch feature=<slug>` as the write-back, so the drift is announced
+`/pipeline-revise feature=<slug>` as the write-back, so the drift is announced
 the moment it's created. `--single` needs `feature=<slug>` and can't be
 combined with `--short`.
 
@@ -583,93 +582,47 @@ section.
 Commits and pushes automatically (`--no-commit` to skip both, `--no-push` to
 commit without pushing).
 
-### `/pipeline-patch`
+### `/pipeline-revise`
 
-Applies a change that touches **exactly one** feature document, task or
-runbook step through that owner's amend step, then re-checks it. Anything
-else it refuses.
+The pipeline's revision surface, and the only one. It takes a **change set** —
+one change or a dozen — to work that is already planned, and carries every
+item to the owner of every artifact it reaches: a design decision, a roadmap
+milestone, a feature document, a task, a plan edge, a runbook step. The
+analysis is the heavy half; the writing is always an owner's, and the skill
+writes nothing itself.
 
 ```
-/pipeline-patch <anchor> "<change>" [--no-commit] [--no-push]
+/pipeline-revise "<change set>" [--no-commit] [--no-push]
+/pipeline-revise <anchor> "<change>" [--no-commit] [--no-push]
 ```
 
-The anchor is required, in one of three forms:
+The first form is the general one: the argument is free-form text describing
+however many changes, or a numbered list in the shape `/follow-ups` prints,
+which is one item per number. Free-form text is split into items at the
+changes it describes, so a sentence naming two things to change is two items.
+The split is said back to you, numbered, at the gate, and yours to correct
+there. The second form is the same run with one item.
+
+**Anchors.** Every item needs one, and takes it either from the `<anchor>`
+argument — which applies to every item that names no artifact of its own — or
+from its own text:
 
 - `feature=<slug>` — an entry in `FEATURES.md`;
 - `task=<N>` — a live summary block in `TASKS.md`;
 - `runbook=<id|name|id-name> step=<n>` — one step of a runbook listed in
-  `RUNBOOKS.md`.
+  `RUNBOOKS.md`;
+- a milestone — `m3`, or an exit criterion quoted from it — resolving to a
+  block of `product-roadmap.md`. This one has no argument form; only an item's
+  own text names it.
 
-An anchor that resolves to nothing stops the run and lists what exists. A
-task id that has been archived is reported as archived; one that was never
-assigned is reported as that.
+An anchor that resolves to nothing stops the whole run and lists what exists;
+a task id that has been archived is reported as archived, one that was never
+assigned as that. An item that names no artifact at all stops the run too,
+naming that item and the four forms. It never picks between two, and a stop
+here writes nothing.
 
-It decides from the indexes alone (`FEATURES.md`, `TASKS.md`, `PLAN.md`,
-`RUNBOOKS.md`) and never opens a task body, a feature document or a runbook
-body. The **single-owner rule** is a count and a checklist, not a judgement
-about whether the change feels small. It goes ahead only when the change
-writes exactly one owner and none of these five structural signals is
-present:
-
-1. more than one owner;
-2. a dependency edge changing: an id added to, dropped from or re-pointed on
-   a `Preconditions:` line, or a plan dependency moving;
-3. scope added that no task covers: a new promise in a feature document that
-   no live task answers to, or any new task at all;
-4. a deletion that crosses artifacts: removing a task another line points
-   at, or a whole feature;
-5. a reorder of existing entries.
-
-Writes an owner's amend step makes as its own consequence, such as the
-`[STALE]` flips `/architect amend` makes, don't count as a second owner.
-
-When it goes ahead, it loads the owner's amend step by path and runs it with
-that step's own approval gate. That step is `/architect amend` for a
-feature document, `task-engine`'s `references/amend.md` for a task, and
-`runbook-run`'s `references/step-amend.md` for a runbook step. Then it runs
-`/pipeline-check` scoped to the anchor: the feature itself, the task's
-feature for a task anchor, or unscoped for a runbook step. When it refuses,
-it prints one line and stops:
-
-```
-Not a patch — <signal>: <what in the change set it off>. Run /pipeline-revise <anchor> "<change>".
-```
-
-There is no escalation and no second question, and nothing is written. A
-change that writes none of the three owners, only a line another command
-owns (a milestone's order in `PLAN.md`, say), is refused too, naming that
-line's owner.
-
-A patch is one unit of work, so it lands as exactly one commit, made at the
-end. It pulls once at the start, runs the amend step uncommitted (an owner
-command the step invokes, such as `/runbook-create --append`, always gets
-`--no-commit`), then stages exactly what the step wrote and commits it with
-the step's closing report line as the subject, and pushes. `--no-push`
-commits without pushing; `--no-commit` commits nothing and the report lists
-what was written. A refusal, a step answered stop, or a run that wrote nothing
-commits nothing. `--commit` is still accepted and changes nothing. Requires
-`skill:pipeline-engine`, `skill:architect`, `skill:task-engine` and
-`skill:runbook-run`, which `chosko-llm add` installs with it.
-
-### `/pipeline-revise`
-
-The heavier tool, for a change that reaches more than one artifact: new
-scope, a task or runbook step inserted, removed or moved, or a dependency
-edge changing. It traces the change's impact, proposes one plan, then runs
-each owner's own step in order. It writes nothing itself.
-
-```
-/pipeline-revise [<anchor>] "<change>" [--no-commit] [--no-push]
-```
-
-The anchor takes the same three forms as `/pipeline-patch` and is optional.
-Without one, the change itself must name exactly one feature slug, one task
-id, or one runbook together with a step, and the skill says which it picked.
-If the change names none, or more than one, the skill stops and lists what
-exists; it never picks between two.
-
-**Four branches.** Each request is classified into exactly one branch,
-tested in this order, and only that branch's instructions are read:
+**Four branches.** Each item is classified into exactly one, tested in this
+order:
 
 - **reorder** — an existing task or runbook step is to run at a different
   position. This is done as skip-and-insert: the old entry is marked `[SKIP]`
@@ -683,117 +636,128 @@ tested in this order, and only that branch's instructions are read:
   `/production-plan` drops its edges, while its `FEATURES.md` entry stays.
   `[DONE]` work is never touched, and actually removing anything stays
   `/task-clean`'s and `/runbook-clean`'s job.
-- **insert** — a new task or runbook step is to exist. This is the case the
-  skill was built for: `/architect amend` writes the new scope into the
-  feature document first, `/task-add feature=<slug> --single --after <N>`
-  attaches and places the task, the successors' `Preconditions:` gain its
-  id, and `/runbook-create --append --after <n>` inserts the step that runs
-  it.
-- **amend** — anything else that changes what already exists, including a
-  `Preconditions:` change that moves no entry. Owners run upstream first: a
-  `product-design.md` decision, then each feature document, then the tasks,
-  then each runbook step. The task step has two forms, both shown at the gate.
-  If `/architect amend` stales nothing, each task is amended on its own. If it
-  stales a task or moves the feature to `[ITERATED]`, one `/task-add
-  feature=<slug>` reconciliation runs instead. It rewrites the staled tasks,
-  clears `[STALE]` and drafts tasks for any added scope. Facts from your change
-  that the feature document doesn't hold are passed to it as its annotation.
-  An unstaled task whose own fields must change is still amended, before the
-  reconciliation.
+- **insert** — a new task or runbook step is to exist: `/architect amend`
+  writes the new scope into the feature document when the document doesn't
+  promise it yet, `/task-add feature=<slug> --single --after <N>` attaches and
+  places the task, the successors' `Preconditions:` gain its id, and
+  `/runbook-create --append --after <n>` inserts the step that runs it.
+- **amend** — anything else that changes what already exists, a milestone
+  line and a `Preconditions:` change that moves no entry included.
 
-A request of two kinds is two runs: the skill does the first and tells you
-the rest is a separate run. In the same way, a change that also names
-something under another anchor, such as a task of a different feature, is
-scoped to the anchor, and the rest is reported as a separate run.
+A run reads the instructions of every branch its items classify into, and of
+no other. A change set spanning four kinds is one run, not four.
 
-**The impact walk.** From the anchor it follows the links between the
-indexes in both directions: down from a feature document to its tasks, its
-plan edges and the runbook steps that name them, and up from a task to the
-feature document that promised it, when the task's `Feature:` resolves.
-Unlike `/pipeline-patch` it may open bodies, but only within the anchor's
-scope: the target itself, the tasks whose `Preconditions:` name it or whose
-`Files:` overlap with it, and the runbook steps that name it. It never reads
-the backlog in bulk.
+**The impact walk.** From each item's anchor, following the links between the
+indexes in the directions its branch takes: down from a feature document to
+its tasks, its plan edges and the runbook steps that name them, and up from a
+task to the feature document that promised it, when the task's `Feature:`
+resolves. Bodies are opened only within each item's scope — the target
+artifact itself, the tasks whose `Preconditions:` name it or whose `Files:`
+overlap with it, the runbook steps that name it, and whatever an owner's arm
+reads to make a decision the plan is about to make for it. It never reads the
+backlog in bulk. Every artifact is visited once across the whole change set:
+one two items reach is one entry in the plan.
 
-**Lint before and after.** `/pipeline-check`, scoped to the anchor, runs
-before the plan is built, so the plan starts from the true state. It runs
-again after the steps have run, even when they stopped part-way, and the
+**One plan.** The items' owner steps merge into a single sequence. Two items
+reaching the same artifact become one step: several sections of one feature
+document are one `/architect amend` naming them all, several feature
+documents one multi-slug run, every roadmap edit one `/product-roadmap
+amend`, every plan edit one `/production-plan amend`, every design-decision
+edit one `/product-design amend`. The order is upstream first — the design
+decision, then the feature documents, then task amends, then removals, then
+task insertions with `/task-add`'s reconciliation, then the plan, then
+runbook strikes, facts and insertions — and a step whose input is an earlier
+step's output comes after it whatever the kinds say.
+
+Every decision an owner's arm makes by a closed rule over what it reads is
+made here, at plan time, and shown on its step: the editorial classification
+`/architect amend` would reach, the drafted task fields and body sections,
+the struck step's id and reason, the drafted design, roadmap and plan edits.
+Such a step is tagged **headless** — it runs with the decision carried in and
+asks nothing. The exception is `/task-add`, the one owner whose work is
+drafting: its create and reconcile steps are tagged **GATED** with one
+`Will ask:` line naming what their own gate will ask, and they sort last
+wherever the order allows, so every headless write lands before the first
+stop. A reconciliation step is conditional and shows its evidence (`because
+step 1 stales 12, 14`), and an id that won't exist until a step runs appears
+as a placeholder — `<id from step 5>` — in every later step that needs it.
+How far an item's sequence reaches is its branch's judgement, shown with it:
+**editorial** is the one step that writes the anchored artifact, **local**
+adds the entries that merely cite it, **structural** runs everything the walk
+reached. An insert, a delete and a reorder are never editorial. Only a
+borderline wording-versus-meaning classification is left open, and it is
+asked at the gate in `/architect amend`'s own question form.
+
+**One gate, and it always waits.** Nothing is written before it, by this
+skill or by any arm it drives. It carries the probe's verdict line; the items
+as they were split, each with its branch and anchor; every artifact the walk
+touched, with the edge or the body read that reached it, and the ones
+examined and judged untouched, so a call can be overruled; the owner steps,
+numbered and in order, each with its owner, its `headless` or `GATED` tag,
+its invocation, what it writes, the decision it carries or its `Will ask:`
+line, and the `/pipeline-check` findings it clears or creates; the lint
+findings in scope; and any architect question still open. The reply edits the
+plan by number:
+
+- `go` — run the plan as rendered;
+- `all but <n>[, <m>]` — drop those steps and run the rest;
+- `<n> as runbook step` — defer step n, carrying its invocation, anchor,
+  change and every decision taken here, to the runbook you name, to the one
+  this session is running, or to a new one `/runbook-create` writes from the
+  deferred steps; `all as runbook steps` defers the whole plan;
+- `<n> after <m>` — move step n below step m;
+- an answer to an open architect question, or an overruled touched/untouched
+  call or tier;
+- `stop` — write nothing.
+
+Any reply but `go` and `stop` applies the edit and re-renders the plan at the
+same gate. A step the reply drops takes the steps depending on it with it,
+named. Silence, an unclear reply or EOF is `stop`.
+
+**Lint before and after.** `/pipeline-check`, scoped to the features the
+items reach — unscoped when an item anchors on a runbook or a milestone —
+runs before the plan is built, so the plan starts from the true state. It
+runs again after the steps have run, even when they stopped part-way, and the
 report shows the difference: findings cleared, findings created, findings
-unchanged. Where an insertion or a deletion changed a precondition, the
-skill also reads the successor tasks' bodies afterwards to confirm the
-sequence still reads as a sequence, and reports any gap without fixing it.
-
-**Three tiers.** The plan names one:
-
-- **editorial** — wording only, nothing downstream changes meaning. Only the
-  step that writes the anchored artifact runs. The amend branch can judge a
-  change editorial; an insert, a delete or a reorder never is.
-- **local** — the artifact plus the entries that merely cite it. No status
-  moves and no edge changes.
-- **structural** — the scope changes, or the contract of something
-  downstream does. The full sequence the walk reached runs. A reorder is
-  always structural.
-
-**One gate.** Nothing is written before it. It shows the probe's verdict
-line, the anchor, the branch and the tier, and every touched artifact with
-how it was reached. The artifacts judged untouched are listed too, so you
-can overrule the call. It numbers the owner steps in order and shows which
-`/pipeline-check` findings each is expected to clear or create. Then it
-settles the **editorial question**: is this change wording only, with nothing
-downstream changing meaning?
-
-- *Editorial* runs the short sequence.
-- *Not editorial, here* runs the full sequence in this session.
-- *Not editorial, as a runbook* hands the full sequence to `/runbook-create`
-  and stops.
-- *Stop* writes nothing.
-
-When a mechanical signal settles it, the gate decides without asking and shows
-one `Classified:` line with the evidence. An insert, a delete or a reorder is
-never editorial. An amend that adds or drops a dependency edge, changes a
-`Files:` line or changes scope is not editorial; one that is wording only,
-changes nothing downstream and runs the same sequence either way is.
-
-The gate waits for your reply only when something is still open: the
-editorial question on a borderline amend, or the here-versus-runbook choice
-when the runbook option is shown. With neither open, it shows the plan and
-runs it.
-
-When the question is asked, the gate marks a recommended answer, taken from
-the tier it already shows: an editorial tier recommends *Editorial*, a local
-or structural one recommends *Not editorial*. One line gives the evidence,
-naming the touched artifacts. You still have to reply; silence, an unclear
-reply or EOF is *Stop*, and the recommendation never carries into an
-`/architect amend` step — only your reply, or the gate's own classification.
-
-The runbook option is offered only when the sequence has **four or more**
-owner steps and `/runbook-create` is installed; otherwise it simply isn't
-shown. Three steps or fewer always run in the session. You can overrule the
-tier or a touched/untouched call in any answer the gate asks for, and the gate
-is shown again. The classification carries into any `/architect amend` step
-run in the same session, which applies it without a prompt when its own
-findings agree and asks you to confirm it when they differ. A step handed off
-as a runbook applies the arm's own rule.
+unchanged. Where an insertion or a deletion changed a precondition, the skill
+also reads the successor tasks' bodies afterwards, to confirm the sequence
+still reads as a sequence.
 
 **Running the steps.** One at a time, in order, never in parallel and never
-in a subagent, each with its owner's own approval gate intact. If an owner
-refuses (a touched `[IN PROGRESS]` task, say), or you stop at an owner's
-gate, the sequence ends there. Earlier steps' writes stay and are reported,
-never rolled back, and the lint after still runs. A step whose owner isn't
-installed stops the run before the gate.
+in a subagent. A headless step executes its owner's arm from its file by
+path, with the decision carried in, and the arm writes without a second gate
+when the draft matches its own; a gated step runs the owner's command as you
+would invoke it, with the owner's gate asked exactly as the owner asks it. A
+step an earlier step's outcome made moot is dropped with one line saying why,
+and no step is ever added after the gate. If an owner refuses (a touched
+`[IN PROGRESS]` task, say), or you stop at a gated owner's gate, the sequence
+ends there: earlier steps' writes stay, uncommitted, reported path by path
+and never rolled back, and the lint after still runs. A step whose owner
+isn't installed stops the run before the gate, before anything is written.
+
+**The closing follow-up gate.** What execution surfaced and the plan didn't
+hold goes to a second gate in the same numbered shape, with the same reply
+grammar: a task a `/task-add` step created that no open runbook running its
+feature has a step for, a successor that no longer reads as a sequence, a
+lint finding the closing check reports as created, a feature an owner named
+for reconciliation that no step ran. When nothing arose the gate is skipped,
+and nothing on the list is written without your reply.
 
 A revision is one unit of work, so it lands as exactly one commit, made at
 the end, never one per owner step. It pulls once at the start; every owner
-step runs uncommitted (`/task-add`, `/product-design`, `/production-plan`,
-`/runbook-create` and `/architect` always get `--no-commit`, and an amend step
-run by path commits nothing). After the last step and the lint, it stages the
-paths the steps wrote, commits them with the `Revised <anchor> — …` report
-line as the subject, and pushes. Handing the plan to `/runbook-create` commits
-the new runbook as the revision's one commit. A sequence that stops part-way
-(an owner refuses, or you stop at its gate) commits nothing: the report lists
-every path written so far, so every commit holds a complete revision.
-`--no-push` commits without pushing, `--no-commit` commits nothing, and
-`--commit` is still accepted and changes nothing. Requires the same four skills as `/pipeline-patch`.
+step runs uncommitted (`/task-add`, `/product-design`, `/product-roadmap`,
+`/production-plan`, `/runbook-create` and `/architect` always get
+`--no-commit`, and an arm run by path commits nothing). After the closing
+gate it stages the paths the steps wrote — a runbook `/runbook-create` wrote
+for deferred steps included — commits them with the `Revised …` report line
+as the subject, and pushes. A sequence that stops part-way, or a run that
+wrote nothing, commits nothing: the report lists every path written so far,
+so every commit holds a complete revision. `--no-push` commits without
+pushing, `--no-commit` commits nothing, and `--commit` is still accepted and
+changes nothing. Requires `skill:pipeline-engine`, `skill:architect`,
+`skill:task-engine`, `skill:runbook-run`, `skill:product-design`,
+`skill:production-plan` and `skill:product-roadmap`, which `chosko-llm add`
+installs with it.
 
 ### `pipeline-suggest`
 
@@ -835,8 +799,7 @@ a command:
 | --- | --- |
 | A new capability or a feature-sized addition | `/architect` |
 | A bug, a small change or a chore | `/task-add` |
-| A small change to something already planned | `/pipeline-patch` |
-| A large change, an insertion at a point in the sequence, a deletion or a reorder of planned work | `/pipeline-revise` |
+| A change to something already planned — a wording fix, a large change, an insertion at a point in the sequence, a deletion, a reorder, or a list of them | `/pipeline-revise` |
 | "What should I build next" | `/production-status` |
 | "Is the backlog consistent" | `/pipeline-check` |
 | An ordered list of follow-ups | none — `runbook-suggest` already fires |
@@ -855,8 +818,8 @@ restates nothing of what you asked, and no failure adds a third line.
 It **never invokes** the command it names, **never asks** a question or gates
 anything, and **never writes**. It keeps no memory of having suggested,
 deliberately, since a suppression list would be a state file: a repeated
-request earns a repeated line. Requires `skill:pipeline-engine`,
-`skill:pipeline-revise` and `command:pipeline-patch`, which `chosko-llm add`
+request earns a repeated line. Requires `skill:pipeline-engine` and
+`skill:pipeline-revise`, which `chosko-llm add`
 installs with it. The other commands its table names aren't required; a
 project with a feature index or a backlog is already using them.
 
@@ -1070,8 +1033,8 @@ changing one existing task in place. It refuses a task that is
 feature promises through `/architect amend` instead. It deletes a live task
 only by marking it `[SKIP]` with a reason, and it requires a dropped
 `Preconditions:` edge to be explained in the task's `## Decisions`. No
-`task-*` command reads it itself: `/pipeline-patch` and `/pipeline-revise`
-read it by path whenever they change a task.
+`task-*` command reads it itself: `/pipeline-revise` reads it by path
+whenever it changes a task.
 
 ### `pipeline-engine`
 
@@ -1105,7 +1068,7 @@ arguments, runs nothing and produces no output, and it carries the same
 `disable-model-invocation: true`, so nothing can suggest it — its
 description stays out of the model's context altogether. It's a reference
 library that other features read while they run.
-`/pipeline-check`, `/pipeline-patch`, `/pipeline-revise` and
+`/pipeline-check`, `/pipeline-revise` and
 `pipeline-suggest` declare `requires: skill:pipeline-engine`, so installing
 any of them installs the engine too, and `chosko-llm rm skill:pipeline-engine`
 refuses while any of them is still installed. (`pipeline-suggest` reads none

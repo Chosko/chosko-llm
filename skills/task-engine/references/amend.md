@@ -159,6 +159,12 @@ task a `[SKIP]` releases; any cycle an added edge closes; any owned-document
 question. End with **"Apply?"** and wait for an explicit answer. Silence, an
 unclear reply or EOF writes nothing.
 
+**With a draft passed in** — a revision surface that drafted the same fields
+and sections at its own gate passes them in — compare it with the draft this
+arm produced from the same reads. When they match, write without waiting:
+the consumer's gate already approved this edit. When they differ, render the
+difference as the gate and wait.
+
 ## What is written
 
 Exactly:
@@ -188,8 +194,9 @@ Amended task <N> — <fields and sections changed>[; skipped: <reason>][; droppe
 
 ## Per-consumer notes
 
-- **The pipeline revision surfaces** — the consumers. They read this file by
-  path and execute it. They own none of the lines it writes; each stays its
+- **The pipeline revision surface** — the consumer. It reads this file by
+  path and executes it, with its drafted fields passed in. It owns none of
+  the lines it writes; each stays its
   owner's.
 - **`/task-add`** — the owner of the lines this file lets change: the body,
   the block's title, `Target:`, `Files:`, `Preconditions:` and `Feature:`,

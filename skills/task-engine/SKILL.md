@@ -1,23 +1,22 @@
 ---
 name: task-engine
-version: 0.5.7
+version: 0.5.8
 type: skill
-description: Reference library for the task-* features — one authority per rule they share, under references/; read by path by the task-* commands and skills and by the pipeline revision surfaces, never invoked.
+description: Reference library for the task-* features — one authority per rule they share, under references/; read by path by the task-* commands and skills and by the pipeline revision surface, never invoked.
 disable-model-invocation: true
 ---
 
 # task-engine
 # Reference library, read by path by /task-add, /task-list, /task-clean,
-# /task-implement, /task-review, /pipeline-patch and /pipeline-revise; not invoked.
+# /task-implement, /task-review and /pipeline-revise; not invoked.
 
 > **Not directly invocable.** This skill exists so that the rules the
 > `task-*` features share have exactly one home. It has no command, no
 > arguments and no behaviour of its own. Nothing invokes `/task-engine`;
 > nothing should suggest it. `/task-add`, `/task-list`, `/task-clean`,
 > `/task-implement` and `/task-review` cite the files below by path while they
-> run, the pipeline revision surfaces `/pipeline-patch` and `/pipeline-revise`
-> read `references/amend.md` by path, and those files are the only content
-> here.
+> run, the pipeline revision surface `/pipeline-revise` reads
+> `references/amend.md` by path, and those files are the only content here.
 
 > **Install path assumption:** this skill installs beside the features that
 > read it — `chosko-llm add skill:task-engine` writes it under the same home

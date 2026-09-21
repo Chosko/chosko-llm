@@ -1,6 +1,6 @@
 ---
 name: pipeline-check
-version: 0.1.2
+version: 0.1.3
 type: command
 description: Report structural drift across the pipeline's indexes — FEATURES.md, TASKS.md, PLAN.md and RUNBOOKS.md — as findings grouped by artifact, each with its severity and the one command that fixes it. Use it when an index looks out of step with another, or before revising planned work.
 requires: skill:pipeline-engine
@@ -128,7 +128,7 @@ FEATURES.md
   WARNING FEATURES.md feature password-auth — [PLANNED], every task on Tasks: resolved → flip to [DONE]
 
 TASKS.md
-  ERROR   TASKS.md task 42 — Preconditions: 57 was never assigned (Last task number: 51) → /pipeline-patch
+  ERROR   TASKS.md task 42 — Preconditions: 57 was never assigned (Last task number: 51) → /pipeline-revise
   WARNING TASKS.md task 44 — [STALE]: feature session-handling was re-architected after this task was written → /pipeline-revise
 
 1 ERROR, 2 WARNING — read FEATURES.md, TASKS.md, RUNBOOKS.md.

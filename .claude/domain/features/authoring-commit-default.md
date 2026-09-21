@@ -43,8 +43,8 @@ deliberately.
   no-op and the existing mutual-exclusion error preserved.
 - Pull-at-start, which is tied to the commit decision and therefore becomes
   unconditional on a default run.
-- The two forwarding tables that record these skills' defaults on behalf of
-  a caller: `/pipeline-patch` and `/pipeline-revise`.
+- The forwarding table that records these skills' defaults on behalf of
+  a caller: `/pipeline-revise`.
 - Every sentence in the shipped bodies, the docs, the domain layer and the
   context layer that asserts the old default — including the
   `product-design.md` design-decision bullet that records it as policy.
@@ -125,9 +125,9 @@ the old default in prose. They are part of the same change, not follow-up:
 `architect/amend.md`, `architect/iterating.md`, `architect/council-gate.md`,
 `product-design/council-gate.md`, `product-design/resuming.md`.
 
-### The two consumers
+### The consumer
 
-`/pipeline-patch` and `/pipeline-revise` each carry a *forwarding table*
+`/pipeline-revise` carries a *forwarding table*
 whose rows are grouped by the owner's commit default — the one place in the
 product where a command records another command's default on its behalf. A
 default that changes without its forwarding row changing produces exactly
@@ -145,13 +145,13 @@ so it needs no row of its own.
 `architect/amend.md`, `task-engine/references/amend.md` and
 `runbook-run/references/step-amend.md` are *arms executed by path*: the
 executor stages and commits their closed write set, and the arm itself
-asserts no default. That contract is what lets `/pipeline-patch` run an arm
+asserts no default. That contract is what lets `/pipeline-revise` run an arm
 without inheriting a command's habits.
 
 The flip therefore reaches `/architect amend` **only when it runs as
-`/architect`**. Loaded by path by `/pipeline-patch` or `/pipeline-revise`,
+`/architect`**. Loaded by path by `/pipeline-revise`,
 `architect/amend.md` behaves exactly as it does today. Any edit to
-`amend.md` that gave it a default of its own would break the patcher's own
+`amend.md` that gave it a default of its own would break the reviser's own
 table, and is out of bounds.
 
 ### `council-gate.md`'s exclusion survives by rewording
@@ -212,8 +212,8 @@ appearing in commits.
 - `--commit --no-commit` — stops the run:
   `--commit and --no-commit cannot be combined. Pick one.`
 
-**The forwarding contract.** `/pipeline-patch` and `/pipeline-revise` make
-no commit of their own and must, for each owner step, forward whichever flag
+**The forwarding contract.** `/pipeline-revise` makes
+no commit of its own and must, for each owner step, forward whichever flag
 produces *the user's stated intent* under that owner's default. The table is
 the contract; a default change that does not reach it is a defect.
 
@@ -230,9 +230,9 @@ where there used to be a reminder that nothing was committed.
 
 ## Dependencies
 
-- `pipeline-revision` — owns `/pipeline-patch` and `/pipeline-revise`, whose
-  forwarding tables state these four defaults. Their rows change in this
-  feature; nothing else of theirs does.
+- `pipeline-revision` — owns `/pipeline-revise`, whose
+  forwarding table states these four defaults. Its rows change in this
+  feature; nothing else of it does.
 - `owner-amend-arms` — owns `architect/amend.md` and the by-path arm
   contract this feature must not disturb. Its own documentation names
   `/architect amend`'s flags and is updated here.

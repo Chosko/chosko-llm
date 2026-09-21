@@ -1040,12 +1040,12 @@ Commands that run other commands follow one of two orchestrator patterns:
   commits its own artifacts first, then invokes its nested commands with
   `--commit` so each commits its own output (`/task-setup`, `/domain-setup`,
   `/context-build`, and `/unity-mcp-setup`, in that order).
-- **One commit at the end.** `/pipeline-patch` and `/pipeline-revise` commit
-  by default and own the commit: every owner step runs with `--no-commit` (an
-  arm executed by path, with no commit), and after the last step they stage
-  the union of the paths the steps wrote and make one commit for the whole
-  change. A run that stops part-way is left uncommitted, so every commit holds
-  a complete change.
+- **One commit at the end.** `/pipeline-revise` commits by default and owns
+  the commit: every owner step runs with `--no-commit` (an arm executed by
+  path, with no commit), and after the last step it stages the union of the
+  paths the steps wrote and makes one commit for the whole revision. A run
+  that stops part-way is left uncommitted, so every commit holds a complete
+  revision.
 
 ### The push protocol
 

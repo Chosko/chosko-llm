@@ -3,8 +3,8 @@
 An auto-triggering skill that reads a free-form request on a project with a
 pipeline and says, in one or two lines, which pipeline command fits it, then
 stops. "Add a login to the page" earns a pointer at `/architect`; "fix this
-bug" earns a pointer at `/task-add`; a change to something already planned
-earns a pointer at `/pipeline-patch` or `/pipeline-revise`. It asks nothing,
+bug" earns a pointer at `/task-add`; any change to something already planned
+earns a pointer at `/pipeline-revise`. It asks nothing,
 reads nothing beyond two file-existence probes, writes nothing and never
 invokes what it suggests. It is the cheapest tier of the revision suite and
 the only one selected by the harness rather than by the user.
@@ -26,7 +26,7 @@ whose default of doing the work directly is interrupted only by a sentence.
 
 ## Scope and non-goals
 
-In scope: the skill, its trigger description, its ten-row shape table, its
+In scope: the skill, its trigger description, its eight-row shape table, its
 silence rules, its two-probe gate and its fixed output shape.
 
 Deliberately out:
@@ -88,14 +88,13 @@ row.
 
 ### The shape table
 
-Nine rows, in the body, in this order:
+Eight rows, in the body, in this order:
 
 | Request shape | Command |
 | --- | --- |
 | A new capability or a feature-sized addition | `/architect` |
 | A bug, a small change or a chore | `/task-add` |
-| A small change to something already planned | `/pipeline-patch` |
-| A large change, an insertion at a point in the sequence, a deletion or a reorder of planned work | `/pipeline-revise` |
+| A change to something already planned — a wording fix, a large change, an insertion at a point in the sequence, a deletion, a reorder, or a list of them | `/pipeline-revise` |
 | "What should I build next" | `/production-status` |
 | "Is the backlog consistent" | `/pipeline-check` |
 | An ordered list of follow-ups | none — `runbook-suggest` already fires |
@@ -120,9 +119,9 @@ because a suppression list would be a state file.
 ## Interfaces and contracts
 
 - Selected by description; no arguments; `requires: skill:pipeline-engine,
-  skill:pipeline-revise, command:pipeline-patch`. `requires:` is flat and
-  non-transitive, so the two revision surfaces four of the table's rows point
-  at are named explicitly rather than expected through the engine. The engine
+  skill:pipeline-revise`. `requires:` is flat and
+  non-transitive, so the revision surface the table's revision row points at
+  is named explicitly rather than expected through the engine. The engine
   is required for installation, not for reading — the zero-reference-read
   contract stands — and declaring it is what obliges the routing row. Left
   out of the frontmatter, deliberately: the pipeline's own commands the table
@@ -143,9 +142,9 @@ lines.
 
 ## Dependencies
 
-- **[pipeline-revision](./pipeline-revision.md)** — the two surfaces the
-  table points at must exist first, or the suggestion names commands that
-  are not installed.
+- **[pipeline-revision](./pipeline-revision.md)** — the surface the
+  table points at must exist first, or the suggestion names a command that
+  is not installed.
 - **[pipeline-engine](./pipeline-engine.md)** — `/pipeline-check` as a row;
   the overlap audit note about the two tables.
 - **[runbook-suite](./runbook-suite.md)** — the `runbook-suggest` shape this

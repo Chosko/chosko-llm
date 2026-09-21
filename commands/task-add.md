@@ -1,6 +1,6 @@
 ---
 name: task-add
-version: 2.5.1
+version: 2.5.2
 type: command
 description: Plan one new task with the user and write it to the backlog — a summary block in TASKS.md plus a body file — from a prose description or from an /architect feature document. Use it for any new unit of work; stage 5 of the pipeline: turns a feature document into tasks; its output is /task-implement's input.
 requires: skill:task-engine
@@ -754,7 +754,7 @@ line, so the drift is announced when it is created rather than discovered
 later:
 
 > Feature document `<the entry's Doc: path>` was not updated for task <N> —
-> `/pipeline-patch feature=<slug>` writes it back.
+> `/pipeline-revise feature=<slug> "<what task <N> adds>"` writes it back.
 
 That line is all this command does about the document. `/task-add` stays a
 non-writer of it, and of every other owned document.

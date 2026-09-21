@@ -240,9 +240,9 @@ Preconditions: none
 
 ## 253. `/pipeline-revise` takes a change set behind one numbered plan gate; `/pipeline-patch` retired
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
-Files: skills/pipeline-revise/SKILL.md, skills/pipeline-revise/amend.md, skills/pipeline-revise/insert.md, skills/pipeline-revise/delete.md, skills/pipeline-revise/reorder.md, commands/pipeline-patch.md, skills/pipeline-engine/SKILL.md, skills/pipeline-engine/references/lint.md, skills/pipeline-engine/references/routing.md, skills/pipeline-suggest/SKILL.md, commands/pipeline-check.md, commands/runbook-create.md, commands/task-add.md, skills/architect/amend.md, skills/task-engine/SKILL.md, docs/reference.md, docs/authoring-guide.md, README.md, .claude/domain/features/pipeline-revision.md, .claude/domain/features/pipeline-suggest.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/context/features.md, VERSION, CHANGELOG.md
+Files: skills/pipeline-revise/SKILL.md, skills/pipeline-revise/amend.md, skills/pipeline-revise/insert.md, skills/pipeline-revise/delete.md, skills/pipeline-revise/reorder.md, commands/pipeline-patch.md, skills/pipeline-engine/SKILL.md, skills/pipeline-engine/references/lint.md, skills/pipeline-engine/references/routing.md, skills/pipeline-suggest/SKILL.md, commands/pipeline-check.md, commands/runbook-create.md, commands/task-add.md, skills/task-engine/SKILL.md, skills/task-engine/references/amend.md, skills/runbook-run/SKILL.md, skills/runbook-run/references/step-amend.md, .claude/FEATURES.md, .claude/domain/INDEX.md, .claude/domain/product-design.md, docs/reference.md, docs/authoring-guide.md, README.md, .claude/domain/features/pipeline-revision.md, .claude/domain/features/pipeline-suggest.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: 251, 252
 
 ---

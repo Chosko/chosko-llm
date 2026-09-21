@@ -41,9 +41,9 @@ consequence it needs — an id absent from `TASKS.md` is terminal.
 
 `amend.md` is the one file no `task-*` feature reads. It was authored in the
 engine, since no consumer ever carried a copy, and it is read by path by
-whatever amends a single task — the pipeline revision surfaces,
-`/pipeline-patch` and `/pipeline-revise` — which execute it but own none of
-the lines it writes. See [§ Changing a planned task](#changing-a-planned-task-pipeline-patch-pipeline-revise).
+whatever amends a single task — the pipeline revision surface,
+`/pipeline-revise` — which executes it but owns none of
+the lines it writes. See [§ Changing a planned task](#changing-a-planned-task-pipeline-revise).
 
 **Why a skill and not a command.** `cmd-add` installs a skill by `cp -R` of
 the whole folder, so supporting files ride along; a command is a single `.md`
@@ -230,14 +230,14 @@ Task leaving backlog is **archived, not deleted**. `/task-clean` removes summary
 
 Design: [`./features/task-archive.md`](./features/task-archive.md).
 
-## Changing a planned task (`/pipeline-patch`, `/pipeline-revise`)
+## Changing a planned task (`/pipeline-revise`)
 
-Live task changed after planning goes through `task-engine`'s `references/amend.md` — one arm, one gate, closed write set — never hand-edited, never re-planned by `/task-add`. No `task-*` feature drives that arm; the two pipeline revision surfaces do, by path:
+Live task changed after planning goes through `task-engine`'s `references/amend.md` — one arm, one gate, closed write set — never hand-edited, never re-planned by `/task-add`. No `task-*` feature drives that arm; the pipeline revision surface does, by path:
 
-- **`/pipeline-patch task=<N> "<change>"`** — change touching this task alone (wording, Hints, `Files:`, `Target:`, an orphan's `Feature:`). Decided from `TASKS.md` and the other indexes, never the body; refused, naming `/pipeline-revise`, when a structural signal fires — an edge changing, a new task, a deletion another line points at, a move.
-- **`/pipeline-revise`** — change reaching past this task. Sequences the arm among other owners' steps, upstream first, behind one gate: `/architect amend` before the task arm when the change moves what the feature promises (the arm's own second check routes such a change there anyway), successors' `Preconditions:` through the same arm, one step per task.
+- **`/pipeline-revise task=<N> "<change>"`** — a change touching this task alone (wording, Hints, `Files:`, `Target:`, an orphan's `Feature:`) is one item, one owner step, drafted at plan time and run headless: the arm receives the drafted fields and writes without a second gate.
+- **`/pipeline-revise "<change set>"`** — a change reaching past this task, or several changes at once. Sequences the arm among other owners' steps, upstream first, behind one plan gate: `/architect amend` before the task arm when the change moves what the feature promises (the arm's own second check routes such a change there anyway), successors' `Preconditions:` through the same arm, one step per task.
 
-What the arm allows is `amend.md`'s, not restated here: refuses `[IN PROGRESS]`, `[DONE]`, `[SKIP]`; a change to what the feature promises goes to `/architect amend`; a dropped `Preconditions:` edge is named in the dependent's `## Decisions`. Neither surface writes a line itself — every line the arm writes is still `/task-add`'s, per `pipeline-engine`'s routing table. See [product-workflow.md § Revision](./product-workflow.md#revision-pipeline-patch-pipeline-revise).
+What the arm allows is `amend.md`'s, not restated here: refuses `[IN PROGRESS]`, `[DONE]`, `[SKIP]`; a change to what the feature promises goes to `/architect amend`; a dropped `Preconditions:` edge is named in the dependent's `## Decisions`. The surface writes no line itself — every line the arm writes is still `/task-add`'s, per `pipeline-engine`'s routing table. See [product-workflow.md § Revision](./product-workflow.md#revision-pipeline-revise).
 
 **Removing a live task is `[SKIP]` with a reason, never deletion.** Arm writes `Status: [SKIP]` + dated reason in `## Decisions`; summary block and body stay. Successors' edges on it dropped through the same arm, each naming the deletion. Taking a task out of the backlog stays `/task-clean`'s explicit act over terminal statuses — and even that archives rather than deletes (§ The archive); `[SKIP]` is what makes a task eligible for it.
 
@@ -272,7 +272,7 @@ Feature document itself read-only to `/task-add`. Named in every feature-derived
 
 `/task-add feature=<slug> --single "<description>"` plans exactly one task against feature document (still PHASE 1b's primary context) and attaches it to a feature without re-planning it. **What it changes:** new block carries `Feature: <slug>`, body names the feature in Goal and its document under Hints, id appended to entry's `Tasks:` line. **What it does not change:** no reconciliation over feature's other tasks (not even read); feature's `Status:` stays `[PLANNED]` — the only status `--single` accepts, since one more planned task leaves design-to-backlog relationship unchanged (`[NEW]`/`[ITERATED]` still need a full planning run, `[DONE]` would claim done w/ a task open); no documentation task; no split; `Doc:`/`Source:` untouched as always. Mutually exclusive w/ `--short`, same reason `feature=` is.
 
-Nor does it update feature document: report ends w/ one fixed line saying document was not updated and naming `/pipeline-patch feature=<slug>` as write-back, so drift announced when created rather than discovered later. `/task-add` stays non-writer of the document. One commit, under single-task (or split) message plus `FEATURES.md` — never `Plan feature`, since one attached task is not a planning pass.
+Nor does it update feature document: report ends w/ one fixed line saying document was not updated and naming `/pipeline-revise feature=<slug>` as write-back, so drift announced when created rather than discovered later. `/task-add` stays non-writer of the document. One commit, under single-task (or split) message plus `FEATURES.md` — never `Plan feature`, since one attached task is not a planning pass.
 
 **Orphan question.** On a project w/ `.claude/FEATURES.md`, free-form run (not `--short`) asks inside PHASE 3's existing gate — never a second one — whether task belongs to a feature, listing every `[PLANNED]` entry, none the default. Slug takes the `--single` path; none writes task exactly as before. No `FEATURES.md`, or no `[PLANNED]` entry → question not asked, free-form path unchanged.
 
@@ -363,7 +363,7 @@ This is the only write `/task-implement` makes to `FEATURES.md`, and the only st
 - [`./product-workflow.md`](./product-workflow.md) — product pipeline upstream of this backlog: `FEATURES.md`, feature status machine, writers of `Feature:` and `[STALE]`.
 - [`./features/task-peer-review.md`](./features/task-peer-review.md) — feature design behind the review loop: the three input forms, the gates, mandatory triage, sticky rejections, and the `--review` / `--rounds` integration.
 - [`./features/shared-phase-engine.md`](./features/shared-phase-engine.md) — feature design behind `task-engine` and `requires:`: why the engine had to be a skill, what the CLI change is, the migration order, and what the extraction actually achieved.
-- [`./features/pipeline-revision.md`](./features/pipeline-revision.md) — feature design behind `/pipeline-patch` and `/pipeline-revise`, the surfaces that drive `amend.md`.
+- [`./features/pipeline-revision.md`](./features/pipeline-revision.md) — feature design behind `/pipeline-revise`, the surface that drives `amend.md`.
 - [`./features/task-archive.md`](./features/task-archive.md) — feature design behind the task archive: the archived-file form, the archived-and-terminal rule, `/task-clean` as a skill, and `--backfill`.
 - [`../../docs/authoring-guide.md`](../../docs/authoring-guide.md) — the `requires:` frontmatter contract, and the council-gate exception that `requires:` cannot cover.
 - [`../context/features.md`](../context/features.md) — shipped artifacts including every `task-*` command and skill, plus `skills/task-engine/`.

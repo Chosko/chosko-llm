@@ -195,8 +195,8 @@ Currently shipped:
   edge named in `## Decisions`, deleting a live task as `[SKIP]` never by
   removal, `Feature:` added only to an orphan, one gate, a closed write set;
   authored in the engine rather than extracted, and read by NO `task-*`
-  feature — only by whatever amends a single task, by path: `/pipeline-patch`
-  and `pipeline-revise`). A
+  feature — only by whatever amends a single task, by path:
+  `pipeline-revise`). A
   consumer cites the file by a path **relative to the citing body** —
   `../skills/task-engine/references/<f>.md` from a command,
   `../task-engine/references/<f>.md` from another skill's `SKILL.md`,
@@ -223,7 +223,7 @@ Currently shipped:
   id appended to `Tasks:`, but NO reconciliation, `Status:` untouched, no
   documentation task, no split; mutually exclusive with `--short`; the
   report ends with a fixed write-back line naming
-  `/pipeline-patch feature=<slug>`; commits under the single-task/split
+  `/pipeline-revise feature=<slug>`; commits under the single-task/split
   message plus `FEATURES.md` (`commit.md`'s fourth, "attached" form, never
   `Plan feature`). **Orphan question**: a free-form run (not `--short`) on a
   project with `.claude/FEATURES.md` asks inside PHASE 3's existing gate
@@ -1017,8 +1017,8 @@ Currently shipped:
   probes `.claude/tasks/archive/`). Consumers cite
   `../skills/pipeline-engine/references/<f>.md` (from a command) or
   `../pipeline-engine/references/<f>.md` (from another skill's `SKILL.md`),
-  relative to the citing body, and state only deviations. Three consumers: `/pipeline-check`,
-  `/pipeline-patch`, `pipeline-revise`. A fourth feature, `pipeline-suggest`,
+  relative to the citing body, and state only deviations. Two consumers: `/pipeline-check`,
+  `pipeline-revise`. A third feature, `pipeline-suggest`,
   declares `requires: skill:pipeline-engine` but reads none of the four files
   — installation only, and it buys the skill a routing row. Routing
   table kept honest by repo-local `scripts/check-routing.sh` (sibling of
@@ -1055,135 +1055,144 @@ Currently shipped:
   included), `.claude/runbooks/` or `.claude/domain/features/`; the probe is
   its only shell use — the one stated departure from `/production-status`,
   which runs none. Runs only when invoked; no pipeline writer auto-runs it.
-- `commands/pipeline-patch.md` — cheap half of revising planned work
-  (feature `pipeline-revision`). Command not skill: one pass, no supporting
-  files, thin by contract. `requires: skill:pipeline-engine, skill:architect,
-  skill:task-engine, skill:runbook-run` — the engine plus every skill whose
-  amend arm it may load, so installing the patcher pulls in the owners.
-  Anchor REQUIRED, one of three forms: `feature=<slug>`, `task=<N>`,
+- `skills/pipeline-revise/` — the pipeline's ONE revision surface (feature
+  `pipeline-revision`). Explicit, never auto-triggered. `requires:
+  skill:pipeline-engine, skill:architect, skill:task-engine,
+  skill:runbook-run, skill:product-design, skill:production-plan,
+  skill:product-roadmap` — the engine plus every owner whose amend arm a step
+  may drive. `SKILL.md` carries the workflow; four flat supporting files, one
+  per branch — `amend.md`, `insert.md`, `delete.md`, `reorder.md` — read ON
+  DEMAND, one per kind a run's items classify into, each once, never one no
+  item needs; all four share one seven-section schema (*Applies when*,
+  *Impact walk*, *Owner sequence*, *Tier*, *Verification*, *Outcomes*,
+  *Never*). **Argument is a change set**: `"<change set>"` — free-form text
+  describing however many changes, or a numbered list in `/follow-ups`'
+  output shape (one item per number); free-form splits into items at the
+  changes it describes, the split said back at the gate for the user to
+  correct. `<anchor> "<change>"` still accepted for a single item. Anchor,
+  four forms: `feature=<slug>`, `task=<N>`,
   `runbook=<id|name|id-name> step=<n>` (resolved by `runbook-schema.md`'s
-  rule); missing anchor or empty change stops, naming
-  `/pipeline-revise` as the no-anchor path; unresolved anchor stops listing
-  what exists (archived vs never-assigned task id said). Probes (or reuses a
-  verdict), walks `graph.md`'s edges reading ONLY the four indexes — never a
-  task body, feature doc or runbook body, which is the line separating it
-  from `pipeline-revise`. Decision is a count plus a closed checklist, never a
-  judgement: exactly ONE owner written (feature doc / task / runbook step;
-  writes an arm makes as its own consequence — `[STALE]` flips, an orphan's
-  `Tasks:` id, the `Steps:` count — not counted) AND none of five structural
-  signals (more than one owner; a dependency edge changing; scope added no
-  task covers, any new task included; a deletion crossing artifacts; a
-  reorder). Proceed → load that owner's arm by path
-  (`skills/architect/amend.md`, `task-engine`'s `references/amend.md`,
-  `runbook-run`'s `references/step-amend.md`), execute it with its own gate,
-  then `/pipeline-check` scoped to the anchor (`feature=` for a feature
-  anchor and for a task whose `Feature:` resolves, unscoped otherwise;
-  `lint.md` evaluated directly when `/pipeline-check` absent). Refuse → ONE
-  fixed line `Not a patch — <signal>: … Run /pipeline-revise <anchor>
-  "<change>".`, no escalation, no second question, arm never loaded; body
-  carries a signal → branch table naming where `pipeline-revise` takes each
-  signal. A change writing none of the three owners (only a `PLAN.md` line,
-  say) stops naming that line's owner from `routing.md`. Write set EMPTY:
-  owns no line, its routing row owns `Nothing`, no who-writes-what row.
-  Owns the run's commit (COMMITTING, per `commit.md`): commits + pushes by
-  default, `--no-commit` / `--no-push`, `--commit` a no-op; pull once at
-  start after the anchor resolves; the arm runs uncommitted and an owner
-  command it invokes (`/runbook-create --append`) always gets `--no-commit`,
-  no owner pulls or pushes; then ONE commit of exactly what the arm wrote,
-  subject = the arm's closing report line. No commit on a refusal, a stop, an
-  empty write, or `--no-commit`.
-- `skills/pipeline-revise/` — heavy half of revising planned work (feature
-  `pipeline-revision`). Explicit, never auto-triggered; same `requires:` as
-  the patcher. `SKILL.md` carries the workflow; four flat supporting files,
-  one per branch — `amend.md`, `insert.md`, `delete.md`, `reorder.md` — read
-  ON DEMAND, exactly one per run once CLASSIFY picks it, never a second; all
-  four share one seven-section schema (*Applies when*, *Impact walk*, *Owner
-  sequence*, *Tier*, *Verification*, *Outcomes*, *Never*). Anchor optional:
-  same three forms (`runbook=<id|name|id-name> step=<n>`), or exactly one
-  found in the change (stated in one line);
-  none or several stops listing what exists, never picks. CLASSIFY is
-  first-match in order reorder → delete → insert → amend (amend = everything
-  else, incl. a `Preconditions:` change that moves no entry — the boundary
-  `reorder.md` states so classification stays unambiguous); a request of two
-  kinds is two runs. Impact walk both directions over `graph.md`'s edges and
-  no other traversal — top-down design section → features → tasks, plan
-  edges, runbook steps; bottom-up task → feature doc when `Feature:` resolves
-  (an unresolved slug stops the upward walk, not an error), plus forward to
-  E4 successors. Whether the walk continues FROM those successors is per
-  branch and written down in each: `amend.md` continues from every successor
-  whose basis changes — up to that successor's own feature doc (E3b, then
-  E2), stopping on an unresolved slug as for the anchor, then forward again
-  (E4) — and `delete.md` the same from every successor whose edge is dropped
-  AND whose basis is thereby withdrawn, which is what keeps a reorder (drop
-  then replace with the same spec) from walking up spuriously;
+  rule), and a milestone named in an item's own text (`m3`, an exit criterion
+  quoted) resolving to a `##` block of `product-roadmap.md` — that last has
+  NO argument form. The argument anchor applies to every item naming no
+  artifact of its own; an item naming one uses its own; an item anchored on
+  nothing, or an anchor resolving to nothing, stops the whole run listing
+  what exists (archived vs never-assigned task id said), never picks between
+  two. CLASSIFY per item, first-match in order reorder → delete → insert →
+  amend (amend = everything else, incl. a milestone line and a
+  `Preconditions:` change that moves no entry — the boundary `reorder.md`
+  states so classification stays unambiguous); a change set spanning four
+  kinds is ONE run. Impact walk per item, both directions over `graph.md`'s
+  edges and no other traversal — top-down design section → features → tasks,
+  plan edges, runbook steps; bottom-up task → feature doc when `Feature:`
+  resolves (an unresolved slug stops the upward walk, not an error), plus
+  forward to E4 successors. Whether the walk continues FROM those successors
+  is per branch and written down in each: `amend.md` continues from every
+  successor whose basis changes — up to that successor's own feature doc
+  (E3b, then E2), stopping on an unresolved slug as for the anchor, then
+  forward again (E4) — and `delete.md` the same from every successor whose
+  edge is dropped AND whose basis is thereby withdrawn, which is what keeps a
+  reorder (drop then replace with the same spec) from walking up spuriously;
   `insert.md` explicitly does NOT, a successor gaining a wait edge still
-  delivering what it did; `reorder.md` inherits both. Every node visited once.
-  A doc reached that way is named from index lines and enters the owner
-  sequence as an `/architect amend` step, never opened here — whether it needs
-  a change is that arm's call, and its Stop answer is the accepted cost of
-  catching one that does. May open bodies,
-  scoped: the target artifact, tasks whose `Preconditions:` name it or whose
-  `Files:` overlap, runbook steps naming it; never bulk, never the archive.
-  Lint bracket: `/pipeline-check` scoped to the anchor BEFORE the proposal
-  and AFTER actuation (also when stopped part-way), report shows cleared /
-  created / unchanged; plus a successor-body read wherever an insert, delete
-  or edge change moved a precondition — reported, never fixed. Tiers
-  editorial / local / structural, judged by the branch file (`amend.md` may
-  judge editorial — wording only, nothing downstream changes meaning, A's
-  sequence equal to B's; `reorder.md` fixed structural; `insert.md`
-  structural when it adds scope, local when the doc already promises it;
-  `delete.md` local only for a task nothing else names — insert/delete never
-  editorial). ONE gate, nothing written before it by the skill or any arm:
-  verdict line, anchor/branch/tier, touched artifacts with the edge or read
-  that reached each plus the untouched ones listed for overruling, numbered
-  owner steps, expected lint delta, then the editorial CLASSIFICATION —
-  automatic `Classified:` line when a mechanical signal settles it
-  (insert/delete/reorder never editorial; amend with edge / `Files:` / scope
-  change → not editorial; amend meeting all three editorial conditions →
-  editorial), the question asked only for a borderline amend — A editorial /
-  B not editorial, here / C as a runbook / D stop — marking the letter the
-  judged tier implies (editorial → A, local / structural → B), a
-  recommendation only, silence still Stop; a classified change with C
-  rendered asks only here / runbook / stop; nothing open → actuates with no
-  reply; the classification (user's reply or automatic, never the
-  recommendation) is carried into each `/architect amend` step, applied there
-  with no prompt when its findings agree, confirmed when they differ; C rendered only at FOUR OR MORE owner steps AND `/runbook-create`
-  installed (read off the verdict line's `installed` field, omitted silently
-  otherwise — the council gate's optional-delegation shape). Actuation:
-  sequential in the session, never parallel, never subagents, each owner's
-  gate intact; a step an earlier outcome made moot is dropped with a line,
-  none added after the gate; C invokes `/runbook-create` with self-contained
-  steps plus a final lint step, then stops — the skill never writes a
-  runbook. Owner sequences upstream first: amend = `/product-design`'s amend
-  arm → `/architect amend` per feature → tasks in two gate-shown forms
-  (task-engine `amend.md` per task when step 2 stales nothing; one `/task-add
-  feature=<slug>` reconciliation when it stales or moves the feature
-  `[ITERATED]`, unstaled tasks' own amends first, doc-less facts as its
-  annotation) → `step-amend.md` per step; report drops the reconcile
-  follow-up once reconciliation ran as a step; a change naming another
-  anchor's artifacts is scoped to the resolved one; insert = `/architect amend` for new scope →
-  `/task-add feature=<slug> --single --before/--after` (or the reconciliation
-  form when step 1 leaves the feature `[ITERATED]`, both shown at the gate) →
+  delivering what it did; `reorder.md` inherits both. Every node visited once
+  ACROSS THE WHOLE SET — an artifact two items reach is one entry. A doc
+  reached that way is named from index lines and enters the owner sequence as
+  an `/architect amend` step, never opened here — whether it needs a change is
+  that arm's call. May open bodies, scoped per item: the target artifact,
+  tasks whose `Preconditions:` name it or whose `Files:` overlap, runbook
+  steps naming it, PLUS what a headless arm reads to make a decision the plan
+  takes for it (for `/architect amend`, the feature's tasks' summary blocks,
+  a body only when the block cannot decide); never bulk, never the archive.
+  Lint bracket: `/pipeline-check` scoped to the union of the items' features
+  (unscoped when an item anchors on a runbook or a milestone) BEFORE the
+  proposal and AFTER actuation (also when stopped part-way), report shows
+  cleared / created / unchanged; plus a successor-body read wherever an
+  insert, delete or edge change moved a precondition — reported, never fixed.
+  **Merge**: two items reaching one artifact become one step — several
+  sections of one feature doc one `/architect amend` naming them all, several
+  docs one multi-slug run, every roadmap edit one `/product-roadmap amend`,
+  every plan edit one `/production-plan amend`, every design edit one
+  `/product-design amend`, one runbook's inserts one `/runbook-create
+  --append`. **Order** upstream first across items: design → feature docs →
+  task amends → removals → task insertions and `/task-add` reconciliation →
+  plan → runbook strikes, facts, insertions; a step consuming an earlier
+  step's output follows it whatever the kinds say. **Decide at plan time**:
+  every decision an owner's arm makes by a closed rule over its reads is
+  taken in the proposal and shown on its step — `/architect amend`'s
+  editorial classification (per `../architect/amend.md` § 4 over the touched
+  set and the scope call), the drafted task fields and body sections, a
+  struck id + reason or dated `Context:` fact, the drafted design / roadmap /
+  plan edits — and that step is tagged **headless**: runs with the decision
+  carried in, asks nothing, the arm writing without a second gate when the
+  draft matches its own. `/task-add` create and reconcile, the one owner whose
+  work is drafting, are tagged **GATED** with one `Will ask:` line and sort
+  LAST wherever the order allows, so every headless write lands before the
+  first stop. A reconciliation step is conditional and shows its evidence
+  (`because step 1 stales 12, 14`; none rendered when the carried
+  classification is editorial for every feature); an id unknown until a step
+  runs is a placeholder (`<id from step 5>`) in every later step. Tiers
+  editorial / local / structural still set a sequence's length, judged by the
+  branch file (`reorder.md` fixed structural; `insert.md` structural when it
+  adds scope, local when the doc already promises it; `delete.md` local only
+  for a task nothing else names — insert/delete/reorder never editorial);
+  only a borderline wording-vs-meaning architect classification stays open.
+  ONE gate, and it ALWAYS waits; nothing written before it by the skill or
+  any arm: verdict line; the items numbered with branch + anchor; touched
+  artifacts with the edge or read that reached each plus the untouched ones
+  listed for overruling; numbered owner steps on
+  `<owner> — <headless|GATED> — <invocation or arm path> — writes: <what>`
+  plus the carried decision or `Will ask:` line plus the lint findings each
+  clears or creates; the lint in scope; any still-open architect question in
+  that arm's ambiguous form. Reply grammar: `go`; `all but <n>[, <m>]`;
+  `<n> as runbook step` (the step deferred self-contained, carrying its
+  invocation, anchor, change and every decision taken here, to a named
+  runbook, the session's runbook, or a new one `/runbook-create` writes —
+  `all as runbook steps` defers the plan); `<n> after <m>`; a letter for an
+  open architect question or an overruled touched/untouched call or tier;
+  `stop`. Anything but `go`/`stop` re-renders at the SAME gate with the edit
+  applied; a dropped step drops its dependents, named; silence, unclear reply
+  or EOF is `stop`. Actuation: sequential in the session, never parallel,
+  never subagents; a headless step runs its arm by path with the decision
+  carried in, a gated step runs its owner's command with that owner's gate
+  intact; a step an earlier outcome made moot is dropped with a line, none
+  added after the gate; deferred steps go to `/runbook-create --append` (or
+  `/runbook-create <name>`) with `--no-commit` once the in-session steps have
+  run — the skill writes no line of the runbook. Branch owner sequences:
+  amend = `/product-design`'s amend arm → `/architect amend` per feature →
+  tasks in two forms (task-engine `amend.md` per task when step 2 stales
+  nothing; one `/task-add feature=<slug>` reconciliation when it stales or
+  moves the feature `[ITERATED]`, unstaled tasks' own amends first, doc-less
+  facts as its annotation) → `step-amend.md` per step; insert = `/architect
+  amend` for new scope → `/task-add feature=<slug> --single --before/--after`
+  (or the reconciliation form when step 1 leaves the feature `[ITERATED]`) →
   successors' `Preconditions:` via the task arm → `/runbook-create --append
   --before/--after`; delete = withdraw the promise → `[SKIP]` + dated reason →
   successors' edges dropped with the reason → steps struck, and for a feature
   every live task `[SKIP]` plus a `/production-plan` run, entry kept (lint
   then reports L11); reorder = skip-and-insert, new id at the new place, no
-  renumber. Failure contract: an owner refusing (touched `[IN PROGRESS]`,
-  `[DONE]`, a `[RUNNING]` position) stops the sequence there, earlier writes
-  kept and reported, NEVER rolled back, the after-lint still runs; a missing
-  owner stops before the gate. Write set empty — no line, no file, no report
-  on disk; no status value, no change ledger. Owns the run's commit
-  (COMMITTING, per `commit.md`): commits + pushes by default, `--no-commit` /
-  `--no-push`, `--commit` a no-op; pull once at start after the anchor
-  resolves; every owner step uncommitted (`/task-add`, `/product-design`,
-  `/production-plan`, `/runbook-create` incl. `--append`, `/architect` always
-  get `--no-commit`; by-path arms run with no commit; no owner pulls or
-  pushes); after step 9's lint, ONE commit of the union of reported writes,
-  subject = the `Revised <anchor> — <branch>, <tier>` line; arm C commits the
-  runbook `/runbook-create` wrote as that one commit. No commit on a stop
-  before the gate, D, a sequence stopped part-way (left uncommitted on
-  purpose, every path listed), an empty write, or `--no-commit`.
+  renumber. **Closing follow-up gate** after actuation: what execution
+  surfaced and the plan did not hold — a created task no open runbook running
+  its feature has a step for, a successor no longer reading as a sequence, a
+  lint finding created, a feature an owner named for reconciliation that no
+  step ran — rendered in the same numbered shape with the same reply grammar,
+  skipped when nothing arose, nothing written without the reply. Failure
+  contract: an owner refusing (touched `[IN PROGRESS]`, `[DONE]`, a
+  `[RUNNING]` position) or a gated owner's gate answered stop stops the
+  sequence there, earlier writes kept and reported, NEVER rolled back, the
+  after-lint still runs; a missing owner stops before the gate; absent
+  `/runbook-create` makes `as runbook step` an error and re-renders. Write
+  set empty — no line, no file, no report on disk; no status value, no change
+  ledger. Owns the run's commit (COMMITTING, per `commit.md`): commits +
+  pushes by default, `--no-commit` / `--no-push`, `--commit` a no-op; pull
+  once at start after every item resolves; every owner step uncommitted
+  (`/task-add`, `/product-design`, `/product-roadmap`, `/production-plan`,
+  `/runbook-create` incl. `--append`, `/architect` always get `--no-commit`;
+  by-path arms run with no commit; no owner pulls or pushes); after the
+  closing gate, ONE commit of the union of reported writes — a runbook
+  written for deferred steps included — subject = the `Revised <items> items
+  — …` line. No commit on a stop before the gate, `stop` at either gate, a
+  sequence stopped part-way (left uncommitted on purpose, every path listed),
+  an empty write, or `--no-commit`.
 - `skills/pipeline-suggest/` — the pipeline's auto-suggested entry point
   (feature `pipeline-suggest`) and the second artifact nobody invokes, built
   in `runbook-suggest`'s shape: Claude Code selects it from its
@@ -1197,10 +1206,10 @@ Currently shipped:
   with neither index. Gate is TWO existence probes — `.claude/FEATURES.md`,
   `.claude/TASKS.md` — both absent → silence, an erroring probe counts as
   absent; no third probe, never the files' contents, NO reference file (not
-  the engine's `probes.md`, not `routing.md`). Body carries a nine-row
+  the engine's `probes.md`, not `routing.md`). Body carries an eight-row
   request-shape → command table (feature-sized addition `/architect`; bug /
-  small change / chore `/task-add`; small change to planned work
-  `/pipeline-patch`; large change, insert, delete or reorder of planned work
+  small change / chore `/task-add`; ANY change to planned work — wording fix,
+  large change, insert, delete, reorder, or a list of them —
   `/pipeline-revise`; "what next" `/production-status`; "is the backlog
   consistent" `/pipeline-check`; follow-up list → none, `runbook-suggest`
   fires; design decision `/product-design`; milestone/release
@@ -1212,8 +1221,8 @@ Currently shipped:
   parent may proceed directly; nothing of the request restated, no failure
   path adds a third. Never invokes, asks, gates or writes; no suppression list
   (would be a state file). `requires: skill:pipeline-engine,
-  skill:pipeline-revise, command:pipeline-patch` — `requires:` is
-  non-transitive, so the revision surfaces are named; the other commands the
+  skill:pipeline-revise` — `requires:` is
+  non-transitive, so the revision surface is named; the other commands the
   table names are deliberately not required. The engine is declared for
   installation, not reading, and that declaration is why `routing.md` carries
   a `pipeline-suggest` row (owns `Nothing`, Amend `—`) — `check-routing.sh`
@@ -1347,7 +1356,7 @@ Currently shipped:
   facts; the prompt block immutable, so a wrong prompt is struck and a
   corrected step inserted; a `[RUNNING]` runbook accepting changes only after
   its current step), is never read by this body — whatever amends a step
-  (`/pipeline-patch`, `pipeline-revise`) reads it by path, and reads and writes
+  (`pipeline-revise`) reads it by path, and reads and writes
   the body at `File:`. A fifth, `references/body-migration.md` (the lazy rename
   of a legacy `<name>.md` body: plain `mv` to `<id>-<name>.md` then rewrite
   `File:`, nothing staged until the writing command's one commit, which names
@@ -1830,10 +1839,11 @@ non-transitive. Live examples: `commands/task-add.md`,
 `skills/task-implement/SKILL.md`, all declaring `requires: skill:task-engine`;
 and `commands/pipeline-check.md`, declaring `requires: skill:pipeline-engine` —
 the second engine, built on the same non-invocable-skill pattern.
-`commands/pipeline-patch.md` and `skills/pipeline-revise/SKILL.md` declare four
+`skills/pipeline-revise/SKILL.md` declares seven
 at once (`skill:pipeline-engine, skill:architect, skill:task-engine,
-skill:runbook-run`) — the engine plus every owner whose amend arm they load by
-path.
+skill:runbook-run, skill:product-design, skill:production-plan,
+skill:product-roadmap`) — the engine plus every owner whose amend arm it loads
+by path.
 Unlike `replaces:`, it is permanent — the dependency does not "propagate" and
 the key is dropped only when the reference is.
 

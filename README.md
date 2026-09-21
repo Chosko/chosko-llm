@@ -50,7 +50,7 @@ Windows, run the installer from Git Bash. See [The CLI](#the-cli) below.
 | 1. Set up | `/project-setup`, `/task-setup`, `/domain-setup` | `CLAUDE.md`, `.claude/TASKS.md`, `.claude/domain/`, `.claude/FEATURES.md` |
 | 2. Orient | `/context-build`, `/context-update`, `/context-convert` | `.claude/context/` — the navigation layer |
 | 3. Design | `/product-design`, `/product-roadmap`, `/architect` | `product-design.md`, `technical-direction.md`, `product-roadmap.md`, one feature document per architected feature |
-| 4. Plan | `/production-plan`, `/production-status`, `/pipeline-check`, `/task-add`, `/pipeline-patch`, `/pipeline-revise` | `.claude/PLAN.md`, task bodies + `TASKS.md` entries |
+| 4. Plan | `/production-plan`, `/production-status`, `/pipeline-check`, `/task-add`, `/pipeline-revise` | `.claude/PLAN.md`, task bodies + `TASKS.md` entries |
 | 5. Build | `/task-implement`, `/task-review`, `/task-iterate` | code, one reviewed commit per task |
 | 6. Continue | `/runbook-*`, `/session-save`, `/session-resume` | `.claude/runbooks/`, `.claude/sessions/` |
 | 7. Maintain | `/refactor-codebase`, `/refactor-tests`, `/doc-consolidate` | a cleaner codebase, tests green throughout; rules documents that state each rule once |
@@ -301,30 +301,30 @@ a task only a human can do (an editor step, a cloud console) it records the
 checkpoints and marks the task human-in-the-loop.
 
 **Changing planned work.** Plans change after they're written, and a change
-rarely stops at one file. Two commands carry it, at two costs, and neither
-writes anything itself: every edit goes through the command that owns the
-artifact. **`/pipeline-patch`** takes a change that touches exactly one
-owner (one feature document, one task, or one runbook step). It decides
-that from the indexes alone, runs that owner's amend step with its own
-approval, and re-checks with `/pipeline-check`. Anything bigger it refuses in
-one line naming the other command. **`/pipeline-revise`** takes everything
-structural: new scope, a task inserted, removed or moved, or a dependency
-edge changing. It traces the change up to the feature document and down to
-the tasks and runbook steps built on it, then shows the whole plan once: its
-tier, every artifact it touches and the owner steps in order. It always asks
-whether the change is only a wording change, recommending the answer its
-tier implies, and runs `/pipeline-check`
-before and after so you can see what the change fixed and what it broke.
-Nothing is ever deleted: a removed task becomes `[SKIP]` with a reason, a
-removed runbook step is struck. And when you describe work in your own words
-instead of naming a command, `pipeline-suggest` fires on its own and points
-at the pipeline command that fits, in a line, then stops.
+rarely stops at one file — or at one change. **`/pipeline-revise`** is the
+one surface for all of it, and it writes nothing itself: every edit goes
+through the command that owns the artifact. You hand it a change set — a
+wording fix, or a dozen amendments, insertions, deletions and reorders
+described in your own words or pasted as a numbered list. It traces each
+item up to the feature document and down to the tasks and runbook steps
+built on it, decides in advance everything an owner would decide by rule,
+and shows the whole thing once as a numbered plan: every artifact touched,
+every owner step in order, what each writes, and which of them will stop to
+ask you something. You reply by number — run it, drop a step, move one,
+defer one to a runbook, or stop — and the steps run in order, in the
+session. It runs `/pipeline-check` before and after so you can see what the
+change fixed and what it broke, and asks once more at the end about anything
+the run surfaced that the plan didn't hold. Nothing is ever deleted: a
+removed task becomes `[SKIP]` with a reason, a removed runbook step is
+struck. And when you describe work in your own words instead of naming a
+command, `pipeline-suggest` fires on its own and points at the pipeline
+command that fits, in a line, then stops.
 
 `/production-plan` and `/task-add` both commit and push by default, and both
 take `--no-commit`; `/production-status`, `/pipeline-check` and
 `pipeline-suggest` write nothing;
-`/pipeline-patch` and `/pipeline-revise` run every owner step uncommitted and
-land the whole change as one commit at the end (`--no-commit`, `--no-push`). [Details →](docs/reference.md#4-planning-the-work)
+`/pipeline-revise` runs every owner step uncommitted and
+lands the whole revision as one commit at the end (`--no-commit`, `--no-push`). [Details →](docs/reference.md#4-planning-the-work)
 
 ## 5. Build and review
 

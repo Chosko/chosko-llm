@@ -20,9 +20,9 @@ inconsistency with the command that fixes it.
 
 The engine exists for the same reason `task-engine` does: the probing, the
 graph and the routing knowledge would otherwise be restated by
-[pipeline-revision](./pipeline-revision.md)'s two surfaces,
-[pipeline-suggest](./pipeline-suggest.md) and the lint itself, and four copies
-of a rule is three chances to forget one. Serves Claude-as-operator, who reads
+[pipeline-revision](./pipeline-revision.md)'s surface,
+[pipeline-suggest](./pipeline-suggest.md) and the lint itself, and three copies
+of a rule is two chances to forget one. Serves Claude-as-operator, who reads
 the engine at run time, and the director, who reads the lint's output.
 
 ## Scope and non-goals
@@ -96,7 +96,7 @@ the other, invisibly, which is what the council gates once did.
 - **Lint** — the finding catalogue: each finding's detection rule over the
   indexes, its severity — two levels, `ERROR` and `WARNING` — and the one
   command that resolves it. The command
-  and the two revision surfaces read this file so a finding is defined once.
+  and the revision surface read this file so a finding is defined once.
 
 ### The findings
 
@@ -121,7 +121,7 @@ question.
 
 Each finding names its fix: `/task-add feature=<slug>` for the iterated
 feature, `/production-plan` for the missing slug, `flip to [DONE]` for the
-resolved feature, `/pipeline-patch` or `/pipeline-revise` for the rest.
+resolved feature, `/pipeline-revise` for the rest.
 
 ### The command
 
@@ -131,8 +131,8 @@ clean project prints one line. Every absent index removes its findings rather
 than failing the run; the only stop is a project with none of the indexes at
 all, which is pointed at `/task-setup` and `/domain-setup`. An optional
 `feature=<slug>` scopes the walk to one feature and the tasks, edges and steps
-that name it, which is the form the revision surfaces call before and after
-they act.
+that name it, which is the form the revision surface calls before and after
+it acts.
 
 ### The routing check
 
@@ -157,7 +157,7 @@ content, versioned with the skill.
 - `/pipeline-check [feature=<slug>]` — read-only report; exit is a printed
   summary, never a status flip.
 - `requires: skill:pipeline-engine` — declared by `/pipeline-check`,
-  `/pipeline-patch`, `pipeline-revise` and `pipeline-suggest`.
+  `pipeline-revise` and `pipeline-suggest`.
 - The verdict line — a single line, fixed field order, printed by any
   consumer that probes and reused by any that finds it.
 - Hard contracts: the engine states no rule that any other skill also

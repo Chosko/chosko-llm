@@ -137,6 +137,12 @@ strike releases, and — on a `[RUNNING]` runbook — which step is current. End
 with **"Apply?"** and wait for an explicit answer. Silence, an unclear reply
 or EOF writes nothing.
 
+**With a draft passed in** — a revision surface that decided the strike, the
+fact or the inserted step at its own gate passes it in — compare it with the
+operation this arm produced from the same reads. When they match, write
+without waiting: the consumer's gate already approved it. When they differ,
+render the difference as the gate and wait.
+
 An insert's gate is `/runbook-create`'s own confirmation gate; this file adds
 none beside it.
 

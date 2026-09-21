@@ -10,10 +10,10 @@ skill body, while the one-writer-per-artifact invariant stays intact.
 
 ## Purpose
 
-The revision surfaces in [pipeline-revision](./pipeline-revision.md) need to
+The revision surface in [pipeline-revision](./pipeline-revision.md) needs to
 change planned units without either loading a whole owner or reimplementing
-its guards. Loading a whole owner is the cost the cheap surface exists to
-avoid; reimplementing a guard is a second copy that drifts, and a skipped
+its guards. Loading a whole owner is what makes a step expensive and a plan
+of many steps slow; reimplementing a guard is a second copy that drifts, and a skipped
 guard is precisely the silent drift the suite is built to prevent. The way out
 is the pattern `task-engine` already proved: the rule lives in one file in the
 owner's folder, and a consumer reads that file by path. Here the file is the
@@ -36,7 +36,7 @@ own, so a consumer executes it without opening the owner's body.
 Deliberately out:
 
 - **New writers.** Every amend file is owned by the artifact's existing owner
-  and lives in its folder. The patcher and the reviser execute it; they do not
+  and lives in its folder. The reviser executes it; it does not
   own it. The who-writes-what table in the product workflow gains no row.
 - **A second gate inside an arm a revision surface drives.** Every arm —
   `/architect`'s, `/product-design`'s, `/product-roadmap`'s,
@@ -156,7 +156,7 @@ uses the existing step-marker vocabulary rather than a new one.
   by listing the slugs that exist. A `[NEW]` feature is amended with no guard
   at all, having no tasks.
 - The single-task amend reference — read by path from `task-engine`; the
-  consumer is `/pipeline-patch` or `pipeline-revise`, never the user directly.
+  consumer is `pipeline-revise`, never the user directly.
 - The single-step amend reference — read by path from `runbook-run`'s
   references; same consumers.
 - Hard contracts: an arm never writes a line another owner owns; an arm never

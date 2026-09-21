@@ -168,7 +168,7 @@ check has found an un-prefixed `File:`:
 
 - `/runbook-clean`, which deletes whatever `File:` names;
 - `/runbook-describe` and `/runbook-list`, which are read-only;
-- `/pipeline-patch`, `/pipeline-revise` and `/pipeline-check`;
+- `/pipeline-revise` and `/pipeline-check`;
 - the single-step amend in `step-amend.md`, which writes at `File:` and leaves
   the name alone.
 
@@ -237,8 +237,8 @@ This describes each consumer's responsibility, not an edit plan.
   `File:`.
 - **`step-amend.md`**: the body read and written at `File:`; resolution by the
   schema's rule.
-- **`/pipeline-patch` and `pipeline-revise`**: the `runbook=` anchor accepts
-  the three forms. Both already cite the schema, so only the notation changes.
+- **`pipeline-revise`**: the `runbook=` anchor accepts
+  the three forms. It already cites the schema, so only the notation changes.
 - **`pipeline-engine`'s routing table**: the runbook rows' paths and argument
   notation. The routing guard, `check-routing.sh`, runs after that edit.
 - **`pipeline-engine`'s graph**: edge E6's `File:` line text.
@@ -275,7 +275,6 @@ Documentation that describes the old shape follows as a documentation change:
 /runbook-create --append <id|name|id-name> [--before <step> | --after <step>]
 /runbook-describe <id|name|id-name>
 /runbook-clean [<id|name|id-name> ...] [--no-commit] [--no-push]
-/pipeline-patch  runbook=<id|name|id-name> step=<n> "<change>"
 /pipeline-revise runbook=<id|name|id-name> step=<n> "<change>"
 ```
 

@@ -1,6 +1,6 @@
 ---
 name: runbook-run
-version: 0.14.1
+version: 0.14.2
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user, recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
 requires: command:follow-ups
@@ -25,7 +25,7 @@ requires: command:follow-ups
 # own nesting level. A legacy body at `.claude/runbooks/<name>.md` is
 # renamed to `<id>-<name>.md` lazily, never while [RUNNING], per
 # `references/body-migration.md`. Also carries, under `references/`, the
-# files the rest of the runbook suite and the pipeline revision surfaces
+# files the rest of the runbook suite and the pipeline revision surface
 # read by path: `runbook-schema.md`, `subagent-contract.md`,
 # `body-migration.md` and `step-amend.md`. Every run ends with one
 # /follow-ups call, skipped silently when that command is not installed.

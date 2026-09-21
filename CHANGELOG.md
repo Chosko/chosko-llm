@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.65.0 — 2026-09-21
+
+- **`/pipeline-revise` takes a change set:** `/pipeline-revise "<change set>"` accepts free-form text describing several changes, or a pasted numbered list in `/follow-ups`' shape, with the old `<anchor> "<change>"` form still accepted for one item and a milestone nameable as an anchor. Each item is classified and walked; the items merge into one owner sequence — several sections of one feature document are one `/architect amend`, several documents one multi-slug run, every roadmap, plan or design edit one arm run — ordered upstream first. Every decision an owner's arm makes by a closed rule over its reads is made at plan time and shown on its step, tagged `headless`; a `/task-add` step is tagged `GATED` with one `Will ask:` line and sorts last. One plan gate, which always waits: `go`, `all but N`, `N as runbook step`, `N after M`, `stop`, and any edit re-renders the plan. What execution surfaces beyond the plan goes to one closing follow-up gate in the same shape, never written on its own. One commit at the end holds the whole revision, deferred-step runbooks included.
+- **`/pipeline-patch` is retired.** Its single-owner case is a one-item change set, and everything that pointed at it — the lint catalogue's fix commands, `pipeline-suggest`'s routing, `/task-add`'s `--single` write-back line, the engine and reference bodies — now names `/pipeline-revise`. A machine that still has the command installed keeps a copy `chosko-llm` no longer ships; remove it with `chosko-llm rm command:pipeline-patch`.
+
 ## 1.64.0 — 2026-09-21
 
 - **`/task-implement`'s closing report has two groups:** *Needs you* first, every item waiting on a decision at whatever length it needs; then *For the record*, one line per item in the fixed shape `<what deviated> — <why> — <resolved by whom>` — a criterion overshot and accepted by the reviewer, a wrong premise in a body, a consequential edit outside the task's files. Nothing in the second group is a question. `/task-review`'s report closes the same way.

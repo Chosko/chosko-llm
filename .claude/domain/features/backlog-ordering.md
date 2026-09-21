@@ -55,7 +55,7 @@ Deliberately out:
   amend files in [owner-amend-arms](./owner-amend-arms.md).
 - **Automatic feature write-back.** `--single` attaches a task to a feature
   and says in one line that the feature document was not updated. Updating it
-  is the patcher's job, not `/task-add`'s.
+  is the revision surface's job, not `/task-add`'s.
 
 ## Architecture
 
@@ -110,7 +110,7 @@ id to the feature's `Tasks:` line, and runs no reconciliation over the
 feature's other tasks. The feature's status is untouched: it was `[PLANNED]`
 and one more planned task does not change the design-to-backlog relationship.
 The closing report carries one fixed line saying the feature document was not
-updated and naming `/pipeline-patch feature=<slug>` as the write-back, so the
+updated and naming `/pipeline-revise feature=<slug>` as the write-back, so the
 drift is announced at the moment it is created rather than discovered later.
 
 ### The orphan prompt

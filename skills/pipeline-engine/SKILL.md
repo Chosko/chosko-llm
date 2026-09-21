@@ -1,21 +1,21 @@
 ---
 name: pipeline-engine
-version: 0.2.18
+version: 0.2.19
 type: skill
 description: Reference library for the pipeline as a whole — one authority per rule the pipeline features share, under references/ (the project probe and verdict line, the index graph, the routing table, the drift catalogue); read by path by the pipeline-* features, never invoked.
 disable-model-invocation: true
 ---
 
 # pipeline-engine
-# Reference library, read by path by /pipeline-check, /pipeline-patch and
-# pipeline-revise while they run; not invoked.
+# Reference library, read by path by /pipeline-check and pipeline-revise
+# while they run; not invoked.
 
 > **Not directly invocable.** This skill exists so that what every pipeline
 > feature needs to know about the pipeline as a whole has exactly one home. It
 > has no command, no arguments and no behaviour of its own. Nothing invokes
-> `/pipeline-engine`; nothing should suggest it. `/pipeline-check`,
-> `/pipeline-patch` and `pipeline-revise` cite the files below by path while
-> they run, and those files are the only content here.
+> `/pipeline-engine`; nothing should suggest it. `/pipeline-check` and
+> `pipeline-revise` cite the files below by path while they run, and those
+> files are the only content here.
 
 > **Install path assumption:** this skill installs beside the features that
 > read it — `chosko-llm add skill:pipeline-engine` writes it under the same

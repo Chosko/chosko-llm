@@ -78,7 +78,7 @@ about whether it exists.
   `FEATURES.md`.
 
 ```
-ERROR   TASKS.md task <N> — Feature: <slug> names no feature in FEATURES.md → /pipeline-patch
+ERROR   TASKS.md task <N> — Feature: <slug> names no feature in FEATURES.md → /pipeline-revise
 ```
 
 ### L2 — a task with no `Feature:` line · WARNING
@@ -90,7 +90,7 @@ ERROR   TASKS.md task <N> — Feature: <slug> names no feature in FEATURES.md �
   feature index, it is work no feature accounts for.
 
 ```
-WARNING TASKS.md task <N> — no Feature: line on a project with FEATURES.md → /pipeline-patch
+WARNING TASKS.md task <N> — no Feature: line on a project with FEATURES.md → /pipeline-revise
 ```
 
 ### L3 — a `Preconditions:` id that resolves to no task · ERROR
@@ -103,7 +103,7 @@ WARNING TASKS.md task <N> — no Feature: line on a project with FEATURES.md →
   precondition, and is not a finding.
 
 ```
-ERROR   TASKS.md task <N> — Preconditions: <id> was never assigned (Last task number: <K>) → /pipeline-patch
+ERROR   TASKS.md task <N> — Preconditions: <id> was never assigned (Last task number: <K>) → /pipeline-revise
 ```
 
 ### L4 — a `Preconditions:` id naming a `[SKIP]` task · ERROR
@@ -115,7 +115,7 @@ ERROR   TASKS.md task <N> — Preconditions: <id> was never assigned (Last task 
   becomes eligible on work that was abandoned rather than done.
 
 ```
-ERROR   TASKS.md task <N> — Preconditions: <id> is [SKIP] → /pipeline-patch
+ERROR   TASKS.md task <N> — Preconditions: <id> is [SKIP] → /pipeline-revise
 ```
 
 ### L5 — a precondition cycle · ERROR
@@ -179,7 +179,7 @@ WARNING PLAN.md feature <slug> — in FEATURES.md, nowhere in PLAN.md → /produ
   no entry in `FEATURES.md`. One finding per unknown slug per line.
 
 ```
-ERROR   PLAN.md feature <slug> — named by <milestone-slug> Features: | Unscheduled | Dependencies (<dependent>) but not in FEATURES.md → /pipeline-patch
+ERROR   PLAN.md feature <slug> — named by <milestone-slug> Features: | Unscheduled | Dependencies (<dependent>) but not in FEATURES.md → /pipeline-revise
 ```
 
 Print exactly one of the three `named by` forms: the line that carries the
@@ -198,7 +198,7 @@ slug.
   itself, and neither half needs the body to see it.
 
 ```
-WARNING RUNBOOKS.md runbook <id>. <name> — [PENDING] with Steps: <n>/<n> → /pipeline-patch
+WARNING RUNBOOKS.md runbook <id>. <name> — [PENDING] with Steps: <n>/<n> → /pipeline-revise
 ```
 
 ### L11 — a fully resolved `[PLANNED]` feature · WARNING
@@ -254,7 +254,7 @@ a line some finding reads, or carrying a value outside that line's vocabulary
 list of ids — is reported, and the run carries on:
 
 ```
-ERROR   <artifact> <identifier> — malformed: <the line missing or unreadable> → /pipeline-patch
+ERROR   <artifact> <identifier> — malformed: <the line missing or unreadable> → /pipeline-revise
 ```
 
 It is `ERROR` because a block that cannot be read will misdirect any command

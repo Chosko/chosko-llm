@@ -1,9 +1,9 @@
 ---
 name: pipeline-suggest
-version: 0.1.1
+version: 0.2.0
 type: skill
 description: 'Name, in one line, the pipeline command a free-form request fits. Trigger whenever the user asks in their own words to build, change, fix, remove or sequence work — "add a login to the page", "fix this bug", "drop the export step", "do this before that" — on a project that has a .claude/FEATURES.md or a .claude/TASKS.md, and the request does not already name a slash command. Emits one or two lines naming the command and stops. Not for: a question; a request that names a command; a request that says "just do it" or "directly"; work already under way in a /task-implement run; an enumeration inside an explanation; a follow-up list meant for later sessions, which runbook-suggest owns; or a project with neither a feature index nor a backlog.'
-requires: skill:pipeline-engine, skill:pipeline-revise, command:pipeline-patch
+requires: skill:pipeline-engine, skill:pipeline-revise
 ---
 
 # /pipeline-suggest
@@ -30,8 +30,7 @@ table (feature → consumes / produces / owns): different job, different content
 | --- | --- |
 | A new capability or a feature-sized addition | `/architect` |
 | A bug, a small change or a chore | `/task-add` |
-| A small change to something already planned | `/pipeline-patch` |
-| A large change, an insertion at a point in the sequence, a deletion or a reorder of planned work | `/pipeline-revise` |
+| A change to something already planned — a wording fix, a large change, an insertion at a point in the sequence, a deletion, a reorder, or a list of them | `/pipeline-revise` |
 | "What should I build next" | `/production-status` |
 | "Is the backlog consistent" | `/pipeline-check` |
 | An ordered list of follow-ups | none — `runbook-suggest` already fires |

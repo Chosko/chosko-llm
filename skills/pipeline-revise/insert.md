@@ -68,8 +68,8 @@ which a runbook runs — in order:
    the current step and nothing before it — `step-amend.md`'s rule, which this
    branch follows and does not own; a position it refuses stops the sequence
    here, per `./SKILL.md`'s failure contract.
-5. **The scoped lint** — `./SKILL.md` step 9, which closes every run and is
-   not an owner step.
+5. **The scoped lint** — `./SKILL.md` step 9, which brackets every run and
+   is not an owner step.
 
 A task that belongs to no feature has no step 1, and step 2 is a free-form
 `/task-add --after <N> "<the task>"`, whose orphan prompt is answered `none`
@@ -77,12 +77,13 @@ at `/task-add`'s own gate. A runbook-only insert is step 4 alone.
 
 **When step 1 leaves the feature `[ITERATED]`.** `--single` refuses an
 `[ITERATED]` feature — `/task-add`'s FEATURE RESOLUTION step 5, its rule and
-not this file's. So the gate shows step 2 in both forms: `--single` when
+not this file's. So step 2 takes one of two forms, selected at plan time
+from the scope call step 1 carries (`./SKILL.md` step 6): `--single` when
 step 1 leaves the feature `[PLANNED]`, and `/task-add feature=<slug> --after
-<N>` when step 1 leaves it `[ITERATED]` — the reconciliation run, the one
-path back to `[PLANNED]`, with the drafts and the documentation task it adds
-named. Step 1's outcome selects the form at actuation; the user saw both at
-the gate.
+<N>` when it leaves it `[ITERATED]` — the reconciliation run, the one path
+back to `[PLANNED]`, with the drafts and the documentation task it adds
+named. A step 1 that ends otherwise makes the rendered form moot, and
+`./SKILL.md` step 8 drops it with one line.
 
 ## Tier
 
@@ -94,7 +95,7 @@ the gate.
 
 Neither tier is editorial — an insert makes a new entry, which is never
 wording only — so the gate classifies it not editorial without asking the
-question, per `./SKILL.md` step 7: the `Classified:` line names the new entry,
+question, per `./SKILL.md` step 6: the `Classified:` line names the new entry,
 and under structural the scope step 1 adds.
 
 ## Verification
@@ -118,6 +119,6 @@ owner's own write.
 - Write anything itself, or write a successor's `Preconditions:` other than
   through step 3's arm or `/task-add`'s placement.
 - Run `/task-add feature=<slug>` without `--single`, save the `[ITERATED]`
-  form the gate showed beside it.
+  form the plan selected.
 - Draft the task before `/architect amend` has written the scope it builds.
 - Renumber an id, or move an existing task or step.

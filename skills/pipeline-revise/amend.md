@@ -84,9 +84,11 @@ its artifact and the tier keeps it; the order never changes.
    step per feature, in `.claude/FEATURES.md` order. Never the full
    `/architect`: the arm's precision guard stales only the tasks the change
    touches, where the blanket guard would stale every one.
-3. **The tasks** — in one of two forms per feature, both rendered at the
-   gate, because which one runs depends on step 2's answer, which the gate
-   cannot know:
+3. **The tasks** — in one of two forms per feature, selected at plan time
+   from the classification step 2 carries (`./SKILL.md` step 6) and rendered
+   as one step; a step 2 that turns out to stale differently from its
+   carried classification makes the rendered form moot, and `./SKILL.md`
+   step 8 drops it with one line:
    - **(a) Per-task amends** — each task's body and summary fields through
      `../task-engine/references/amend.md`,
      one step per task, in `.claude/TASKS.md` appearance order. A
@@ -112,9 +114,8 @@ its artifact and the tier keeps it; the order never changes.
      state, where run after it would edit a backlog reconciliation has
      already re-planned and shown at its gate.
 
-   Step 2's outcome selects the form at actuation, per feature; the user saw
-   both at the gate — the precedent is `./insert.md` § *When step 1 leaves the
-   feature `[ITERATED]`*.
+   The same selection rule is `./insert.md` § *When step 1 leaves the
+   feature `[ITERATED]`*'s.
 
    **Facts the document does not carry.** A change often states things no
    feature document holds — implementation notes such as which files to
@@ -162,23 +163,24 @@ names `/production-plan amend "<the edge that moved>"` as the follow-up.
   so step 3, when present, is form (a).
 - **Structural** — the scope changes, or a downstream entry's contract
   changes: what a task delivers, its `Files:`, an edge. The full sequence the
-  walk reached, steps 1 to 4, with step 3 rendered in both forms wherever
-  step 2 runs for the task's feature. A `Preconditions:` edge added or dropped
-  is always structural.
+  walk reached, steps 1 to 4, step 3 in the form step 2's carried
+  classification selects. A `Preconditions:` edge added or dropped is always
+  structural.
 
 The branch judges the tier for the proposal, and judges **editorial** only when
 all three hold: the change is wording only; nothing downstream changes meaning
-— no status moves, no edge, no `Files:`, no scope; and the sequence A leaves
-equals the sequence B runs, the one step that writes the anchored artifact.
-When any one fails it judges local or structural, as above. The tier decides how
-long the sequence is. Whether the editorial question is asked is `./SKILL.md`
-step 7's rule over these findings: a `Preconditions:` edge added or dropped, a
-`Files:` change or a scope change classifies the amend not editorial, and all
-three editorial conditions above classify it editorial — either way without
-asking. Only a borderline wording-versus-meaning amend is asked, and then the
-judged tier is the letter the gate marks: editorial marks A, local or
-structural marks B. Editorial runs the editorial sequence; not editorial, the
-judged tier's.
+— no status moves, no edge, no `Files:`, no scope; and the editorial sequence
+is the one step that writes the anchored artifact. When any one fails it
+judges local or structural, as above. The tier decides how long the sequence
+is. Whether a feature's editorial classification is decided at plan time or
+asked at the gate is `./SKILL.md` step 6's rule, which applies
+`../architect/amend.md` § 4 over the touched set and the scope call: a
+`Preconditions:` edge added or dropped, a `Files:` change or a scope change
+classifies the amend not editorial, and all three editorial conditions above
+classify it editorial — either way without asking. Only a borderline
+wording-versus-meaning amend is asked, in that arm's own form, and the answer
+is carried into the step. Editorial runs the editorial sequence; not
+editorial, the judged tier's.
 
 ## Verification
 

@@ -128,7 +128,7 @@ Tasks: 182, 183, 184, 185, 186
 
 ---
 
-## pipeline-revision — `/pipeline-patch` and `/pipeline-revise`: change planned work at proportional cost, through its owners
+## pipeline-revision — `/pipeline-revise`: change planned work as one change set, through its owners
 
 Status: [DONE]
 Doc: .claude/domain/features/pipeline-revision.md
