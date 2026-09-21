@@ -441,7 +441,9 @@ Currently shipped:
   the very end of the run (batched across the whole run, never per-task),
   proposes flipping each candidate's `FEATURES.md` `Status:` from
   `[PLANNED]` to `[DONE]` — user decides per feature, one commit covers
-  every flip approved.
+  every flip approved. Non-interactive run (delegated agent, `/runbook-run`
+  step) never proposes: names candidates in its closing report, outermost run
+  asks.
   `--review` (with optional `--rounds N`, default 1) runs a review/iterate
   loop per task. Availability gate first: both `task-review` and
   `task-iterate` must be present in the session or the run stops BEFORE any
@@ -1416,7 +1418,9 @@ Currently shipped:
   the run**, short but exhaustive, one entry per step from the `Done:` line and
   the report already in hand, printed the same at completion, at a bound and at
   a failure halt; nothing extra read for it; no opt-out flag; `--inline`
-  unchanged.
+  unchanged. Report ends with a `Feature completion candidates:` block from the
+  step reports plus one flip question, asked once after the run (nothing
+  printed when empty); `FEATURES.md` still never written by the orchestrator.
   **Commit convention: one commit per completed step**, staging exactly the
   runbook (its `File:` path; both old and new path on the step that migrated
   it) and the index, then push; `--no-commit`/`--no-push` usual meanings.

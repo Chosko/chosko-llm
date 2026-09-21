@@ -1,6 +1,6 @@
 ---
 name: runbook-run
-version: 0.14.0
+version: 0.14.1
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user, recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
 requires: command:follow-ups
@@ -422,6 +422,13 @@ step in the whole runbook is now `[x]` (then it is `[DONE]` by the completion
 rule above), and report how many steps ran, the same short-but-exhaustive entry
 per step as above, and which steps remain.
 
+**Every closing report ends with the feature completion candidates** — at
+completion, at a bound and at a failure halt alike. List under `Feature
+completion candidates:` every slug a step report named as having all its tasks
+`[DONE]`/`[SKIP]`, then ask once: "Flip to `[DONE]` in FEATURES.md? Name the
+slugs, or say all / none." With none, print nothing; the answer is acted on in
+conversation after the run, and the write set is unchanged.
+
 Whichever of those three ended the run, the closing report is not the last
 thing the run does — CLOSING THE RUN is.
 
@@ -587,7 +594,8 @@ propagate facts (below).
 Do not retry the step, do not attempt the work yourself, and do not continue
 to the next step. Report to the user: which step failed, the reason, what the
 agent said, the same short-but-exhaustive entry for each step that did complete
-before it, and which steps were never started. Then make the closing
+before it, which steps were never started, and the feature completion
+candidates. Then make the closing
 call — a halted run is a run that ended, and it is the one most likely to
 strand unrecorded work. See CLOSING THE RUN.
 

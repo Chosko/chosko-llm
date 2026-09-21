@@ -52,6 +52,8 @@ OPERATING RULES
   when the result file has been written; read it and continue. Ask for one
   child at a time.
 - Never edit <FILE> or .claude/RUNBOOKS.md.
+- Never ask whether to flip a feature to `[DONE]`. Name any feature whose tasks
+  are now all `[DONE]`/`[SKIP]` in the `DONE` report instead.
 - You are executing step <N> of runbook <RUNBOOK>.
 - When finished, end your turn with the literal line `DONE` followed by a
   concise report naming the commit sha(s) and their diffstat (files changed,
@@ -113,6 +115,8 @@ contract, and is never sent to a subagent.
   spawns anything, so filling it invents nothing, whereas a relay path is one
   it would have to make up before knowing whether the relay is used at all.
   `<PROMPT>` and `<RESULT>` pass the same test: the `SPAWN REQUEST` names both.
+- **No feature-flip question.** Relayed as `QUESTIONS FOR USER` it would block
+  the run mid-step; the orchestrator's closing report asks once, after the run.
 - **Naming the runbook and step.** It orients the agent, it makes its report
   attributable, and it is what lets a step's subagent call
   `/runbook-create --append` with no name argument.

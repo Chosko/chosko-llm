@@ -125,7 +125,8 @@ The whole thing reads roughly:
 > Read the task body, CLAUDE.md and `.claude/context/` yourself — you have
 > not been given them. You are running non-interactively and cannot ask the
 > user anything; if something genuinely needs a human decision, stop and
-> report it.
+> report it. Do not propose flipping a feature to `[DONE]` in FEATURES.md —
+> the launcher proposes at the end of the run.
 >
 > When the task is finished, read the `/follow-ups` command's own body — it
 > states what counts as a follow-up, what is excluded, and how an item is

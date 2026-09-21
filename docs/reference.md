@@ -862,7 +862,9 @@ the spawn, no budget at all). The resolved pair is reported per task, so
 When a feature-derived task finishes the last task for its feature, it
 proposes, once, at the end of the run, flipping that feature to `[DONE]` in
 `FEATURES.md`; you decide. A many-task run batches every feature it finished
-into one proposal at the very end, never one per task.
+into one proposal at the very end, never one per task. A run nobody is
+watching — a delegated agent under `--agents`, a `/runbook-run` step — never
+asks: it names the candidates in its report and the outermost run proposes.
 
 On a human-in-the-loop task it pauses at each checkpoint, walks you through
 the manual step, and verifies the outcome itself (the promised file exists,
@@ -1231,7 +1233,9 @@ Between steps it stays quiet — one line per step at its end, `Step 4 done
 still coming straight through — because the record of the run is the closing
 report at the end of it: short but exhaustive, one entry per step drawn from
 the `Done:` line and the step's report, and printed the same way whether the
-run completed, stopped at a bound or halted on a failure.
+run completed, stopped at a bound or halted on a failure. It ends with any
+features whose tasks a step just finished off, and one question — flip them to
+`[DONE]` in `FEATURES.md`? — asked once, after the run rather than mid-step.
 
 **When a step needs a subagent of its own.** In some environments, cloud
 sessions among them, a subagent can't spawn a subagent, which breaks any step

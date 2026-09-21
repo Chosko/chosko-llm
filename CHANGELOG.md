@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.58.6 — 2026-09-21
+
+- **A run nobody is watching no longer asks whether to flip a feature to `[DONE]`:** under `/task-implement --agents` a delegated agent, and under `/runbook-run` a step's subagent, now name any feature whose tasks are all `[DONE]`/`[SKIP]` in their report instead of proposing the flip themselves. Previously the agent treated its one task as the whole run and reached the proposal, and a runbook step's subagent relayed it as a `QUESTIONS FOR USER` block that blocked the run mid-step.
+- **The outermost run proposes instead:** the `--agents` launcher asks at the end of the batch exactly as it always did, and `/runbook-run`'s closing report — at completion, at a `--to` / `--only` / `--steps` bound and at a failure halt alike — now ends with a `Feature completion candidates:` block and one question, asked once before the `/follow-ups` call and printed not at all when there are no candidates. The orchestrator still never writes `FEATURES.md`.
+
 ## 1.58.5 — 2026-09-21
 
 - **A relay child now gets a fixed contract of its own:** `/runbook-run`'s subagent contract carries a second pasted block, `RELAY CHILD RULES`, sent verbatim ahead of `OPERATING RULES` to every child the spawn relay spawns. It tells the child to write its full report to the result file, check that file exists and is non-empty, keep the report out of its returned turn, and end with the literal `DONE` plus one line. Previously those obligations were prose the orchestrator re-worded per spawn, and children were observed returning the report in the turn with no file written, or writing the file but omitting `DONE`.

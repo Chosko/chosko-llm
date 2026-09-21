@@ -37,7 +37,10 @@ Deliberately out:
   to who reads what, not to the implementation flow.
 - **Removing the parent's summary duties.** Feature-completion proposals,
   batched to the end of the run, still happen in the parent — and so does the
-  closing `/follow-ups` call the run makes once, after that proposal.
+  closing `/follow-ups` call the run makes once, after that proposal. The
+  proposal stays in the parent, and the agent is told in its prompt not to
+  propose: the parent already derives the candidates from the `TASKS.md`
+  re-read it makes between tasks, so the return contract is untouched.
 
 ## Architecture
 

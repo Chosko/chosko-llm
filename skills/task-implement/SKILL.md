@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.7.5
+version: 1.7.6
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups
@@ -651,6 +651,11 @@ during the delegated-run "re-read TASKS.md" step (`./delegated-runs.md`) for
 a task a subagent implemented. Either way it's the parent that accumulates
 the candidate list across the whole run.
 
+**A non-interactive run never proposes** — under a delegated agent, or a runbook
+step whose prompt ends with `OPERATING RULES`, the proposal belongs to the
+outermost run. A runbook step names each candidate in its `DONE` report, one
+line; a delegated agent names none — the launcher derives them from `TASKS.md`.
+
 **Propose once, at the very end of the run** — after the last requested
 task's Step 7 (or Step 6, under `--no-commit`), never mid-run even on a
 many-task batch. If the candidate list is empty, say nothing about this at
@@ -824,8 +829,9 @@ DO NOT:
 - Force-push, retry a failed push, defer a task's push to end-of-run, or
   push unless `--no-push`/`--no-commit` was passed — `commit.md`
   § *The push protocol* and its `/task-implement` note.
-- Propose a `[DONE]` feature flip mid-run, or per-task — FEATURE COMPLETION
-  proposals are batched to the very end of the run, always.
+- Propose a `[DONE]` feature flip mid-run, per-task, or at all under a
+  non-interactive invocation — FEATURE COMPLETION proposals are batched to the
+  very end of the run, and it is the outermost run that makes them.
 - Flip a `FEATURES.md` `Status:` to `[DONE]` without the user naming that
   slug in response to the proposal, or flip any status other than
   `[PLANNED]` → `[DONE]` there.

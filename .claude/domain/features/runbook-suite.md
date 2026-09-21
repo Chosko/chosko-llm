@@ -464,7 +464,14 @@ followed by what remains outside the range — and it reads the same way at
 completion, at a bound and at a failure halt. It costs no extra reading: the
 `Done:` lines and the step reports are already in hand, so the read scope is
 untouched. There is no opt-out flag, and `--inline` changes none of it: a user
-who wants live detail has the per-step commits.
+who wants live detail has the per-step commits. The report closes with the
+**feature completion candidates** the step reports named and one question —
+flip them to `[DONE]` in `FEATURES.md`? — asked once, after the report and
+before the `/follow-ups` call, and printed not at all when there are none. A
+step's own agent is barred from asking it, since a relayed approval gate would
+halt the runbook mid-run. The orchestrator proposes and never writes
+`FEATURES.md`: acting on the answer is conversation after the run, and the
+write set stays the runbook and the index.
 
 **The spawned prompt**, assembled in this order so the operating rules are the
 last thing the agent reads. Parts 1–4 are the only text the orchestrator
