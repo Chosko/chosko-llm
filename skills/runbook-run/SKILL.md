@@ -1,6 +1,6 @@
 ---
 name: runbook-run
-version: 0.13.5
+version: 0.14.0
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user, recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
 requires: command:follow-ups
@@ -539,9 +539,9 @@ outside this rule: one is verbatim, the other fixed text.
    slash command.
 6. **OPERATING RULES.** Verbatim from
    `./references/subagent-contract.md`,
-   with only its three placeholders filled in: `<RUNBOOK>` with the runbook's
-   name, `<N>` with the step id, and `<FILE>` with the resolved path from
-   step 1. It is fixed text and goes last.
+   with only that block's three placeholders filled in: `<RUNBOOK>` with the
+   runbook's name, `<N>` with the step id, and `<FILE>` with the resolved path
+   from step 1. It is fixed text and goes last.
 
 ---
 
@@ -673,17 +673,11 @@ On a `SPAWN REQUEST` result, read only the marker and the three lines under it
 — `prompt:`, `result:` and `model:`. Then:
 
 1. **Spawn one child subagent**, with the model the request names (or the run's
-   model where it says `same`), and a prompt that says: read the file at
-   `<prompt path>`, do exactly what it asks, write your **full** report to
-   `<result path>`, and then end your turn with the usual marker and one line
-   — no more — saying the file is written. Add the OPERATING RULES block, as
-   for any spawn: a child is a subagent like any other and is bound by the same
-   contract, `DONE` and all.
-
-   That split is what makes step 3 possible without reading anything. The
-   **file** carries the report, for the caller; the child's **returned turn**
-   carries only the marker, for you. Classifying on a marker is not reading a
-   report.
+   model where it says `same`). Its prompt is the `RELAY CHILD RULES` block
+   followed by the `OPERATING RULES` block, both **verbatim** from
+   `./references/subagent-contract.md`, in the form THE SPAWNED PROMPT part 6
+   uses: `<PROMPT>` and `<RESULT>` filled with the request's two paths, and
+   `<RUNBOOK>`, `<N>` and `<FILE>` as for any spawn. Compose nothing else.
 2. **Wait for the child's result**, exactly as for a step's own agent. The
    spawn call returns an id, not the result.
 3. **Classify the child's returned turn exactly as a step's own agent's**, by
@@ -698,13 +692,20 @@ On a `SPAWN REQUEST` result, read only the marker and the three lines under it
      told that reads an absent or failure-noting file, finishes its step, and
      the runbook gets a `Done:` line for work that never happened — the one
      outcome this suite exists to prevent.
+   - **A `DONE` child, before step 4** — check `<result path>` exists and is
+     non-empty, opening nothing; if absent or empty, re-prompt that same child
+     once ("Your result file at `<result path>` is missing. Write your full
+     report there and end your turn with `DONE`.") and, if it is still absent or
+     empty, fail the step exactly as above, the `Done:` line naming the missing
+     result file. The re-prompt is not a relay round and does not count toward
+     the cap.
 4. **Reply to the same caller subagent** — the one that is suspended awaiting
    this — with one line: the child is finished, and its report is at
    `<result path>`. The caller reads the file and continues.
 
-**Open neither file.** Not the prompt, not the result, not "just to check" —
-classification runs on the child's returned marker, which is why it never needs
-to.
+**Open neither file.** Not the prompt, not the result, not "just to check" (an
+existence check is not opening) — classification runs on the child's returned
+marker, which is why it never needs to.
 Forwarding paths is what keeps this cheap: the whole point of routing a child's
 work through a file is that its content never passes through the orchestrator's
 context. This is the same discipline as the question relay's *compresses, does

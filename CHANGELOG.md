@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.58.5 — 2026-09-21
+
+- **A relay child now gets a fixed contract of its own:** `/runbook-run`'s subagent contract carries a second pasted block, `RELAY CHILD RULES`, sent verbatim ahead of `OPERATING RULES` to every child the spawn relay spawns. It tells the child to write its full report to the result file, check that file exists and is non-empty, keep the report out of its returned turn, and end with the literal `DONE` plus one line. Previously those obligations were prose the orchestrator re-worded per spawn, and children were observed returning the report in the turn with no file written, or writing the file but omitting `DONE`.
+- **The orchestrator checks the result file exists before replying to the caller:** on a `DONE` child, an absent or empty result file re-prompts that same child once with a fixed line, and a second miss fails the step with the missing path named in the `Done:` line. The re-prompt is not a relay round and does not count against the eight-round cap, and an existence check is still not opening the file.
+
 ## 1.58.4 — 2026-09-21
 
 - **`/runbook-run` is quiet between steps:** it now prints one line per step at that step's end — `Step 4 done (abc1234). Starting step 5.`, or the failure line — and no longer narrates spawning, waiting, classifying a result, writing the `Done:` line or committing. Relayed `QUESTIONS FOR USER` blocks and the spawn relay's lines still come through verbatim, so a run that needs an answer still asks for it at once. The same holds under `--inline`.

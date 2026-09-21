@@ -576,7 +576,12 @@ nesting level** — sideways, not down, which is the whole mechanism — waits f
 it, and replies to the suspended caller that the result file is ready. It
 **opens neither file**: it forwards paths, which is what keeps the child's
 output out of its context, and is the same discipline as the question relay's
-*compresses, does not answer*.
+*compresses, does not answer*. The child is bound by its own verbatim block,
+`RELAY CHILD RULES`, pasted ahead of the operating rules, rather than by prose
+the orchestrator composes per spawn. The one stated exception to *forwards,
+does not read* is an existence check on the result path before the caller is
+told the file is ready: a missing or empty file buys the same child one
+re-prompt, and still missing fails the step.
 
 Four decisions inside it are worth naming:
 

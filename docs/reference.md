@@ -1242,7 +1242,12 @@ child's prompt to a temp file and end its turn with `SPAWN REQUEST`. The
 orchestrator spawns that child **at its own level** (sideways rather than
 down, which is why it works), waits for it, and tells the caller its result
 is ready. It forwards the two paths and opens neither file, so the child's
-output never enters the orchestrator's context. Detection sits with the
+output never enters the orchestrator's context. The child is bound by a fixed
+`RELAY CHILD RULES` block pasted ahead of the operating rules rather than by
+prose the orchestrator composes, and the one thing the orchestrator does touch
+is whether the result file exists and is non-empty before it replies — a
+missing one buys that child a single re-prompt, then fails the step. Detection
+sits with the
 subagent, because only the agent that needs the tool can tell whether it has
 it. Where you already know the environment is flat, `--relay-spawns` skips
 the discovery.

@@ -1310,10 +1310,12 @@ Currently shipped:
   line is backfilled in place — to the highest id present, counting steps about
   to be removed — by whichever of `/runbook-create --append` and
   `/runbook-prune` writes it first)
-  and `references/subagent-contract.md` (the OPERATING RULES block pasted
-  verbatim into every spawned prompt — three placeholders, `<RUNBOOK>`, `<N>`
-  and `<FILE>` (the body's `File:` path, for the never-edit rule; relay file
-  names stay built from `<RUNBOOK>`/`<N>`),
+  and `references/subagent-contract.md` (two fenced blocks: OPERATING RULES,
+  pasted verbatim into every spawned prompt, and RELAY CHILD RULES, pasted
+  verbatim ahead of it into a relay child's prompt only — five placeholders,
+  `<RUNBOOK>`, `<N>` and `<FILE>` (the body's `File:` path, for the never-edit
+  rule; relay file names stay built from `<RUNBOOK>`/`<N>`), plus
+  `<PROMPT>`/`<RESULT>` on the child block alone,
   and it now carries the `SPAWN REQUEST` rule), both cited by the other three
   by a `./references/<f>.md` path relative to the citing body. A third, `references/inline-contract.md`,
   holds the fixed inline rule set that replaces the OPERATING RULES under
@@ -1383,8 +1385,10 @@ Currently shipped:
   down, which is the whole mechanism — waits, then tells the same suspended
   caller the result file is ready. It **opens neither file**: forwards, does not
   read, the same discipline as *compresses, does not answer*, and what keeps the
-  child's output out of its context. Detection is the SUBAGENT's, not the
-  orchestrator's — only the agent needing the tool can tell whether it has it,
+  child's output out of its context. The child is bound by the verbatim RELAY
+  CHILD RULES block, and the one exception is an existence check on the result
+  path — one re-prompt, then the step fails. Detection is the SUBAGENT's, not
+  the orchestrator's — only the agent needing the tool can tell if it has it,
   and a probe would measure the wrong environment. The caller stays suspended
   throughout, so one agent works at a time — the one stated exception to *never
   two subagents*; a child's own `SPAWN REQUEST` is served identically, so
