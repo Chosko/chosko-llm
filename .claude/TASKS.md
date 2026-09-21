@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 246
+Last task number: 253
 
 ---
 
@@ -181,3 +181,66 @@ Status: [DONE]
 Target: claude
 Files: skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, skills/runbook-run/SKILL.md, skills/runbook-run/references/subagent-contract.md, .claude/domain/task-workflow.md, .claude/domain/features/task-implement-launcher.md, .claude/domain/features/runbook-suite.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: 245
+
+---
+
+## 247. Ship `claude-md:editing-discipline` and cite it from the authoring guide, the feature template and `/task-review`
+
+Status: [MISSING]
+Target: claude
+Files: claude-md/editing-discipline.md, CLAUDE.md, docs/authoring-guide.md, skills/architect/feature-doc-template.md, skills/task-review/SKILL.md, docs/reference.md, README.md, .claude/context/features.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 248. Add `/doc-consolidate`: rewrite a document under the editing discipline, with a drops-only ledger and an independent verifier
+
+Status: [MISSING]
+Target: claude
+Files: skills/doc-consolidate/SKILL.md, skills/doc-consolidate/verifier.md, docs/reference.md, README.md, docs/cli-help.txt, .claude/context/features.md, VERSION, CHANGELOG.md
+Preconditions: 247
+
+---
+
+## 249. Reframe `/task-add`'s ownership question as a design-change check and drop the read-only marker
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-add.md, skills/task-implement/SKILL.md, skills/task-engine/references/amend.md, skills/pipeline-engine/references/routing.md, .claude/domain/task-workflow.md, .claude/domain/product-workflow.md, .claude/context/features.md, docs/reference.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 250. Two-group closing report for `/task-implement` and `/task-review`; consequential edits are in scope, untraceable doc edits are a finding
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-implement/SKILL.md, skills/task-implement/review-rounds.md, skills/task-review/SKILL.md, .claude/domain/task-workflow.md, .claude/domain/features/task-peer-review.md, .claude/context/features.md, docs/reference.md, VERSION, CHANGELOG.md
+Preconditions: 249
+
+---
+
+## 251. `/architect amend`: a body read classifies, the stricter carried classification wins, several features per run
+
+Status: [MISSING]
+Target: claude
+Files: skills/architect/amend.md, skills/architect/SKILL.md, skills/pipeline-revise/SKILL.md, skills/pipeline-engine/references/routing.md, .claude/domain/features/owner-amend-arms.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 252. Direct, headless-capable amend arms for `/product-roadmap`, `/production-plan` and `/product-design`
+
+Status: [MISSING]
+Target: claude
+Files: skills/product-roadmap/SKILL.md, skills/product-roadmap/amend.md, skills/production-plan/SKILL.md, skills/production-plan/amend.md, skills/product-design/SKILL.md, skills/product-design/amend.md, skills/product-design/resuming.md, skills/pipeline-engine/references/routing.md, skills/pipeline-revise/amend.md, skills/pipeline-revise/delete.md, .claude/domain/features/owner-amend-arms.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 253. `/pipeline-revise` takes a change set behind one numbered plan gate; `/pipeline-patch` retired
+
+Status: [MISSING]
+Target: claude
+Files: skills/pipeline-revise/SKILL.md, skills/pipeline-revise/amend.md, skills/pipeline-revise/insert.md, skills/pipeline-revise/delete.md, skills/pipeline-revise/reorder.md, commands/pipeline-patch.md, skills/pipeline-engine/SKILL.md, skills/pipeline-engine/references/lint.md, skills/pipeline-engine/references/routing.md, skills/pipeline-suggest/SKILL.md, commands/pipeline-check.md, commands/runbook-create.md, commands/task-add.md, skills/architect/amend.md, skills/task-engine/SKILL.md, docs/reference.md, docs/authoring-guide.md, README.md, .claude/domain/features/pipeline-revision.md, .claude/domain/features/pipeline-suggest.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/context/features.md, VERSION, CHANGELOG.md
+Preconditions: 251, 252
