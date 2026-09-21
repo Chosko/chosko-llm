@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 256
+Last task number: 257
 
 ---
 
@@ -270,6 +270,15 @@ Preconditions: none
 Status: [MISSING]
 Target: claude
 Files: skills/doc-consolidate/SKILL.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 257. `/follow-ups` renders its list under a `Follow-ups` heading
+
+Status: [MISSING]
+Target: claude
+Files: commands/follow-ups.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none
 
 ---
