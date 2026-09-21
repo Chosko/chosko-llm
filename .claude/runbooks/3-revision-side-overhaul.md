@@ -16,7 +16,7 @@ Context: none
 
 Done: 2026-09-21, commit `565509d` (12 files, +146/-57). Decision: `skills/architect/SKILL.md` bumped to 0.12.6 too, since the template is installed as part of the skill folder.
 
-## [ ] 2. Implement 249 — /task-add design-change question
+## [x] 2. Implement 249 — /task-add design-change question
 
 Depends on: none
 
@@ -25,6 +25,8 @@ Context: none
 ```prompt
 /task-implement 249 --review
 ```
+
+Done: 2026-09-21, commit `d8ca4d9` (13 files, +140/-215). Decision: `docs/reference.md` gained a paragraph on the question; the repo's own dogfood copies under `.claude/commands` and `.claude/skills` were left for their own refresh commit.
 
 ## [ ] 3. Implement 251 — /architect amend precision, multi-feature
 
