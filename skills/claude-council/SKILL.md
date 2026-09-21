@@ -1,10 +1,23 @@
 ---
 name: claude-council
-version: 0.1.2
+version: 0.1.4
 type: skill
-description: 'Pressure-test a high-stakes decision with a structured LLM Council — five thinking-lens advisors (Red Team, First Principles, Expansionist, Outsider, Executor), anonymised peer review, forced debate when consensus looks too clean, and a dual-chairman synthesis that preserves dissent. Triggers: /claude-council, "convene the council", "run this by the council", "council this", "pressure-test this", "stress-test this", "war room this", "debate this", "torn between two options", "this is a big decision", "I need outside perspectives". Not for factual questions, coding help, debugging, quick yes/no calls, or emotional support. Suffixes: "with codex", "deep", "quick". Secondary: /claude-council outcome <sha1> <note>, /claude-council meta.'
+description: 'Pressure-test a high-stakes decision with a structured LLM Council — five thinking-lens advisors, anonymised peer review, forced debate when consensus looks too clean, and a dual-chairman synthesis that preserves dissent. Trigger on /claude-council, "convene the council", "council this", "pressure-test this", "stress-test this", "war room this", "debate this", "torn between two options", "this is a big decision", "I need outside perspectives". Not for factual questions, coding help, debugging, quick yes/no calls, or emotional support.'
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent, AskUserQuestion
 ---
+
+# /claude-council
+# Global skill: pressure-test a high-stakes decision with a structured LLM
+# Council — five thinking-lens advisors (Red Team, First Principles,
+# Expansionist, Outsider, Executor), anonymised peer review, forced debate
+# when consensus looks too clean, and a dual-chairman synthesis that preserves
+# dissent. Triggered by Claude on a genuine fork ("pressure-test this", "run
+# this by the council", "torn between two options") or invoked by name. Needs
+# `jq` on PATH for the journal.
+# Usage: /claude-council <decision to pressure-test>
+#        /claude-council <decision> deep | quick | with codex
+#        /claude-council outcome <sha1> <note>   (record how a logged run turned out)
+#        /claude-council meta                    (persona refinement after 5+ runs; needs jq)
 
 # LLM Council
 

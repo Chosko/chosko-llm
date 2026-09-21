@@ -3,8 +3,10 @@
 ## Overview
 
 `scripts/cmd-show.sh` inspect single feature detail: name, kind,
-installed/latest version, status, description, path — optional print
-body or line-by-line diff. Unlike `ls`, can also inspect
+installed/latest version, status, description, path, then the body's
+leading `#` header (the `# /name` / `# Usage:` block carrying the flags
+the short-by-contract `description` no longer does) — optional print
+full body or line-by-line diff instead. Unlike `ls`, can also inspect
 **local-only** feature (installed but absent from managed clone).
 
 ## Public API
@@ -17,15 +19,17 @@ CLI:
 - `--latest` — show latest copy from managed clone.
 - `--diff` — compare latest vs installed (summary; add `--content` for line
   diff). These three mutually exclusive (`die` if more than one).
-- `--content` — also print body of selected copy (or diff).
+- `--content` — print full body of selected copy (or diff) in place of the
+  header block.
 - `--local` / `--global` — scope, see below.
 - `-h` / `--help` — usage, exit 0.
 
 Default view (no flag): installed copy if installed, else latest.
 
 Output: metadata block (Name, Kind, Installed, Latest, Status, Description,
-Path) using same status/kind color vocabulary as `cmd-ls`, then optional
-body/diff, then status-specific footer tip (`add` / `update` /
+Path) using same status/kind color vocabulary as `cmd-ls`, then the header
+block (every view, unless `--content`; nothing when body has none), then
+optional body/diff, then status-specific footer tip (`add` / `update` /
 `show --diff --content` / up-to-date / local-only).
 
 Exit codes: 0 normal; 1 (via `die`) on no feature, unknown flag, more
@@ -71,6 +75,20 @@ than one view flag, or unresolvable/ambiguous name.
   also probes `check_migration_pending` across every kind the bare name
   matches, appending one line naming the pending migration when found —
   the die itself is unchanged otherwise; only the message gains a line.
+- **Header block (`print_header_block`, task 240).** Awk over the file
+  past the frontmatter's second `---`: skips blank lines, then prints the
+  contiguous run of lines matching `^#($|[^#])` — single-`#` comment lines,
+  `##` headings excluded — and stops at the first blank or non-`#` line. A
+  body with no such run prints nothing, which is the case for the two `.sh`
+  kinds (heredoc terminator sits between frontmatter and first comment).
+  Read from the copy the view shows (`inst_file` for `installed`,
+  `src_file` otherwise), falling back to `src_file` when the chosen file is
+  absent or kind is claude-md (installed section carries no frontmatter).
+  Indented two spaces via `sed`, printed only when `show_content` is 0 —
+  `--content` prints the full body, which opens with the same block. This
+  is the human-facing side of the `description` contract
+  (`../../docs/authoring-guide.md` § The body header): flags live in the
+  header, so `show` must surface it without a flag.
 - **claude-md bodies have no frontmatter once installed.** Installed
   description unavailable for claude-md (managed section carries no
   YAML); body extracted from begin/end markers in
@@ -84,7 +102,8 @@ than one view flag, or unresolvable/ambiguous name.
 ## Domain dependencies
 
 - `../../docs/authoring-guide.md` — frontmatter (`version`, `description`)
-  this surfaces.
+  this surfaces; § The `description` contract and § The body header explain
+  why the header block is printed (flags moved out of the description).
 - `../../CLAUDE.md` — "filesystem is source of truth"; status derived
   by comparing two homes, no lockfile.
 
@@ -105,6 +124,9 @@ than one view flag, or unresolvable/ambiguous name.
   `cmd-show.sh`.
 - Change diff rendering (currently `diff -u` over extracted bodies) →
   `diff)` branch in `cmd-show.sh`.
+- Change what counts as the header block, or which copy it is read from →
+  `print_header_block` and the `header_file` selection just below it in
+  `cmd-show.sh`.
 - Change the statusline-in-local-scope footer note → the
   `scope_is_local` check just before the `case "$status"` footer block in
   `cmd-show.sh`.

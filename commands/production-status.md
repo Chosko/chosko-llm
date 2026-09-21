@@ -1,8 +1,8 @@
 ---
 name: production-status
-version: 0.3.1
+version: 0.3.2
 type: command
-description: Report what to build next by joining PLAN.md, FEATURES.md and TASKS.md — the active milestone with its roadmap goal and exit criteria, its features in plan order as a five-column markdown table whose Next column names the one concrete action each needs, the ready set, the single recommended next feature, blocked features named with their blocker, coverage gaps, features missing from the plan, and the remaining milestones. Readiness, the Next action and coverage are derived on every read. A [DONE] feature is reported plainly, never as ready, blocked, or recommended — it still satisfies dependency edges pointing at it. A task ID a feature names but TASKS.md no longer holds is counted as archived, from its absence alone. Read-only — writes nothing, runs no shell, and never opens a file under .claude/tasks/.
+description: Report what to build next by joining PLAN.md, FEATURES.md and TASKS.md — the active milestone, its features in plan order with the one action each needs, the ready set and the recommended next feature. Use it when deciding what to pick up; the pipeline's read side, spanning every stage and entering none.
 ---
 
 # /production-status
@@ -11,8 +11,16 @@ description: Report what to build next by joining PLAN.md, FEATURES.md and TASKS
 # dependency edges), `.claude/FEATURES.md` (each feature's design/backlog
 # state) and `.claude/TASKS.md` (the work), plus
 # `.claude/domain/product-roadmap.md` for the active milestone's goal and
-# exit criteria. Read-only — never modifies, creates or commits any file,
-# and never opens a file under `.claude/tasks/`.
+# exit criteria. Prints the milestone's features as a five-column table whose
+# Next column names the one concrete action each needs, the ready set, the
+# single recommended next feature, blocked features with their blocker,
+# coverage gaps, features missing from the plan, and the remaining
+# milestones. Readiness, Next and coverage are derived on every read. A
+# [DONE] feature is reported plainly — never ready, blocked or recommended —
+# and still satisfies dependency edges pointing at it; a task id a feature
+# names but TASKS.md no longer holds counts as archived. Read-only — never
+# modifies, creates or commits any file, runs no shell, and never opens a
+# file under `.claude/tasks/`.
 # Usage: /production-status
 #        /production-status --task-ids
 #        /production-status milestone=<slug>

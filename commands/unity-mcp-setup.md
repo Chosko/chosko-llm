@@ -1,8 +1,9 @@
 ---
 name: unity-mcp-setup
-version: 0.2.2
+version: 0.2.3
 type: command
-description: Make a Unity project ready for MCP-assisted task implementation. Idempotent and re-runnable — detects the project, installs the Unity-side com.coplaydev.unity-mcp package into Packages/manifest.json if missing, records the project-side fact in versioned artifacts (a terse CLAUDE.md marker plus, when a context layer exists, .claude/context/mcp-tools.md and an INDEX.md row), and registers + verifies the machine-local Claude-side UnityMCP server via claude mcp add / claude mcp list. Configures only what is missing. Authoring command — leaves its versioned artifacts uncommitted for review by default; pass --commit to commit and push them (--commit --no-push to skip the push). The Claude-side registration is machine-local config (in ~/.claude.json), not a repo change, so it happens regardless of the flag.
+description: Make a Unity project ready for MCP-assisted task implementation — install the Unity-side MCP package, record the project-side marker in CLAUDE.md and the context layer, and register and verify the machine-local UnityMCP server. Use it once per Unity project and once per machine; a re-run configures only what is missing.
+disable-model-invocation: true
 ---
 
 # /unity-mcp-setup
@@ -11,7 +12,14 @@ description: Make a Unity project ready for MCP-assisted task implementation. Id
 # marker, and an optional context-layer doc) and a MACHINE-LOCAL Claude side
 # (the `claude mcp add` registration in ~/.claude.json). The command is the
 # single, re-runnable entry point that fills in only what is missing and
-# carries a from-nothing project all the way to a tested connection.
+# carries a from-nothing project all the way to a tested connection: adds
+# `com.coplaydev.unity-mcp` to `Packages/manifest.json` if missing, writes
+# the CLAUDE.md marker plus, when a context layer exists,
+# `.claude/context/mcp-tools.md` and an INDEX.md row, and registers and
+# verifies the `UnityMCP` server via `claude mcp add` / `claude mcp list`.
+# Authoring command — leaves its versioned artifacts uncommitted for review
+# unless `--commit` is passed; the Claude-side registration is machine-local
+# config, not a repo change, so it happens regardless of the flag.
 # Usage: /unity-mcp-setup
 # Usage with commit: /unity-mcp-setup --commit
 #   (commit and push the versioned artifacts this command writes)

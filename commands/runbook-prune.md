@@ -1,8 +1,9 @@
 ---
 name: runbook-prune
-version: 0.1.1
+version: 0.1.2
 type: command
-description: Prune the finished steps out of one runbook — remove every [x] step, heading through prompt block, and record the removed ids on the body header's Archive: line so nothing that referred to them dangles. Takes one runbook as `<id>`, `<name>` or `<id>-<name>`, resolved by the runbook schema's rule. An id in Archive: counts as [x], so a surviving Depends on: naming a pruned step still resolves and the index's Steps: count keeps counting archived ids toward both halves — a runbook pruned to nothing reads 7/7, not 0/0. Only [x] is removed; [ ], [~] and [!] are never touched, and a struck step is [x] like any other. A body with no Last step number: line is backfilled to the highest id present — counting the steps about to go — before anything is deleted, so a prune can never lower the next append's id; the counter is otherwise never touched, which is why pruning the highest-numbered step is legal. Refuses a [RUNNING] runbook and one with a [~] step; any other status may be pruned. A runbook with no [x] steps says so and stops. Always plans and confirms before writing. Commits and pushes by default; pass --no-commit to leave the changes uncommitted, or --no-push to commit without pushing.
+description: Prune the finished steps out of one runbook — remove every [x] step and record its id on the body's Archive: line, so a surviving dependency and the index's step count still resolve. Use it to shrink a long-running runbook without renumbering a step or touching a pending one.
+disable-model-invocation: true
 requires: skill:runbook-run
 ---
 
@@ -11,7 +12,14 @@ requires: skill:runbook-run
 # record their ids on the header's `Archive:` line. Reads and writes
 # exactly two files — the body at its index block's `File:` path, and
 # `.claude/RUNBOOKS.md`. Always reports the plan and asks for explicit
-# confirmation before writing anything.
+# confirmation before writing anything. Only [x] steps are removed; [ ], [~]
+# and [!] are never touched, and a struck step is [x] like any other. An id
+# in `Archive:` still counts as [x], so a surviving `Depends on:` resolves
+# and the index's `Steps:` count keeps counting archived ids. A body with no
+# `Last step number:` line is backfilled to the highest id present before
+# anything is deleted; the counter is otherwise never touched. Refuses a
+# [RUNNING] runbook and one with a [~] step; a runbook with no [x] step says
+# so and stops. Commits and pushes by default.
 # Usage: /runbook-prune <id|name|id-name>
 #        /runbook-prune <id|name|id-name> --no-commit   (prune, skip the commit and push)
 #        /runbook-prune <id|name|id-name> --no-push     (commit as usual, skip the push)

@@ -153,9 +153,10 @@ Currently shipped:
   output. Exists because a rule stated in four bodies is four things to
   update and three chances to forget. `SKILL.md` is a MAP, not a rule
   holder — it says which reference file owns what and repeats the
-  not-invocable statement for an agent that opened the file without
-  reading frontmatter; the `description` says the same thing in the words
-  skill selection matches on, which is what keeps it out of suggestions.
+  not-invocable statement, as a two-line "read by path; not invoked" `#`
+  header, for an agent that opened the file without reading frontmatter;
+  `disable-model-invocation: true` in that frontmatter is what keeps it out
+  of suggestions — the description never reaches the model.
   Eight files under `references/`, one authority each:
   `resolution.md` (`.claude/TASKS.md` schema and parsing — appearance
   order is the backlog's order and need not be numeric, since
@@ -966,8 +967,9 @@ Currently shipped:
   beside `task-engine` and deliberately NOT merged with it (open question in
   `../domain/features/pipeline-engine.md`). Same pattern: no arguments, runs
   nothing, no output; `SKILL.md` is a MAP carrying no rule text, the
-  not-invocable statement repeated in body and `description` so skill
-  selection never suggests it. Four files under `references/`, one authority
+  not-invocable statement in its `#` header and
+  `disable-model-invocation: true` in its frontmatter so skill selection
+  never sees it. Four files under `references/`, one authority
   each: `probes.md` (fixed set of cheap filesystem probes describing a
   project's pipeline setup, the one-line verdict every consumer prints
   identically, and the in-session reuse rule naming the writers whose runs
@@ -1715,8 +1717,50 @@ replaces: command:<name>     # OPTIONAL, only on a kind change; see below
 requires: skill:<name>       # OPTIONAL, any kind; comma-separated; see below
 event: PreToolUse            # hook kind ONLY; required there
 matcher: AskUserQuestion     # hook kind ONLY; optional, narrows event to one tool
+disable-model-invocation: true   # OPTIONAL loading-control key; see below
+paths:                       # OPTIONAL, skills only; see below
+  - "Assets/**"
 ---
 ```
+
+**`description` is short by contract** (tasks 240–242;
+`../../docs/authoring-guide.md` § The `description` contract). Claude Code
+injects every installed description into the system prompt at session start
+as one `- name: description` line and truncates each at 1,536 chars (and at
+a literal ` --- ` before that), so a description costs every session whether
+or not the feature runs. Each says what the feature does and when to use it,
+front-loaded: ≤ 60 words / 400 chars for a feature invoked by name; ≤ 150
+words / 1,000 chars for the four auto-trigger skills (`claude-council`,
+`runbook-suggest`, `pipeline-suggest`, `unity-mcp-skill`), trigger phrases
+first, "Not for" list last; pipeline stage in exactly one clause. Flags,
+argument grammar, refusals, read-only contracts and commit/push defaults
+live in the body's leading `#` header (`# /name`, summary, `# Usage:`,
+`# Examples:`), which loads only on invocation and which `cmd-show` prints
+under the description ([cmd-show.md](./cmd-show.md)). Every shipped body has
+one; the two engines' is a two-line "read by path; not invoked" note. The
+repo-local `/context-budget` flags a description over 60 words (150 for the
+four auto-trigger skills), over 1,536 chars or containing ` --- `. Measured:
+rendered list 45,105 chars at v1.57.4 → 13,035 on disk, 9,977 model-visible.
+
+**Loading-control keys** — three Claude Code frontmatter keys this repo may
+use; `parse_frontmatter` ignores unknown keys, so they pass through
+`add` / `update` untouched and are never a rejection path:
+- `disable-model-invocation: true` (commands, skills) — description kept
+  out of the model's context; only the user invokes it, by typing
+  `/<name>`; stays listed and typeable. **Carried by ten features:** the two
+  reference libraries `skills/task-engine/`, `skills/pipeline-engine/`, and
+  eight wizards / housekeeping commands never worth suggesting unprompted —
+  `commands/project-setup.md`, `commands/task-setup.md`,
+  `commands/domain-setup.md`, `commands/unity-mcp-setup.md`,
+  `commands/refactor-codebase.md`, `commands/refactor-tests.md`,
+  `commands/runbook-prune.md`, `commands/runbook-clean.md`. `task-review` /
+  `task-iterate` deliberately NOT hidden — `/task-implement --review` spawns
+  them by name.
+- `user-invocable: false` (commands, skills) — hidden from the `/` menu;
+  model-only. Carried by nothing currently.
+- `paths:` (skills only) — loads only when files matching its globs are in
+  play. **Carried by one:** `skills/unity-mcp-skill/` (`Assets/**`,
+  `ProjectSettings/**`, `Packages/**`), so it loads only in a Unity project.
 
 `replaces:` is an optional key from the kind-migration path: set it when
 a feature changes kind (`commands/<n>.md` rewritten as `skills/<n>/SKILL.md`),

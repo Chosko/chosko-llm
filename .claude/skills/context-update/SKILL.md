@@ -1,8 +1,8 @@
 ---
 name: context-update
-version: 1.4.0
+version: 1.4.1
 type: skill
-description: Update an existing navigation context layer after code changes, then auto-commit and push the context files it updated. Works on both flat and nested layers; on a nested layer pass unit=<names> to scope the run to specific units. Pass --no-commit to leave them uncommitted, or --no-push to commit without pushing.
+description: Update an existing navigation context layer after code changes — by default only the context files the commits since INDEX.md's Last updated date touched — then commit and push what it updated. Use it after landing code a context file describes.
 replaces: command:context-update
 ---
 

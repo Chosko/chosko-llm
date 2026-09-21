@@ -1,17 +1,23 @@
 ---
 name: pipeline-check
-version: 0.1.1
+version: 0.1.2
 type: command
-description: Report structural drift across the pipeline's indexes — FEATURES.md, TASKS.md, PLAN.md and RUNBOOKS.md — as findings grouped by artifact, each with its ERROR or WARNING severity and the one command that fixes it, closing on a count of both; a clean project prints one line. feature=<slug> scopes the report to that feature and to the tasks and plan edges that name it. An absent index drops its findings rather than failing the run. Read-only — writes nothing, creates nothing, commits nothing, flips no status, never opens a file under .claude/tasks/ (the archive included), .claude/runbooks/ or .claude/domain/features/, and runs no shell beyond the probe.
+description: Report structural drift across the pipeline's indexes — FEATURES.md, TASKS.md, PLAN.md and RUNBOOKS.md — as findings grouped by artifact, each with its severity and the one command that fixes it. Use it when an index looks out of step with another, or before revising planned work.
 requires: skill:pipeline-engine
 ---
 
 # /pipeline-check
 # Global command: report drift across the pipeline's indexes — a reference
 # between them that does not resolve, or a state its owner has not acted on —
-# each finding with the one command that fixes it. Read-only.
+# each finding with its ERROR or WARNING severity and the one command that
+# fixes it, closing on a count of both; a clean project prints one line. An
+# absent index drops its findings rather than failing the run. Read-only —
+# writes nothing, creates nothing, commits nothing, flips no status, never
+# opens a file under `.claude/tasks/` (the archive included),
+# `.claude/runbooks/` or `.claude/domain/features/`, and runs no shell
+# beyond the probe.
 # Usage: /pipeline-check
-#        /pipeline-check feature=<slug>
+#        /pipeline-check feature=<slug>      (scope to that feature and the tasks and plan edges naming it)
 # Examples: /pipeline-check
 #           /pipeline-check feature=password-auth
 

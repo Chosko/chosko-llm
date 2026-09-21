@@ -1,15 +1,28 @@
 ---
 name: task-review
-version: 0.2.3
+version: 0.2.4
 type: skill
-description: Audit a diff against the acceptance criteria of the task that produced it and report structured findings. Three input forms — no argument reviews the uncommitted working tree, a branch name reviews that branch against the repository's default branch or an explicit base=<ref>, and a PR number or URL reviews that pull request through gh. Every finding passes a confidence gate before it is written: report only what is held at 80% confidence or better, citing a file:line and naming a concrete failure mode, with severities BLOCKING / IMPORTANT / ADVISORY and an unmet acceptance criterion always BLOCKING. The task is resolved from task=<n>, the branch name, the PR title, or the most recently modified .claude/tasks file, and an unresolvable task stops the run rather than degrading into a generic code review. A review that reports no findings is a valid, complete result. Read-only — it edits no source, test, task or status file, runs no mutating command, opens no pull request, and writes at most the opt-in .claude/reviews/<task>-R<round>.md report a manual run asked for. It also invokes no test command, in any mode, under any budget, under any testing policy and on either invocation path: a green suite is an input its caller hands it, and where the caller reports skip-tests mode it says nothing ran and reports a criterion depending on runtime behaviour as unverifiable rather than re-deriving it. A run spawned by /task-implement --review may carry a budget block naming a read tier (shallow / standard / deep); the skill honours it from task-engine's references/review-budget.md, which is why it declares requires: skill:task-engine — the navigation layer is read in full and never counted at any tier, only distinct source and test files beyond the diff count against the cap, and a cap that actually binds is reported in one line. An invocation with no budget block — a manual run, or a spawn whose effort resolved to same — reads unbounded, exactly as before.
+description: Audit a diff against the acceptance criteria of the task that produced it and report structured findings, each cited to a file:line with a BLOCKING, IMPORTANT or ADVISORY severity. Use it on an uncommitted tree, a branch or a pull request before the work is accepted; /task-implement's review rounds spawn it as a fresh-context reviewer.
 requires: skill:task-engine
 ---
 
 # /task-review
 # Global skill: audit a diff against the acceptance criteria of the task that
-# produced it, and report structured findings. Read-only. One reviewer, one
-# pass, no fan-out.
+# produced it, and report structured findings. One reviewer, one pass, no
+# fan-out. Every finding passes a confidence gate — 80% or better, a
+# file:line and a concrete failure mode — and an unmet acceptance criterion
+# is always BLOCKING; no findings is a valid, complete result. The task
+# resolves from task=<n>, the branch name, the PR title or the most recently
+# modified .claude/tasks file, and an unresolvable task stops the run rather
+# than degrading into a generic code review. Read-only — edits no source,
+# test, task or status file, runs no mutating command and never a test
+# command (a green suite is an input its caller hands it; in skip-tests mode
+# a runtime-dependent criterion is reported unverifiable), opens no pull
+# request, and writes at most the opt-in .claude/reviews/<task>-R<round>.md
+# report a manual run asked for. A spawn from /task-implement --review may
+# carry a budget block naming a read tier (shallow / standard / deep),
+# honoured from task-engine's references/review-budget.md; with no block it
+# reads unbounded.
 # Usage: /task-review                        (review uncommitted changes)
 #        /task-review <branch>               (review a branch against its base)
 #        /task-review <branch> base=<ref>    (override the base)

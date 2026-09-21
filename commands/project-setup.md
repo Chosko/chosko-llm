@@ -1,15 +1,26 @@
 ---
 name: project-setup
-version: 0.7.2
+version: 0.7.3
 type: command
-description: Interactive first-time project initialization wizard. Gathers all choices upfront (VCS, CLAUDE.md content, AGENTS.md, task backlog, domain layer, context layer), confirms once, then executes them in a fixed order. Orchestrates /task-setup, /domain-setup (before the context layer, since context files cross-reference domain docs), and the /context-build skill, which it always runs in its default flat layout (it never offers the nested layout — /context-convert restructures a layer later); injects a VCS-mapping section into CLAUDE.md for non-git projects (e.g. Plastic SCM). On Unity projects, also injects a "Tasks implementation" section into CLAUDE.md covering editor dirty-tree noise handling (with a self-updating known-noise-files list maintained by future sessions) and, when the project has no test suite, the permanent skip-tests testing-policy marker for /task-implement, and offers to run /unity-mcp-setup (as the last step, after the context layer) to wire up MCP-assisted task implementation. Authoring command — leaves all output uncommitted for one review pass by default; pass --commit to commit and push its own artifacts and delegate --commit (and --no-push, if passed) to the nested commands.
+description: Interactive first-time project initialization wizard — gathers every choice up front (VCS, CLAUDE.md content, AGENTS.md, task backlog, domain layer, context layer), confirms once, then runs /task-setup, /domain-setup and /context-build in a fixed order. Use it once, on a project the chosko-llm tooling has not been set up on yet.
+disable-model-invocation: true
 ---
 
 # /project-setup
 # Global command: a single entry point for initializing a project with the
 # chosko-llm tooling. Two phases: a conversational GATHER phase that collects
 # every choice upfront, then a silent EXECUTE phase that applies them in a
-# fixed order with no further questions.
+# fixed order with no further questions. Runs /task-setup, then
+# /domain-setup (before the context layer, since context files
+# cross-reference domain docs), then /context-build in its default flat
+# layout — never nested; /context-convert restructures a layer later.
+# Injects a VCS-mapping section into CLAUDE.md for non-git projects (e.g.
+# Plastic SCM). On Unity projects also injects a "Tasks implementation"
+# section (editor dirty-tree noise handling, and the permanent skip-tests
+# testing-policy marker for /task-implement when there is no test suite)
+# and offers to run /unity-mcp-setup as the last step. Authoring command —
+# leaves all output uncommitted for one review pass unless `--commit` is
+# passed.
 # Usage: /project-setup
 # Usage with hint: /project-setup "source lives under lib/, we use Plastic"
 # Usage with commit: /project-setup --commit

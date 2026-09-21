@@ -1,8 +1,8 @@
 ---
 name: pipeline-patch
-version: 0.3.1
+version: 0.3.2
 type: command
-description: Apply a change that touches exactly one feature document, task or runbook step through that owner's amend arm, then re-check it — or refuse. From a required anchor (feature=<slug>, task=<N> or runbook=<id|name|id-name> step=<n>) it probes, walks the pipeline's graph reading only the indexes — FEATURES.md, TASKS.md, PLAN.md, RUNBOOKS.md, never a task body, feature document or runbook body — and counts the owners the change would touch. The single-owner rule is a count plus a closed checklist, never a judgement: exactly one owner and none of five structural signals (more than one owner, a dependency edge changing, scope added that no task covers, a deletion that crosses artifacts, a reorder of existing entries) loads that owner's amend arm by path, runs it with its own gate and without committing, and runs /pipeline-check scoped to the anchor. Anything else is refused in one line naming /pipeline-revise and the signal that triggered it — no escalation, no second question, nothing written. Writes no line of its own, and commits and pushes by default: one commit at the end holding exactly the paths the arm wrote, the arm's closing report line as the subject. Pass --no-commit to leave the patch uncommitted, or --no-push to commit without pushing.
+description: Apply a change that touches exactly one feature document, task or runbook step through that owner's amend arm, then re-check it — or refuse in one line naming /pipeline-revise. Use it for a small single-owner change to already-planned work; the pipeline's revision side.
 requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run
 ---
 
@@ -10,7 +10,17 @@ requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbo
 # Global command: apply a change that touches exactly one feature document,
 # task or runbook step, through that owner's amend arm, and re-check the
 # anchor — or refuse in one line and name /pipeline-revise. Reads only the
-# indexes.
+# indexes — FEATURES.md, TASKS.md, PLAN.md, RUNBOOKS.md — never a task body,
+# feature document or runbook body. The single-owner rule is a count plus a
+# closed checklist, never a judgement: exactly one owner and none of five
+# structural signals (more than one owner, a dependency edge changing, scope
+# added that no task covers, a deletion that crosses artifacts, a reorder of
+# existing entries) loads that owner's amend arm by path, runs it with its
+# own gate and without committing, then runs /pipeline-check scoped to the
+# anchor; anything else is refused naming the signal — no escalation, no
+# second question, nothing written. Writes no line of its own. Commits and
+# pushes by default: one commit at the end holding exactly the paths the arm
+# wrote, the arm's closing report line as the subject.
 # Usage: /pipeline-patch <anchor> "<change>" [--no-commit] [--no-push]
 #        anchor: feature=<slug> | task=<N> | runbook=<id|name|id-name> step=<n>
 # Examples: /pipeline-patch task=42 "Hints: point at the new loader module"

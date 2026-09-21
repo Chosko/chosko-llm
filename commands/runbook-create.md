@@ -1,8 +1,8 @@
 ---
 name: runbook-create
-version: 0.8.2
+version: 0.8.3
 type: command
-description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/<id>-<name>.md, plus its .claude/RUNBOOKS.md index block — or append steps to one that already exists, including one a run is in the middle of. An append goes at the foot by default; with --before <step> or --after <step> the new steps are written at that position in the list instead, still taking the next unused step id, because a step's id is a stable identifier and not its position — no existing step is ever edited or renumbered. Takes every step id from the body header's monotonic Last step number: counter rather than from max() over the headings present, writes that counter on a new runbook, advances it on an append, and backfills it in place on a body written before the field existed. Assigns each new runbook the next id from the index's Last runbook number: counter, which every other runbook- command then accepts in place of the name. Authors each step's optional Needs: line (agent / agent+human / human, absent meaning agent) so a reader can see before starting which steps need a person, and calls those steps out at the confirmation gate. Refuses a new name that is already taken, or whose first kebab segment is all digits, with one suggested alternative. Two axes: where the steps go (a new runbook, --append <id|name|id-name>, which renames a legacy <name>.md body to <id>-<name>.md unless that runbook is running, --append with no name for the runbook this session is running, or no arguments at all, which asks) and where the material comes from (the current conversation's most recent follow-up list, the default; or a free-form description gathered through one batched interview). Enforces ten prompt-quality rules against every step before writing — self-contained, names the document to read first, carries every decision that exists nowhere on disk and nothing that already does, states its sequencing and what must not be re-proposed, uses real slash commands, references no path missing at run time, produces one deliverable, never invokes /runbook-run, and prefers two steps to one that would need a nested spawn — fixing failures and naming each fix in the confirmation report. The gate shows the proposed shape only, never the full prompts. Commits and pushes what it wrote by default, since a runbook is read by the next session and its review happens at the gate; pass --no-commit to leave it uncommitted, or --no-push to commit without pushing. --commit is accepted and changes nothing.
+description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/, indexed in .claude/RUNBOOKS.md — from this conversation's follow-up list or a free-form description, or append steps to one. Use it to hand ordered work to later sessions that lack this conversation's context.
 requires: skill:runbook-run
 ---
 
@@ -13,7 +13,17 @@ requires: skill:runbook-run
 # Writes the runbook's body at its index block's `File:` path
 # (`.claude/runbooks/<id>-<name>.md` for a new runbook) and its
 # `.claude/RUNBOOKS.md` index block, and nothing else. Never runs a runbook;
-# that is `/runbook-run`.
+# that is `/runbook-run`. Steps come from the conversation's most recent
+# follow-up list by default, or from a free-form description gathered in one
+# batched interview. A new runbook takes the next id from the index's
+# `Last runbook number:` counter; a new step takes the next id from the
+# body's `Last step number:` counter, so no existing step is ever edited or
+# renumbered, and an append lands at the foot unless `--before` / `--after`
+# place it. Authors each step's optional `Needs:` line (agent / agent+human /
+# human) and calls out the steps that need a person at the confirmation
+# gate, which shows the proposed shape only, never the full prompts. Refuses
+# a name already taken, or whose first kebab segment is all digits, with one
+# suggested alternative. Commits and pushes what it wrote by default.
 # Usage: /runbook-create
 #        /runbook-create <name>
 #        /runbook-create <free-form description of the work>
@@ -23,6 +33,7 @@ requires: skill:runbook-run
 #        /runbook-create --append <id|name|id-name> --after <step>   (insert below that step)
 #        /runbook-create <args> --no-commit  (write the runbook, skip the commit and push)
 #        /runbook-create <args> --no-push    (commit as usual, skip the push)
+#        /runbook-create <args> --commit     (accepted; changes nothing — the default already commits)
 # Examples: /runbook-create implement-ecc-import
 #           /runbook-create --append implement-ecc-import
 #           /runbook-create --append 3 --before 4

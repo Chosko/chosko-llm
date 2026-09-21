@@ -1,14 +1,23 @@
 ---
 name: task-iterate
-version: 0.1.1
+version: 0.1.2
 type: skill
-description: Triage review findings it did not produce, apply the ones that survive triage, and record why the rest did not. Three input forms — no argument iterates on the uncommitted working tree, a branch name on that branch against the repository's default branch or an explicit base=<ref>, and a PR number or URL on that pull request through gh. Findings come from exactly one of the review subagent's structured output, a .claude/reviews/<task>-R<n>.md file, or the PR's review comments; the skill never invents a finding and never adds one of its own. Triage is mandatory and explicit — every finding gets exactly one of fix, defer or reject, defer requires a follow-up task number or a note that one should be authored, reject requires a one-line reason, and the full verdict table is written before any edit is made. Committing depends on the caller and the caller asserts it: standalone it commits and pushes like every other auto-committing feature, accepting --no-commit and --no-push, while inside a /task-implement --review round it commits nothing and leaves the corrected tree for that run's Step 7 so the task still produces exactly one commit. It returns a triage summary, a sticky rejection ledger for the next round, and whether any BLOCKING findings remain unresolved. It never opens a pull request, in any mode.
+description: Triage review findings it did not produce — fix, defer or reject each one, apply the fixes and record why the rest were not — on an uncommitted tree, a branch or a pull request. Use it after /task-review has reported; /task-implement's review rounds run it in-session between the review and the task's single commit.
 ---
 
 # /task-iterate
 # Global skill: triage review findings, apply what survives triage, and record
 # why the rest did not. Fixes only what it was handed — it never finds anything
-# itself.
+# itself. Findings come from exactly one of the review subagent's structured
+# output, a .claude/reviews/<task>-R<n>.md file, or the PR's review comments.
+# Triage is mandatory and explicit: every finding gets exactly one of fix,
+# defer or reject — defer needs a follow-up task number or a note that one
+# should be authored, reject a one-line reason — and the full verdict table is
+# written before any edit is made. Returns a triage summary, a sticky rejection
+# ledger for the next round, and whether any BLOCKING findings remain.
+# Standalone it commits and pushes by default; inside a /task-implement
+# --review round it commits nothing and leaves the corrected tree for that
+# run's single commit. Never opens a pull request, in any mode.
 # Usage: /task-iterate                        (iterate on uncommitted changes)
 #        /task-iterate <branch>               (iterate on a branch)
 #        /task-iterate <branch> base=<ref>    (override the base)

@@ -1,17 +1,22 @@
 ---
 name: task-list
-version: 0.6.1
+version: 0.6.2
 type: command
-description: Print the project's task backlog as a compact summary, optionally filtered by status. Marks human-in-the-loop tasks (target claude+human or human) with a ⚠ so the user can see which tasks need them present, marks [STALE] tasks whose originating feature was re-architected, and shows the Feature: slug on feature-derived tasks. When the project has a .claude/PLAN.md, groups tasks by milestone in plan order — resolving each task's Feature: slug through the plan — and flags tasks whose feature is blocked with the blocker's name; with no plan, output is exactly what it has always been. Read-only — reads TASKS.md, and PLAN.md plus FEATURES.md when a plan exists, never the per-task body files.
+description: Print the project's task backlog as a compact summary, optionally filtered by status — marking tasks that need a human present and tasks gone stale, and grouping by milestone when the project has a plan. Use it to see what is open before picking, adding or pruning a task.
 requires: skill:task-engine
 ---
 
 # /task-list
 # Global command: print the project's task backlog as a compact summary,
-# optionally filtered by status. Read-only — never modifies any file. Reads
-# `.claude/TASKS.md`, plus `.claude/PLAN.md` and `.claude/FEATURES.md` when
-# the project has a production plan; the per-task body files under
-# `.claude/tasks/` are NOT opened by this command.
+# optionally filtered by status. Marks human-in-the-loop tasks (target
+# claude+human or human) with a ⚠, marks [STALE] tasks whose originating
+# feature was re-architected, and shows the `Feature:` slug on
+# feature-derived tasks. With a `.claude/PLAN.md`, groups tasks by milestone
+# in plan order and flags tasks whose feature is blocked with the blocker's
+# name; without one, output is the flat list. Read-only — never modifies any
+# file. Reads `.claude/TASKS.md`, plus `.claude/PLAN.md` and
+# `.claude/FEATURES.md` when the project has a production plan; the per-task
+# body files under `.claude/tasks/` are NOT opened by this command.
 # Usage: /task-list
 #        /task-list <STATUS>
 # Examples: /task-list

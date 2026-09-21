@@ -56,7 +56,99 @@ description: One short sentence summarizing the feature.
 | `name`        | kebab-case. MUST match the filename (without `.md`) or the skill folder. |
 | `version`     | Semantic version, e.g. `0.1.0`, `1.2.0`. Required — install will refuse without it. |
 | `type`        | `command` for `commands/*.md`, `skill` for `skills/*/SKILL.md`, `claude-md` for `claude-md/*.md`, `statusline` for `statusline/*.sh`, `hook` for `hooks/*.sh`. |
-| `description` | A single paragraph, no line breaks. For a simple feature, one short sentence is enough. A command or skill with several flags/modes may use a longer, multi-clause description that documents them — that detail is what `chosko-llm show <feature>` and (for skills) Claude Code's own skill-discovery listing surface to the user before they read the body. `chosko-llm ls` does not print `description` at all (see its `NAME KIND INSTALLED LATEST STATUS REQUIRES` columns), so description length never affects that table. |
+| `description` | A single paragraph, no line breaks, saying **what the feature does and when to use it** — front-loaded and short. Budgets, the hard cap, and what does *not* belong here are in [§ The `description` contract](#the-description-contract) below; flags and contracts go in the body header ([§ The body header](#the-body-header)). `chosko-llm ls` does not print `description` at all (see its `NAME KIND INSTALLED LATEST STATUS REQUIRES` columns), so its length never affects that table. |
+
+### <a id="the-description-contract"></a>The `description` contract — what + when, short
+
+Claude Code injects every installed feature's `description` into the system
+prompt at session start, as one `- name: description` line per feature, and
+truncates each at 1,536 characters ("Put the key use case first: the combined
+description and when_to_use text is truncated at 1,536 characters in the skill
+listing"). A description is therefore a per-session cost paid by every user who
+has the feature installed, whether or not they ever invoke it — and everything
+past the cap is silently gone. Measured on this repo at v1.57.4: 38 features put
+~45,100 chars of description on disk, the model received ~7,600 tokens of it
+before the first prompt, and the seven longest lost their tails, which is where
+the flags lived.
+
+The contract every shipped `description` follows:
+
+- **What, then when, front-loaded.** The first clause says what the feature
+  does; the next says when to use it. The key use case comes first, because
+  that is what the harness matches on and what survives a cut.
+- **Manual features: ≤ 60 words / 400 chars.** A command or skill the user
+  invokes by name.
+- **Auto-trigger skills: ≤ 150 words / 1,000 chars.** The skills Claude selects
+  on its own — `claude-council`, `runbook-suggest`, `pipeline-suggest`,
+  `unity-mcp-skill`. Trigger phrases first; any "Not for" list last.
+- **Hard fail above 1,536 chars.** The harness cuts there; a description that
+  long has already lost whatever it put at the end.
+- **Never ` --- ` inside a description.** The harness truncates the description
+  at that token: `runbook-clean`'s once said "the surrounding `---` rules", and
+  the model saw 145 of its 1,111 chars.
+- **Pipeline stage: exactly one clause.** A feature that has a stage in the
+  product pipeline names it once, in the shipped form — "stage 5 of the
+  pipeline: turns a feature document into tasks; its output is
+  `/task-implement`'s input" — and does not restate it.
+- **Not here:** flags, argument grammar, refusal lists, read-only contracts,
+  commit/push defaults, edge cases. They live in the body header, below.
+
+Budgets are in characters and words, not tokens: the repo forbids a tokenizer
+dependency, and characters are what the harness caps on anyway. `/context-budget`
+(repo-local, see below) flags a description over 60 words (150 for the four
+auto-trigger skills), over 1,536 chars, or containing ` --- `.
+
+### <a id="the-body-header"></a>The body header — where the flags live
+
+Every shipped body opens, right after the frontmatter, with a `#`-comment
+header: a `# /name` line, a one-paragraph summary, `# Usage:` lines, and
+`# Examples:`. `commands/task-list.md` is the shape:
+
+```markdown
+# /task-list
+# Global command: print the project's task backlog as a compact summary,
+# optionally filtered by status. Read-only — never modifies any file. …
+# Usage: /task-list
+#        /task-list <STATUS>
+# Examples: /task-list
+#           /task-list MISSING
+```
+
+That header is the **authority at run time for flags and contracts** — every
+flag, mode, refusal, read-only guarantee and commit/push default the description
+no longer carries. It costs nothing per session: a body is loaded only when the
+feature is invoked. And a human loses nothing either: `chosko-llm show
+<feature>` prints the header under the description in every view — the
+contiguous lines starting with a single `#` immediately after the frontmatter,
+stopping at the first blank or non-`#` line — so `show` stays useful without a
+flag; `--content` still prints the full body instead.
+
+Every shipped body has one. A reference library's (`task-engine`,
+`pipeline-engine`) is a two-line "read by path by …; not invoked" note. The two
+`.sh` kinds are the exception by construction: their heredoc terminator sits
+between the frontmatter and the first comment, so `show` prints nothing extra for
+them, which is what a body with no header does.
+
+### Loading-control keys
+
+Claude Code recognises three frontmatter keys that decide when a feature's
+description and body are loaded. This repo may use them:
+
+| Key | Effect | Kinds |
+| --- | --- | --- |
+| `disable-model-invocation: true` | The description is kept out of the model's context; only the user can invoke the feature, by typing `/<name>`. | commands, skills |
+| `user-invocable: false` | Hidden from the `/` menu; only the model invokes it. | commands, skills |
+| `paths:` | The skill loads only when files matching its globs are in play. | skills only — commands do not support it |
+
+`disable-model-invocation: true` is the right key for a reference library nobody
+invokes and for a wizard the user always starts by hand: the feature stays
+listed and typeable, and its description stops costing every session.
+
+`scripts/lib.sh`'s `parse_frontmatter` reads a fixed list of keys (`name`,
+`version`, `type`, `description`, `replaces`, `requires`, `event`, `matcher`)
+and quietly ignores every other key, so unknown keys — these three,
+`allowed-tools`, anything Claude Code adds later — pass through `chosko-llm
+add` / `update` untouched and are never a rejection path.
 
 ### `replaces:` — the optional fifth field
 
@@ -252,14 +344,14 @@ the rules the `task-*` suite shares, its `SKILL.md` is a map of which file owns
 which rule rather than a rule holder itself, and it takes no arguments, runs
 nothing and produces no output.
 
-Say so in the `description`, and say it in the words the harness reads — the
-description is what skill selection matches on, so a library that does not
-announce itself as one gets suggested to users who have no use for it.
-`task-engine`'s reads, in part: *"NOT a skill the user invokes and never a
-skill to suggest — it takes no arguments, runs nothing, and produces no
-output"*, followed by the names of the features that do read it. Repeat the
-same statement in the body's opening lines, for the agent that opens the file
-without having read the frontmatter.
+Say so in the `description`, in one clause and in the words the harness reads
+— the description is what skill selection matches on, so a library that does
+not announce itself as one gets suggested to users who have no use for it —
+and set `disable-model-invocation: true` so the description leaves the model's
+context altogether (§ Loading-control keys). Repeat the statement in the body's
+`#` header, for the agent that opens the file without having read the
+frontmatter: a library's header is the two-line "read by path by …; not
+invoked" note.
 
 ## <a id="statusline"></a>Authoring a statusline
 
@@ -476,8 +568,10 @@ skill:claude-council` instead of a second package manager. Treat it as
 foreign code that happens to live here: don't refactor it to local taste,
 don't restyle its prose, and don't split it up.
 
-The copy is not verbatim. Two adaptations were applied at import and must be
-re-applied on every re-sync:
+The copy is not verbatim. Three adaptations were applied at import and must be
+re-applied on every re-sync (the third — the `# /claude-council` header block
+that opens the body, per § The body header — is the same one every shipped body
+carries, and `skills/unity-mcp-skill/SKILL.md` carries it too):
 
 1. **Frontmatter is pinned.** Upstream's `description:` is a `|` block scalar
    and it carries no `version:` or `type:` — `parse_frontmatter` would read
@@ -533,6 +627,10 @@ What that means concretely:
 - **Names must not collide with any shipped feature name.** Both are visible in
   a session in this repo, so a repo-local skill sharing a name with a shipped
   one would be ambiguous. Check the shipped catalogue before naming a new one.
+- **`/context-budget` is where the `description` contract gets checked.** It
+  flags a description over 60 words (150 for the four auto-trigger skills),
+  over the 1,536-char hard cap, or containing ` --- ` — an observation, not a
+  gate; see § The `description` contract for the rule it measures against.
 
 One interaction is worth recording so a later reader does not file it as a bug:
 `select_export_files` in `scripts/cmd-export.sh` selects `.claude/**/*.md`

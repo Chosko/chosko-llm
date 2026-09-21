@@ -2,6 +2,32 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.58.3 — 2026-09-20
+
+- **`chosko-llm help` describes what `show` prints since 1.58.0:** the `show <feature>` entry now says the command prints the body's leading `#` header — the `# /name` / `# Usage:` block that carries the flags — and that `--content` prints the full body in its place. The command itself is unchanged; only its help text had lagged.
+
+## 1.58.2 — 2026-09-20
+
+- **The remaining eighteen descriptions rewritten to the description contract** (`runbook-create`, `runbook-list`, `runbook-describe`, `runbook-clean`, `runbook-prune`, `runbook-run`, `session-save`, `session-resume`, `context-build`, `context-update`, `context-convert`, `refactor-codebase`, `refactor-tests`, `project-setup`, `unity-mcp-setup`, `unity-mcp-skill`, `claude-council`, `runbook-suggest`): each now says what the feature does and when to use it in at most 60 words; `claude-council` and `runbook-suggest` keep their trigger phrases first and their "Not for" list last. `runbook-run`'s description drops from 4,384 characters to 253, and every one of its flags now lives in its `#` header.
+- Every flag, refusal, read-only contract and commit default a description no longer carries sits in that body's leading `#` header, which `chosko-llm show` prints and which loads only when the feature is invoked. Behaviour is unchanged.
+- **Seven one-shot wizards and housekeeping commands carry `disable-model-invocation: true`** — `/project-setup`, `/unity-mcp-setup`, `/task-setup`, `/runbook-prune`, `/runbook-clean`, `/refactor-codebase`, `/refactor-tests`. None is useful to suggest unprompted, each is reachable by typing its name, and their descriptions leave the model's context entirely.
+- **`unity-mcp-skill` carries a `paths:` filter** (`Assets/**`, `ProjectSettings/**`, `Packages/**`), so it loads only in a Unity project.
+- The rendered skill list — the `- name: description` lines Claude Code injects at session start, summed over every command and skill — drops from 45,105 characters at v1.57.4 (25,566 after 1.58.1) to 13,035 on disk, of which the model receives 9,977: the ten hidden features' lines are never rendered.
+- This repo's own local install under `.claude/commands/` and `.claude/skills/` is refreshed from the working tree for every feature it already held, so sessions on this repo see the 1.58.1 and 1.58.2 descriptions.
+
+## 1.58.1 — 2026-09-20
+
+- **Twenty pipeline-core descriptions rewritten to the description contract** (`task-add`, `task-list`, `task-setup`, `task-clean`, `task-implement`, `task-review`, `task-iterate`, `follow-ups`, `production-status`, `pipeline-check`, `pipeline-patch`, `pipeline-revise`, `pipeline-suggest`, `domain-setup`, `product-design`, `product-roadmap`, `architect`, `production-plan`, `task-engine`, `pipeline-engine`): each now says what the feature does and when to use it in at most 60 words, `pipeline-suggest` keeps its trigger phrases first and its "Not for" list last. Together they drop from ~22,000 to ~6,000 characters of system-prompt text per session.
+- Every flag, refusal, read-only contract and commit default a description no longer carries now sits in that body's leading `#` header, which `chosko-llm show` prints and which loads only when the feature is invoked. Behaviour is unchanged.
+- Each stage feature names its place in the pipeline in exactly one clause ("stage 3 of the pipeline: turns a design section into feature documents; its output is /task-add's input"); the "sits between X and Y" prose that six descriptions repeated is gone.
+- **`task-engine`, `pipeline-engine` and `/domain-setup` carry `disable-model-invocation: true`.** The two reference libraries are read by path and never invoked, and the scaffold is always started by hand, so their descriptions leave the model's context entirely; all three stay listed and typeable. `task-review` and `task-iterate` stay model-invocable, since `/task-implement --review` spawns them by name.
+
+## 1.58.0 — 2026-09-20
+
+- **`chosko-llm show`** prints the body's leading `#` header — the `# /name` / `# Usage:` block that carries a feature's flags and contracts — under the description in every view; `--content` still prints the full body instead, and a body with no header prints nothing extra.
+- **`/runbook-clean`** no longer carries a literal ` --- ` in its description, which Claude Code truncated the description at — the model saw 145 of its 1,111 characters.
+- **`task-engine`, `pipeline-engine`, `claude-council`, `unity-mcp-skill`** open with a `#` header like every other shipped body — a two-line "read by path; not invoked" note for the two reference libraries.
+
 ## 1.57.4 — 2026-09-20
 
 - `scripts/check-home-paths.sh` now catches every spelling of an install home, not only the three literals it was written against. `$CLAUDE_HOME/skills/…`, `${CLAUDE_HOME}/…`, `${HOME}/.claude/…` and `"$HOME"/.claude/…` all passed it silently before; the bare `$CLAUDE_HOME` form is the one an author is most likely to write.

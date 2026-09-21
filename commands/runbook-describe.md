@@ -1,8 +1,8 @@
 ---
 name: runbook-describe
-version: 0.3.2
+version: 0.3.3
 type: command
-description: Print a compact summary of one runbook — a little more than its /runbook-list line and far less than its body. The index heading line (id, status, name, progress, title), one header line with Created, Source and Model, an archived-ids line printed only when the body carries an Archive: line, then one line per step with its marker, number and title, its dependencies when it has any and its Needs value when an authored one is not agent, plus at most one short done line per step that a run finished or failed, and a closing by-marker count that counts every archived id as done and as present, naming the steps that need a person. Takes the runbook as the numeric id the index assigns it, its kebab-case name, or `<id>-<name>`, and reads the body at the index block's File: path. Reads the index and pulls only the lines it prints from that one runbook's body by targeted line extraction — never a full read of the body, never a step prompt, never a task body, never another runbook. Task ids in a Done line are printed as written and never followed. Writes nothing, runs no shell command including git, and corrects no status, count or marker however wrong it looks against the body.
+description: Print a compact summary of one runbook — its index line, header, and one line per step with marker, title, dependencies and who it needs — without opening a step prompt. Use it to see where a runbook stands.
 requires: skill:runbook-run
 ---
 
@@ -10,7 +10,11 @@ requires: skill:runbook-run
 # Global command: print a compact summary of one runbook — heading, one header
 # line, one line per step with an optional one-line done: summary, and a
 # closing count. Read-only — never modifies any file. Reads the index and
-# extracts lines from exactly one body, at its index block's `File:` path.
+# extracts lines from exactly one body, at its index block's `File:` path —
+# never a full read of the body, never a step prompt, never a task body,
+# never another runbook. Task ids in a `Done:` line are printed as written
+# and never followed. Runs no shell command including git, and corrects no
+# status, count or marker however wrong it looks against the body.
 # Usage: /runbook-describe <id|name|id-name>
 # Examples: /runbook-describe implement-ecc-import
 #           /runbook-describe 3

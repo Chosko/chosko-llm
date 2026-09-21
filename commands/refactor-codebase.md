@@ -1,8 +1,9 @@
 ---
 name: refactor-codebase
-version: 0.3.1
+version: 0.3.2
 type: command
-description: Refactor a codebase by applying clean-code principles — extract constants/enums, eliminate duplication, split oversized files, clean imports, and rename ambiguous identifiers — without changing observable behaviour. Plan-first, phase-gated, test-suite-protected. Supports scope= and focus= arguments to limit the work, and --commit to commit and push the result (--commit --no-push to skip the push; default leaves it uncommitted).
+description: Refactor a codebase by applying clean-code principles — extract constants and enums, eliminate duplication, split oversized files, clean imports, rename ambiguous identifiers — without changing observable behaviour, plan-first and test-suite-protected. Use it on a codebase that works but has grown untidy, whole or limited to a scope or a single concern.
+disable-model-invocation: true
 ---
 
 # /refactor-codebase

@@ -1,8 +1,8 @@
 ---
 name: task-add
-version: 2.4.2
+version: 2.4.3
 type: command
-description: Plan a new task entry conversationally, confirm with the user, write a summary block and body file, then auto-commit and push. Pass --before <N> or --after <N> to write the new task at that position in TASKS.md together with the Preconditions: edge the position implies — no existing id moves. Pass feature=<slug> --single to attach exactly one task to a [PLANNED] feature without reconciling or re-planning it; on a project with FEATURES.md, a free-form run asks at its existing approval gate whether the task belongs to a feature. Detects work needing manual human steps (e.g. game-engine editors) and authors a Manual interventions section with target claude+human or human. Pass feature=<slug> to plan from an /architect feature document instead of a prose description — reconciling any tasks that feature already generated (update-in-place, skip-and-replace, or leave untouched; [DONE] never touched), tagging new tasks with Feature: <slug>, appending a final documentation-update task when new tasks were drafted, and setting the feature [PLANNED]. Whenever a drafted task names a document owned by another pipeline command, the PHASE 3 gate enumerates the reconciliations that task needs to make to it and asks the user to pre-authorise exactly those points, keep the file as a read-only reference, or drop it — the grant, the reference marker, or the removal is written into the task body so the implementer never has to ask. Pass --short for trivial low-ambiguity tasks to skip the deep PHASE 1 investigation and write a minimal Goal-only body (mutually exclusive with feature= and --single), --no-split to always write exactly one task, --no-commit to write the files but skip the commit (and push), or --no-push to commit without pushing.
+description: Plan one new task with the user and write it to the backlog — a summary block in TASKS.md plus a body file — from a prose description or from an /architect feature document. Use it for any new unit of work; stage 5 of the pipeline: turns a feature document into tasks; its output is /task-implement's input.
 requires: skill:task-engine
 ---
 
@@ -12,9 +12,22 @@ requires: skill:task-engine
 # `.claude/tasks/<N>.md`. Refuses to run if the backlog has not been
 # initialized — the user must run `/task-setup` first. May propose
 # splitting the description into multiple tasks when that produces better
-# units; pass `--no-split` to always get exactly one task. With
-# `feature=<slug>`, plans from a `/architect` feature document instead of a
-# prose description, and reconciles tasks that feature already generated.
+# units; pass `--no-split` to always get exactly one task. `--short` skips
+# the deep investigation and writes a minimal Goal-only body (mutually
+# exclusive with `feature=` and `--single`). With `feature=<slug>`, plans
+# from a `/architect` feature document instead of a prose description,
+# reconciles tasks that feature already generated ([DONE] never touched),
+# tags new tasks `Feature: <slug>`, appends a final documentation-update
+# task and sets the feature [PLANNED]; `feature=<slug> --single` attaches
+# exactly one task without reconciling. On a project with FEATURES.md a
+# free-form run asks at its approval gate whether the task belongs to a
+# feature. `--before <N>` / `--after <N>` write the task at that position
+# with the `Preconditions:` edge it implies — no existing id moves. Detects
+# work needing a human present and authors a Manual interventions section
+# with target claude+human or human. A drafted task that names a document
+# another pipeline command owns has its reconciliation grant, a read-only
+# marker or the removal written into its body at the approval gate, so the
+# implementer never has to ask. Commits and pushes what it wrote by default.
 # Usage: /task-add [--short] [--no-split] [--before <N> | --after <N>] [--no-commit] [--no-push] <free-form description of the task>
 #        /task-add feature=<slug> [--no-split] [--before <N> | --after <N>] [--no-commit] [--no-push] [scope-narrowing text]
 #        /task-add feature=<slug> --single [--before <N> | --after <N>] [--no-commit] [--no-push] <description of the one task>
