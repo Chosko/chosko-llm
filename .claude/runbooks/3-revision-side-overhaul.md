@@ -152,7 +152,7 @@ Context:
 
 Done: 2026-09-21, commit `b1ad56d` (3 files, +110/-225). Wrong premise: the body itself said a delegated agent returns four values while its own THE CLOSING REPORT cited a sixth field; PRE-FLIGHT 2b now cites `delegated-runs.md`'s contract instead of a count.
 
-## [ ] 11. Consolidate commands/runbook-create.md
+## [x] 11. Consolidate commands/runbook-create.md
 
 Depends on: 5, 7
 
@@ -163,6 +163,8 @@ Context:
 ```prompt
 /doc-consolidate commands/runbook-create.md --commit
 ```
+
+Done: 2026-09-21, commit `7af4062` (3 files, +64/-146). Wrong premise: rule 9 still justified the nested-runbook rejection by the depth budget; it now gives the orchestration-duplication reason step 9 settled, and no body in the runbook suite cites the depth budget as a live justification.
 
 ## Do not re-propose
 
