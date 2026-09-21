@@ -90,19 +90,12 @@ own `Target:` line.
 | Title line `# Task <N> — <Title>` | Changes only when the summary block's title does, to the same text. |
 
 **Owned documents.** A change that adds a path owned by another pipeline
-command to `## Hints` or to `Files:` needs the Grant / Reference / Drop
-answer that `/task-add`'s OWNERSHIP PRE-AUTHORISATION asks for such a path —
-its owner table, its three answers, its read-only marker and its hard rules,
-cited here and not restated — asked inside this file's gate, never at a
-second one. An existing grant is never widened by an amendment; a wider grant
-is a new question.
-
-A Hint already carrying that marker, carried through the amendment unchanged,
-is already decided and is not asked about again — the same carryover rule
-OWNERSHIP PRE-AUTHORISATION states, and what keeps an amendment from
-stripping a Reference an earlier run recorded. Turning such a Hint into
-something the task edits is a Grant question, and so is adding an owned path
-the body did not carry before.
+command to `## Hints` or to `Files:`, or adds a point at which the task
+diverges from such a document, runs `/task-add`'s DESIGN-CHANGE CHECK for
+it — its owner table, its settles/diverges enumeration, its question and its
+hard rules, cited here and not restated — inside this file's gate, never at a
+second one. An agreement already recorded in `## Decisions` stands; a new
+diverging point is a new question.
 
 ### The summary block
 
@@ -166,6 +159,14 @@ task a `[SKIP]` releases; any cycle an added edge closes; any owned-document
 question. End with **"Apply?"** and wait for an explicit answer. Silence, an
 unclear reply or EOF writes nothing.
 
+**With a draft passed in** — a revision surface that drafted the same fields
+and sections at its own gate passes them in — compare it with the draft this
+arm produced from the same reads. When they match, write without waiting:
+the consumer's gate already approved this edit. When they differ, render the
+difference as the gate and wait. An owned-document design-change question
+survives a passed-in draft: it is asked here and always waits, whatever the
+draft, because only an explicit answer writes an agreement.
+
 ## What is written
 
 Exactly:
@@ -195,11 +196,11 @@ Amended task <N> — <fields and sections changed>[; skipped: <reason>][; droppe
 
 ## Per-consumer notes
 
-- **The pipeline revision surfaces** — the consumers. They read this file by
-  path and execute it. They own none of the lines it writes; each stays its
+- **The pipeline revision surface** — the consumer. It reads this file by
+  path and executes it, with its drafted fields passed in. It owns none of
+  the lines it writes; each stays its
   owner's.
 - **`/task-add`** — the owner of the lines this file lets change: the body,
   the block's title, `Target:`, `Files:`, `Preconditions:` and `Feature:`,
   and `FEATURES.md` `Tasks:`. Its own body does not read this file. Its
-  OWNERSHIP PRE-AUTHORISATION — its three answers and its read-only marker
-  included — and its `--single` rule are cited above, not changed.
+  DESIGN-CHANGE CHECK and its `--single` rule are cited above, not changed.

@@ -1,6 +1,6 @@
 ---
 name: architect
-version: 0.12.5
+version: 0.13.0
 type: skill
 description: Turn high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md and grounded in the technical direction or the existing code. Use it from a design section, named features or a bare prompt, or to amend an existing document; stage 3 of the pipeline: turns a design section into feature documents; its output is /task-add's input.
 ---
@@ -19,11 +19,12 @@ description: Turn high-level features into low-level feature documents under .cl
 # an entry runs an iterate guard: refuses outright while any of its tasks is
 # [IN PROGRESS], otherwise asks, then flips surviving tasks [STALE] and the
 # feature [ITERATED], with no ask when no task is left to invalidate. The
-# amend form changes the named sections of one document behind one gate: a
-# precision guard marks [STALE] only the tasks the change touches, refuses
-# only when a touched task is [IN PROGRESS], settles the editorial call on
-# mechanical evidence in one Classified: line, and asks only when the call
-# rests on judgement. Requires `/domain-setup`. At a genuine design fork
+# amend form changes the named sections of one or more documents behind one
+# gate: per feature, a precision guard marks [STALE] only the tasks the
+# change touches, drops the feature when a touched task is [IN PROGRESS],
+# settles the editorial call on mechanical evidence in one Classified: line,
+# and asks only when the call rests on judgement. Requires `/domain-setup`.
+# At a genuine design fork
 # offers to convene claude-council when that skill is installed, and is
 # silent when it is not. Commits and pushes exactly the paths the run wrote
 # by default.
@@ -32,7 +33,7 @@ description: Turn high-level features into low-level feature documents under .cl
 #        /architect <free-form description of what to build>
 #        /architect <feature name> <milestone-slug>  (pick the slice up front on a roadmapped project)
 #        /architect <args> --no-slices     (ignore the roadmap; resolve every target traditionally)
-#        /architect amend feature=<slug> "<change>"  (targeted change to one feature document)
+#        /architect amend feature=<slug>[,<slug>...] "<change>"  (targeted change to one or more feature documents)
 #        /architect <args> --no-commit     (write everything, run no git command)
 #        /architect <args> --no-push       (commit what this run wrote, skip the push)
 
@@ -66,7 +67,7 @@ SUPPORTING FILES (read on demand — not up front)
 | `./sectioned-input.md` | PHASE 0, for each target resolving in **traditional mode** — no roadmap, or `--no-slices`, or a roadmap that does not slice this target's section. Matching against `product-design.md`'s sections and existing `FEATURES.md` slugs, and the `Source:` value that produces. |
 | `./sliced-input.md` | PHASE 0, for each target resolving in **slice mode** — `.claude/domain/product-roadmap.md` carries at least one milestone with a `Covers:` line, a slice matches this target, and `--no-slices` was not passed. Slice resolution, disambiguation, exclusions into non-goals, and the extended `Source:`. |
 | `./iterating.md` | PHASE 0 finds the target feature already has a `FEATURES.md` entry. Read before PHASE 0b. |
-| `./amend.md` | ARGUMENT PARSING recognised `amend feature=<slug> "<change>"`. Read once PHASE 0's gate has passed; it carries the whole amend path, including its precision guard, and replaces input resolution, PHASE 0b and PHASES 1–3 for the run. |
+| `./amend.md` | ARGUMENT PARSING recognised `amend feature=<slug>[,<slug>...] "<change>"`. Read once PHASE 0's gate has passed; it carries the whole amend path, including its per-feature precision guard, and replaces input resolution, PHASE 0b and PHASES 1–3 for the run. |
 | `./tech-stack-selection.md` | The project has NO existing tech stack AND no `technical-direction.md` (greenfield). Read at the start of PHASE 2. |
 | `./feature-doc-template.md` | PHASE 3, always — the feature-document schema and the `FEATURES.md` entry format. |
 | `./council-gate.md` | PHASE 2 reaches a genuine design fork — a real trade-off with nameable stakes, expensive to reverse once tasks exist. Not on a fork settled by an existing stack, and not when the blocker is a missing fact (that is a PHASE 1 clarification). |
@@ -104,11 +105,13 @@ no-op — never warn about it.
 
 Then check whether what remains opens with the literal token `amend`
 immediately followed by a `feature=` token. Only then set AMEND = true: the
-rest is the change, as one quoted string — `amend feature=<slug> "<change>"`.
-Input that opens with `amend` but not with `amend feature=` is not the amend
-form: it falls through to ordinary input resolution as a free-form
-description. An empty slug or a missing change stops the run with:
-`amend needs feature=<slug> and the change to make, e.g. /architect amend feature=password-auth "Data and state: sessions expire after 30 days".`
+token's value is one or more slugs, comma-separated with no spaces, and the
+rest is the change, as one quoted string —
+`amend feature=<slug>[,<slug>...] "<change>"`. Input that opens with `amend`
+but not with `amend feature=` is not the amend form: it falls through to
+ordinary input resolution as a free-form description. An empty slug list, an
+empty slug inside it, or a missing change stops the run with:
+`amend needs feature=<slug>[,<slug>...] and the change to make, e.g. /architect amend feature=password-auth "Data and state: sessions expire after 30 days".`
 `--no-commit` and `--no-push` compose with it unchanged. `--no-slices` is
 accepted and has nothing to act on, since the amend path resolves no input.
 
@@ -476,8 +479,8 @@ DO NOT:
   is re-running `/product-design`.
 - Rename a slug, or reuse one for a different feature. Slugs are stable
   identifiers, like task IDs.
-- Override the `[IN PROGRESS]` refusal in PHASE 0b, or a touched
-  `[IN PROGRESS]` task's refusal in `./amend.md` — not on the user's
+- Override the `[IN PROGRESS]` refusal in PHASE 0b, or the drop a touched
+  `[IN PROGRESS]` task causes in `./amend.md` — not on the user's
   insistence, not with a flag. Tell them to finish or reset that task
   first.
 - Advance past PHASE 2 without the user confirming the architecture — a

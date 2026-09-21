@@ -67,9 +67,10 @@ and the tier keeps it.
 
 **A feature.** `[SKIP]` on every one of its live tasks — step 2 for each, in
 `.claude/TASKS.md` order — then step 3 for their successors outside the
-feature, step 4 for the runbook steps naming the slug or its tasks, and last a
-`/production-plan` run given the removal as its free-form context, whose
-reconciliation drops the plan edges naming the slug, at its own gate. The
+feature, step 4 for the runbook steps naming the slug or its tasks, and last
+`/production-plan amend "<the removal>"`, executed from its arm,
+`../production-plan/amend.md`, by path, which drops the plan edges naming the
+slug and unschedules it, with the diff drafted at plan time carried in. The
 feature's `.claude/FEATURES.md` entry stays, with its ids intact: an entry
 whose tasks are all `[SKIP]` and whose edges are dropped is inert, and
 nothing that was planned — or why — is erased. The lint after reports it as
@@ -98,7 +99,7 @@ them.
 
 Neither tier is editorial — a removal ends what an entry means — so the gate
 classifies it not editorial without asking the question, per `./SKILL.md`
-step 7: the `Classified:` line names the removed entry, and under structural
+step 6: the `Classified:` line names the removed entry, and under structural
 the artifacts it crosses or the edge it drops.
 
 ## Verification

@@ -1,6 +1,6 @@
 ---
 name: runbook-run
-version: 0.13.4
+version: 0.14.2
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user, recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
 requires: command:follow-ups
@@ -13,7 +13,9 @@ requires: command:follow-ups
 # one at a time, never in parallel; list position is the order, a step's
 # number a stable id. In the default mode the orchestrator reads only
 # CLAUDE.md, the runbook and the index, writes only the runbook and the
-# index, and never does a step's work or second-guesses a subagent. Under
+# index, and never does a step's work or second-guesses a subagent. It is
+# quiet between steps — one line per step, no narration — and its closing
+# report is the record of the run. Under
 # --inline this session executes each selected step itself under the fixed
 # rule set in `references/inline-contract.md`, with the bookkeeping
 # unchanged; --inline is refused beside --relay-spawns or --model, and the
@@ -23,7 +25,7 @@ requires: command:follow-ups
 # own nesting level. A legacy body at `.claude/runbooks/<name>.md` is
 # renamed to `<id>-<name>.md` lazily, never while [RUNNING], per
 # `references/body-migration.md`. Also carries, under `references/`, the
-# files the rest of the runbook suite and the pipeline revision surfaces
+# files the rest of the runbook suite and the pipeline revision surface
 # read by path: `runbook-schema.md`, `subagent-contract.md`,
 # `body-migration.md` and `step-amend.md`. Every run ends with one
 # /follow-ups call, skipped silently when that command is not installed.
@@ -124,6 +126,21 @@ diff, or second-guess its commit. Under `--inline` it classifies on the
 session's own stated outcome and never re-inspects the session's own diff.
 Review is `/task-review`'s job and is
 invoked, when it is wanted, from inside a step's own prompt.
+
+---
+
+## CHAT OUTPUT
+
+**Quiet between steps, exhaustive at the end.** While the loop runs, print one
+line per step, at that step's end and nowhere else — `Step 4 done (abc1234).
+Starting step 5.`, or the failure line the halt already calls for. Do not
+narrate spawning, waiting, classifying a result, writing a `Done:` line or
+committing: those happen every step, and the fragments are hard to read back
+once the run is over. Two things are never suppressed and go through exactly as
+today: a relayed `QUESTIONS FOR USER` block, verbatim, because a run that needs
+an answer asks for it at once, and the spawn relay's own lines. The record of
+the run is the closing report, not the transcript above it. The same rule holds
+under `--inline`.
 
 ---
 
@@ -382,23 +399,35 @@ Commit the runbook and the index per COMMIT CADENCE, then loop back to step 2
 and re-read the body.
 
 When no `[ ]` steps remain — every step is `[x]` — set the index `Status:` to
-`[DONE]`, commit, and report: the runbook name, the number of steps, and a
-one-line-per-step summary of what each `Done:` line records.
+`[DONE]`, commit, and report: the runbook name, the number of steps, and one
+entry per step. The report is **short but exhaustive**, and every entry is
+drawn from that step's `Done:` line and the step's own report, both already in
+hand: the outcome, the commit sha and its diffstat, what changed in one line,
+any decision or wrong premise the agent flagged, and any question relayed with
+the answer given. Nothing is re-derived for it — the orchestrator opens no file
+here that it does not open anywhere else.
 
 **Reaching a `--to` bound is not completion.** When the selected step was the
 last one in range, stop there instead of looping, and set the index back to
 `[PENDING]` unless every step in the *whole* runbook is now `[x]` — a bounded
 run leaves work behind by design, and marking that `[DONE]` would be a lie. The
-report says the same thing: which range ran, a line per step as above, and which
-steps remain outside it. `--only N` stops this way too; it is the bound `--to N`
-doing it.
+report says the same thing: which range ran, the same short-but-exhaustive
+entry per step as above, and which steps remain outside it. `--only N` stops
+this way too; it is the bound `--to N` doing it.
 
 **Reaching the `--steps` count is not completion either.** When the step just
 committed is the N-th step executed in this run, stop there instead of looping,
 exactly as at a `--to` bound: set the index back to `[PENDING]` unless every
 step in the whole runbook is now `[x]` (then it is `[DONE]` by the completion
-rule above), and report how many steps ran, a line per step as above, and which
-steps remain.
+rule above), and report how many steps ran, the same short-but-exhaustive entry
+per step as above, and which steps remain.
+
+**Every closing report ends with the feature completion candidates** — at
+completion, at a bound and at a failure halt alike. List under `Feature
+completion candidates:` every slug a step report named as having all its tasks
+`[DONE]`/`[SKIP]`, then ask once: "Flip to `[DONE]` in FEATURES.md? Name the
+slugs, or say all / none." With none, print nothing; the answer is acted on in
+conversation after the run, and the write set is unchanged.
 
 Whichever of those three ended the run, the closing report is not the last
 thing the run does — CLOSING THE RUN is.
@@ -517,9 +546,9 @@ outside this rule: one is verbatim, the other fixed text.
    slash command.
 6. **OPERATING RULES.** Verbatim from
    `./references/subagent-contract.md`,
-   with only its three placeholders filled in: `<RUNBOOK>` with the runbook's
-   name, `<N>` with the step id, and `<FILE>` with the resolved path from
-   step 1. It is fixed text and goes last.
+   with only that block's three placeholders filled in: `<RUNBOOK>` with the
+   runbook's name, `<N>` with the step id, and `<FILE>` with the resolved path
+   from step 1. It is fixed text and goes last.
 
 ---
 
@@ -564,7 +593,9 @@ propagate facts (below).
 
 Do not retry the step, do not attempt the work yourself, and do not continue
 to the next step. Report to the user: which step failed, the reason, what the
-agent said, and which steps were never started. Then make the closing
+agent said, the same short-but-exhaustive entry for each step that did complete
+before it, which steps were never started, and the feature completion
+candidates. Then make the closing
 call — a halted run is a run that ended, and it is the one most likely to
 strand unrecorded work. See CLOSING THE RUN.
 
@@ -650,17 +681,11 @@ On a `SPAWN REQUEST` result, read only the marker and the three lines under it
 — `prompt:`, `result:` and `model:`. Then:
 
 1. **Spawn one child subagent**, with the model the request names (or the run's
-   model where it says `same`), and a prompt that says: read the file at
-   `<prompt path>`, do exactly what it asks, write your **full** report to
-   `<result path>`, and then end your turn with the usual marker and one line
-   — no more — saying the file is written. Add the OPERATING RULES block, as
-   for any spawn: a child is a subagent like any other and is bound by the same
-   contract, `DONE` and all.
-
-   That split is what makes step 3 possible without reading anything. The
-   **file** carries the report, for the caller; the child's **returned turn**
-   carries only the marker, for you. Classifying on a marker is not reading a
-   report.
+   model where it says `same`). Its prompt is the `RELAY CHILD RULES` block
+   followed by the `OPERATING RULES` block, both **verbatim** from
+   `./references/subagent-contract.md`, in the form THE SPAWNED PROMPT part 6
+   uses: `<PROMPT>` and `<RESULT>` filled with the request's two paths, and
+   `<RUNBOOK>`, `<N>` and `<FILE>` as for any spawn. Compose nothing else.
 2. **Wait for the child's result**, exactly as for a step's own agent. The
    spawn call returns an id, not the result.
 3. **Classify the child's returned turn exactly as a step's own agent's**, by
@@ -675,13 +700,20 @@ On a `SPAWN REQUEST` result, read only the marker and the three lines under it
      told that reads an absent or failure-noting file, finishes its step, and
      the runbook gets a `Done:` line for work that never happened — the one
      outcome this suite exists to prevent.
+   - **A `DONE` child, before step 4** — check `<result path>` exists and is
+     non-empty, opening nothing; if absent or empty, re-prompt that same child
+     once ("Your result file at `<result path>` is missing. Write your full
+     report there and end your turn with `DONE`.") and, if it is still absent or
+     empty, fail the step exactly as above, the `Done:` line naming the missing
+     result file. The re-prompt is not a relay round and does not count toward
+     the cap.
 4. **Reply to the same caller subagent** — the one that is suspended awaiting
    this — with one line: the child is finished, and its report is at
    `<result path>`. The caller reads the file and continues.
 
-**Open neither file.** Not the prompt, not the result, not "just to check" —
-classification runs on the child's returned marker, which is why it never needs
-to.
+**Open neither file.** Not the prompt, not the result, not "just to check" (an
+existence check is not opening) — classification runs on the child's returned
+marker, which is why it never needs to.
 Forwarding paths is what keeps this cheap: the whole point of routing a child's
 work through a file is that its content never passes through the orchestrator's
 context. This is the same discipline as the question relay's *compresses, does

@@ -1,6 +1,6 @@
 ---
 name: runbook-create
-version: 0.8.3
+version: 0.8.4
 type: command
 description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/, indexed in .claude/RUNBOOKS.md — from this conversation's follow-up list or a free-form description, or append steps to one. Use it to hand ordered work to later sessions that lack this conversation's context.
 requires: skill:runbook-run
@@ -453,7 +453,7 @@ titles, and it decides whether they can start the run and walk away.
 
 **Only the shape.** Full prompts are deliberately not shown back: they are a
 wall of text that gets skimmed, and they are in the file a moment later, where
-a fix is one `/pipeline-patch` or `--append` away. The gate exists to catch a **wrong order or a
+a fix is one `/pipeline-revise` or `--append` away. The gate exists to catch a **wrong order or a
 missing step** — both expensive after the first step has run, and cheap now.
 
 Wait for an explicit answer. Iterate and re-render the whole plan after any

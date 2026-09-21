@@ -1,17 +1,20 @@
 # The subagent contract
 
-Fixed text. The block below is pasted **verbatim** as the last section of every
-spawned step prompt, with only its three placeholders filled in. It is a
-reference file rather than prose the orchestrator composes because it must be
-identical in every step of every runbook: a contract that is re-worded per
-spawn is a contract the agent can be talked out of.
+Fixed text. `OPERATING RULES` is pasted **verbatim** as the last section of
+every spawned step prompt, `RELAY CHILD RULES` **verbatim** ahead of it into a
+relay child's prompt only (THE SPAWN RELAY protocol step 1). Both are reference
+text rather than prose the orchestrator composes because each must be identical
+in every step of every runbook: a contract that is re-worded per spawn is a
+contract the agent can be talked out of.
 
-Three placeholders, and nothing else, are substituted:
+Five placeholders, and nothing else, are substituted:
 
 - `<RUNBOOK>` — the runbook's name, e.g. `implement-ecc-import`.
 - `<N>` — the step number being executed.
 - `<FILE>` — the runbook body's path, exactly as its index block's `File:` line
   holds it, e.g. `.claude/runbooks/3-implement-ecc-import.md`.
+- `<PROMPT>`, `<RESULT>` — the `prompt:` and `result:` paths the `SPAWN REQUEST`
+  named. `RELAY CHILD RULES` only.
 
 The relay rule below names no directory of its own: the subagent chooses one
 under the OS temp directory and reports it, and the file names are built from
@@ -49,6 +52,8 @@ OPERATING RULES
   when the result file has been written; read it and continue. Ask for one
   child at a time.
 - Never edit <FILE> or .claude/RUNBOOKS.md.
+- Never ask whether to flip a feature to `[DONE]`. Name any feature whose tasks
+  are now all `[DONE]`/`[SKIP]` in the `DONE` report instead.
 - You are executing step <N> of runbook <RUNBOOK>.
 - When finished, end your turn with the literal line `DONE` followed by a
   concise report naming the commit sha(s) and their diffstat (files changed,
@@ -58,6 +63,25 @@ OPERATING RULES
   restatement of the prompt or task body, and any account of your own process.
   If the work failed or could not be completed, say so plainly instead of
   `DONE`.
+```
+
+## Paste ends
+
+---
+
+## RELAY CHILD RULES — paste from here, verbatim
+
+```
+RELAY CHILD RULES
+
+- Read the file at <PROMPT>; do exactly what it asks.
+- Write your full report to <RESULT>.
+- Check <RESULT> exists and is non-empty before you end your turn.
+- Do not repeat the report in your returned turn.
+- End your turn with the literal line `DONE` and one line saying the file is
+  written, nothing else.
+- On failure, write what there is to <RESULT> and say so plainly, not `DONE`.
+- OPERATING RULES follows and binds you; the report it asks for goes to <RESULT>.
 ```
 
 ## Paste ends
@@ -90,6 +114,9 @@ contract, and is never sent to a subagent.
   the orchestrator already holds `File:` from its *Resolve* step before it
   spawns anything, so filling it invents nothing, whereas a relay path is one
   it would have to make up before knowing whether the relay is used at all.
+  `<PROMPT>` and `<RESULT>` pass the same test: the `SPAWN REQUEST` names both.
+- **No feature-flip question.** Relayed as `QUESTIONS FOR USER` it would block
+  the run mid-step; the orchestrator's closing report asks once, after the run.
 - **Naming the runbook and step.** It orients the agent, it makes its report
   attributable, and it is what lets a step's subagent call
   `/runbook-create --append` with no name argument.
@@ -122,3 +149,10 @@ contract, and is never sent to a subagent.
   the line — review tallies, touched files, restated prompts, resumption
   narrative — until runbook bodies grew unreadable. "Say so plainly instead of `DONE`" exists because an agent that
   fails and still writes `DONE` out of politeness produces a runbook that lies.
+- **`RELAY CHILD RULES`.** The child's obligations were orchestrator-composed
+  prose until 2026-09-20, when step 83 of `m3-tasks-implementation` returned its
+  report in its turn and wrote no result file, suspending its caller on a file
+  that did not exist.
+- **The self-check and the bare `DONE`.** Step 85 of the same run wrote the file
+  but ended `Result file written: <path>`, which THE FOUR RESULT CASES reads as
+  failure.

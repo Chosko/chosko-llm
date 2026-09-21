@@ -40,7 +40,7 @@ for the replacement at the new one.
 
 Fixed, not judged: every reorder is **structural**, because it changes an
 order or an edge by definition. So the gate classifies it not editorial
-without asking the question, per `./SKILL.md` step 7, with that reason as the
+without asking the question, per `./SKILL.md` step 6, with that reason as the
 `Classified:` line's evidence: no step of a reorder can be dropped as wording.
 
 ## Verification

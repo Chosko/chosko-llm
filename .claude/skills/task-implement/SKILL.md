@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.7.5
+version: 1.8.1
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups
@@ -73,9 +73,9 @@ about the run changes.
 
 If any step fails and cannot be resolved by fixing the code, stop the entire
 run and report. Do not proceed to subsequent tasks. Do not commit a broken
-task. Under `--no-commit`, when the run completes, end with a reminder that
-nothing was committed — every task's changes sit in the working tree for the
-user to review and commit.
+task. Under `--no-commit`, when the run completes, the closing report
+records that nothing was committed — every task's changes sit in the working
+tree for the user to review and commit.
 
 When a completed task carries a `Feature:` line and it was the last task for
 that feature to reach `[DONE]`/`[SKIP]`, the run notes the feature as a
@@ -243,13 +243,19 @@ spec; the project's context layer provides conventions and patterns.
 Use judgment about how much to read — the body's Hints point to the
 right files.
 
-A Hint carrying the marker `— read-only reference, do not edit` is a
-pointer to read and nothing more: the document belongs to another pipeline
-command, and this task was written with no authority to edit it. Read it
-for context, and leave it exactly as it is. If the implementation turns out
-to need that document changed, stop and say so — the edit needs a grant
-this task does not carry, and `/task-add` is where one is asked for. A path
-the task may edit is on its `Files:` line; a marked Hint never is.
+**Consequential edits are in scope.** An edit that only makes a passage
+agree with a change already approved — by the task body, a user reply or a
+gate — and changes no meaning beyond it is this task's to make, in whatever
+file owns the passage, in this task's commit, whether or not the file is on
+`Files:`; it is never asked about and never left as a follow-up, and it is
+reported under *For the record* (THE CLOSING REPORT). That is how a Hint
+naming a document another pipeline command owns is edited: for the design
+change the body's `## Decisions` records as agreed and the points it records
+as settled, every passage stating the old design is updated. A passage whose
+update would introduce new meaning in an owned document stays untouched and
+goes under *Needs you* as a precise follow-up — the command, the anchor and
+the passages, `/architect amend feature=<slug> "<change>"` — never a vague
+pointer at the owner.
 
 If the body carries sections that do not match that schema — a `Context
 bundle` / `Implementation steps` pair, or the older `Description` /
@@ -580,8 +586,8 @@ COMPLETION flip — and why a push failure here is not an ordinary failure.
 If NO_COMMIT is true, do not commit (or push) this task. Leave all files
 modified by this task — including the `.claude/TASKS.md` status flip —
 uncommitted in the working tree, and move on to the next task (or the
-final report). The changes from each task accumulate uncommitted across
-the run; the final report reminds the user that nothing was committed.
+closing report). The changes from each task accumulate uncommitted across
+the run; the closing report records that nothing was committed.
 Skip the rest of this step.
 
 Otherwise (the default), stage this task's own paths, commit once, report
@@ -651,6 +657,11 @@ during the delegated-run "re-read TASKS.md" step (`./delegated-runs.md`) for
 a task a subagent implemented. Either way it's the parent that accumulates
 the candidate list across the whole run.
 
+**A non-interactive run never proposes** — under a delegated agent, or a runbook
+step whose prompt ends with `OPERATING RULES`, the proposal belongs to the
+outermost run. A runbook step names each candidate in its `DONE` report, one
+line; a delegated agent names none — the launcher derives them from `TASKS.md`.
+
 **Propose once, at the very end of the run** — after the last requested
 task's Step 7 (or Step 6, under `--no-commit`), never mid-run even on a
 many-task batch. If the candidate list is empty, say nothing about this at
@@ -698,6 +709,40 @@ longer `[PLANNED]`).
 
 ---
 
+THE CLOSING REPORT
+
+Every run ends with one closing report — at completion, at a failure halt
+and at a stop the user asked for alike — in two groups, in this order, each
+under its heading:
+
+- **Needs you** — every item waiting on a decision, as long as it needs to
+  be: an unresolved `BLOCKING` finding, a task left `[IN PROGRESS]` and why,
+  a follow-up naming an owner's command with its anchor and passages, a
+  precondition that no longer held.
+- **For the record** — one line per item, in exactly this shape:
+  `<what deviated> — <why> — <resolved by whom>`. A criterion overshot, a
+  wrong premise or cross-reference in the body, a consequential edit outside
+  `Files:`, a deliberate departure from the body, the `--no-commit` reminder
+  that nothing was committed. The one line in another shape is the review
+  pair, `./review-rounds.md` § *Reporting the resolved pair*. No item in this
+  group runs past one line, and none is a question.
+
+An empty group prints its heading and `none`. Two lines in the second
+group's shape:
+
+```
+Task 245 asked ~25 net lines across two files — the mandated block needed 19 — +31, reviewer approved.
+Body Hints named ./test-runner.md for the policy marker — the marker's rule is RESOLVING THE TEST RUNNER step 0 — edit cites the right one, reviewer confirmed.
+```
+
+Order at the end of a run: the FEATURE COMPLETION proposal first, then this
+report — a slug declined there is a *Needs you* item — then CLOSING THE
+RUN's `/follow-ups` call. Under `--agents`, the parent renders the report
+from the per-agent returns it holds: each agent's sixth field is its *For
+the record* lines, attributed to its task (`./delegated-runs.md`).
+
+---
+
 CLOSING THE RUN
 
 **Every run ends with one `/follow-ups` call.** It fires **once per run —
@@ -722,7 +767,7 @@ of the run.
 
 **Under `--agents`.** The closing call is not skipped in a delegated run. The
 parent's reading covers the per-agent result reports it already collects — the
-five-field returns in `./delegated-runs.md` — as well as its own conversation.
+six-field returns in `./delegated-runs.md` — as well as its own conversation.
 It opens nothing new to do it.
 
 The fifth field is what makes that reading worth anything: before returning,
@@ -824,8 +869,9 @@ DO NOT:
 - Force-push, retry a failed push, defer a task's push to end-of-run, or
   push unless `--no-push`/`--no-commit` was passed — `commit.md`
   § *The push protocol* and its `/task-implement` note.
-- Propose a `[DONE]` feature flip mid-run, or per-task — FEATURE COMPLETION
-  proposals are batched to the very end of the run, always.
+- Propose a `[DONE]` feature flip mid-run, per-task, or at all under a
+  non-interactive invocation — FEATURE COMPLETION proposals are batched to the
+  very end of the run, and it is the outermost run that makes them.
 - Flip a `FEATURES.md` `Status:` to `[DONE]` without the user naming that
   slug in response to the proposal, or flip any status other than
   `[PLANNED]` → `[DONE]` there.
