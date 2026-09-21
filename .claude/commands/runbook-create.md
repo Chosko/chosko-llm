@@ -1,6 +1,6 @@
 ---
 name: runbook-create
-version: 0.8.4
+version: 0.8.5
 type: command
 description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/, indexed in .claude/RUNBOOKS.md — from this conversation's follow-up list or a free-form description, or append steps to one. Use it to hand ordered work to later sessions that lack this conversation's context.
 requires: skill:runbook-run
@@ -76,12 +76,10 @@ step's heading, never a position in the list — and both the flag and its value
 are stripped. They are mutually exclusive; if both appear, stop with:
 `--before and --after cannot be combined. Pick one.` Either one without
 `--append` stops with `--before requires --append.` (or `--after requires
---append.`) — a new runbook has no steps to place against. Without either flag
-an append goes at the foot, exactly as it always has.
+--append.`) — a new runbook has no steps to place against.
 
-COMMIT is true unless `--no-commit` is passed. `--commit` is stripped
-silently, so existing runbook steps and invocations that still pass it keep
-working. `--commit` and `--no-commit` together stop the run with:
+COMMIT is true unless `--no-commit` is passed; `--commit` is stripped
+silently. `--commit` and `--no-commit` together stop the run with:
 `--commit and --no-commit cannot be combined. Pick one.`
 
 **Pull at start.** Unless `--no-commit` was passed or `NO_PUSH` is true, run
@@ -132,7 +130,7 @@ The body is always opened and written at the path its block's `File:` line
 holds, never at a path built from the name — `runbook-schema.md` § *The store*.
 
 This command writes no task, no feature document, and no line that belongs to
-a run. It also never executes a runbook.
+a run. It also never executes a runbook; that is `/runbook-run`.
 
 ---
 
@@ -142,19 +140,14 @@ Four forms, resolved in this order.
 
 1. **`/runbook-create --append <id|name|id-name>`** — append to that runbook.
    The argument is resolved to exactly one index block by `runbook-schema.md`
-   § *Resolving a runbook argument*, and its errors are the ones that rule
-   gives: an unknown argument lists the runbooks that do exist, so a typo is
-   corrected without going to look; a compound whose halves disagree names the
-   runbook the id actually belongs to; an ambiguity names both candidates.
-   Each stops the run with nothing written.
+   § *Resolving a runbook argument*, and each of the errors that rule gives
+   stops the run with nothing written.
 
 2. **`/runbook-create --append`, no name** — append to the runbook **this
    session is currently running**. An orchestrator session knows which one
    that is; a step's subagent knows because the prompt that spawned it names
    its runbook and step. With no current runbook this is an error, and the
-   error names the fix: `--append <name>`. The body is the one at that
-   runbook's `File:` path, and it is **never migrated** — the runbook is
-   `[RUNNING]`.
+   error names the fix: `--append <name>`.
 
 3. **`/runbook-create <argument>`, no `--append`** — a new runbook. A **single
    kebab-case token** is read as the name; **anything longer** is read as a
@@ -189,17 +182,17 @@ going to look. Nothing is gathered and nothing is written.
 
 **The migration check on an append target.** Once form 1 or 2 has resolved
 the target — after the pull at start, and before any material is
-gathered — apply the check in `runbook-schema.md` § *The store* to the target's
-block. On a hit, read
+gathered — apply the check in `runbook-schema.md` § *The store* to the
+target's block, and to no other block. On a hit, read
 `../skills/runbook-run/references/body-migration.md`
-and migrate the body as it says; on no hit that file is never opened. A
-`[RUNNING]` target is **never migrated**, under any flag: it is appended to at
-its current `File:` path. A target path that is already taken stops the run
-with nothing written, as that file says. Whatever path results — the `File:`
-path as read, or the new one — is the path every later read and write in this
-run uses. The `--before` / `--after` step lookup above runs first, against the
-body at the `File:` path as read, so a step id no step carries stops the run
-before anything is migrated; never migrate under a condition that stops it.
+and migrate the body exactly as it says, its stop on an already-taken target
+path included; on no hit that file is never opened. A `[RUNNING]` target is
+**never migrated**, under any flag: it is appended to at its current `File:`
+path. Whatever path results — the `File:` path as read, or the new one — is
+the path every later read and write in this run uses. The `--before` /
+`--after` step lookup above runs first, against the body at the `File:` path
+as read, so a step id no step carries stops the run before anything is
+migrated; never migrate under a condition that stops it.
 
 The migration is the **one write that may happen before PHASE 4's gate**. It
 changes no content — a rename plus a one-line `File:` rewrite — and a run that
@@ -207,13 +200,10 @@ stops afterwards, at the gate or anywhere else, leaves it in the tree exactly
 as `body-migration.md` § *Staging* describes.
 
 **Name collisions.** A new runbook whose name is already in the index is
-**refused with a suggested alternative**, never disambiguated automatically: a
-runbook is referred to by name for the length of its execution, and two
-similar names are a real hazard. Say which name is taken, what its status is,
-suggest one alternative, and offer `--append <name>` as the other option.
-Names of removed runbooks are not reserved. Their **ids** are the opposite:
-`runbook-schema.md` § *The index block* is why a pruned id is never handed out
-again, so a collision is only ever possible on a name.
+**refused with one suggested alternative**, never disambiguated automatically
+— `runbook-schema.md` § *Resolving a runbook argument*. Say which name is
+taken, what its status is, suggest the alternative, and offer `--append
+<name>` as the other option.
 
 **Leading-numeric names.** A new runbook whose name's first kebab segment is
 all digits — `2026-migration` — is **refused the same way**, beside the
@@ -226,25 +216,18 @@ the gate from a free-form description (never propose a name that would fail
 either), and one the user substitutes at the gate.
 
 **First use is silent and idempotent.** If `.claude/runbooks/` or
-`.claude/RUNBOOKS.md` does not exist, create it at write time — the index as
-its title line and its `Last runbook number: 0` counter, and nothing else. Say
-nothing about having done it; a project needs no setup step for runbooks, and
-neither `/task-setup` nor `/project-setup` gains one.
+`.claude/RUNBOOKS.md` does not exist, create it at write time, in the shape
+`runbook-schema.md` § *The store* gives a freshly created index. Say nothing
+about having done it; a project needs no setup step for runbooks, and neither
+`/task-setup` nor `/project-setup` gains one.
 
-**An index written before ids** — one with no counter line, or blocks whose
-headings carry no id — is backfilled here, per `runbook-schema.md`
-§ *Backfilling an index written before ids*, before this run assigns anything.
-This command writes the index, so it performs the backfill rather than working
-around it.
-
-**A body written before the step counter** — an append target whose header
-carries no `Last step number:` line — is backfilled the same way and at the same
-point, per `runbook-schema.md` § *Backfilling a body written before the step
-counter*: set it in place to the highest step id present in the body, before
-this run assigns anything. This command is one of the two the counter is
-load-bearing for, and it owns the header line, so it performs the backfill
-rather than falling back to `max()`. A new runbook has nothing to backfill —
-PHASE 5 writes the line.
+**Backfills.** An index written before ids — one with no counter line, or
+blocks whose headings carry no id — and an append target's body written before
+the step counter are both backfilled here, before this run assigns anything,
+per `runbook-schema.md` § *Backfilling an index written before ids* and
+§ *Backfilling a body written before the step counter*. This command writes the
+index and owns the body's header line, so it performs both rather than working
+around either. A new runbook has nothing to backfill — PHASE 5 writes the line.
 
 ---
 
@@ -306,8 +289,7 @@ so the whole interview can be settled in a sentence:
    the step is partly manual or wholly so. The answer is each step's `Needs:`
    line per `runbook-schema.md` § *A step*; recommend `agent` for every step,
    which is the common case, so a runbook of ordinary agent work is confirmed
-   with one word. **An `agent` step gets no `Needs:` line at all** — the value
-   is the default and the schema says it is never written.
+   with one word.
 
 A seventh question — **the model** — is asked **only when the default `opus`
 is not wanted**. Do not ask it routinely.
@@ -362,10 +344,11 @@ read as complete and are not.
 
 9. **Never invokes `/runbook-run`.** Nested runbooks are forbidden, and the
    rejection happens **here**, at authoring time, not at spawn time. The
-   reason is the depth budget: the orchestrator occupies one nesting level and
-   the step's agent a second, so a nested orchestrator would leave nothing for
-   the work. Reject such a step by name, with that reason, and propose the
-   alternative — the steps inline, or a separate runbook run afterwards.
+   reason is what a runbook inside a runbook duplicates: `/runbook-run` is
+   already the orchestration, and a second one inside it orchestrates nothing
+   the first does not. Reject such a step by name, with that reason, and
+   propose the alternative — the steps inline, or a separate runbook run
+   afterwards.
 
 10. **Prefer two steps to a step that needs a nested spawn.** A step whose
     prompt invokes something that wants its own subagent — `/task-implement
@@ -469,10 +452,8 @@ Two cases.
 
 ### New runbook
 
-1. Create `.claude/runbooks/` and `.claude/RUNBOOKS.md` if either is missing —
-   silently, idempotently, in the shape `runbook-schema.md` § *The store*
-   gives a freshly created index. Backfill an index written before ids, per
-   PHASE 1's rule, before step 2.
+1. Create the store, and backfill an index written before ids, per PHASE 1 —
+   both before step 2.
 2. Take the new id from `Last runbook number: + 1` — **before** the body is
    written, because the body's file name carries it. Nothing is written yet.
 3. Write `.claude/runbooks/<id>-<name>.md`: the header, then each step in
@@ -492,21 +473,16 @@ this command is the only thing that assigns one or advances the body's
 shape and the reason each is taken from its counter rather than from `max()`
 are the schema's, cited and not copied.
 
-Every step marker is `[ ]`. There are no `Done:` lines — an authored runbook
-has none at all.
-
 ### Append
 
 The APPEND RULES below govern it, all of them.
 
 ### `Context:` at authoring time
 
-Write `Context: none` on every step, in the common case. The decisions a
-prompt needs belong **inside the prompt**, which is what keeps the fenced
-block pasteable into a fresh session on its own — the property that keeps a
-runbook executable by hand when `/runbook-run` is unavailable, or when the
-user simply prefers to drive it. `Context:` is the **run's** field:
-corrections, failure notes, and facts learned by earlier steps.
+Write `Context: none` on every step. The decisions a prompt needs belong
+**inside the prompt** — `runbook-schema.md` § *A step* — which is what keeps a
+runbook executable by hand when `/runbook-run` is unavailable, or when the user
+simply prefers to drive it.
 
 ---
 
@@ -537,10 +513,9 @@ All of these apply to every append — at the foot or at a `--before` /
   rewritten** — not to point at a step inserted above it, not for any reason.
 - **The `Sequencing:` header line is never touched** — not extended, not
   replaced, not added to a runbook that has none. It is one line, fixed at
-  authoring time, per `runbook-schema.md` § *The header*; an append that
-  extended it is what once grew a header to a page of dated narration. A dated
-  fact an appended step needs goes in its prompt, and a fact learned later
-  goes in its `Context:`.
+  authoring time, per `runbook-schema.md` § *The header*. A dated fact an
+  appended step needs goes in its prompt, and a fact learned later goes in its
+  `Context:`.
 - **Existing steps are never edited.** This is the invariant that makes an
   append safe during a run, and it holds wherever the new steps land: no
   existing step's heading, marker, `Depends on:`, `Needs:`, `Context:`, prompt
@@ -554,10 +529,9 @@ All of these apply to every append — at the foot or at a `--before` /
 - **Appending to a `[RUNNING]` runbook is allowed only from the running
   session itself** — one session, one tree, no race. From any other session,
   refuse and say why. The steps are written at the runbook's current `File:`
-  path, which is never migrated. The run picks the new steps up at its next step
-  re-read; there is nothing to notify. It selects by list position, so a step
-  inserted above steps already `[x]` is simply the next pending step it
-  reaches.
+  path. The run picks the new steps up at its next step re-read; there is
+  nothing to notify. It selects by list position, so a step inserted above
+  steps already `[x]` is simply the next pending step it reaches.
 - **The index `Steps: <done>/<total>` is updated** — the total grows, the done
   count is untouched.
 - **The runbook's id and the index counter are untouched.** An append adds steps
@@ -569,8 +543,10 @@ All of these apply to every append — at the foot or at a `--before` /
 
 PHASE 6 — COMMIT AND PUSH (skipped under `--no-commit`)
 
-If COMMIT is false (`--no-commit` was passed), do nothing here. Report the
-paths written, remind the user that nothing was committed, and stop.
+If COMMIT is false (`--no-commit` was passed), do nothing here — no git
+command of any kind, the move an append target's migration makes excepted.
+Report the paths written, remind the user that nothing was committed, and
+stop.
 
 Otherwise (the default), follow the commit-and-push protocol — four steps, in
 this order:
@@ -592,9 +568,9 @@ this order:
    `body-migration.md` § *Staging* says, never in a commit of its own.
 
    Never a catch-all (`git add -A` / `git add .` / `git add -u`), never an
-   empty commit, never `--no-verify` / `--amend` / `--no-gpg-sign`. On commit
-   failure, surface the exact output, do not retry, and tell the user the
-   files remain staged.
+   empty commit, never `--no-verify` / `--amend` / `--no-gpg-sign`, and never
+   a branch or a tag. On commit failure, surface the exact output, do not
+   retry, and tell the user the files remain staged.
 3. **Pre-push re-sync.** `git pull` again, immediately before pushing. On a
    conflict: abort the merge, leave the local commit intact, do **not** push,
    and report that the commit exists locally but could not be synced.
@@ -604,65 +580,3 @@ this order:
 Under `--no-push`, run step 2 only. On a non-git VCS — a project whose
 `CLAUDE.md` defines a `## VCS` section overriding git — skip steps 1, 3 and 4
 entirely and use that mapping for the commit.
-
----
-
-DO NOT:
-- Write to any file before PHASE 4's **"Approve and write?"** is answered —
-  the sole exception being an append target's migration, per PHASE 1.
-- Build a body path from the name. The body is opened and written at `File:`.
-- Migrate a `[RUNNING]` runbook, migrate anything but the append target, or
-  overwrite a taken target path — `body-migration.md`.
-- Accept a new name that is taken or whose first kebab segment is all digits.
-- Restate the body schema, the step markers, the status vocabulary or the
-  index block in this body. They are
-  `../skills/runbook-run/references/runbook-schema.md`,
-  cited and never copied.
-- Show the full prompts back at the confirmation gate. Shape only.
-- Fix a rule failure silently. Every fix is named in the report.
-- Accept a step whose prompt invokes `/runbook-run`. Rule 9 is enforced here,
-  not deferred to spawn time.
-- Split a step under rule 10 silently, or treat that rule as a rejection.
-  It is a preference: name the split, or name the reason a step was left
-  whole, in the confirmation report.
-- Write a `Done:` line, a step marker other than `[ ]`, or an index `Status:`
-  other than `[PENDING]` — the sole exception being the `[DONE]` → `[PENDING]`
-  flip an append forces.
-- Write anything into `Context:` other than `none`. Corrections and learned
-  facts are the run's, and a prompt's decisions belong inside the prompt.
-- Edit an existing step during an append — its title, marker, `Depends on:`,
-  `Needs:`, `Context:`, prompt block or `Done:` line — or move or renumber
-  one. Writing new steps above an existing one with `--before` / `--after` is
-  not an edit to it; changing any line of an existing step is.
-- Give an inserted step an id derived from its position, or renumber existing
-  steps so the ids read in order — `runbook-schema.md` § *A step*.
-- Accept `--before` and `--after` together, either without `--append`, or a
-  step id no step carries.
-- Write to the `Sequencing:` line on an append — neither extend nor replace
-  it — or write one longer than a single line when authoring.
-- Append to a `[RUNNING]` runbook from a session that is not the one running
-  it.
-- Disambiguate a colliding name automatically. Refuse it, suggest one
-  alternative, and offer `--append`.
-- Reserve the names of removed runbooks.
-- Derive a new id with `max()` over the blocks present, reuse a pruned
-  runbook's id, renumber an existing runbook, or advance
-  `Last runbook number:` on an append — `runbook-schema.md`
-  § *The index block* is the authority for all four.
-- Derive a new **step** id with `max()` over the headings present, or leave the
-  body's `Last step number:` unadvanced after assigning one. The counter is the
-  only source of the next unused step id, and a body missing the line is
-  backfilled before it is read, never worked around — `runbook-schema.md`
-  § *The header* and § *Backfilling a body written before the step counter*.
-- Treat the id as the runbook's identity. It is an alias for the command line
-  that the body's file name also carries; the name still names every message
-  about the runbook.
-- Ask new-versus-append anywhere except the no-argument form of PHASE 1.
-- Add a runbook step to `/task-setup` or `/project-setup`, or require any
-  setup before a runbook can be created.
-- Execute a runbook, or any step of one. That is `/runbook-run`.
-- Create a task, a feature document, or any file other than the body at its
-  `File:` path and `.claude/RUNBOOKS.md`.
-- Run any git command under `--no-commit` — other than the move an append
-  target's migration makes, which runs either way; and on any run, never
-  force-push, retry a failed push, branch, tag, or stage with a catch-all.
