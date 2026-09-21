@@ -89,7 +89,7 @@ Context:
 
 Done: 2026-09-21, commit `e9f6b13` (37 files, +983/-1315). Decision: `task-engine/references/amend.md` and `runbook-run/references/step-amend.md` gained the passed-in-draft clause so their steps run headless; `/pipeline-revise` carries no `replaces:` for the retired command — `chosko-llm rm command:pipeline-patch` is the removal path.
 
-## [ ] 12. Implement 254 — /task-add approval digest
+## [x] 12. Implement 254 — /task-add approval digest
 
 Depends on: 2
 
@@ -98,6 +98,8 @@ Context: none
 ```prompt
 /task-implement 254 --review
 ```
+
+Done: 2026-09-21, commit `e5018b9` (6 files, +64/-69). Wrong premise: task 254's criterion 7 names an OWNERSHIP PRE-AUTHORISATION section of `commands/task-add.md`; no such heading exists — the section it describes is DESIGN-CHANGE CHECK.
 
 ## [ ] 13. Implement 255 — closing reports: two groups in /runbook-run, numbered Needs you
 
