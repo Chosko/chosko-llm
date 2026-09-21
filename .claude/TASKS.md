@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 257
+Last task number: 258
 
 ---
 
@@ -276,9 +276,18 @@ Preconditions: none
 
 ## 257. `/follow-ups` renders its list under a `Follow-ups` heading
 
-Status: [MISSING]
+Status: [IN PROGRESS]
 Target: claude
 Files: commands/follow-ups.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 258. `chosko-llm`: a `skills/<dir>` with no `SKILL.md` is unmanaged, not a missing feature
+
+Status: [MISSING]
+Target: claude
+Files: scripts/lib.sh, scripts/cmd-ls.sh, scripts/cmd-show.sh, scripts/cmd-rm.sh, scripts/cmd-update.sh, .claude/context/cmd-ls.md, .claude/context/cmd-show.md, .claude/context/shared-lib.md, VERSION, CHANGELOG.md
 Preconditions: none
 
 ---
