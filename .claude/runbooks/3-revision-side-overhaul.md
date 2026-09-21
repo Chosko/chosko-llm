@@ -28,7 +28,7 @@ Context: none
 
 Done: 2026-09-21, commit `d8ca4d9` (13 files, +140/-215). Decision: `docs/reference.md` gained a paragraph on the question; the repo's own dogfood copies under `.claude/commands` and `.claude/skills` were left for their own refresh commit.
 
-## [ ] 3. Implement 251 — /architect amend precision, multi-feature
+## [x] 3. Implement 251 — /architect amend precision, multi-feature
 
 Depends on: none
 
@@ -37,6 +37,8 @@ Context: none
 ```prompt
 /task-implement 251 --review
 ```
+
+Done: 2026-09-21, commit `d76ccb1` (13 files, +283/-234). Decision: on a multi-feature ask, an asked feature the reply leaves unnamed is Stop for that feature, never its marked letter; a missing `Doc:` stops the whole run.
 
 ## [ ] 4. Implement 252 — three headless amend arms
 
