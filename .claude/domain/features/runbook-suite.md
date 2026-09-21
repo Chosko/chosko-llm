@@ -143,7 +143,7 @@ skills/runbook-run/
   SKILL.md                        the orchestration protocol
   references/
     runbook-schema.md             the artifact: store, body, index, statuses
-    subagent-contract.md          the preamble and OPERATING RULES, verbatim
+    subagent-contract.md          the preamble, OPERATING RULES, RELAY CHILD RULES
     step-amend.md                 amending one step: strike, insert, Context: facts
 ```
 
@@ -497,16 +497,18 @@ the rule.
 4. **Context** — the step's `Context:` bullets, if any.
 5. **The prompt** — the fenced block, verbatim. Never paraphrased, never
    trimmed, never merged with the surrounding material.
-6. **OPERATING RULES** — verbatim from `references/subagent-contract.md`.
+6. **OPERATING RULES** — verbatim from `references/subagent-contract.md`. A
+   relay child's prompt carries a second verbatim block from that same file,
+   **RELAY CHILD RULES**, pasted ahead of this one.
 
-The contract block is fixed text, which is why it is a reference file rather
-than prose the orchestrator composes. It tells the subagent that it cannot talk
-to the user; that at any clarifying question or approval gate it must stop and
-end its turn with `QUESTIONS FOR USER` followed by the questions, the options, a
-recommendation for each, and — at an approval gate — the full draft; that it
-must follow the default commit behaviour of whatever skill it invokes and add no
-flag the user did not type; that it must never edit the runbook or the index;
-which runbook and step it is executing; and that it must end with `DONE` and a
+Both blocks are fixed text, which is why they live in a reference file rather
+than in prose the orchestrator composes. `OPERATING RULES` tells the subagent
+that it cannot talk to the user; that at any clarifying question or approval
+gate it must stop and end its turn with `QUESTIONS FOR USER` followed by the
+questions, the options, a recommendation for each, and — at an approval gate —
+the full draft; that it must follow the default commit behaviour of whatever
+skill it invokes and add no flag the user did not type; that it must never
+edit the runbook or the index; which runbook and step it is executing; and that it must end with `DONE` and a
 concise report naming the commit sha, the decisions taken, and any premise in
 the prompt that proved wrong.
 
