@@ -185,8 +185,8 @@ The return contract is exactly six things, the last two optional:
 3. the commit hash — or, under NO_COMMIT, that nothing was committed,
 4. a one-line failure reason, and only when it failed,
 5. **at most three one-line follow-ups**, and only when there are any,
-6. **at most three *For the record* lines**, in SKILL.md's THE CLOSING
-   REPORT shape, and only when there are any.
+6. **at most three *For the record* lines**, in the shape SKILL.md's THE
+   CLOSING REPORT gives that group, and only when there are any.
 
 The parent accumulates that and nothing else. No diffs, no file lists, no
 narrative — a deviation worth keeping is one bounded line in the sixth

@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.8.1
+version: 1.8.2
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups
@@ -715,10 +715,13 @@ Every run ends with one closing report — at completion, at a failure halt
 and at a stop the user asked for alike — in two groups, in this order, each
 under its heading:
 
-- **Needs you** — every item waiting on a decision, as long as it needs to
-  be: an unresolved `BLOCKING` finding, a task left `[IN PROGRESS]` and why,
-  a follow-up naming an owner's command with its anchor and passages, a
-  precondition that no longer held.
+- **Needs you** — every item waiting on a decision, numbered `1.`, `2.`, … and
+  as long as it needs to be: an unresolved `BLOCKING` finding, a task left
+  `[IN PROGRESS]` and why, a follow-up naming an owner's command with its
+  anchor and passages, a precondition that no longer held. **The number is the
+  handle the user replies with**, the same way `/follow-ups`' numbering is. It
+  starts at 1 in every report, carries no meaning beyond the handle, and a
+  report with a single item still numbers it.
 - **For the record** — one line per item, in exactly this shape:
   `<what deviated> — <why> — <resolved by whom>`. A criterion overshot, a
   wrong premise or cross-reference in the body, a consequential edit outside

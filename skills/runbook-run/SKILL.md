@@ -1,6 +1,6 @@
 ---
 name: runbook-run
-version: 0.14.2
+version: 0.15.0
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user, recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
 requires: command:follow-ups
@@ -399,35 +399,23 @@ Commit the runbook and the index per COMMIT CADENCE, then loop back to step 2
 and re-read the body.
 
 When no `[ ]` steps remain — every step is `[x]` — set the index `Status:` to
-`[DONE]`, commit, and report: the runbook name, the number of steps, and one
-entry per step. The report is **short but exhaustive**, and every entry is
-drawn from that step's `Done:` line and the step's own report, both already in
-hand: the outcome, the commit sha and its diffstat, what changed in one line,
-any decision or wrong premise the agent flagged, and any question relayed with
-the answer given. Nothing is re-derived for it — the orchestrator opens no file
-here that it does not open anywhere else.
+`[DONE]`, commit, and give the closing report (THE CLOSING REPORT), naming the
+runbook and the number of steps.
 
 **Reaching a `--to` bound is not completion.** When the selected step was the
 last one in range, stop there instead of looping, and set the index back to
 `[PENDING]` unless every step in the *whole* runbook is now `[x]` — a bounded
 run leaves work behind by design, and marking that `[DONE]` would be a lie. The
-report says the same thing: which range ran, the same short-but-exhaustive
-entry per step as above, and which steps remain outside it. `--only N` stops
-this way too; it is the bound `--to N` doing it.
+report says which range ran, and carries the steps remaining outside it as a
+*Needs you* item. `--only N` stops this way too; it is the bound `--to N`
+doing it.
 
 **Reaching the `--steps` count is not completion either.** When the step just
 committed is the N-th step executed in this run, stop there instead of looping,
 exactly as at a `--to` bound: set the index back to `[PENDING]` unless every
 step in the whole runbook is now `[x]` (then it is `[DONE]` by the completion
-rule above), and report how many steps ran, the same short-but-exhaustive entry
-per step as above, and which steps remain.
-
-**Every closing report ends with the feature completion candidates** — at
-completion, at a bound and at a failure halt alike. List under `Feature
-completion candidates:` every slug a step report named as having all its tasks
-`[DONE]`/`[SKIP]`, then ask once: "Flip to `[DONE]` in FEATURES.md? Name the
-slugs, or say all / none." With none, print nothing; the answer is acted on in
-conversation after the run, and the write set is unchanged.
+rule above), and report how many steps ran, with the steps remaining as a
+*Needs you* item.
 
 Whichever of those three ended the run, the closing report is not the last
 thing the run does — CLOSING THE RUN is.
@@ -592,10 +580,10 @@ propagate facts (below).
 ### On failure
 
 Do not retry the step, do not attempt the work yourself, and do not continue
-to the next step. Report to the user: which step failed, the reason, what the
-agent said, the same short-but-exhaustive entry for each step that did complete
-before it, which steps were never started, and the feature completion
-candidates. Then make the closing
+to the next step. Give the closing report (THE CLOSING REPORT): which step
+failed, its reason and what the agent said, and which steps were never started,
+as *Needs you* items; one line for each step that did complete before it under
+*For the record*. Then make the closing
 call — a halted run is a run that ended, and it is the one most likely to
 strand unrecorded work. See CLOSING THE RUN.
 
@@ -923,6 +911,41 @@ forgotten commit still gets thought about.
 
 Under `--inline` the same condition answers one more prompt — a step command's
 dirty-tree prompt, answered `proceed` — see `inline-contract.md`.
+
+---
+
+## THE CLOSING REPORT
+
+Every run ends with one closing report — at completion, at a `--to` / `--only`
+/ `--steps` bound and at a failure halt alike — in two groups, in this order,
+each under its heading. It costs no extra reading: every entry is drawn from a
+step's `Done:` line and its own report, both already in hand, so the
+orchestrator opens no file here that it does not open anywhere else.
+
+- **Needs you** — every item awaiting a decision, numbered `1.`, `2.`, … and as
+  long as it needs to be. The feature completion candidates go here: every slug
+  a step report named as having all its tasks `[DONE]`/`[SKIP]`, with the one
+  question, "Flip to `[DONE]` in FEATURES.md? Name the slugs, or say all /
+  none." So do a failed step, with its reason and what the agent said; a step
+  left `[~]`, to resume; and the steps left outside the range, outside the
+  `--steps` count, or never started.
+- **For the record** — one line per step the run executed, in list order, in
+  exactly this shape: `<step n> — <outcome, commit sha and diffstat> — <what
+  changed in one line; decision or wrong premise flagged; questions relayed and
+  their answers>`. Any run-level deviation follows on one line of its own. No
+  item in this group runs past one line, and none is a question.
+
+An empty group prints its heading and `none`.
+
+**The numbering is the reply handle**, the same way `/follow-ups`' numbering
+is. It starts at 1 in every report, carries no meaning beyond the handle, and a
+report with a single item still numbers it.
+
+The flip question is asked once, here. The answer is acted on in conversation
+after the run: the write set stays the runbook and the index, and the
+orchestrator never writes `FEATURES.md`.
+
+The report reads the same way under `--inline`. There is no opt-out flag.
 
 ---
 

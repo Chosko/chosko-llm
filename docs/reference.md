@@ -899,11 +899,13 @@ traceability finding is the check behind that freedom.
 
 The closing report has two groups, in this order. **Needs you** holds every
 item waiting on a decision — an unresolved blocking finding, a feature flip,
-a follow-up naming an owner's command — at whatever length it needs. **For
-the record** holds one line per item in a fixed shape, `what deviated — why
-— resolved by whom`: a criterion overshot and accepted by the reviewer, a
-wrong premise in a task body, a consequential edit outside the task's files.
-Nothing in that group is a question, and nothing in it runs past one line.
+a follow-up naming an owner's command — numbered, at whatever length each
+needs; the number is the handle you reply with, and it starts at 1 in every
+report. **For the record** holds one line per item in a fixed shape, `what
+deviated — why — resolved by whom`: a criterion overshot and accepted by the
+reviewer, a wrong premise in a task body, a consequential edit outside the
+task's files. Nothing in that group is a question, and nothing in it runs past
+one line. An empty group prints its heading and `none`.
 
 Every run ends with one [`/follow-ups`](#follow-ups) call, once for the whole
 run and after the feature-completion proposal — at a stop you asked for
@@ -926,7 +928,8 @@ nothing is a valid, complete review. On a diff that edits documentation it
 also flags an edit not traceable to the task — one that introduces a
 decision the task never approved, whether or not it is dressed as a
 consequence. Its report closes in the same two groups as
-`/task-implement`'s: *Needs you*, then *For the record*.
+`/task-implement`'s: *Needs you*, numbered so you can answer by number, then
+*For the record*.
 
 A run spawned by `/task-implement --review` may carry a **read budget**
 naming a tier (`shallow` / `standard` / `deep`), and it honours it: the
@@ -1258,11 +1261,17 @@ tree is the signal that this is the tree an interrupted run left behind.
 Between steps it stays quiet — one line per step at its end, `Step 4 done
 (abc1234). Starting step 5.`, with relayed questions and spawn-relay lines
 still coming straight through — because the record of the run is the closing
-report at the end of it: short but exhaustive, one entry per step drawn from
-the `Done:` line and the step's report, and printed the same way whether the
-run completed, stopped at a bound or halted on a failure. It ends with any
-features whose tasks a step just finished off, and one question — flip them to
-`[DONE]` in `FEATURES.md`? — asked once, after the run rather than mid-step.
+report at the end of it, printed the same way whether the run completed,
+stopped at a bound or halted on a failure. It closes in the same two groups as
+`/task-implement`'s. **Needs you** comes first, numbered so you can answer by
+number: any features whose tasks a step just finished off, with one question —
+flip them to `[DONE]` in `FEATURES.md`? — asked once, after the run rather than
+mid-step; a failed step and its reason; a step left `[~]` to resume; the steps
+left outside the range or never started. **For the record** follows with one
+line per step, `step n — outcome, commit sha and diffstat — what changed,
+any decision or wrong premise flagged, any question relayed and its answer`,
+each drawn from the `Done:` line and the step's report. An empty group prints
+its heading and `none`.
 
 **When a step needs a subagent of its own.** In some environments, cloud
 sessions among them, a subagent can't spawn a subagent, which breaks any step

@@ -446,9 +446,10 @@ Currently shipped:
   every flip approved. Non-interactive run (delegated agent, `/runbook-run`
   step) never proposes: names candidates in its closing report, outermost run
   asks. THE CLOSING REPORT: two groups, **Needs you** (items awaiting a
-  decision, any length) then **For the record** (one line each,
-  `<what deviated> — <why> — <resolved by whom>`); an empty group prints
-  `none`. Consequential edits — a passage brought into agreement with an
+  decision, numbered `1.`/`2.`/…, any length — the number is the reply handle,
+  restarting at 1 per report, a lone item still numbered) then **For the
+  record** (one line each, `<what deviated> — <why> — <resolved by whom>`); an
+  empty group prints `none`. Consequential edits — a passage brought into agreement with an
   approved change, no meaning added — are in scope in any file, same commit,
   reported For the record; new meaning in an owned document goes under Needs
   you as a precise `/architect amend` follow-up.
@@ -513,7 +514,7 @@ Currently shipped:
   the task that produced it and reports structured findings; on a
   documentation diff also an untraceable documentation edit (a decision the
   task never approved, `IMPORTANT` by default); report closes in the two
-  groups Needs you / For the record. Exists beside
+  groups Needs you (numbered, the reply handle) / For the record. Exists beside
   Claude Code's built-in `/code-review` because of that one difference:
   generic review asks *is this good code*, this asks *does this satisfy task
   N's criteria*; where the two overlap it defers to the built-in rather than
@@ -1451,12 +1452,19 @@ Currently shipped:
   (`Step 4 done (abc1234). Starting step 5.`, or the failure line), no
   narration of spawn/wait/classify/`Done:`/commit, relayed questions and
   spawn-relay lines still verbatim — with the **closing report as the record of
-  the run**, short but exhaustive, one entry per step from the `Done:` line and
-  the report already in hand, printed the same at completion, at a bound and at
-  a failure halt; nothing extra read for it; no opt-out flag; `--inline`
-  unchanged. Report ends with a `Feature completion candidates:` block from the
-  step reports plus one flip question, asked once after the run (nothing
-  printed when empty); `FEATURES.md` still never written by the orchestrator.
+  the run**, printed the same at completion, at a bound and at a failure halt;
+  nothing extra read for it; no opt-out flag; `--inline` unchanged. THE CLOSING
+  REPORT: the same two groups `/task-implement` closes in. **Needs you**
+  (numbered `1.`/`2.`/…, any length — the reply handle, restarting at 1 per
+  report): the feature completion candidates the step reports named plus one
+  flip question asked once after the run, a failed step with its reason, a step
+  left `[~]` to resume, the steps outside the range / `--steps` count / never
+  started. **For the record**: one line per executed step in list order,
+  `<step n> — <outcome, commit sha and diffstat> — <what changed in one line;
+  decision or wrong premise flagged; questions relayed and their answers>`,
+  then any run-level deviation on one line; each drawn from the `Done:` line
+  and the step report already in hand. An empty group prints `none`;
+  `FEATURES.md` still never written by the orchestrator.
   **Commit convention: one commit per completed step**, staging exactly the
   runbook (its `File:` path; both old and new path on the step that migrated
   it) and the index, then push; `--no-commit`/`--no-push` usual meanings.

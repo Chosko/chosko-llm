@@ -457,21 +457,34 @@ and narrates nothing else: not the spawn, the wait, the classification, the
 `Done:` write or the commit. Relayed `QUESTIONS FOR USER` blocks and the spawn
 relay's lines are never suppressed, because a run that needs an answer has to
 ask for it at once; quiet applies to narration only. The **closing report is
-the record of the run** instead, short but exhaustive — one entry per step
-(outcome, commit sha and diffstat, what changed in one line, any decision or
-wrong premise the agent flagged, any question relayed with its answer),
-followed by what remains outside the range — and it reads the same way at
-completion, at a bound and at a failure halt. It costs no extra reading: the
-`Done:` lines and the step reports are already in hand, so the read scope is
-untouched. There is no opt-out flag, and `--inline` changes none of it: a user
-who wants live detail has the per-step commits. The report closes with the
-**feature completion candidates** the step reports named and one question —
-flip them to `[DONE]` in `FEATURES.md`? — asked once, after the report and
-before the `/follow-ups` call, and printed not at all when there are none. A
-step's own agent is barred from asking it, since a relayed approval gate would
-halt the runbook mid-run. The orchestrator proposes and never writes
-`FEATURES.md`: acting on the answer is conversation after the run, and the
-write set stays the runbook and the index.
+the record of the run** instead, in the same two groups `/task-implement` and
+`/task-review` close in, and it reads the same way at completion, at a bound
+and at a failure halt. *Needs you* comes first: every item awaiting a decision,
+numbered, at whatever length — the **feature completion candidates** the step
+reports named with one question, flip them to `[DONE]` in `FEATURES.md`?; a
+failed step with its reason and what the agent said; a step left `[~]` to
+resume; the steps left outside the range, outside the `--steps` count or never
+started. *For the record* follows: one line per step the run executed, in list
+order, `<step n> — <outcome, commit sha and diffstat> — <what changed in one
+line; decision or wrong premise flagged; questions relayed and their answers>`,
+then any run-level deviation on one line. An empty group prints its heading and
+`none`.
+
+Keeping the per-step entries and grouping them under *For the record* is what
+makes the report exhaustive and scannable at once: whoever has to act reads a
+short numbered list, and the record of what happened sits below it rather than
+in front of it. The numbering is the reply handle, exactly as it is in
+`/follow-ups`' list — it starts at 1 in every report and means nothing else, so
+a user answers "2 and 4" instead of quoting a slug back. It costs no extra
+reading: the `Done:` lines and the step reports are already in hand, so the
+read scope is untouched. There is no opt-out flag, and `--inline` changes none
+of it: a user who wants live detail has the per-step commits. The flip question
+is asked once, in that group and before the `/follow-ups` call, and no
+candidate line is printed when there are none. A step's own agent is barred
+from asking it, since a relayed approval gate would halt the runbook mid-run.
+The orchestrator proposes and never writes `FEATURES.md`: acting on the answer
+is conversation after the run, and the write set stays the runbook and the
+index.
 
 **The spawned prompt**, assembled in this order so the operating rules are the
 last thing the agent reads. Parts 1–4 are the only text the orchestrator
