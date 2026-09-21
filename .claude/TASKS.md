@@ -195,7 +195,7 @@ Preconditions: none
 
 ## 248. Add `/doc-consolidate`: rewrite a document under the editing discipline, with a drops-only ledger and an independent verifier
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/doc-consolidate/SKILL.md, skills/doc-consolidate/verifier.md, docs/reference.md, README.md, docs/cli-help.txt, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: 247

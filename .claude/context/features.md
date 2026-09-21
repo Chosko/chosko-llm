@@ -1697,6 +1697,17 @@ Currently shipped:
 - `commands/refactor-tests.md` — splits oversized test files into focused ones,
   runs suite before/after each split to keep it green. `threshold=`
   sets line cutoff; `--commit` commits splits (default uncommitted).
+- `skills/doc-consolidate/` — rewrites a rules document (or every `.md`
+  under a folder) under `claude-md:editing-discipline`, meaning-preserving:
+  classifies each normative statement kept / superseded / historical /
+  duplicate / restated / merged, renders a per-section ledger of drops and
+  merges only, gates per section (or once per file), rewrites, then spawns
+  the fresh-context verifier in `verifier.md` (old + new text, no ledger)
+  whose LOST list must be restored or accepted before the run ends; on a
+  folder resolves cross-file duplicates with `rule-overlap`'s collection
+  method, one owner cited from the rest. Preserves frontmatter, the `#`
+  header, context six sections, feature-doc sections. Line counts reported
+  as observation, never a target. Uncommitted by default; `--commit`.
 - `claude-md/tool-usage-policy.md` — claude-md artifact: global tool-usage
   guidance injected into `$CLAUDE_HOME/CLAUDE.md`. Installed/updated/removed
   via `claude-md:` kind, not as copied file.

@@ -53,7 +53,7 @@ Windows, run the installer from Git Bash. See [The CLI](#the-cli) below.
 | 4. Plan | `/production-plan`, `/production-status`, `/pipeline-check`, `/task-add`, `/pipeline-patch`, `/pipeline-revise` | `.claude/PLAN.md`, task bodies + `TASKS.md` entries |
 | 5. Build | `/task-implement`, `/task-review`, `/task-iterate` | code, one reviewed commit per task |
 | 6. Continue | `/runbook-*`, `/session-save`, `/session-resume` | `.claude/runbooks/`, `.claude/sessions/` |
-| 7. Maintain | `/refactor-codebase`, `/refactor-tests` | a cleaner codebase, tests green throughout |
+| 7. Maintain | `/refactor-codebase`, `/refactor-tests`, `/doc-consolidate` | a cleaner codebase, tests green throughout; rules documents that state each rule once |
 
 Two realistic starting points:
 
@@ -422,6 +422,12 @@ naming) and **`/refactor-tests`** (split bloated test files) do
 behaviour-preserving cleanup under a safety net: plan first, get approval,
 proceed phase by phase, run the suite between phases, halt on the first
 failure. Uncommitted by default.
+
+**`/doc-consolidate`** does the same for a rules document: it rewrites a
+command or skill body, a feature document or a context file under
+`claude-md:editing-discipline`, shows you only what it drops or merges, and
+has a fresh-context verifier list any rule the rewrite lost before the run
+ends. Meaning-preserving, never a style compressor. Uncommitted by default.
 [Details →](docs/reference.md#7-keeping-the-codebase-healthy)
 
 ## 8. Editor and shell extras

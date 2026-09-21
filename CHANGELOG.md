@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.63.0 — 2026-09-21
+
+- **New `/doc-consolidate`:** rewrites a rules document — a command or skill body, a feature document, a context file, a `CLAUDE.md` — or every document under a folder, under `claude-md:editing-discipline`, keeping every rule it stated. It shows a per-section ledger of only what it drops or merges (a superseded sentence beside its replacement, historical sentences under a count, duplicates with the surviving copy's location), gates per section or once per file, and then has a fresh-context verifier that sees only the old and new text list every rule the rewrite lost; the run ends only when that list is restored or accepted. On a folder it resolves a rule stated in several files to one owner cited from the rest. Meaning-preserving, never a style compressor; frontmatter, body headers and schema sections stay in place; line counts are reported as an observation, never a target. Uncommitted by default, `--commit` to commit and push.
+
 ## 1.62.0 — 2026-09-21
 
 - **Three owners gain a direct amend arm:** `/product-roadmap amend "<change>"` edits named milestone lines (`Goal:`, `Exit criteria:`, `Rationale:`, `Covers:`, the `Strategy:` paragraph, `Not now`) behind one before → after gate and refuses a change it cannot pin; `/production-plan amend "<change>"` reconciles `PLAN.md` for the features, edges or milestones the change names and nothing else, with the cycle and later-milestone refusals intact; `/product-design amend "<change>"` reaches the finished design's amend arm directly, without the resume menu, and compresses `design-process.md` as before.

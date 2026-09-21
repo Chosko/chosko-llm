@@ -1544,6 +1544,32 @@ on the first failure.
 Both leave the result uncommitted by default; `--commit` commits and pushes
 it (`--commit --no-push` to commit without pushing).
 
+### `/doc-consolidate`
+
+Rewrites a rules document — a command or skill body, a feature document, a
+context file, a `CLAUDE.md` — under `claude-md:editing-discipline`, and
+proves it lost nothing. `/doc-consolidate <path>` takes a file, or a folder
+consolidated file by file. It classifies every normative statement as kept,
+superseded, historical, duplicate, restated or merged, and shows you, per
+section, a ledger of only what it will drop or merge — a superseded sentence
+beside the one that replaced it, historical sentences grouped under a count,
+a duplicate with where the surviving copy lives. You approve per section, or
+once for the file. Kept statements are never listed: they are the new text.
+
+After the rewrite an independent verifier — a fresh subagent that sees the
+old and the new text and nothing else, not even the ledger — lists every
+rule the old text stated that the new one does not. That list, expected
+empty, is what you validate: each item is restored, or you accept its loss.
+On a folder it also finds a rule stated in several files and leaves it in
+the one that owns it, cited from the others.
+
+It is meaning-preserving, never a style compressor: a long sentence that
+carries meaning stays long, frontmatter, a body's `#` header, a context
+file's six sections and a feature document's sections stay in place, and
+line counts are reported as an observation with no target behind them.
+Uncommitted by default; `--commit` commits and pushes (`--no-push` to skip
+the push).
+
 ---
 
 ## 8. Editor and shell extras
