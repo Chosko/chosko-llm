@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.66.1 — 2026-09-21
+
+- **`/task-add`'s body is consolidated:** the same rules, stated once each. The historical asides about what the free-form path used to do are gone, `--short`'s effects are stated in the phases they apply to rather than repeated in the argument note, the one-approval-gate rule is stated once, and the DO NOT list keeps only the three prohibitions the body does not already state. Nothing about how the command behaves changed.
+
 ## 1.66.0 — 2026-09-21
 
 - **`/runbook-run`'s closing report has the two groups:** *Needs you* first — the feature completion candidates with their flip question, a failed step and its reason, a step left `[~]` to resume, the steps left outside the range or never started; then *For the record*, one line per step in the shape `<step n> — <outcome, commit sha and diffstat> — <what changed; decision or wrong premise flagged; questions relayed and their answers>`. Same at completion, at a `--to` / `--only` / `--steps` bound and at a failure halt; an empty group prints `none`.

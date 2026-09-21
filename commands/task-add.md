@@ -1,6 +1,6 @@
 ---
 name: task-add
-version: 2.5.4
+version: 2.5.5
 type: command
 description: Plan one new task with the user and write it to the backlog — a summary block in TASKS.md plus a body file — from a prose description or from an /architect feature document. Use it for any new unit of work; stage 5 of the pipeline: turns a feature document into tasks; its output is /task-implement's input.
 requires: skill:task-engine
@@ -45,21 +45,17 @@ SETUP-CHECK → READ → SPLIT-CHECK → ASK → DRAFT → CONFIRM → WRITE →
 
 Two input modes share that flow:
 
-- **Free-form** (the default) — a prose description of the work. Unchanged
-  in every respect by the feature mode below, save the one question THE
-  ORPHAN QUESTION adds on a project that has `.claude/FEATURES.md`.
+- **Free-form** (the default) — a prose description of the work.
 - **Feature** (`feature=<slug>`) — plan from the low-level feature document
   `/architect` wrote, and reconcile any tasks that feature already
   generated. This is stage 5 of the product pipeline.
 
-By default, the body contains: Goal, Acceptance criteria, Decisions (when
-applicable), and Hints. Claude navigates the project at implementation time
-and does not need more.
+The body's default shape is PER-TASK BODY FILE FORMAT below: Claude
+navigates the project at implementation time and needs no more than that.
 
 With `--short`, skip the deep PHASE 1 investigation for a trivial,
 low-ambiguity task and write a minimal Goal-only body instead — see the
-ARGUMENT NOTE and SHORT-FORM BODY sections below. `--short` is mutually
-exclusive with `feature=<slug>`.
+ARGUMENT NOTE and PER-TASK BODY FILE FORMAT — `--short` mode below.
 
 With `--before <N>` / `--after <N>`, the new task is written at that position
 rather than at the end, together with the `Preconditions:` edge the position
@@ -76,7 +72,6 @@ gate, are
 `../skills/task-engine/references/commit.md`.
 Scan `$ARGUMENTS` for them before PHASE 1 and strip whichever appear; what
 is left, after the flags below are stripped too, is the task description.
-Here NO_COMMIT false — the default — means PHASE 5 auto-commits as before.
 
 Also scan for the optional `--no-split` flag (independent of `--no-commit`,
 coexists with it). If present, set NO_SPLIT = true and
@@ -86,19 +81,13 @@ a split would produce better units.
 
 Also scan for the optional `--short` flag. If present, set SHORT = true and
 strip it. `--short` is for trivial, low-ambiguity tasks where the normal
-deep PHASE 1 investigation costs more tokens than the task itself; under
-SHORT, PHASE 1 is reduced to the minimum needed to fill the `Files:` line
-(light Grep/Glob only — no reading of CLAUDE.md, `.claude/context/`, or
-`.claude/domain/` files for grounding), PHASE 1.5 is skipped entirely
-exactly as under `--no-split` (a short task is never split; SHORT implies
-NO_SPLIT = true), and the body is written using the SHORT-FORM BODY schema
-below instead of the default one. PHASE 2 still runs — SHORT only removes
-the deep-investigation source of open questions, not ambiguity inherent to
-the user's own description (see PHASE 2 below). `--short` is mutually
-exclusive with `feature=<slug>` — it implies exactly the deep
-investigation `--short` exists to skip. If `--short` appears with it, stop
-with: `--short cannot be combined with feature=<slug>. Pick one.`
-`--short` composes normally with `--no-commit` and `--no-push`.
+deep PHASE 1 investigation costs more tokens than the task itself; SHORT
+implies NO_SPLIT = true, and what it changes is stated where it applies —
+PHASE 1, PHASE 1.5, PHASE 2, PHASE 3, and PER-TASK BODY FILE FORMAT —
+`--short` mode. `--short` is mutually exclusive with `feature=<slug>` — it
+implies exactly the deep investigation `--short` exists to skip. If `--short`
+appears with it, stop with: `--short cannot be combined with feature=<slug>.
+Pick one.` `--short` composes normally with `--no-commit` and `--no-push`.
 
 Also scan for the optional `--before <N>` and `--after <N>` flags and strip
 whichever appears with its value, setting PLACE = `before` or `after` and
@@ -107,10 +96,9 @@ ANCHOR = N. They are mutually exclusive — if both appear, stop with:
 or a value that is not a task number, stops with:
 `--before and --after need a task number.` Whether N names an existing task
 is checked in PHASE 1 step 1, once `TASKS.md` is read; an N matching no task
-stops there with the unknown-task message in PLACEMENT. Either flag composes
-with `--short`, `--no-split`, `--no-commit`, `--no-push`, `feature=<slug>`
-and `--single`. With neither, PLACE is unset and new tasks are appended at
-the end exactly as before.
+stops there with the unknown-task message in PLACEMENT. With neither flag,
+PLACE is unset; PLACEMENT carries what the flags write and what they compose
+with.
 
 Also scan for the optional `--single` flag. If present, set SINGLE = true and
 strip it. It is meaningful only beside `feature=<slug>` — without it, stop
@@ -128,10 +116,9 @@ remains is NOT the task description in this mode — it narrows or annotates
 the scope (`feature=user-profile just the avatar upload`), and the feature
 document stays the primary source. Under `--single` the remaining text IS
 the one task's description, planned against that document. When FEATURE is
-unset, every phase behaves exactly as it always has: no feature resolution,
-no reconciliation, no `Feature:` line, no new prompts — save the one
-question THE ORPHAN QUESTION adds to PHASE 3's existing gate, and only on a
-project that has `.claude/FEATURES.md`.
+unset there is no feature resolution, no reconciliation and no `Feature:`
+line; the only feature-aware step of a free-form run is THE ORPHAN QUESTION,
+and only on a project that has `.claude/FEATURES.md`.
 
 ---
 
@@ -185,8 +172,7 @@ things it resolves from the index are the next task ID, the task a
 `--before <N>` / `--after <N>` flag names, and — on a `feature=<slug>` run —
 the tasks that feature already generated.
 
-Do not proceed to PHASE 1 until that probe passes. This rule has no
-exceptions.
+Do not proceed to PHASE 1 until that probe passes — no exceptions.
 
 If all artifacts exist, pull at start per `commit.md`, then continue to
 PHASE 1.
@@ -469,8 +455,7 @@ Scope note:     <the free-form narrowing text, if any>
 ```
 
 Then, when that feature already has tasks and SINGLE is false, render a
-RECONCILIATION section BEFORE the new drafts (see RECONCILIATION below). One approval covers the
-reconciliation and the new tasks together — there is no second gate.
+RECONCILIATION section BEFORE the new drafts (see RECONCILIATION below).
 
 The plan is a **digest** of what was drafted, not the draft itself: the
 heading, the target, the goal, the decisions, and the manual interventions
@@ -500,10 +485,8 @@ Target: <claude|claude+human|human>
 ```
 
 **When SHORT is true** (SPLIT is always none in this mode, per PHASE 1.5),
-the digest has the same shape and is simply shorter: the body PHASE 4 writes
-omits `## Acceptance criteria` and `## Hints` entirely and keeps `## Goal`
-to 1–3 sentences — see PER-TASK BODY FILE FORMAT — `--short` mode above.
-`## Decisions` remains conditional as usual.
+the digest has the same shape over the shorter body PER-TASK BODY FILE
+FORMAT — `--short` mode defines.
 
 When SPLIT is set (multiple parts), render one digest per part in write
 order, in one message, using sequential IDs starting at `previous Last + 1`,
@@ -553,14 +536,15 @@ That line and `Order:` are the only wiring the gate shows.
 
 Before the closing prompt, render the design-change question for every
 drafted task that diverges from an owned document — see DESIGN-CHANGE CHECK.
-It is answered in this same exchange, not at a second gate. On a free-form
-run, render THE ORPHAN QUESTION here too, under the same rule.
+On a free-form run, render THE ORPHAN QUESTION here too, under the same rule.
 
 End with: **"Approve and write?"**
 
-Wait for explicit approval. Iterate on changes and re-present the full
-plan (all parts, when split) after any non-trivial revision. Silence is
-not approval.
+This is the run's only gate: the reconciliation, the design-change question
+and the orphan question are all answered in this same exchange, never at a
+second one. Wait for explicit approval. Iterate on changes and re-present
+the full plan (all parts, when split) after any non-trivial revision.
+Silence is not approval.
 
 ---
 
@@ -597,8 +581,6 @@ RECONCILIATION — feature <slug> has 4 existing tasks
       → [SKIP] ("superseded: the design no longer has a separate cache
         layer"), replaced by new task <N+2> below.
 ```
-
-Then the new drafts, then the single **"Approve and write?"**.
 
 ---
 
@@ -719,9 +701,8 @@ What it does not do:
   design-to-backlog relationship. That is also why only a `[PLANNED]`
   feature takes an attached task (FEATURE RESOLUTION step 5): a `[NEW]`
   feature has no tasks by definition, and a `[DONE]` one would be left
-  claiming every task is done with one open. `Doc:` and `Source:` are never
-  written, as on every run.
-- **No documentation task** — one attached task is not a planning pass.
+  claiming every task is done with one open.
+- **No documentation task** — see DOCUMENTATION TASK.
 - **No split.** SINGLE implies NO_SPLIT; exactly one task is written.
 
 **The write-back line.** PHASE 4's report always ends with this one fixed
@@ -731,21 +712,18 @@ later:
 > Feature document `<the entry's Doc: path>` was not updated for task <N> —
 > `/pipeline-revise feature=<slug> "<what task <N> adds>"` writes it back.
 
-That line is all this command does about the document. `/task-add` stays a
-non-writer of it, and of every other owned document.
+That line is all this command does about the document.
 
 ---
 
 THE ORPHAN QUESTION (free-form runs, only when `.claude/FEATURES.md` exists)
 
 Asked only when FEATURE is unset, SHORT is false, and `.claude/FEATURES.md`
-exists. **A project with no `.claude/FEATURES.md` sees no change at all** —
-the question is not asked and nothing is said about it. It is not asked
-under `--short` either: its only non-`none` answer is the `--single` path,
-which `--short` cannot take.
+exists; on a project without that file the question is not asked and nothing
+is said about it. It is not asked under `--short` either: its only non-`none`
+answer is the `--single` path, which `--short` cannot take.
 
-It rides PHASE 3's existing single approval gate, never a second one. Just
-before **"Approve and write?"**, render:
+Just before **"Approve and write?"**, render:
 
 > Does this task belong to a feature?
 >
@@ -760,16 +738,12 @@ there is nothing to attach to, and the question is not asked.
 - **A slug** takes the `--single` path for that feature: read the entry's
   `Doc:` as PHASE 1b's primary context, revise the draft against it (the
   `Feature:` line, the Goal naming the feature, the document under Hints),
-  and re-present the plan at the same gate. That is the usual
-  re-presentation after a non-trivial revision, not a second gate. From then
-  on SINGLE-TASK ATTACHMENT applies in full, the write-back line included.
-  On a split plan, every part is attached the same way, and the write-back
-  line names every attached ID. The question is asked on every free-form
-  run, a split included, and applying the one-task attachment to each part
-  is the only reading that neither drops the question on a split nor
-  collapses the split to one task.
+  and re-present the plan at the same gate. From then on SINGLE-TASK
+  ATTACHMENT applies in full, the write-back line included. The question is
+  asked on every free-form run, a split included; on a split plan every part
+  is attached the same way, and the write-back line names every attached ID.
 - **none** — or an approval that does not address the question — writes
-  the task exactly as today.
+  the task as a free-form task, with no `Feature:` line.
 
 ---
 
@@ -813,10 +787,9 @@ not a point. Every point is one of two kinds:
 
 A detected file with no points is a path in `## Hints` like any other.
 
-**The question.** Asked only when at least one point diverges, at PHASE 3,
-inside the existing single approval gate, never as a second gate — one block
-per task, every detected file's diverging points together, settling points
-listed beneath for the record:
+**The question.** Asked only when at least one point diverges, at PHASE 3 —
+one block per task, every detected file's diverging points together, settling
+points listed beneath for the record:
 
 > Task `<N>` as drafted changes the design at these points:
 >
@@ -876,6 +849,8 @@ as the open questions, redraft, and re-present the plan at the same gate.
 
 PHASE 4 — WRITE (only after explicit approval)
 
+Task IDs never repeat — a collision is an error; stop and report.
+
 Single-task case (SPLIT is none):
 
 1. Edit `.claude/TASKS.md`:
@@ -888,7 +863,6 @@ Single-task case (SPLIT is none):
       makes to another task's line.
 
 2. Write `.claude/tasks/<N>.md` with the full draft body.
-   Task IDs never repeat — a collision is an error; stop and report.
 
 3. Report: task ID, both paths written, counter advanced.
 
@@ -906,8 +880,7 @@ Split case (SPLIT is set, k parts):
 2. Write each `.claude/tasks/<N>.md` body file, one per part, `N` ranging
    over `K+1 .. K+k`. A part that depends on an earlier part gets that
    earlier part's ID in its `Preconditions:` line; a part with no
-   dependency gets `none`. Task IDs never repeat — a collision is an
-   error; stop and report.
+   dependency gets `none`.
 
 3. Report: all task IDs written, all paths, counter advanced by k.
 
@@ -947,9 +920,10 @@ Feature case (FEATURE is set) — in addition to the above:
    Never write `Doc:` or `Source:` — those are `/architect`'s fields, and
    the by-line split is what lets the two commands share this file.
 
-5. Do NOT edit `.claude/domain/features/<slug>.md`. The feature document is
-   read-only to this command; if planning revealed a genuine design
-   problem, say so in the report and let the user re-run `/architect`.
+5. The feature document `.claude/domain/features/<slug>.md` is not this
+   command's to edit — DESIGN-CHANGE CHECK's hard rules are why. If planning
+   revealed a genuine design problem in it, say so in the report and let the
+   user re-run `/architect`.
 
 6. If a documentation task was drafted (see DOCUMENTATION TASK), write its
    summary block and body exactly like any other new task, using the next
@@ -977,72 +951,19 @@ commit-message forms — single task, split, feature, attached — one commit ea
 which paths PHASE 4 leaves to stage in each case, and that PHASE 5 is the only
 phase here that shells out.
 
-No other phase runs a shell command, and under `--no-commit` this phase runs
-none of it: the files PHASE 4 wrote stay uncommitted, reported with their task
-ID(s) and paths. Once PHASE 4 completes the commit happens automatically —
-PHASE 3's **"Approve and write?"** was the run's only gate, and no further
-prompt is asked here.
+Under `--no-commit` this phase runs none of it: the files PHASE 4 wrote stay
+uncommitted, reported with their task ID(s) and paths. Otherwise the commit
+happens automatically once PHASE 4 completes, with no further prompt here.
 
 ---
 
 DO NOT:
-- Write to any file before PHASE 4.
-- Renumber existing tasks — `resolution.md` § *Index file format* is why IDs
-  are stable and `Last task number` only ever increases. An insertion under
-  `--before` / `--after` consumes the next ID exactly as an append does; no
-  existing ID moves.
-- Update any other task's `Preconditions:` line — with one bounded
-  exception: under `--before <N>`, append the new task's ID to task N's
-  `Preconditions:` line (PLACEMENT). Nothing else on task N changes, and no
-  other task's line is touched.
-- Write a placement's position without its edge, or its edge without its
-  position.
 - Auto-create `.claude/TASKS.md` or `.claude/tasks/` if missing —
   `resolution.md` § *When the backlog is not initialised* is the rule, and
   PHASE 0's stop is the whole response.
-- Change the status of any existing task.
 - Implement the task. This command only creates the entry.
-- Use `git add -A`, `git add .`, or `git add -u` in PHASE 5, or any of the
-  hook-skipping and history-rewriting flags — `commit.md` § *Staging* and
-  § *One commit per unit of work* forbid both.
-- Force-push, retry a failed push, branch, tag, or otherwise touch
-  shared/visible git state beyond `commit.md` § *The push protocol*.
-- Propose a split for work that's fine as one task — PHASE 1.5 stays quiet
-  unless a split genuinely produces better units.
-- Set `Target: claude+human` or `human` without a `## Manual interventions`
-  section, or write that section under any other target — `targets.md` makes
-  the two go together.
-- Bundle multiple commits for a split — `commit.md`'s `/task-add` note is one
-  commit covering every task ID created.
-- Run PHASE 1.5 at all when `--no-split` or `--short` is passed.
-- Combine `--short` with `feature=<slug>` or `--single`, or `--before` with
-  `--after`, or pass `--single` without `feature=<slug>` — stop with an
-  error instead (see the ARGUMENT NOTE).
-- Reconcile the feature's other tasks, change its `Status:`, or draft a
-  documentation task under `--single`.
-- Write placeholder `## Acceptance criteria` or `## Hints` sections in a
-  `--short` body — omit them entirely.
-- Skip PHASE 2 wholesale under `--short` — it still asks about ambiguity
-  inherent to the user's own description.
-- Edit `.claude/domain/features/<slug>.md`, or any other domain document.
-  They are read-only here; `/architect` owns them.
-- Write `Doc:` or `Source:` in a `.claude/FEATURES.md` entry. This command
-  writes `Tasks:` and `Status:` only.
-- Modify, skip, reopen, or re-status a `[DONE]` task during reconciliation —
-  `stale.md` § *Clearing it* is why follow-up work is a new task instead.
+- Edit any document under `.claude/domain/`. They are read-only here.
 - Add a `Feature:` line to a task that did not come from that feature and
   was not attached to it by `--single` or the orphan question, or write
   `Feature: none` on a free-form task — `resolution.md` § *Index file
   format* is why its absence is the signal.
-- Change any behavior of the free-form path when `feature=` is absent. The
-  feature mode is additive; a plain `/task-add <description>` run must be
-  indistinguishable from before, save the orphan question — asked only on a
-  project with `.claude/FEATURES.md`. Without that file, and without a
-  placement flag, a free-form run is unchanged in every respect.
-- Write any drafted task — documentation task, free-form task, split part, or
-  a body rewritten during reconciliation — with a diverging point on a
-  document from DESIGN-CHANGE CHECK's owner table that the user has not
-  agreed to. Naming such a document is allowed; an unanswered design change
-  is not, and silence is not agreement.
-- Draft a documentation task on a reconciliation-only run that creates zero
-  new tasks.
