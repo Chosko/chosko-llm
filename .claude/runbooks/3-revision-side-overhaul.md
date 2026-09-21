@@ -1,7 +1,7 @@
 # Runbook: revision-side-overhaul
 
 Created: 2026-09-21 · Source: conversation (tasks 247–253 authored this session) · Model: opus
-Last step number: 12
+Last step number: 13
 Sequencing: Steps 8–11 run last so each body is consolidated once, after every implementation step that edits it.
 
 ## [x] 1. Implement 247 — editing discipline claude-md
@@ -97,6 +97,16 @@ Context: none
 
 ```prompt
 /task-implement 254 --review
+```
+
+## [ ] 13. Implement 255 — closing reports: two groups in /runbook-run, numbered Needs you
+
+Depends on: 6
+
+Context: none
+
+```prompt
+/task-implement 255 --review
 ```
 
 ## [ ] 8. Consolidate commands/task-add.md

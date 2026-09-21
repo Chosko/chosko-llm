@@ -10,6 +10,6 @@ Status: [PENDING]
 File: .claude/runbooks/3-revision-side-overhaul.md
 Created: 2026-09-21
 Source: conversation (tasks 247–253 authored this session)
-Steps: 7/12
+Steps: 7/13
 
 ---
