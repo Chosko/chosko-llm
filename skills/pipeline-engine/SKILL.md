@@ -1,6 +1,6 @@
 ---
 name: pipeline-engine
-version: 0.2.15
+version: 0.2.16
 type: skill
 description: Reference library for the pipeline as a whole — one authority per rule the pipeline features share, under references/ (the project probe and verdict line, the index graph, the routing table, the drift catalogue); read by path by the pipeline-* features, never invoked.
 disable-model-invocation: true

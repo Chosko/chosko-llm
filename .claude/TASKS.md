@@ -204,9 +204,9 @@ Preconditions: 247
 
 ## 249. Reframe `/task-add`'s ownership question as a design-change check and drop the read-only marker
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
-Files: commands/task-add.md, skills/task-implement/SKILL.md, skills/task-engine/references/amend.md, skills/pipeline-engine/references/routing.md, .claude/domain/task-workflow.md, .claude/domain/product-workflow.md, .claude/context/features.md, docs/reference.md, VERSION, CHANGELOG.md
+Files: commands/task-add.md, skills/task-implement/SKILL.md, skills/task-engine/SKILL.md, skills/task-engine/references/amend.md, skills/pipeline-engine/SKILL.md, skills/pipeline-engine/references/routing.md, .claude/domain/task-workflow.md, .claude/domain/product-workflow.md, .claude/context/features.md, docs/reference.md, VERSION, CHANGELOG.md
 Preconditions: none
 
 ---

@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.60.0 — 2026-09-21
+
+- **`/task-add` asks about the design, not about file permissions:** the Grant / Reference / Drop question is gone. For a drafted task that names a document another pipeline command owns, the command now lists where the task *settles* something the document leaves open (for the record, unasked) and where it *diverges* from what the document states, and asks once, inside the approval gate, whether you agree to that design change. Agreement covers every passage stating the old design and is recorded dated in the body; disagreement sends the task back to drafting questions. A document is never kept wrong on purpose.
+- **The read-only marker is gone:** `— read-only reference, do not edit` is no longer written, and `/task-implement` and the task amend arm no longer key on it. An implementer edits an owned document for the agreed design change and for nothing else, and stops to say so when it meets a further design decision.
+
 ## 1.59.0 — 2026-09-21
 
 - **New `claude-md:editing-discipline`:** nine rules for editing a rules document — a CLAUDE.md, a command or skill body, a feature document, a context file. Supersede the old sentence instead of appending beside it, keep history out of the body, state the rule rather than the decision, one rule in one place cited everywhere else, clearer wording over more adjectives, no DO NOT bullet that negates a sentence the body already carries, rewrite the section rather than the sentence, merge overlapping sentences before finishing, and carry a change's consequences into every passage it makes stale whoever owns the file. Install it with `chosko-llm add claude-md:editing-discipline` (or `--local` for one project).

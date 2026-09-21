@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.7.6
+version: 1.7.7
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups
@@ -243,13 +243,12 @@ spec; the project's context layer provides conventions and patterns.
 Use judgment about how much to read — the body's Hints point to the
 right files.
 
-A Hint carrying the marker `— read-only reference, do not edit` is a
-pointer to read and nothing more: the document belongs to another pipeline
-command, and this task was written with no authority to edit it. Read it
-for context, and leave it exactly as it is. If the implementation turns out
-to need that document changed, stop and say so — the edit needs a grant
-this task does not carry, and `/task-add` is where one is asked for. A path
-the task may edit is on its `Files:` line; a marked Hint never is.
+A Hint naming a document another pipeline command owns is an edit target
+only for the design change the body's `## Decisions` records as agreed, and
+the points it records as settled: update every passage of that document that
+states the old design, and introduce no meaning beyond the agreed change. A
+further design decision met at implementation time is not covered — stop and
+say so; `/task-add` is where the agreement is asked for.
 
 If the body carries sections that do not match that schema — a `Context
 bundle` / `Implementation steps` pair, or the older `Description` /

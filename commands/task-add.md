@@ -1,6 +1,6 @@
 ---
 name: task-add
-version: 2.4.3
+version: 2.5.0
 type: command
 description: Plan one new task with the user and write it to the backlog — a summary block in TASKS.md plus a body file — from a prose description or from an /architect feature document. Use it for any new unit of work; stage 5 of the pipeline: turns a feature document into tasks; its output is /task-implement's input.
 requires: skill:task-engine
@@ -25,9 +25,9 @@ requires: skill:task-engine
 # with the `Preconditions:` edge it implies — no existing id moves. Detects
 # work needing a human present and authors a Manual interventions section
 # with target claude+human or human. A drafted task that names a document
-# another pipeline command owns has its reconciliation grant, a read-only
-# marker or the removal written into its body at the approval gate, so the
-# implementer never has to ask. Commits and pushes what it wrote by default.
+# another pipeline command owns has every design change it implies agreed at
+# the approval gate and recorded in its body, so the implementer never has to
+# ask. Commits and pushes what it wrote by default.
 # Usage: /task-add [--short] [--no-split] [--before <N> | --after <N>] [--no-commit] [--no-push] <free-form description of the task>
 #        /task-add feature=<slug> [--no-split] [--before <N> | --after <N>] [--no-commit] [--no-push] [scope-narrowing text]
 #        /task-add feature=<slug> --single [--before <N> | --after <N>] [--no-commit] [--no-push] <description of the one task>
@@ -236,10 +236,8 @@ MANUAL INTERVENTIONS below.>
 
 ## Hints
 <Required. Always present. File paths the implementer should touch:
-edit targets, test files, documentation, collateral files. A path
-carrying the read-only marker defined in OWNERSHIP PRE-AUTHORISATION is
-a pointer to read rather than an edit target, and authorises no edit.
-Write "none" explicitly only when nothing collateral genuinely exists.>
+edit targets, test files, documentation, collateral files. Write "none"
+explicitly only when nothing collateral genuinely exists.>
 - <path/to/file>
 - <…>
 ```
@@ -565,8 +563,8 @@ Part 1/k — Draft body:
 **When FEATURE is set** and at least one new task was drafted above (single
 or split), also render the documentation task's draft here, last, using the
 next sequential ID after the others. See DOCUMENTATION TASK below for its
-content, and OWNERSHIP PRE-AUTHORISATION for the question that accompanies it
-when its Hints name an owned document. Skip this entirely on a
+content, and DESIGN-CHANGE CHECK for the question that accompanies it when
+it diverges from an owned document. Skip this entirely on a
 reconciliation-only run that drafts zero new tasks.
 
 When PLACE is set, add one line under the counter update, so the position —
@@ -578,10 +576,10 @@ Placement:  before task <ANCHOR> — task <ANCHOR> Preconditions: <old> → <new
             (or: after task <ANCHOR> — new task waits on <ANCHOR>)
 ```
 
-Before the closing prompt, render the ownership question for every drafted task
-whose Hints or `Files:` name an owned document — see OWNERSHIP
-PRE-AUTHORISATION. It is answered in this same exchange, not at a second gate.
-On a free-form run, render THE ORPHAN QUESTION here too, under the same rule.
+Before the closing prompt, render the design-change question for every
+drafted task that diverges from an owned document — see DESIGN-CHANGE CHECK.
+It is answered in this same exchange, not at a second gate. On a free-form
+run, render THE ORPHAN QUESTION here too, under the same rule.
 
 End with: **"Approve and write?"**
 
@@ -657,9 +655,8 @@ up to date with this run's other new tasks once they're implemented:
   fixed list; judge per feature, same as any other task's Hints.
 
 Some of that collateral is owned by another command in this pipeline. Naming
-one of those documents here is allowed but never free: OWNERSHIP
-PRE-AUTHORISATION below governs it, and the documentation task is its worked
-example.
+one of those documents here is allowed but never free: DESIGN-CHANGE CHECK
+below governs it, and the documentation task is its worked example.
 
 ---
 
@@ -801,13 +798,14 @@ there is nothing to attach to, and the question is not asked.
 
 ---
 
-OWNERSHIP PRE-AUTHORISATION
+DESIGN-CHANGE CHECK
 
 Applies to **every task this run drafts** — the documentation task, a single
 free-form task, each part of a split, and any existing body rewritten during
-reconciliation. The failure it prevents is identical in all four cases: an
-implementer holding a document it has no authority to edit, which either stalls
-the run to ask or edits an owned document without asking.
+reconciliation. What it catches is a task whose implementation would change a
+design the user has not seen changed: the user agrees to the design change at
+the gate, or the task is redrawn. A document is never kept wrong on purpose,
+and a path is never marked read-only.
 
 **Detection.** These paths are owned by another command in this pipeline. This
 table is the sole source of ownership — do not try to derive it from a
@@ -825,142 +823,78 @@ line rather than by file, and this command is itself one of their writers.
 
 Run the check against both the drafted `## Hints` and the summary block's
 `Files:` line, for every task drafted in this run. A path matching a row above
-is a *detected file*, and its task cannot be written until that path has one of
-the three outcomes below: **Grant**, **Reference** or **Drop**.
+is a *detected file*.
 
-**The read-only marker.** A path kept as a Reference is written in `## Hints`
-with this literal suffix and no other wording:
+**Enumeration.** For each detected file, list the points at which the task's
+implementation touches what the document says — numbered, one line or two
+each, each naming the passage it lands on. "Review this document for drift" is
+not a point. Every point is one of two kinds:
 
-```
-— read-only reference, do not edit
-```
+- **settles** — the document leaves the matter open (an open question, an
+  unstated detail, a choice the design defers to implementation) and the task
+  decides it. No conflict with the design.
+- **diverges** — the document states one thing and the task will do another.
+  A design change.
 
-That one text is what a later reader, the next reconciliation and
-`/task-implement` all key on, so it is defined here once and copied verbatim
-wherever a Reference is written.
+A detected file with no points is a path in `## Hints` like any other.
 
-**Enumeration.** For each detected file, list the specific reconciliations the
-task needs to make to it — the concrete points at which the implementation
-diverges from, or settles, what the document says — numbered, one line or two
-each. "Review this document for drift" is not a point. What happens next is
-decided by what could be named, in this order:
+**The question.** Asked only when at least one point diverges, at PHASE 3,
+inside the existing single approval gate, never as a second gate — one block
+per task, every detected file's diverging points together, settling points
+listed beneath for the record:
 
-1. **Points can be named** — ask the question below, with all three answers.
-2. **No points, and the path is this feature-derived task's own feature
-   document** (the `Doc:` of the feature the task carries) — write it as a
-   Reference, and ask nothing. PHASE 4 feature case step 2 requires that
-   pointer on every new body of a feature run, so the rule decides it rather
-   than the user. The documentation task is included: step 2 covers it too, and
-   its writer reads the design to know what the feature promised.
-3. **No points, some other owned path, and a concrete reason to read it** —
-   the section of that document the task implements — ask the question below
-   with the Reference and Drop answers only. With no points there is nothing to
-   grant.
-4. **No points and no read reason** — drop it, and ask nothing.
-
-Cases 2 and 4 are the rule deciding; only 1 and 3 reach the user. Either way
-every detected file leaves this step with a decision, and silence is never one.
-
-**The question.** Ask it at PHASE 3, inside the existing single approval gate,
-never as a second gate. One question per detected file, grouped into a single
-question when several files are involved, across all drafted tasks in one pass.
-Rendered here for the documentation task, the common case:
-
-> Task `<N>` (the documentation task) names
-> `.claude/domain/features/<slug>.md` in its Hints. That document is
-> `/architect`'s, not this command's. It needs these reconciliations with what
-> the tasks above will ship:
+> Task `<N>` as drafted changes the design at these points:
 >
->   1. <point>
->   2. <point>
->   3. <point>
->
-> A. **Grant** — authorise task `<N>`'s implementer to edit that document for
->    exactly those 3 points and nothing else.
-> B. **Reference** — keep the path in task `<N>`'s Hints as a read-only
->    pointer. It authorises no edit; those 3 points are left to `/architect`.
-> C. **Drop** — leave the file out of task `<N>`, and leave the document to
->    `/architect` on a later run.
->
-> Which?
-
-Under case 3 the same question is asked without answer A and without the
-numbered list — there are no points, so it names the reason to read the
-document in their place.
-
-**Grant outcome.** Write the grant into the drafted body before PHASE 4. Its
-`## Acceptance criteria` carries the enumerated points:
-
-> - `<path>` is reconciled with what shipped on exactly these `<N>` points —
->   editing it is authorised for this task, see Decisions:
->   1. …
+>   1. `<path>` § <section>: <before> → <after> — <one line of context>
 >   2. …
+>
+> Agree?
+>
+> It also settles, without conflict: <path> § <section> — <the point>.
+
+A task whose points all settle asks nothing; its settled points still go into
+the body below.
+
+**Agreement.** The design change is agreed as a whole, not passage by passage:
+the implementer updates every passage of the document that states the old
+design, the enumerated ones included, and introduces no meaning beyond the
+agreed change. The path stays in `## Hints` and joins `Files:`. Write it into
+the drafted body before PHASE 4 — `## Acceptance criteria`:
+
+> - `<path>` states the agreed design change — <the change in one line> — in
+>   every passage that stated the old one, and settles <the settled points>.
 >   Nothing else in the document changes.
 
-and its `## Decisions` carries:
+and `## Decisions`:
 
-> - **Editing `<path>` is explicitly authorised for this task (user decision,
->   `<YYYY-MM-DD>`), for the `<N>` reconciliations listed above and for nothing
->   else. Do not ask for permission at implementation time — the permission is
->   already granted.** That document is normally `<owner>`'s, and anything
->   beyond those points still belongs to `<owner>`. These are factual
->   reconciliations with shipped behaviour, not redesigns; if one turns out to
->   need a design decision rather than a wording fix, stop and say so instead of
->   deciding it here.
+> - **Design change agreed (user decision, `<YYYY-MM-DD>`):** <one line per
+>   diverging point>. Settled here: <one line per settling point>. `<path>` is
+>   normally `<owner>`'s; this task updates it for exactly this and for nothing
+>   else. A further design decision met at implementation time is not covered:
+>   stop and say so.
 
-`<YYYY-MM-DD>` is the date of this `/task-add` run.
+`<YYYY-MM-DD>` is the date of this `/task-add` run. A task with settling
+points only records them the same way, without the user-decision marker.
 
-**Reference outcome.** Keep the path in the drafted `## Hints` with the
-read-only marker appended, and keep it out of the summary block's `Files:`
-line — `Files:` is the task's edit surface, and a Reference authorises no edit:
-
-> - `<path>` — read-only reference, do not edit
-
-When points were named (case 1), record them in `## Decisions` exactly as the
-Drop outcome does, so what is left undone is still written down. Under cases 2
-and 3 there are no points, and nothing goes into `## Decisions`: the marked
-Hint is the whole record.
-
-**Drop outcome.** Remove the path from the drafted `## Hints` and from the
-summary block's `Files:` line, and record the decision in `## Decisions`, naming
-the points left unreconciled so a later run of the owner command knows what is
-outstanding:
-
-> - **`<path>` is deliberately left to `<owner>`.** Its drift from what this
->   task ships — `<point>`, `<point>` — is real but out of scope here; a later
->   `<owner>` run reconciles it.
-
-Under case 4 nothing was asked and no points exist to name, so nothing is
-recorded either — the path simply does not appear in the body.
-
-**A carried-over Reference is already decided.** When a body is rewritten —
-reconciliation here, or an amendment under
-`../skills/task-engine/references/amend.md` — a Hint
-that already carries the marker and survives the rewrite unchanged is not
-asked about again. That is what lets a Reference outlive the next
-reconciliation instead of being stripped by it. Two things are still new
-questions: turning a marked Reference into something the task edits, which is a
-Grant question, and adding an owned path the body did not carry before.
+**Disagreement.** The task, not the document, is wrong: it is heading
+somewhere the user does not want. Return to PHASE 2 with the diverging points
+as the open questions, redraft, and re-present the plan at the same gate.
 
 **Hard rules.**
 
-- A grant is never written without an explicit user answer. Silence is not a
-  grant, and neither is an approval that did not address the question.
-- **A Reference is not a grant.** It authorises reading and nothing else, it
-  never puts the path in `Files:`, and it never stands in for a Grant on a path
-  the task must edit.
-- PHASE 3's **"Approve and write?"** does not answer this question. If the
-  user approves the plan while the ownership question is still unanswered, the
-  approval is incomplete: re-ask the question and wait, rather than assuming
-  any of the three outcomes.
-- PHASE 4 must not write a task in which a detected file is neither granted,
-  referenced, nor removed. If it would, stop the run and report — write
-  nothing.
-- **A grant does not make this command a writer.** `/task-add` still never
-  edits an owned document itself; the grant authorises the *implementer of the
+- A diverging point is never written as agreed without an explicit answer.
+  Silence is not agreement, and neither is an approval that does not address
+  the question: re-ask and wait rather than assume.
+- PHASE 4 never writes a task with an unanswered diverging point. If it would,
+  stop the run and report — write nothing.
+- **Agreement does not make this command a writer.** `/task-add` never edits
+  an owned document itself; the agreement authorises the *implementer of the
   task it drafts*, at implementation time. One writer per artifact holds for
-  the pipeline commands exactly as before, and a Reference makes nobody a
-  writer at all.
+  the pipeline commands exactly as before.
+- A body rewritten — reconciliation here, or an amendment under
+  `../skills/task-engine/references/amend.md` — re-runs the check only on
+  the points the rewrite adds; an agreement already recorded in
+  `## Decisions` stands.
 
 ---
 
@@ -1010,16 +944,8 @@ Feature case (FEATURE is set) — in addition to the above:
 2. Every new body's `## Goal` names the originating feature, and its
    document path appears under `## Hints` — the implementer should be able
    to reach the design from the task without being told the slug
-   separately. That pointer is a read-only Reference unless the ownership
-   question granted an edit on it: OWNERSHIP PRE-AUTHORISATION case 2 writes
-   it with the marker and asks nothing, which is what keeps this step and that
-   rule from contradicting each other on the healthy path — a document that
-   needs no reconciliation. **The one exception is an explicit Drop** under
-   that rule's case 1: where points could be named and the user chose to leave
-   the document to `/architect`, their answer decides and this step does not
-   override it — the body is written without the pointer, and the unreconciled
-   points are recorded in `## Decisions` as the Drop outcome requires. Nothing
-   else omits it.
+   separately. It is an edit target only for what DESIGN-CHANGE CHECK
+   recorded in the body.
 
 3. Apply the approved reconciliation, and nothing beyond it (under SINGLE
    there is none, so this step does nothing):
@@ -1138,10 +1064,9 @@ DO NOT:
   project with `.claude/FEATURES.md`. Without that file, and without a
   placement flag, a free-form run is unchanged in every respect.
 - Write any drafted task — documentation task, free-form task, split part, or
-  a body rewritten during reconciliation — that names a document from
-  OWNERSHIP PRE-AUTHORISATION's owner table without a recorded grant, a
-  recorded read-only Reference, or a recorded removal. Including such a
-  document is allowed; leaving it un-adjudicated is not, silence is not a
-  grant, and a Reference is not a grant either.
+  a body rewritten during reconciliation — with a diverging point on a
+  document from DESIGN-CHANGE CHECK's owner table that the user has not
+  agreed to. Naming such a document is allowed; an unanswered design change
+  is not, and silence is not agreement.
 - Draft a documentation task on a reconciliation-only run that creates zero
   new tasks.

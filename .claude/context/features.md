@@ -261,24 +261,18 @@ Currently shipped:
   `technical-direction.md` / `business-model.md` → `/product-design`;
   `product-roadmap.md` → `/product-roadmap`; `PLAN.md` →
   `/production-plan`; `FEATURES.md` / `TASKS.md` excluded), specific
-  reconciliations enumerated per file, then three outcomes: grant (dated
-  point-scoped bullet written into body's Decisions, points into Acceptance
-  criteria), reference (path kept in Hints under the one literal marker
-  `— read-only reference, do not edit`, kept out of `Files:`, authorising no
-  edit) or drop (path removed from Hints and `Files:`, remainder noted in
-  Decisions). Which is asked depends on what could be named: points nameable
-  → one question per file inside PHASE 3's single gate offering all three;
-  no points but path is that feature-derived task's own feature document
-  (doc task included) → reference written unasked, since PHASE 4 feature
-  case step 2 requires the pointer; no points but a concrete read reason →
-  reference-or-drop asked; no points, no read reason → dropped unasked. A
-  marked reference carried unchanged into a rewritten body (reconciliation
-  or `task-engine/references/amend.md`) is already decided, not re-asked;
-  turning it into an edit target, or adding a new owned path, is a new
-  question. Silence is not a grant and a reference is not a grant; PHASE 4
-  refuses a task whose detected file is neither granted, referenced nor
-  removed. Grant authorises that task's implementer — `/task-add` still never
-  edits an owned document, and a reference makes nobody a writer. Free-form text alongside slug narrows scope;
+  points enumerated per file as *settles* (document leaves it open) or
+  *diverges* (design change). DESIGN-CHANGE CHECK asks one question per
+  task inside PHASE 3's single gate, only when a point diverges — before →
+  after, agree? — settling points listed for the record. Agreement covers
+  the whole design change (every passage stating the old design), recorded
+  as an acceptance criterion plus a dated Decisions bullet, path joins
+  `Files:`; disagreement returns to PHASE 2 questions. No read-only marker,
+  no drop answer. Silence is not agreement; PHASE 4 refuses a task with an
+  unanswered diverging point. A rewritten body (reconciliation or
+  `task-engine/references/amend.md`) re-checks only points it adds.
+  Agreement authorises that task's implementer — `/task-add` still never
+  edits an owned document. Free-form text alongside slug narrows scope;
   feature document read-only to `/task-add` itself. Free-form path unchanged when
   `feature=` absent, save the orphan question above on a project with
   `FEATURES.md`.
@@ -987,7 +981,7 @@ Currently shipped:
   `File:` — the ownership authority the revision suite reads; owned BY
   LINE, no two rows claiming one line or value; every row verified against
   the shipped body, never a design doc; agrees with `/task-add`'s
-  pre-authorisation table and is the one fixed if they diverge), `lint.md`
+  DESIGN-CHANGE CHECK table and is the one fixed if they diverge), `lint.md`
   (closed catalogue of eleven structural drift findings L1–L11, each with a
   detection rule over `graph.md`'s edges, severity `ERROR` or `WARNING` —
   two levels, deliberately clear of every status vocabulary — one fix command

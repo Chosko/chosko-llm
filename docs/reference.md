@@ -541,6 +541,16 @@ every `[PLANNED]` one with *none* as the default. Naming a slug takes the
 `--single` path; *none* writes the task exactly as before. A project without a
 feature index never sees the question.
 
+A drafted task that would change what a design document another pipeline
+command owns states — a feature document, `product-design.md`,
+`product-roadmap.md`, `PLAN.md` — lists those points, before and after, and
+asks once, inside the same approval step, whether you agree to the design
+change. Agreeing authorises that task's implementer to update every passage
+of the document stating the old design, recorded dated in the task body;
+disagreeing sends the task back to drafting questions. Points the task merely
+settles, where the document left the matter open, are listed for the record
+and never asked about.
+
 Tasks can be **human-in-the-loop**: when part of the work only a human can
 perform in an external tool (a Unity editor step, a cloud console, hardware),
 `/task-add` marks the task `Target: claude+human` (or `human` for fully
