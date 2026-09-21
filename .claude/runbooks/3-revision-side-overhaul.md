@@ -76,7 +76,7 @@ Context: none
 
 Done: 2026-09-21, commit `a735c9f` (12 files, +150/-37). Decision: end-of-run order is FEATURE COMPLETION proposal, closing report, `/follow-ups`; delegated agents return a bounded sixth field of *For the record* lines. Wrong premise: `/runbook-run`'s closing report has no Needs you / For the record groups; aligning it is a follow-up.
 
-## [~] 7. Implement 253 — change-set /pipeline-revise, patch retired
+## [x] 7. Implement 253 — change-set /pipeline-revise, patch retired
 
 Depends on: 3, 4
 
@@ -86,6 +86,8 @@ Context:
 ```prompt
 /task-implement 253 --review
 ```
+
+Done: 2026-09-21, commit `e9f6b13` (37 files, +983/-1315). Decision: `task-engine/references/amend.md` and `runbook-run/references/step-amend.md` gained the passed-in-draft clause so their steps run headless; `/pipeline-revise` carries no `replaces:` for the retired command — `chosko-llm rm command:pipeline-patch` is the removal path.
 
 ## [ ] 12. Implement 254 — /task-add approval digest
 
