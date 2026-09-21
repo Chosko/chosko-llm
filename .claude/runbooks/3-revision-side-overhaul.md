@@ -138,7 +138,7 @@ Context:
 
 Done: 2026-09-21, commit `ecf962d` (3 files, +101/-201). Decision: the nested-runbook refusal now gives one reason, at THE EXECUTION LOOP step 5 — refused for the orchestration it duplicates, not for the depth it costs; the depth-based reason is gone.
 
-## [ ] 10. Consolidate skills/task-implement/SKILL.md
+## [x] 10. Consolidate skills/task-implement/SKILL.md
 
 Depends on: 5, 6
 
@@ -149,6 +149,8 @@ Context:
 ```prompt
 /doc-consolidate skills/task-implement/SKILL.md --commit
 ```
+
+Done: 2026-09-21, commit `b1ad56d` (3 files, +110/-225). Wrong premise: the body itself said a delegated agent returns four values while its own THE CLOSING REPORT cited a sixth field; PRE-FLIGHT 2b now cites `delegated-runs.md`'s contract instead of a count.
 
 ## [ ] 11. Consolidate commands/runbook-create.md
 
