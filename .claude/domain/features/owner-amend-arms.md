@@ -61,7 +61,7 @@ appears.
 
 ### `/architect amend`
 
-A new argument form, `amend feature=<slug> "<change>"`, dispatches to
+A new argument form, `amend feature=<slug>[,<slug>...] "<change>"`, dispatches to
 `skills/architect/amend.md`, a supporting file beside the skill's other
 on-demand files. The arm skips the
 clarify and architecture phases entirely: the change is described, not
@@ -81,11 +81,19 @@ blanket one:
   clear — a task touched on its summary block or a nameable added scope item
   is not editorial; no touched task, no added scope and no contract text
   changed is editorial — stating it in one `Classified:` evidence line and
-  proceeding without a reply. It asks only when the case is ambiguous — a
-  touched status needed a body read, the scope call is borderline, or the
-  findings point different ways — marking the letter its touched set and
-  scope call imply, with a one-line evidence statement citing what it already
-  shows. On proceed, `[STALE]` is written on touched tasks only.
+  proceeding without a reply. A body read that decides a touched status is a
+  mechanical signal like a summary-block decision. It asks only when the case
+  is ambiguous — a task's body still could not decide, the scope call is
+  borderline, or the findings point different ways — marking the letter its
+  touched set and scope call imply, with a one-line evidence statement citing
+  what it already shows. On proceed, `[STALE]` is written on touched tasks
+  only.
+- `feature=<slug>,<slug>,...` amends several features in one run: the change
+  is scoped and the guard run per feature, one gate renders a section per
+  feature with its own touched set, outcome and classification, the
+  `product-design.md` upstream edit is drafted once, a feature whose touched
+  task is `[IN PROGRESS]` is dropped with one line while the rest proceed, and
+  the run makes one commit.
 - The feature flips to `[ITERATED]` when any task was staled or when the
   change adds scope no existing task covers; an editorial change leaves the
   status as it was. The legal transitions are unchanged; the arm only chooses
@@ -139,10 +147,11 @@ uses the existing step-marker vocabulary rather than a new one.
 
 ## Interfaces and contracts
 
-- `/architect amend feature=<slug> "<change>" [--no-commit] [--no-push]` —
-  one gate, precision guard, same `WRITTEN` discipline as the full skill.
-  Unknown slug stops by listing the slugs that exist. A `[NEW]` feature is
-  amended with no guard at all, having no tasks.
+- `/architect amend feature=<slug>[,<slug>...] "<change>" [--no-commit]
+  [--no-push]` — one gate, precision guard per feature, same `WRITTEN`
+  discipline as the full skill, one commit. Unknown slug stops the whole run
+  by listing the slugs that exist. A `[NEW]` feature is amended with no guard
+  at all, having no tasks.
 - The single-task amend reference — read by path from `task-engine`; the
   consumer is `/pipeline-patch` or `pipeline-revise`, never the user directly.
 - The single-step amend reference — read by path from `runbook-run`'s
@@ -152,9 +161,10 @@ uses the existing step-marker vocabulary rather than a new one.
   body only when the summary block cannot decide; the editorial question is
   decided without a reply when the evidence is clear and asked when it is
   ambiguous; a classification carried from `/pipeline-revise` is accepted
-  without a prompt when the arm's own findings agree, and confirmed when they
-  disagree; whenever the arm asks, silence is still Stop, and a recommended
-  letter is never a default.
+  without a prompt when the arm's own findings agree, and when they disagree
+  the stricter one applies — not editorial over editorial — with no prompt and
+  the deviation named in the closing line; whenever the arm asks, silence is
+  still Stop, and a recommended letter is never a default.
 
 Failure contract: a change that the arm cannot scope to named sections is
 refused with a pointer to the full skill; a touched `[IN PROGRESS]` task

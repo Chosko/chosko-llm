@@ -239,10 +239,11 @@ on a feature that already has tasks and it checks them first: if any is
 document, marks the unfinished tasks `[STALE]` and the feature `[ITERATED]`.
 Nothing is deleted. `/task-add feature=<slug>` then reconciles each stale
 task, and `[DONE]` tasks are never touched. For a targeted change rather
-than a redesign, `/architect amend feature=<slug> "<change>"` edits only the
-sections the change names and marks `[STALE]` only the tasks the change
-touches, judged from each task's title and `Files:` line. An `[IN PROGRESS]`
-task blocks it only when the change touches that task. It decides on its own
+than a redesign, `/architect amend feature=<slug>[,<slug>...] "<change>"`
+edits only the sections the change names, in one or more documents, and
+marks `[STALE]` only the tasks the change touches, judged from each task's
+title and `Files:` line. An `[IN PROGRESS]` task blocks it only when the
+change touches that task, and only for that feature. It decides on its own
 whether the change is editorial when its touched tasks and scope call settle
 it, and asks only when they don't; if it is editorial, nothing is staled. What each
 status means at each level is in

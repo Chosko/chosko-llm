@@ -1,6 +1,6 @@
 ---
 name: pipeline-revise
-version: 0.6.2
+version: 0.6.3
 type: skill
 description: Revise already-planned work — change, insert into, remove from or reorder a feature document, a task or a runbook step — through the owners of every artifact the change reaches, behind one gate. Use it for a change that crosses owners or restructures the plan; for one owner's amend arm, /pipeline-patch is cheaper.
 requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run
@@ -338,9 +338,10 @@ An `/architect amend` step — in whichever branch runs one — receives the
 editorial classification step 7 settled: the user's reply when the question
 was asked (A as *editorial*, B, or arm C, as *not editorial*), the automatic
 classification otherwise — never the letter the gate marked. The arm applies
-it with no prompt when its own findings agree, and asks in its confirmation
-form, needing an explicit reply, when they disagree (`architect/amend.md`
-§ 4). No other owner receives it.
+it with no prompt when its own findings agree; when they disagree the
+stricter classification applies, *not editorial* over *editorial*, with no
+prompt and the deviation stated in the arm's closing line
+(`architect/amend.md` § 4). No other owner receives it.
 
 A later step that an earlier step's outcome made moot — an `/architect amend`
 answered editorial leaves no stale task for a later step to amend — is

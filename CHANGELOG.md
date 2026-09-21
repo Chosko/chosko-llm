@@ -2,6 +2,12 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.61.0 — 2026-09-21
+
+- **`/architect amend` takes several features at once:** `amend feature=<slug>,<slug>,... "<change>"` scopes the change and runs the precision guard per feature, renders one gate with a section per feature, drafts the `product-design.md` upstream edit once, drops a feature whose touched task is `[IN PROGRESS]` while the rest proceed, and makes one commit.
+- **A body read now classifies:** a task whose summary block could not decide its touched status, and whose body then did, is a clear case like any other; the arm asks only when the body still cannot decide, when the scope call is borderline, or when the findings point different ways.
+- **No second gate under `/pipeline-revise`:** when the classification carried from the revise gate disagrees with the arm's own findings, the stricter one applies — not editorial over editorial — with no prompt, and the closing line names the deviation. The confirmation form is gone.
+
 ## 1.60.0 — 2026-09-21
 
 - **`/task-add` asks about the design, not about file permissions:** the Grant / Reference / Drop question is gone. For a drafted task that names a document another pipeline command owns, the command now lists where the task *settles* something the document leaves open (for the record, unasked) and where it *diverges* from what the document states, and asks once, inside the approval gate, whether you agree to that design change. Agreement covers every passage stating the old design and is recorded dated in the body; disagreement sends the task back to drafting questions. A document is never kept wrong on purpose.

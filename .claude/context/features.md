@@ -747,22 +747,26 @@ Currently shipped:
   exclusions flowing into the feature document's non-goals, and the extended
   `Source:` — then
   `iterating.md` (the feature already has an entry), `amend.md` (the
-  `amend feature=<slug> "<change>"` argument form; replaces input
-  resolution, PHASE 0b and PHASES 1–3 for the run: edits only the sections
-  the change names, refusing a change it can't scope to named sections;
-  runs a PRECISION iterate guard — each live task classified touched or
-  untouched from its summary block, body opened only when that can't
-  decide — that refuses only on a touched `[IN PROGRESS]` task and stales
-  only touched tasks; one gate settling whether the change is editorial —
-  CLEAR cases (task touched on its summary block or nameable added scope →
-  not editorial; empty touched set, no scope, no contract text changed →
-  editorial) print a `Classified:` evidence line and write with no reply;
-  AMBIGUOUS cases (a body read decided a touched status, borderline scope
-  call, findings pointing different ways) ask A/B/C with the letter derived
-  from touched set and scope call (empty and none → A, else B) — under
+  `amend feature=<slug>[,<slug>...] "<change>"` argument form; replaces
+  input resolution, PHASE 0b and PHASES 1–3 for the run: per feature, edits
+  only the sections the change names, dropping a feature the change can't
+  be scoped to; runs a PRECISION iterate guard — each live task classified
+  touched or untouched from its summary block, body opened only when that
+  can't decide, a body that decides counting as a mechanical signal — that
+  drops the feature only on a touched `[IN PROGRESS]` task and stales only
+  touched tasks; one gate with a section per feature settling whether the
+  change is editorial — CLEAR cases (task touched on summary block or body,
+  or nameable added scope → not editorial; empty touched set, no scope, no
+  contract text changed → editorial) print a `Classified:` evidence line
+  and write with no reply; AMBIGUOUS cases (a body still undecided,
+  borderline scope call, findings pointing different ways) ask A/B/C with
+  the letter derived from touched set and scope call (empty and none → A,
+  else B), one reply answering every asked feature — under
   `/pipeline-revise` it applies the carried classification with no prompt
-  when its own derivation agrees, and asks the confirmation form when it
-  differs; no progress marker), `tech-stack-
+  when its own derivation agrees, and the stricter one, not editorial over
+  editorial, with no prompt and the deviation in the closing line when it
+  differs; `product-design.md` upstream edit drafted once; one commit; no
+  progress marker), `tech-stack-
   selection.md` (no existing stack in either form — an existing stack
   always wins), `council-gate.md` (PHASE 2 hit a genuine design fork —
   optional delegation to the claude-council skill this repo ships (opt-in,

@@ -222,9 +222,9 @@ Preconditions: 249
 
 ## 251. `/architect amend`: a body read classifies, the stricter carried classification wins, several features per run
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
-Files: skills/architect/amend.md, skills/architect/SKILL.md, skills/pipeline-revise/SKILL.md, skills/pipeline-engine/references/routing.md, .claude/domain/features/owner-amend-arms.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
+Files: skills/architect/amend.md, skills/architect/SKILL.md, skills/pipeline-revise/SKILL.md, skills/pipeline-engine/SKILL.md, skills/pipeline-engine/references/routing.md, .claude/domain/features/owner-amend-arms.md, .claude/domain/product-workflow.md, docs/reference.md, README.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none
 
 ---

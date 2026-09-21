@@ -220,27 +220,31 @@ those tasks is `[IN PROGRESS]` it refuses outright, and otherwise it asks
 before marking the surviving tasks `[STALE]` and the feature `[ITERATED]`,
 then tells you to reconcile with `/task-add feature=<slug>`.
 
-**Amending instead of re-architecting.** `/architect amend feature=<slug>
-"<change>"` makes one targeted change to one feature document and skips the
-clarify and architecture phases, because the change is described, not
-designed. The change has to name the sections it lands in, or quote a
-passage that lives in them. A change it can't pin to named sections is
-refused, with a pointer to `/architect <slug>`. When the change moves a
-decision `product-design.md` records, the matching high-level edit is
-drafted there too.
+**Amending instead of re-architecting.** `/architect amend
+feature=<slug>[,<slug>...] "<change>"` makes one targeted change to one or
+more feature documents and skips the clarify and architecture phases, because
+the change is described, not designed. The change has to name the sections
+it lands in, or quote a passage that lives in them. A change it can't pin to
+named sections of a document is refused for that document, with a pointer to
+`/architect <slug>`; on a multi-feature run the other features proceed. When
+the change moves a decision `product-design.md` records, the matching
+high-level edit is drafted there too, once for the run.
 
-It then runs a **precision guard** in place of the blanket one. Each
-unfinished task is classified as touched or untouched by the change, from its
-title and `Files:` line alone. Its body is opened only when those can't
-decide, and a task still undecided after that counts as touched. Only a
-*touched* `[IN PROGRESS]` task refuses the amendment, where the blanket guard
-refuses on any. Only the touched tasks go `[STALE]`, where the blanket guard
-stales every unfinished one. `[DONE]` and `[SKIP]` tasks are never looked at.
+It then runs a **precision guard** per feature in place of the blanket one.
+Each unfinished task is classified as touched or untouched by the change,
+from its title and `Files:` line alone. Its body is opened only when those
+can't decide, and a task still undecided after that counts as touched. Only a
+*touched* `[IN PROGRESS]` task blocks the amendment, where the blanket guard
+refuses on any — and on a multi-feature run it drops that feature alone,
+with one line, while the rest proceed. Only the touched tasks go `[STALE]`,
+where the blanket guard stales every unfinished one. `[DONE]` and `[SKIP]`
+tasks are never looked at.
 
-There is exactly one gate. It shows the drafted edit and the touched set,
-with the untouched live tasks listed too so you can overrule a
-classification, and the outcome. Then it settles the **editorial question** —
-is this change wording only, with nothing any task builds changing?
+There is exactly one gate, with a section per feature. Each shows the
+drafted edit and the touched set, with the untouched live tasks listed too so
+you can overrule a classification, and the outcome. Then it settles the
+**editorial question** per feature — is this change wording only, with
+nothing any task builds changing?
 
 - *Editorial* edits the document, stales nothing, and leaves the feature's
   status where it was.
@@ -250,33 +254,38 @@ is this change wording only, with nothing any task builds changing?
 - *Stop* writes nothing.
 
 When the evidence is clear, the arm decides without asking. A task touched on
-its title or `Files:` line, or added scope it can name as a component,
-contract or promise, makes the change *not editorial*. No touched task, no
-added scope and no contract text changed makes it *editorial*. The gate shows
-one `Classified:` line with that evidence and writes, with no reply needed.
+its title or `Files:` line, or on its body when those could not decide, or
+added scope it can name as a component, contract or promise, makes the change
+*not editorial*. No touched task, no added scope and no contract text changed
+makes it *editorial*. The gate shows one `Classified:` line with that
+evidence and writes, with no reply needed.
 
-It asks only when the call rests on judgement: a task's touched status needed
-its body read, the scope call is borderline, or the findings point different
-ways. Then the gate marks a recommended answer, worked out from what it
-already shows: no touched task and no added scope recommends *Editorial*, and
-anything else recommends *Not editorial*. One line gives the evidence, naming
-the touched task ids or the added scope. When *Editorial* is recommended, the
-line also says both answers would write the same thing. You still have to
-reply; silence, an unclear reply or EOF is *Stop*.
+It asks only when the call rests on judgement: a task's body still couldn't
+decide its status, the scope call is borderline, or the findings point
+different ways. Then the gate marks a recommended answer, worked out from what
+it already shows: no touched task and no added scope recommends *Editorial*,
+and anything else recommends *Not editorial*. One line gives the evidence,
+naming the touched task ids or the added scope. When *Editorial* is
+recommended, the line also says both answers would write the same thing. You
+still have to reply; on a multi-feature run one reply answers every asked
+feature, a letter per feature or one for all, and an asked feature you leave
+unnamed is *Stop* for that feature. Silence, an unclear reply or EOF is
+*Stop* for every asked feature.
 
-An `[IN PROGRESS]` touched task still refuses the amendment before anything
-is classified.
+An `[IN PROGRESS]` touched task still drops the feature before anything is
+classified.
 
 When `/pipeline-revise` runs the arm in the same session, its gate already
 settled the question, so the arm carries that classification in. When the
-arm's own findings agree, it applies it with no prompt. When they differ, it
-shows the carried classification as the marked answer, with one line saying
-what its own findings would mark, and asks you to confirm it, switch, or
-stop. A runbook step run later applies the rule above on its own.
+arm's own findings agree, it applies it with no prompt. When they differ, the
+stricter classification applies — *not editorial* over *editorial* — with no
+prompt, and the closing line says what was carried and what was applied. A
+runbook step run later applies the rule above on its own.
 
 A `[NEW]` feature has no tasks, so it gets no guard; it is classified by the
 same rule and stays `[NEW]` either way. An amendment writes no progress
-marker, and `--commit` / `--no-push` work as on any other run.
+marker, makes one commit for the whole run, and `--commit` / `--no-push`
+work as on any other run.
 
 At a genuine design fork (the stack choice, the shape of the architecture,
 or where the low-level split falls) it can route the decision through the
