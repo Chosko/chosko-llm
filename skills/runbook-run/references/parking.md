@@ -71,10 +71,11 @@ Steps remain, none is selectable, and at least one of them is `[P]`. This is
 not a deadlock and not a failure — the run is waiting on an answer nobody
 present can give. Set the index `Status:` back to `[PENDING]` (the `Parked:`
 line stays), commit per COMMIT CADENCE, and give the closing report, whose
-*Needs you* group names every `[P]` step with its question verbatim under an
+*Follow-ups* group names every `[P]` step with its question verbatim under an
 item number, and under it the steps waiting on it — every step that is not
 `[x]` and whose `Depends on:` reaches it, directly or through another
-blocked step. Then CLOSING THE RUN, as at any other end.
+blocked step. The report is the run's last act here as at any other end
+(CLOSING THE RUN).
 
 A runbook that is a linear chain therefore stops after its first parked
 step; one whose `Depends on:` lines were authored honestly runs on through

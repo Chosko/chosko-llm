@@ -1,6 +1,6 @@
 ---
 name: task-add
-version: 2.5.5
+version: 2.5.6
 type: command
 description: Plan one new task with the user and write it to the backlog — a summary block in TASKS.md plus a body file — from a prose description or from an /architect feature document. Use it for any new unit of work; stage 5 of the pipeline: turns a feature document into tasks; its output is /task-implement's input.
 requires: skill:task-engine
@@ -819,7 +819,7 @@ and `## Decisions`:
 >   diverging point>. Settled here: <one line per settling point>. `<path>` is
 >   normally `<owner>`'s; this task updates it for exactly this and for nothing
 >   else. A further design decision met at implementation time is not
->   covered: leave that passage untouched and name it under *Needs you* as a
+>   covered: leave that passage untouched and name it under *Follow-ups* as a
 >   precise follow-up.
 
 `<YYYY-MM-DD>` is the date of this `/task-add` run. A task with settling

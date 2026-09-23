@@ -281,7 +281,7 @@ question is in the task's `## Parking handoff`; the parent records the row,
 prints the returned question under the run's next handle number exactly as
 SKILL.md's *Parking at a question* does for an in-context task, prints its
 progress line (§ *Between delegated tasks*), and spawns the next agent. The
-closing report lists the task under *Needs you* with that question, per
+closing report lists the task under *Follow-ups* with that question, per
 SKILL.md's THE CLOSING REPORT — the parent still opens no body for it.
 
 **The fifth field applies `/follow-ups`' rules; it does not define its own.**
@@ -300,13 +300,14 @@ and are **not restated here**: a second copy is a copy that will drift, and
 this file is not its authority.
 
 **It reads the rules rather than invoking the command**, for two reasons.
-Invoking it would be a per-task `/follow-ups` call, which SKILL.md's DO NOT
-list forbids — the run's closing call is once, in the parent. And a read
-degrades where an invocation would not: `requires: command:follow-ups` means
-the command is normally installed, but a user who removed it by hand leaves
-the agent nothing to read, and the rule there is the same silent skip the
-closing call makes — omit the field, report nothing about it, and do not fail
-the task. An absent optional field is not a failed task.
+Invoking it would be a per-task `/follow-ups` call — the rules are applied
+once per run, in the parent's closing report (SKILL.md's CLOSING THE RUN).
+And a read degrades where an invocation would not: `requires:
+command:follow-ups` means the command is normally installed, but a user who
+removed it by hand leaves the agent nothing to read, and the rule there is
+the same silent skip the closing report makes — omit the field, report
+nothing about it, and do not fail the task. An absent optional field is not a
+failed task.
 
 That is also why the field is empty on almost every task: the command's
 exclusion rule does the work, and an agent that did its task and wrote it down
@@ -321,10 +322,11 @@ still holds fifty short rows.
 
 The parent does not act on them, does not judge them and does not ask about
 them mid-run. It records them beside the other four fields and they feed
-exactly one place: the closing `/follow-ups` call in SKILL.md's CLOSING THE
-RUN. A follow-up line is the agent's claim, not the parent's finding — the
-parent never opened the task and is in no position to verify it, which is also
-why it is never a reason to halt the run.
+exactly one place: the *Follow-ups* group of the closing report, SKILL.md's
+THE CLOSING REPORT, attributed to their task and de-duplicated by action
+against the run's own items there. A follow-up line is the agent's claim, not
+the parent's finding — the parent never opened the task and is in no position
+to verify it, which is also why it is never a reason to halt the run.
 
 ## Between delegated tasks
 

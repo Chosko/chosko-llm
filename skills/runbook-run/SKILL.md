@@ -1,6 +1,6 @@
 ---
 name: runbook-run
-version: 0.17.0
+version: 0.18.0
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user — or, under the `unattended` policy, parking the step that asked and going on — recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
 requires: command:follow-ups
@@ -31,8 +31,9 @@ requires: command:follow-ups
 # relayed and the run waits. Also carries, under `references/`, the
 # files the rest of the runbook suite and the pipeline revision surface
 # read by path: `runbook-schema.md`, `subagent-contract.md`,
-# `body-migration.md` and `step-amend.md`. Every run ends with one
-# /follow-ups call, skipped silently when that command is not installed.
+# `body-migration.md` and `step-amend.md`. Every run ends with one closing
+# report — For the record, then one Follow-ups list whose numbers are the
+# reply handle and which applies /follow-ups' rules without invoking it.
 # Usage: /runbook-run <id|name|id-name>
 #        /runbook-run <id|name|id-name> --from N        (begin selection at step N)
 #        /runbook-run <id|name|id-name> --to N          (stop after step N)
@@ -434,7 +435,7 @@ last one in range, stop there instead of looping, and set the index back to
 `[PENDING]` unless every step in the *whole* runbook is now `[x]` — a bounded
 run leaves work behind by design, and marking that `[DONE]` would be a lie. The
 report says which range ran, and carries the steps remaining outside it as a
-*Needs you* item. `--only N` stops this way too; it is the bound `--to N`
+*Follow-ups* item. `--only N` stops this way too; it is the bound `--to N`
 doing it.
 
 **Reaching the `--steps` count is not completion either.** When the step just
@@ -442,10 +443,10 @@ committed is the N-th step executed in this run, stop there instead of looping,
 exactly as at a `--to` bound: set the index back to `[PENDING]` unless every
 step in the whole runbook is now `[x]` (then it is `[DONE]` by the completion
 rule above), and report how many steps ran, with the steps remaining as a
-*Needs you* item.
+*Follow-ups* item.
 
-Whichever of those three ended the run, the closing report is not the last
-thing the run does — CLOSING THE RUN is.
+Whichever of those three ended the run, the closing report is the last thing
+the run does — see CLOSING THE RUN.
 
 ---
 
@@ -615,9 +616,9 @@ propagate facts (below).
 ### On failure
 
 Do not retry the step, do not attempt the work yourself, and do not continue
-to the next step. Give the closing report (THE CLOSING REPORT), then make the
-closing call — a halted run is a run that ended, and it is the one most likely
-to strand unrecorded work. See CLOSING THE RUN.
+to the next step. Give the closing report (THE CLOSING REPORT), its
+*Follow-ups* group included — a halted run is a run that ended, and it is the
+one most likely to strand unrecorded work. See CLOSING THE RUN.
 
 ---
 
@@ -957,31 +958,39 @@ agent under OPERATING RULES (`subagent-contract.md`), or the session under
 ## THE CLOSING REPORT
 
 Every run ends with one closing report — at completion, at a `--to` / `--only`
-/ `--steps` bound and at a failure halt alike — in two groups, in this order,
-each under its heading. Every entry is drawn from a step's `Done:` line and its
-own report, both already in hand.
+/ `--steps` bound, at the end branch and at a failure halt alike — in two
+groups, in this order, each under its heading. Every entry is drawn from a
+step's `Done:` line and its own report, both already in hand, and from the
+run's own conversation.
 
-- **Needs you** — every item awaiting a decision, numbered `1.`, `2.`, … and as
-  long as it needs to be. The feature completion candidates go here: every slug
-  a step report named as having all its tasks `[DONE]`/`[SKIP]`, with the one
-  question, "Flip to `[DONE]` in FEATURES.md? Name the slugs, or say all /
-  none." So do a failed step, with its reason and what the agent said; a step
-  left `[~]`, to resume; every step left `[P]`, with its question verbatim
-  under its item number — a reply by that number is the answer, mid-run and
-  after the report alike (`./references/parking.md` § *Mid-run answers*) —
-  and the steps waiting on it; and the steps left outside the range, outside
-  the `--steps` count, or never started.
 - **For the record** — one line per step the run executed, in list order, in
   exactly this shape: `<step n> — <outcome, commit sha and diffstat> — <what
   changed in one line; decision or wrong premise flagged; questions relayed and
   their answers>`. Any run-level deviation follows on one line of its own. No
   item in this group runs past one line, and none is a question.
+- **Follow-ups** — one numbered list, `1.`, `2.`, …, each item as long as it
+  needs to be, holding two kinds of item under the one numbering. The run's
+  own items: the feature completion candidates — every slug a step report
+  named as having all its tasks `[DONE]`/`[SKIP]`, with the one question,
+  "Flip to `[DONE]` in FEATURES.md? Name the slugs, or say all / none."; a
+  failed step, with its reason and what the agent said; a step left `[~]`, to
+  resume; every step left `[P]`, with its question verbatim and multi-line
+  under its item number, options included, and the steps waiting on it; and
+  the steps left outside the range, outside the `--steps` count, or never
+  started. And the items the `/follow-ups` command's rules yield when applied
+  to the run's reading — the command's body read by name and applied, never
+  invoked (CLOSING THE RUN). Two items naming the same action are one item,
+  in the command form where either had it.
 
 An empty group prints its heading and `none`.
 
-**The numbering is the reply handle**, the same way `/follow-ups`' numbering
-is. It starts at 1 in every report, carries no meaning beyond the handle, and a
-report with a single item still numbers it.
+**The numbering is the reply handle.** It starts at 1 in every report, carries
+no meaning beyond the handle, and a report with a single item still numbers
+it. Replying by number is ordinary conversation — "execute 2", "insert 3 as
+the next step" — handled as any other request is; a number that names a
+parked step's question is that step's answer, recorded exactly as a mid-run
+reply is (`./references/parking.md` § *Mid-run answers*), and the next run
+selects the step.
 
 The flip question is asked once, here. The answer is acted on in conversation
 after the run: the orchestrator never writes `FEATURES.md`.
@@ -992,11 +1001,15 @@ The report reads the same way under `--inline`. There is no opt-out flag.
 
 ## CLOSING THE RUN
 
-**Every run ends with one `/follow-ups` call.** It fires **once per run —
-never per step** — after the run's own closing report is printed, and it is
-the last thing the run does.
+**The closing report is the last thing a run does**, and its *Follow-ups*
+group is where the `/follow-ups` command's rules are applied — **once per
+run, never per step** — inside the report, not as a call after it. The
+command is never invoked: its body is read by name and its rules applied to
+the run's reading, so what they yield folds into one list with the run's own
+items, under one numbering. What counts as a follow-up, what is excluded and
+how an item is written are that body's alone and are restated nowhere here.
 
-It fires at every point a run stops, not only at completion:
+The report is given at every point a run stops, not only at completion:
 
 - when no `[ ]` steps remain and the index went `[DONE]`;
 - at a `--to`, `--only` or `--steps` bound;
@@ -1025,16 +1038,16 @@ that came from a step subagent, forwarding it to that same subagent is often
 the convenient thing to do, and is allowed. Judgement, not a rule — this is
 not a new relay protocol and adds no round to the cap.
 
-**It changes no bookkeeping.** The call sits outside COMMIT CADENCE: it adds
-no commit, and it runs after the index `Status:` (`[DONE]` / `[FAILED]` /
-`[PENDING]`) and the run's final commit are already written, so it never
-dirties a tree the run just cleaned.
+**It changes no bookkeeping.** The report sits outside COMMIT CADENCE: it
+adds no commit, and it is printed after the index `Status:` (`[DONE]` /
+`[FAILED]` / `[PENDING]`) and the run's final commit are already written, so
+it never dirties a tree the run just cleaned.
 
-**When `/follow-ups` is not installed, skip the call silently.** The
-frontmatter declares `requires: command:follow-ups`, so the dependency
-helpers install it alongside this skill; a user who removed it by hand gets
-no message and no error. An absent optional closing step is not a run
-failure.
+**When `/follow-ups` is not installed, the group holds the run's own items
+only, silently.** The frontmatter keeps `requires: command:follow-ups` — the
+rules must be installed to be read — so the dependency helpers install it
+alongside this skill; a user who removed it by hand gets no message and no
+error. An absent optional rule set is not a run failure.
 
 ---
 

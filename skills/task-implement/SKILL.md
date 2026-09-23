@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.9.1
+version: 1.10.0
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups
@@ -32,7 +32,8 @@ requires: skill:task-engine, command:follow-ups
 # work-in-progress on `park/task-<N>`) and the run continues; the run's
 # `[PARKED]` tasks are pre-asked at launch unless `--skip-parked`, and a
 # parked question is answered by number in chat. Every run ends with one
-# `/follow-ups` call.
+# closing report — For the record, then one Follow-ups list whose numbers are
+# the reply handle and which applies `/follow-ups`' rules without invoking it.
 # Usage: /task-implement <task-number> [<task-number> ...]
 #        /task-implement all
 #        /task-implement next
@@ -84,7 +85,8 @@ halting the run — see PARKED TASKS.
 A step that fails and cannot be resolved by fixing the code stops the whole
 run — see FAILURE HANDLING. A completed task carrying a `Feature:` line may
 make its feature a completion candidate — see FEATURE COMPLETION. However the
-run ends, its last act is one `/follow-ups` call — see CLOSING THE RUN.
+run ends, its last act is the closing report — see THE CLOSING REPORT and
+CLOSING THE RUN.
 
 $ARGUMENTS
 
@@ -279,7 +281,7 @@ naming a document another pipeline command owns is edited: for the design
 change the body's `## Decisions` records as agreed and the points it records
 as settled, every passage stating the old design is updated. A passage whose
 update would introduce new meaning in an owned document stays untouched and
-goes under *Needs you* as a precise follow-up — the command, the anchor and
+goes under *Follow-ups* as a precise follow-up — the command, the anchor and
 the passages, `/architect amend feature=<slug> "<change>"` — never a vague
 pointer at the owner.
 
@@ -813,16 +815,6 @@ Every run ends with one closing report — at completion, at a failure halt
 and at a stop the user asked for alike — in two groups, in this order, each
 under its heading:
 
-- **Needs you** — every item waiting on a decision, numbered `1.`, `2.`, … and
-  as long as it needs to be: an unresolved `BLOCKING` finding, a task left
-  `[IN PROGRESS]` and why, a follow-up naming an owner's command with its
-  anchor and passages, a precondition that no longer held, a task parked
-  this run or skipped for want of an answer — its `Question:` verbatim
-  under its handle number, since a reply by that number is its answer
-  (BETWEEN TASKS step 2a) and unparks it on the next run. **The number is the
-  handle the user replies with**, the same way `/follow-ups`' numbering is. It
-  starts at 1 in every report, carries no meaning beyond the handle, and a
-  report with a single item still numbers it.
 - **For the record** — one line per item, in exactly this shape:
   `<what deviated> — <why> — <resolved by whom>`. A criterion overshot, a
   wrong premise or cross-reference in the body, a consequential edit outside
@@ -830,8 +822,19 @@ under its heading:
   that nothing was committed. The one line in another shape is the review
   pair, `./review-rounds.md` § *Reporting the resolved pair*. No item in this
   group runs past one line, and none is a question.
+- **Follow-ups** — one numbered list, `1.`, `2.`, …, each item as long as it
+  needs to be, holding two kinds of item under the one numbering. The run's
+  own items: an unresolved `BLOCKING` finding, a task left `[IN PROGRESS]`
+  and why, a follow-up naming an owner's command with its anchor and
+  passages, a precondition that no longer held, a slug declined at the
+  FEATURE COMPLETION proposal, a task parked this run or skipped for want of
+  an answer — its `Question:` verbatim and multi-line under its item number,
+  options included. And the items the `/follow-ups` command's rules yield
+  when applied to the run's reading — the command's body read by name and
+  applied, never invoked (CLOSING THE RUN). Two items naming the same action
+  are one item, in the command form where either had it.
 
-An empty group prints its heading and `none`. Two lines in the second
+An empty group prints its heading and `none`. Two lines in the first
 group's shape:
 
 ```
@@ -839,70 +842,80 @@ Task 245 asked ~25 net lines across two files — the mandated block needed 19 �
 Body Hints named ./test-runner.md for the policy marker — the marker's rule is RESOLVING THE TEST RUNNER step 0 — edit cites the right one, reviewer confirmed.
 ```
 
+**The numbering is the reply handle.** It starts at 1 in every report,
+carries no meaning beyond the handle, and a report with a single item still
+numbers it. Replying by number is ordinary conversation — "execute 1 and 2
+now" — handled as any other request is; a number that names a parked task's
+question is that task's answer, recorded exactly as a reply mid-run is
+(BETWEEN TASKS step 2a), and the next run unparks the task.
+
 Order at the end of a run: the FEATURE COMPLETION proposal first, then this
-report — a slug declined there is a *Needs you* item — then CLOSING THE
-RUN's `/follow-ups` call. Under `--agents`, the parent renders the report
-from the per-agent returns it holds: each agent's sixth field is its *For
-the record* lines, attributed to its task, and each `[PARKED]` return is a
-*Needs you* item under its handle with the question the return carried
+report, the run's last act (CLOSING THE RUN). Under `--agents`, the parent
+renders the report from the per-agent returns it holds: each agent's sixth
+field is its *For the record* lines, attributed to its task, its fifth field
+feeds the *Follow-ups* group attributed the same way, and each `[PARKED]`
+return is a *Follow-ups* item with the question the return carried
 (`./delegated-runs.md`).
 
 ---
 
 CLOSING THE RUN
 
-**Every run ends with one `/follow-ups` call.** It fires **once per run —
-never per task** — after the run's own closing report is printed, and it is
-the last thing the run does.
+**The closing report is the last thing a run does**, and its *Follow-ups*
+group is where the `/follow-ups` command's rules are applied — **once per
+run, never per task** — inside the report, not as a call after it. The
+command is never invoked: its body is read by name and its rules applied to
+the run's reading, so what they yield folds into one list with the run's own
+items, under one numbering. What counts as a follow-up, what is excluded and
+how an item is written are that body's alone, restated neither here nor in
+`./delegated-runs.md`.
 
-It fires **after** the FEATURE COMPLETION proposal, never before. That
-proposal can itself leave something unresolved — a slug the user declined
-stays `[PLANNED]` — and a follow-up list drawn before it would miss exactly
+The report comes **after** the FEATURE COMPLETION proposal, never before.
+That proposal can itself leave something unresolved — a slug the user
+declined stays `[PLANNED]` — and a list drawn before it would miss exactly
 that.
 
-It fires at every point a run stops, not only at completion: after the last
-task in the run, whatever the run resolved to (`<N>...`, `all`, `next`); at
-a failure halt, per FAILURE HANDLING — including a `--review` loop that
+It is given at every point a run stops, not only at completion: after the
+last task in the run, whatever the run resolved to (`<N>...`, `all`, `next`);
+at a failure halt, per FAILURE HANDLING — including a `--review` loop that
 ended with unresolved `BLOCKING` findings; and when the user asks to stop
 between tasks. A single-task run is not a special case: the end of the one
 task is the end of the run.
 
-**Under `--agents`.** The closing call is not skipped in a delegated run. The
-parent's reading covers the per-agent result reports it already collects — the
-six-field returns in `./delegated-runs.md` — as well as its own conversation.
-It opens nothing new to do it. A `[PARKED]` return is not a failure halt: the
-run goes on to its last task and the call fires at the end as usual.
+**Under `--agents`.** The parent's reading covers the per-agent result
+reports it already collects — the six-field returns in `./delegated-runs.md`
+— as well as its own conversation. It opens nothing new to do it. A
+`[PARKED]` return is not a failure halt: the run goes on to its last task and
+the report comes at the end as usual.
 
 The fifth field is what makes that reading worth anything: before returning,
 each agent reads the `/follow-ups` command's own body — given the command's
 **name and never a path** — and applies its rules to its own session without
 invoking it, handing back at most three items; where the command is
-unavailable it skips the field silently instead of failing. What counts as a
-follow-up, what is excluded and how an item is written are the `/follow-ups`
-body's alone, restated neither here nor in `./delegated-runs.md`. Fold the lines it
-does return into the run's list, attributed to the task they came from. They
-are the agent's claim and the parent never saw the work, so pass them through
-as stated — do not re-word them into a judgement the parent cannot support,
-and do not drop one because it looks unlikely. Most tasks return none; that is
-the field working, not failing.
+unavailable it skips the field silently instead of failing. Fold the lines it
+does return into the *Follow-ups* group, attributed to the task they came
+from. They are the agent's claim and the parent never saw the work, so pass
+them through as stated — do not re-word them into a judgement the parent
+cannot support, and do not drop one because it looks unlikely. Most tasks
+return none; that is the field working, not failing.
 
-The rest of the list still comes from the launcher's own conversation — the
+The rest of the group still comes from the launcher's own conversation — the
 delegation split, tasks skipped for unmet preconditions, failure lines,
 declined feature slugs. Where the user then asks to execute or plan a listed
 follow-up that came from a delegated agent, forwarding it to that same agent
 is often the convenient thing to do, and is allowed. Judgement, not a rule —
 this is not a new relay protocol.
 
-**It changes no bookkeeping.** The call adds no commit and flips no status.
-It runs after every per-task commit, after any FEATURE COMPLETION commit, and
-after the closing report, so it never dirties a tree the run just cleaned and
-never touches the one-commit-per-task rule.
+**It changes no bookkeeping.** The report adds no commit and flips no status.
+It is printed after every per-task commit and after any FEATURE COMPLETION
+commit, so it never dirties a tree the run just cleaned and never touches the
+one-commit-per-task rule.
 
-**When `/follow-ups` is not installed, skip the call silently.** The
-frontmatter declares `requires: command:follow-ups`, so the dependency
-helpers install it alongside this skill; a user who removed it by hand gets
-no message and no error. An absent optional closing step is not a run
-failure.
+**When `/follow-ups` is not installed, the group holds the run's own items
+only, silently.** The frontmatter keeps `requires: command:follow-ups` — the
+rules must be installed to be read — so the dependency helpers install it
+alongside this skill; a user who removed it by hand gets no message and no
+error. An absent optional rule set is not a run failure.
 
 ---
 
@@ -917,7 +930,8 @@ If any step fails in a way you cannot resolve:
 - Report clearly what failed, what you tried, and what the user might
   want to do next (revert with `git restore`, fix manually, edit the
   task spec).
-- Then make the closing `/follow-ups` call, per CLOSING THE RUN.
+- Then give the closing report, its *Follow-ups* group included, per
+  CLOSING THE RUN.
 
 A failure inside a delegated task is not a special case: the parent stops
 the run without spawning the next agent, and reports as `./delegated-runs.md`

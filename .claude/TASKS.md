@@ -354,7 +354,7 @@ Feature: unattended-parking
 
 ## 265. Closing reports end with one Follow-ups list
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/SKILL.md, skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, skills/task-implement/review-rounds.md, commands/follow-ups.md, VERSION, CHANGELOG.md
 Preconditions: 261, 264
