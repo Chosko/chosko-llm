@@ -149,6 +149,9 @@ skills/runbook-run/
     runbook-schema.md             the artifact: store, body, index, statuses
     subagent-contract.md          the preamble, OPERATING RULES, RELAY CHILD RULES
     step-amend.md                 amending one step: strike, insert, Context: facts
+    inline-contract.md            the INLINE RULES a session follows under --inline
+    body-migration.md             renaming a legacy body to <id>-<name>.md
+    parking.md                    parking a step under the unattended policy
 ```
 
 Consumers cite them by a path relative to the citing body, never by an absolute
@@ -164,13 +167,23 @@ install home — that is the only form correct under both a global and a
 This is the pattern the vendored `claude-council` skill already uses for its own
 files, and the one `shared-phase-engine` generalizes.
 
-This suite needed two reference files, not three. The prompt-quality rules stay
-in `runbook-create`'s body: they have exactly one consumer, and a shared file
-with one consumer is indirection without benefit. A third file joined the folder
-later, for the opposite reason: `step-amend.md`, added by
-[owner-amend-arms](./owner-amend-arms.md), owns the single-step amend rules
-because more than one feature reads them by path. `/runbook-run`'s own body
-never reads it.
+The prompt-quality rules stay in `runbook-create`'s body: they have exactly
+one consumer, and a shared file with one consumer is indirection without
+benefit. Each file in the folder is there for one of two reasons — more than
+one feature reads it by path, or `/runbook-run` loads it only on a branch a
+default run never takes — and each has one owning feature:
+
+- `runbook-schema.md` and `subagent-contract.md` — this feature; read by every
+  run and by the rest of the suite.
+- `step-amend.md` — [owner-amend-arms](./owner-amend-arms.md); read by path by
+  the features that amend a step, never by `/runbook-run`'s own body.
+- `inline-contract.md` — [runbook-inline](./runbook-inline.md); read once per
+  run, only under `--inline`.
+- `body-migration.md` — [runbook-id-filenames](./runbook-id-filenames.md);
+  read only when a block's `File:` is not yet `<id>`-prefixed.
+- `parking.md` — [unattended-parking](./unattended-parking.md); read only when
+  the policy resolves to `unattended`, or when a `[P]` step is selected or
+  blocks selection.
 
 ### The store
 
