@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.10.0
+version: 1.10.1
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups
@@ -225,9 +225,10 @@ true:
   override (`commit.md`) — the parking branch is the mechanism and there is
   no equivalent there — each with the one-line message that section gives.
   Read `CLAUDE.md` here if it has not been read yet.
-- every prompt this run can raise that has a default takes it, per
-  `parking.md` § *Prompts with a default*, each value taken being one *For
-  the record* line; the one prompt with none, an ambiguous test runner,
+- every prompt this run can raise that has a default takes it when it goes
+  unanswered — a contract the session runs under, such as a runbook step's
+  OPERATING RULES, answers it first — per `parking.md` § *Prompts with a
+  default*, each value taken being one *For the record* line; the one prompt with none, an ambiguous test runner,
   aborts the run (RESOLVING THE TEST RUNNER step 2). Only a question about
   the work parks a task, and only inside the per-task workflow (PER-TASK
   WORKFLOW § *Parking at a question*).
@@ -726,10 +727,11 @@ before starting the next:
    record it in run memory and move the task to the front of the remaining
    list, so Step 1 unparks it next. Any other message is ordinary
    conversation, and the run continues. A reply naming a number this run
-   never printed, or a second answer to a question already answered, is
-   rejected with one line and records nothing — the first answer wins. A
-   pre-ask `skip` holds no answer, so a later reply by that number is the
-   question's first.
+   never printed, a second answer to a question already answered, or an
+   answer to an `approval gate` item is rejected with one line and records
+   nothing — the set is `parking.md` § *The answerer rule*'s, and the first
+   answer wins. A pre-ask `skip` holds no answer, so a later reply by that
+   number is the question's first.
 3. Briefly report progress: "Task N committed. Starting task M." — or, for
    a task that did not commit, "Task N parked (question 3). Starting task
    M." / "Task N skipped — parked, no answer held. Starting task M."

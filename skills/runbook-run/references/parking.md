@@ -157,6 +157,9 @@ Each is one line in chat and records nothing:
   changing it is a hand edit of `Context:`;
 - an answer to an `approval gate` item, at the pre-ask or in chat.
 
+The same three, and no other, are the task side's
+(`../../task-engine/references/parking.md` § *The answerer rule*).
+
 ## A parked step reached under `attended`
 
 A `[P]` step left by an earlier run, met by an attended run at step 3 as the
@@ -167,6 +170,8 @@ subagent, end the turn under `QUESTIONS FOR USER` and resume when the answer
 returns, by the relay's own subagent-position rule. The orchestrator answers
 nothing itself. With the answer, unpark per § *Unparking a step* and select
 the step now. A step whose bullet says `approval gate` is unparked without a
-question — the bullet reads `unparked with answer: attended run — asked at
-the gate` — and the step's agent relays the gate with its draft, as any
+question — its bullet is a plain dated one, `- <date> unparked by an
+attended run; the gate is asked when the step runs`, never one opening
+`unparked with answer:`, which OPERATING RULES would read as the gate's
+answer — and the step's agent relays the gate with its draft, as any
 attended question is relayed: a gate is answered seen, never from a block.

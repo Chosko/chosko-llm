@@ -120,7 +120,10 @@ task's own changes:
   deliberately left uncommitted and will accumulate, so a non-empty
   `git status` is expected, not a surprise." On a delegated run, an agent is
   told the dirty-tree decision the parent already made and must not re-run
-  this prompt protocol.
+  this prompt protocol. Under `--unattended` the prompt is still put; a
+  contract the session runs under — a runbook step's OPERATING RULES —
+  answers it first, and an unanswered prompt resolves to abort
+  (`./parking.md` § *Prompts with a default*).
 - **`/task-add`, `/task-list`, `/task-clean`** — no dirty-tree check. They
   stage only the explicit paths they wrote (`/task-list` writes nothing at
   all), so a dirty tree cannot reach their commits — see

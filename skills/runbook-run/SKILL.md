@@ -1,6 +1,6 @@
 ---
 name: runbook-run
-version: 0.18.0
+version: 0.18.1
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user — or, under the `unattended` policy, parking the step that asked and going on — recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
 requires: command:follow-ups
@@ -422,9 +422,9 @@ classified by those same cases.
 
 Commit the runbook and the index per COMMIT CADENCE — a step the fifth row
 parked is committed here exactly as a `[x]` or `[!]` step is, `[P]` on its
-heading and `Parked:` in the index — then apply `./references/parking.md`
-§ *Mid-run answers* to any reply that arrived during the step, and loop back
-to step 2 and re-read the body.
+heading and `Parked:` in the index — then, when `./references/parking.md`
+has been read this run, apply its § *Mid-run answers* to any reply that
+arrived during the step, and loop back to step 2 and re-read the body.
 
 When no `[ ]` steps remain — every step is `[x]` — set the index `Status:` to
 `[DONE]`, commit, and give the closing report (THE CLOSING REPORT), naming the

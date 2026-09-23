@@ -298,7 +298,11 @@ requested task carries another one, is
   is a re-check: between tasks of an `all` run it re-reads TASKS.md anyway,
   and there it re-checks the upcoming task's `Preconditions:` against clause
   2 of *Eligibility*, skipping with a one-line report a task whose
-  preconditions no longer hold. It reads nothing new to do it.
+  preconditions no longer hold. It reads nothing new to do it. Its other
+  departure is the pre-ask under `--unattended`: at pre-flight it opens each
+  `[PARKED]` task's trailing `## Parking handoff`, that section only,
+  because the question it lists verbatim lives nowhere else
+  (`./parking.md`).
 - **`/task-add`** — resolves nothing from the index but the next ID, the
   task a `--before <N>` / `--after <N>` flag names and, on a
   `feature=<slug>` run, the tasks that feature already generated. Its

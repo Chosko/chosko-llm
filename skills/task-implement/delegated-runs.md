@@ -53,6 +53,11 @@ after the agent returns. The three fields the delegation guard needs —
 `Target:`, `Status:` and `Feature:` — all live in the task's `TASKS.md`
 summary block, which PRE-FLIGHT step 2 already read once for the whole run,
 so the guard costs nothing per task and no body read can be justified by it.
+One read is bounded and named: under UNATTENDED the pre-ask (SKILL.md
+PRE-FLIGHT) opens each `[PARKED]` task's trailing `## Parking handoff` — that
+section only, before DELEGATE is decided — because the question it must list
+verbatim lives nowhere else. Nothing else in a delegated task's body is ever
+opened here.
 
 The tasks the parent keeps are the exception that proves the shape: a
 `claude+human`, `human` or explicitly requested `[STALE]` task is not

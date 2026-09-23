@@ -50,6 +50,12 @@ report:
 | the dirty-tree prompt at pre-flight (`./tree.md`) | abort |
 | a `[STALE]` task named explicitly (`./stale.md`) | skip, with one line |
 
+The prompt is still put, and a contract the session runs under answers it
+first: a runbook step's OPERATING RULES or INLINE RULES answer the
+dirty-tree prompt that lists only the runbook and its index, and that
+answer stands. The value in the table is what an **unanswered** prompt
+resolves to.
+
 The one prompt with no default — an ambiguous test runner — aborts the run.
 A pre-flight prompt can never park, because there is no current task yet;
 that is why it needs this rule and nothing more.
@@ -160,6 +166,12 @@ made. `all` and `next` treat `[PARKED]` as implementable exactly under that
 condition; a `[PARKED]` task named by number is unparked under either
 policy, its answer under `unattended` coming from the pre-ask, where `skip`
 skips it as the batch selectors would.
+
+Three replies are rejected, each with one line in chat, and record
+nothing: an answer to a number the run never printed; a second answer to a
+question already answered — the first wins; and an answer to an `approval
+gate` item, at the pre-ask or in chat — a gate is answered seen, never from
+a block. Both run skills carry exactly this set, and no other rejection.
 
 ## Refusals
 
