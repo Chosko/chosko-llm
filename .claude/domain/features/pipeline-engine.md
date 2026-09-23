@@ -42,7 +42,9 @@ Deliberately out:
   to keep the lint an explicit act.
 - **Fixing anything.** The lint reports; every fix is the named owner's.
   The register is `/production-status`'s: writes nothing, runs no shell beyond
-  the probe, never opens a file under `.claude/tasks/` or `.claude/runbooks/`.
+  the probe, and opens a file under `.claude/tasks/` or `.claude/runbooks/`
+  only for the two reads the parking findings make — bounded by the index,
+  headings and markers only.
 - **Absorbing `task-engine`.** The two engines sit beside each other. Merging
   them is recorded as an open question, not done speculatively.
 - **Semantic drift.** The lint detects structural inconsistency between
@@ -100,7 +102,7 @@ the other, invisibly, which is what the council gates once did.
 
 ### The findings
 
-The initial catalogue, all derivable from indexes alone:
+The catalogue — thirteen findings, eleven derivable from indexes alone:
 
 - a task's `Feature:` slug absent from `FEATURES.md`;
 - a task with no `Feature:` line on a project whose `FEATURES.md` exists;
@@ -111,17 +113,25 @@ The initial catalogue, all derivable from indexes alone:
 - a runbook `[PENDING]` with no unticked step, derived from `Steps: <n>/<n>`
   and `Status:` in `RUNBOOKS.md` alone;
 - a `[PLANNED]` feature whose every task is `[DONE]` or `[SKIP]` and which
-  has not been flipped.
+  has not been flipped;
+- a `[PARKED]` task whose body has no `## Parking handoff`;
+- a runbook whose `[P]` steps and index `Parked:` line disagree.
 
 A pending runbook step naming a task already `[DONE]` or `[SKIP]` is not in
-the shipped catalogue: detecting it means reading a step's prompt, which means
-opening a runbook body, and no finding opens one. `/runbook-run` surfaces the
-same problem when it prints each step before spawning it. See the second open
-question.
+the shipped catalogue: detecting it means reading a step's prompt. The two
+parking findings are the catalogue's only body reads, each bounded by the
+index and reading headings and markers only — every `[PARKED]` task's body
+for its `## Parking handoff` heading, every non-`[DONE]` runbook's body for
+its step markers; no finding reads a prompt block, a body's text, the
+archive, a feature or a design document. `/runbook-run` surfaces the
+pending-step problem when it prints each step before spawning it. See the
+second open question.
 
 Each finding names its fix: `/task-add feature=<slug>` for the iterated
 feature, `/production-plan` for the missing slug, `flip to [DONE]` for the
-resolved feature, `/pipeline-revise` for the rest.
+resolved feature, `/task-implement <N>` in an attended session for the
+parked task, `/runbook-run <id>` for the disagreeing runbook,
+`/pipeline-revise` for the rest.
 
 ### The command
 
@@ -191,8 +201,9 @@ lint's at run time.
   have shipped and the overlap is measurable.
 - **Should the runbook index carry per-step task ids?** One named finding — a
   pending runbook step naming a task already `[DONE]` or `[SKIP]` — needs a
-  step's contents, which today means opening a runbook body, so it is left out
-  of the shipped catalogue. Adding a
+  step's contents, which means reading a prompt block — the parking finding
+  reads a body's markers, never a prompt — so it is left out of the shipped
+  catalogue. Adding a
   summary of step targets to `RUNBOOKS.md` would keep the lint index-only,
   at the cost of a derived field the schema currently avoids.
 - **Does a second non-invocable skill change harness behaviour?** The same
