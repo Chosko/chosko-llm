@@ -294,7 +294,7 @@ Preconditions: none
 
 ## 259. Spawned step agents answer the runbook-WIP dirty-tree prompt themselves
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/references/subagent-contract.md, skills/runbook-run/references/inline-contract.md, skills/runbook-run/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: none

@@ -228,14 +228,16 @@ is a linear chain therefore stops after its first parked step; the value of
 continuing is proportional to how honestly `Depends on:` was authored, and the
 report says exactly what to answer either way.
 
-Three lines join the subagent contract as fixed text, conditional on the
-preamble's policy sentence: under `unattended`, leave the tree clean of your
-own changes before ending with a question, and say so in the block; an answer
-recorded in your `Context:` answers the invoked skill's question — do not
-relay it back; and the dirty-tree prompt that lists only the runbook and the
-index is answered `proceed` — the inline contract's rule, ported, closing the
-gap that makes a spawned step's `/task-implement` ask on every step. Under
-`--inline` the session follows the same three under its own contract.
+Three lines join the subagent contract as fixed text. Two are conditional on
+the preamble's policy sentence: under `unattended`, leave the tree clean of
+your own changes before ending with a question, and say so in the block; an
+answer recorded in your `Context:` answers the invoked skill's question — do
+not relay it back. The third is unconditional, because the prompt fires under
+both policies and its answer is known under both: the dirty-tree prompt that
+lists only the runbook and the index is answered `proceed` — the inline
+contract's rule, ported, closing the gap that makes a spawned step's
+`/task-implement` ask on every step. Under `--inline` the session follows the
+same three under its own contract.
 
 Unparking a step is bookkeeping only: append
 `- <date> unparked with answer: <text>` to `Context:` and set the marker to

@@ -1,6 +1,6 @@
 ---
 name: runbook-run
-version: 0.15.1
+version: 0.15.2
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user, recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
 requires: command:follow-ups
@@ -858,8 +858,10 @@ If anything else is dirty, this is not that case — handle it normally. That
 fall-through is the point: the condition is your own two writes, so a genuinely
 forgotten commit still gets thought about.
 
-Under `--inline` the same condition answers one more prompt — a step command's
-dirty-tree prompt, answered `proceed` — see `inline-contract.md`.
+The same condition answers one more prompt, in either mode — a step command's
+dirty-tree prompt, answered `proceed` by whoever executes the step: the step's
+agent under OPERATING RULES (`subagent-contract.md`), or the session under
+`inline-contract.md`.
 
 ---
 

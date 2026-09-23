@@ -38,6 +38,14 @@ OPERATING RULES
   each, and a recommendation for each. At an approval gate, include the full
   draft, unabridged, so it can be approved as-is. The user's answer will be
   sent back to you in this same conversation; then continue.
+- One prompt is the exception: the dirty-tree prompt (`Working tree has
+  uncommitted changes. Choose:`) a step's command puts before it starts. When
+  the only uncommitted changes it lists are <FILE> and .claude/RUNBOOKS.md —
+  the runbook and the index the run marked in-flight — answer `1` / `proceed`
+  yourself, print the one line
+  `dirty-tree prompt answered proceed — only runbook WIP is dirty`, and carry
+  on. Never `include`: those two files must not ride in the step's commit. If
+  anything else is dirty, put the prompt to the user unchanged.
 - Follow the invoked skill's default commit behaviour. Add no flag the user did
   not type.
 - If the work needs a subagent and you CANNOT spawn one, do not do that
@@ -101,6 +109,17 @@ contract, and is never sent to a subagent.
   compresses but never answers — the user must be able to decide from the block
   alone. The full unabridged draft at an approval gate is the one thing the
   orchestrator must not compress: a summarized draft cannot be approved.
+- **The dirty-tree prompt answers itself.** The orchestrator writes `[~]` and
+  `[RUNNING]` before it spawns, uncommitted by design, so the step's
+  `/task-implement` meets exactly those two dirty paths at pre-flight and would
+  otherwise end every step under `QUESTIONS FOR USER` on a question whose
+  answer is already known. The rule holds in every spawned step, under either
+  execution policy, because the prompt fires under both and its answer is the
+  same under both. `proceed`, never `include`, because folding the markers into
+  the task's commit would commit the in-flight state COMMIT CADENCE forbids;
+  anything else dirty is not this case and still reaches the user. The same
+  rule, word for word, is in `inline-contract.md` for the session that
+  executes a step itself.
 - **Default commit behaviour, no invented flags.** A step's prompt is often a
   bare slash-command invocation whose commit behaviour the user already chose
   when they authored it. An agent that helpfully adds `--no-commit` (or drops
