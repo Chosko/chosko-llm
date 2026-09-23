@@ -1,8 +1,8 @@
 ---
 name: runbook-run
-version: 0.16.0
+version: 0.17.0
 type: skill
-description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user, recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
+description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user — or, under the `unattended` policy, parking the step that asked and going on — recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
 requires: command:follow-ups
 ---
 
@@ -22,7 +22,13 @@ requires: command:follow-ups
 # step's agent ends with a SPAWN REQUEST that the orchestrator serves at its
 # own nesting level. A legacy body at `.claude/runbooks/<name>.md` is
 # renamed to `<id>-<name>.md` lazily, never while [RUNNING], per
-# `references/body-migration.md`. Also carries, under `references/`, the
+# `references/body-migration.md`. Under the `unattended` execution policy —
+# the header's `Execution policy:` line, or --unattended / --attended
+# overriding it for one run — a step that asks a question is parked ([P])
+# with its question recorded and printed under a number handle, and the run
+# goes on to the steps that do not depend on it, per
+# `references/parking.md`; under `attended`, the default, a question is
+# relayed and the run waits. Also carries, under `references/`, the
 # files the rest of the runbook suite and the pipeline revision surface
 # read by path: `runbook-schema.md`, `subagent-contract.md`,
 # `body-migration.md` and `step-amend.md`. Every run ends with one
@@ -37,6 +43,9 @@ requires: command:follow-ups
 #        /runbook-run <id|name|id-name> --model sonnet  (override the header model)
 #        /runbook-run <id|name|id-name> --inline        (execute the selected steps in this session)
 #        /runbook-run <id|name|id-name> --relay-spawns  (force the spawn relay for this run)
+#        /runbook-run <id|name|id-name> --unattended    (park a step at a question instead of waiting; pre-ask the parked steps in range first)
+#        /runbook-run <id|name|id-name> --attended      (relay and wait, overriding a header `Execution policy: unattended`)
+#        /runbook-run <id|name|id-name> --unattended --skip-parked  (no pre-ask; a parked step stays parked)
 #        /runbook-run <id|name|id-name> --no-commit     (write the bookkeeping, commit nothing)
 #        /runbook-run <id|name|id-name> --no-push       (commit as usual, skip the push)
 # Examples: /runbook-run implement-ecc-import
@@ -46,6 +55,9 @@ requires: command:follow-ups
 #           /runbook-run 3 --from 4 --steps 2
 #           /runbook-run implement-ecc-import --only 4 --model sonnet
 #           /runbook-run 3 --inline --from 4 --steps 2
+#           /runbook-run 3 --unattended
+#           /runbook-run 3 --unattended --skip-parked
+#           /runbook-run 3 --inline --unattended
 
 GOAL
 Take a runbook and execute it. For each step, in order: spawn one subagent
@@ -71,6 +83,7 @@ everything else is unchanged — see THE INLINE MODE.
 > | `./references/runbook-schema.md` | Always — before parsing or writing the body or the index. |
 > | `./references/subagent-contract.md` | Always — THE SPAWNED PROMPT part 6, and a relay child's rules. |
 > | `./references/inline-contract.md` | **Only under `--inline`**, once, in step 1. It holds the inline rule set that replaces the subagent contract's OPERATING RULES under that flag; a default run never loads it. |
+> | `./references/parking.md` | **Once, on two triggers only**: when the policy resolves to `unattended` (step 1), or when step 3 selects a `[P]` step or finds one blocking selection. It holds the fifth result row, the end branch that is not a deadlock, unparking, the pre-ask, mid-run answers and the rejections. A default attended run that meets no `[P]` step never loads it. |
 > | `./references/body-migration.md` | **Only when the migration check fires** in step 1 — a legacy body to rename. A run with nothing to migrate never loads it. |
 > | `./references/step-amend.md` | **Never by this body.** It sits beside the others, holding the rules for amending one step, read by path by whatever amends one. |
 
@@ -116,7 +129,8 @@ narrate spawning, waiting, classifying a result, writing a `Done:` line or
 committing: those happen every step, and the fragments are hard to read back
 once the run is over. Two things are never suppressed: a relayed
 `QUESTIONS FOR USER` block, verbatim, because a run that needs an answer asks
-for it at once, and the spawn relay's own lines. The record of
+for it at once — under `unattended`, the parked step's question under its
+number handle, for the same reason — and the spawn relay's own lines. The record of
 the run is the closing report, not the transcript above it. The same rule holds
 under `--inline`.
 
@@ -132,10 +146,24 @@ under `--inline`.
 | `--only N` | Run exactly step N, then stop. |
 | `--steps N` | Run at most N steps in this run, then stop. N is a positive integer. Composes with `--from`; refused beside `--to` or `--only`. |
 | `--model <model>` | Override the runbook header's `Model:` for **this whole run**. There is no per-step model. |
-| `--inline` | Execute every selected step in **this session** instead of in a fresh subagent, for the whole run. Composes with `--from`, `--to`, `--only`, `--steps N`, `--no-commit` and `--no-push`, and changes nothing about selection or committing. Refused beside `--relay-spawns` or `--model`; the header `Model:` is not applied. See THE INLINE MODE. |
+| `--inline` | Execute every selected step in **this session** instead of in a fresh subagent, for the whole run. Composes with `--from`, `--to`, `--only`, `--steps N`, `--no-commit`, `--no-push`, `--attended`, `--unattended` and `--skip-parked`, and changes nothing about selection, committing or the policy. Refused beside `--relay-spawns` or `--model`; the header `Model:` is not applied. See THE INLINE MODE. |
 | `--relay-spawns` | Force the spawn relay for the whole run, for an environment already known to be flat. Without it the relay still works — the step's own subagent triggers it when it finds it cannot spawn. See THE SPAWN RELAY. |
+| `--unattended` | Run under the `unattended` execution policy for this whole run, whatever the header says: a step that asks a question is parked and the run goes on (`./references/parking.md`). At launch, unless `--skip-parked`, the `[P]` steps in range are pre-asked. |
+| `--attended` | Run under the `attended` policy for this whole run, overriding a header `Execution policy: unattended`: a question is relayed and the run waits. Refused beside `--unattended`. |
+| `--skip-parked` | No pre-ask at launch: a `[P]` step in range stays parked unless a reply in chat answers it. For a launch no human sees — a routine, a scheduler, an orchestrator that is itself a subagent. Requires `--unattended`. |
 | `--no-commit` | Do the work and write the bookkeeping, but commit nothing. Implies `--no-push`. |
 | `--no-push` | Commit each step as usual, skip the push. |
+
+**The execution policy** is one value for the whole run, `attended` or
+`unattended`: `--attended` or `--unattended` when passed, else the header's
+`Execution policy:` line, else `attended`. Under `attended` nothing in this
+body changes and `./references/parking.md` is opened only for a `[P]` step an
+earlier run left behind (step 3). Under `unattended` the fifth result row
+parks a step at its question instead of relaying it, the spawned preamble
+carries the one sentence that tells the step's agent so, and the launch
+pre-asks the parked steps in range — all in `./references/parking.md`, read
+in step 1. The policy is resolved in step 1, once the body is read, and is
+never written back to the header.
 
 `--from` and `--to` compose: `--from X --to Y` runs steps X through Y
 inclusive and stops. Either bound stands alone — `--from X` with no `--to` runs
@@ -165,7 +193,7 @@ selected under any of them whose `Depends on:` are not all `[x]` stops the run,
 naming the unmet dependency. The remedy is not a flag: the user marks that step
 `[x]` by hand, which is a visible, committed act rather than a silent override.
 
-Six argument errors — name the problem and stop, having run nothing:
+Nine argument errors — name the problem and stop, having run nothing:
 
 - `--only` together with `--from` or `--to`. It is already both of them.
 - `--to Y` naming a step listed above step X of `--from X`. An empty range is
@@ -178,6 +206,14 @@ Six argument errors — name the problem and stop, having run nothing:
   for.
 - `--inline` together with `--model`. The session's model cannot be changed
   from inside the run.
+- `--attended` together with `--unattended`. One policy per run.
+- `--skip-parked` without `--unattended` — beside `--attended` or alone.
+  There is no pre-ask to skip under `attended`; it asks when it reaches the
+  step.
+- A header `Execution policy:` value that is neither `attended` nor
+  `unattended`, named in the error. A typo in the header is fixed, not
+  routed around, so this holds whether or not a flag was passed; it is
+  caught in step 1, once the body is read, before anything is written.
 
 A bound naming a step the body does not hold yet is **not** an error. Steps are
 appended mid-run by `/runbook-create --append`, and step 2 re-reads the body
@@ -257,6 +293,14 @@ Under `--inline`, read
 here, once, and give the run's opening line — see THE INLINE MODE
 § *The opening line*.
 
+**Resolve the execution policy** last in this step, from the header as it now
+stands at the resolved path, per ARGUMENTS § *The execution policy* — a header
+value outside the two words is the ninth argument error. When the policy is
+`unattended`, read `./references/parking.md` here, once, and run its
+§ *The pre-ask* unless `--skip-parked` was passed: it is the one thing that
+writes to the body before step 4, and its commit is its own. Under `attended`
+nothing more happens here.
+
 ### 2. Re-read the body
 
 **At the start of every step, not once per run.** Re-open the body at the
@@ -289,9 +333,20 @@ here: it selects no differently, and is checked in step 8 after each commit.
   and re-run it.
 - A **`[!]`** step is re-run with its failure already recorded in `Context:`
   by the run that failed. Do not re-record it.
-- If steps remain but **none is selectable**, that is a dependency deadlock:
-  report the blocked steps and, for each, the dependencies that are not `[x]`,
-  and stop. Do not pick one anyway.
+- A **`[P]`** step is never selected as it stands: it runs only once it is
+  `[ ]` again, which its answer makes it. Under `attended`, when it is the
+  step this rule would otherwise pick — first in range, every dependency
+  `[x]` — read `./references/parking.md` (if not yet read this run) and ask
+  its question as § *A parked step reached under `attended`* says; answered,
+  it is `[ ]` and selected now. Under `unattended` it is passed over, and
+  selection goes on down the list to the next candidate; a step that depends
+  on it is unselectable by the ordinary rule, untouched, not parked.
+- If steps remain but **none is selectable**, and none of them is `[P]`, that
+  is a dependency deadlock: report the blocked steps and, for each, the
+  dependencies that are not `[x]`, and stop. Do not pick one anyway. When
+  at least one remaining step **is** `[P]`, it is not a deadlock and not a
+  failure: the run is waiting on an answer. Read `./references/parking.md`
+  (if not yet read this run) and end the run as its § *The end branch* says.
 - If **no steps remain** — every step is `[x]` — go to step 8's completion
   branch.
 - If steps remain but **none of them is in range**, the bounded run is over:
@@ -356,14 +411,19 @@ finish.
 
 ### 7. Handle the result
 
-Four cases, and only four — see THE FOUR RESULT CASES below. Under `--inline`,
-the outcome the execution phase wrote out is classified by those same four
-cases.
+Four cases, and only four — see THE FOUR RESULT CASES below — plus, under
+`unattended` and only then, the fifth row that parks the step at a
+`QUESTIONS FOR USER` result (`./references/parking.md` § *The fifth result
+row*). Under `--inline`, the outcome the execution phase wrote out is
+classified by those same cases.
 
 ### 8. Commit and loop
 
-Commit the runbook and the index per COMMIT CADENCE, then loop back to step 2
-and re-read the body.
+Commit the runbook and the index per COMMIT CADENCE — a step the fifth row
+parked is committed here exactly as a `[x]` or `[!]` step is, `[P]` on its
+heading and `Parked:` in the index — then apply `./references/parking.md`
+§ *Mid-run answers* to any reply that arrived during the step, and loop back
+to step 2 and re-read the body.
 
 When no `[ ]` steps remain — every step is `[x]` — set the index `Status:` to
 `[DONE]`, commit, and give the closing report (THE CLOSING REPORT), naming the
@@ -478,6 +538,16 @@ outside this rule: one is verbatim, the other fixed text.
    here because part 6 is fixed text: its relay rule fires on *cannot spawn*,
    which is precisely not this case, and editing it per run would break the
    one property that makes it a contract.
+
+   **Under the `unattended` policy, and only then, the preamble carries one
+   more sentence, in that same slot**: *This run is unattended: a question
+   about the work parks this step, and a skill you invoke reads it as
+   unattended too.* The sentence says **unattended** — never
+   *non-interactive*, which an attended step's agent is too, and which would
+   make it park where it must relay. It is what turns on the two conditional
+   OPERATING RULES in part 6 and what `/task-implement` reads as *the
+   conversation declares this run unattended*. Under `attended` the preamble
+   says nothing about the policy.
 2. **Background.** The `Companion:` document named in the runbook header, if
    there is one. Offer it as background to read if needed, not as required
    reading.
@@ -507,6 +577,13 @@ outside this rule: one is verbatim, the other fixed text.
 | `DONE` + report | Mark `[x]`, write the `Done:` line, propagate facts, update `Steps:`, commit, continue. |
 | Anything else, or a report of failure | Mark `[!]`, write a `Done:` line opening with the reason, set the index to `[FAILED]` with `Failed at: step <n> — <reason>`, halt, report. |
 
+**Under the `unattended` policy a fifth row replaces the first**, and it is
+the only change the policy makes to this table: `QUESTIONS FOR USER` → park
+the step, per `./references/parking.md` § *The fifth result row* — `[P]`, the
+question into `Context:`, printed in chat under a number handle, committed,
+and the run continues. The other three rows are unchanged under either
+policy; an attended run never reaches the fifth.
+
 **An ambiguous report is a failure, not a success.** A report the orchestrator
 cannot confidently classify halts the run. The alternative is ticking a step
 on a guess, and the whole value of the `Done:` line is that it is true. A
@@ -517,8 +594,10 @@ a narrative that trails off is ambiguous — halt.
 (THE INLINE MODE § *Ending the execution phase*), classified by the same four
 rows; an outcome the session cannot state confidently is ambiguous, and
 therefore a failure. A top-level inline session asks its questions directly
-rather than producing a `QUESTIONS FOR USER` result, and spawns a wanted child
-itself rather than producing a `SPAWN REQUEST` — see the relays below.
+rather than producing a `QUESTIONS FOR USER` result — under `unattended` it
+parks the step at that question instead, by the fifth row, exactly as it
+would classify a subagent's block — and spawns a wanted child itself rather
+than producing a `SPAWN REQUEST` — see the relays below.
 
 ### On `DONE`
 
@@ -574,6 +653,13 @@ earlier step that answers the question — and must say that it is doing so, so
 the user can see which part of the block came from the agent and which from
 the runbook. It **may never** invent a decision on the user's behalf, and it
 never asks the user to re-state something an earlier step already settled.
+
+**This relay is the `attended` policy's.** Under `unattended` the same result
+takes the fifth row instead (THE FOUR RESULT CASES) and nothing is relayed:
+the block's question and options are stored and printed, and the run goes on.
+The one question an attended run asks that no agent of its own raised — a `[P]` step
+parked by an earlier run and reached now — is put in this same fixed block,
+per `./references/parking.md` § *A parked step reached under `attended`*.
 
 **When the orchestrator is itself a subagent** — a runbook driven from a batch
 parent, which the depth budget permits — there is no user to ask. It emits the
@@ -811,8 +897,11 @@ subagent that commits its own work produces a separate commit; the runbook
 commit is bookkeeping and is expected to sit beside it.
 
 The `[~]` marker is never committed. By the time a step is committed its
-marker is `[x]` or `[!]`; if a commit would capture `[~]`, the step is not
-finished and must not be committed.
+marker is `[x]`, `[!]` or `[P]`; if a commit would capture `[~]`, the step is
+not finished and must not be committed. A parked step's commit is the step's
+one commit for this run; an unpark — at the pre-ask or mid-run — is a
+bookkeeping commit of its own, staging the same two files, so the marker on
+disk never lags the answer (`./references/parking.md` § *Unparking a step*).
 
 Then push, following **the commit-and-push protocol** — the repo-wide
 convention every committing feature shares:
@@ -877,8 +966,11 @@ own report, both already in hand.
   a step report named as having all its tasks `[DONE]`/`[SKIP]`, with the one
   question, "Flip to `[DONE]` in FEATURES.md? Name the slugs, or say all /
   none." So do a failed step, with its reason and what the agent said; a step
-  left `[~]`, to resume; and the steps left outside the range, outside the
-  `--steps` count, or never started.
+  left `[~]`, to resume; every step left `[P]`, with its question verbatim
+  under its item number — a reply by that number is the answer, mid-run and
+  after the report alike (`./references/parking.md` § *Mid-run answers*) —
+  and the steps waiting on it; and the steps left outside the range, outside
+  the `--steps` count, or never started.
 - **For the record** — one line per step the run executed, in list order, in
   exactly this shape: `<step n> — <outcome, commit sha and diffstat> — <what
   changed in one line; decision or wrong premise flagged; questions relayed and
@@ -908,6 +1000,8 @@ It fires at every point a run stops, not only at completion:
 
 - when no `[ ]` steps remain and the index went `[DONE]`;
 - at a `--to`, `--only` or `--steps` bound;
+- at the end branch — steps remain, none selectable, at least one `[P]` —
+  with the index back at `[PENDING]`;
 - at a failure halt — the `[!]` marker and the index `[FAILED]`;
 - when the user asks to stop after a step mid-run, **even when the run
   carried no bound to that step**.

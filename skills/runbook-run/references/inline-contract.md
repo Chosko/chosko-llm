@@ -49,6 +49,15 @@ INLINE RULES
   `dirty-tree prompt answered proceed — only runbook WIP is dirty`, and carry
   on. Never `include`: those two files must not ride in the step's commit. If
   anything else is dirty, put the prompt to the user unchanged.
+- Two rules hold only when the run's policy is unattended — the brief's
+  preamble says so; under an attended run neither applies. First: at a
+  question you would otherwise ask, leave the working tree clean of your own
+  changes — work a skill you invoked has parked on a branch is not yours and
+  stays where it is — say so, and end the execution phase with the question
+  as your outcome, for the fifth result row to park. Second: a `Context:`
+  bullet opening `unparked with answer:` answers the question the invoked
+  skill asks — a pre-ask, a prompt, a gate — so answer it from there, at
+  whatever point the skill asks it, and never put it to the user again.
 - Follow the invoked skill's default commit behaviour. Add no flag the user did
   not type.
 - If the work wants a child subagent, spawn it directly, one level down. If you
@@ -106,6 +115,14 @@ Not part of the rule set — this section is for whoever maintains the contract.
   RULES carry for a spawned step, and it lives in the two contracts rather than
   in `task-engine`'s `tree.md`: the runbook side answers its own prompt, and
   `/task-implement` learns nothing about runbooks.
+- **The two unattended rules.** The same two the subagent contract's
+  OPERATING RULES carry, for the same reasons, in the inline session's own
+  register: there is no turn to end, so the question becomes the execution
+  phase's written outcome, which step 7 parks by the fifth result row instead
+  of asking. The tree is left clean because the run goes on to the next step
+  in this same session, which would otherwise meet its own leftovers at the
+  next dirty-tree prompt; the answer is read from `Context:` because the step
+  re-runs whole and the invoked skill asks again.
 - **Children one level down, never inline.** The default mode's step agent sat
   one level below the orchestrator; under `--inline` that level is free, so a
   wanted child goes there. Doing a child's work in the session destroys the

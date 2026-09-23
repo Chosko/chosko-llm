@@ -344,7 +344,7 @@ Feature: unattended-parking
 
 ## 264. `/runbook-run` parks a step under the `unattended` policy
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/SKILL.md, skills/runbook-run/references/parking.md, skills/runbook-run/references/subagent-contract.md, skills/runbook-run/references/inline-contract.md, VERSION, CHANGELOG.md
 Preconditions: 259, 263

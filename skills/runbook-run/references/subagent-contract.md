@@ -46,6 +46,15 @@ OPERATING RULES
   `dirty-tree prompt answered proceed — only runbook WIP is dirty`, and carry
   on. Never `include`: those two files must not ride in the step's commit. If
   anything else is dirty, put the prompt to the user unchanged.
+- Two rules hold only when the preamble above declares this run unattended;
+  under an attended run neither applies. First: before ending your turn with
+  `QUESTIONS FOR USER`, leave the working tree clean of your own changes —
+  work a skill you invoked has parked on a branch is not yours and stays
+  where it is — and say in the block that you did. Second: a `Context:`
+  bullet opening `unparked with answer:` answers the question the invoked
+  skill asks — a pre-ask, a prompt, a gate — so answer it from there, at
+  whatever point the skill asks it, and never relay it back under
+  `QUESTIONS FOR USER`.
 - Follow the invoked skill's default commit behaviour. Add no flag the user did
   not type.
 - If the work needs a subagent and you CANNOT spawn one, do not do that
@@ -120,6 +129,23 @@ contract, and is never sent to a subagent.
   anything else dirty is not this case and still reaches the user. The same
   rule, word for word, is in `inline-contract.md` for the session that
   executes a step itself.
+- **The two unattended rules, conditional on the preamble.** Under the
+  `unattended` policy the orchestrator does not relay a question: it parks the
+  step (`[P]`, the question in `Context:`) and the agent is never resumed —
+  the step re-runs from the start, in a fresh subagent, once the answer is
+  written. The condition is the preamble's one sentence and nothing else,
+  because the block is fixed text and the policy is per run; an attended
+  step's agent is non-interactive too, and that must not trigger them.
+  *Clean tree before asking* because the run goes on: the next step's agent
+  meets a dirty-tree prompt listing whatever this one left, on changes it
+  cannot know, and the re-run has no use for them either — the only
+  work-in-progress worth keeping is what a skill already put on
+  `park/task-<N>`, which is that task's, not this agent's. Saying so in the
+  block is what lets the orchestrator go on without looking, since it never
+  reviews. *Answer from `Context:`* because the step re-runs whole and the
+  invoked skill will ask its question again — `/task-implement`'s pre-ask on
+  a `[PARKED]` task, a gate, a prompt — and an agent that relayed it back
+  would park the step a second time on a question already answered, forever.
 - **Default commit behaviour, no invented flags.** A step's prompt is often a
   bare slash-command invocation whose commit behaviour the user already chose
   when they authored it. An agent that helpfully adds `--no-commit` (or drops
