@@ -127,7 +127,7 @@ ahead of the steps that depended on the struck one; say so at the gate.
   written.
 - Step ids. Nothing is renumbered, and nothing is deleted.
 - The vocabulary. No new step marker and no new status value:
-  `runbook-schema.md`'s four markers and four statuses stand unchanged.
+  `runbook-schema.md`'s five markers and four statuses stand unchanged.
 
 ## The gate
 

@@ -1,6 +1,6 @@
 ---
 name: runbook-list
-version: 0.2.2
+version: 0.2.3
 type: command
 description: Print the project's runbooks as a compact listing — id, status, name, progress, source and title, one line each — optionally filtered by status. Use it to see which runbooks are pending, running, done or failed.
 requires: skill:runbook-run
@@ -14,9 +14,9 @@ requires: skill:runbook-run
 # `.claude/runbooks/` are NOT opened by this command. Runs no shell command
 # and corrects no status however wrong it looks. The status filter is
 # matched without brackets and case-insensitively; an unknown status names
-# the valid ones. A failed runbook's halt reason prints as a continuation
-# line; a block written before ids prints `-` in the id column and is left
-# alone. A missing or empty index is not an error.
+# the valid ones. A failed runbook's halt reason and a runbook's parked steps
+# each print as a continuation line; a block written before ids prints `-` in
+# the id column and is left alone. A missing or empty index is not an error.
 # Usage: /runbook-list
 #        /runbook-list <STATUS>
 # Examples: /runbook-list
@@ -26,7 +26,8 @@ requires: skill:runbook-run
 GOAL
 Give the user a quick, scannable view of every runbook in the project: how to
 refer to it, what it is, how far it got, when it was authored, where it came
-from, and — when it halted — why. This is a diagnostic / orientation command. It must not
+from, why it halted when it did, and which steps are parked when it is
+waiting on an answer. This is a diagnostic / orientation command. It must not
 write, edit, or commit anything.
 
 One pass: read `.claude/RUNBOOKS.md`, parse each block, apply the optional
@@ -39,7 +40,7 @@ $ARGUMENTS
 THE ARTIFACT
 
 The four-status vocabulary and the shape of an index block — its five fields
-and the conditional `Failed at:` line — are specified in
+and the conditional `Failed at:` and `Parked:` lines — are specified in
 `../skills/runbook-run/references/runbook-schema.md`.
 Read it before parsing the index. **Neither is restated here** — a second
 copy is the copy that drifts, and a listing whose idea of the status set has
@@ -55,9 +56,9 @@ to check a marker, not to confirm a status the index reports.
 
 This is `/task-list`'s discipline of never opening a file under
 `.claude/tasks/`, and it is not an optimisation to be traded away under
-pressure. It is why the index carries derived fields such as `Steps:` and
-`Failed at:` at all, and it is what keeps this command's cost flat in the
-number of runbooks rather than in their size.
+pressure. It is why the index carries derived fields such as `Steps:`,
+`Failed at:` and `Parked:` at all, and it is what keeps this command's cost
+flat in the number of runbooks rather than in their size.
 
 ---
 
@@ -93,8 +94,9 @@ WORKFLOW
 2. Parse every block in the file, in the order they appear, per
    `runbook-schema.md` § *The index block*: the runbook's id, name and
    one-line title from the heading, then `Status:`, `Created:`, `Source:`,
-   `Steps:`, and the `Failed at:` line where one is present. `File:` is parsed
-   but not printed — the listing prints the name, which names the body file.
+   `Steps:`, and the `Failed at:` and `Parked:` lines where present. `File:`
+   is parsed but not printed — the listing prints the name, which names the
+   body file.
 
 3. Apply the filter from THE STATUS FILTER above, if one was given.
 
@@ -127,9 +129,19 @@ WORKFLOW
 
      A `[FAILED]` block with no `Failed at:` line prints the runbook's line
      and no continuation. Do not go looking in the body for the reason.
+   - For a block carrying a `Parked:` line, whatever its status, print it as
+     a continuation line exactly as `Failed at:` is rendered:
+
+     ```
+     ↳ parked: steps <ids>
+     ```
+
+     A block with both lines prints both, `Failed at:` first. A block with
+     neither prints no continuation.
    - Do not reorder the runbooks by status, date, or anything else. Index
      order is the order.
-   - Do not truncate a long title, name, or halt reason. Let it overflow.
+   - Do not truncate a long title, name, halt reason or id list. Let it
+     overflow.
 
 5. After the per-runbook lines, inside the same fenced code block, print a
    one-line summary counting the runbooks by status, lower-cased:
@@ -155,7 +167,8 @@ The whole rendered shape, for reference:
   1. [DONE]     ecc-import-landing      7/7   2026-08-24  /architect run       Land the ECC import architecture
   2. [FAILED]   cli-dependency-field    2/5   2026-08-25  manual               Add a requires: field to the CLI
      ↳ failed at step 3 — the managed clone was on the wrong channel
-  5. [PENDING]  context-layer-refresh   0/3   2026-08-26  /product-design run  Rebuild the context layer
+  5. [PENDING]  context-layer-refresh   1/3   2026-08-26  /product-design run  Rebuild the context layer
+     ↳ parked: steps 2
 
   3 runbooks: 1 done, 1 failed, 1 pending.
 ```
@@ -171,8 +184,8 @@ DO NOT:
   that predates ids — `runbook-schema.md` § *Backfilling an index written
   before ids* gives that to the three commands that write the index, and this
   is not one of them. An id-less block prints `-` and is left alone.
-- Correct a status, a `Steps:` count or a `Failed at:` line, however wrong
-  it looks against the rest of the index. Reconciliation belongs to the
+- Correct a status, a `Steps:` count, a `Failed at:` or a `Parked:` line,
+  however wrong it looks against the rest of the index. Reconciliation belongs to the
   command that already has the body open — `/runbook-run` re-reads the body
   every step and fixes the index from it. Reporting an inconsistency in
   prose is fine; editing it is not.
@@ -180,7 +193,8 @@ DO NOT:
   They are
   `../skills/runbook-run/references/runbook-schema.md`,
   cited and never copied.
-- Print the `↳` continuation for anything other than a `[FAILED]` runbook.
+- Print the `↳` continuation for anything other than a `[FAILED]` runbook's
+  `Failed at:` line or a block's `Parked:` line.
 - Print a runbook's `File:` path, its step titles, its prompts, or any
   `Done:` line. None of those are in the index, and reaching for them means
   opening a body. The one-line title from the heading is not one of these —

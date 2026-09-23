@@ -1,6 +1,6 @@
 ---
 name: runbook-describe
-version: 0.3.3
+version: 0.3.4
 type: command
 description: Print a compact summary of one runbook — its index line, header, and one line per step with marker, title, dependencies and who it needs — without opening a step prompt. Use it to see where a runbook stands.
 requires: skill:runbook-run
@@ -38,7 +38,7 @@ $ARGUMENTS
 
 THE ARTIFACT
 
-The store, the body schema, the four step markers, the `Done:` line, the
+The store, the body schema, the five step markers, the `Done:` line, the
 `Needs:` field, the four-status vocabulary, the index block and the id are all
 specified in
 `../skills/runbook-run/references/runbook-schema.md`.
@@ -147,7 +147,9 @@ WORKFLOW
 
    **The heading line.** Id, name, status, progress and title, from the index.
    For a `[FAILED]` runbook, and only for one, follow it with the index's
-   `Failed at:` line as a continuation, exactly as `/runbook-list` renders it.
+   `Failed at:` line as a continuation, exactly as `/runbook-list` renders it;
+   a block carrying a `Parked:` line gets that continuation the same way,
+   `↳ parked: steps <ids>`, after the `Failed at:` one when both are present.
 
    **The header line.** One line: `Created:`, `Source:`, `Model:`. Nothing
    else from the header on this line — no `Sequencing:`, no `Companion:`, no
@@ -189,8 +191,11 @@ WORKFLOW
 
    **The step lines.** One line per step, in body order:
 
-   - the marker **as the body carries it** — `[ ]`, `[~]`, `[x]`, `[!]` —
-     first on the line, then the number and the title;
+   - the marker **as the body carries it** — `[ ]`, `[~]`, `[x]`, `[!]`,
+     `[P]` — first on the line, then the number and the title. A `[P]` step
+     prints its marker and nothing of its `Context:`; the question is in the
+     body, and the continuation under the heading already says the step is
+     parked;
    - `deps:` on the same line, only when the step has dependencies. A step
      whose `Depends on:` is `none` prints nothing for it. A surviving
      `Depends on:` naming an archived id is printed **verbatim**, like any
@@ -210,7 +215,8 @@ WORKFLOW
    whole or in part.
 
    **The closing lines.** One line counting the steps by marker — only the
-   non-zero counts, the singular for one step, `[~]` named "in progress".
+   non-zero counts, the singular for one step, `[~]` named "in progress",
+   `[P]` named "parked".
    **Every id on the `Archive:` line counts as done and as present**, per
    `runbook-schema.md` § *An archived id counts as `[x]`* and the index's
    `Steps:` accounting one level down: the total is the steps present plus
@@ -251,8 +257,8 @@ DO NOT:
   kind, including `git`.
 - Add, edit or persist any line in a body or in the index. Authoring is
   `/runbook-create`'s by line, and the run's lines are `/runbook-run`'s.
-- Correct a status, a `Steps:` count, a marker or a `Failed at:` line, however
-  wrong the index looks against the lines just extracted. Reconciliation
+- Correct a status, a `Steps:` count, a marker, a `Failed at:` or a `Parked:`
+  line, however wrong the index looks against the lines just extracted. Reconciliation
   belongs to `/runbook-run`. Reporting an inconsistency in prose is fine;
   editing it is not. Deriving the closing count from the body's steps **and
   its `Archive:` line** is derivation, not reconciliation — it is how the

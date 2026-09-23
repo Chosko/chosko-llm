@@ -44,11 +44,20 @@ INLINE RULES
 - One prompt is the exception: the dirty-tree prompt (`Working tree has
   uncommitted changes. Choose:`) a step's command puts before it starts. When
   the only uncommitted changes it lists are <FILE> and .claude/RUNBOOKS.md —
-  the runbook and the index you yourself just wrote — answer `1` / `proceed`
+  the runbook and the index the run marked in-flight — answer `1` / `proceed`
   yourself, print the one line
   `dirty-tree prompt answered proceed — only runbook WIP is dirty`, and carry
   on. Never `include`: those two files must not ride in the step's commit. If
   anything else is dirty, put the prompt to the user unchanged.
+- Two rules hold only when the run's policy is unattended — the brief's
+  preamble says so; under an attended run neither applies. First: at a
+  question you would otherwise ask, leave the working tree clean of your own
+  changes — work a skill you invoked has parked on a branch is not yours and
+  stays where it is — say so, and end the execution phase with the question
+  as your outcome, for the fifth result row to park. Second: a `Context:`
+  bullet opening `unparked with answer:` answers the question the invoked
+  skill asks — a pre-ask, a prompt, a gate — so answer it from there, at
+  whatever point the skill asks it, and never put it to the user again.
 - Follow the invoked skill's default commit behaviour. Add no flag the user did
   not type.
 - If the work wants a child subagent, spawn it directly, one level down. If you
@@ -97,13 +106,23 @@ Not part of the rule set — this section is for whoever maintains the contract.
   `/task-implement` runs in the session that set `[~]` and `[RUNNING]` one
   moment earlier, so its pre-flight check meets them and would stall on a
   question whose answer is already known. The condition mirrors SKILL.md's
-  Stop-hook reply — the runbook and the index you yourself just wrote — so the
-  two read as one rule applied twice, and its fall-through is the same: anything
-  else dirty still reaches the user. `proceed`, never `include`, because folding
-  the markers into the task's commit would commit the in-flight state COMMIT
-  CADENCE forbids. The rule lives here, not in `task-engine`'s `tree.md`: the
-  caller answers its own prompt, and `/task-implement` learns nothing about
-  runbooks.
+  Stop-hook reply — the runbook and the index the run marked in-flight, which
+  under `--inline` this session wrote itself — so the two read as one rule
+  applied twice, and its fall-through is the same: anything else dirty still
+  reaches the user. `proceed`, never `include`, because folding the markers
+  into the task's commit would commit the in-flight state COMMIT CADENCE
+  forbids. The rule is word for word the one the subagent contract's OPERATING
+  RULES carry for a spawned step, and it lives in the two contracts rather than
+  in `task-engine`'s `tree.md`: the runbook side answers its own prompt, and
+  `/task-implement` learns nothing about runbooks.
+- **The two unattended rules.** The same two the subagent contract's
+  OPERATING RULES carry, for the same reasons, in the inline session's own
+  register: there is no turn to end, so the question becomes the execution
+  phase's written outcome, which step 7 parks by the fifth result row instead
+  of asking. The tree is left clean because the run goes on to the next step
+  in this same session, which would otherwise meet its own leftovers at the
+  next dirty-tree prompt; the answer is read from `Context:` because the step
+  re-runs whole and the invoked skill asks again.
 - **Children one level down, never inline.** The default mode's step agent sat
   one level below the orchestrator; under `--inline` that level is free, so a
   wanted child goes there. Doing a child's work in the session destroys the

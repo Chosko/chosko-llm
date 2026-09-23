@@ -9,9 +9,9 @@ which tasks it operates on, and the eligibility clause — status plus
 Extracted verbatim from the `LOCATING THE BACKLOG` sections of
 `/task-list`, `/task-clean` and `/task-implement`, from `/task-add`'s
 `PHASE 0 — SETUP CHECK` and `INDEX FILE FORMAT`, and from
-`/task-implement`'s `ARGUMENT PARSING` selectors. § *The archive* is the
-one exception: feature `task-archive` authored it here, and no consumer
-ever carried a copy of it.
+`/task-implement`'s `ARGUMENT PARSING` selectors. § *The archive* and the
+`[PARKED]` clauses are the exceptions: authored here, and no consumer ever
+carried a copy of them.
 
 ---
 
@@ -113,6 +113,10 @@ open each one only at the moment its task becomes the current one. If the
 body file for a task you intend to implement is missing, stop and report
 — the task is corrupt and the user should investigate.
 
+A body is read on this path, never written. The one section
+`/task-implement` writes in a body is the trailing `## Parking handoff` of
+`./parking.md`, appended at a park and removed at the unpark.
+
 This section governs live bodies only — the `.claude/tasks/<N>.md` paths.
 Nothing in it opens a file under `.claude/tasks/archive/`; a file there
 falls under § *The archive* instead.
@@ -164,7 +168,10 @@ task, and at that point a missing file says so itself.
 
 Status flips happen in `.claude/TASKS.md` only — the per-task body
 file does not store Status, Files, or Preconditions, so do not edit
-the body file when changing status.
+the body file when changing status. The `[PARKED]` flip is the one that
+touches the body as well: it writes the `## Parking handoff` beside the
+flip, and the unpark removes it — `./parking.md`. The status itself still
+lives in `.claude/TASKS.md` alone.
 
 ## Selectors
 
@@ -181,7 +188,7 @@ A run's task list resolves from its argument to one of:
   proceed without asking for confirmation. If no task is eligible, stop
   with whichever of these is true:
   - no implementable task exists at all — "No eligible tasks found — all
-    tasks are DONE, SKIP, IN PROGRESS, or STALE.";
+    tasks are DONE, SKIP, IN PROGRESS, STALE, or PARKED with no answer.";
   - implementable tasks exist, but every one of them is blocked — "No
     eligible tasks found — every implementable task is waiting on an unmet
     precondition: 14 (waits on 12), 15 (waits on 14)." Name every blocked
@@ -209,8 +216,12 @@ A run's task list resolves from its argument to one of:
 A task is **eligible** only when both hold:
 
 1. its status is implementable — `[MISSING]`, `[STUBBED]`, `[INCORRECT]` or
-   `[PARTIAL]`. Tasks whose status is `[DONE]`, `[SKIP]`, `[IN PROGRESS]` or
-   `[STALE]` are skipped by both batch selectors;
+   `[PARTIAL]`, or `[PARKED]` exactly when an answerer exists
+   (`./parking.md` § *The answerer rule*): an attended session, or an
+   `unattended` run holding an answer for it. A `[PARKED]` task with no
+   answerer is skipped with one line, never re-parked. Tasks whose status
+   is `[DONE]`, `[SKIP]`, `[IN PROGRESS]` or `[STALE]` are skipped by both
+   batch selectors;
 2. every id on its `Preconditions:` line resolves to a task whose status is
    `[DONE]` or `[SKIP]`. `Preconditions: none` satisfies this trivially. An
    id that resolves to no summary block in TASKS.md is ignored, never a
@@ -287,7 +298,11 @@ requested task carries another one, is
   is a re-check: between tasks of an `all` run it re-reads TASKS.md anyway,
   and there it re-checks the upcoming task's `Preconditions:` against clause
   2 of *Eligibility*, skipping with a one-line report a task whose
-  preconditions no longer hold. It reads nothing new to do it.
+  preconditions no longer hold. It reads nothing new to do it. Its other
+  departure is the pre-ask under `--unattended`: at pre-flight it opens each
+  `[PARKED]` task's trailing `## Parking handoff`, that section only,
+  because the question it lists verbatim lives nowhere else
+  (`./parking.md`).
 - **`/task-add`** — resolves nothing from the index but the next ID, the
   task a `--before <N>` / `--after <N>` flag names and, on a
   `feature=<slug>` run, the tasks that feature already generated. Its

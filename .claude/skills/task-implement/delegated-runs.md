@@ -53,6 +53,11 @@ after the agent returns. The three fields the delegation guard needs —
 `Target:`, `Status:` and `Feature:` — all live in the task's `TASKS.md`
 summary block, which PRE-FLIGHT step 2 already read once for the whole run,
 so the guard costs nothing per task and no body read can be justified by it.
+One read is bounded and named: under UNATTENDED the pre-ask (SKILL.md
+PRE-FLIGHT) opens each `[PARKED]` task's trailing `## Parking handoff` — that
+section only, before DELEGATE is decided — because the question it must list
+verbatim lives nowhere else. Nothing else in a delegated task's body is ever
+opened here.
 
 The tasks the parent keeps are the exception that proves the shape: a
 `claude+human`, `human` or explicitly requested `[STALE]` task is not
@@ -99,12 +104,32 @@ It carries four things:
      earlier tasks is expected, so the agent must not re-run the prompt
      protocol in
      `../task-engine/references/tree.md`;
-   - the notice that it runs non-interactively: it cannot ask the user
-     anything, and if it hits something that genuinely needs a human
-     decision it must stop and report that rather than guess or wait.
+   - UNATTENDED — the run's execution policy as ARGUMENT PARSING resolved
+     it. When it is true the prompt says so in the one sentence that
+     declares the run unattended, which is what makes the agent's own
+     UNATTENDED true; when false the prompt says the run is attended.
+     Whether the agent can ask is settled by this value alone, not by the
+     fact that it is a subagent: a subagent can ask, because the launcher
+     can carry an answer. Under attended, a question that genuinely needs
+     the user — an acceptance criterion the body and the codebase cannot
+     settle, a review round's approval gate — ends the agent's turn under a
+     `QUESTIONS FOR USER` heading in the fixed relay block below, options
+     and a recommendation included, and the answer comes back in the same
+     conversation (§ *The question relay*); the agent never guesses, never
+     waits on nothing, and never stops for a question. Under UNATTENDED the
+     agent parks the task instead, per
+     `../task-engine/references/parking.md`, and returns `[PARKED]` as its
+     terminal status;
+   - the held answer for this task — only when the task is `[PARKED]` and
+     the parent holds one from the pre-ask or from chat (§ *Between
+     delegated tasks* step 2a): one answer, for the one task the prompt
+     names, which the agent's Step 1 feeds to the unpark. Under attended
+     no answer is held; the agent asks the handoff's question through the
+     relay.
 
-   Every one of these is a run-level value, resolved once — so the flag list
-   is O(1) in the size of the batch, exactly like the rest of the prompt.
+   Every one of these is a run-level value, resolved once — the held answer
+   is the one per-task value, and it is one line — so the flag list is O(1)
+   in the size of the batch, exactly like the rest of the prompt.
 3. **The instruction to gather its own context**: read the task body,
    CLAUDE.md and `.claude/context/` itself, since it has been given none of
    them. This is not a hardship — the agent has the same project a user
@@ -123,10 +148,15 @@ The whole thing reads roughly:
 > Resolved flags for this run: `<the run's resolved flag list>`.
 >
 > Read the task body, CLAUDE.md and `.claude/context/` yourself — you have
-> not been given them. You are running non-interactively and cannot ask the
-> user anything; if something genuinely needs a human decision, stop and
-> report it. Do not propose flipping a feature to `[DONE]` in FEATURES.md —
-> the launcher proposes at the end of the run.
+> not been given them. This run is attended: if something genuinely needs
+> the user's decision, end your turn under a `QUESTIONS FOR USER` heading —
+> the question, its options with what each costs, your recommendation, and
+> any draft awaiting approval verbatim — and the answer will come back in
+> this conversation; never guess and never answer it yourself. *(Under
+> UNATTENDED, instead: This run is unattended: a question about the work
+> parks the task per `task-engine`'s `parking.md` and you return `[PARKED]`
+> as its terminal status.)* Do not propose flipping a feature to `[DONE]`
+> in FEATURES.md — the launcher proposes at the end of the run.
 >
 > When the task is finished, read the `/follow-ups` command's own body — it
 > states what counts as a follow-up, what is excluded, and how an item is
@@ -134,9 +164,10 @@ The whole thing reads roughly:
 > Do not invoke the command. If it is not available to you, skip this and
 > report nothing for it.
 >
-> Report back only: the task number, the terminal status you wrote, the
-> commit hash (or that nothing was committed), — only if it failed — a
-> one-line reason, that list, omitted entirely when it is empty, and at most
+> Report back only: the task number, the terminal status you wrote (for
+> `[PARKED]`, followed by the handoff's `Question:` verbatim), the commit
+> hash (or that nothing was committed), — only if it failed — a one-line
+> reason, that list, omitted entirely when it is empty, and at most
 > three *For the record* lines — `<what deviated> — <why> — <resolved by
 > whom>`: a criterion overshot, a wrong premise in the body, a consequential
 > edit outside `Files:` — omitted entirely when there are none.
@@ -176,13 +207,66 @@ an unrecorded piece of work. The one thing from a loop that its reading does
 catch is a deferral `/task-iterate` noted should become a task, where none was
 authored — an unwritten task, not a finding.
 
+## The question relay
+
+**The launcher relays; it does not answer.** An agent's result that opens
+with `QUESTIONS FOR USER` is not a return — the task is still in progress
+inside that agent, whose context is intact — and the parent handles it
+before anything else:
+
+1. Render the question in the fixed relay block — `/runbook-run`'s shape
+   with a task heading, so the user reads one form of question from every
+   run-level skill:
+
+   ```
+   Task 42 — Add the login form — the agent is asking (round 1):
+
+     <the question in one or two lines>
+
+     a) <option> — <what it costs>
+     b) <option> — <what it costs>
+
+   Recommendation: (b), because <one line>.
+   ```
+
+   At an approval gate the draft follows the block **verbatim and
+   unabridged** — a summarized draft cannot be approved, and an approval
+   given against a summary approves something the user never saw. The
+   round number counts this task's questions, from 1.
+2. Wait for the user's answer. Silence, EOF or an unrelated reply is not an
+   answer; the run waits.
+3. Send the answer to the **same** agent, by its id — never to a fresh one,
+   which would have to be re-briefed and would answer differently — and
+   block on its result as for any spawn. That result is either another
+   question, which repeats this loop with the next round number, or the
+   six-field return below.
+
+The parent adds no fact it does not hold and never answers on the user's
+behalf, not even a question it finds easy: it never opened the task and is
+in no position to. The one thing it may add is a fact already in its own
+row set — an earlier task's outcome that answers the question — and it says
+that it is doing so, so the user can see which part of the block came from
+the agent and which from the launcher.
+
+Under UNATTENDED this case does not occur: the agent parks instead
+(§ *The agent prompt*) and its result is a return with `[PARKED]` as the
+terminal status. A `QUESTIONS FOR USER` result under UNATTENDED is an agent
+that did not follow its prompt, and counts as an ambiguous return
+(§ *Failure*).
+
 ## What the agent returns, and what the parent keeps
 
 The return contract is exactly six things, the last two optional:
 
 1. the task number,
-2. the terminal status it wrote to `.claude/TASKS.md`,
-3. the commit hash — or, under NO_COMMIT, that nothing was committed,
+2. the terminal status it wrote to `.claude/TASKS.md` — `[DONE]`,
+   `[PARTIAL]`, or under UNATTENDED `[PARKED]`, followed in that one case
+   by the handoff's `Question:` verbatim, options included: the agent's
+   own chat print of it (`parking.md` § *The park sequence*) reaches no
+   user from a subagent, so the return is how the question gets to the
+   parent's handle print and to the closing report,
+3. the commit hash — or, under NO_COMMIT, that nothing was committed; for a
+   `[PARKED]` task, the bookkeeping commit's hash,
 4. a one-line failure reason, and only when it failed,
 5. **at most three one-line follow-ups**, and only when there are any,
 6. **at most three *For the record* lines**, in the shape SKILL.md's THE
@@ -191,9 +275,19 @@ The return contract is exactly six things, the last two optional:
 The parent accumulates that and nothing else. No diffs, no file lists, no
 narrative — a deviation worth keeping is one bounded line in the sixth
 field, an agent with more to say says it in the failure line, and a task
-that needs the user's attention is a task that stopped. After a fifty-task
-run the parent holds fifty short rows, and its closing report's *For the
-record* group is those sixth fields, attributed to their tasks.
+that needs the user's attention is a relayed question (attended) or a
+`[PARKED]` return (UNATTENDED), never a stop. After a fifty-task run the
+parent holds fifty short rows, and its closing report's *For the record*
+group is those sixth fields, attributed to their tasks.
+
+**A `[PARKED]` return is not a failure and does not halt the run.** The
+agent ran the park sequence itself, so the base tree is clean and its
+question is in the task's `## Parking handoff`; the parent records the row,
+prints the returned question under the run's next handle number exactly as
+SKILL.md's *Parking at a question* does for an in-context task, prints its
+progress line (§ *Between delegated tasks*), and spawns the next agent. The
+closing report lists the task under *Follow-ups* with that question, per
+SKILL.md's THE CLOSING REPORT — the parent still opens no body for it.
 
 **The fifth field applies `/follow-ups`' rules; it does not define its own.**
 The agent reads that command's own body and applies what it finds there to its
@@ -211,13 +305,14 @@ and are **not restated here**: a second copy is a copy that will drift, and
 this file is not its authority.
 
 **It reads the rules rather than invoking the command**, for two reasons.
-Invoking it would be a per-task `/follow-ups` call, which SKILL.md's DO NOT
-list forbids — the run's closing call is once, in the parent. And a read
-degrades where an invocation would not: `requires: command:follow-ups` means
-the command is normally installed, but a user who removed it by hand leaves
-the agent nothing to read, and the rule there is the same silent skip the
-closing call makes — omit the field, report nothing about it, and do not fail
-the task. An absent optional field is not a failed task.
+Invoking it would be a per-task `/follow-ups` call — the rules are applied
+once per run, in the parent's closing report (SKILL.md's CLOSING THE RUN).
+And a read degrades where an invocation would not: `requires:
+command:follow-ups` means the command is normally installed, but a user who
+removed it by hand leaves the agent nothing to read, and the rule there is
+the same silent skip the closing report makes — omit the field, report
+nothing about it, and do not fail the task. An absent optional field is not a
+failed task.
 
 That is also why the field is empty on almost every task: the command's
 exclusion rule does the work, and an agent that did its task and wrote it down
@@ -232,10 +327,11 @@ still holds fifty short rows.
 
 The parent does not act on them, does not judge them and does not ask about
 them mid-run. It records them beside the other four fields and they feed
-exactly one place: the closing `/follow-ups` call in SKILL.md's CLOSING THE
-RUN. A follow-up line is the agent's claim, not the parent's finding — the
-parent never opened the task and is in no position to verify it, which is also
-why it is never a reason to halt the run.
+exactly one place: the *Follow-ups* group of the closing report, SKILL.md's
+THE CLOSING REPORT, attributed to their task and de-duplicated by action
+against the run's own items there. A follow-up line is the agent's claim, not
+the parent's finding — the parent never opened the task and is in no position
+to verify it, which is also why it is never a reason to halt the run.
 
 ## Between delegated tasks
 
@@ -251,16 +347,31 @@ After each agent returns, and before the next spawn:
    next task's `Preconditions:`: if they no longer hold, skip that task with
    its one-line report and spawn no agent for it, then apply the check to
    the task after it. `Preconditions:` is on the summary block, so the
-   re-check opens no body and adds no read.
+   re-check opens no body and adds no read. Likewise, under UNATTENDED a
+   next task that is `[PARKED]` with no held answer is skipped here with
+   `parking.md` § *The answerer rule*'s one line and gets no agent —
+   `Status:` is on the summary block and the answers are in run memory, so
+   this too opens no body.
 2. Confirm the agent actually did what it claims — the status it reports
    should match the file, and under the default (committing) mode
-   `git status --porcelain` should be clean. A mismatch is a failure; see
-   below.
+   `git status --porcelain` should be clean. A `[PARKED]` status with a
+   clean tree is consistent: the park sequence ends in a bookkeeping
+   commit, and the work-in-progress is on `park/task-<N>`, not in the
+   tree. A mismatch is a failure; see below.
+2a. Read any chat message that arrived while the agent ran, exactly as
+   SKILL.md's BETWEEN TASKS step 2a says for an in-context run: a reply by
+   number handle to a question printed this run — at the pre-ask or at a
+   park — is that task's answer, recorded in run memory, and the task moves
+   to the front of the remaining list, so its agent is spawned next, the
+   answer in its prompt (§ *The agent prompt*), and unparks it in its own
+   Step 1. A reply the parent cannot match is rejected with one line, as
+   there.
 3. Report one line of progress to the user: "Task 20 done (`abc1234`).
-   Starting task 22."
+   Starting task 22." — or, for a `[PARKED]` return, "Task 20 parked
+   (question 3). Starting task 22."
 4. In skip-tests mode, ask "Proceed?" before spawning the next agent,
-   unless AUTO_CONFIRM is true. This prompt belongs to the parent — the
-   agent never asks it.
+   unless AUTO_CONFIRM is true or UNATTENDED is true. This prompt belongs
+   to the parent — the agent never asks it.
 
 ## Failure
 
@@ -274,4 +385,7 @@ behind the agent's back, and report
 
 An agent that returns something ambiguous — no status, no commit, an
 unclear report — counts as a failure. Verify rather than assume; the
-parent never saw the work.
+parent never saw the work. A `QUESTIONS FOR USER` result is neither a
+failure nor a return (§ *The question relay*), and a `[PARKED]` return is
+not a failure (§ *What the agent returns*): only a task that stopped
+`[IN PROGRESS]` halts the run.

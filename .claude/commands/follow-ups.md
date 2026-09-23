@@ -1,6 +1,6 @@
 ---
 name: follow-ups
-version: 0.1.2
+version: 0.1.3
 type: command
 description: List what this conversation would lose if it ended now — actions proposed but never executed, outcomes never recorded on disk, decisions written down nowhere — as a numbered list, or exactly `No follow-ups left`. Use it before a session ends, or when a run stopped early.
 ---
@@ -68,6 +68,11 @@ a command fits the follow-up:
 
 A free-form item is legal where no command fits. Prefer the command form
 whenever one does.
+
+A run-closing skill — `/runbook-run`, `/task-implement` — may apply these
+rules as the second group of its own closing report, under this same
+`Follow-ups` heading, its own items folded into the one numbering; this
+command, invoked on its own, is unchanged by that.
 
 THE NUMBERING IS THE HANDLE
 The numbers are there so the user can reply by number — "execute 1 and 2

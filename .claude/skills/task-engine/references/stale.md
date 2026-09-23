@@ -73,6 +73,7 @@ Reconciliation classifies EVERY existing task the feature generated:
 | Still valid under the new design | Left untouched. No edit at all. |
 | Needs minor change, and is `[STALE]` or `[MISSING]` | Body updated in place. A `[STALE]` task flips back to `[MISSING]`. |
 | Substantially invalidated | Marked `[SKIP]` with a reason, and a replacement task drafted. |
+| `[PARKED]` | Classified exactly as a `[MISSING]` task is — untouched, updated in place, or skipped and replaced. Updated in place: the body is rewritten above its `## Parking handoff`, and the handoff and the `park/task-<N>` branch are left as they are — the task stays `[PARKED]`, its question still open. Skipped and replaced: `[SKIP]` with a reason that names the parking branch, and the branch is deleted, local and remote (`git branch -D park/task-<N>` and `git push origin --delete park/task-<N>`), since nothing will resume it. What the handoff and the branch are is `./parking.md`. |
 | `[DONE]` | Never modified, skipped, or reopened. |
 
 **Prefer update-in-place.** Whenever the task's goal survives the design
@@ -112,7 +113,9 @@ add `[STALE]` to a default prune set, or treat it as terminal anywhere.
   is named explicitly.
 - **`/task-add`** — the clearer. Reconciliation runs only on a
   `feature=<slug>` run whose feature has a non-`none` `Tasks:` line, and it
-  never sets `[STALE]` when creating a task.
+  never sets `[STALE]` when creating a task. It is also the one feature
+  besides `/task-implement` that touches a `park/task-<N>` branch — deleting
+  it on a parked task's skip-and-replace, per the table above.
 - **`/task-implement`** — the protocol above is its own, and it is
   deliberate that the choice is put to a human: a stale task is never
   delegated to a subagent (see `targets.md`), and it is never started

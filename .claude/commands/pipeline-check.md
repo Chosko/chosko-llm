@@ -1,6 +1,6 @@
 ---
 name: pipeline-check
-version: 0.1.3
+version: 0.1.4
 type: command
 description: Report structural drift across the pipeline's indexes — FEATURES.md, TASKS.md, PLAN.md and RUNBOOKS.md — as findings grouped by artifact, each with its severity and the one command that fixes it. Use it when an index looks out of step with another, or before revising planned work.
 requires: skill:pipeline-engine
@@ -13,9 +13,9 @@ requires: skill:pipeline-engine
 # fixes it, closing on a count of both; a clean project prints one line. An
 # absent index drops its findings rather than failing the run. Read-only —
 # writes nothing, creates nothing, commits nothing, flips no status, never
-# opens a file under `.claude/tasks/` (the archive included),
-# `.claude/runbooks/` or `.claude/domain/features/`, and runs no shell
-# beyond the probe.
+# opens a file under `.claude/tasks/archive/` or `.claude/domain/features/`,
+# opens a task body or a runbook body only where the two parking findings
+# need one, and runs no shell beyond the probe.
 # Usage: /pipeline-check
 #        /pipeline-check feature=<slug>      (scope to that feature and the tasks and plan edges naming it)
 # Examples: /pipeline-check
@@ -69,9 +69,12 @@ WORKFLOW
    `/production-status`, which runs none at all.
 
 2. **Read the indexes the probe found**, with the Read tool, read-only — each
-   of the four that exists, and nothing else. `backlog=partial` does not say
-   which half exists: try `.claude/TASKS.md`, and count it absent when it is
-   not there.
+   of the four that exists. `backlog=partial` does not say which half
+   exists: try `.claude/TASKS.md`, and count it absent when it is not there.
+   The only other files a run opens are the bodies `lint.md` § *What no rule
+   reads* names for L12 and L13 — each `[PARKED]` task's, each
+   non-`[DONE]` runbook's — read in step 5, when those findings are
+   evaluated, and only for the heading or the markers the finding checks.
 
 3. **Stop only on a project with no index.** When step 2 read none of
    `.claude/FEATURES.md`, `.claude/TASKS.md`, `.claude/PLAN.md` and
@@ -94,10 +97,11 @@ WORKFLOW
 
    Under FEATURE, keep only the findings that touch the feature: its own entry
    (L6, L8, L11); the tasks whose `Feature:` names it or whose id is on its
-   `Tasks:` line, with the precondition findings and cycles through them; and
-   the plan lines that name the slug (L9). No runbook finding is in scope:
-   `RUNBOOKS.md` ties no runbook to a slug (`graph.md` E7), and this command
-   opens no runbook body to find one.
+   `Tasks:` line, with the precondition findings and cycles through them and
+   L12 on a parked one; and the plan lines that name the slug (L9). No
+   runbook finding is in scope: `RUNBOOKS.md` ties no runbook to a slug
+   (`graph.md` E7), and this command opens no runbook body to find one — L13
+   reads a body for its markers, never for its prompt blocks.
 
 ---
 
@@ -143,17 +147,20 @@ and every fix is its owner's to apply.
 READ-ONLY
 
 This command writes nothing, creates nothing, commits nothing and flips no
-status. It opens no file under `.claude/tasks/` — **`.claude/tasks/archive/`
-included** — none under `.claude/runbooks/`, and none under
-`.claude/domain/features/`. It runs no shell command beyond the probe.
+status. It opens no file under `.claude/tasks/archive/` and none under
+`.claude/domain/features/`. Under `.claude/tasks/` and `.claude/runbooks/` it
+opens exactly the bodies `lint.md` § *What no rule reads* names for L12 and
+L13, and reads nothing else in them — never a prompt block, never a
+handoff's question. It runs no shell command beyond the probe.
 
 It runs when the user invokes it, and at no other time.
 
 DO NOT:
 - Write, edit, create or commit anything — no status flip, no fix for a
   finding this run reported, no cached report.
-- Open a task body, an archived body, a runbook body, a feature document or a
-  design document. Every finding is derived from index lines.
+- Open an archived body, a feature document or a design document, or a
+  task or runbook body beyond the two `lint.md` names. Every other finding
+  is derived from index lines.
 - Run any shell command other than the probe, `git` included.
 - Refuse over an absent index, a malformed block, an unknown `feature=` slug
   or an unrecognised argument. Each is reported, and the run carries on.
