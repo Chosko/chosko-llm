@@ -1,6 +1,6 @@
 ---
 name: runbook-create
-version: 0.8.5
+version: 0.8.6
 type: command
 description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/, indexed in .claude/RUNBOOKS.md — from this conversation's follow-up list or a free-form description, or append steps to one. Use it to hand ordered work to later sessions that lack this conversation's context.
 requires: skill:runbook-run
@@ -91,7 +91,7 @@ and re-run. On a non-git VCS (a `## VCS` section in `CLAUDE.md`) skip it.
 
 THE ARTIFACT
 
-The store, the body schema, the four step markers, the `Done:` line, the
+The store, the body schema, the five step markers, the `Done:` line, the
 four-status vocabulary and the index block are all specified in
 `../skills/runbook-run/references/runbook-schema.md`.
 Read it before parsing or writing either file, and emit exactly the shapes it
@@ -112,12 +112,13 @@ which is what makes appending safe while a run is in progress:
 | Line | Written here | Never written here |
 | --- | --- | --- |
 | the header, `Last step number:`, `Sequencing:`, `Companion:` | yes | `Archive:`, which is `/runbook-prune`'s — an append never writes, normalises or drops it |
+| `Execution policy:` | only when the user asks for an unattended runbook | by default — absent means `attended`, the way an absent `Needs:` means `agent`; and never by a run, which overrides it per run with a flag instead |
 | a step's title and its ```prompt``` block | yes | — |
 | `Depends on:` | yes | — |
 | `Needs:` | `agent+human` and `human` only | `agent`, which is the default and is never written |
 | `## Do not re-propose` | yes | — |
-| the step marker | `[ ]` only | `[~]`, `[x]`, `[!]` |
-| `Context:` | `none` only, at authoring time | a run's dated correction bullets |
+| the step marker | `[ ]` only | `[~]`, `[x]`, `[!]`, `[P]` |
+| `Context:` | `none` only, at authoring time | a run's dated correction bullets, and its two parking bullets — `parked: <question>` and `unparked with answer: <text>` |
 | `Done:` | — | never; it does not exist until a run writes it |
 | the index `Status:` | `[PENDING]` only | `[RUNNING]`, `[FAILED]`, `[DONE]` |
 | the index `File:` | at creation, `.claude/runbooks/<id>-<name>.md`; on an append, only the rewrite a migration makes | any other change |
@@ -292,7 +293,9 @@ so the whole interview can be settled in a sentence:
    with one word.
 
 A seventh question — **the model** — is asked **only when the default `opus`
-is not wanted**. Do not ask it routinely.
+is not wanted**. Do not ask it routinely. The header's `Execution policy:` is
+never asked at all, in either mode: it is written only when the user asked for
+an unattended runbook, and a runbook nobody asked that of carries no line.
 
 ---
 
@@ -403,6 +406,7 @@ Index: .claude/RUNBOOKS.md
 Position: before step 4 — <its title>   (appends only; or: after step <n> — <title>; or: at the foot)
 
 Header:     Created <YYYY-MM-DD> · Source <…> · Model opus
+Policy:     unattended   (only when the user asked for it; the line is absent otherwise)
 Sequencing: <one line: why this order, where position and Depends on: can't show it — or none>
 Companion:  <path, or none>
 

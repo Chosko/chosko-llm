@@ -1,7 +1,7 @@
 # The runbook asset kind
 
 The single authority for what a runbook **is**: where it is stored, the shape
-of its body, the four step markers, the four-status vocabulary, and the index
+of its body, the five step markers, the four-status vocabulary, and the index
 block. Every feature in the runbook suite reads this file rather than carrying
 its own copy — a second copy is the copy that drifts.
 
@@ -100,6 +100,7 @@ way a task's `Preconditions:` line points at a task id.
 
 Created: 2026-08-24 · Source: /architect run · Model: opus
 Last step number: 7
+Execution policy: unattended                      ← optional; absent means attended
 Sequencing: 1–4 all edit skills/task-implement/SKILL.md.          ← optional; one line
 Companion: .claude/sessions/2026-08-24-1430-ecc-import-architecture.md
 Archive: 1, 2                                     ← optional; written by /runbook-prune
@@ -140,9 +141,10 @@ Context: none
 | `Source:` | provenance — where the material came from (`/architect run`, `manual`, …). |
 | `Model:` | the model **every** step is spawned with. Header-only; there is no per-step model. `/runbook-run --model <model>` overrides it for a whole run. |
 | `Last step number:` | the **highest step id ever assigned** in this runbook — not the highest currently present — and it **only ever increases**. The next unused step id is this value plus one; it is **never derived with `max()`** over the step headings. This is `.claude/TASKS.md`'s `Last task number:` rule and the index's own `Last runbook number:` rule verbatim, and it holds for the same reason: once a step can be removed, a counter derived with `max()` drops and hands a removed step's id to the next step written — repointing every reference recorded before the removal (`Depends on:` lines, `Failed at: step <n>`, `Context:` bullets, commit messages) at the wrong step. |
+| `Execution policy:` | optional. `attended` or `unattended` — what a run does with a question nobody present can answer: under `attended` the question is relayed and the run waits; under `unattended` the step is parked (`[P]`) and the run goes on. **Absent means `attended`.** Authored by `/runbook-create` only when the user asks for it, never by default, and never rewritten by a run; `/runbook-run --attended` / `--unattended` overrides it for one run. Any value other than those two words is an **argument error at run time**. |
 | `Sequencing:` | optional, absent by default; **one line** when present. Its only job is **why** this is the order, in the cases list position and `Depends on:` cannot express — "1–4 all edit the same file". What the order *is* is list position and `Depends on:`, never this line. It is written at authoring time and never changed afterwards: an append or an amendment does not extend it, and a dated fact about an inserted or struck step goes in that step's `Context:`. The one-line cap is what stops the header growing without bound — an extendable field accumulated a full page of dated append narration in one real runbook. An existing longer line is left as it is. |
 | `Companion:` | optional. A background document offered to every step, inserted into every spawned prompt. |
-| `Archive:` | optional, last in the header, after `Companion:`. A comma-separated list of the step ids `/runbook-prune` has removed from this body, ascending. Absent on a runbook never pruned, and never written empty. **An id on this line counts as `[x]`** — see § *The four step markers*, which is where that rule is stated and why the line exists at all: it is what keeps a surviving `Depends on:` naming a pruned step resolvable, and what keeps the index's `Steps:` count honest once the steps it counted are gone. It is a bare id list and nothing more: no titles, no `Done:` lines, no commit shas. The record of what those steps did lives in the commits they made; the ids exist for dependency resolution and the count. |
+| `Archive:` | optional, last in the header, after `Companion:`. A comma-separated list of the step ids `/runbook-prune` has removed from this body, ascending. Absent on a runbook never pruned, and never written empty. **An id on this line counts as `[x]`** — see § *The five step markers*, which is where that rule is stated and why the line exists at all: it is what keeps a surviving `Depends on:` naming a pruned step resolvable, and what keeps the index's `Steps:` count honest once the steps it counted are gone. It is a bare id list and nothing more: no titles, no `Done:` lines, no commit shas. The record of what those steps did lives in the commits they made; the ids exist for dependency resolution and the count. |
 
 ### A step
 
@@ -205,7 +207,13 @@ Under the heading, in this order:
   field thereafter: corrections, failure notes, and facts learned by earlier
   steps, each as a dated bullet. The decisions a prompt needs belong *inside*
   the prompt, which is what keeps the fenced block pasteable into a fresh
-  session on its own.
+  session on its own. Three bullet forms, all dated:
+
+  | Form | Written when |
+  | --- | --- |
+  | `- <date> <correction, failure note or fact>` | a run learns something a later step or reader needs. |
+  | `- <date> parked: <question>` | the step is parked (`[P]`). The question **verbatim**, options included, multi-line where the question was — never an approval-gate draft, which is work-in-progress and lives where the work does. |
+  | `- <date> unparked with answer: <text>` | the parked question is answered and the marker goes back to `[ ]`. The answer as given; the step's agent reads it here in place of asking again. |
 - **exactly one fenced ```prompt``` block** — the self-contained prompt. It is
   written once, by the author, and is **never edited by a run**. New facts go
   to `Context:`; a reader must always be able to see what was originally asked
@@ -221,7 +229,7 @@ turned down.
 
 ---
 
-## The four step markers
+## The five step markers
 
 | Marker | Meaning |
 | --- | --- |
@@ -229,6 +237,14 @@ turned down.
 | `[~]` | in progress |
 | `[x]` | done — a `Done:` line follows |
 | `[!]` | failed — a `Done:` line follows, opening with the reason |
+| `[P]` | parked — a `Context:` bullet opening `parked:` carries the question (§ *A step*) |
+
+A step is one marker at a time: `[P]` replaces the `[~]` the step carried
+while it ran, and the two never sit on the same step. `[P]` counts as **not
+done** in the index's `Steps:` count, and it is **committed**, like `[x]` and
+`[!]` — `[~]` is the one marker that is never committed. It is written under
+the `unattended` execution policy only (§ *The header*), and it is cleared to
+`[ ]` when the question is answered, with a second `Context:` bullet.
 
 ### An archived id counts as `[x]`
 
@@ -298,7 +314,7 @@ In `.claude/RUNBOOKS.md`:
 
 | Status | Meaning | Written by |
 | --- | --- | --- |
-| `[PENDING]` | authored and not started, or started and interrupted | `/runbook-create`, `/runbook-run` |
+| `[PENDING]` | authored and not started, or started and interrupted — a runbook waiting on a `[P]` step is `[PENDING]` too, and the index's `Parked:` line is what says so | `/runbook-create`, `/runbook-run` |
 | `[RUNNING]` | a step is executing now | `/runbook-run` |
 | `[FAILED]` | a step reported failure or an unreadable result; the run halted | `/runbook-run` |
 | `[DONE]` | every step is `[x]` | `/runbook-run` |
@@ -347,8 +363,8 @@ Steps: 0/7
   This is `TASKS.md`'s rule verbatim and holds for the same reason — a counter
   derived with `max()` hands a deleted runbook's id to the next one, and every
   reference written down before the prune then points at the wrong runbook.
-- `Steps:` is `<done>/<total>`, where **done counts `[x]` only**. `[~]` and
-  `[!]` are not done. **Every id on the body's `Archive:` line counts toward
+- `Steps:` is `<done>/<total>`, where **done counts `[x]` only**. `[~]`, `[!]`
+  and `[P]` are not done. **Every id on the body's `Archive:` line counts toward
   both halves** — it is `[x]` (§ *An archived id counts as `[x]`*) and it was a
   step. So total is the steps present plus the archived ids, done is the
   present `[x]` steps plus the same archived ids, and a prune therefore changes
@@ -360,6 +376,11 @@ Steps: 0/7
   index because the one thing a reader of a halted runbook needs is why it
   halted, and making them open the body for a single sentence is the friction
   that stops the listing being used.
+- A line `Parked: steps <ids>` — the ids of every `[P]` step, ascending — is
+  present **only** while at least one step is `[P]`, and is removed when none
+  remains. It is the `Failed at:` rule above applied again, for the same
+  reason: a listing shows a runbook waiting on an answer without opening its
+  body.
 
 **The index is a summary.** With one exception it holds nothing that is not
 derivable from the body: that is what makes a hand-edited body safe —
@@ -417,7 +438,8 @@ An unwanted step is **deleted before the run**, not carried as a tombstone.
 Tasks need `[SKIP]` because a backlog accumulates over months and the record of
 a decision not to do something has value; a runbook is a single ordered plan
 with a beginning and an end, and a skipped step in it is just noise in the
-`Steps:` count.
+`Steps:` count. `[P]` is not a skip: a parked step is still to run, once its
+question is answered.
 
 **There is no per-step `Produces:` field.** It was considered — a step
 declaring up front whether it ends in a commit or in a report would let an

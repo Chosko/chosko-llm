@@ -334,7 +334,7 @@ Feature: unattended-parking
 
 ## 263. Runbook schema: `[P]` marker, `Parked:` index line, `Execution policy:` header
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/references/runbook-schema.md, commands/runbook-create.md, commands/runbook-list.md, commands/runbook-describe.md, VERSION, CHANGELOG.md
 Preconditions: none

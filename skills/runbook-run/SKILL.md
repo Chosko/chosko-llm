@@ -1,6 +1,6 @@
 ---
 name: runbook-run
-version: 0.15.2
+version: 0.16.0
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user, recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
 requires: command:follow-ups
@@ -195,7 +195,7 @@ stop. Doing nothing quietly is indistinguishable from a bug.
 
 ## THE ARTIFACT
 
-The store, the body schema, the four step markers and the `Done:` line, the
+The store, the body schema, the five step markers and the `Done:` line, the
 four-status vocabulary, and the index block are all specified in
 `./references/runbook-schema.md`.
 Read it before parsing or writing either file. Nothing about the artifact is
