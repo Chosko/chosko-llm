@@ -246,8 +246,13 @@ top-down selection picks it next — stated as a rule anyway, so the behaviour
 is a promise and not a coincidence. When the step's prompt is a
 `/task-implement` on a task that is itself `[PARKED]`, the answer is recorded
 on the step only; the task unparks when the step executes, the step's agent
-answering its skill's question from `Context:`. Runbook steps never park work
-on a branch; the task's branch is the task's.
+answering its skill's question from `Context:`. A `[P]` step whose bullet
+says `approval gate`, reached by an attended run, is unparked without a
+question — its bullet a plain dated one, never one opening `unparked with
+answer:`, which the contract would read as the gate's answer — and the gate
+is relayed with its draft when the step runs: a gate is answered seen, never
+from a block. Runbook steps never park work on a branch; the task's branch
+is the task's.
 
 ### Answer intake
 
@@ -257,7 +262,8 @@ Three moments, one handle:
   present at that instant. Before the run starts, one block lists every
   `[P]` step in range (runbook) or `[PARKED]` task in the resolved list
   (task-implement), each with its question verbatim, numbered; the user
-  answers by number or replies `skip`, per item or for all. Runbook answers go
+  answers by number or replies `skip`, per item or for all, and an `approval
+  gate` item is listed skip-only. Runbook answers go
   into `Context:` at once; task answers are held in run memory and fed at
   unpark. An attended run has no pre-ask: it asks when it reaches the item,
   after the user has seen the earlier steps' outcomes. `--skip-parked`
@@ -269,10 +275,12 @@ Three moments, one handle:
   unparked after the current step or task finishes, before the next —
   `[P]`→`[ ]` above the current step is selected next by list order; an
   answered task moves to the front of the remaining list. Any other message
-  is ordinary conversation and the run continues. An answer to a question this
-  run never printed is rejected and records nothing; a second answer to an
-  already-answered question is rejected too — the first wins, and changing it
-  is a hand edit of `Context:`.
+  is ordinary conversation and the run continues. Three replies are
+  rejected, with one line and recording nothing: an answer to a question this
+  run never printed; a second answer to an already-answered question — the
+  first wins, and changing it is a hand edit of `Context:`; and an answer to
+  an `approval gate` item, at the pre-ask or in chat. Both run skills carry
+  exactly that set, stated once in `task-engine`'s `parking.md`.
 - **After the closing report.** Parked items are listed there with their
   question verbatim and a number; replying by number is the same act as
   mid-run, and unparks on the next run.
@@ -292,7 +300,9 @@ same one, under one numbering. Neither old list was a superset of the other:
 `Needs you` carried on-disk pointers `/follow-ups` excludes by rule, and
 `/follow-ups` carried unrecorded conversation facts `Needs you` never held. The
 standalone `/follow-ups` command is unchanged and already prints under the
-same `Follow-ups` heading. `requires: command:follow-ups` stays; where the
+same `Follow-ups` heading. `/task-review`'s own report shares the heading and
+the order (task 268), but not the rules fold — it reads a diff, not a
+session. `requires: command:follow-ups` stays; where the
 command is absent the list is the run's own items only, silently.
 
 ### Ripple
