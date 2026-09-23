@@ -184,9 +184,9 @@ Tasks: 211, 212, 213, 214
 
 ## unattended-parking — Park a question instead of halting the run under an `unattended` policy
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/unattended-parking.md
 Source: product-design.md § Task backlog
-Tasks: none
+Tasks: 259, 260, 261, 262, 263, 264, 265, 266, 267
 
 ---

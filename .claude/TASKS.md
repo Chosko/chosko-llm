@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 258
+Last task number: 267
 
 ---
 
@@ -289,5 +289,95 @@ Status: [DONE]
 Target: claude
 Files: scripts/lib.sh, scripts/cmd-ls.sh, scripts/cmd-show.sh, scripts/cmd-rm.sh, scripts/cmd-update.sh, .claude/context/cmd-ls.md, .claude/context/cmd-show.md, .claude/context/shared-lib.md, VERSION, CHANGELOG.md
 Preconditions: none
+
+---
+
+## 259. Spawned step agents answer the runbook-WIP dirty-tree prompt themselves
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/references/subagent-contract.md, skills/runbook-run/references/inline-contract.md, skills/runbook-run/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: none
+Feature: unattended-parking
+
+---
+
+## 260. `[PARKED]` status and the task parking protocol in `task-engine`
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-engine/references/parking.md, skills/task-engine/references/status.md, skills/task-engine/references/resolution.md, skills/task-engine/references/commit.md, skills/task-engine/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: none
+Feature: unattended-parking
+
+---
+
+## 261. `/task-implement --unattended`: park at a question, unpark when reached, pre-ask at launch
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-implement/SKILL.md, skills/task-implement/no-test-suite.md, skills/task-engine/references/parking.md, VERSION, CHANGELOG.md
+Preconditions: 260
+Feature: unattended-parking
+
+---
+
+## 262. Delegated runs relay questions when attended and return `[PARKED]` when not
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-implement/delegated-runs.md, skills/task-implement/SKILL.md, skills/task-engine/references/targets.md, VERSION, CHANGELOG.md
+Preconditions: 261
+Feature: unattended-parking
+
+---
+
+## 263. Runbook schema: `[P]` marker, `Parked:` index line, `Execution policy:` header
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/references/runbook-schema.md, commands/runbook-create.md, commands/runbook-list.md, commands/runbook-describe.md, VERSION, CHANGELOG.md
+Preconditions: none
+Feature: unattended-parking
+
+---
+
+## 264. `/runbook-run` parks a step under the `unattended` policy
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/SKILL.md, skills/runbook-run/references/parking.md, skills/runbook-run/references/subagent-contract.md, skills/runbook-run/references/inline-contract.md, VERSION, CHANGELOG.md
+Preconditions: 259, 263
+Feature: unattended-parking
+
+---
+
+## 265. Closing reports end with one Follow-ups list
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/SKILL.md, skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, skills/task-implement/review-rounds.md, commands/follow-ups.md, VERSION, CHANGELOG.md
+Preconditions: 261, 264
+Feature: unattended-parking
+
+---
+
+## 266. Parked items across the read-only and lint commands
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-list.md, skills/task-clean/SKILL.md, commands/pipeline-check.md, skills/pipeline-engine/references/lints.md, skills/pipeline-engine/references/routing.md, skills/task-engine/references/stale.md, commands/task-add.md, VERSION, CHANGELOG.md
+Preconditions: 261, 264
+Feature: unattended-parking
+
+---
+
+## 267. Update documentation for feature `unattended-parking`
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/reference.md, docs/cli-help.txt, .claude/domain/task-workflow.md, .claude/context/features.md, .claude/domain/features/runbook-suite.md, .claude/domain/features/task-implement-launcher.md, .claude/domain/features/runbook-inline.md, .claude/domain/features/task-peer-review.md
+Preconditions: 259, 260, 261, 262, 263, 264, 265, 266
+Feature: unattended-parking
 
 ---
