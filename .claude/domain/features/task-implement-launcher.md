@@ -129,8 +129,11 @@ agent — never a halt. Both are
 
 Per returned agent: task number, terminal status (`[PARKED]` among them, with
 its question), commit hash, a one-line
-failure reason if it failed, and at most three follow-ups derived by applying
-`/follow-ups`' rules to its own session. Nothing else. The fifth field applies
+failure reason if it failed, at most three follow-ups derived by applying
+`/follow-ups`' rules to its own session, and at most three *For the record*
+lines — `<what deviated> — <why> — <resolved by whom>`: a criterion
+overshot, a wrong premise in the body, a consequential edit outside
+`Files:` — only when there are any. Nothing else. The fifth field applies
 that command's rules rather than defining a format of its own: what counts as
 a follow-up and what is excluded are stated once, in the command's own body,
 and deliberately not restated in the contract, so the two cannot drift apart.
@@ -152,7 +155,8 @@ The parent's context after a fifty-task run is still fifty short rows, because
 the command's own exclusion rule empties the field on almost every task. Two
 bounds are the channel's rather than the command's, and only two: a cap of
 three items, which exists to protect the parent's context and not to redefine
-a follow-up, and omission when the list is empty.
+a follow-up, and omission when the list is empty. The same two bounds hold
+for the sixth field.
 
 Failure handling is unchanged: a failed agent stops the run without spawning
 the next, and the parent reports which tasks completed with hashes, which failed
@@ -162,7 +166,9 @@ is not a failure and does not halt the run.
 Those rows are also what the closing report's *Follow-ups* group reads,
 alongside the parent's own conversation: the per-agent result reports are
 already in hand, so the group is not emptied under `--agents` and opens
-nothing new. The fifth field exists for that group and feeds nothing else —
+nothing new, and the sixth field is what its *For the record* group renders
+under `--agents`, each line attributed to its task. The fifth field exists
+for the *Follow-ups* group and feeds nothing else —
 the parent records it, never acts on it mid-run, and never verifies it, since
 it did not open the task and is in no position to. A follow-up line is
 therefore never a reason to halt a run. Where the user then asks to
