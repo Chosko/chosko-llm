@@ -181,3 +181,12 @@ Source: prompt
 Tasks: 211, 212, 213, 214
 
 ---
+
+## unattended-parking — Park a question instead of halting the run under an `unattended` policy
+
+Status: [NEW]
+Doc: .claude/domain/features/unattended-parking.md
+Source: product-design.md § Task backlog
+Tasks: none
+
+---
