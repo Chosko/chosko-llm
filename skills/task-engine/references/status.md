@@ -1,20 +1,22 @@
 # The status vocabulary
 
-Authority for: the eight status tags and what each means, which are
+Authority for: the nine status tags and what each means, which are
 terminal, which are implementable, how a status argument is accepted, and
 the legal transitions.
 
 Extracted verbatim from `/task-add`'s `STATUS TAGS (the only allowed
 values, recorded in TASKS.md)`, `/task-list`'s `STATUS TAGS (the only
 allowed values)`, `/task-clean`'s `WHICH STATUSES COUNT AS "TERMINAL"`, and
-`/task-implement`'s implementable-status list.
+`/task-implement`'s implementable-status list. The `[PARKED]` lines are the
+exception: authored here, and no consumer ever carried a copy of them.
 
 ---
 
 ## The tags
 
 `[MISSING]`, `[STUBBED]`, `[INCORRECT]`, `[PARTIAL]`, `[IN PROGRESS]`,
-`[DONE]`, `[SKIP]`, `[STALE]`. These are the only allowed values.
+`[DONE]`, `[SKIP]`, `[STALE]`, `[PARKED]`. These are the only allowed
+values.
 
 - `[MISSING]` — behavior not implemented at all. **Default for new tasks.**
 - `[STUBBED]` — placeholder/TODO exists but no real implementation.
@@ -31,6 +33,10 @@ allowed values)`, `/task-clean`'s `WHICH STATUSES COUNT AS "TERMINAL"`, and
   in place (flipping the task back to `[MISSING]`) or marks it `[SKIP]` and
   drafts a replacement. **Never set by `/task-add` when creating a task.**
   Not terminal — a stale task is live work awaiting reconciliation.
+- `[PARKED]` — the task asked a question under the `unattended` policy and
+  its work is set aside until someone answers; what parks it, what it keeps
+  and how it resumes are `./parking.md`. Written and cleared only by
+  `/task-implement`. Not terminal.
 
 A new task is `[MISSING]` unless the user's description clearly indicates
 a different pre-implementation state.
@@ -57,18 +63,25 @@ The non-terminal statuses, and why pruning one is unusual:
   `/task-add feature=<slug>`, which updates or replaces the task. Never
   prune it by default. If the user names `[STALE]` explicitly, say all
   of that in the plan and confirm before applying.
+- `[PARKED]` — the task is waiting on an answer, with its work-in-progress
+  on a branch (`./parking.md`). Pruning it discards the question and
+  strands the branch. Never in a default prune set; if the user names
+  `[PARKED]` explicitly, say so in the plan and confirm before applying.
 
 ## Implementable
 
 The implementable statuses are `[MISSING]`, `[STUBBED]`, `[INCORRECT]`,
-`[PARTIAL]`.
+`[PARTIAL]` — and `[PARKED]` exactly when an answerer exists,
+`./parking.md` § *The answerer rule*.
 
 When a task is requested explicitly by number and its status is `[DONE]`,
 `[SKIP]`, or `[IN PROGRESS]`, ask whether to skip or override. If it's
 `[STALE]` and was requested explicitly by number, apply the stale protocol
 in
 `./stale.md`.
-A batch selector skips all of those statuses instead of asking — see
+If it's `[PARKED]`, it is unparked — `./parking.md`.
+A batch selector skips the first four statuses instead of asking, and a
+`[PARKED]` task with no answerer with one line — see
 `./resolution.md`.
 
 ## Accepting a status argument
@@ -91,6 +104,9 @@ valid options and stop.
   `[DONE]` is `/task-implement`'s per-task path. `[PARTIAL]` is a legal
   terminal outcome there; `[INCORRECT]` is not — it "should not appear on
   a fresh implementation".
+- `[IN PROGRESS]` → `[PARKED]` → `[IN PROGRESS]` is the park and the
+  unpark, both `/task-implement`'s under the `unattended` policy —
+  `./parking.md`.
 - Feature `Status:` values in `.claude/FEATURES.md` are a separate
   vocabulary (`[NEW]`, `[ITERATED]`, `[PLANNED]`, `[DONE]`) and are not
   governed by this file.
@@ -116,7 +132,8 @@ valid options and stop.
   write `[SKIP]` on a superseded task or flip `[STALE]` back to
   `[MISSING]`.
 - **`/task-implement`** — the only consumer that writes `[IN PROGRESS]` and
-  `[DONE]`. `[PARTIAL]` is used "only if you discovered a sub-requirement
+  `[DONE]`, and the only one that writes and clears `[PARKED]`.
+  `[PARTIAL]` is used "only if you discovered a sub-requirement
   during impl that genuinely belongs in a separate task — surface this to
   the user before choosing this status." A run that fails leaves the task
   `[IN PROGRESS]` deliberately, "so the user can see where the run

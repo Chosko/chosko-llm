@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.68.0 — 2026-09-23
+
+- **`[PARKED]` joins the task status vocabulary, with the parking protocol behind it.** `task-engine`'s `status.md` lists the ninth tag — a task that asked a question under the `unattended` policy and had its work set aside; non-terminal, never in a default prune set, written and cleared only by `/task-implement`, with `[IN PROGRESS]` → `[PARKED]` → `[IN PROGRESS]` its transitions — and a new `references/parking.md` is the one authority for the rest: the single event that parks (a question the agent asked, nothing else), the prompts that take their default instead, the trailing `## Parking handoff` a parked body carries, the `park/task-<N>` branch holding the work-in-progress in one commit, the park sequence that leaves the base tree clean, the transactional unpark that rolls back on a conflict, when an unpark is attempted, and the two refusals (`--unattended` beside `--no-commit`, or on a non-git VCS). `resolution.md` makes a `[PARKED]` task eligible for `all` / `next` exactly when an answerer exists and names the handoff as the one body section `/task-implement` writes; `commit.md` records the two parking commit forms. Nothing acts on any of it yet — `/task-implement --unattended` lands in a following change.
+
 ## 1.67.3 — 2026-09-23
 
 - **A spawned runbook step answers the runbook-WIP dirty-tree prompt itself.** `/runbook-run` marks the step `[~]` and the index `[RUNNING]` before spawning, uncommitted by design, so a step's `/task-implement` met a dirty tree at pre-flight and — forbidden to answer any question on its own — ended every step under `QUESTIONS FOR USER`. The subagent contract's OPERATING RULES now carry the inline contract's rule, word for word: when the prompt lists only the runbook body and `.claude/RUNBOOKS.md`, the step's agent answers `proceed` (never `include`), says so in one line, and carries on; anything else dirty still reaches you as before. It holds in every spawned step, under either execution policy.

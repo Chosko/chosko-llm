@@ -304,7 +304,7 @@ Feature: unattended-parking
 
 ## 260. `[PARKED]` status and the task parking protocol in `task-engine`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-engine/references/parking.md, skills/task-engine/references/status.md, skills/task-engine/references/resolution.md, skills/task-engine/references/commit.md, skills/task-engine/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: none

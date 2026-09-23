@@ -68,7 +68,8 @@ invocation, and never bundles two units into one commit.
 Do NOT use `--no-verify`, `--amend`, `--no-gpg-sign`, or skip any hooks
 unless the user explicitly asked for it. If a pre-commit hook fails,
 investigate and fix the underlying issue, then create a NEW commit (do
-not amend). Never branch or tag.
+not amend). Never branch or tag — the one exception is `/task-implement`'s
+parking branch, `./parking.md`.
 
 ## The push protocol
 
@@ -189,6 +190,17 @@ push sequence unconditionally — only the commit (checkin) step runs.
     per-task commits already made" — exactly ONE commit covering every flip
     approved in the run, `Mark feature(s) <slug>[, <slug> …] [DONE]`, pushed
     the same way.
+
+  Two more are `./parking.md`'s, under the `unattended` policy:
+  - a park makes two commits — `Task <N>: parked work-in-progress` on the
+    branch `park/task-<N>` (the task's tracked edits and created files,
+    minus `.claude/TASKS.md` and `.claude/tasks/<N>.md`), then
+    `Task <N>: parked — <reason>` on the base, staging exactly those two
+    backlog files; the same bookkeeping form records the `Answer:` of an
+    unpark whose merge failed;
+  - an unpark makes no commit of its own: the `[IN PROGRESS]` flip and the
+    handoff's removal ride in the task's own commit, which is the one path
+    on which the per-task body file is staged.
 
   A `Step 7` push failure or pre-push conflict is distinct from any other
   failure: the commit already succeeded, so do not revert it or flip the
