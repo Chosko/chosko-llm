@@ -5,7 +5,10 @@ prune it. A **runbook** is an ordered list of self-contained prompts, each
 written to be executed by a fresh agent that has none of the conversation the
 prompts came out of. `/runbook-run` walks one top to bottom, spawning one
 subagent per step, relaying that subagent's questions to the user and the
-user's answers back to the same subagent, recording what each step actually did,
+user's answers back to the same subagent — under the default `attended`
+execution policy; under `unattended` the step that asked is parked and the
+run goes on, per [unattended-parking](./unattended-parking.md) — recording
+what each step actually did,
 and committing after every step. Spawning one subagent per step is the default
 mode; the one opt-in exception, executing the steps in the orchestrating
 session, is [runbook-inline](./runbook-inline.md).
@@ -66,10 +69,11 @@ Deliberately out:
   request file nor the result file, so no part of that work passes through it.
   Reading a child's report would be both the token cost the relay exists to
   avoid and one step from reviewing work it delegated. The one carve-out is at
-  run end: the closing `/follow-ups` call reads the step subagents' result
-  reports the orchestrator already holds, because agents routinely name their
-  own follow-ups there and that report is its only window onto the step. It
-  opens no file to do it, and by then there is no work left to review.
+  run end: the closing report's *Follow-ups* group reads the step subagents'
+  result reports the orchestrator already holds, because agents routinely
+  name their own follow-ups there and that report is its only window onto
+  the step. It opens no file to do it, and by then there is no work left to
+  review.
 - **Coupling to any upstream skill.** Nothing here knows about `/architect`,
   `/product-design` or `/product-roadmap`, and none of them reference this
   suite. A runbook is a list of prompts; where the prompts came from is
@@ -253,7 +257,11 @@ carrying only *why* this is the order where list position and `Depends on:`
 cannot show it ("1–4 all edit the same file") — never changed after authoring,
 so it cannot grow. `Companion:` is optional — a background
 document offered to every step, which in the reference file was pasted into all
-seven prompts by hand.
+seven prompts by hand. `Execution policy: attended|unattended` is optional
+too — absent means `attended` — and says what a run does with a question
+nobody present can answer; `/runbook-create` writes it only when asked, and
+`/runbook-run --attended` / `--unattended` overrides it for one run
+([unattended-parking](./unattended-parking.md)).
 
 Two further header fields are optional and came later, both of them the index's
 own arrangement repeated one level down:
@@ -295,6 +303,7 @@ Step markers, in the `##` heading:
 | `[~]` | in progress |
 | `[x]` | done — a `Done:` line follows |
 | `[!]` | failed — a `Done:` line follows, opening with the reason |
+| `[P]` | parked — a `Context:` bullet carries the question; [unattended-parking](./unattended-parking.md) |
 
 The `Done:` line does not exist until a run writes it. By default it is one
 terse line — `Done: <YYYY-MM-DD>, commit `<sha>` (<N> files, +<X>/-<Y>).` —
@@ -338,7 +347,7 @@ Four statuses, in `.claude/RUNBOOKS.md`, deliberately distinct from both
 
 | Status | Meaning | Written by |
 |---|---|---|
-| `[PENDING]` | authored, not started, or started and interrupted | `/runbook-create`, `/runbook-run` |
+| `[PENDING]` | authored, not started, or started and interrupted — or waiting on a `[P]` step, which the index's `Parked:` line says | `/runbook-create`, `/runbook-run` |
 | `[RUNNING]` | a step is executing now | `/runbook-run` |
 | `[FAILED]` | a step reported failure or an unreadable result; the run halted | `/runbook-run` |
 | `[DONE]` | every step is `[x]` | `/runbook-run` |
@@ -382,7 +391,9 @@ neither number: a runbook pruned to nothing still reads `7/7`, not `0/0`, which
 is what keeps the count derivable from the body alone — from its steps and its
 header together. A line
 `Failed at: step <n> — <reason>` is present only while the status is
-`[FAILED]`, and is removed when a re-run clears it.
+`[FAILED]`, and is removed when a re-run clears it; a line
+`Parked: steps <ids>` is present only while at least one step is `[P]`, the
+same rule applied again ([unattended-parking](./unattended-parking.md)).
 
 `Last runbook number:` tracks the highest id ever assigned, only ever
 increases, and is stored rather than derived with `max()` — `TASKS.md`'s rule,
@@ -409,8 +420,8 @@ same rule that stops it correcting a `Steps:` count it thinks is wrong.
 
 **The execution loop.** Steps 5 and 6 below, and the orchestrator's contracts
 that follow — it reads only `CLAUDE.md`, the runbook and the index (plus, at
-run end only, the step reports it already holds, for the closing
-`/follow-ups` call), writes only the runbook and the index, and never does a
+run end only, the step reports it already holds, for the closing report's
+*Follow-ups* group), writes only the runbook and the index, and never does a
 step's work — are **default-mode contracts**. Under `--inline` they apply as
 [runbook-inline](./runbook-inline.md)'s contract table scopes them.
 
@@ -431,7 +442,10 @@ step's work — are **default-mode contracts**. Under `--inline` they apply as
    such and re-run. A `[!]` step is re-run with its failure already recorded in
    `Context:` by the run that failed. If
    steps remain but none are selectable, that is a dependency deadlock: report
-   the blocked steps and their unmet dependencies, and stop.
+   the blocked steps and their unmet dependencies, and stop — unless one of
+   them is `[P]`, which is the end branch of
+   [unattended-parking](./unattended-parking.md): the run is waiting on an
+   answer, and ends `[PENDING]` rather than failing.
 4. **Mark.** Set the step to `[~]` and the index status to `[RUNNING]`.
 5. **Spawn** one subagent, fresh context, with the assembled prompt below and
    the model from the header (`--model` overrides for the whole run).
@@ -440,16 +454,20 @@ step's work — are **default-mode contracts**. Under `--inline` they apply as
    it does. This is the single most dangerous point in the whole feature: a body
    that treats the spawn's return value as the result will tick a step that
    never ran and commit the lie.
-7. **Handle the result** — the four cases under Interfaces and contracts.
+7. **Handle the result** — the four cases under Interfaces and contracts,
+   plus the fifth row `unattended` adds.
 8. **Commit** the runbook and the index, then loop to 2. When no `[ ]` steps
-   remain, set the index to `[DONE]` and report. Then, after that report and
-   after the final commit, call `/follow-ups` once — the run's last act. It
-   fires at every point a run stops, not only here: at a `--to` / `--only` /
-   `--steps` bound, at a user-requested stop after a step (even with no bound
-   to that step) and at a failure halt, always once per run and never per
-   step. It adds no commit and flips no status, so it never dirties the tree
-   the run just cleaned, and it is skipped silently when `/follow-ups` is not
-   installed.
+   remain, set the index to `[DONE]`, commit, and give the closing report —
+   the run's last act, after the final commit. It is given at every point a
+   run stops, not only here: at a `--to` / `--only` / `--steps` bound, at
+   the parked end branch, at a user-requested stop after a step (even with no
+   bound to that step) and at a failure halt, always once per run and never
+   per step. Its *Follow-ups* group is where `/follow-ups`' rules are
+   applied, the command's body read and never invoked
+   ([unattended-parking](./unattended-parking.md) § The closing report). The
+   report adds no commit and flips no status, so it never dirties the tree
+   the run just cleaned; with `/follow-ups` not installed the group holds
+   the run's own items only, silently.
 
 **The chat contract.** Between steps the run says one line per step at that
 step's end — `Step 4 done (abc1234). Starting step 5.`, or the failure line —
@@ -458,28 +476,33 @@ and narrates nothing else: not the spawn, the wait, the classification, the
 relay's lines are never suppressed, because a run that needs an answer has to
 ask for it at once; quiet applies to narration only. The **closing report is
 the record of the run** instead, in the same two groups `/task-implement` and
-`/task-review` close in, and it reads the same way at completion, at a bound
-and at a failure halt. *Needs you* comes first: every item awaiting a decision,
-numbered, at whatever length — the **feature completion candidates** the step
-reports named with one question, flip them to `[DONE]` in `FEATURES.md`?; a
-failed step with its reason and what the agent said; a step left `[~]` to
-resume; the steps left outside the range, outside the `--steps` count or never
-started. *For the record* follows: one line per step the run executed, in list
-order, `<step n> — <outcome, commit sha and diffstat> — <what changed in one
-line; decision or wrong premise flagged; questions relayed and their answers>`,
-then any run-level deviation on one line. An empty group prints its heading and
-`none`.
+`/task-implement` closes in, and it reads the same way at completion, at a
+bound, at the parked end branch and at a failure halt. *For the record*
+comes first: one line per step the run executed, in list order, `<step n> —
+<outcome, commit sha and diffstat> — <what changed in one line; decision or
+wrong premise flagged; questions relayed and their answers>`, then any
+run-level deviation on one line. *Follow-ups* follows, one numbered list at
+whatever length each item needs: the **feature completion candidates** the
+step reports named with one question, flip them to `[DONE]` in
+`FEATURES.md`?; a failed step with its reason and what the agent said; a step
+left `[~]` to resume; every step left `[P]` with its question verbatim and the
+steps waiting on it; the steps left outside the range, outside the `--steps`
+count or never started; and what `/follow-ups`' rules yield applied to the
+run's reading, two items naming the same action merged — the one list
+[unattended-parking](./unattended-parking.md) § The closing report
+specifies. An empty group prints its heading and `none`.
 
 Keeping the per-step entries and grouping them under *For the record* is what
-makes the report exhaustive and scannable at once: whoever has to act reads a
-short numbered list, and the record of what happened sits below it rather than
-in front of it. The numbering is the reply handle, exactly as it is in
+makes the report exhaustive and scannable at once: the record of what
+happened is read first, and whoever has to act reads a short numbered list
+nearest the prompt. The numbering is the reply handle, exactly as it is in
 `/follow-ups`' list — it starts at 1 in every report and means nothing else, so
-a user answers "2 and 4" instead of quoting a slug back. It costs no extra
+a user answers "2 and 4" instead of quoting a slug back, and a number naming
+a parked step's question is that step's answer. It costs no extra
 reading: the `Done:` lines and the step reports are already in hand, so the
 read scope is untouched. There is no opt-out flag, and `--inline` changes none
 of it: a user who wants live detail has the per-step commits. The flip question
-is asked once, in that group and before the `/follow-ups` call, and no
+is asked once, in that group, and no
 candidate line is printed when there are none. A step's own agent is barred
 from asking it, since a relayed approval gate would halt the runbook mid-run.
 The orchestrator proposes and never writes `FEATURES.md`: acting on the answer
@@ -504,7 +527,9 @@ the rule.
    else — it never opens a navigation layer, since it touches no source.
    The preamble carries exactly what the agent cannot derive — the navigation
    instruction, the runbook name and the step number (plus the one
-   `--relay-spawns` sentence when that flag is passed) — and nothing more.
+   `--relay-spawns` sentence when that flag is passed, and the one sentence
+   declaring the run unattended under that policy,
+   [unattended-parking](./unattended-parking.md)) — and nothing more.
 2. **Background** — the `Companion:` document, if the header names one.
 3. **Do not re-propose** — the runbook's trailing section, if present.
 4. **Context** — the step's `Context:` bullets, if any.
@@ -523,7 +548,10 @@ the full draft; that it must follow the default commit behaviour of whatever
 skill it invokes and add no flag the user did not type; that it must never
 edit the runbook or the index; which runbook and step it is executing; and that it must end with `DONE` and a
 concise report naming the commit sha, the decisions taken, and any premise in
-the prompt that proved wrong.
+the prompt that proved wrong. Three further lines are
+[unattended-parking](./unattended-parking.md)'s: the runbook-WIP dirty-tree
+prompt answered `proceed` by the agent itself, and two rules conditional on
+the preamble's unattended sentence.
 
 **The question relay.** The orchestrator compresses, it does not answer. A
 relayed question is rendered as one fixed block:
@@ -547,6 +575,12 @@ may add facts it already holds — a `Done:` line from an earlier step that
 answers the question — and must say that it is doing so. It may never invent a
 decision on the user's behalf, and it never asks the user to re-state something
 an earlier step already settled.
+
+That relay is the `attended` policy's. Under `unattended` the same result
+takes the fifth row instead — the step is parked, its question stored and
+printed under a number handle, and the run goes on — per
+[unattended-parking](./unattended-parking.md); the orchestrator still
+compresses and never answers.
 
 **The relay in the subagent position.** The depth budget below permits an
 orchestrator that is itself a subagent — that is what allows a runbook to be
@@ -830,7 +864,9 @@ backfill belongs to a command that writes the index, and this one does not.
 The `Failed at:` continuation is printed only for `[FAILED]` runbooks and is why
 the field is carried in the index: the one thing a reader of a halted runbook
 needs is why it halted, and making them open the file for a single sentence is
-the friction that stops the listing being used.
+the friction that stops the listing being used. A block's `Parked:` line
+prints as the same kind of continuation, `↳ parked: steps <ids>`, for the same
+reason ([unattended-parking](./unattended-parking.md)).
 
 The optional status argument is matched without brackets and
 case-insensitively — `/task-list`'s existing convention. An unknown status names
@@ -904,7 +940,10 @@ only when it has dependencies, and `needs:` only when an authored value is not
 `agent`. A step with a `Done:` line gets at most one `done:` line, **summarised**:
 the sha(s) and a short summary, wrong premises as a count only, and a `[!]`
 step's line opening `FAILED —` with the first clause of its reason. No
-`Context:` text is printed. A closing by-marker count and the "need a person
+`Context:` text is printed — a `[P]` step shows its marker and nothing of its
+question, and a block carrying `Parked:` gets the continuation `/runbook-list`
+prints ([unattended-parking](./unattended-parking.md)). A closing by-marker
+count and the "need a person
 present" line end it. There is no `--full` flag: a reader who needs the full
 record opens the file.
 
@@ -1039,7 +1078,7 @@ safe with two writers:
 
 | Line | Written by | Never touched by |
 |---|---|---|
-| `Created:`, `Source:`, `Model:`, `Sequencing:`, `Companion:` | `/runbook-create` | `/runbook-run`, `/runbook-prune` |
+| `Created:`, `Source:`, `Model:`, `Sequencing:`, `Companion:`, `Execution policy:` | `/runbook-create` | `/runbook-run`, `/runbook-prune` |
 | `Last step number:` | `/runbook-create`; backfilled in place by whichever of `/runbook-create --append` and `/runbook-prune` writes the body first | `/runbook-run` |
 | `Archive:` | `/runbook-prune` | `/runbook-create`, `/runbook-run` |
 | a step's title and its ```prompt``` block | `/runbook-create` | `/runbook-run` |
@@ -1101,6 +1140,9 @@ it.
 /runbook-run <name> --no-commit          write the bookkeeping, commit nothing
 /runbook-run <name> --no-push            commit as usual, skip the push
 /runbook-run <name> --relay-spawns       force the spawn relay for this run
+/runbook-run <name> --unattended         park a step at a question; pre-ask the parked steps in range
+/runbook-run <name> --attended           relay and wait, overriding a header `Execution policy: unattended`
+/runbook-run <name> --unattended --skip-parked   no pre-ask   (unattended-parking.md)
 
 /runbook-list [<STATUS>]
 /runbook-describe <id|name|id-name>      print a compact summary of one runbook
@@ -1139,11 +1181,11 @@ does not weaken dependencies, is an error beside `--to` or `--only`, and compose
 with `--from` — selection begins at step X and at most N steps run from there.
 Reaching the count stops the run the way a `--to` bound does: the index goes back
 to `[PENDING]` unless the whole runbook is `[x]`. A bounded run is still a run that
-ended, so it makes the closing `/follow-ups` call in step 8 exactly as a
+ended, so it gives the closing report in step 8 exactly as a
 completed one does — as do a stop the user asks for after a step and a failure
 halt.
 
-The four result cases:
+The four result cases, and the fifth row `unattended` adds:
 
 | Result | Action |
 |---|---|
@@ -1151,6 +1193,7 @@ The four result cases:
 | `SPAWN REQUEST` | spawn the child at the orchestrator's own level, wait, tell the same subagent its result file is ready |
 | `DONE` + report | mark `[x]`, write `Done:`, propagate facts, update `Steps:`, commit, continue |
 | anything else, or a report of failure | mark `[!]`, write `Done:` with the reason, set the index to `[FAILED]` with `Failed at:`, halt, report |
+| `QUESTIONS FOR USER`, under `unattended` only — replaces the first row | mark `[P]`, record the question in `Context:`, print it with a number handle, commit, continue ([unattended-parking](./unattended-parking.md)) |
 
 An ambiguous report is a failure, not a success. A report the orchestrator cannot
 confidently classify halts the run — the alternative is ticking a step on a

@@ -136,11 +136,13 @@ a suggested fix. The report also carries a per-criterion verdict — met, not
 met, or unverifiable — a one-line overall verdict, and a closing section in
 two groups: *Needs you* (every item awaiting a decision, numbered, any length)
 then *For the record* (one line per item, `<what deviated> — <why> — <resolved
-by whom>`). `/task-implement`'s own closing report has the same two groups, so
-a run's end and a review's end read alike and nothing in the second group is
-ever a question. The *Needs you* numbering is the handle the reader replies
-with, the way `/follow-ups`' numbering is: it starts at 1 in every report,
-carries no meaning beyond that, and a lone item is still numbered.
+by whom>`). `/task-implement`'s own closing report shares the *For the record*
+group and closes on a numbered *Follow-ups* list in the other's place
+([unattended-parking](./unattended-parking.md) § The closing report), so a
+run's end and a review's end still read alike and nothing in a *For the
+record* group is ever a question. The numbering is the handle the reader
+replies with, the way `/follow-ups`' numbering is: it starts at 1 in every
+report, carries no meaning beyond that, and a lone item is still numbered.
 
 **Output destination** depends on how the skill was invoked:
 

@@ -157,7 +157,7 @@ Currently shipped:
   header, for an agent that opened the file without reading frontmatter;
   `disable-model-invocation: true` in that frontmatter is what keeps it out
   of suggestions — the description never reaches the model.
-  Eight files under `references/`, one authority each:
+  Nine files under `references/`, one authority each:
   `resolution.md` (`.claude/TASKS.md` schema and parsing — appearance
   order is the backlog's order and need not be numeric, since
   `/task-add --before`/`--after` insert mid-file under the next id — the
@@ -172,8 +172,14 @@ Currently shipped:
   `.claude/tasks/archive/<N>.md`, the frozen-header form, and the
   archived-and-terminal rule every id reader cites: an id referenced but
   absent from `TASKS.md` is archived, and nothing probes the folder or opens
-  an archived file unless the user names a task and asks), `status.md` (the eight-value status
-  vocabulary, which statuses are terminal, which implementable, legal
+  an archived file unless the user names a task and asks; a `[PARKED]` task
+  eligible for `all` / `next` exactly when an answerer exists, and the
+  `## Parking handoff` named as the one body section `/task-implement`
+  writes), `status.md` (the nine-value status
+  vocabulary — `[PARKED]` the ninth: non-terminal, never in a default prune
+  set, written and unparked only by `/task-implement`, `[IN PROGRESS]` →
+  `[PARKED]` → `[IN PROGRESS]` its transitions, `[PARKED]` → `[SKIP]`
+  reconciliation's — which statuses are terminal, which implementable, legal
   transitions), `targets.md` (`Target:` values, the `## Manual
   interventions` pairing rule, the delegation guard, per-consumer notes),
   `stale.md` (`[STALE]` detection, who writes and clears it, the
@@ -196,7 +202,20 @@ Currently shipped:
   removal, `Feature:` added only to an orphan, one gate, a closed write set;
   authored in the engine rather than extracted, and read by NO `task-*`
   feature — only by whatever amends a single task, by path:
-  `pipeline-revise`). A
+  `pipeline-revise`), and `parking.md` (task parking under the `unattended`
+  policy, also authored in the engine: the ONE event that parks — a question
+  the agent asked, nothing else; the prompts that take their default instead,
+  each a *For the record* line; the trailing `## Parking handoff` — `Parked:`,
+  `Parking Branch:`, `Question:` verbatim and multi-line, `Answer:` only after
+  a failed unpark; the `park/task-<N>` branch holding the work-in-progress in
+  one commit, minus `TASKS.md` and the body, pushed unless `--no-push`, never
+  overwritten; the park sequence ending in a bookkeeping commit that leaves
+  the base tree clean; the transactional unpark — ask first, gates
+  cherry-pick first, cherry-pick without committing, delete the branch, resume
+  at the step named, rollback on conflict; the answerer rule; the two
+  refusals, `--unattended` beside `--no-commit` and on a non-git VCS; read by
+  `/task-implement` only when UNATTENDED is true or a resolved task is
+  `[PARKED]`). A
   consumer cites the file by a path **relative to the citing body** —
   `../skills/task-engine/references/<f>.md` from a command,
   `../task-engine/references/<f>.md` from another skill's `SKILL.md`,
@@ -303,8 +322,11 @@ Currently shipped:
   the flag is present, so an ordinary prune never pays its tokens — a
   command is one file and can carry nothing beside it. Terminal means
   `[DONE]` and `[SKIP]` and nothing else — `[STALE]` is live work awaiting
-  reconciliation and never pruned by default (naming it explicitly warns
-  and confirms); a non-terminal status named explicitly archives the same
+  reconciliation and `[PARKED]` live work awaiting an answer, and neither is
+  ever pruned by default (naming either explicitly warns and confirms; for
+  `[PARKED]` the plan says the prune discards the question and orphans the
+  `park/task-<N>` branch, named per task); a non-terminal status named
+  explicitly archives the same
   way, its frozen `Status:` recording that it was pruned live. Removes
   summary blocks and MOVES each body to `.claude/tasks/archive/<N>.md`
   (`mkdir -p` + `git mv`, so history follows the file; plain `mv` for an
@@ -361,12 +383,42 @@ Currently shipped:
   `mcp__UnityMCP__*` tools connected this session), `body-schemas.md`
   (non-current body schema), `delegated-runs.md` (2+-task run user delegated to subagents),
   and `review-rounds.md` (`--review` passed; read once after argument
-  parsing, before the first task, never otherwise).
-  Also declares `requires: command:follow-ups`, for the closing `/follow-ups`
-  call its CLOSING THE RUN section makes once per run — after the
-  feature-completion proposal, at a user-requested stop between tasks and at a
-  failure halt too, reading the per-agent returns under `--agents`, adding no
-  commit and skipped silently when the command is absent.
+  parsing, before the first task, never otherwise) — plus `task-engine`'s
+  `parking.md`, read at ARGUMENT PARSING when UNATTENDED is true or at
+  PRE-FLIGHT step 2 when a resolved task is `[PARKED]`, never on an attended
+  run that meets no parked task.
+  Also declares `requires: command:follow-ups`: its CLOSING THE RUN section
+  applies that command's rules — the body read by name, never invoked — as
+  the *Follow-ups* group of the closing report, once per run, after the
+  feature-completion proposal, at a user-requested stop between tasks and at
+  a failure halt too, reading the per-agent returns under `--agents`, adding
+  no commit; with the command absent the group holds the run's own items
+  only, silently. **`--unattended`** (PARKED TASKS; the `unattended`
+  execution policy, `attended` the default under which nothing changes):
+  UNATTENDED is true when the flag was passed OR the conversation declares
+  the run unattended — the one sentence a runbook step's preamble or a
+  delegated-agent prompt carries; a merely *non-interactive* notice is not
+  that. Refused beside `--no-commit` and on a `## VCS` override
+  (`parking.md` § Refusals). Under it every prompt with a default takes it
+  (delegation → no, dirty tree → abort, `Proceed?` → yes, …), each a *For the
+  record* line; an ambiguous test runner aborts. A question about the work —
+  inside the per-task workflow only — runs `parking.md`'s park sequence:
+  handoff, `park/task-<N>`, bookkeeping commit, question printed under the
+  run's next number handle, on to BETWEEN TASKS. PRE-FLIGHT step 2a
+  **pre-asks**: one numbered block of every `[PARKED]` task in the resolved
+  list with its `Question:` verbatim — the one pre-flight body read, handoff
+  section only — answered by number or `skip` / `skip N` / `skip all`,
+  approval-gate items skip-only, answers held in run memory; silence is `skip
+  all`; `--skip-parked` (requires `--unattended`) suppresses it. BETWEEN
+  TASKS step 2a reads chat replies by handle, records the answer and moves
+  the task to the front; a number never printed or a second answer is
+  rejected with one line. Step 1 on a `[PARKED]` task decides the answerer
+  (an attended session, or a held answer): none → skipped with one line, no
+  branch touched; else the unpark transaction, handoff removed, resumed at
+  the step named, both edits riding in Step 7's commit; a cherry-pick
+  conflict leaves it `[PARKED]` (skipped after a bookkeeping commit under
+  UNATTENDED, halt-and-ask under attended). A park that cannot make its
+  branch is a Step 7 failure; a parked task never is.
   Reads each task's body file from `.claude/tasks/<N>.md` only when
   needed, treats it as primary context source — only fans out to
   CLAUDE.md and context layer when body doesn't cover what's
@@ -436,8 +488,8 @@ Currently shipped:
   **Reads the rules, never invokes the command** — invoking would be the
   per-task call the DO NOT list forbids, and a read degrades where an
   invocation would not: no file to read means skip the field silently, the
-  same rule the closing call follows, never a failed task. The lines feed the
-  run's closing call and nothing else, and the parent neither acts on nor
+  same rule the closing report follows, never a failed task. The lines feed
+  the report's *Follow-ups* group and nothing else, and the parent neither acts on nor
   verifies one. Prompt O(1) in batch size and
   in task size, so parent's context no longer grows with batch. Tasks
   parent keeps still get body read in Step 1, unchanged. Commits each task
@@ -450,14 +502,21 @@ Currently shipped:
   `[PLANNED]` to `[DONE]` — user decides per feature, one commit covers
   every flip approved. Non-interactive run (delegated agent, `/runbook-run`
   step) never proposes: names candidates in its closing report, outermost run
-  asks. THE CLOSING REPORT: two groups, **Needs you** (items awaiting a
-  decision, numbered `1.`/`2.`/…, any length — the number is the reply handle,
-  restarting at 1 per report, a lone item still numbered) then **For the
-  record** (one line each, `<what deviated> — <why> — <resolved by whom>`); an
-  empty group prints `none`. Consequential edits — a passage brought into agreement with an
+  asks. THE CLOSING REPORT: two groups, **For the record** (one line each,
+  `<what deviated> — <why> — <resolved by whom>`) then **Follow-ups** — last,
+  nearest the prompt — one numbered list, `1.`/`2.`/…, any length: the run's
+  own items (unresolved `BLOCKING` finding, task left `[IN PROGRESS]`, owner
+  follow-up with anchor, precondition that no longer held, declined slug,
+  every task parked or skipped-unanswered with its `Question:` verbatim) plus
+  what `/follow-ups`' rules yield applied to the run's reading, de-duplicated
+  by action with the command form kept; the number is the reply handle,
+  restarting at 1 per report, a lone item still numbered, and a number naming
+  a parked task's question is its answer for the next run; an empty group
+  prints `none`. Under `--agents` the sixth field feeds *For the record*, the
+  fifth and each `[PARKED]` return's question feed *Follow-ups*. Consequential edits — a passage brought into agreement with an
   approved change, no meaning added — are in scope in any file, same commit,
-  reported For the record; new meaning in an owned document goes under Needs
-  you as a precise `/architect amend` follow-up.
+  reported For the record; new meaning in an owned document goes under
+  Follow-ups as a precise `/architect amend` follow-up.
   `--review` (with optional `--rounds N`, default 1) runs a review/iterate
   loop per task. Availability gate first: both `task-review` and
   `task-iterate` must be present in the session or the run stops BEFORE any
@@ -1065,8 +1124,15 @@ Currently shipped:
   named and ignored; ONLY stop is a project with none of the four indexes,
   pointed at `/task-setup` / `/domain-setup`. Reports, never fixes: writes
   nothing, commits nothing, flips no status; no exit-code contract, no
-  `--fix`, no `--quiet`. Opens no file under `.claude/tasks/` (archive
-  included), `.claude/runbooks/` or `.claude/domain/features/`; the probe is
+  `--fix`, no `--quiet`. Opens no file under `.claude/tasks/archive/` or
+  `.claude/domain/features/`; under `.claude/tasks/` and `.claude/runbooks/`
+  it opens exactly the bodies `lint.md`'s two parking findings name — L12, a
+  `[PARKED]` task with no `## Parking handoff` (`ERROR`, fix
+  `/task-implement <N>` attended), reading each parked task's body for the
+  heading; L13, a runbook whose `[P]` steps and index `Parked:` line disagree
+  (`WARNING`, fix `/runbook-run <id>`), reading each non-`[DONE]` runbook's
+  body for its markers, never a prompt block — and no branch probe; `feature=`
+  keeps L12 on a parked task in scope. The filesystem probe is
   its only shell use — the one stated departure from `/production-status`,
   which runs none. Runs only when invoked; no pipeline writer auto-runs it.
 - `skills/pipeline-revise/` — the pipeline's ONE revision surface (feature
@@ -1244,7 +1310,9 @@ Currently shipped:
 - `commands/task-list.md` — prints backlog as compact read-only
   summary. Marks `claude+human` / `human` tasks with `⚠ <target>`, shows
   `[<slug>]` for tasks with `Feature:` line, appends `⚠ stale` to
-  `[STALE]` tasks. When `.claude/PLAN.md` exists, also groups tasks under
+  `[STALE]` tasks and `⚠ parked` to `[PARKED]` ones in that same slot (a
+  task is never both; `PARKED` filters like any status; nine tags, the
+  padded column still sized to `[IN PROGRESS]`). When `.claude/PLAN.md` exists, also groups tasks under
   milestone headings in plan order, resolving each task's `Feature:` slug
   through the milestones' `Features:` lists, and appends `⚠ blocked by <slug>`
   when the task's feature is blocked — same readiness rule as
@@ -1253,8 +1321,8 @@ Currently shipped:
   treated as a blocker. Tasks with no `Feature:` line and slugs no milestone
   lists (including `Unscheduled` ones) fall under one trailing `Unplanned`
   heading; empty milestones get no heading. Marker order stated explicitly in
-  the body: `⚠ <target>`, `[<slug>]`, `(deps: N, M)`, `⚠ stale`,
-  `⚠ blocked by <slug>`. Filter applies before grouping, so it works within
+  the body: `⚠ <target>`, `[<slug>]`, `(deps: N, M)`, `⚠ stale` |
+  `⚠ parked`, `⚠ blocked by <slug>`. Filter applies before grouping, so it works within
   groups; summary line unchanged. NO `PLAN.md` → byte-for-byte the old output,
   a silent no-op with no warning and no pointer at `/production-plan`. Reads
   `.claude/TASKS.md`, plus `PLAN.md` and `FEATURES.md` when a plan exists;
@@ -1342,8 +1410,17 @@ Currently shipped:
   the id and its counter are the one exception, assigned rather than derived).
   **Skill not command** because `cmd-add` copies a skill folder with `cp -R`
   while a command is one file carrying nothing: it hosts `references/
-  runbook-schema.md` (store, body schema, step markers `[ ]`/`[~]`/`[x]`/`[!]`,
-  the four statuses `[PENDING]`/`[RUNNING]`/`[FAILED]`/`[DONE]`, the optional
+  runbook-schema.md` (store, body schema, the FIVE step markers
+  `[ ]`/`[~]`/`[x]`/`[!]`/`[P]` — `[P]` parked: a `Context:` bullet
+  `- <date> parked: <question>` carries the question verbatim, options
+  included, never an approval-gate draft; not done in `Steps:`, committed
+  like `[x]`/`[!]`, never beside `[~]`, not a skip, cleared to `[ ]` with
+  `- <date> unparked with answer: <text>` — the four statuses
+  `[PENDING]`/`[RUNNING]`/`[FAILED]`/`[DONE]` (a runbook waiting on a `[P]`
+  step is `[PENDING]`), the optional header `Execution policy:
+  attended|unattended` (absent = `attended`; any other value an argument
+  error at run time), the index `Parked: steps <ids>` line present only while
+  a step is `[P]` — `Failed at:`'s rule applied again — the optional
   per-step `Needs:` field, index block + its `Last runbook number:` counter and
   per-runbook **id**, plus two header fields of the body's own: the
   `Last step number:` step counter — highest id ever assigned, only ever
@@ -1363,7 +1440,20 @@ Currently shipped:
   and it now carries the `SPAWN REQUEST` rule), both cited by the other three
   by a `./references/<f>.md` path relative to the citing body. A third, `references/inline-contract.md`,
   holds the fixed inline rule set that replaces the OPERATING RULES under
-  `--inline`, read only when that flag is passed. A fourth, `references/step-amend.md`
+  `--inline`, read only when that flag is passed. Both contracts carry, as
+  fixed text, one unconditional rule — a step command's dirty-tree prompt
+  listing only the runbook and the index is answered `proceed` (never
+  `include`) by the step's agent or the inline session, one line said — and
+  two rules conditional on the preamble's `unattended` sentence: leave the
+  tree clean of your own changes before ending with a question (work a skill
+  parked on a branch is not yours) and say so; and a `Context:` bullet
+  `unparked with answer:` answers the invoked skill's question, never relayed
+  back. A `references/parking.md`, read once per run on two triggers only
+  (policy resolved to `unattended` in step 1; step 3 selecting or blocked by
+  a `[P]` step), holds the fifth result row, the end branch, unparking, the
+  pre-ask, mid-run answers, the rejections and the attended handling of a
+  `[P]` step — bookkeeping in the two files only, never a task body, branch
+  or diff. A fourth, `references/step-amend.md`
   (amending one pending step: strike it as `[x]` with a `Done:` line opening
   `struck — <reason>` and no commit sha, never deleted or renumbered; insert
   through `/runbook-create --append --before`/`--after`; add dated `Context:`
@@ -1381,15 +1471,37 @@ Currently shipped:
   only after the schema's one-sentence check finds a `File:` file name not
   beginning `<id>-`. No sweep, no migration script. It IS the dependency
   the rest of the runbook suite declares — and declares one itself,
-  `requires: command:follow-ups`, for the closing `/follow-ups` call its
-  CLOSING THE RUN section makes once per run (completion, a `--to`/`--only`/
-  `--steps` bound, a user-requested stop after a step, or a failure halt),
-  after the closing report and the final commit, adding no commit and skipped
-  silently when the command is absent; in the default spawned mode that
+  `requires: command:follow-ups`: its CLOSING THE RUN section applies that
+  command's rules — body read by name, never invoked — as the *Follow-ups*
+  group of the closing report, once per run (completion, a `--to`/`--only`/
+  `--steps` bound, the end branch, a user-requested stop after a step, or a
+  failure halt), after the final commit, adding no commit; with the command
+  absent the group holds the run's own items only, silently; in the default
+  spawned mode that
   reading covers the step subagents' result reports — already in hand from
   step 7, so no file is opened and neither the "reads three files" contract
   nor the spawn relay's never-read-a-relay-file rule is touched — and
-  `--inline` is unchanged. **Ids**: every runbook carries one beside its kebab-case name,
+  `--inline` is unchanged. **The execution policy**, one value per run:
+  `--attended` / `--unattended` when passed, else the header
+  `Execution policy:`, else `attended`; resolved last in step 1, never
+  written back. `--unattended`: a step that asks is parked and the run goes
+  on; at launch, unless `--skip-parked` (requires `--unattended`), the
+  **pre-ask** — one numbered block of every `[P]` step in range with its
+  question verbatim, answered by number or `skip` / `skip N` / `skip all`,
+  approval-gate items skip-only, silence = `skip all`, each answer unparking
+  its step at once in one bookkeeping commit. `--attended` overrides a header
+  `unattended`; both together an error. All three compose with `--inline`.
+  Under `unattended` the spawned preamble carries ONE sentence declaring the
+  run unattended (never *non-interactive*, which an attended step's agent is
+  too) — what turns on the contract's two conditional rules and what
+  `/task-implement` reads as its own UNATTENDED. **Handles**: every parked
+  question printed carries a number, one sequence per run (pre-ask from 1,
+  later parks the next unused); a reply by number, step id or title mid-run
+  (read at step 8, after the commit) or after the report unparks the step —
+  `unparked with answer:` bullet, `[ ]`, `Parked:` rewritten, one bookkeeping
+  commit — and it is the next step selected, stated as a rule; rejected with
+  one line and nothing recorded: a number never printed, a second answer, an
+  answer to an approval-gate item. **Ids**: every runbook carries one beside its kebab-case name,
   and every command taking a runbook accepts `<id>`, `<name>` or
   `<id>-<name>`, resolved in order: all digits → id; exact name → that block;
   `<digits>-<rest>` → that block only when block `<digits>` is named `<rest>`,
@@ -1411,7 +1523,13 @@ Currently shipped:
   re-read body at start of EVERY step (this is the whole
   reconciliation mechanism, and what makes mid-run `--append` steps picked up),
   select the first step **in list order** whose marker is `[ ]`/`[~]`/`[!]`
-  and whose `Depends on:` are all `[x]`, mark
+  and whose `Depends on:` are all `[x]` (a `[P]` step is never selected as it
+  stands: under `attended`, reached as the step this rule would pick, its
+  question is asked in the relay's fixed block headed `parked <date>,
+  asking:` and, answered, it is `[ ]` and selected now — an `approval gate`
+  bullet unparks without a question and the agent relays the gate with its
+  draft; under `unattended` it is passed over and its dependents are
+  unselectable, untouched, not parked), mark
   `[~]`, spawn ONE subagent, **wait for the result notification** (the single
   most dangerous point — the spawn's return value is not the result), classify,
   commit. **Four** result cases: `QUESTIONS FOR USER` → relay to user, answer back
@@ -1420,7 +1538,20 @@ Currently shipped:
   diffstat; decisions / wrong premises only if a re-reader would be misled),
   propagate facts as dated `Context:` bullets,
   update `Steps:`, commit; **anything else, incl. ambiguous → `[!]`**, index
-  `[FAILED]` + `Failed at:`, halt. **Spawn relay** (`--relay-spawns` forces it;
+  `[FAILED]` + `Failed at:`, halt. Under `unattended` a **fifth row replaces
+  the first**, the policy's only change to the table: `QUESTIONS FOR USER`
+  (from the step's agent, a relay child, or the inline session's own written
+  outcome) → `[P]` replacing `[~]`, `- <date> parked: <question>` into
+  `Context:` (question, options, recommendation verbatim; an approval gate
+  recorded as the words `approval gate`, draft left out), printed in chat
+  under the next handle in a fixed `Parked (n) — Step …` block, `Parked:`
+  line written, `Status:` still `[RUNNING]`, `Steps:` unmoved, committed at
+  step 8 like `[x]`/`[!]`, loop; no `Done:` line, the agent never resumed —
+  the step re-runs whole in a fresh subagent once answered. Selection with
+  steps remaining, none selectable and one `[P]` is the **end branch**, not a
+  deadlock: index back to `[PENDING]` (`Parked:` stays), commit, closing
+  report naming each `[P]` step's question and the steps waiting on it;
+  applies inside a bounded run too. **Spawn relay** (`--relay-spawns` forces it;
   otherwise the step's own agent triggers it): where a subagent cannot spawn a
   subagent — cloud sessions — the step's agent writes the child's prompt to a
   `$TMPDIR` file, **never inside the repo**, and ends its turn with
@@ -1457,18 +1588,24 @@ Currently shipped:
   (`Step 4 done (abc1234). Starting step 5.`, or the failure line), no
   narration of spawn/wait/classify/`Done:`/commit, relayed questions and
   spawn-relay lines still verbatim — with the **closing report as the record of
-  the run**, printed the same at completion, at a bound and at a failure halt;
-  nothing extra read for it; no opt-out flag; `--inline` unchanged. THE CLOSING
-  REPORT: the same two groups `/task-implement` closes in. **Needs you**
-  (numbered `1.`/`2.`/…, any length — the reply handle, restarting at 1 per
-  report): the feature completion candidates the step reports named plus one
-  flip question asked once after the run, a failed step with its reason, a step
-  left `[~]` to resume, the steps outside the range / `--steps` count / never
-  started. **For the record**: one line per executed step in list order,
+  the run**, printed the same at completion, at a bound, at the end branch
+  and at a failure halt; a parked step's question under its handle is never
+  suppressed, like a relayed block; nothing extra read for it; no opt-out
+  flag; `--inline` unchanged. THE CLOSING
+  REPORT: the same two groups `/task-implement` closes in. **For the record**:
+  one line per executed step in list order,
   `<step n> — <outcome, commit sha and diffstat> — <what changed in one line;
   decision or wrong premise flagged; questions relayed and their answers>`,
   then any run-level deviation on one line; each drawn from the `Done:` line
-  and the step report already in hand. An empty group prints `none`;
+  and the step report already in hand. **Follow-ups** (numbered `1.`/`2.`/…,
+  any length — the reply handle, restarting at 1 per report, a number naming
+  a parked step's question being its answer): the feature completion
+  candidates the step reports named plus one flip question asked once after
+  the run, a failed step with its reason, a step left `[~]` to resume, every
+  step left `[P]` with its question verbatim and the steps waiting on it, the
+  steps outside the range / `--steps` count / never started, and what
+  `/follow-ups`' rules yield applied to the run's reading, de-duplicated by
+  action with the command form kept. An empty group prints `none`;
   `FEATURES.md` still never written by the orchestrator.
   **Commit convention: one commit per completed step**, staging exactly the
   runbook (its `File:` path; both old and new path on the step that migrated
@@ -1476,7 +1613,9 @@ Currently shipped:
   `[~]` is deliberately NEVER committed — its presence in a tree is the resume
   signal and the same-tree exception to one-run-per-runbook (`[RUNNING]` in the
   index blocks a second run otherwise; no lock file, no timestamp, no staleness
-  heuristic). **The Stop-hook reply** (under COMMIT CADENCE) is the cost of that
+  heuristic); by commit time a marker is `[x]`, `[!]` or `[P]`, a parked
+  step's commit its one commit for the run, an unpark a bookkeeping commit of
+  its own. **The Stop-hook reply** (under COMMIT CADENCE) is the cost of that
   choice, paid down: a cloud sandbox's Stop hook exits 2 on any dirty tree, and
   an in-flight step is dirty by design, so the block lands at every step start
   and every relayed question. It cannot be cleared from inside the run — the
@@ -1516,7 +1655,10 @@ Currently shipped:
   refused at spawn time). `--from N`/`--to N`/`--only N` narrow selection but
   never weaken `Depends on:` — one model, not three (`--only N` **is**
   `--from N --to N`; naming `--only` beside either bound is an error, as is a
-  `--to` naming a step listed above the `--from` step). The bounds name steps
+  `--to` naming a step listed above the `--from` step — nine argument errors
+  in all, the last three `--attended` with `--unattended`, `--skip-parked`
+  without `--unattended`, and a header `Execution policy:` value outside the
+  two words). The bounds name steps
   **by id** and cut the list **at those steps' positions**, so a range is
   always the stretch of steps the run walks. Bounds are re-applied against the
   body re-read each step, so a step appended mid-run inside the range runs and
@@ -1548,7 +1690,12 @@ Currently shipped:
   only writer of a step's `Needs:` line (`agent` / `agent+human` / `human`,
   absent meaning `agent`) — a seventh from-scratch interview question, harvested
   in passing in conversation mode, and called out at the gate because whether
-  the run can be left unattended is the one thing the titles cannot say.
+  the run can be left unattended is the one thing the titles cannot say. Also
+  the only writer of the header `Execution policy:` line — written only when
+  the user asks for an unattended runbook, never by default and never asked
+  in either mode (absent means `attended`, as an absent `Needs:` means
+  `agent`); the gate's `Policy:` line shows it only then. Never writes `[P]`
+  or the two parking `Context:` bullets, which are the run's.
   Command not skill:
   one pass with a confirmation gate, no supporting files of its own. Two
   orthogonal axes — target (`<name>` new / `--append <id|name|id-name>` / bare `--append` =
@@ -1594,22 +1741,29 @@ Currently shipped:
   runbook command, the one-line title closes so the listing is answerable
   without opening anything; an id-less block prints `-` and is **left alone**,
   the backfill belonging to a command that writes the index. `Failed at:`
-  printed as a continuation line under `[FAILED]` rows only. Optional status filter matched without brackets, case-insensitively
+  printed as a continuation line under `[FAILED]` rows only; a block's
+  `Parked:` line printed the same way, `↳ parked: steps <ids>`, whatever the
+  status, after `Failed at:` when both are present — the reason the index
+  carries `Parked:` at all. Optional status filter matched without brackets, case-insensitively
   (`/task-list`'s convention); unknown status names the four valid ones rather
   than printing nothing. Missing/empty index is not an error. **Writes nothing**,
-  runs no shell, corrects no status however wrong it looks.
+  runs no shell, corrects no status, `Failed at:` or `Parked:` line however
+  wrong it looks.
 - `commands/runbook-describe.md` — the compact one-runbook summary, and the
   deliberate pair to `/runbook-list`. `requires: skill:runbook-run` for the
   schema. Takes one runbook as `<id|name|id-name>` (the schema's resolution
   rule), extracts from the body at its block's `File:` path (a `File:` that
   does not resolve is reported; never migrates), and renders a fixed shape: the
-  index heading line (`Failed at:` continuation for `[FAILED]` only), one header
+  index heading line (`Failed at:` continuation for `[FAILED]` only, and a
+  `↳ parked: steps <ids>` continuation for a block carrying `Parked:`, after
+  `Failed at:` when both), one header
   line (`Created:`/`Source:`/`Model:` — no `Sequencing:`, `Companion:`,
   `Last step number:` or
   re-propose count), an `Archived: <ids>   (pruned; counted as done)` line
   directly under it **only when the body carries an `Archive:` line** (absent
   renders nothing — a never-pruned runbook is byte-identical to before 0.3.0),
-  one line per step (marker as the body carries it, `deps:`
+  one line per step (marker as the body carries it, `[P]` included — printed
+  with nothing of its `Context:`, the question staying in the body; `deps:`
   only when non-empty and printed verbatim even when it names an archived id —
   never annotated or cross-referenced against `Archived:`, `needs:` only for an
   authored non-`agent` value), at most
@@ -1617,7 +1771,8 @@ Currently shipped:
   `[!]` opens `FAILED —`), no `Context:` text, then a by-marker count **that
   counts every archived id as done and as present** (schema § *An archived id
   counts as `[x]`*, so the count agrees with the heading line's progress
-  figure; a fully-pruned body renders heading + header + `Archived:` + count,
+  figure; `[P]` named "parked"; a fully-pruned body renders heading + header +
+  `Archived:` + count,
   not an error) and the
   "need a person present" line. **Read budget (THE READ BUDGET section):** the
   index plus Grep line extraction from exactly one body — header fields
@@ -1628,7 +1783,8 @@ Currently shipped:
   `.claude/context/` or another body; task ids in `Done:` printed as written.
   Malformed body reported as found, never compensated by reading more. No
   `Needs:` inference (removed in 0.2.0). Writes nothing, runs no shell,
-  corrects no status however wrong the index looks — deriving the count from
+  corrects no status, count, marker, `Failed at:` or `Parked:` line however
+  wrong the index looks — deriving the count from
   the body's steps *and* its `Archive:` line is derivation, not
   reconciliation; a disagreeing index `Steps:` is reported in prose only.
 - `commands/runbook-clean.md` — pruning, `/task-clean`'s plan-and-confirm
@@ -1722,10 +1878,16 @@ Currently shipped:
   something the command implements. Takes no arguments, opens no project file,
   writes nothing, commits nothing, invokes nothing. Deliberately short — a
   reading rule, an exclusion rule, an output shape and a stop; `runbook-suggest`
-  is the register it imitates. No `requires:` of its own; the dependency runs
+  is the register it imitates. States in one sentence that a run-closing
+  skill may apply its rules as the second group of its own closing report,
+  under this same `Follow-ups` heading, its own items folded into the one
+  numbering — the standalone command unchanged by that. No `requires:` of its
+  own; the dependency runs
   the other way — `skills/runbook-run/` and `skills/task-implement/` both
-  declare `requires: command:follow-ups` for the closing call they make at the
-  end of every run, which is what installs it alongside them. Carries a
+  declare `requires: command:follow-ups` for the *Follow-ups* group of the
+  report that closes every run, where they read this body by name and apply
+  it without invoking it — the rules must be installed to be read, which is
+  what installs it alongside them. Carries a
   `routing.md` row (Consumes the conversation only, Produces the list, Owns
   `Nothing`, no preconditions, no arguments, Amend `—`) in the shape
   `runbook-suggest` and `pipeline-suggest` use; `check-routing.sh` does not

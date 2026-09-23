@@ -37,7 +37,9 @@ Deliberately out:
   to who reads what, not to the implementation flow.
 - **Removing the parent's summary duties.** Feature-completion proposals,
   batched to the end of the run, still happen in the parent — and so does the
-  closing `/follow-ups` call the run makes once, after that proposal. The
+  closing report the run gives once, after that proposal, whose *Follow-ups*
+  group applies `/follow-ups`' rules
+  ([unattended-parking](./unattended-parking.md) § The closing report). The
   proposal stays in the parent, and the agent is told in its prompt not to
   propose: the parent already derives the candidates from the `TASKS.md`
   re-read it makes between tasks, so the return contract is untouched.
@@ -78,16 +80,25 @@ flags for the run, and the instruction to proceed as if invoked directly:
 Implement task <n> from this project's backlog using /task-implement.
 Flags for this run: <resolved flag list>.
 Read the task body, CLAUDE.md, and .claude/context/ yourself — you have not
-been given them. When you are finished, read the /follow-ups command's own
-body and apply its rules to this session, keeping at most three items; do not
-invoke the command, and skip this if it is not available to you.
+been given them. This run is attended: if something genuinely needs the
+user's decision, end your turn under QUESTIONS FOR USER and the answer will
+come back in this conversation. (Under UNATTENDED, instead: this run is
+unattended — a question about the work parks the task and you return
+[PARKED] as its terminal status.) When you are finished, read the
+/follow-ups command's own body and apply its rules to this session, keeping
+at most three items; do not invoke the command, and skip this if it is not
+available to you.
 Report back only: task number, terminal status, commit hash if you committed,
 a one-line failure reason if you did not, and that list, omitted when it is
 empty.
 ```
 
-The prompt is O(1) in the number of tasks and O(1) in task size. A fifty-task
-batch composes the same prompt fifty times with a different number in it.
+The resolved flag list carries UNATTENDED — the run's execution policy —
+beside the others, and, for a `[PARKED]` task the launcher holds an answer
+for, that one answer; both per
+[unattended-parking](./unattended-parking.md). The prompt is O(1) in the
+number of tasks and O(1) in task size. A fifty-task batch composes the same
+prompt fifty times with a different number in it.
 
 This works because the agent is not context-starved — it has the same project
 it would have had if the user typed the command, including the two navigation
@@ -102,9 +113,22 @@ resolves its own context, runs Steps 1–7, commits and pushes per the run's
 flags. No special batch-agent path exists, which is itself the point: the
 delegated flow and the manual flow stop being two things that can drift apart.
 
+### The question relay
+
+Under attended, an agent's question is its own result case rather than a
+return: the launcher renders it in the runbook's fixed relay block with a
+task heading, waits for the user, sends the answer to the **same** agent and
+blocks on its result again, never answering on the user's behalf. Under
+unattended the agent parks the task itself and returns `[PARKED]` as its
+terminal status, followed by the handoff's question; the launcher records the
+row, prints the question under the run's next handle and spawns the next
+agent — never a halt. Both are
+[unattended-parking](./unattended-parking.md)'s.
+
 ### What the parent accumulates
 
-Per returned agent: task number, terminal status, commit hash, a one-line
+Per returned agent: task number, terminal status (`[PARKED]` among them, with
+its question), commit hash, a one-line
 failure reason if it failed, and at most three follow-ups derived by applying
 `/follow-ups`' rules to its own session. Nothing else. The fifth field applies
 that command's rules rather than defining a format of its own: what counts as
@@ -117,10 +141,11 @@ project that installed the command locally.
 
 The agent **reads** those rules rather than invoking the command, which buys
 two things. Invoking would be a per-task `/follow-ups` call, and the rule that
-the closing call fires once per run stays whole. And a read degrades cleanly
+the rules are applied once per run, in the closing report, stays whole. And a
+read degrades cleanly
 where an invocation would not: a user who removed the command by hand leaves
 nothing to read, and the agent skips the field silently — the same rule the
-closing call follows — instead of failing a task over a missing optional
+closing report follows — instead of failing a task over a missing optional
 input.
 
 The parent's context after a fifty-task run is still fifty short rows, because
@@ -131,15 +156,16 @@ a follow-up, and omission when the list is empty.
 
 Failure handling is unchanged: a failed agent stops the run without spawning
 the next, and the parent reports which tasks completed with hashes, which failed
-and what the agent said, and which were never attempted.
+and what the agent said, and which were never attempted. A `[PARKED]` return
+is not a failure and does not halt the run.
 
-Those rows are also what the run's closing `/follow-ups` call reads, alongside
-the parent's own conversation: the per-agent result reports are already in
-hand, so the call is not skipped under `--agents` and opens nothing new. The
-fifth field exists for that call and feeds nothing else — the parent records
-it, never acts on it mid-run, and never verifies it, since it did not open the
-task and is in no position to. A follow-up line is therefore never a reason to
-halt a run. Where the user then asks to
+Those rows are also what the closing report's *Follow-ups* group reads,
+alongside the parent's own conversation: the per-agent result reports are
+already in hand, so the group is not emptied under `--agents` and opens
+nothing new. The fifth field exists for that group and feeds nothing else —
+the parent records it, never acts on it mid-run, and never verifies it, since
+it did not open the task and is in no position to. A follow-up line is
+therefore never a reason to halt a run. Where the user then asks to
 execute or plan a listed follow-up that came from a delegated agent, the parent
 may forward it to that same agent where that is convenient. Judgement, not a
 rule, and not a new relay protocol.

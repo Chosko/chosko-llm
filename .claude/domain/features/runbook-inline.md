@@ -58,7 +58,9 @@ the pipeline-engine routing table.
 `--inline` alters step 5 (Spawn) and step 6 (Wait) of the execution loop and
 nothing else. It composes with `--from`, `--to`, `--only`, `--steps N`,
 `--no-commit` and `--no-push`, because those govern selection and committing,
-which inlining does not touch.
+which inlining does not touch — and with `--attended`, `--unattended` and
+`--skip-parked`, which govern the policy
+([unattended-parking](./unattended-parking.md)).
 
 Two new argument errors, in the register of the existing ones (name the
 problem, stop, run nothing):
@@ -160,6 +162,17 @@ When the inline session is itself a subagent, the default mode's
 subagent-position rule applies unchanged: it emits the block as its own final
 turn under `QUESTIONS FOR USER` and resumes when the answer returns.
 
+Under the `unattended` policy the session follows the inline equivalents of
+the two conditional lines [unattended-parking](./unattended-parking.md) adds
+to the subagent contract. At a question it would otherwise ask, it leaves the
+working tree clean of its own changes — work a skill it invoked has parked on
+a branch is not its own — says so, and ends the execution phase with the
+question as its written outcome, which step 7 parks by the fifth result row
+instead of asking. And a `Context:` bullet opening `unparked with answer:`
+answers the question the invoked skill asks, wherever the skill asks it,
+never put to the user again. The dirty-tree self-answer is the inline
+contract's own rule already; that feature ports it to the spawned contract.
+
 The Stop-hook reply applies unchanged.
 
 ### `--model` and the header `Model:`
@@ -213,7 +226,7 @@ Contracts of the default mode, and their scope under `--inline`:
 | Orchestrator does not review | Holds: classification runs on the session's stated outcome, never on a re-inspection of its own diff |
 | One fresh subagent per step | Replaced by the brief/records-win/write-it-down rules |
 | Spawn relay, `--relay-spawns`, 8-round cap | No role; `--relay-spawns` refused |
-| Question relay | Direct ask in the same fixed block; subagent position unchanged |
+| Question relay | Direct ask in the same fixed block; subagent position unchanged; under `unattended`, parked by the fifth result row from the written outcome |
 | `--model` / header `Model:` | `--model` refused; header not applied, stated once |
 | Markers, `Done:`, index, commit cadence, resume signal | Identical |
 | Nested runbook refusal | Identical |

@@ -462,7 +462,7 @@ two indexes that doesn't resolve, or an index state its owner hasn't acted on
 yet. Whether a feature document still describes what its tasks build is a
 judgement, not structure, and this command doesn't attempt it.
 
-The catalogue is closed. It has eleven findings and no others:
+The catalogue is closed. It has thirteen findings and no others:
 
 | Severity | Finding | Fix it names |
 | --- | --- | --- |
@@ -477,6 +477,8 @@ The catalogue is closed. It has eleven findings and no others:
 | `ERROR` | a `PLAN.md` line naming a slug that isn't in `FEATURES.md` | `/pipeline-revise` |
 | `WARNING` | a runbook still `[PENDING]` with every step done (`Steps: <n>/<n>`) | `/pipeline-revise` |
 | `WARNING` | a `[PLANNED]` feature whose every task is `[DONE]`, `[SKIP]` or archived | `flip to [DONE]` |
+| `ERROR` | a `[PARKED]` task whose body has no `## Parking handoff` | `/task-implement <N>` in an attended session |
+| `WARNING` | a runbook whose `[P]` steps and index `Parked:` line disagree | `/runbook-run <id>` |
 
 `ERROR` means something a pipeline command will act on wrongly if it's left;
 `WARNING` means a legal state that needs its owner's attention.
@@ -487,8 +489,12 @@ Two things are deliberately **not** findings. A feature's `Tasks:` id with no
 `TASKS.md` block is an archived task (the normal state of a feature after
 `/task-clean`), and a precondition on an archived id counts as satisfied. A
 pending runbook step naming a task that is already finished would need a
-runbook body opened to detect, and no finding opens one; `/runbook-run`
-prints each step before running it, which is where that shows up.
+runbook body's prompts read to detect, and no finding reads one; `/runbook-run`
+prints each step before running it, which is where that shows up. The two
+parking findings are the catalogue's only body reads, each bounded by the
+index — the bodies of the `[PARKED]` tasks, for the handoff heading, and of
+the runbooks not `[DONE]`, for their step markers — and neither probes
+whether a parking branch exists.
 
 A clean project prints one line naming the indexes it read. Otherwise the
 findings print grouped by artifact (`FEATURES.md`, `PLAN.md`, `TASKS.md`,
@@ -888,6 +894,36 @@ standard manual protocol runs unchanged.
 Commits and pushes once per task (`--no-commit` to skip both, `--no-push` to
 commit without pushing).
 
+**Attended or unattended.** By default a run is *attended*: a question about
+the work — an acceptance criterion the body and the codebase can't settle, a
+review round's approval gate — is put to you and the run waits; in a
+delegated run the agent's question comes back through the launcher in the
+same fixed block a runbook step's question uses, and your answer goes to the
+same agent. Pass **`--unattended`** for a run nobody is watching, and a
+question **parks** the task instead of halting the run: the task goes
+`[PARKED]` in `TASKS.md`, its body gains a trailing `## Parking handoff`
+(when it was parked, at which step, and the question verbatim), its
+uncommitted work goes in one commit on a `park/task-<N>` branch, and the run
+continues with the next task. Only a question parks; every prompt with a
+default takes it (and says so *For the record*), and the one prompt without
+one — an ambiguous test runner — aborts the run. `--unattended` is refused
+beside `--no-commit` (parking is made of commits) and on a project whose
+`CLAUDE.md` maps git to another VCS. A `[PARKED]` task is never pruned by
+default and blocks its dependents like any unfinished task.
+
+Answering is by number. At the start of an unattended run, one numbered block
+lists every parked task in the run with its question verbatim; reply by
+number, or `skip` for one or all (an approval-gate item is skip-only, since
+its draft has to be seen). `--skip-parked` suppresses that pre-ask for a
+launch no human sees. While the run is going, a reply by the number a parked
+question was printed under is its answer, and the task is unparked after the
+current one finishes; after the closing report, replying by a listed item's
+number does the same on the next run. An attended run has no pre-ask — it
+asks each parked task's question when it reaches it. Unparking cherry-picks
+the branch back, deletes it, and resumes the task at the step it stopped at;
+a conflict rolls everything back and leaves the task `[PARKED]`. A parked
+task with nobody to answer is skipped with one line, never re-parked.
+
 An implementer that finds a passage its own approved change made stale
 updates it — a *consequential edit*: the passage brought into agreement with
 the change, no meaning added — in whatever file owns it, in the task's
@@ -897,22 +933,28 @@ new meaning in a document another command owns stays untouched and is named
 as a precise follow-up, the command and the passages. `/task-review`'s
 traceability finding is the check behind that freedom.
 
-The closing report has two groups, in this order. **Needs you** holds every
-item waiting on a decision — an unresolved blocking finding, a feature flip,
-a follow-up naming an owner's command — numbered, at whatever length each
-needs; the number is the handle you reply with, and it starts at 1 in every
-report. **For the record** holds one line per item in a fixed shape, `what
-deviated — why — resolved by whom`: a criterion overshot and accepted by the
-reviewer, a wrong premise in a task body, a consequential edit outside the
-task's files. Nothing in that group is a question, and nothing in it runs past
-one line. An empty group prints its heading and `none`.
+The closing report has two groups, in this order. **For the record** holds
+one line per item in a fixed shape, `what deviated — why — resolved by whom`:
+a criterion overshot and accepted by the reviewer, a wrong premise in a task
+body, a consequential edit outside the task's files, a prompt that took its
+default under `--unattended`. Nothing in that group is a question, and
+nothing in it runs past one line. **Follow-ups** is one numbered list, last
+and nearest the prompt: the run's own items — an unresolved blocking finding,
+a feature flip you declined, a task left `[IN PROGRESS]` and why, a follow-up
+naming an owner's command, every task parked this run or skipped for want of
+an answer with its question verbatim — together with what
+[`/follow-ups`](#follow-ups)' rules yield when applied to the run, the
+command's body read and applied rather than invoked, two items naming the
+same action merged. The number is the handle you reply with, starting at 1 in
+every report; a number that names a parked task's question is that task's
+answer. An empty group prints its heading and `none`.
 
-Every run ends with one [`/follow-ups`](#follow-ups) call, once for the whole
-run and after the feature-completion proposal — at a stop you asked for
-between tasks and at a failure halt as much as at the end of the last task.
-Under `--agents` the parent's reading covers the per-agent returns it already
-holds. The call adds no commit and flips no status, and it is skipped silently
-when `/follow-ups` isn't installed.
+The report comes once per run, after the feature-completion proposal — at a
+stop you asked for between tasks and at a failure halt as much as at the end
+of the last task. Under `--agents` the parent's reading covers the per-agent
+returns it already holds. It adds no commit and flips no status; with
+`/follow-ups` not installed the list holds the run's own items only,
+silently.
 
 ### `/task-review`
 
@@ -927,9 +969,9 @@ It reports only findings it holds at 80% confidence or better, each citing a
 nothing is a valid, complete review. On a diff that edits documentation it
 also flags an edit not traceable to the task — one that introduces a
 decision the task never approved, whether or not it is dressed as a
-consequence. Its report closes in the same two groups as
-`/task-implement`'s: *Needs you*, numbered so you can answer by number, then
-*For the record*.
+consequence. Its report closes in two groups: *Needs you*, numbered so you
+can answer by number, then *For the record*, the same one-line shape
+`/task-implement`'s closing report uses.
 
 A run spawned by `/task-implement --review` may carry a **read budget**
 naming a tier (`shallow` / `standard` / `deep`), and it honours it: the
@@ -969,7 +1011,9 @@ reviewed or not.
 ### `/task-list`
 
 Show what's pending, optionally filtered by status. Human-in-the-loop tasks
-are marked with a ⚠ so you know they need you present.
+are marked with a ⚠ so you know they need you present; a `[PARKED]` task
+carries `⚠ parked`, in the slot `⚠ stale` uses, since it is waiting on an
+answer only you can give.
 
 On a project with a `.claude/PLAN.md` it groups the backlog **by milestone in
 plan order**, resolving each task's `Feature:` slug through the plan, and
@@ -982,8 +1026,10 @@ grouping, no flags, and no message about the missing plan.
 
 Clear finished tasks out of the backlog without losing them. By default it
 takes the terminal statuses, `[DONE]` and `[SKIP]` only; name statuses to
-prune those instead (`[STALE]` is never in the default set, and naming a
-non-terminal status is flagged in the plan). Each task's summary block leaves
+prune those instead (`[STALE]` and `[PARKED]` are never in the default set,
+and naming a non-terminal status is flagged in the plan — for a parked task,
+that the prune discards its question and orphans its `park/task-<N>`
+branch). Each task's summary block leaves
 `TASKS.md` and its body **moves** to `.claude/tasks/archive/<N>.md` — a
 `git mv`, so history follows the file — under a frozen header: an `Archived:`
 date plus the `Status:`, `Files:`, `Preconditions:` and (when it had one)
@@ -1024,8 +1070,9 @@ retires the old command copy.
 The rules the task features share (how a task is resolved from `TASKS.md`,
 where an archived task lives and what an id missing from `TASKS.md` means,
 what each status means, what `Target:` gates, how `[STALE]` is handled, the
-dirty-tree prompt, how commits and pushes are gated, and the review cost
-controls behind `--review-model` / `--review-effort`) live once, in the
+dirty-tree prompt, how commits and pushes are gated, the review cost
+controls behind `--review-model` / `--review-effort`, and how a task is
+parked and unparked under `--unattended`) live once, in the
 `task-engine` skill, and each feature references them instead of restating
 them. `task-engine` is not a command you invoke; it is a reference library
 the others read while they run, and it carries
@@ -1046,6 +1093,14 @@ only by marking it `[SKIP]` with a reason, and it requires a dropped
 `Preconditions:` edge to be explained in the task's `## Decisions`. No
 `task-*` command reads it itself: `/pipeline-revise` reads it by path
 whenever it changes a task.
+
+A ninth, `references/parking.md`, holds the task-parking protocol behind
+`/task-implement --unattended`: the one event that parks, the prompts that
+take their default instead, the `## Parking handoff` section, the
+`park/task-<N>` branch, the park sequence, the transactional unpark, when an
+unpark is attempted and the two refusals. `/task-implement` reads it only
+under `--unattended` or when a task in its list is `[PARKED]`; an attended
+run that meets no parked task never opens it.
 
 ### `pipeline-engine`
 
@@ -1134,7 +1189,9 @@ that has none of the conversation the prompts came out of.
   A step's number is a stable id, not its position, so a runbook may list step
   6 above step 3. No existing step is edited, moved or renumbered, and the
   header's optional one-line `Sequencing:` (why the order is what it is) is
-  never extended.
+  never extended. A header line `Execution policy: unattended` is written
+  only when you ask for an unattended runbook, never by default — absent
+  means `attended`.
 - `/runbook-run <id|name|id-name>` — execute it, one step at a time, top to bottom in
   list order. `--from N`, `--to N`
   (they compose: `--from X --to Y` runs that range, inclusive), `--only N` and
@@ -1148,27 +1205,49 @@ that has none of the conversation the prompts came out of.
   context; it works with `--from`, `--to`, `--only`, `--steps`, `--no-commit`
   and `--no-push`, is refused beside `--relay-spawns` (there is no step
   subagent to relay for) or `--model` (the session can't change its own
-  model), and doesn't apply the runbook header's `Model:`. A run that stops at its `--to` bound or its
+  model), and doesn't apply the runbook header's `Model:`. `--unattended`
+  runs under the `unattended` policy whatever the header says: a step that
+  asks a question is **parked** — `[P]` on its heading, the question verbatim
+  in its `Context:` and printed in chat under a number, `Parked: steps <ids>`
+  in the index — and the run goes on to the steps that don't depend on it;
+  at launch it lists the parked steps in range for you to answer by number or
+  `skip` (approval-gate items are skip-only), which `--skip-parked` suppresses
+  for a launch no human sees. `--attended` overrides a header
+  `Execution policy: unattended` for one run: a question is relayed and the
+  run waits, the default. The two together are an error, as is `--skip-parked`
+  without `--unattended`; all three compose with `--inline`. A reply by a
+  parked question's number — mid-run, or after the closing report — unparks
+  the step (`unparked with answer:` in its `Context:`, back to `[ ]`), and it
+  is the next step selected. When steps remain, none is selectable and one is
+  parked, that is not a deadlock: the run ends `[PENDING]` and the report
+  names each parked step and what waits on it. A run that stops at its `--to` bound or its
   `--steps` count leaves the runbook `[PENDING]`, never `[DONE]` (unless every
   step is done): a bounded run leaves work behind by design. However the run ends —
-  completion, a bound, a stop you asked for after a step, or a failure halt —
-  its last act is one [`/follow-ups`](#follow-ups) call, once for the whole
-  run and never per step, after the closing report and the final commit. In
-  the default spawned mode that reading covers the step subagents' result
-  reports as well as the orchestrator's own conversation — a step's result is
-  already in hand by then, so this opens no file and leaves the "reads three
-  files" contract and the spawn relay's never-read-a-relay-file rule alike
-  untouched; under `--inline` there are no step reports and nothing changes. It adds no commit and is
-  skipped silently when `/follow-ups` isn't installed.
+  completion, a bound, a stop you asked for after a step, a run waiting on a
+  parked step, or a failure halt — its last act is the closing report, whose
+  *Follow-ups* list applies [`/follow-ups`](#follow-ups)' rules once for the
+  whole run and never per step, without invoking the command. In the default
+  spawned mode that reading covers the step subagents' result reports as well
+  as the orchestrator's own conversation — a step's result is already in hand
+  by then, so this opens no file and leaves the "reads three files" contract
+  and the spawn relay's never-read-a-relay-file rule alike untouched; under
+  `--inline` there are no step reports and nothing changes. It adds no commit
+  and, when `/follow-ups` isn't installed, holds the run's own items only,
+  silently.
 - `/runbook-list` — every runbook as one line: id, status, name, steps done
-  over total, created date, source, and its one-line title.
+  over total, created date, source, and its one-line title; a failed
+  runbook's halt reason and a runbook's parked steps (`↳ parked: steps
+  <ids>`) each follow as a continuation line.
 - `/runbook-describe <id|name|id-name>` — a compact summary of one runbook: its index
   line, one header line (created, source, model), an `Archived:` line printed
   only when the body carries an `Archive:` line (the pruned ids, ascending,
-  noted as counted done), one line per step with its
-  marker, dependencies when it has any and an authored `Needs:` other than
+  noted as counted done), the same `↳ parked: steps <ids>` continuation
+  `/runbook-list` prints when the runbook has one, one line per step with its
+  marker (`[P]` for a parked step, its question left in the body),
+  dependencies when it has any and an authored `Needs:` other than
   `agent`, a one-line `done:` summary for each finished or failed step, and a
-  by-marker count **that counts every archived id as done and as present**, so
+  by-marker count — parked steps counted as "parked" — **that counts every
+  archived id as done and as present**, so
   it agrees with the progress figure in the index line above it. A runbook
   never pruned renders exactly as before, line for line. It pulls only those
   lines from exactly one body — never a
@@ -1262,16 +1341,18 @@ Between steps it stays quiet — one line per step at its end, `Step 4 done
 (abc1234). Starting step 5.`, with relayed questions and spawn-relay lines
 still coming straight through — because the record of the run is the closing
 report at the end of it, printed the same way whether the run completed,
-stopped at a bound or halted on a failure. It closes in the same two groups as
-`/task-implement`'s. **Needs you** comes first, numbered so you can answer by
-number: any features whose tasks a step just finished off, with one question —
-flip them to `[DONE]` in `FEATURES.md`? — asked once, after the run rather than
-mid-step; a failed step and its reason; a step left `[~]` to resume; the steps
-left outside the range or never started. **For the record** follows with one
-line per step, `step n — outcome, commit sha and diffstat — what changed,
-any decision or wrong premise flagged, any question relayed and its answer`,
-each drawn from the `Done:` line and the step's report. An empty group prints
-its heading and `none`.
+stopped at a bound, ended waiting on a parked step or halted on a failure. It
+closes in the same two groups as `/task-implement`'s. **For the record**
+comes first, with one line per step, `step n — outcome, commit sha and
+diffstat — what changed, any decision or wrong premise flagged, any question
+relayed and its answer`, each drawn from the `Done:` line and the step's
+report. **Follow-ups** is one numbered list, last so you can answer by number:
+any features whose tasks a step just finished off, with one question — flip
+them to `[DONE]` in `FEATURES.md`? — asked once, after the run rather than
+mid-step; a failed step and its reason; a step left `[~]` to resume; every
+step left `[P]`, its question verbatim and the steps waiting on it; the steps
+left outside the range or never started; and whatever `/follow-ups`' rules
+yield when applied to the run. An empty group prints its heading and `none`.
 
 **When a step needs a subagent of its own.** In some environments, cloud
 sessions among them, a subagent can't spawn a subagent, which breaks any step
@@ -1310,9 +1391,14 @@ approval gate and ends its turn; the orchestrator renders it as a fixed block
 (the question, the options with what each costs, a recommendation) and relays
 your answer back to the *same* agent, whose context is still intact. It
 compresses, it never answers for you, and at an approval gate the full draft
-is shown unabridged, since a summarized draft can't be approved. When a step's
-report changes a fact a later step relies on, the orchestrator appends a
-dated bullet to that step's `Context:`; the prompt block itself is never
+is shown unabridged, since a summarized draft can't be approved. That is the
+`attended` policy; under `unattended` the same question parks the step
+instead, and the agent that asked is not resumed — the step re-runs from the
+start once the answer is in its `Context:`, which is why the contract has the
+agent leave the tree clean of its own changes before asking and answer the
+invoked skill's question from that bullet rather than asking again. When a
+step's report changes a fact a later step relies on, the orchestrator appends
+a dated bullet to that step's `Context:`; the prompt block itself is never
 edited, so you can always see what was originally asked and what was learned
 since, separately.
 
@@ -1420,9 +1506,11 @@ not something the command implements.
 It takes no arguments and is read-only: it opens no project file, writes
 nothing, commits nothing, and invokes no other command.
 [`/runbook-run`](#the-runbook--commands) and
-[`/task-implement`](#task-implement) call it at the end of every run, which is
-where most of its value is — a run that stopped at a bound or halted on a
-failure is exactly the one most likely to strand unrecorded work. It is the
+[`/task-implement`](#task-implement) apply its rules, under this same
+`Follow-ups` heading, as the last group of the report that closes every run —
+which is where most of its value is, since a run that stopped at a bound or
+halted on a failure is exactly the one most likely to strand unrecorded work;
+the standalone command is unchanged by that. It is the
 inverse of `runbook-suggest`, which fires on its own: a `/follow-ups` list of
 three or more ordered items is precisely what that skill watches for.
 

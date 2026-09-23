@@ -374,7 +374,7 @@ Feature: unattended-parking
 
 ## 267. Update documentation for feature `unattended-parking`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, docs/cli-help.txt, .claude/domain/task-workflow.md, .claude/context/features.md, .claude/domain/features/runbook-suite.md, .claude/domain/features/task-implement-launcher.md, .claude/domain/features/runbook-inline.md, .claude/domain/features/task-peer-review.md
 Preconditions: 259, 260, 261, 262, 263, 264, 265, 266

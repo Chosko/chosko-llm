@@ -339,6 +339,17 @@ walks you through it, and verifies the outcome itself before moving on. On a
 Unity project set up with `/unity-mcp-setup` it can drive the editor over
 MCP instead and hand you a verification step in place of an instruction.
 
+By default a run is **attended**: a question about the work is put to you and
+the run waits. Pass **`--unattended`** for a run nobody is watching and the
+task that asked is **parked** instead — `[PARKED]` in the backlog, its
+question recorded verbatim, its work-in-progress kept on a `park/task-<N>`
+branch — and the run goes on to the next task. You answer later: at the next
+launch, where the run lists its parked tasks and you reply by number
+(`--skip-parked` skips that), in chat while the run is still going, or after
+the closing report; the task is then unparked and resumed where it stopped.
+Every run ends with one closing report — *For the record*, then a numbered
+*Follow-ups* list whose numbers are the reply handle.
+
 Pass **`--review`** and each task is peer-reviewed before it's committed.
 **`/task-review`** audits the diff against the task's acceptance criteria in
 a fresh subagent and reports only findings it holds at 80% confidence or
@@ -377,6 +388,13 @@ parallel, by default never does a step's work itself, and never reviews what a
 step did; that is `/task-review`'s job, invoked from inside the step.
 `--inline` is the one opt-in exception: it executes the selected steps in your
 own session, sharing one context, instead of spawning a subagent for each.
+Relay-and-wait is the default `attended` policy. Under **`--unattended`** — or
+a runbook header line `Execution policy: unattended`, which `--attended`
+overrides for one run — the step that asked is parked (`[P]`, its question
+recorded and printed under a number) and the run goes on to the steps that
+don't depend on it; at launch the parked steps in range are listed for you to
+answer by number, unless `--skip-parked`, and a reply by number in chat or
+after the closing report unparks a step too.
 `/runbook-create` commits and pushes the runbook it wrote by default
 (`--no-commit`, `--no-push`). `/runbook-list`,
 `/runbook-describe`, `/runbook-prune` and `/runbook-clean` round out the set —
@@ -394,9 +412,10 @@ that is a guarantee rather than a shrug: the session can be quit without
 information or operation loss. Work already tracked on disk is never a
 follow-up; a task created here and not yet appended to the running runbook is.
 It takes no arguments, opens no project file and writes nothing, and
-`/runbook-run` and `/task-implement` call it once at the end of every run — at
-a bound, a user-requested stop and a failure halt as much as at completion — so
-a run never ends leaving unrecorded work visible only in the transcript.
+`/runbook-run` and `/task-implement` apply its rules inside the *Follow-ups*
+list that closes every run — at a bound, a user-requested stop and a failure
+halt as much as at completion — so a run never ends leaving unrecorded work
+visible only in the transcript.
 
 **Session handoffs** are for work in flight. **`/session-save`** writes what
 this conversation knows into `.claude/sessions/`: what was tried and failed,
