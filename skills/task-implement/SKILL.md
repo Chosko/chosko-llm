@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.9.0
+version: 1.9.1
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups
@@ -343,7 +343,9 @@ Its `/task-implement` note names the rest as this skill's own, and this body
 is where each lives: the `--unattended` flag and UNATTENDED's resolution
 (ARGUMENT PARSING), the pre-ask (PRE-FLIGHT step 2a), the park and the
 unpark inside the workflow (PER-TASK WORKFLOW), the chat handle and the
-in-memory answers (BETWEEN TASKS step 2a).
+in-memory answers (BETWEEN TASKS step 2a). On a delegated run the agent
+parks and the launcher records the `[PARKED]` return — or, under attended,
+relays the agent's question instead — per `./delegated-runs.md`.
 
 Read it on the condition SUPPORTING FILES gives — never on an attended run
 that meets no `[PARKED]` task.
@@ -535,7 +537,9 @@ both.
 
 A question about the work — an acceptance criterion this task cannot settle
 from the body and the codebase, a `--review` round's approval gate — is put
-to the user under attended, and the run waits. Under UNATTENDED it parks the
+to the user under attended, and the run waits; a delegated agent puts it to
+its launcher under `QUESTIONS FOR USER`, and the launcher relays it
+(`./delegated-runs.md` § *The question relay*). Under UNATTENDED it parks the
 task instead: run the park sequence from `parking.md`, the step reached
 being the one the handoff's `Parked:` names, the question recorded verbatim
 there and printed in chat under the next handle number (PRE-FLIGHT step
@@ -688,10 +692,12 @@ is `tree.md` § *Folding in Step 7*.
 BETWEEN TASKS
 
 When DELEGATE is true, `./delegated-runs.md` governs what happens between
-tasks — it covers the same ground (re-read TASKS.md, progress line,
-skip-tests "Proceed?") plus verifying what the returning agent did. Follow
-it instead of the list below for delegated tasks; a task the parent
-implements itself follows the list as usual.
+tasks — it covers the same ground (re-read TASKS.md, chat answers, progress
+line, skip-tests "Proceed?") plus verifying what the returning agent did.
+Follow it instead of the list below for delegated tasks; a task the parent
+implements itself follows the list as usual. Step 2a is the parent's under
+either: the chat is the launcher's own, and an answered task's agent is
+spawned next.
 
 After committing — or, under UNATTENDED, parking or skipping — a task,
 before starting the next:
@@ -837,7 +843,9 @@ Order at the end of a run: the FEATURE COMPLETION proposal first, then this
 report — a slug declined there is a *Needs you* item — then CLOSING THE
 RUN's `/follow-ups` call. Under `--agents`, the parent renders the report
 from the per-agent returns it holds: each agent's sixth field is its *For
-the record* lines, attributed to its task (`./delegated-runs.md`).
+the record* lines, attributed to its task, and each `[PARKED]` return is a
+*Needs you* item under its handle with the question the return carried
+(`./delegated-runs.md`).
 
 ---
 
@@ -862,7 +870,8 @@ task is the end of the run.
 **Under `--agents`.** The closing call is not skipped in a delegated run. The
 parent's reading covers the per-agent result reports it already collects — the
 six-field returns in `./delegated-runs.md` — as well as its own conversation.
-It opens nothing new to do it.
+It opens nothing new to do it. A `[PARKED]` return is not a failure halt: the
+run goes on to its last task and the call fires at the end as usual.
 
 The fifth field is what makes that reading worth anything: before returning,
 each agent reads the `/follow-ups` command's own body — given the command's
@@ -929,8 +938,10 @@ resuming with the remaining tasks.
 A park that cannot make its branch — the name already taken, the push
 refused — is a Step 7 failure of that kind, per `parking.md` § *The park
 sequence*: task `[IN PROGRESS]`, tree intact, run stopped. A parked task
-is not a failure, and neither is an unpark whose cherry-pick conflicts: it
-rolls back, and Step 1 says what each policy does next.
+is not a failure — in this conversation or as a delegated agent's
+`[PARKED]` return, which the launcher records before spawning the next
+agent — and neither is an unpark whose cherry-pick conflicts: it rolls
+back, and Step 1 says what each policy does next.
 
 DO NOT:
 - Run destructive git operations (`reset --hard`, `clean -f`,

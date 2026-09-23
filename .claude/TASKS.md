@@ -324,7 +324,7 @@ Feature: unattended-parking
 
 ## 262. Delegated runs relay questions when attended and return `[PARKED]` when not
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-implement/delegated-runs.md, skills/task-implement/SKILL.md, skills/task-engine/references/targets.md, VERSION, CHANGELOG.md
 Preconditions: 261

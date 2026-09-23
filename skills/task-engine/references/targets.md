@@ -126,4 +126,10 @@ per task and no body read can be justified by it.
   its supporting `human-in-loop.md` for a `claude+human` / `human` task,
   which in turn carries the gate deciding whether the manual checkpoints
   can be driven through Unity MCP. It applies the delegation guard on a run
-  resolving to 2+ tasks with delegation enabled.
+  resolving to 2+ tasks with delegation enabled. A delegated agent's
+  question is not what the guard keeps in the parent: under attended the
+  launcher relays it and carries the answer back (its `delegated-runs.md`
+  § *The question relay*), and under UNATTENDED the agent parks the task
+  and a `[PARKED]` return is an ordinary delegated outcome, not a failure.
+  The relay carries one question and its answer, not a checkpoint
+  walkthrough with verified outcomes, so the guard stands as written.

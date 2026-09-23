@@ -413,11 +413,16 @@ Currently shipped:
   prompt — task number + repo's absolute path + run's resolved flags
   (open list, not closed set: NO_COMMIT/NO_PUSH/AUTO_CONFIRM, resolved
   testing mode w/ concrete test command, DIRTY_FOLD /
-  DIRTY_FOLD_UNTRACKED, non-interactivity notice) + instruction to read
-  body, CLAUDE.md, context layer itself; keeps exactly five values per
-  return, the fifth optional (task number, terminal status, commit hash or
-  nothing-committed, one-line failure reason only on failure, and at most
-  three follow-ups, omitted when empty, which is almost every task). The
+  DIRTY_FOLD_UNTRACKED, UNATTENDED — attended: a question ends the agent's
+  turn under `QUESTIONS FOR USER` and the launcher relays it in the runbook's
+  fixed block, answer sent back to the same agent; unattended: the agent
+  parks and returns `[PARKED]` with its question, recorded, never a halt —
+  plus a held answer for a `[PARKED]` task) + instruction to read
+  body, CLAUDE.md, context layer itself; keeps exactly six values per
+  return, the last two optional (task number, terminal status, commit hash or
+  nothing-committed, one-line failure reason only on failure, at most
+  three follow-ups, omitted when empty, which is almost every task, and at
+  most three *For the record* lines). The
   field applies `/follow-ups`' rules, **not a format of its own** — the agent
   reads that command's own body and applies what is there; what counts, what
   is excluded and how an item is written are that command's and are
