@@ -21,10 +21,17 @@ catalogue's, and no finding here approximates it.
 
 ## What no rule reads
 
-Every detection rule reads **index lines only** — `.claude/FEATURES.md`,
+Every detection rule reads **index lines** — `.claude/FEATURES.md`,
 `.claude/TASKS.md`, `.claude/PLAN.md`, `.claude/RUNBOOKS.md` — through the
-`graph.md` edge it names. **No rule opens a file under `.claude/tasks/`,
-`.claude/runbooks/` or `.claude/domain/`.**
+`graph.md` edge it names. **No rule opens a file under `.claude/domain/`, and
+only the two parking findings open one under `.claude/tasks/` or
+`.claude/runbooks/`:** L12 opens the body of each `[PARKED]` task, for its
+`## Parking handoff` heading; L13 opens the body of each runbook whose block
+is not `[DONE]`, for its step markers. Each read is bounded by the index that
+names the file, and neither reads a prompt block, a handoff's question or
+anything else in the body. Parking leaves state an index cannot summarise —
+a handoff lives in a body, `[P]` on a step heading — so a finding about it
+must look there; no other finding does.
 
 **No rule probes `.claude/tasks/archive/`, opens an archived file, or reports
 on its contents.** The prohibition is stated once, here, and holds for the
@@ -66,9 +73,9 @@ verbatim.
 
 ## The catalogue
 
-Eleven findings, and no others. The catalogue is closed: adding a finding is
-an edit to this file, so every consumer gains it at once and none can disagree
-about whether it exists.
+Thirteen findings, and no others. The catalogue is closed: adding a finding
+is an edit to this file, so every consumer gains it at once and none can
+disagree about whether it exists.
 
 ### L1 — a task's `Feature:` slug absent from `FEATURES.md` · ERROR
 
@@ -215,6 +222,49 @@ WARNING RUNBOOKS.md runbook <id>. <name> — [PENDING] with Steps: <n>/<n> → /
 WARNING FEATURES.md feature <slug> — [PLANNED], every task on Tasks: resolved → flip to [DONE]
 ```
 
+### L12 — a `[PARKED]` task with no `## Parking handoff` · ERROR
+
+- **Walks.** No edge: the body is the one `.claude/tasks/<N>.md` the block's
+  id names (`../../task-engine/references/resolution.md`), opened for this
+  finding alone — § *What no rule reads*.
+- **Needs.** `TASKS.md`; the body of each `[PARKED]` task.
+- **Fires when** a summary block's `Status:` is `[PARKED]` and its body has
+  no `## Parking handoff` heading — or no body exists. What the handoff is,
+  and that a parked body carries exactly one, is
+  `../../task-engine/references/parking.md`
+  § *The handoff*. `ERROR` because the unpark resumes the task from that
+  section: without it the `Parked:` step and the `Question:` are gone, and
+  the next run that reaches the task acts on a handoff that is not there. The
+  fix is an attended `/task-implement <N>`, which unparks the task or reports
+  what it cannot recover. Whether the `park/task-<N>` branch exists is not
+  checked: git state differs across machines, and the unpark that needs the
+  branch reports its absence itself.
+
+```
+ERROR   TASKS.md task <N> — [PARKED] with no ## Parking handoff in its body → /task-implement <N>
+```
+
+### L13 — a runbook's `[P]` steps and its `Parked:` line disagree · WARNING
+
+- **Walks.** E6, followed into the body — the one finding that does,
+  § *What no rule reads* — for its step markers only.
+- **Needs.** `RUNBOOKS.md`; the body at `File:` of each block whose
+  `Status:` is not `[DONE]` — a done runbook has no step left to be parked.
+- **Fires when** the body marks a step `[P]` whose id the block's
+  `Parked: steps <ids>` line does not list — the line absent included — or
+  the line lists a step the body does not mark `[P]`. The line's rule is
+  `../../runbook-run/references/runbook-schema.md`
+  § *The index block*: present exactly while a step is `[P]`, holding
+  exactly those ids. `WARNING` because the body is authoritative and the
+  next run reads the body: nothing is misdirected, but `/runbook-list` and
+  `/runbook-describe` show the index's version. One finding per runbook,
+  naming both sides. The fix is `/runbook-run <id>`, which rewrites the
+  index from the body at its next commit.
+
+```
+WARNING RUNBOOKS.md runbook <id>. <name> — Parked: <ids | absent> but body marks [P] on <ids | none> → /runbook-run <id>
+```
+
 ---
 
 ## Two deliberate absences
@@ -231,9 +281,9 @@ cleaned feature and means **archived, terminal** — the rule is
 run against an archived backlog.
 
 **"A pending runbook step naming a task already `[DONE]` or `[SKIP]`" is not a
-finding.** Detecting it means reading a step's prompt block, which means
-opening a runbook body — which no rule here does, and which is why `graph.md`
-E7 has no step-level index form. `/runbook-run` surfaces the same problem at
+finding.** Detecting it means reading a step's prompt block — which no rule
+here does, L13's marker scan included, and which is why `graph.md` E7 has no
+step-level index form. `/runbook-run` surfaces the same problem at
 the moment it matters: it prints each step before spawning it. A
 `RUNBOOKS.md` that carried per-step targets is what would make a cheap
 index-only version possible; until it does, the finding stays out.
@@ -245,7 +295,9 @@ index-only version possible; until it does, the finding stays out.
 **An absent index drops its findings.** A finding whose **Needs** names an
 index the project does not have is not evaluated and not reported — dropped
 from the run, never an error. A project with no `PLAN.md` has no plan
-findings; that is not drift.
+findings; that is not drift. An absent **body**, by contrast, is what L12 and
+L13 exist to see: a `[PARKED]` task with no body is L12, and a non-`[DONE]`
+block whose `File:` names no file is a malformed block, below.
 
 **A malformed block is a finding of its own, never an abort.** A block missing
 a line some finding reads, or carrying a value outside that line's vocabulary

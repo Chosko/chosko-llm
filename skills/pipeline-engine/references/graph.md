@@ -183,7 +183,9 @@ ids that no longer have a block, which it alone still names.
   summarise the body `File:` points at, so a question they answer is answered
   without following the edge.
 - **Consumed by.** `lint.md` L10, which reads that summary instead of the
-  body. The impact walk: the path a consumer follows when it decides to open a
+  body, and L13, which follows the edge into the body for its step markers —
+  checking what the index cannot say, the one reason a consumer opens a far
+  end. The impact walk: the path a consumer follows when it decides to open a
   candidate runbook E7 named.
 
 ### E7 — runbook step → task ids and feature slugs

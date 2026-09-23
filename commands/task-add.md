@@ -1,6 +1,6 @@
 ---
 name: task-add
-version: 2.5.6
+version: 2.5.7
 type: command
 description: Plan one new task with the user and write it to the backlog — a summary block in TASKS.md plus a body file — from a prose description or from an /architect feature document. Use it for any new unit of work; stage 5 of the pipeline: turns a feature document into tasks; its output is /task-implement's input.
 requires: skill:task-engine
@@ -568,7 +568,7 @@ user can overrule any call inside the same approval.
 Render it like this:
 
 ```
-RECONCILIATION — feature <slug> has 4 existing tasks
+RECONCILIATION — feature <slug> has 5 existing tasks
 
   12. [DONE]     <title>
       → untouched. Completed work; the new design doesn't change it.
@@ -580,6 +580,10 @@ RECONCILIATION — feature <slug> has 4 existing tasks
   15. [MISSING]  <title>
       → [SKIP] ("superseded: the design no longer has a separate cache
         layer"), replaced by new task <N+2> below.
+  16. [PARKED]   <title>
+      → [SKIP] ("superseded: the endpoint it was parked on no longer
+        exists; branch park/task-16 deleted"), replaced by new task <N+3>
+        below. Its parked question is moot under the new design.
 ```
 
 ---
@@ -899,10 +903,14 @@ Feature case (FEATURE is set) — in addition to the above:
 3. Apply the approved reconciliation, and nothing beyond it (under SINGLE
    there is none, so this step does nothing):
    - Rewrite the body of each task classified "update in place", and flip a
-     `[STALE]` one back to `[MISSING]` in TASKS.md.
+     `[STALE]` one back to `[MISSING]` in TASKS.md. A `[PARKED]` one is
+     rewritten above its `## Parking handoff` and stays `[PARKED]`.
    - Set each "substantially invalidated" task's `Status:` to `[SKIP]`, and
      record the one-line reason from the plan in its body so a later reader
-     knows why. The replacement task is written as a new task.
+     knows why. The replacement task is written as a new task. A `[PARKED]`
+     one's `park/task-<N>` branch is deleted, local and remote, as
+     `stale.md` § *Clearing it* says — the one git command this phase runs
+     before PHASE 5.
    - Touch nothing on a task classified "untouched", and nothing at all on
      a `[DONE]` task.
 

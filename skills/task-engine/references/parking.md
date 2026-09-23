@@ -179,5 +179,11 @@ skips it as the batch selectors would.
   three commit forms. The `--unattended` flag, UNATTENDED's resolution from
   the flag or the conversation, the pre-ask, the chat handle and the
   in-memory answers are its own and are stated in its body, not here.
-- **`/task-list`, `/task-clean`, `/task-add`, `/pipeline-check`** — meet
-  `[PARKED]` only as a tag, per `./status.md`, and never open this file.
+- **`/task-list`, `/task-clean`** — meet `[PARKED]` only as a tag, per
+  `./status.md`, and never open this file.
+- **`/task-add`** — reconciliation classifies a parked task per `./stale.md`
+  § *Clearing it*, and deletes the branch on skip-and-replace; it never opens
+  this file.
+- **`/pipeline-check`** — checks that a `[PARKED]` task's body carries the
+  `## Parking handoff` heading, and nothing more of it; it never opens this
+  file and never probes the branch.

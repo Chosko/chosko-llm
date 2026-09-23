@@ -1,8 +1,8 @@
 ---
 name: task-list
-version: 0.6.2
+version: 0.6.3
 type: command
-description: Print the project's task backlog as a compact summary, optionally filtered by status — marking tasks that need a human present and tasks gone stale, and grouping by milestone when the project has a plan. Use it to see what is open before picking, adding or pruning a task.
+description: Print the project's task backlog as a compact summary, optionally filtered by status — marking tasks that need a human present, tasks gone stale and tasks parked on a question, and grouping by milestone when the project has a plan. Use it to see what is open before picking, adding or pruning a task.
 requires: skill:task-engine
 ---
 
@@ -10,8 +10,8 @@ requires: skill:task-engine
 # Global command: print the project's task backlog as a compact summary,
 # optionally filtered by status. Marks human-in-the-loop tasks (target
 # claude+human or human) with a ⚠, marks [STALE] tasks whose originating
-# feature was re-architected, and shows the `Feature:` slug on
-# feature-derived tasks. With a `.claude/PLAN.md`, groups tasks by milestone
+# feature was re-architected and [PARKED] tasks waiting on an answer, and
+# shows the `Feature:` slug on feature-derived tasks. With a `.claude/PLAN.md`, groups tasks by milestone
 # in plan order and flags tasks whose feature is blocked with the blocker's
 # name; without one, output is the flat list. Read-only — never modifies any
 # file. Reads `.claude/TASKS.md`, plus `.claude/PLAN.md` and
@@ -22,6 +22,7 @@ requires: skill:task-engine
 # Examples: /task-list
 #           /task-list MISSING
 #           /task-list IN PROGRESS
+#           /task-list PARKED
 #           /task-list DONE
 
 GOAL
@@ -61,8 +62,8 @@ STATUS TAGS AND THE FILTER
 
 The status vocabulary, and how a status argument is accepted, are
 `../skills/task-engine/references/status.md`. Its
-`/task-list` note carries what this command adds: the `[STALE]` gloss and the
-padded status column.
+`/task-list` note carries what this command adds: the `[STALE]` gloss, the
+`[PARKED]` marker and the padded status column.
 
 Here a status is a display filter and nothing else — `$ARGUMENTS` is never a
 task selector, and this command writes no status anywhere.
@@ -152,8 +153,8 @@ WORKFLOW
    N.  [STATUS]      Title
    ```
 
-   - Pad the status column so titles align. The longest tag is
-     `[IN PROGRESS]` (13 chars).
+   - Pad the status column so titles align. Of the nine tags the longest
+     is `[IN PROGRESS]` (13 chars); `[PARKED]` fits the same column.
    - Preserve the original task IDs — they are stable, do NOT
      renumber for display. IDs aren't sequential, so unfenced `N.`
      lines get renumbered by markdown renderers. Print the actual
@@ -169,10 +170,14 @@ WORKFLOW
    - If the status is `[STALE]`, append `⚠ stale` at the end of the
      line, after the deps annotation. The status column already shows
      `[STALE]`, but the marker keeps it visible in the same scan as the
-     human-in-the-loop `⚠` — a stale task is the one status that needs
-     the user to act (reconcile it, or decide it still applies).
+     human-in-the-loop `⚠` — a stale task needs the user to act
+     (reconcile it, or decide it still applies).
+   - If the status is `[PARKED]`, append `⚠ parked` in that same
+     position, for the same reason: a parked task is waiting on an answer
+     only the user can give. A task is never both stale and parked, so the
+     slot holds one marker.
    - If a task has non-`none` preconditions, append `(deps: 3, 7)`
-     before any staleness marker.
+     before any staleness or parking marker.
    - If the project has a `PLAN.md` and the task's feature is blocked,
      append `⚠ blocked by <slug>` at the very end of the line. Without a
      `PLAN.md` this marker never appears.
@@ -181,7 +186,7 @@ WORKFLOW
    lines stay scannable no matter which markers a task happens to have:
 
    ```
-   N.  [STATUS]      Title  ⚠ <target>  [<slug>]  (deps: 3, 7)  ⚠ stale  ⚠ blocked by <slug>
+   N.  [STATUS]      Title  ⚠ <target>  [<slug>]  (deps: 3, 7)  ⚠ stale | ⚠ parked  ⚠ blocked by <slug>
    ```
 
    Omit any marker that does not apply; never reorder them, and never
@@ -228,7 +233,7 @@ DO NOT:
 - Reorder milestones by anything other than their position in `PLAN.md`,
   or reorder tasks within a group by anything other than their ID.
 - Suggest next actions, recommend which task to start, or comment on
-  staleness. Just list.
+  staleness or a parked question. Just list.
 - Write, edit, or commit anything.
 - Truncate long titles. If a title is unusually long, let it overflow
   the column.

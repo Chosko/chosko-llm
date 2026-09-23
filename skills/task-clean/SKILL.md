@@ -1,6 +1,6 @@
 ---
 name: task-clean
-version: 0.9.2
+version: 0.9.3
 type: skill
 description: Prune tasks in a terminal status from the backlog by archiving them — each summary block leaves TASKS.md and the body moves to .claude/tasks/archive/<N>.md, never deleted. Use it when finished tasks clutter the backlog; a backfill mode recovers, from git history, bodies earlier runs deleted.
 replaces: command:task-clean
@@ -13,8 +13,9 @@ requires: skill:task-engine
 # `.claude/TASKS.md` and moves the corresponding `.claude/tasks/<N>.md` body
 # file into `.claude/tasks/archive/<N>.md`, under a frozen header recording
 # the summary block it had. No body is deleted. Terminal means [DONE] and
-# [SKIP] only; [STALE] is live work awaiting reconciliation and is never
-# pruned by default. A prune never opens `.claude/FEATURES.md` — a feature
+# [SKIP] only; [STALE] is live work awaiting reconciliation and [PARKED] is
+# live work awaiting an answer, and neither is ever pruned by default. A
+# prune never opens `.claude/FEATURES.md` — a feature
 # keeps every task id it ever generated. Survivors are NOT renumbered — task
 # numbers are stable IDs across the project's lifetime, so the `Last task
 # number` counter is never decremented and pruned IDs are never reused.
@@ -92,11 +93,14 @@ canonical status may be named, and when a named one is non-terminal, carry
 way is archived exactly like a terminal one; its frozen `Status:` records
 that it was pruned live.
 
-`[STALE]` is never in the default set. What it means, and why it is live work
-awaiting reconciliation rather than abandoned work, are
-`../task-engine/references/stale.md`; when
-the user names it explicitly, say all of that in the plan and confirm before
-applying.
+`[STALE]` and `[PARKED]` are never in the default set. What `[STALE]` means,
+and why it is live work awaiting reconciliation rather than abandoned work,
+are `../task-engine/references/stale.md`; when the user names it explicitly,
+say all of that in the plan and confirm before applying. A `[PARKED]` task is
+live work waiting on an answer, with its work-in-progress on a
+`park/task-<N>` branch; when the user names it explicitly, carry
+`status.md`'s warning into the plan — the prune discards the question and
+orphans that branch, named per task — and confirm before applying.
 
 ---
 
@@ -253,6 +257,6 @@ DO NOT:
 - Decrement the `Last task number:` counter, even if you just archived
   the task with the highest ID.
 - Touch tasks whose status is not in the prune set.
-- Add `[STALE]` to the default prune set.
+- Add `[STALE]` or `[PARKED]` to the default prune set.
 - Change task content other than `Preconditions:` lines on survivors and
   the frozen header written into each archived body.

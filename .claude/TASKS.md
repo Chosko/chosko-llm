@@ -364,7 +364,7 @@ Feature: unattended-parking
 
 ## 266. Parked items across the read-only and lint commands
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-list.md, skills/task-clean/SKILL.md, commands/pipeline-check.md, skills/pipeline-engine/references/lints.md, skills/pipeline-engine/references/routing.md, skills/task-engine/references/stale.md, commands/task-add.md, VERSION, CHANGELOG.md
 Preconditions: 261, 264
