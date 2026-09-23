@@ -47,14 +47,17 @@ tests-first flow cannot run; switch to interactive mode.
      summarize what you're about to change and ask "Proceed?" Wait for
      explicit approval before editing any file. When AUTO_CONFIRM is true,
      skip this prompt — state the one-line summary anyway so the user can
-     see what's about to happen, then proceed without waiting.
+     see what's about to happen, then proceed without waiting. When
+     UNATTENDED is true the prompt takes its default, yes, and is one *For
+     the record* line — `../task-engine/references/parking.md` § *Prompts
+     with a default*; the one-line summary is still stated.
    - Skip Steps 2, 4, and 5 of the per-task workflow (anything
      test-related). Steps 1, 3, 6, 7 still run.
    - The commit message should note "(no tests — manual verification
      pending)" in the body so it's visible later.
    - The `all` argument still works in skip-tests mode but the per-task
      confirmation prompts still apply (one per task) unless AUTO_CONFIRM
-     is true.
+     or UNATTENDED is true.
 
 Never auto-scaffold a test suite without the user explicitly choosing
 option A.

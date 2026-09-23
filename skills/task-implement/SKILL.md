@@ -1,8 +1,8 @@
 ---
 name: task-implement
-version: 1.8.3
+version: 1.9.0
 type: skill
-description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
+description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups
 ---
 
@@ -27,7 +27,12 @@ requires: skill:task-engine, command:follow-ups
 # after the last round stop the run with the task `[IN PROGRESS]`. When a
 # `Feature:`-tagged task completes its feature, proposes flipping its
 # `FEATURES.md` `Status:` from `[PLANNED]` to `[DONE]` once, at the end of
-# the run. Every run ends with one `/follow-ups` call.
+# the run. Under `--unattended` — or when the conversation declares the run
+# unattended — a question about the work parks the task (`[PARKED]`, its
+# work-in-progress on `park/task-<N>`) and the run continues; the run's
+# `[PARKED]` tasks are pre-asked at launch unless `--skip-parked`, and a
+# parked question is answered by number in chat. Every run ends with one
+# `/follow-ups` call.
 # Usage: /task-implement <task-number> [<task-number> ...]
 #        /task-implement all
 #        /task-implement next
@@ -40,6 +45,8 @@ requires: skill:task-engine, command:follow-ups
 #        /task-implement <args> --review --rounds N  (up to N review/iterate rounds; default 1)
 #        /task-implement <args> --review --review-model <name>|same|auto   (reviewer's model; default auto)
 #        /task-implement <args> --review --review-effort shallow|standard|deep|same|auto  (reviewer's read budget; default auto)
+#        /task-implement <args> --unattended  (park a task at a question instead of halting; pre-ask the list's parked tasks first)
+#        /task-implement <args> --unattended --skip-parked  (no pre-ask; a parked task with no answer is skipped)
 # Examples: /task-implement 12
 #           /task-implement 12 13 14
 #           /task-implement all
@@ -53,6 +60,8 @@ requires: skill:task-engine, command:follow-ups
 #           /task-implement 12 --review --review-model sonnet
 #           /task-implement 12 --review --review-model same
 #           /task-implement all --review --review-effort shallow
+#           /task-implement all --unattended
+#           /task-implement all --unattended --skip-parked
 
 GOAL
 For each requested task, in the order given:
@@ -69,6 +78,9 @@ Under `--review`, a review/iterate loop runs between steps 5 and 6, on the
 uncommitted tree, so its fixes ride in the task's own single commit — see
 `./review-rounds.md`.
 
+Under UNATTENDED a question about the work parks the task instead of
+halting the run — see PARKED TASKS.
+
 A step that fails and cannot be resolved by fixing the code stops the whole
 run — see FAILURE HANDLING. A completed task carrying a `Feature:` line may
 make its feature a completion candidate — see FEATURE COMPLETION. However the
@@ -80,16 +92,17 @@ $ARGUMENTS
 
 SHARED RULES (the `task-engine`)
 
-Seven rules this skill shares with the rest of the `task-*` suite have exactly
+Eight rules this skill shares with the rest of the `task-*` suite have exactly
 one authority each, under
 `../task-engine/references/`:
 `resolution.md` (where the backlog lives and how a run resolves its task
 list), `status.md` (the status vocabulary), `targets.md` (the `Target:`
 values and the delegation guard), `stale.md` (`[STALE]`), `tree.md` (the
-dirty-tree protocol), `commit.md` (commit and push gating) and
+dirty-tree protocol), `commit.md` (commit and push gating),
 `review-budget.md` (the review cost controls behind `--review-model` /
-`--review-effort`). Every one of them carries a `/task-implement` note
-holding this skill's own departures.
+`--review-effort`) and `parking.md` (task parking under the `unattended`
+policy — read only on the condition SUPPORTING FILES gives). Every one of
+them carries a `/task-implement` note holding this skill's own departures.
 
 The sections below cite those files where they apply and state only what is
 this skill's own. `requires: skill:task-engine` in the frontmatter is what
@@ -112,6 +125,7 @@ tasks. Everything below is loaded only when its branch actually applies.
 | `./body-schemas.md`  | The task body does NOT match the current schema (Goal / Acceptance criteria / Decisions / Hints). |
 | `./delegated-runs.md` | DELEGATE is true — the resolved list holds 2+ tasks and the user opted into per-task subagents (or passed `--agents`). Never on a single-task run, nor when the user declined. |
 | `./review-rounds.md` | REVIEW is true — the run was invoked with `--review`. Read once, after ARGUMENT PARSING and before the first task. Never on a run without the flag. |
+| `../task-engine/references/parking.md` | UNATTENDED is true (read at ARGUMENT PARSING, where its refusals apply), OR any task in the resolved list is `[PARKED]` (read at PRE-FLIGHT step 2). Never otherwise — an attended run that meets no parked task never opens it. |
 
 Do not read a supporting file speculatively — if none of the conditions above
 fires, the run never touches one.
@@ -187,6 +201,34 @@ budget anywhere — a second copy is a copy that will drift. With REVIEW false,
 the default, neither value is ever resolved or used, `./review-rounds.md` is
 never opened, no loop runs, nothing new is asked, and the output says nothing
 about reviewing.
+
+Also scan for the optional `--unattended` and `--skip-parked` flags and strip
+whichever appear. `--skip-parked` sets SKIP_PARKED = true and suppresses
+PRE-FLIGHT step 2a's pre-ask, for a launch no human sees — a routine, a
+scheduler, an orchestrator that is itself a subagent; `--skip-parked` without
+`--unattended` stops the run with: `--skip-parked requires --unattended.`
+
+UNATTENDED is true when `--unattended` was passed **or** the conversation
+declares this run unattended — the one sentence a runbook step's preamble or
+a delegated-agent prompt carries under that policy, which cannot be typed
+into a prompt block as a flag. A notice that the run is merely
+*non-interactive* is not that declaration: an attended runbook's step agent
+is non-interactive too, and it relays rather than parks. Default false —
+`attended`, under which nothing in this skill changes. When UNATTENDED is
+true:
+
+- read `../task-engine/references/parking.md` now and apply its
+  § *Refusals* before anything else: `--unattended` beside `--no-commit`
+  stops the run, and so does a project whose `CLAUDE.md` carries a `## VCS`
+  override (`commit.md`) — the parking branch is the mechanism and there is
+  no equivalent there — each with the one-line message that section gives.
+  Read `CLAUDE.md` here if it has not been read yet.
+- every prompt this run can raise that has a default takes it, per
+  `parking.md` § *Prompts with a default*, each value taken being one *For
+  the record* line; the one prompt with none, an ambiguous test runner,
+  aborts the run (RESOLVING THE TEST RUNNER step 2). Only a question about
+  the work parks a task, and only inside the per-task workflow (PER-TASK
+  WORKFLOW § *Parking at a question*).
 
 After stripping the flags, `$ARGUMENTS` is a whitespace-separated list of
 task numbers, the literal token `all`, or the literal token `next`. Those
@@ -291,6 +333,23 @@ continue unless the user explicitly chose to implement it anyway.
 
 ---
 
+PARKED TASKS
+
+What `[PARKED]` means, the one event that parks a task, the handoff and the
+branch a park leaves behind, the park sequence, the unpark transaction, when
+an unpark is attempted and the two refusals are
+`../task-engine/references/parking.md`.
+Its `/task-implement` note names the rest as this skill's own, and this body
+is where each lives: the `--unattended` flag and UNATTENDED's resolution
+(ARGUMENT PARSING), the pre-ask (PRE-FLIGHT step 2a), the park and the
+unpark inside the workflow (PER-TASK WORKFLOW), the chat handle and the
+in-memory answers (BETWEEN TASKS step 2a).
+
+Read it on the condition SUPPORTING FILES gives — never on an attended run
+that meets no `[PARKED]` task.
+
+---
+
 RESOLVING THE TEST RUNNER
 
 The skill must work on any project. Establish how tests run before doing
@@ -317,7 +376,10 @@ anything else:
    path this resolves the runner and you are done here.**
 2. Otherwise, read `./test-runner.md` and infer the runner from the
    project's files. If it is still ambiguous after that, ask the user
-   before starting any task.
+   before starting any task — or, under UNATTENDED, abort the run with one
+   line naming the ambiguity: this is the one prompt with no default, and
+   nothing has started that could park (`parking.md` § *Prompts with a
+   default*).
 3. If the project has no test suite at all (no runner inferable AND no
    test directory like `tests/`, `test/`, `__tests__/`, `spec/`), read
    `./no-test-suite.md` and follow it. A project that has one — runner
@@ -363,8 +425,13 @@ PRE-FLIGHT CHECKS (before any task)
      `../task-engine/references/status.md`
      § *Implementable* is which statuses those are and what to do when a
      task requested explicitly by number carries another one — including
-     the `[STALE]` hand-off to STALE TASKS above. (For `all` and `next`,
-     all of those statuses are skipped — see ARGUMENT PARSING.)
+     the `[STALE]` hand-off to STALE TASKS above and the `[PARKED]` unpark
+     of PARKED TASKS below. (For `all` and `next`, the other statuses are
+     skipped — see ARGUMENT PARSING.) A `[PARKED]` task stays in the
+     resolved list under either policy: whether an answerer exists is
+     decided when it is reached (Step 1), after the pre-ask, and a task
+     with none is skipped there with one line. If any resolved task is
+     `[PARKED]`, read `../task-engine/references/parking.md` now.
    - Note its Files, Preconditions, and — when present — `Feature:`
      fields from the summary block. `Feature:` appears only on
      feature-derived tasks; its absence is normal.
@@ -376,6 +443,38 @@ PRE-FLIGHT CHECKS (before any task)
    parent opens `.claude/tasks/<N>.md` for a delegated task on no path ever
    — not to size the work, not to write the hand-off prompt, not after the
    agent returns (see `./delegated-runs.md`).
+
+2a. **Pre-ask.** Only when UNATTENDED is true and SKIP_PARKED is false;
+   otherwise skip this step — an attended run asks each parked task's
+   question when it reaches the task (Step 1), after the user has seen the
+   earlier tasks' outcomes. With no `[PARKED]` task in the resolved list,
+   nothing is printed.
+
+   Otherwise, after the resolution report, open the trailing `## Parking
+   handoff` of each `[PARKED]` task's body — for its `Parked:` and
+   `Question:` lines only, the body's one pre-flight read — and print one
+   numbered block, one item per parked task in list order:
+
+   > Parked tasks in this run — answer each by number, or reply `skip`
+   > for one (`skip 2`) or for all (`skip all`):
+   >
+   > 1. Task 42 — parked 2026-09-23 at Step 3
+   >    <its `Question:`, verbatim and multi-line, options included>
+   > 2. Task 47 — parked 2026-09-23 at the review round, approval gate —
+   >    skip-only: its draft is approved in an attended run, with the
+   >    draft in the tree
+
+   Wait for a reply. Each answer is held in run memory for its task and fed
+   to the unpark in Step 1 — nothing on disk changes, so a run that dies
+   loses them and the next launch asks again. An `approval gate` item is
+   listed skip-only, per `parking.md` § *The unpark transaction*; an answer
+   to one is rejected with one line and records nothing. Silence, EOF or an
+   unrelated reply is `skip all` — the value `--skip-parked` gives. Nothing
+   parks here: a pre-flight prompt has no current task.
+
+   The numbers are the run's question handles, one sequence for the whole
+   run: a task parked later in this run takes the next unused number, and
+   BETWEEN TASKS reads replies against them.
 
 2b. **Delegation check.** Only when the resolved list holds 2 or more
    tasks. With fewer than 2, DELEGATE is false, nothing is asked and the
@@ -432,10 +531,36 @@ so the delegated flow and the manual flow cannot drift apart, and Step 1's
 body read happens in whichever session is implementing the task, never in
 both.
 
+### Parking at a question   [only when UNATTENDED is true]
+
+A question about the work — an acceptance criterion this task cannot settle
+from the body and the codebase, a `--review` round's approval gate — is put
+to the user under attended, and the run waits. Under UNATTENDED it parks the
+task instead: run the park sequence from `parking.md`, the step reached
+being the one the handoff's `Parked:` names, the question recorded verbatim
+there and printed in chat under the next handle number (PRE-FLIGHT step
+2a). The base tree is clean afterwards, so go to BETWEEN TASKS as if the
+task had committed, and continue with the next task.
+
 ### Step 1 — Mark IN PROGRESS
 
 If this task's status is `[STALE]`, run the STALE TASKS protocol before
 reading anything else.
+
+If this task's status is `[PARKED]`, decide the answerer first, per
+`parking.md` § *The answerer rule*: an attended session, or an answer held
+for this task from the pre-ask or a chat reply (BETWEEN TASKS). With none —
+which only an UNATTENDED run can meet — skip the task with that section's
+one line and go to BETWEEN TASKS: no branch is touched and no commit is
+made. A held `skip` is the same skip. With an answerer, run the unpark
+transaction from `parking.md`; once it succeeds, read the body as below,
+flip the status as below, remove the `## Parking handoff` section from the
+body, and continue this workflow at the step `Parked:` names, the answer in
+hand — both edits ride in Step 7's commit, which stages the body file on
+this one path (`commit.md`). A cherry-pick conflict follows `parking.md`
+§ *The unpark transaction*: under UNATTENDED the task stays `[PARKED]` and
+is skipped after the bookkeeping commit; under attended the run halts and
+asks how to merge.
 
 Use the Read tool to open `.claude/tasks/<N>.md` for the current task.
 Hold its contents in mind for the rest of the per-task workflow.
@@ -568,7 +693,8 @@ skip-tests "Proceed?") plus verifying what the returning agent did. Follow
 it instead of the list below for delegated tasks; a task the parent
 implements itself follows the list as usual.
 
-After committing a task, before starting the next:
+After committing — or, under UNATTENDED, parking or skipping — a task,
+before starting the next:
 1. Run the dirty-tree check again, exactly as PRE-FLIGHT CHECKS step 1 did,
    per `tree.md`; DIRTY_FOLD set there applies to the upcoming task's
    Step 7. **In --no-commit mode, skip this check entirely** — the previous
@@ -586,9 +712,21 @@ After committing a task, before starting the next:
    to the task after it. The re-check uses only the file this step already
    re-reads. An explicit-number list is never re-checked: a task requested
    by number is never blocked by a precondition.
-3. Briefly report progress: "Task N committed. Starting task M."
+2a. Read any chat message that arrived since the previous task started. A
+   reply by number handle to a question printed this run — at the pre-ask
+   or at a park — or one naming that question's task, is the task's answer:
+   record it in run memory and move the task to the front of the remaining
+   list, so Step 1 unparks it next. Any other message is ordinary
+   conversation, and the run continues. A reply naming a number this run
+   never printed, or a second answer to a question already answered, is
+   rejected with one line and records nothing — the first answer wins. A
+   pre-ask `skip` holds no answer, so a later reply by that number is the
+   question's first.
+3. Briefly report progress: "Task N committed. Starting task M." — or, for
+   a task that did not commit, "Task N parked (question 3). Starting task
+   M." / "Task N skipped — parked, no answer held. Starting task M."
 4. In skip-tests mode, ask "Proceed?" before starting the next task,
-   unless AUTO_CONFIRM is true.
+   unless AUTO_CONFIRM is true or UNATTENDED is true — `./no-test-suite.md`.
 
 ---
 
@@ -672,7 +810,10 @@ under its heading:
 - **Needs you** — every item waiting on a decision, numbered `1.`, `2.`, … and
   as long as it needs to be: an unresolved `BLOCKING` finding, a task left
   `[IN PROGRESS]` and why, a follow-up naming an owner's command with its
-  anchor and passages, a precondition that no longer held. **The number is the
+  anchor and passages, a precondition that no longer held, a task parked
+  this run or skipped for want of an answer — its `Question:` verbatim
+  under its handle number, since a reply by that number is its answer
+  (BETWEEN TASKS step 2a) and unparks it on the next run. **The number is the
   handle the user replies with**, the same way `/follow-ups`' numbering is. It
   starts at 1 in every report, carries no meaning beyond the handle, and a
   report with a single item still numbers it.
@@ -784,6 +925,12 @@ the commit already succeeded, so nothing is reverted and no status is
 flipped back. Stop the entire run the same way, and report that this
 task's commit exists locally and needs a manual sync + push before
 resuming with the remaining tasks.
+
+A park that cannot make its branch — the name already taken, the push
+refused — is a Step 7 failure of that kind, per `parking.md` § *The park
+sequence*: task `[IN PROGRESS]`, tree intact, run stopped. A parked task
+is not a failure, and neither is an unpark whose cherry-pick conflicts: it
+rolls back, and Step 1 says what each policy does next.
 
 DO NOT:
 - Run destructive git operations (`reset --hard`, `clean -f`,

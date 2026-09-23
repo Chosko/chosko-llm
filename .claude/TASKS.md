@@ -314,7 +314,7 @@ Feature: unattended-parking
 
 ## 261. `/task-implement --unattended`: park at a question, unpark when reached, pre-ask at launch
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-implement/SKILL.md, skills/task-implement/no-test-suite.md, skills/task-engine/references/parking.md, VERSION, CHANGELOG.md
 Preconditions: 260
