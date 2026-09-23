@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 267
+Last task number: 268
 
 ---
 
@@ -378,6 +378,16 @@ Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, docs/cli-help.txt, .claude/domain/task-workflow.md, .claude/context/features.md, .claude/domain/features/runbook-suite.md, .claude/domain/features/task-implement-launcher.md, .claude/domain/features/runbook-inline.md, .claude/domain/features/task-peer-review.md
 Preconditions: 259, 260, 261, 262, 263, 264, 265, 266
+Feature: unattended-parking
+
+---
+
+## 268. `/task-review`'s report closes on For the record then Follow-ups
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-review/SKILL.md, docs/reference.md, .claude/domain/features/task-peer-review.md, .claude/context/features.md, VERSION, CHANGELOG.md
+Preconditions: 265
 Feature: unattended-parking
 
 ---
