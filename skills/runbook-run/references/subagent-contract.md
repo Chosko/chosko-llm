@@ -78,8 +78,10 @@ OPERATING RULES
   task body that proved wrong which a later reader of this runbook would be
   misled without. Leave out review tallies, the list of touched files, a
   restatement of the prompt or task body, and any account of your own process.
-  If the work failed or could not be completed, say so plainly instead of
-  `DONE`.
+  Work that made no commit omits the sha(s) and diffstat. A finished turn
+  without the literal `DONE` line is a hard failure: the run halts on it,
+  however complete the work. If the work failed or could not be completed,
+  say so plainly instead of `DONE`.
 ```
 
 ## Paste ends

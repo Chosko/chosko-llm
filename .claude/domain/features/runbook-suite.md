@@ -560,8 +560,10 @@ questions, the options, a recommendation for each, and — at an approval gate �
 the full draft; that it must follow the default commit behaviour of whatever
 skill it invokes and add no flag the user did not type; that it must never
 edit the runbook or the index; which runbook and step it is executing; and that it must end with `DONE` and a
-concise report naming the commit sha, the decisions taken, and any premise in
-the prompt that proved wrong. Three further lines are
+concise report naming the commit sha — omitted when the work made no commit —
+the decisions taken, and any premise in the prompt that proved wrong, a
+finished turn without the literal `DONE` being a hard failure. Three further
+lines are
 [unattended-parking](./unattended-parking.md)'s: the runbook-WIP dirty-tree
 prompt answered `proceed` by the agent itself, and two rules conditional on
 the preamble's unattended sentence.

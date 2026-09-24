@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.72.3 — 2026-09-24
+
+- **`/runbook-run` step agents are told the `DONE` marker is mandatory.** OPERATING RULES state that a finished turn without the literal `DONE` line is a hard failure that halts the run, and that work making no commit — a relay review child — omits the sha and diffstat instead of ending on its report.
+
 ## 1.72.2 — 2026-09-23
 
 - **Parking rules reconciled after review.** Under `--unattended` a prompt with a default is still put, and a contract the session runs under — a runbook step's OPERATING RULES — answers it first; the default is what an unanswered prompt resolves to, so a runbook step's `/task-implement` no longer aborts on the runbook's own dirty markers. The three rejected replies (a number never printed, a second answer, an answer to an `approval gate` item) are stated once in `task-engine`'s `parking.md` and carried identically by both run skills. `delegated-runs.md` and `resolution.md` name the pre-ask's bounded `## Parking handoff` read as the one body read at pre-flight. `/runbook-run` applies § *Mid-run answers* only when `parking.md` was read this run, and an attended run unparking an `approval gate` step writes a plain dated bullet, never one the contract reads as an answer.
