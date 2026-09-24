@@ -404,10 +404,10 @@ Currently shipped:
   record* line; an ambiguous test runner aborts. A question about the work —
   inside the per-task workflow only — runs `parking.md`'s park sequence:
   handoff, `park/task-<N>`, bookkeeping commit, question printed under the
-  run's next number handle, on to BETWEEN TASKS. PRE-FLIGHT step 2a
-  **pre-asks**: one numbered block of every `[PARKED]` task in the resolved
+  run's next `P<n>` handle, on to BETWEEN TASKS. PRE-FLIGHT step 2a
+  **pre-asks**: one block of every `[PARKED]` task, each under its `P<n>` handle, in the resolved
   list with its `Question:` verbatim — the one pre-flight body read, handoff
-  section only — answered by number or `skip` / `skip N` / `skip all`,
+  section only — answered by handle (`P1: Q1a, Q2b`) or `skip` / `skip P<n>` / `skip all`,
   approval-gate items skip-only, answers held in run memory; silence is `skip
   all`; `--skip-parked` (requires `--unattended`) suppresses it. BETWEEN
   TASKS step 2a reads chat replies by handle, records the answer and moves
@@ -1486,8 +1486,9 @@ Currently shipped:
   `Execution policy:`, else `attended`; resolved last in step 1, never
   written back. `--unattended`: a step that asks is parked and the run goes
   on; at launch, unless `--skip-parked` (requires `--unattended`), the
-  **pre-ask** — one numbered block of every `[P]` step in range with its
-  question verbatim, answered by number or `skip` / `skip N` / `skip all`,
+  **pre-ask** — one block of every `[P]` step in range under its `P<n>`
+  handle with its question verbatim, answered by handle or `skip` /
+  `skip P<n>` / `skip all`,
   approval-gate items skip-only, silence = `skip all`, each answer unparking
   its step at once in one bookkeeping commit. `--attended` overrides a header
   `unattended`; both together an error. All three compose with `--inline`.
@@ -1495,8 +1496,10 @@ Currently shipped:
   run unattended (never *non-interactive*, which an attended step's agent is
   too) — what turns on the contract's two conditional rules and what
   `/task-implement` reads as its own UNATTENDED. **Handles**: every parked
-  question printed carries a number, one sequence per run (pre-ask from 1,
-  later parks the next unused); a reply by number, step id or title mid-run
+  question printed carries a `P<n>` handle, its questions `Q1`, `Q2`, … and
+  options `a`, `b`, … (`Unpark P1: Q1a, Q2b`, an example, not a grammar),
+  one sequence per run (pre-ask from `P1`, later parks the next unused); a
+  reply by handle, step id or title mid-run
   (read at step 8, after the commit) or after the report unparks the step —
   `unparked with answer:` bullet, `[ ]`, `Parked:` rewritten, one bookkeeping
   commit — and it is the next step selected, stated as a rule; rejected with
@@ -1544,7 +1547,7 @@ Currently shipped:
   outcome) → `[P]` replacing `[~]`, `- <date> parked: <question>` into
   `Context:` (question, options, recommendation verbatim; an approval gate
   recorded as the words `approval gate`, draft left out), printed in chat
-  under the next handle in a fixed `Parked (n) — Step …` block, `Parked:`
+  under the next handle in a fixed `Parked (P<n>) — Step …` block, `Parked:`
   line written, `Status:` still `[RUNNING]`, `Steps:` unmoved, committed at
   step 8 like `[x]`/`[!]`, loop; no `Done:` line, the agent never resumed —
   the step re-runs whole in a fresh subagent once answered. Selection with

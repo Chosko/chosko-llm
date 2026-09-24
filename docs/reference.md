@@ -911,14 +911,18 @@ beside `--no-commit` (parking is made of commits) and on a project whose
 `CLAUDE.md` maps git to another VCS. A `[PARKED]` task is never pruned by
 default and blocks its dependents like any unfinished task.
 
-Answering is by number. At the start of an unattended run, one numbered block
-lists every parked task in the run with its question verbatim; reply by
-number, or `skip` for one or all (an approval-gate item is skip-only, since
-its draft has to be seen). `--skip-parked` suppresses that pre-ask for a
-launch no human sees. While the run is going, a reply by the number a parked
-question was printed under is its answer, and the task is unparked after the
-current one finishes; after the closing report, replying by a listed item's
-number does the same on the next run. An attended run has no pre-ask — it
+Answering is by handle. Every parked question is printed under a handle
+`P<n>`, its questions labelled `Q1`, `Q2`, … and their options `a`, `b`, …,
+so a reply names both without colliding: `Unpark P1: Q1a, Q2b`. Any reply
+that names the handle and leaves no doubt which answer goes to which question
+works. At the start of an unattended run, one block lists every parked task
+in the run under its handle with its question verbatim; reply by handle, or
+`skip` for one or all (an approval-gate item is skip-only, since its draft
+has to be seen). `--skip-parked` suppresses that pre-ask for a launch no
+human sees. While the run is going, a reply by the handle a parked question
+was printed under is its answer, and the task is unparked after the current
+one finishes; after the closing report, replying by a parked item's handle
+does the same on the next run. An attended run has no pre-ask — it
 asks each parked task's question when it reaches it. Unparking cherry-picks
 the branch back, deletes it, and resumes the task at the step it stopped at;
 a conflict rolls everything back and leaves the task `[PARKED]`. A parked
@@ -1208,9 +1212,9 @@ that has none of the conversation the prompts came out of.
   model), and doesn't apply the runbook header's `Model:`. `--unattended`
   runs under the `unattended` policy whatever the header says: a step that
   asks a question is **parked** — `[P]` on its heading, the question verbatim
-  in its `Context:` and printed in chat under a number, `Parked: steps <ids>`
-  in the index — and the run goes on to the steps that don't depend on it;
-  at launch it lists the parked steps in range for you to answer by number or
+  in its `Context:` and printed in chat under a `P<n>` handle, `Parked: steps
+  <ids>` in the index — and the run goes on to the steps that don't depend on
+  it; at launch it lists the parked steps in range for you to answer by handle or
   `skip` (approval-gate items are skip-only), which `--skip-parked` suppresses
   for a launch no human sees. `--attended` overrides a header
   `Execution policy: unattended` for one run: a question is relayed and the

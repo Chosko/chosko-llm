@@ -34,8 +34,9 @@ OPERATING RULES
 
 - You cannot talk to the user. Nobody is watching your turn in real time.
 - At any clarifying question or approval gate, stop and end your turn with the
-  literal line `QUESTIONS FOR USER`, followed by the questions, the options for
-  each, and a recommendation for each. At an approval gate, include the full
+  literal line `QUESTIONS FOR USER`, followed by the questions labelled `Q1`,
+  `Q2`, …, the options for each lettered `a`, `b`, …, and a recommendation for
+  each. At an approval gate, include the full
   draft, unabridged, so it can be approved as-is. The user's answer will be
   sent back to you in this same conversation; then continue.
 - One prompt is the exception: the dirty-tree prompt (`Working tree has

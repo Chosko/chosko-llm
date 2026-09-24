@@ -18,12 +18,15 @@ step's diff.
 
 ## The handles
 
-Every parked question the run prints carries a number, and the number is the
-reply handle. One sequence per run: the pre-ask numbers its items from 1, and
-each step parked later takes the next unused number. The closing report
-numbers its own items from 1, as THE CLOSING REPORT says, and once it is
-printed its numbers are the handles — it is the last thing on screen. A reply
-by the step's id or title is accepted wherever a number is.
+Every parked question the run prints carries a handle `P<n>` — `P1`, `P2`, … —
+and the handle is the reply handle. One sequence per run: the pre-ask labels
+its items from `P1`, each step parked later takes the next unused handle, and
+the closing report lists a parked step under the handle it already holds, or
+the next unused one. The questions inside a parked block are labelled `Q1`,
+`Q2`, … and their options `a`, `b`, … (OPERATING RULES), so a reply names both
+without colliding — `Unpark P1: Q1a, Q2b`. Any reply that names the handle and
+leaves no doubt which answer goes to which question is accepted, and so is a
+reply by the step's id or title.
 
 ## The fifth result row
 
@@ -42,11 +45,12 @@ step's agent, from a relay child, or from the session itself under
 3. Print the question in chat under the next handle, in one fixed block:
 
    ```
-   Parked (3) — Step 4 of 7 — Peer review — the agent asked:
+   Parked (P3) — Step 4 of 7 — Peer review — the agent asked:
 
      <the question, its options and the recommendation, verbatim>
 
-   Reply `3: <answer>` to unpark it; the run goes on meanwhile.
+   Reply `Unpark P3: <answers>` (e.g. `Unpark P3: Q1a, Q2b`) to unpark it;
+   the run goes on meanwhile.
    ```
 
 4. Write the index `Parked: steps <ids>` line — this id added, ascending
@@ -71,8 +75,8 @@ Steps remain, none is selectable, and at least one of them is `[P]`. This is
 not a deadlock and not a failure — the run is waiting on an answer nobody
 present can give. Set the index `Status:` back to `[PENDING]` (the `Parked:`
 line stays), commit per COMMIT CADENCE, and give the closing report, whose
-*Follow-ups* group names every `[P]` step with its question verbatim under an
-item number, and under it the steps waiting on it — every step that is not
+*Follow-ups* group names every `[P]` step with its question verbatim under its
+`P<n>` handle, and under it the steps waiting on it — every step that is not
 `[x]` and whose `Depends on:` reaches it, directly or through another
 blocked step. The report is the run's last act here as at any other end
 (CLOSING THE RUN).
@@ -114,17 +118,17 @@ answers `/task-implement`'s question from there, per OPERATING RULES.
 
 At loop step 1, under `unattended` only, unless `--skip-parked`. With no
 `[P]` step in range, nothing is printed. Otherwise, before any step is
-marked, print one numbered block listing every `[P]` step in range, in list
-order, each with the question its `parked:` bullet holds, verbatim:
+marked, print one block listing every `[P]` step in range under its handle,
+in list order, each with the question its `parked:` bullet holds, verbatim:
 
 ```
-Parked steps in this run — answer each by number, or reply `skip` for one
-(`skip 2`) or for all (`skip all`):
+Parked steps in this run — answer each by handle (`P1: Q1a, Q2b`), or reply
+`skip` for one (`skip P2`) or for all (`skip all`):
 
-1. Step 4 — Peer review — parked 2026-09-23
-   <the question, options included>
-2. Step 6 — Approve the migration draft — parked 2026-09-23, approval gate —
-   skip-only: its draft is approved in an attended run, when the step runs
+P1. Step 4 — Peer review — parked 2026-09-23
+    <the question, options included>
+P2. Step 6 — Approve the migration draft — parked 2026-09-23, approval gate —
+    skip-only: its draft is approved in an attended run, when the step runs
 ```
 
 Wait for a reply. Each answer unparks its step at once, per § *Unparking a
@@ -145,14 +149,14 @@ naming a parked step by id or title, is that step's answer: unpark it per
 ordinary conversation, and the run continues.
 
 The same holds after the closing report, while the session is still open: a
-reply by the report's item number is recorded the same way, and the next
+reply by the report's `P<n>` handle is recorded the same way, and the next
 `/runbook-run` of the runbook selects the step.
 
 ## The rejections
 
 Each is one line in chat and records nothing:
 
-- an answer to a number this run never printed;
+- an answer to a handle this run never printed;
 - a second answer to a step already unparked — the first answer wins, and
   changing it is a hand edit of `Context:`;
 - an answer to an `approval gate` item, at the pre-ask or in chat.

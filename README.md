@@ -344,9 +344,11 @@ the run waits. Pass **`--unattended`** for a run nobody is watching and the
 task that asked is **parked** instead — `[PARKED]` in the backlog, its
 question recorded verbatim, its work-in-progress kept on a `park/task-<N>`
 branch — and the run goes on to the next task. You answer later: at the next
-launch, where the run lists its parked tasks and you reply by number
+launch, where the run lists its parked tasks and you reply by handle
 (`--skip-parked` skips that), in chat while the run is still going, or after
 the closing report; the task is then unparked and resumed where it stopped.
+Each parked question carries a handle `P<n>`, its questions `Q1`, `Q2`, …
+and options `a`, `b`, …, so a reply reads like `Unpark P1: Q1a, Q2b`.
 Every run ends with one closing report — *For the record*, then a numbered
 *Follow-ups* list whose numbers are the reply handle.
 
@@ -391,10 +393,10 @@ own session, sharing one context, instead of spawning a subagent for each.
 Relay-and-wait is the default `attended` policy. Under **`--unattended`** — or
 a runbook header line `Execution policy: unattended`, which `--attended`
 overrides for one run — the step that asked is parked (`[P]`, its question
-recorded and printed under a number) and the run goes on to the steps that
-don't depend on it; at launch the parked steps in range are listed for you to
-answer by number, unless `--skip-parked`, and a reply by number in chat or
-after the closing report unparks a step too.
+recorded and printed under a `P<n>` handle) and the run goes on to the steps
+that don't depend on it; at launch the parked steps in range are listed for
+you to answer by handle, unless `--skip-parked`, and a reply by handle in chat
+or after the closing report unparks a step too.
 `/runbook-create` commits and pushes the runbook it wrote by default
 (`--no-commit`, `--no-push`). `/runbook-list`,
 `/runbook-describe`, `/runbook-prune` and `/runbook-clean` round out the set —

@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.10.1
+version: 1.10.2
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups
@@ -31,7 +31,7 @@ requires: skill:task-engine, command:follow-ups
 # unattended — a question about the work parks the task (`[PARKED]`, its
 # work-in-progress on `park/task-<N>`) and the run continues; the run's
 # `[PARKED]` tasks are pre-asked at launch unless `--skip-parked`, and a
-# parked question is answered by number in chat. Every run ends with one
+# parked question is answered by its `P<n>` handle in chat. Every run ends with one
 # closing report — For the record, then one Follow-ups list whose numbers are
 # the reply handle and which applies `/follow-ups`' rules without invoking it.
 # Usage: /task-implement <task-number> [<task-number> ...]
@@ -458,16 +458,16 @@ PRE-FLIGHT CHECKS (before any task)
    Otherwise, after the resolution report, open the trailing `## Parking
    handoff` of each `[PARKED]` task's body — for its `Parked:` and
    `Question:` lines only, the body's one pre-flight read — and print one
-   numbered block, one item per parked task in list order:
+   block, one item per parked task in list order, each under its handle:
 
-   > Parked tasks in this run — answer each by number, or reply `skip`
-   > for one (`skip 2`) or for all (`skip all`):
+   > Parked tasks in this run — answer each by handle (`P1: Q1a, Q2b`), or
+   > reply `skip` for one (`skip P2`) or for all (`skip all`):
    >
-   > 1. Task 42 — parked 2026-09-23 at Step 3
-   >    <its `Question:`, verbatim and multi-line, options included>
-   > 2. Task 47 — parked 2026-09-23 at the review round, approval gate —
-   >    skip-only: its draft is approved in an attended run, with the
-   >    draft in the tree
+   > P1. Task 42 — parked 2026-09-23 at Step 3
+   >     <its `Question:`, verbatim and multi-line, options included>
+   > P2. Task 47 — parked 2026-09-23 at the review round, approval gate —
+   >     skip-only: its draft is approved in an attended run, with the
+   >     draft in the tree
 
    Wait for a reply. Each answer is held in run memory for its task and fed
    to the unpark in Step 1 — nothing on disk changes, so a run that dies
@@ -477,9 +477,11 @@ PRE-FLIGHT CHECKS (before any task)
    unrelated reply is `skip all` — the value `--skip-parked` gives. Nothing
    parks here: a pre-flight prompt has no current task.
 
-   The numbers are the run's question handles, one sequence for the whole
-   run: a task parked later in this run takes the next unused number, and
-   BETWEEN TASKS reads replies against them.
+   The `P<n>` handles are the run's question handles, one sequence for the
+   whole run: a task parked later in this run takes the next unused handle,
+   and BETWEEN TASKS reads replies against them. Any reply that names the
+   handle and leaves no doubt which answer goes to which `Q<n>` is accepted
+   (`parking.md` § *The one event that parks*).
 
 2b. **Delegation check.** Only when the resolved list holds 2 or more
    tasks. With fewer than 2, DELEGATE is false, nothing is asked and the
@@ -545,7 +547,7 @@ its launcher under `QUESTIONS FOR USER`, and the launcher relays it
 (`./delegated-runs.md` § *The question relay*). Under UNATTENDED it parks the
 task instead: run the park sequence from `parking.md`, the step reached
 being the one the handoff's `Parked:` names, the question recorded verbatim
-there and printed in chat under the next handle number (PRE-FLIGHT step
+there and printed in chat under the next `P<n>` handle (PRE-FLIGHT step
 2a). The base tree is clean afterwards, so go to BETWEEN TASKS as if the
 task had committed, and continue with the next task.
 
@@ -722,11 +724,11 @@ before starting the next:
    re-reads. An explicit-number list is never re-checked: a task requested
    by number is never blocked by a precondition.
 2a. Read any chat message that arrived since the previous task started. A
-   reply by number handle to a question printed this run — at the pre-ask
+   reply by `P<n>` handle to a question printed this run — at the pre-ask
    or at a park — or one naming that question's task, is the task's answer:
    record it in run memory and move the task to the front of the remaining
    list, so Step 1 unparks it next. Any other message is ordinary
-   conversation, and the run continues. A reply naming a number this run
+   conversation, and the run continues. A reply naming a handle this run
    never printed, a second answer to a question already answered, or an
    answer to an `approval gate` item is rejected with one line and records
    nothing — the set is `parking.md` § *The answerer rule*'s, and the first
@@ -830,8 +832,8 @@ under its heading:
   and why, a follow-up naming an owner's command with its anchor and
   passages, a precondition that no longer held, a slug declined at the
   FEATURE COMPLETION proposal, a task parked this run or skipped for want of
-  an answer — its `Question:` verbatim and multi-line under its item number,
-  options included. And the items the `/follow-ups` command's rules yield
+  an answer — its `Question:` verbatim and multi-line under its `P<n>`
+  handle in place of an item number, options included. And the items the `/follow-ups` command's rules yield
   when applied to the run's reading — the command's body read by name and
   applied, never invoked (CLOSING THE RUN). Two items naming the same action
   are one item, in the command form where either had it.
@@ -847,9 +849,10 @@ Body Hints named ./test-runner.md for the policy marker — the marker's rule is
 **The numbering is the reply handle.** It starts at 1 in every report,
 carries no meaning beyond the handle, and a report with a single item still
 numbers it. Replying by number is ordinary conversation — "execute 1 and 2
-now" — handled as any other request is; a number that names a parked task's
-question is that task's answer, recorded exactly as a reply mid-run is
-(BETWEEN TASKS step 2a), and the next run unparks the task.
+now" — handled as any other request is. A parked task keeps its `P<n>`
+handle, the one it held this run or the next unused one, and a reply by it
+is that task's answer, recorded exactly as a reply mid-run is (BETWEEN TASKS
+step 2a), and the next run unparks the task.
 
 Order at the end of a run: the FEATURE COMPLETION proposal first, then this
 report, the run's last act (CLOSING THE RUN). Under `--agents`, the parent

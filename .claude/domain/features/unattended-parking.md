@@ -214,7 +214,7 @@ body.
 The orchestrator's result table gains a fifth row, active only under
 `unattended`: `QUESTIONS FOR USER` → mark `[P]`, append
 `- <date> parked: <question verbatim>` to the step's `Context:`, print the
-question in chat with a number handle, commit, continue. The orchestrator
+question in chat under a `P<n>` handle, commit, continue. The orchestrator
 still compresses and never answers; it stores the block's question and
 options, not an approval-gate draft. Attended runs keep the relay row and
 never reach this one.
@@ -256,21 +256,25 @@ is the task's.
 
 ### Answer intake
 
-Three moments, one handle:
+Three moments, one handle. A parked question is printed under `P<n>`, its
+questions labelled `Q1`, `Q2`, … and their options `a`, `b`, …, so a reply
+names both without colliding — `Unpark P1: Q1a, Q2b`. The syntax is an
+example, not a grammar: any reply naming the handle that leaves no doubt
+which answer goes to which question is accepted.
 
 - **Pre-ask, at launch, `unattended` only.** The user typing the command is
   present at that instant. Before the run starts, one block lists every
   `[P]` step in range (runbook) or `[PARKED]` task in the resolved list
-  (task-implement), each with its question verbatim, numbered; the user
-  answers by number or replies `skip`, per item or for all, and an `approval
+  (task-implement), each with its question verbatim under its handle; the
+  user answers by handle or replies `skip`, per item or for all, and an `approval
   gate` item is listed skip-only. Runbook answers go
   into `Context:` at once; task answers are held in run memory and fed at
   unpark. An attended run has no pre-ask: it asks when it reaches the item,
   after the user has seen the earlier steps' outcomes. `--skip-parked`
   suppresses the pre-ask for a launch no human sees — a routine, a scheduler,
   an orchestrator that is itself a subagent, which implies it.
-- **Mid-run, in chat.** A parked question is printed with a number when it is
-  parked. A reply by that number, or naming the step or task, is its answer:
+- **Mid-run, in chat.** A parked question is printed under its handle when it
+  is parked. A reply by that handle, or naming the step or task, is its answer:
   it is recorded (runbook `Context:` and `[ ]`; task memory) and the item is
   unparked after the current step or task finishes, before the next —
   `[P]`→`[ ]` above the current step is selected next by list order; an
@@ -282,8 +286,8 @@ Three moments, one handle:
   an `approval gate` item, at the pre-ask or in chat. Both run skills carry
   exactly that set, stated once in `task-engine`'s `parking.md`.
 - **After the closing report.** Parked items are listed there with their
-  question verbatim and a number; replying by number is the same act as
-  mid-run, and unparks on the next run.
+  question verbatim under their handle; replying by handle is the same act
+  as mid-run, and unparks on the next run.
 
 ### The closing report
 
@@ -335,7 +339,7 @@ The pipeline-engine routing rows for both skills list the new flags.
   index while any step is `[P]`; **`Execution policy:`** in the header,
   absent by default.
 - **In memory only:** pre-ask and chat answers for tasks, until unpark; the
-  run's resolved policy; the number handles printed this run.
+  run's resolved policy; the `P<n>` handles printed this run.
 
 The source of truth is the filesystem throughout: a `[PARKED]` task without a
 branch is `[none]` or an error the unpark reports; nothing is derived from a

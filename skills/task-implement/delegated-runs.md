@@ -283,7 +283,7 @@ group is those sixth fields, attributed to their tasks.
 **A `[PARKED]` return is not a failure and does not halt the run.** The
 agent ran the park sequence itself, so the base tree is clean and its
 question is in the task's `## Parking handoff`; the parent records the row,
-prints the returned question under the run's next handle number exactly as
+prints the returned question under the run's next `P<n>` handle exactly as
 SKILL.md's *Parking at a question* does for an in-context task, prints its
 progress line (§ *Between delegated tasks*), and spawns the next agent. The
 closing report lists the task under *Follow-ups* with that question, per
@@ -360,7 +360,7 @@ After each agent returns, and before the next spawn:
    tree. A mismatch is a failure; see below.
 2a. Read any chat message that arrived while the agent ran, exactly as
    SKILL.md's BETWEEN TASKS step 2a says for an in-context run: a reply by
-   number handle to a question printed this run — at the pre-ask or at a
+   `P<n>` handle to a question printed this run — at the pre-ask or at a
    park — is that task's answer, recorded in run memory, and the task moves
    to the front of the remaining list, so its agent is spawned next, the
    answer in its prompt (§ *The agent prompt*), and unparks it in its own

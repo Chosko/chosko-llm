@@ -23,7 +23,10 @@ and the codebase, a `--review` round's approval gate), or, when the session
 is a runbook step agent, the question it would otherwise end its turn with
 under `QUESTIONS FOR USER`. Under `unattended` that question parks the task
 instead of halting the run. Under `attended` nothing ever parks: the question
-is put to the user and the run waits.
+is put to the user and the run waits. A question that can park labels its
+questions `Q1`, `Q2`, … and their options `a`, `b`, …, and the run prints it
+under a `P<n>` handle, so a reply names both without colliding —
+`Unpark P1: Q1a, Q2b`.
 
 Every other gate keeps its existing outcome, and none gets a handoff:
 
@@ -122,7 +125,7 @@ never overwritten and never reused.
    `Task <N>: parked — <reason>`, and push unless NO_PUSH.
 
 The base tree is clean afterwards, so the next task meets no dirty tree.
-Print the question in chat with a number handle, then continue.
+Print the question in chat under the run's next `P<n>` handle, then continue.
 
 ## The unpark transaction
 
@@ -158,8 +161,8 @@ A conflict at step 2:
 
 Unpark is attempted whenever an answerer exists: an attended session when
 the task is reached, or an UNATTENDED run holding an answer for the task —
-from the pre-ask at launch, or from a reply by number in chat during the
-run. How those answers are taken and held is `/task-implement`'s own. With
+from the pre-ask at launch, or from a reply by `P<n>` handle in chat during
+the run. How those answers are taken and held is `/task-implement`'s own. With
 no answer the task is skipped with one line — "Skipping task 42 — parked,
 no answer held." — and never re-parked: no branch is touched, no commit is
 made. `all` and `next` treat `[PARKED]` as implementable exactly under that
@@ -168,7 +171,7 @@ policy, its answer under `unattended` coming from the pre-ask, where `skip`
 skips it as the batch selectors would.
 
 Three replies are rejected, each with one line in chat, and record
-nothing: an answer to a number the run never printed; a second answer to a
+nothing: an answer to a handle the run never printed; a second answer to a
 question already answered — the first wins; and an answer to an `approval
 gate` item, at the pre-ask or in chat — a gate is answered seen, never from
 a block. Both run skills carry exactly this set, and no other rejection.

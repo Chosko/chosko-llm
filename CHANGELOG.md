@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.72.4 — 2026-09-24
+
+- **Parked questions carry `P<n>` handles and `Q<n>` labels.** `/runbook-run` and `/task-implement` print each parked question as `Parked (P1) — …`, its questions labelled `Q1`, `Q2`, … and their options `a`, `b`, …, so a reply names both without colliding — `Unpark P1: Q1a, Q2b`. The syntax is an example: any reply naming the handle that leaves no doubt which answer goes to which question is accepted. The pre-ask and the closing report list parked items under the same handles; a runbook step agent labels its `QUESTIONS FOR USER` block that way.
+
 ## 1.72.3 — 2026-09-24
 
 - **`/runbook-run` step agents are told the `DONE` marker is mandatory.** OPERATING RULES state that a finished turn without the literal `DONE` line is a hard failure that halts the run, and that work making no commit — a relay review child — omits the sha and diffstat instead of ending on its report.

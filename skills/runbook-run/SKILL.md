@@ -1,6 +1,6 @@
 ---
 name: runbook-run
-version: 0.18.2
+version: 0.18.3
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user — or, under the `unattended` policy, parking the step that asked and going on — recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
 requires: command:follow-ups
@@ -25,7 +25,7 @@ requires: command:follow-ups
 # `references/body-migration.md`. Under the `unattended` execution policy —
 # the header's `Execution policy:` line, or --unattended / --attended
 # overriding it for one run — a step that asks a question is parked ([P])
-# with its question recorded and printed under a number handle, and the run
+# with its question recorded and printed under a `P<n>` handle, and the run
 # goes on to the steps that do not depend on it, per
 # `references/parking.md`; under `attended`, the default, a question is
 # relayed and the run waits. Also carries, under `references/`, the
@@ -131,7 +131,7 @@ committing: those happen every step, and the fragments are hard to read back
 once the run is over. Two things are never suppressed: a relayed
 `QUESTIONS FOR USER` block, verbatim, because a run that needs an answer asks
 for it at once — under `unattended`, the parked step's question under its
-number handle, for the same reason — and the spawn relay's own lines. The record of
+`P<n>` handle, for the same reason — and the spawn relay's own lines. The record of
 the run is the closing report, not the transcript above it. The same rule holds
 under `--inline`.
 
@@ -581,7 +581,7 @@ outside this rule: one is verbatim, the other fixed text.
 **Under the `unattended` policy a fifth row replaces the first**, and it is
 the only change the policy makes to this table: `QUESTIONS FOR USER` → park
 the step, per `./references/parking.md` § *The fifth result row* — `[P]`, the
-question into `Context:`, printed in chat under a number handle, committed,
+question into `Context:`, printed in chat under a `P<n>` handle, committed,
 and the run continues. The other three rows are unchanged under either
 policy; an attended run never reaches the fifth.
 
@@ -975,7 +975,8 @@ run's own conversation.
   "Flip to `[DONE]` in FEATURES.md? Name the slugs, or say all / none."; a
   failed step, with its reason and what the agent said; a step left `[~]`, to
   resume; every step left `[P]`, with its question verbatim and multi-line
-  under its item number, options included, and the steps waiting on it; and
+  under its `P<n>` handle in place of an item number, options included, and
+  the steps waiting on it; and
   the steps left outside the range, outside the `--steps` count, or never
   started. And the items the `/follow-ups` command's rules yield when applied
   to the run's reading — the command's body read by name and applied, never
@@ -987,9 +988,9 @@ An empty group prints its heading and `none`.
 **The numbering is the reply handle.** It starts at 1 in every report, carries
 no meaning beyond the handle, and a report with a single item still numbers
 it. Replying by number is ordinary conversation — "execute 2", "insert 3 as
-the next step" — handled as any other request is; a number that names a
-parked step's question is that step's answer, recorded exactly as a mid-run
-reply is (`./references/parking.md` § *Mid-run answers*), and the next run
+the next step" — handled as any other request is. A parked step keeps its
+`P<n>` handle (`./references/parking.md` § *The handles*), and a reply by it
+is that step's answer, recorded exactly as a mid-run reply is (`./references/parking.md` § *Mid-run answers*), and the next run
 selects the step.
 
 The flip question is asked once, here. The answer is acted on in conversation
