@@ -1,6 +1,6 @@
 ---
 name: task-review
-version: 0.4.1
+version: 0.4.2
 type: skill
 description: Audit a diff against the acceptance criteria of the task that produced it and report structured findings, each cited to a file:line with a BLOCKING, IMPORTANT or ADVISORY severity. Use it on an uncommitted tree, a branch or a pull request before the work is accepted; /task-implement's review rounds spawn it as a fresh-context reviewer.
 requires: skill:task-engine
@@ -290,14 +290,17 @@ The report as a whole:
   readable without the task body open;
 - the findings, BLOCKING first;
 - **one line of overall verdict**;
-- a closing section in two groups, in this order: **Needs you** — what the
-  caller must decide, an `unverifiable` criterion and what would settle it
-  among them — numbered `1.`, `2.`, …, each at whatever length it needs; then
-  **For the record** — one line per item, `<what deviated> — <why> — <resolved
-  by whom>`: a cap that bound, a wrong cross-reference in the body, a guard's
-  pre-existing noise. An empty group prints its heading and `none`. The number
-  is the handle the caller replies with: it starts at 1 in every report,
-  carries no meaning beyond that, and a single item is still numbered.
+- a closing section in two groups, in this order: **For the record** — one
+  line per item, `<what deviated> — <why> — <resolved by whom>`: a cap that
+  bound, a wrong cross-reference in the body, a guard's pre-existing noise;
+  then **Follow-ups** — what the caller must decide, an `unverifiable`
+  criterion and what would settle it among them — numbered `1.`, `2.`, …,
+  each at whatever length it needs. An empty group prints its heading and
+  `none`. The number is the handle the caller replies with: it starts at 1 in
+  every report, carries no meaning beyond that, and a single item is still
+  numbered. The heading and order are the run-closing skills' own, but this
+  read-only skill reads a diff, not a session, so it does not apply
+  `/follow-ups`' rules to fill the group.
 
 A `not met` criterion must have a BLOCKING finding pointing at it, and every
 BLOCKING finding about a criterion must appear in that criterion's verdict.
