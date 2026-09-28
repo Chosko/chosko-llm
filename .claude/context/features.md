@@ -578,7 +578,7 @@ Currently shipped:
   the task that produced it and reports structured findings; on a
   documentation diff also an untraceable documentation edit (a decision the
   task never approved, `IMPORTANT` by default); report closes in the two
-  groups Needs you (numbered, the reply handle) / For the record. Exists beside
+  groups For the record / Follow-ups (numbered, the reply handle). Exists beside
   Claude Code's built-in `/code-review` because of that one difference:
   generic review asks *is this good code*, this asks *does this satisfy task
   N's criteria*; where the two overlap it defers to the built-in rather than

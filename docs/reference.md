@@ -973,9 +973,9 @@ It reports only findings it holds at 80% confidence or better, each citing a
 nothing is a valid, complete review. On a diff that edits documentation it
 also flags an edit not traceable to the task — one that introduces a
 decision the task never approved, whether or not it is dressed as a
-consequence. Its report closes in two groups: *Needs you*, numbered so you
-can answer by number, then *For the record*, the same one-line shape
-`/task-implement`'s closing report uses.
+consequence. Its report closes in the two groups `/task-implement`'s
+closing report uses: *For the record*, one line per item, then
+*Follow-ups*, numbered so you can answer by number.
 
 A run spawned by `/task-implement --review` may carry a **read budget**
 naming a tier (`shallow` / `standard` / `deep`), and it honours it: the

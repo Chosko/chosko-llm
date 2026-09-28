@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.72.5 — 2026-09-28
+
+- **`/task-review`'s report closes on *For the record* then *Follow-ups*.** The same two groups, in the same order, as the `/task-implement` and `/runbook-run` closing reports: the one-line deviations first, then everything awaiting your decision — an `unverifiable` criterion and what would settle it among them — numbered so you can reply by number. The reviewer reads a diff, not a session, so it does not apply `/follow-ups`' rules to fill the list.
+
 ## 1.72.4 — 2026-09-24
 
 - **Parked questions carry `P<n>` handles and `Q<n>` labels.** `/runbook-run` and `/task-implement` print each parked question as `Parked (P1) — …`, its questions labelled `Q1`, `Q2`, … and their options `a`, `b`, …, so a reply names both without colliding — `Unpark P1: Q1a, Q2b`. The syntax is an example: any reply naming the handle that leaves no doubt which answer goes to which question is accepted. The pre-ask and the closing report list parked items under the same handles; a runbook step agent labels its `QUESTIONS FOR USER` block that way.

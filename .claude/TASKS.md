@@ -384,7 +384,7 @@ Feature: unattended-parking
 
 ## 268. `/task-review`'s report closes on For the record then Follow-ups
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-review/SKILL.md, docs/reference.md, .claude/domain/features/task-peer-review.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: 265
