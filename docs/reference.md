@@ -1730,7 +1730,7 @@ A status-bar script showing model, working directory, git branch, context
 usage, session cost and the 5-hour / 7-day rate-limit usage. Installed to
 `~/.claude/statusline/session-statusline.sh`; `add` prints a prompt for a
 Claude Code session to wire that path into `settings.json`'s `statusLine`
-key, since the CLI never edits `settings.json` itself. Needs `jq`.
+key, since the CLI never edits `settings.json` itself.
 Global-only: a status bar belongs to your terminal, not a repository.
 
 ---

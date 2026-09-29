@@ -2,7 +2,7 @@
 : <<'CHOSKO_FRONTMATTER'
 ---
 name: session-statusline
-version: 0.1.0
+version: 0.1.1
 type: statusline
 description: Status line showing model, cwd, git branch, context usage, cost, and 5h/7d rate limits.
 ---
@@ -12,14 +12,62 @@ set -euo pipefail
 
 input=$(cat)
 
+# --- Flatten the JSON to "dotted.path<TAB>value" lines (no jq) ---
+# Scalars only; null is dropped so a missing and a null field read the same.
+FIELDS=$(printf '%s' "$input" | awk '
+  function emit(v,   p, k) {
+    p = ""
+    for (k = 1; k <= d; k++) p = p (k > 1 ? "." : "") key[k]
+    print p "\t" v
+  }
+  { s = s $0 "\n" }
+  END {
+    n = length(s); d = 0; i = 1
+    while (i <= n) {
+      c = substr(s, i, 1)
+      if (c == "{") { d++; typ[d] = "o"; key[d] = ""; expk = 1; i++; continue }
+      if (c == "[") { d++; typ[d] = "a"; key[d] = 0;  expk = 0; i++; continue }
+      if (c == "}" || c == "]") { d--; i++; continue }
+      if (c == ":") { expk = 0; i++; continue }
+      if (c == ",") { if (typ[d] == "o") expk = 1; else key[d]++; i++; continue }
+      if (c ~ /[ \t\r\n]/) { i++; continue }
+      if (c == "\"") {
+        v = ""; i++
+        while (i <= n) {
+          c = substr(s, i, 1)
+          if (c == "\\") {
+            e = substr(s, i + 1, 1)
+            if (e == "n" || e == "t" || e == "r") v = v " "
+            else if (e == "u") { v = v "\\u" substr(s, i + 2, 4); i += 4 }
+            else v = v e
+            i += 2; continue
+          }
+          i++
+          if (c == "\"") break
+          v = v c
+        }
+        if (typ[d] == "o" && expk) key[d] = v; else emit(v)
+        continue
+      }
+      j = i
+      while (j <= n && substr(s, j, 1) !~ /[,}\] \t\r\n]/) j++
+      v = substr(s, i, j - i); i = j
+      if (v != "null") emit(v)
+    }
+  }')
+
+field() {
+  printf '%s\n' "$FIELDS" | awk -F'\t' -v k="$1" '$1 == k { sub(/^[^\t]*\t/, ""); print; exit }'
+}
+
 # --- Parse fields (all with null-safe fallbacks) ---
-MODEL=$(jq -r '.model.display_name // "?"'                        <<<"$input")
-DIR=$(  jq -r '.workspace.current_dir // "?"'                     <<<"$input")
-PCT=$(  jq -r '.context_window.used_percentage // 0 | floor'      <<<"$input")
-COST=$( jq -r '.cost.total_cost_usd // 0'                         <<<"$input")
-RL5H=$( jq -r '.rate_limits.five_hour.used_percentage // empty'   <<<"$input")
-RL7D=$( jq -r '.rate_limits.seven_day.used_percentage // empty'   <<<"$input")
-RESETS_AT=$(jq -r '.rate_limits.five_hour.resets_at // empty'     <<<"$input")
+MODEL=$(field model.display_name);                    MODEL=${MODEL:-?}
+DIR=$(field workspace.current_dir);                   DIR=${DIR:-?}
+PCT=$(field context_window.used_percentage);          PCT=${PCT%%.*}; PCT=${PCT:-0}
+COST=$(field cost.total_cost_usd);                    COST=${COST:-0}
+RL5H=$(field rate_limits.five_hour.used_percentage)
+RL7D=$(field rate_limits.seven_day.used_percentage)
+RESETS_AT=$(field rate_limits.five_hour.resets_at)
 
 # Normalize Windows paths for Git Bash: E:\projects\foo → /e/projects/foo
 if [[ "$DIR" =~ ^[A-Za-z]:[\\/] ]]; then

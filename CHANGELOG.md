@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.72.6 — 2026-09-29
+
+- **`statusline:session-statusline` no longer needs `jq`.** It reads Claude Code's session JSON with `awk`, so the status bar shows up on machines without `jq`. Before this fix it exited silently there and the status bar stayed blank. Run `chosko-llm update` to pick it up.
+
 ## 1.72.5 — 2026-09-28
 
 - **`/task-review`'s report closes on *For the record* then *Follow-ups*.** The same two groups, in the same order, as the `/task-implement` and `/runbook-run` closing reports: the one-line deviations first, then everything awaiting your decision — an `unverifiable` criterion and what would settle it among them — numbered so you can reply by number. The reviewer reads a diff, not a session, so it does not apply `/follow-ups`' rules to fill the list.
