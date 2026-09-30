@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 272
+Last task number: 276
 
 ---
 
@@ -425,5 +425,45 @@ Status: [DONE]
 Target: claude
 Files: skills/task-engine/references/parking.md, skills/task-engine/references/status.md, skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, skills/task-clean/SKILL.md, skills/pipeline-engine/references/routing.md, .claude/domain/features/unattended-parking.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none
+
+---
+
+## 273. `/runbook-run` progress line counts finished steps and reads the index's `Steps:` counter
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: none
+Feature: runbook-suite
+
+---
+
+## 274. Update documentation for feature `runbook-suite`
+
+Status: [MISSING]
+Target: claude
+Files: docs/reference.md, .claude/context/features.md
+Preconditions: 273
+Feature: runbook-suite
+
+---
+
+## 275. A re-park deletes the leftover park branch first, and the `/task-clean` sweep spares `[IN PROGRESS]` tasks
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-engine/references/parking.md, skills/task-clean/SKILL.md, skills/pipeline-engine/references/routing.md, skills/task-implement/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: none
+Feature: unattended-parking
+
+---
+
+## 276. Update documentation for feature `unattended-parking`
+
+Status: [MISSING]
+Target: claude
+Files: docs/reference.md, .claude/context/features.md
+Preconditions: 275
+Feature: unattended-parking
 
 ---

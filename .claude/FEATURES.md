@@ -85,10 +85,10 @@ Tasks: none
 
 ## runbook-suite — Ordered self-contained prompts, executed by orchestrated subagents
 
-Status: [DONE]
+Status: [PLANNED]
 Doc: .claude/domain/features/runbook-suite.md
 Source: prompt
-Tasks: none
+Tasks: 273, 274
 
 ---
 
@@ -184,9 +184,9 @@ Tasks: 211, 212, 213, 214
 
 ## unattended-parking — Park a question instead of halting the run under an `unattended` policy
 
-Status: [DONE]
+Status: [PLANNED]
 Doc: .claude/domain/features/unattended-parking.md
 Source: product-design.md § Task backlog
-Tasks: 259, 260, 261, 262, 263, 264, 265, 266, 267, 268
+Tasks: 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 275, 276
 
 ---

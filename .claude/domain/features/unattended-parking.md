@@ -158,8 +158,11 @@ asked, and produces:
 - **The parking branch**, `park/task-<N>`, holding **one commit** of the
   task's uncommitted work — tracked edits and the untracked files it created,
   **excluding** `.claude/TASKS.md` and the task body — branched from the
-  current head and pushed. A branch of that name already existing is an
-  inconsistent state and fails the park; it is never overwritten.
+  current head and pushed. A branch of that name already existing is the
+  one a resumed task's unpark keeps until its commit: the park deletes it
+  first, local and remote — its content is already in the tree — and a delete
+  that is refused or fails fails the park as a Step 7 failure. The name never
+  changes.
 - **The bookkeeping commit** on the base branch: the `Status:` flip to
   `[PARKED]` and the handoff section, and only those. It follows the branch
   commit and the checkout back, so the base tree is clean when the run
@@ -340,8 +343,8 @@ The pipeline-engine routing rows for both skills list the new flags.
   `[PARKED]` with a non-`[none]` branch, and after an unpark until the task's
   commit lands; deleted best-effort once that commit is in, or by
   reconciliation's skip-and-replace, and any left behind is swept by
-  `/task-clean`, which deletes every `park/task-<N>` whose task is not
-  `[PARKED]`.
+  `/task-clean`, which deletes every `park/task-<N>` whose task is neither
+  `[PARKED]` nor `[IN PROGRESS]`.
 - **`[P]`** on a step heading, committed; **`Context:`** bullets
   `parked: …` and `unparked with answer: …`; **`Parked: steps …`** in the
   index while any step is `[P]`; **`Execution policy:`** in the header,
@@ -375,8 +378,8 @@ lock, a timestamp or a cache.
 | `all` / `next` skip non-implementable statuses | `[PARKED]` implementable when an answerer exists, else skipped with one line |
 | Closing report: Needs you, For the record, then `/follow-ups` | For the record, then one Follow-ups list |
 
-Failure contract: a park that cannot make its branch (name taken, push
-refused) fails the task as any Step 7 failure does, `[IN PROGRESS]`, tree
+Failure contract: a park that cannot make its branch (a leftover branch
+it cannot delete, push refused) fails the task as any Step 7 failure does, `[IN PROGRESS]`, tree
 intact; an unpark that cannot cherry-pick rolls back and leaves `[PARKED]`;
 an answer that matches no printed question is rejected with one line; a
 header policy value outside the two words is an argument error.

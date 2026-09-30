@@ -484,7 +484,13 @@ step's work — are **default-mode contracts**. Under `--inline` they apply as
 
 **The chat contract.** Between steps the run says two lines per step: a
 progress line when the step starts — `Step <n> running. Current run progress
-(<k>/<m>). Total runbook progress (<x>/<y>).` — and one line at its end —
+(<k>/<m>). Total runbook progress (<x>/<y>).`, where `k` counts the steps
+this run has finished plus the one now starting, `m` the steps this run will
+touch — every selectable `[ ]`, `[~]` or `[!]` step in range, capped by
+`--steps N`, fixed at launch — and `x/y` is the index's `Steps:` counter as it
+stood at launch, `x` raised by each step this run finishes plus the one now
+starting; a step that parks or fails adds to neither `k` nor `x` — and one
+line at its end —
 `Step 4 done (abc1234). Starting step 5.`, or the failure line — and narrates
 nothing else: not the spawn, the wait, the classification, the `Done:` write
 or the commit. On a forced mid-step turn the progress line is the only status
@@ -495,7 +501,7 @@ prints a follow-up when it arises mid-run, because the list itself is printed
 only on demand (`follow-ups-resolve` § DURING A RUNBOOK RUN); quiet applies
 to narration only. The **closing report is
 the record of the run** instead, in the same two groups `/task-implement` and
-`/task-implement` closes in, and it reads the same way at completion, at a
+`/task-review` close in, and it reads the same way at completion, at a
 bound, at the parked end branch and at a failure halt. *For the record*
 comes first: one line per step the run executed, in list order, `<step n> —
 <outcome, commit sha and diffstat> — <what changed in one line; decision or
