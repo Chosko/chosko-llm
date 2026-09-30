@@ -487,7 +487,11 @@ progress line when the step starts — `Step <n> running. Current run progress
 (<k>/<m>). Total runbook progress (<x>/<y>).`, where `k` counts the steps
 this run has finished plus the one now starting, `m` the steps this run will
 touch — every selectable `[ ]`, `[~]` or `[!]` step in range, capped by
-`--steps N`, fixed at launch — and `x/y` is the index's `Steps:` counter as it
+`--steps N`, counted once at launch after any pre-ask is answered, a step
+being selectable there when every `Depends on:` is `[x]` or is itself a
+counted step; a step that joins the run later — appended inside the range, or
+unparked by a reply in chat — runs without raising `m`, and `k` holds at `m`
+on it, so `k` never exceeds `m` — and `x/y` is the index's `Steps:` counter as it
 stood at launch, `x` raised by each step this run finishes plus the one now
 starting; a step that parks or fails adds to neither `k` nor `x` — and one
 line at its end —
