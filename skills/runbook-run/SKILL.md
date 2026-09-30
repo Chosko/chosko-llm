@@ -1,6 +1,6 @@
 ---
 name: runbook-run
-version: 0.19.0
+version: 0.19.1
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user — or, under the `unattended` policy, parking the step that asked and going on — recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
 requires: command:follow-ups, skill:follow-ups-resolve
@@ -133,13 +133,24 @@ the progress line:
 Step <n> running. Current run progress (<k>/<m>). Total runbook progress (<x>/<y>).
 ```
 
-- `k` — this step's position among the steps this run executes, from 1.
-- `m` — the run's planned size, fixed at launch: the number of selectable `[ ]`
-  steps in range, or `N` of `--steps N` when that is smaller. It is not
-  recomputed when a step parks or fails.
-- `x` — the number of `[x]` steps in the whole runbook, plus the step now
-  starting.
-- `y` — every step in the runbook.
+- `k` — the steps this run has finished (`[x]` in this run), plus the step now
+  starting. A step that parked or failed earlier in the run adds nothing.
+- `m` — the steps this run will touch: every step in range marked `[ ]`, `[~]`
+  or `[!]` whose every `Depends on:` is `[x]` or is itself one of these steps,
+  capped by `N` of `--steps N` when that is smaller — the same steps `--steps N`
+  counts, in the same terms (ARGUMENTS). A step the run will not execute — out
+  of range, or waiting on a dependency no step of this run completes — is not
+  in it. It is fixed at launch — counted once, after any pre-ask is answered
+  and before the first progress line — and never recomputed: a step that parks or
+  fails leaves it unchanged, and a step that joins the run later — appended
+  inside the range, or unparked by a reply in chat — runs without raising it.
+  `k` never exceeds `m`; on such a late step it holds at `m`.
+- `x` — the done half of this runbook's `Steps:` counter in
+  `.claude/RUNBOOKS.md` as it stood at launch, raised by each step this run has
+  finished, plus the step now starting. A step that parked or failed adds
+  nothing.
+- `y` — the total half of that counter at launch, archived ids included
+  (`runbook-schema.md` § *The index block*).
 
 And at that step's end, `Step 4 done (abc1234). Starting step 5.`, or the
 failure line the halt already calls for. Do not narrate spawning, waiting,
@@ -208,7 +219,8 @@ this run, the run stops. The count is of steps **actually executed in this
 run**: a step counts when it was executed and its outcome reached step 8 as
 `DONE` — by a spawned subagent or, under `--inline`, by this session. Steps
 already `[x]` never count, because selection never picks them; a resumed `[~]`
-step or a re-run `[!]` step counts like any other selected step. Fewer than N
+step or a re-run `[!]` step counts like any other selected step. The progress
+line's `k` and `m` are made of this same count (CHAT OUTPUT). Fewer than N
 selectable steps is not an error: the ordinary branches apply unchanged
 (completion, deadlock, or a failure's halt).
 

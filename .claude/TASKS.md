@@ -430,7 +430,7 @@ Preconditions: none
 
 ## 273. `/runbook-run` progress line counts finished steps and reads the index's `Steps:` counter
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: none

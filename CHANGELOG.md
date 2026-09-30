@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.75.1 — 2026-09-30
+
+- **`/runbook-run`'s progress line counts the right things.** `Current run progress (k/m)` counts the steps this run has finished plus the one starting, out of every `[ ]`, `[~]` or `[!]` step it will run — so a resumed or re-run step no longer shows `1/0`. `Total runbook progress (x/y)` starts from the index's `Steps:` counter, archived steps included.
+
 ## 1.75.0 — 2026-09-30
 
 - **Unparking a task no longer deletes its `park/task-<N>` branch up front.** `/task-implement` deletes it as the task's last act, after the task's commit and push, and a refused or failed delete no longer stops the run: the task keeps its status and the closing report's Follow-ups names the branch and the two commands to delete it. Until the commit lands, the branch stays as a backup of the parked work.
