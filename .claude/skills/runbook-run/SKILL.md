@@ -1,9 +1,9 @@
 ---
 name: runbook-run
-version: 0.18.3
+version: 0.19.1
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user — or, under the `unattended` policy, parking the step that asked and going on — recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
-requires: command:follow-ups
+requires: command:follow-ups, skill:follow-ups-resolve
 ---
 
 # /runbook-run
@@ -12,8 +12,9 @@ requires: command:follow-ups
 # user, records what each step did, and commits after every step. In the
 # default mode the orchestrator reads only CLAUDE.md, the runbook and the
 # index, writes only the runbook and the index, and never does a step's work
-# or second-guesses a subagent. It is quiet between steps — one line per
-# step, no narration — and its closing report is the record of the run. Under
+# or second-guesses a subagent. It is quiet between steps — a progress line
+# at each step's start and one line at its end, no narration — and its
+# closing report is the record of the run. Under
 # --inline this session executes each selected step itself under the fixed
 # rule set in `references/inline-contract.md`, with the bookkeeping
 # unchanged; --inline is refused beside --relay-spawns or --model, and the
@@ -123,15 +124,48 @@ invoked, when it is wanted, from inside a step's own prompt.
 
 ## CHAT OUTPUT
 
-**Quiet between steps, exhaustive at the end.** While the loop runs, print one
-line per step, at that step's end and nowhere else — `Step 4 done (abc1234).
-Starting step 5.`, or the failure line the halt already calls for. Do not
-narrate spawning, waiting, classifying a result, writing a `Done:` line or
-committing: those happen every step, and the fragments are hard to read back
-once the run is over. Two things are never suppressed: a relayed
+**Quiet between steps, exhaustive at the end.** While the loop runs, print two
+lines per step and nowhere else. Once per step, when the step is spawned — under
+`--inline`, when its execution phase begins — the run's first step included,
+the progress line:
+
+```
+Step <n> running. Current run progress (<k>/<m>). Total runbook progress (<x>/<y>).
+```
+
+- `k` — the steps this run has finished (`[x]` in this run), plus the step now
+  starting. A step that parked or failed earlier in the run adds nothing.
+- `m` — the steps this run will touch: every step in range marked `[ ]`, `[~]`
+  or `[!]` whose every `Depends on:` is `[x]` or is itself one of these steps,
+  capped by `N` of `--steps N` when that is smaller — the same steps `--steps N`
+  counts, in the same terms (ARGUMENTS). A step the run will not execute — out
+  of range, or waiting on a dependency no step of this run completes — is not
+  in it. It is fixed at launch — counted once, after any pre-ask is answered
+  and before the first progress line — and never recomputed: a step that parks or
+  fails leaves it unchanged, and a step that joins the run later — appended
+  inside the range, or unparked by a reply in chat — runs without raising it.
+  `k` never exceeds `m`; on such a late step it holds at `m`.
+- `x` — the done half of this runbook's `Steps:` counter in
+  `.claude/RUNBOOKS.md` as it stood at launch, raised by each step this run has
+  finished, plus the step now starting. A step that parked or failed adds
+  nothing.
+- `y` — the total half of that counter at launch, archived ids included
+  (`runbook-schema.md` § *The index block*).
+
+And at that step's end, `Step 4 done (abc1234). Starting step 5.`, or the
+failure line the halt already calls for. Do not narrate spawning, waiting,
+classifying a result, writing a `Done:` line or committing: those happen every
+step, and the fragments are hard to read back once the run is over. A forced
+mid-step turn — a Stop hook firing on the in-flight step's dirty tree, a
+notification arriving while the step runs — explains nothing: the progress line
+is the only status line it may print besides the spawn relay's own lines, and
+COMMIT CADENCE § *The Stop-hook reply* gives the hook its fixed answer. Three
+things are never suppressed: a relayed
 `QUESTIONS FOR USER` block, verbatim, because a run that needs an answer asks
 for it at once — under `unattended`, the parked step's question under its
-`P<n>` handle, for the same reason — and the spawn relay's own lines. The record of
+`P<n>` handle, for the same reason — the spawn relay's own lines, and the one
+line that prints a follow-up when it arises mid-run, per the
+`follow-ups-resolve` skill § DURING A RUNBOOK RUN. The record of
 the run is the closing report, not the transcript above it. The same rule holds
 under `--inline`.
 
@@ -185,7 +219,8 @@ this run, the run stops. The count is of steps **actually executed in this
 run**: a step counts when it was executed and its outcome reached step 8 as
 `DONE` — by a spawned subagent or, under `--inline`, by this session. Steps
 already `[x]` never count, because selection never picks them; a resumed `[~]`
-step or a re-run `[!]` step counts like any other selected step. Fewer than N
+step or a re-run `[!]` step counts like any other selected step. The progress
+line's `k` and `m` are made of this same count (CHAT OUTPUT). Fewer than N
 selectable steps is not an error: the ordinary branches apply unchanged
 (completion, deadlock, or a failure's halt).
 
@@ -367,7 +402,8 @@ COMMIT CADENCE and ONE RUN PER RUNBOOK.
 
 Spawn **one** subagent with fresh context, the assembled prompt (see THE
 SPAWNED PROMPT), and the model from the runbook header — or from `--model`,
-which overrides it for the whole run.
+which overrides it for the whole run — and print the step's progress line
+(CHAT OUTPUT).
 
 One at a time. Never two — see THE SPAWN RELAY for the one exception, a
 relayed child running while its caller is suspended. Steps are sequential
@@ -385,8 +421,8 @@ stops a hand-written runbook smuggling one in.
 
 **Under `--inline`**, spawn nothing. The **execution phase** takes the place of
 this step and step 6: the session assembles the step's brief and executes it
-itself, under the inline contract — see THE INLINE MODE. No other loop step
-changes. The nested-runbook refusal above still applies, unchanged: check it
+itself, under the inline contract — see THE INLINE MODE — printing the
+progress line as it begins. No other loop step changes. The nested-runbook refusal above still applies, unchanged: check it
 before the execution phase begins, and refuse the step exactly as written.
 
 ### 6. Wait
@@ -929,26 +965,41 @@ commit (checkin) step runs.
 
 **The Stop-hook reply.** A cloud sandbox's Stop hook refuses to end a turn on a
 dirty tree, and an in-flight step is dirty by design — the `[~]` heading and the
-index's `[RUNNING]`, which this section forbids committing. That block cannot
-be cleared from here, and it costs one forced turn every time it fires: at each
-step start, and at every question relayed to the user.
+index's `[RUNNING]`, which this section forbids committing, plus, in spawned
+mode, whatever the step's subagent has not committed yet. That block cannot be
+cleared from here, and it costs one forced turn every time it fires: at each
+step start, at every question relayed to the user, and at every notification
+that wakes the run while a step is in flight.
 
-When that feedback arrives and the only uncommitted changes are the runbook and
-the index **you yourself just wrote**, spend nothing on it. Reply with exactly
+Two cases spend nothing on it. In each, reply with exactly the line given and
+end the turn — no tool call, no `git status`, no explanation: you already know
+what is dirty, and re-deriving it costs a few hundred tokens every time and
+changes nothing.
 
-```
-stop hook ignored on runbook WIP
-```
+- **Runbook WIP** — the only uncommitted changes are the runbook and the index
+  **you yourself just wrote**:
 
-and end the turn. No tool call, no `git status`, no explanation — you wrote
-those two files one step ago and already know what is dirty. Re-deriving it
-costs a few hundred tokens every time and changes nothing.
+  ```
+  stop hook ignored on runbook WIP
+  ```
 
-If anything else is dirty, this is not that case — handle it normally. That
-fall-through is the point: the condition is your own two writes, so a genuinely
-forgotten commit still gets thought about.
+- **Subagent WIP** — a spawned step is in flight: spawned in step 5, its result
+  not yet arrived (step 6). Whatever is dirty, since nothing but the step's
+  subagent and the two bookkeeping files can have written the tree then:
 
-The same condition answers one more prompt, in either mode — a step command's
+  ```
+  stop hook ignored on subagent WIP
+  ```
+
+  Spawned mode only. Under `--inline` there is no subagent, and the session's
+  own dirty files are its own work to track, so the runbook-WIP case alone
+  applies.
+
+In any other state this is neither case — handle it normally. That fall-through
+is the point: outside an in-flight spawn the condition is your own two writes,
+so a genuinely forgotten commit still gets thought about.
+
+The runbook-WIP condition answers one more prompt, in either mode — a step command's
 dirty-tree prompt, answered `proceed` by whoever executes the step: the step's
 agent under OPERATING RULES (`subagent-contract.md`), or the session under
 `inline-contract.md`.
@@ -987,8 +1038,9 @@ An empty group prints its heading and `none`.
 
 **The numbering is the reply handle.** It starts at 1 in every report, carries
 no meaning beyond the handle, and a report with a single item still numbers
-it. Replying by number is ordinary conversation — "execute 2", "insert 3 as
-the next step" — handled as any other request is. A parked step keeps its
+it. A reply by number — "execute 2", "insert 3 as the next step" — is acted
+on by the `follow-ups-resolve` skill when it is available, and otherwise
+handled as any other request is. A parked step keeps its
 `P<n>` handle (`./references/parking.md` § *The handles*), and a reply by it
 is that step's answer, recorded exactly as a mid-run reply is (`./references/parking.md` § *Mid-run answers*), and the next run
 selects the step.
@@ -1034,8 +1086,8 @@ never touches. Under `--inline`
 nothing changes — there are no step reports, and the session's own
 conversation is the whole reading.
 
-Where the user then asks to execute or plan one of the listed follow-ups
-that came from a step subagent, forwarding it to that same subagent is often
+When a listed follow-up that came from a step subagent is executed or
+planned, forwarding it to that same subagent is often
 the convenient thing to do, and is allowed. Judgement, not a rule — this is
 not a new relay protocol and adds no round to the cap.
 
@@ -1043,6 +1095,16 @@ not a new relay protocol and adds no round to the cap.
 adds no commit, and it is printed after the index `Status:` (`[DONE]` /
 `[FAILED]` / `[PENDING]`) and the run's final commit are already written, so
 it never dirties a tree the run just cleaned.
+
+**When a working list exists** — the user resolved or approved follow-ups
+during the run, per the `follow-ups-resolve` skill § DURING A RUNBOOK RUN —
+the *Follow-ups* group is that list in its two-section shape: **Approved**
+first, then **Awaiting approval**, the run's own items and what `/follow-ups`'
+rules yield folded into the second, one numbering running across both. After
+the report, the approved items are executed under `follow-ups-resolve`. That
+is conversation after the run, so the report's contract holds as stated: it
+adds no commit and flips no status, and a `FEATURES.md` flip among the items
+is a delegated item — the orchestrator never writes that file itself.
 
 **When `/follow-ups` is not installed, the group holds the run's own items
 only, silently.** The frontmatter keeps `requires: command:follow-ups` — the

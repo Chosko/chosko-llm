@@ -268,7 +268,9 @@ The return contract is exactly six things, the last two optional:
 3. the commit hash — or, under NO_COMMIT, that nothing was committed; for a
    `[PARKED]` task, the bookkeeping commit's hash,
 4. a one-line failure reason, and only when it failed,
-5. **at most three one-line follow-ups**, and only when there are any,
+5. **at most three one-line follow-ups**, and only when there are any — a
+   parking branch whose delete failed among them, within the three
+   (`parking.md` § *The unpark transaction*),
 6. **at most three *For the record* lines**, in the shape SKILL.md's THE
    CLOSING REPORT gives that group, and only when there are any.
 

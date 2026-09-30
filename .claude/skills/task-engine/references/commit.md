@@ -147,7 +147,13 @@ push sequence unconditionally — only the commit (checkin) step runs.
   it. Apart from the `mkdir -p` + `git mv` of the body
   files in PHASE 2 — which replace the old `rm`, and which still run under
   `--no-commit`, because the move is the prune's effect rather than a commit
-  step — PHASE 3 is its only shell use.
+  step — and the park-branch sweep's listing and deletes, PHASE 3 is its
+  only shell use. The sweep's local listing and deletes are its effect too
+  and run under `--no-commit`; its remote listing
+  (`git ls-remote`) and deletes (`git push origin --delete`) are remote
+  operations and are skipped under NO_PUSH, which `--no-commit` implies. A
+  branch delete changes no tracked file, so it adds nothing to the commit
+  and a run that only sweeps makes none.
 
   Under `--backfill` it commits once, with
   `git commit -m "task-clean: backfill <N> archived tasks"`, `<N>` being the
@@ -200,7 +206,9 @@ push sequence unconditionally — only the commit (checkin) step runs.
     unpark whose merge failed;
   - an unpark makes no commit of its own: the `[IN PROGRESS]` flip and the
     handoff's removal ride in the task's own commit, which is the one path
-    on which the per-task body file is staged.
+    on which the per-task body file is staged. The parking branch is
+    deleted after that commit and its push, best-effort — `./parking.md`
+    § *The unpark transaction*.
 
   A `Step 7` push failure or pre-push conflict is distinct from any other
   failure: the commit already succeeded, so do not revert it or flip the

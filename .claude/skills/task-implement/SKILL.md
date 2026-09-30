@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.10.2
+version: 1.10.5
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups
@@ -692,6 +692,9 @@ per `commit.md`. DIRTY_FOLD, set by the dirty-tree check, is what decides
 whether the pre-existing dirty changes are folded in here; the fold itself
 is `tree.md` § *Folding in Step 7*.
 
+A task unparked from a branch ends with that branch's deletion, after this
+step's commit and push — `parking.md` § *The unpark transaction*, step 4.
+
 ---
 
 BETWEEN TASKS
@@ -831,7 +834,8 @@ under its heading:
   own items: an unresolved `BLOCKING` finding, a task left `[IN PROGRESS]`
   and why, a follow-up naming an owner's command with its anchor and
   passages, a precondition that no longer held, a slug declined at the
-  FEATURE COMPLETION proposal, a task parked this run or skipped for want of
+  FEATURE COMPLETION proposal, a parking branch whose delete failed, a task
+  parked this run or skipped for want of
   an answer — its `Question:` verbatim and multi-line under its `P<n>`
   handle in place of an item number, options included. And the items the `/follow-ups` command's rules yield
   when applied to the run's reading — the command's body read by name and
@@ -848,8 +852,9 @@ Body Hints named ./test-runner.md for the policy marker — the marker's rule is
 
 **The numbering is the reply handle.** It starts at 1 in every report,
 carries no meaning beyond the handle, and a report with a single item still
-numbers it. Replying by number is ordinary conversation — "execute 1 and 2
-now" — handled as any other request is. A parked task keeps its `P<n>`
+numbers it. A reply by number — "execute 1 and 2 now" — is acted on by the
+`follow-ups-resolve` skill when it is available, and otherwise handled as any
+other request is. A parked task keeps its `P<n>`
 handle, the one it held this run or the next unused one, and a reply by it
 is that task's answer, recorded exactly as a reply mid-run is (BETWEEN TASKS
 step 2a), and the next run unparks the task.
@@ -906,8 +911,8 @@ return none; that is the field working, not failing.
 
 The rest of the group still comes from the launcher's own conversation — the
 delegation split, tasks skipped for unmet preconditions, failure lines,
-declined feature slugs. Where the user then asks to execute or plan a listed
-follow-up that came from a delegated agent, forwarding it to that same agent
+declined feature slugs. When a listed follow-up that came from a delegated
+agent is executed or planned, forwarding it to that same agent
 is often the convenient thing to do, and is allowed. Judgement, not a rule —
 this is not a new relay protocol.
 
@@ -954,8 +959,8 @@ flipped back. Stop the entire run the same way, and report that this
 task's commit exists locally and needs a manual sync + push before
 resuming with the remaining tasks.
 
-A park that cannot make its branch — the name already taken, the push
-refused — is a Step 7 failure of that kind, per `parking.md` § *The park
+A park that cannot make its branch — a leftover branch it cannot delete,
+the push refused — is a Step 7 failure of that kind, per `parking.md` § *The park
 sequence*: task `[IN PROGRESS]`, tree intact, run stopped. A parked task
 is not a failure — in this conversation or as a delegated agent's
 `[PARKED]` return, which the launcher records before spawning the next

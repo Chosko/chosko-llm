@@ -1,8 +1,8 @@
 ---
 name: runbook-suggest
-version: 0.1.1
+version: 0.1.2
 type: skill
-description: 'Suggest capturing the follow-up actions of a conversation as a runbook, before the session that produced them closes. Trigger whenever a conversation produces an ordered list of follow-up actions for later sessions — the tail of an /architect or /product-design run, a "next steps" list, "do these in order" — and there are three or more actions, or two with an ordering constraint, or any that depends on a decision written down nowhere but this conversation. Emits one or two lines naming /runbook-create and stops. Not for: a single action; things already done; a checklist this session will work through itself; an enumeration inside an explanation; a two-step list of simple prompts; or tasks that belong in the backlog, which is /task-add.'
+description: 'Suggest capturing the follow-up actions of a conversation as a runbook, before the session that produced them closes. Trigger whenever a conversation produces an ordered list of follow-up actions for later sessions — the tail of an /architect or /product-design run, a "next steps" list, "do these in order" — and there are three or more actions, or two with an ordering constraint, or any that depends on a decision written down nowhere but this conversation. Emits one or two lines naming /runbook-create and stops. Not for: a single action; things already done; a checklist this session will work through itself; an enumeration inside an explanation; a two-step list of simple prompts; tasks that belong in the backlog, which is /task-add; or a reply to a Follow-ups list, which follow-ups-resolve owns.'
 requires: command:runbook-create
 ---
 
@@ -25,7 +25,8 @@ disk. Never for a two-step list of simple prompts.
 **Not this.** A single next action. A list of things already done. A
 checklist this session is about to work through itself. An enumeration
 inside an explanation. A list of tasks that belongs in the backlog — that is
-`/task-add`'s job, not a runbook's.
+`/task-add`'s job, not a runbook's. A user reply to a Follow-ups list — that
+is the `follow-ups-resolve` skill's.
 
 **Emit one or two lines, then stop.** Say that `/runbook-create` will turn
 these follow-ups into a runbook, or append them to one that already exists.

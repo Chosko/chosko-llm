@@ -1,6 +1,6 @@
 ---
 name: follow-ups
-version: 0.1.3
+version: 0.2.0
 type: command
 description: List what this conversation would lose if it ended now — actions proposed but never executed, outcomes never recorded on disk, decisions written down nowhere — as a numbered list, or exactly `No follow-ups left`. Use it before a session ends, or when a run stopped early.
 ---
@@ -11,9 +11,10 @@ description: List what this conversation would lose if it ended now — actions 
 # invoked. Takes no arguments. The answer is the bare line `No follow-ups
 # left`, or a numbered list under a `Follow-ups` heading, each item a slash
 # command plus a short "to …" explanation wherever a command fits. Work
-# already tracked on disk is never a follow-up. The numbering is the handle:
-# the user may reply by number, and acting on a number is ordinary
-# conversation, not something this command implements.
+# already tracked on disk is never a follow-up. When the conversation holds a
+# working list, the answer is that list. The numbering is the handle: the user
+# may reply by number, and acting on a reply is the `follow-ups-resolve`
+# skill's, not something this command implements.
 # Usage: /follow-ups
 
 GOAL
@@ -69,6 +70,16 @@ a command fits the follow-up:
 A free-form item is legal where no command fits. Prefer the command form
 whenever one does.
 
+When the conversation holds a working list — the one the
+`follow-ups-resolve` skill keeps once the user has replied to a Follow-ups
+list — the output is that list in its two-section shape: under the
+`Follow-ups` heading, **Approved** first, then **Awaiting approval**, one
+numbering running across both, and any follow-up the list lacks added under
+**Awaiting approval**. Invoked while a `/runbook-run` is in flight, the
+output is the list collected so far in that same two-section shape — the
+follow-ups the run has printed as they arose, with any approvals already
+given. An empty working list is the line `No follow-ups left`.
+
 A run-closing skill — `/runbook-run`, `/task-implement` — may apply these
 rules as the second group of its own closing report, under this same
 `Follow-ups` heading, its own items folded into the one numbering; this
@@ -76,9 +87,9 @@ command, invoked on its own, is unchanged by that.
 
 THE NUMBERING IS THE HANDLE
 The numbers are there so the user can reply by number — "execute 1 and 2
-now", "insert 3 as the next step in this runbook". Acting on a number is
-ordinary conversation, handled the way any other request is; this command
-does not implement it, and does not offer to.
+now", "insert 3 as the next step in this runbook". Acting on a reply is the
+`follow-ups-resolve` skill's, when it is available; this command does not
+implement it, and does not offer to.
 
 STOP THERE
 Print the line or the list, and stop. Take no argument. Open no project

@@ -1,6 +1,6 @@
 ---
 name: task-clean
-version: 0.9.3
+version: 0.10.1
 type: skill
 description: Prune tasks in a terminal status from the backlog by archiving them — each summary block leaves TASKS.md and the body moves to .claude/tasks/archive/<N>.md, never deleted. Use it when finished tasks clutter the backlog; a backfill mode recovers, from git history, bodies earlier runs deleted.
 replaces: command:task-clean
@@ -12,7 +12,10 @@ requires: skill:task-engine
 # backlog by archiving them. Removes the matched task's summary block from
 # `.claude/TASKS.md` and moves the corresponding `.claude/tasks/<N>.md` body
 # file into `.claude/tasks/archive/<N>.md`, under a frozen header recording
-# the summary block it had. No body is deleted. Terminal means [DONE] and
+# the summary block it had. No body is deleted. Every prune also sweeps the
+# `park/task-<N>` branches, local and remote, whose task is neither [PARKED]
+# nor [IN PROGRESS] — a resumed task keeps its branch as rollback source
+# until its commit — at the same confirmation. Terminal means [DONE] and
 # [SKIP] only; [STALE] is live work awaiting reconciliation and [PARKED] is
 # live work awaiting an answer, and neither is ever pruned by default. A
 # prune never opens `.claude/FEATURES.md` — a feature
@@ -38,8 +41,8 @@ on work that still needs doing. Remove the summary block from
 `.claude/TASKS.md` and move the per-task body file into the archive, where
 it keeps the record of what the task was. Rewrite every `Preconditions:`
 reference in surviving summary blocks that pointed at an archived task.
-Always confirm with the user before writing. Never renumber, and never
-delete a body.
+Delete the parking branches no parked or resumed task needs any more. Always confirm
+with the user before writing. Never renumber, and never delete a body.
 
 $ARGUMENTS
 
@@ -100,7 +103,8 @@ say all of that in the plan and confirm before applying. A `[PARKED]` task is
 live work waiting on an answer, with its work-in-progress on a
 `park/task-<N>` branch; when the user names it explicitly, carry
 `status.md`'s warning into the plan — the prune discards the question and
-orphans that branch, named per task — and confirm before applying.
+orphans that branch, named per task, which the next run's PARK-BRANCH SWEEP
+deletes — and confirm before applying.
 
 ---
 
@@ -114,6 +118,35 @@ was never planned. What an id on that line with no summary block means is
 
 ---
 
+THE PARK-BRANCH SWEEP
+
+`/task-implement` keeps a parked task's work-in-progress on a
+`park/task-<N>` branch and deletes it, best-effort, once the unparked task
+has committed; a delete that was refused, or a parked task pruned or
+replaced, leaves one behind. Every prune sweeps those, on the one
+**"Apply?"** gate, so a delete that needs a permission prompt runs where a
+person can approve it. Skip the sweep entirely when the project's CLAUDE.md
+carries a `## VCS` section — there are no git branches to sweep.
+
+- **List.** Local branches with `git branch --list 'park/task-*'`; remote
+  ones with `git ls-remote --heads origin 'refs/heads/park/task-*'`, unless
+  NO_PUSH — then remote branches are neither listed nor deleted
+  (`commit.md`'s `/task-clean` note).
+- **Orphaned** means task N has no summary block in `.claude/TASKS.md`, or
+  has one whose `Status:` is neither `[PARKED]` nor `[IN PROGRESS]` — an
+  unparked task that stopped before its commit still needs the branch as
+  its rollback source. Judged against `TASKS.md` as PHASE 1 read it, never
+  a body, so a `[PARKED]` task this run prunes keeps its branch until the
+  next run.
+- **Delete** each orphan in PHASE 2, only after approval:
+  `git branch -D park/task-<N>` for a local one,
+  `git push origin --delete park/task-<N>` for a remote one. A delete that
+  fails is reported in PHASE 2's report and is neither fatal nor retried.
+
+No orphans means no plan section and nothing said about the sweep.
+
+---
+
 PHASE 1 — REPORT (no file writes, no moves)
 
 1. Read `.claude/TASKS.md` and parse it as `resolution.md` § *Parsing the
@@ -122,8 +155,10 @@ PHASE 1 — REPORT (no file writes, no moves)
    `Feature:`, and reads the `Last task number: N` header value for
    information only — it does not change.
 
-2. Identify the tasks whose status matches the prune set. If there are
-   none, tell the user "No tasks to prune." and stop.
+2. Identify the tasks whose status matches the prune set, and list the
+   orphaned park branches per THE PARK-BRANCH SWEEP. If there are neither,
+   tell the user "No tasks to prune." and stop. With orphans but no tasks,
+   steps 3 and 4 have nothing to plan and the plan holds only the sweep.
 
 3. Plan each pruned task's move: `.claude/tasks/<N>.md` →
    `.claude/tasks/archive/<N>.md`. Probe both paths with an existence
@@ -171,6 +206,11 @@ PHASE 1 — REPORT (no file writes, no moves)
      Task 10: Preconditions "12"   → "none"
      …
 
+   Park branches to delete (J):                  (omit when none)
+     park/task-42   local + remote   task 42 is [DONE]
+     park/task-17   remote           task 17 has no summary block
+     (remote not checked — --no-push)            ← only under NO_PUSH
+
    Anything in [IN PROGRESS]? <yes/no — if yes, list them as a heads-up
    so the user notices unfinished work before pruning around it>
    ```
@@ -214,11 +254,16 @@ PHASE 2 — APPLY (only after explicit approval)
    `Preconditions:` reference to a now-archived task ID. Confirm no stale
    references remain.
 
-7. Report to the user:
+7. Delete each orphaned park branch the plan listed, local and remote as
+   it named, per THE PARK-BRANCH SWEEP.
+
+8. Report to the user:
    - Number of summary blocks removed from `TASKS.md`.
    - Each body file archived, as `<old path> → <new path>`, and any that
      were already missing or refused.
    - Number of `Preconditions:` lines rewritten.
+   - Each park branch deleted, local and remote, and any delete that
+     failed, with its output.
    - Final task count.
    - The unchanged `Last task number:` value.
 
@@ -234,16 +279,18 @@ prune, the push protocol, and what to do when a commit or a push fails — is
 `/task-clean` note carries this skill's own specifics: the commit message
 form, the exact path list PHASE 2 leaves to stage — `.claude/TASKS.md` plus
 each archived file, PHASE 2's `git mv` having already staged both halves of
-every move — and that PHASE 3 is its only shell use apart
-from the `mkdir -p` / `git mv` in PHASE 2. Once PHASE 2 completes
-successfully the commit happens automatically — PHASE 1's **"Apply?"** was
-the run's only gate, and no further prompt is asked here.
+every move — that PHASE 3 is its only shell use apart
+from the `mkdir -p` / `git mv` in PHASE 2 and the park-branch sweep, and
+which of the sweep's operations run under which flag. Once PHASE 2
+completes successfully the commit happens automatically — PHASE 1's
+**"Apply?"** was the run's only gate, and no further prompt is asked here.
+A run that only swept branches changed no file and commits nothing.
 
 Under `--no-commit` the move still happens — it is the prune's effect, not
-a commit step — so each rename sits in the working tree and PHASE 2's
-`mkdir -p` / `git mv` are the skill's only shell use. Report what was
-changed — blocks removed, each body moved and where it went,
-`Preconditions:` lines rewritten — and stop.
+a commit step — so each rename sits in the working tree; the sweep deletes
+local branches only. Report what was changed — blocks removed, each body
+moved and where it went, `Preconditions:` lines rewritten, branches
+deleted — and stop.
 
 DO NOT:
 - Write to any file, or move one, during PHASE 1.
