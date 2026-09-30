@@ -394,7 +394,7 @@ Feature: unattended-parking
 
 ## 269. `/runbook-run` mid-step chat: progress line and subagent-WIP stop-hook reply
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/SKILL.md, .claude/domain/features/runbook-suite.md, docs/reference.md, VERSION, CHANGELOG.md
 Preconditions: none

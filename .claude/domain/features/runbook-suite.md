@@ -482,10 +482,13 @@ step's work — are **default-mode contracts**. Under `--inline` they apply as
    the run just cleaned; with `/follow-ups` not installed the group holds
    the run's own items only, silently.
 
-**The chat contract.** Between steps the run says one line per step at that
-step's end — `Step 4 done (abc1234). Starting step 5.`, or the failure line —
-and narrates nothing else: not the spawn, the wait, the classification, the
-`Done:` write or the commit. Relayed `QUESTIONS FOR USER` blocks and the spawn
+**The chat contract.** Between steps the run says two lines per step: a
+progress line when the step starts — `Step <n> running. Current run progress
+(<k>/<m>). Total runbook progress (<x>/<y>).` — and one line at its end —
+`Step 4 done (abc1234). Starting step 5.`, or the failure line — and narrates
+nothing else: not the spawn, the wait, the classification, the `Done:` write
+or the commit. On a forced mid-step turn the progress line is the only status
+line besides the spawn relay's own. Relayed `QUESTIONS FOR USER` blocks and the spawn
 relay's lines are never suppressed, because a run that needs an answer has to
 ask for it at once; quiet applies to narration only. The **closing report is
 the record of the run** instead, in the same two groups `/task-implement` and

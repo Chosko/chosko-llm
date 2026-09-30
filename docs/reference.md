@@ -1341,9 +1341,12 @@ line — the date, the commit sha and its diffstat, with a decision or wrong
 premise added only when a later reader would be misled without it — then commits the runbook and the index: one commit per
 completed step. The `[~]` marker is never committed, so finding one in your
 tree is the signal that this is the tree an interrupted run left behind.
-Between steps it stays quiet — one line per step at its end, `Step 4 done
-(abc1234). Starting step 5.`, with relayed questions and spawn-relay lines
-still coming straight through — because the record of the run is the closing
+Between steps it stays quiet — a progress line as each step starts, `Step 5
+running. Current run progress (2/4). Total runbook progress (5/9).` (this run's
+steps, then the whole runbook's `[x]` steps counting the one starting), and one
+line at its end, `Step 5 done (abc1234). Starting step 6.`, with relayed
+questions and spawn-relay lines still coming straight through; a turn forced
+mid-step prints nothing else — because the record of the run is the closing
 report at the end of it, printed the same way whether the run completed,
 stopped at a bound, ended waiting on a parked step or halted on a failure. It
 closes in the same two groups as `/task-implement`'s. **For the record**
@@ -1456,7 +1459,7 @@ is the change most likely to be lost. `/runbook-run` commits
 after every step, and `/runbook-list`, `/runbook-describe` and
 `runbook-suggest` write nothing at all.
 
-**In a cloud sandbox, expect `stop hook ignored on runbook WIP` in the transcript.** The
+**In a cloud sandbox, expect `stop hook ignored on runbook WIP` (or `… on subagent WIP`) in the transcript.** The
 sandbox registers a Stop hook that won't let a turn end on a dirty tree, and an
 in-flight step is dirty on purpose — the `[~]` heading and the index's
 `[RUNNING]` are the resume signal and must stay uncommitted. That block can't be
@@ -1464,8 +1467,11 @@ cleared from inside the run, and thanks to the hook's own recursion guard it
 costs exactly one forced turn each time it fires: at every step start and every
 question relayed to you. Rather than re-explain itself each time, `/runbook-run`
 answers with that fixed literal and stops. It applies only when the two
-bookkeeping files it just wrote are the only dirty ones; anything else in the
-tree is handled normally. The same condition covers a step's `/task-implement`
+bookkeeping files it just wrote are the only dirty ones. While a spawned step
+is in flight the answer is `stop hook ignored on subagent WIP` instead, whatever
+is dirty, since only that step's agent can have written the tree; under
+`--inline` there is no such case. Anything else in the tree is handled
+normally. The runbook-WIP condition covers a step's `/task-implement`
 dirty-tree prompt, in either mode: the step's agent — or, under `--inline`, the
 session — answers `proceed` itself (never `include`), says so in one line, and
 carries on; anything else dirty still brings the prompt to you.

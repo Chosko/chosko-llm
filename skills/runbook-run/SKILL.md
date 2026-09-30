@@ -1,6 +1,6 @@
 ---
 name: runbook-run
-version: 0.18.3
+version: 0.18.4
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user — or, under the `unattended` policy, parking the step that asked and going on — recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
 requires: command:follow-ups
@@ -12,8 +12,9 @@ requires: command:follow-ups
 # user, records what each step did, and commits after every step. In the
 # default mode the orchestrator reads only CLAUDE.md, the runbook and the
 # index, writes only the runbook and the index, and never does a step's work
-# or second-guesses a subagent. It is quiet between steps — one line per
-# step, no narration — and its closing report is the record of the run. Under
+# or second-guesses a subagent. It is quiet between steps — a progress line
+# at each step's start and one line at its end, no narration — and its
+# closing report is the record of the run. Under
 # --inline this session executes each selected step itself under the fixed
 # rule set in `references/inline-contract.md`, with the bookkeeping
 # unchanged; --inline is refused beside --relay-spawns or --model, and the
@@ -123,12 +124,32 @@ invoked, when it is wanted, from inside a step's own prompt.
 
 ## CHAT OUTPUT
 
-**Quiet between steps, exhaustive at the end.** While the loop runs, print one
-line per step, at that step's end and nowhere else — `Step 4 done (abc1234).
-Starting step 5.`, or the failure line the halt already calls for. Do not
-narrate spawning, waiting, classifying a result, writing a `Done:` line or
-committing: those happen every step, and the fragments are hard to read back
-once the run is over. Two things are never suppressed: a relayed
+**Quiet between steps, exhaustive at the end.** While the loop runs, print two
+lines per step and nowhere else. Once per step, when the step is spawned — under
+`--inline`, when its execution phase begins — the run's first step included,
+the progress line:
+
+```
+Step <n> running. Current run progress (<k>/<m>). Total runbook progress (<x>/<y>).
+```
+
+- `k` — this step's position among the steps this run executes, from 1.
+- `m` — the run's planned size, fixed at launch: the number of selectable `[ ]`
+  steps in range, or `N` of `--steps N` when that is smaller. It is not
+  recomputed when a step parks or fails.
+- `x` — the number of `[x]` steps in the whole runbook, plus the step now
+  starting.
+- `y` — every step in the runbook.
+
+And at that step's end, `Step 4 done (abc1234). Starting step 5.`, or the
+failure line the halt already calls for. Do not narrate spawning, waiting,
+classifying a result, writing a `Done:` line or committing: those happen every
+step, and the fragments are hard to read back once the run is over. A forced
+mid-step turn — a Stop hook firing on the in-flight step's dirty tree, a
+notification arriving while the step runs — explains nothing: the progress line
+is the only status line it may print besides the spawn relay's own lines, and
+COMMIT CADENCE § *The Stop-hook reply* gives the hook its fixed answer. Two
+things are never suppressed: a relayed
 `QUESTIONS FOR USER` block, verbatim, because a run that needs an answer asks
 for it at once — under `unattended`, the parked step's question under its
 `P<n>` handle, for the same reason — and the spawn relay's own lines. The record of
@@ -367,7 +388,8 @@ COMMIT CADENCE and ONE RUN PER RUNBOOK.
 
 Spawn **one** subagent with fresh context, the assembled prompt (see THE
 SPAWNED PROMPT), and the model from the runbook header — or from `--model`,
-which overrides it for the whole run.
+which overrides it for the whole run — and print the step's progress line
+(CHAT OUTPUT).
 
 One at a time. Never two — see THE SPAWN RELAY for the one exception, a
 relayed child running while its caller is suspended. Steps are sequential
@@ -385,8 +407,8 @@ stops a hand-written runbook smuggling one in.
 
 **Under `--inline`**, spawn nothing. The **execution phase** takes the place of
 this step and step 6: the session assembles the step's brief and executes it
-itself, under the inline contract — see THE INLINE MODE. No other loop step
-changes. The nested-runbook refusal above still applies, unchanged: check it
+itself, under the inline contract — see THE INLINE MODE — printing the
+progress line as it begins. No other loop step changes. The nested-runbook refusal above still applies, unchanged: check it
 before the execution phase begins, and refuse the step exactly as written.
 
 ### 6. Wait
@@ -929,26 +951,41 @@ commit (checkin) step runs.
 
 **The Stop-hook reply.** A cloud sandbox's Stop hook refuses to end a turn on a
 dirty tree, and an in-flight step is dirty by design — the `[~]` heading and the
-index's `[RUNNING]`, which this section forbids committing. That block cannot
-be cleared from here, and it costs one forced turn every time it fires: at each
-step start, and at every question relayed to the user.
+index's `[RUNNING]`, which this section forbids committing, plus, in spawned
+mode, whatever the step's subagent has not committed yet. That block cannot be
+cleared from here, and it costs one forced turn every time it fires: at each
+step start, at every question relayed to the user, and at every notification
+that wakes the run while a step is in flight.
 
-When that feedback arrives and the only uncommitted changes are the runbook and
-the index **you yourself just wrote**, spend nothing on it. Reply with exactly
+Two cases spend nothing on it. In each, reply with exactly the line given and
+end the turn — no tool call, no `git status`, no explanation: you already know
+what is dirty, and re-deriving it costs a few hundred tokens every time and
+changes nothing.
 
-```
-stop hook ignored on runbook WIP
-```
+- **Runbook WIP** — the only uncommitted changes are the runbook and the index
+  **you yourself just wrote**:
 
-and end the turn. No tool call, no `git status`, no explanation — you wrote
-those two files one step ago and already know what is dirty. Re-deriving it
-costs a few hundred tokens every time and changes nothing.
+  ```
+  stop hook ignored on runbook WIP
+  ```
 
-If anything else is dirty, this is not that case — handle it normally. That
-fall-through is the point: the condition is your own two writes, so a genuinely
-forgotten commit still gets thought about.
+- **Subagent WIP** — a spawned step is in flight: spawned in step 5, its result
+  not yet arrived (step 6). Whatever is dirty, since nothing but the step's
+  subagent and the two bookkeeping files can have written the tree then:
 
-The same condition answers one more prompt, in either mode — a step command's
+  ```
+  stop hook ignored on subagent WIP
+  ```
+
+  Spawned mode only. Under `--inline` there is no subagent, and the session's
+  own dirty files are its own work to track, so the runbook-WIP case alone
+  applies.
+
+In any other state this is neither case — handle it normally. That fall-through
+is the point: outside an in-flight spawn the condition is your own two writes,
+so a genuinely forgotten commit still gets thought about.
+
+The runbook-WIP condition answers one more prompt, in either mode — a step command's
 dirty-tree prompt, answered `proceed` by whoever executes the step: the step's
 agent under OPERATING RULES (`subagent-contract.md`), or the session under
 `inline-contract.md`.

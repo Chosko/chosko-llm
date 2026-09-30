@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.72.7 — 2026-09-30
+
+- **`/runbook-run` prints a progress line as each step starts:** `Step 5 running. Current run progress (2/4). Total runbook progress (5/9).` — this run's step out of what it set out to run (fixed at launch, a parked or failed step does not shrink it), then the runbook's finished steps, counting the one starting. It is also the only status line a turn forced mid-step may print, besides the spawn relay's own lines, so no more free-form explanations of what is in flight. The step-end line is unchanged.
+- **`/runbook-run` answers a cloud sandbox's Stop hook with `stop hook ignored on subagent WIP` while a spawned step is in flight**, whatever is dirty, with no tool call and no explanation. Between steps the reply is still `stop hook ignored on runbook WIP`; under `--inline` only that one applies.
+
 ## 1.72.6 — 2026-09-29
 
 - **`statusline:session-statusline` no longer needs `jq`.** It reads Claude Code's session JSON with `awk`, so the status bar shows up on machines without `jq`. Before this fix it exited silently there and the status bar stayed blank. Run `chosko-llm update` to pick it up.

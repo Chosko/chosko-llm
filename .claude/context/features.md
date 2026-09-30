@@ -1587,9 +1587,13 @@ Currently shipped:
   marking `[RUNNING]`, runs the migration check — a hit reads
   `body-migration.md` and the run uses the new path for its whole life; a
   resume of an already-`[RUNNING]` runbook never migrates.
-  **Chat contract**: quiet between steps — one line per step at its end
+  **Chat contract**: quiet between steps — a progress line at each step's
+  spawn / execution-phase start (`Step <n> running. Current run progress
+  (<k>/<m>). Total runbook progress (<x>/<y>).`; `m` fixed at launch, counters
+  defined in CHAT OUTPUT) and one line at its end
   (`Step 4 done (abc1234). Starting step 5.`, or the failure line), no
-  narration of spawn/wait/classify/`Done:`/commit, relayed questions and
+  narration of spawn/wait/classify/`Done:`/commit, the progress line the only
+  status line on a forced mid-step turn, relayed questions and
   spawn-relay lines still verbatim — with the **closing report as the record of
   the run**, printed the same at completion, at a bound, at the end branch
   and at a failure halt; a parked step's question under its handle is never
@@ -1631,7 +1635,10 @@ Currently shipped:
   never a `git status`** — it set `[~]` one step ago, so it needs no inspection,
   the avoided tool call is the bigger saving, and anything else dirty falls
   through to normal handling, which preserves the real forgotten-commit check.
-  Under `--inline` the same condition answers a step command's dirty-tree
+  Second case, spawned mode only: while a spawned step is in flight (spawned,
+  result not yet arrived) reply `stop hook ignored on subagent WIP` whatever is
+  dirty; `--inline` keeps the runbook-WIP case alone.
+  Under `--inline` the runbook-WIP condition answers a step command's dirty-tree
   prompt (`task-engine` `tree.md`) with `1` / `proceed`, never `include`, in one
   line — rule in `references/inline-contract.md`, pointer from the Stop-hook
   reply; `tree.md` itself knows nothing of runbooks.
