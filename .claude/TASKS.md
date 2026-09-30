@@ -440,7 +440,7 @@ Feature: runbook-suite
 
 ## 274. Update documentation for feature `runbook-suite`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: docs/reference.md, .claude/context/features.md
 Preconditions: 273

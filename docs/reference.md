@@ -1355,8 +1355,11 @@ premise added only when a later reader would be misled without it — then commi
 completed step. The `[~]` marker is never committed, so finding one in your
 tree is the signal that this is the tree an interrupted run left behind.
 Between steps it stays quiet — a progress line as each step starts, `Step 5
-running. Current run progress (2/4). Total runbook progress (5/9).` (this run's
-steps, then the whole runbook's `[x]` steps counting the one starting), and one
+running. Current run progress (2/4). Total runbook progress (5/9).` (first the
+steps this run has finished plus the one starting, out of every step in range
+it can reach — capped by `--steps N` and fixed at launch; then the runbook
+index's `Steps:` counter as it stood at launch, raised by this run's finished
+steps plus the one starting), and one
 line at its end, `Step 5 done (abc1234). Starting step 6.`, with relayed
 questions, spawn-relay lines and a one-line `Follow-up: …` for each follow-up
 that arises still coming straight through; a turn forced

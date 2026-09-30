@@ -1603,8 +1603,11 @@ Currently shipped:
   resume of an already-`[RUNNING]` runbook never migrates.
   **Chat contract**: quiet between steps — a progress line at each step's
   spawn / execution-phase start (`Step <n> running. Current run progress
-  (<k>/<m>). Total runbook progress (<x>/<y>).`; `m` fixed at launch, counters
-  defined in CHAT OUTPUT) and one line at its end
+  (<k>/<m>). Total runbook progress (<x>/<y>).`; `k` = steps this run
+  finished + the one starting, `m` = every selectable step in range capped by
+  `--steps N`, fixed at launch, `x/y` = the index's `Steps:` counter at launch,
+  `x` raised by this run's finished steps + the one starting; parked/failed
+  steps add nothing; full definitions in CHAT OUTPUT) and one line at its end
   (`Step 4 done (abc1234). Starting step 5.`, or the failure line), no
   narration of spawn/wait/classify/`Done:`/commit, the progress line the only
   status line on a forced mid-step turn, relayed questions,
