@@ -358,7 +358,7 @@ Currently shipped:
   second run reports nothing to recover. THE PARK-BRANCH SWEEP runs on every
   prune (not `--backfill`, not under a `## VCS` override): `git branch --list
   'park/task-*'` plus `git ls-remote --heads origin` (remote skipped under
-  NO_PUSH), orphan = no summary block or `Status:` not `[PARKED]` as PHASE 1
+  NO_PUSH), orphan = no summary block or `Status:` neither `[PARKED]` nor `[IN PROGRESS]` as PHASE 1
   read it; orphans get a plan section (none → nothing said), are deleted in
   PHASE 2 step 7 on the same gate (`git branch -D` / `git push origin
   --delete`), a failed delete reported, not fatal; "No tasks to prune." only

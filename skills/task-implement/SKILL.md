@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.10.4
+version: 1.10.5
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups
@@ -959,8 +959,8 @@ flipped back. Stop the entire run the same way, and report that this
 task's commit exists locally and needs a manual sync + push before
 resuming with the remaining tasks.
 
-A park that cannot make its branch — the name already taken, the push
-refused — is a Step 7 failure of that kind, per `parking.md` § *The park
+A park that cannot make its branch — a leftover branch it cannot delete,
+the push refused — is a Step 7 failure of that kind, per `parking.md` § *The park
 sequence*: task `[IN PROGRESS]`, tree intact, run stopped. A parked task
 is not a failure — in this conversation or as a delegated agent's
 `[PARKED]` return, which the launcher records before spawning the next

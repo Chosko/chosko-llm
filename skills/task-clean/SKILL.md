@@ -1,6 +1,6 @@
 ---
 name: task-clean
-version: 0.10.0
+version: 0.10.1
 type: skill
 description: Prune tasks in a terminal status from the backlog by archiving them — each summary block leaves TASKS.md and the body moves to .claude/tasks/archive/<N>.md, never deleted. Use it when finished tasks clutter the backlog; a backfill mode recovers, from git history, bodies earlier runs deleted.
 replaces: command:task-clean
@@ -13,8 +13,9 @@ requires: skill:task-engine
 # `.claude/TASKS.md` and moves the corresponding `.claude/tasks/<N>.md` body
 # file into `.claude/tasks/archive/<N>.md`, under a frozen header recording
 # the summary block it had. No body is deleted. Every prune also sweeps the
-# `park/task-<N>` branches, local and remote, whose task is not [PARKED],
-# at the same confirmation. Terminal means [DONE] and
+# `park/task-<N>` branches, local and remote, whose task is neither [PARKED]
+# nor [IN PROGRESS] — a resumed task keeps its branch as rollback source
+# until its commit — at the same confirmation. Terminal means [DONE] and
 # [SKIP] only; [STALE] is live work awaiting reconciliation and [PARKED] is
 # live work awaiting an answer, and neither is ever pruned by default. A
 # prune never opens `.claude/FEATURES.md` — a feature
@@ -40,7 +41,7 @@ on work that still needs doing. Remove the summary block from
 `.claude/TASKS.md` and move the per-task body file into the archive, where
 it keeps the record of what the task was. Rewrite every `Preconditions:`
 reference in surviving summary blocks that pointed at an archived task.
-Delete the parking branches no parked task needs any more. Always confirm
+Delete the parking branches no parked or resumed task needs any more. Always confirm
 with the user before writing. Never renumber, and never delete a body.
 
 $ARGUMENTS
@@ -132,9 +133,11 @@ carries a `## VCS` section — there are no git branches to sweep.
   NO_PUSH — then remote branches are neither listed nor deleted
   (`commit.md`'s `/task-clean` note).
 - **Orphaned** means task N has no summary block in `.claude/TASKS.md`, or
-  has one whose `Status:` is not `[PARKED]` — judged against `TASKS.md` as
-  PHASE 1 read it, so a `[PARKED]` task this run prunes keeps its branch
-  until the next run.
+  has one whose `Status:` is neither `[PARKED]` nor `[IN PROGRESS]` — an
+  unparked task that stopped before its commit still needs the branch as
+  its rollback source. Judged against `TASKS.md` as PHASE 1 read it, never
+  a body, so a `[PARKED]` task this run prunes keeps its branch until the
+  next run.
 - **Delete** each orphan in PHASE 2, only after approval:
   `git branch -D park/task-<N>` for a local one,
   `git push origin --delete park/task-<N>` for a remote one. A delete that

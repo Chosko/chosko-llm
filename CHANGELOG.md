@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.75.2 — 2026-09-30
+
+- **A resumed task can park a second time.** When a task unparked under `--unattended` asks another question, `/task-implement` deletes its leftover `park/task-<N>` branch, local and on origin, before parking again — its work is already in the tree. A delete that fails stops the run with the task `[IN PROGRESS]`.
+- **`/task-clean` keeps the parking branch of an `[IN PROGRESS]` task.** A resumed task that stopped before its commit still needs the branch as a backup, so the sweep deletes only branches whose task is neither `[PARKED]` nor `[IN PROGRESS]`.
+
 ## 1.75.1 — 2026-09-30
 
 - **`/runbook-run`'s progress line counts the right things.** `Current run progress (k/m)` counts the steps this run has finished plus the one starting, out of every `[ ]`, `[~]` or `[!]` step it will run — so a resumed or re-run step no longer shows `1/0`. `Total runbook progress (x/y)` starts from the index's `Steps:` counter, archived steps included.

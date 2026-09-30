@@ -450,7 +450,7 @@ Feature: runbook-suite
 
 ## 275. A re-park deletes the leftover park branch first, and the `/task-clean` sweep spares `[IN PROGRESS]` tasks
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-engine/references/parking.md, skills/task-clean/SKILL.md, skills/pipeline-engine/references/routing.md, skills/task-implement/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: none

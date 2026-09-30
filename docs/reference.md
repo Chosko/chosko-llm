@@ -1049,9 +1049,11 @@ the plan, naming each destination, and asks before writing anything; a
 destination that already exists is refused rather than overwritten.
 
 Every prune also **sweeps orphaned parking branches**: each `park/task-<N>`
-branch, local or on origin, whose task has no summary block or is not
-`[PARKED]` is listed in the plan and deleted on the same approval — a branch
-an unpark could not delete, or one a pruned parked task left behind. With none
+branch, local or on origin, whose task has no summary block or is neither
+`[PARKED]` nor `[IN PROGRESS]` is listed in the plan and deleted on the same
+approval — a branch an unpark could not delete, or one a pruned parked task
+left behind. A resumed task keeps its branch until its commit, as the backup
+of its parked work. With none
 to sweep the plan says nothing about it; a delete that fails is reported, not
 fatal. Under `--no-push` remote branches are neither listed nor deleted, and a
 run that only sweeps commits nothing.
