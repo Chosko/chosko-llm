@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 268
+Last task number: 271
 
 ---
 
@@ -389,5 +389,32 @@ Target: claude
 Files: skills/task-review/SKILL.md, docs/reference.md, .claude/domain/features/task-peer-review.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: 265
 Feature: unattended-parking
+
+---
+
+## 269. `/runbook-run` mid-step chat: progress line and subagent-WIP stop-hook reply
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/SKILL.md, .claude/domain/features/runbook-suite.md, docs/reference.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 270. `follow-ups-resolve` skill: the general protocol for answering a Follow-ups list
+
+Status: [MISSING]
+Target: claude
+Files: skills/follow-ups-resolve/SKILL.md, commands/follow-ups.md, skills/runbook-run/SKILL.md, skills/task-implement/SKILL.md, skills/runbook-suggest/SKILL.md, skills/pipeline-suggest/SKILL.md, README.md, docs/reference.md, docs/cli-help.txt, .claude/context/features.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 271. Follow-ups while a runbook runs
+
+Status: [MISSING]
+Target: claude
+Files: skills/follow-ups-resolve/SKILL.md, skills/runbook-run/SKILL.md, commands/follow-ups.md, .claude/domain/features/runbook-suite.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
+Preconditions: 269, 270
 
 ---
