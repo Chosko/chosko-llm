@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.75.0 — 2026-09-30
+
+- **Unparking a task no longer deletes its `park/task-<N>` branch up front.** `/task-implement` deletes it as the task's last act, after the task's commit and push, and a refused or failed delete no longer stops the run: the task keeps its status and the closing report's Follow-ups names the branch and the two commands to delete it. Until the commit lands, the branch stays as a backup of the parked work.
+- **`/task-clean` sweeps leftover parking branches.** Every prune lists each `park/task-<N>` branch, local and on origin, whose task is not `[PARKED]` and deletes them on the same "Apply?" confirmation. Nothing is said when there are none; under `--no-push` only local branches are swept.
+
 ## 1.74.0 — 2026-09-30
 
 - **Answer follow-ups while a `/runbook-run` is still going.** Resolve and approve them as usual, but nothing runs until the run ends. A follow-up that turns up mid-run is printed once, as one line; the list itself appears only when you ask — `/follow-ups` mid-run prints what has been collected so far, Approved first, then Awaiting approval. At the end the closing report's Follow-ups group shows the list in those two sections, and the approved items start right after it without another reply, unless one depends on an item you haven't approved.

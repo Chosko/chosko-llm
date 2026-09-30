@@ -926,8 +926,11 @@ was printed under is its answer, and the task is unparked after the current
 one finishes; after the closing report, replying by a parked item's handle
 does the same on the next run. An attended run has no pre-ask — it
 asks each parked task's question when it reaches it. Unparking cherry-picks
-the branch back, deletes it, and resumes the task at the step it stopped at;
-a conflict rolls everything back and leaves the task `[PARKED]`. A parked
+the branch back and resumes the task at the step it stopped at; a conflict
+rolls everything back and leaves the task `[PARKED]`. The branch is deleted
+only once the task's commit (and push) has landed, and only best-effort: a
+delete that is refused or fails leaves the task's status alone and becomes a
+Follow-ups item naming the branch, and the next `/task-clean` sweeps it. A parked
 task with nobody to answer is skipped with one line, never re-parked.
 
 An implementer that finds a passage its own approved change made stale
@@ -1035,7 +1038,7 @@ takes the terminal statuses, `[DONE]` and `[SKIP]` only; name statuses to
 prune those instead (`[STALE]` and `[PARKED]` are never in the default set,
 and naming a non-terminal status is flagged in the plan — for a parked task,
 that the prune discards its question and orphans its `park/task-<N>`
-branch). Each task's summary block leaves
+branch, which the next run sweeps). Each task's summary block leaves
 `TASKS.md` and its body **moves** to `.claude/tasks/archive/<N>.md` — a
 `git mv`, so history follows the file — under a frozen header: an `Archived:`
 date plus the `Status:`, `Files:`, `Preconditions:` and (when it had one)
@@ -1044,6 +1047,14 @@ deleted, no id is renumbered or reused, and survivors' `Preconditions:` drop
 the archived ids, since an archived precondition is a satisfied one. It shows
 the plan, naming each destination, and asks before writing anything; a
 destination that already exists is refused rather than overwritten.
+
+Every prune also **sweeps orphaned parking branches**: each `park/task-<N>`
+branch, local or on origin, whose task has no summary block or is not
+`[PARKED]` is listed in the plan and deleted on the same approval — a branch
+an unpark could not delete, or one a pruned parked task left behind. With none
+to sweep the plan says nothing about it; a delete that fails is reported, not
+fatal. Under `--no-push` remote branches are neither listed nor deleted, and a
+run that only sweeps commits nothing.
 
 A prune never touches `.claude/FEATURES.md`. A feature keeps every task id it
 ever generated on its `Tasks:` line, so `Tasks: none` means the feature was

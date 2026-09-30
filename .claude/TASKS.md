@@ -421,7 +421,7 @@ Preconditions: 269, 270
 
 ## 272. Unpark deletes the parking branch after the task's commit, and `/task-clean` sweeps orphaned park branches
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-engine/references/parking.md, skills/task-engine/references/status.md, skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, skills/task-clean/SKILL.md, skills/pipeline-engine/references/routing.md, .claude/domain/features/unattended-parking.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none

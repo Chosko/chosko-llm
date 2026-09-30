@@ -141,11 +141,21 @@ the parked state exactly as it was.
 2. **Cherry-pick without committing** — `git cherry-pick -n <parking
    commit>` onto the current head; nothing to pick when `Parking Branch:`
    is `[none]`. A conflict aborts the pick and restores the tree.
-3. **Delete the branch**, local and remote, unless it was `[none]`.
-4. **Resume the task** at the step `Parked:` names, with the answer in
+3. **Resume the task** at the step `Parked:` names, with the answer in
    hand. The `Status:` flip to `[IN PROGRESS]` and the handoff's removal
    ride in the task's own Step 7 commit — the one path on which the body
    file is staged (`./commit.md`). Step 7 commits as always.
+4. **Delete the branch**, unless it was `[none]` — the task's last act,
+   once its Step 7 commit and push have landed (the commit alone under
+   NO_PUSH): `git branch -D park/task-<N>`, then, unless NO_PUSH,
+   `git push origin --delete park/task-<N>`. Until then the branch is the
+   rollback source for work not yet committed on the base, so a task that
+   stops before its commit, or runs under NO_COMMIT, keeps it. The delete is
+   best-effort: a refused or failed one, local or remote, does not halt the
+   run, does not change the task's status and is not retried — it becomes
+   one *Follow-ups* item in the closing report naming the branch and both
+   commands, and a delegated agent returns it in its fifth field, within
+   its three. `/task-clean` sweeps any branch left behind.
 
 A conflict at step 2:
 
@@ -194,8 +204,11 @@ a block. Both run skills carry exactly this set, and no other rejection.
   three commit forms. The `--unattended` flag, UNATTENDED's resolution from
   the flag or the conversation, the pre-ask, the chat handle and the
   in-memory answers are its own and are stated in its body, not here.
-- **`/task-list`, `/task-clean`** — meet `[PARKED]` only as a tag, per
-  `./status.md`, and never open this file.
+- **`/task-list`** — meets `[PARKED]` only as a tag, per `./status.md`,
+  and never opens this file.
+- **`/task-clean`** — meets `[PARKED]` as a tag, per `./status.md`, and
+  sweeps every `park/task-<N>` branch whose task is not `[PARKED]`, per its
+  own body; it never opens this file.
 - **`/task-add`** — reconciliation classifies a parked task per `./stale.md`
   § *Clearing it*, and deletes the branch on skip-and-replace; it never opens
   this file.

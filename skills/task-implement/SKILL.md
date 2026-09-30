@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.10.3
+version: 1.10.4
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups
@@ -692,6 +692,9 @@ per `commit.md`. DIRTY_FOLD, set by the dirty-tree check, is what decides
 whether the pre-existing dirty changes are folded in here; the fold itself
 is `tree.md` § *Folding in Step 7*.
 
+A task unparked from a branch ends with that branch's deletion, after this
+step's commit and push — `parking.md` § *The unpark transaction*, step 4.
+
 ---
 
 BETWEEN TASKS
@@ -831,7 +834,8 @@ under its heading:
   own items: an unresolved `BLOCKING` finding, a task left `[IN PROGRESS]`
   and why, a follow-up naming an owner's command with its anchor and
   passages, a precondition that no longer held, a slug declined at the
-  FEATURE COMPLETION proposal, a task parked this run or skipped for want of
+  FEATURE COMPLETION proposal, a parking branch whose delete failed, a task
+  parked this run or skipped for want of
   an answer — its `Question:` verbatim and multi-line under its `P<n>`
   handle in place of an item number, options included. And the items the `/follow-ups` command's rules yield
   when applied to the run's reading — the command's body read by name and

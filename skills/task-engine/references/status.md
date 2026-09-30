@@ -66,7 +66,8 @@ The non-terminal statuses, and why pruning one is unusual:
   of that in the plan and confirm before applying.
 - `[PARKED]` — the task is waiting on an answer, with its work-in-progress
   on a branch (`./parking.md`). Pruning it discards the question and
-  orphans the `park/task-<N>` branch, which nothing then deletes. Never in
+  orphans the `park/task-<N>` branch, which the next `/task-clean` sweeps
+  once the task's block is gone. Never in
   a default prune set; if the user names `[PARKED]` explicitly, say so in
   the plan, naming each task's branch, and confirm before applying.
 

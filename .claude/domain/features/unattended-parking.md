@@ -183,10 +183,15 @@ step, and any failure rolls back to the parked state exactly as it was.
    lists it as skip-only.
 2. **Cherry-pick the parking commit without committing** onto the current
    head. A conflict aborts the pick and restores the tree.
-3. **Delete the branch**, local and remote.
-4. **Resume the task** at the step the handoff names: the `Status:` flip to
+3. **Resume the task** at the step the handoff names: the `Status:` flip to
    `[IN PROGRESS]` and the handoff's removal ride in the task's own commit,
    as Step 1's flip does today. Step 7 commits as always.
+4. **Delete the branch**, local and remote, as the task's last act — after
+   its Step 7 commit and push have landed, so the branch stays the rollback
+   source until its content is committed on the base. The delete is
+   best-effort: a refused or failed one leaves the task's status alone,
+   halts nothing and is not retried; it becomes a Follow-ups item naming the
+   branch, and `/task-clean` sweeps what is left.
 
 On failure at step 2: under `unattended`, the task stays `[PARKED]`, the
 answer already given is recorded in the handoff (an `Answer:` line and a
@@ -331,9 +336,12 @@ The pipeline-engine routing rows for both skills list the new flags.
   `[PARKED]`; removed in the unpark commit. The body is otherwise never
   written by this feature.
 - **`park/task-<N>`** — one commit, the task's work-in-progress minus the two
-  backlog files, pushed unless `--no-push`. Exists exactly while the task is
-  `[PARKED]` with a non-`[none]` branch; deleted as the last step of a
-  successful unpark, or by reconciliation's skip-and-replace.
+  backlog files, pushed unless `--no-push`. Exists while the task is
+  `[PARKED]` with a non-`[none]` branch, and after an unpark until the task's
+  commit lands; deleted best-effort once that commit is in, or by
+  reconciliation's skip-and-replace, and any left behind is swept by
+  `/task-clean`, which deletes every `park/task-<N>` whose task is not
+  `[PARKED]`.
 - **`[P]`** on a step heading, committed; **`Context:`** bullets
   `parked: …` and `unparked with answer: …`; **`Parked: steps …`** in the
   index while any step is `[P]`; **`Execution policy:`** in the header,

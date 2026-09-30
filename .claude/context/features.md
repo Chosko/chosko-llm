@@ -211,8 +211,11 @@ Currently shipped:
   one commit, minus `TASKS.md` and the body, pushed unless `--no-push`, never
   overwritten; the park sequence ending in a bookkeeping commit that leaves
   the base tree clean; the transactional unpark — ask first, gates
-  cherry-pick first, cherry-pick without committing, delete the branch, resume
-  at the step named, rollback on conflict; the answerer rule; the two
+  cherry-pick first, cherry-pick without committing, resume at the step
+  named, rollback on conflict, then delete the branch as the task's last act
+  — after its Step 7 commit and push, best-effort, a failed delete a
+  Follow-ups item (a delegated agent's fifth field) and never a halt, the
+  branch kept under `--no-commit`; the answerer rule; the two
   refusals, `--unattended` beside `--no-commit` and on a non-git VCS; read by
   `/task-implement` only when UNATTENDED is true or a resolved task is
   `[PARKED]`). A
@@ -325,7 +328,8 @@ Currently shipped:
   reconciliation and `[PARKED]` live work awaiting an answer, and neither is
   ever pruned by default (naming either explicitly warns and confirms; for
   `[PARKED]` the plan says the prune discards the question and orphans the
-  `park/task-<N>` branch, named per task); a non-terminal status named
+  `park/task-<N>` branch, named per task, for the next run's sweep); a
+  non-terminal status named
   explicitly archives the same
   way, its frozen `Status:` recording that it was pruned live. Removes
   summary blocks and MOVES each body to `.claude/tasks/archive/<N>.md`
@@ -351,7 +355,15 @@ Currently shipped:
   each id put back on its feature's `Tasks:` line at its ascending position
   — the skill's only `FEATURES.md` write, on that path alone; a vanished
   slug reported, not written. Never writes `TASKS.md` under `--backfill`; a
-  second run reports nothing to recover. Commits automatically:
+  second run reports nothing to recover. THE PARK-BRANCH SWEEP runs on every
+  prune (not `--backfill`, not under a `## VCS` override): `git branch --list
+  'park/task-*'` plus `git ls-remote --heads origin` (remote skipped under
+  NO_PUSH), orphan = no summary block or `Status:` not `[PARKED]` as PHASE 1
+  read it; orphans get a plan section (none → nothing said), are deleted in
+  PHASE 2 step 7 on the same gate (`git branch -D` / `git push origin
+  --delete`), a failed delete reported, not fatal; "No tasks to prune." only
+  when there are neither tasks nor orphans; a sweep-only run commits nothing.
+  Commits automatically:
   `task-clean: archive tasks <N>, …` staging `.claude/TASKS.md` + each
   `.claude/tasks/archive/<N>.md` (`git mv` already staged both halves of the
   rename); backfill `task-clean: backfill <N> archived tasks`, adding
