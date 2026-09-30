@@ -1,6 +1,6 @@
 ---
 name: follow-ups
-version: 0.1.4
+version: 0.2.0
 type: command
 description: List what this conversation would lose if it ended now — actions proposed but never executed, outcomes never recorded on disk, decisions written down nowhere — as a numbered list, or exactly `No follow-ups left`. Use it before a session ends, or when a run stopped early.
 ---
@@ -75,8 +75,10 @@ When the conversation holds a working list — the one the
 list — the output is that list in its two-section shape: under the
 `Follow-ups` heading, **Approved** first, then **Awaiting approval**, one
 numbering running across both, and any follow-up the list lacks added under
-**Awaiting approval**. An empty working list is the line `No follow-ups
-left`.
+**Awaiting approval**. Invoked while a `/runbook-run` is in flight, the
+output is the list collected so far in that same two-section shape — the
+follow-ups the run has printed as they arose, with any approvals already
+given. An empty working list is the line `No follow-ups left`.
 
 A run-closing skill — `/runbook-run`, `/task-implement` — may apply these
 rules as the second group of its own closing report, under this same

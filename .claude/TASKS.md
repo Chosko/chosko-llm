@@ -412,7 +412,7 @@ Preconditions: none
 
 ## 271. Follow-ups while a runbook runs
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/follow-ups-resolve/SKILL.md, skills/runbook-run/SKILL.md, commands/follow-ups.md, .claude/domain/features/runbook-suite.md, docs/reference.md, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: 269, 270

@@ -1,9 +1,9 @@
 ---
 name: runbook-run
-version: 0.18.5
+version: 0.19.0
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user — or, under the `unattended` policy, parking the step that asked and going on — recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
-requires: command:follow-ups
+requires: command:follow-ups, skill:follow-ups-resolve
 ---
 
 # /runbook-run
@@ -148,11 +148,13 @@ step, and the fragments are hard to read back once the run is over. A forced
 mid-step turn — a Stop hook firing on the in-flight step's dirty tree, a
 notification arriving while the step runs — explains nothing: the progress line
 is the only status line it may print besides the spawn relay's own lines, and
-COMMIT CADENCE § *The Stop-hook reply* gives the hook its fixed answer. Two
+COMMIT CADENCE § *The Stop-hook reply* gives the hook its fixed answer. Three
 things are never suppressed: a relayed
 `QUESTIONS FOR USER` block, verbatim, because a run that needs an answer asks
 for it at once — under `unattended`, the parked step's question under its
-`P<n>` handle, for the same reason — and the spawn relay's own lines. The record of
+`P<n>` handle, for the same reason — the spawn relay's own lines, and the one
+line that prints a follow-up when it arises mid-run, per the
+`follow-ups-resolve` skill § DURING A RUNBOOK RUN. The record of
 the run is the closing report, not the transcript above it. The same rule holds
 under `--inline`.
 
@@ -1081,6 +1083,16 @@ not a new relay protocol and adds no round to the cap.
 adds no commit, and it is printed after the index `Status:` (`[DONE]` /
 `[FAILED]` / `[PENDING]`) and the run's final commit are already written, so
 it never dirties a tree the run just cleaned.
+
+**When a working list exists** — the user resolved or approved follow-ups
+during the run, per the `follow-ups-resolve` skill § DURING A RUNBOOK RUN —
+the *Follow-ups* group is that list in its two-section shape: **Approved**
+first, then **Awaiting approval**, the run's own items and what `/follow-ups`'
+rules yield folded into the second, one numbering running across both. After
+the report, the approved items are executed under `follow-ups-resolve`. That
+is conversation after the run, so the report's contract holds as stated: it
+adds no commit and flips no status, and a `FEATURES.md` flip among the items
+is a delegated item — the orchestrator never writes that file itself.
 
 **When `/follow-ups` is not installed, the group holds the run's own items
 only, silently.** The frontmatter keeps `requires: command:follow-ups` — the

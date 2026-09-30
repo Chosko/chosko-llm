@@ -1347,7 +1347,8 @@ Between steps it stays quiet — a progress line as each step starts, `Step 5
 running. Current run progress (2/4). Total runbook progress (5/9).` (this run's
 steps, then the whole runbook's `[x]` steps counting the one starting), and one
 line at its end, `Step 5 done (abc1234). Starting step 6.`, with relayed
-questions and spawn-relay lines still coming straight through; a turn forced
+questions, spawn-relay lines and a one-line `Follow-up: …` for each follow-up
+that arises still coming straight through; a turn forced
 mid-step prints nothing else — because the record of the run is the closing
 report at the end of it, printed the same way whether the run completed,
 stopped at a bound, ended waiting on a parked step or halted on a failure. It
@@ -1362,6 +1363,16 @@ mid-step; a failed step and its reason; a step left `[~]` to resume; every
 step left `[P]`, its question verbatim and the steps waiting on it; the steps
 left outside the range or never started; and whatever `/follow-ups`' rules
 yield when applied to the run. An empty group prints its heading and `none`.
+
+You can answer follow-ups while the run is still going — resolve them and
+approve them exactly as [`follow-ups-resolve`](#follow-ups-resolve) describes —
+but nothing you approve runs until the run ends. Mid-run the list is on
+demand: `/follow-ups` prints what has been collected so far. If you approved
+anything, the closing report's **Follow-ups** group comes in two sections,
+**Approved** then **Awaiting approval**, and the approved items start running
+right after the report, without another reply, unless one depends on an item
+you haven't approved yet. `/runbook-run` requires `follow-ups-resolve`, so the
+two install together.
 
 **When a step needs a subagent of its own.** In some environments, cloud
 sessions among them, a subagent can't spawn a subagent, which breaks any step
@@ -1516,7 +1527,8 @@ where none does. The numbering is the handle: reply "execute 1 and 2 now" or
 [`follow-ups-resolve`](#follow-ups-resolve) acts on it — the command itself
 implements nothing. Once you've replied to a list, the conversation holds a
 working list, and `/follow-ups` prints that list: **Approved** items first,
-then **Awaiting approval**, anything new added to the second.
+then **Awaiting approval**, anything new added to the second. Run during a
+`/runbook-run`, it prints the list collected so far in that same shape.
 
 It takes no arguments and is read-only: it opens no project file, writes
 nothing, commits nothing, and invokes no other command.
@@ -1565,6 +1577,11 @@ that turns up during execution joins the list awaiting your approval. And on
 a project with runbooks, every task a follow-up creates brings a companion
 item proposing the runbook and the position it belongs at, so the task
 doesn't drift out of the pipeline.
+
+Beside a running `/runbook-run` it defers: you can resolve and approve, but
+execution waits for the run's end, a follow-up that arises mid-run is one
+line, and the list prints only when you ask for it — see
+[`/runbook-run`](#the-runbook--commands).
 
 It writes nothing of its own: each item commits the way the command it runs
 does.

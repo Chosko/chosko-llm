@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.74.0 — 2026-09-30
+
+- **Answer follow-ups while a `/runbook-run` is still going.** Resolve and approve them as usual, but nothing runs until the run ends. A follow-up that turns up mid-run is printed once, as one line; the list itself appears only when you ask — `/follow-ups` mid-run prints what has been collected so far, Approved first, then Awaiting approval. At the end the closing report's Follow-ups group shows the list in those two sections, and the approved items start right after it without another reply, unless one depends on an item you haven't approved.
+- **`/runbook-run` now requires `follow-ups-resolve`**, so installing it installs both.
+
 ## 1.73.0 — 2026-09-30
 
 - **New skill `follow-ups-resolve`: answer a Follow-ups list once, not the same policy every time.** It fires on its own when you reply to a numbered Follow-ups list — from `/follow-ups`, a `/runbook-run` or `/task-implement` closing report, or any list of that shape. Your reply rewrites the list (merged items, items you take on removed, questions asked now), which comes back until you approve it; nothing runs before. Approved items are handed to subagents, independent ones in parallel. A subagent auto-confirms a gate that only asks for approval while its draft stays inside the approved item; any real question comes to you. New follow-ups found along the way wait for your approval, and on a project with runbooks each task a follow-up creates brings an item proposing where it goes in a runbook.

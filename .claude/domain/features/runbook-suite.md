@@ -488,9 +488,12 @@ progress line when the step starts — `Step <n> running. Current run progress
 `Step 4 done (abc1234). Starting step 5.`, or the failure line — and narrates
 nothing else: not the spawn, the wait, the classification, the `Done:` write
 or the commit. On a forced mid-step turn the progress line is the only status
-line besides the spawn relay's own. Relayed `QUESTIONS FOR USER` blocks and the spawn
-relay's lines are never suppressed, because a run that needs an answer has to
-ask for it at once; quiet applies to narration only. The **closing report is
+line besides the spawn relay's own. Three things are never suppressed:
+relayed `QUESTIONS FOR USER` blocks and the spawn relay's lines, because a
+run that needs an answer has to ask for it at once, and the one line that
+prints a follow-up when it arises mid-run, because the list itself is printed
+only on demand (`follow-ups-resolve` § DURING A RUNBOOK RUN); quiet applies
+to narration only. The **closing report is
 the record of the run** instead, in the same two groups `/task-implement` and
 `/task-implement` closes in, and it reads the same way at completion, at a
 bound, at the parked end branch and at a failure halt. *For the record*

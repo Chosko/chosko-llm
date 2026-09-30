@@ -1470,8 +1470,10 @@ Currently shipped:
   mapping), is read ONLY by `/runbook-run` and `/runbook-create --append`, and
   only after the schema's one-sentence check finds a `File:` file name not
   beginning `<id>-`. No sweep, no migration script. It IS the dependency
-  the rest of the runbook suite declares — and declares one itself,
-  `requires: command:follow-ups`: its CLOSING THE RUN section applies that
+  the rest of the runbook suite declares — and declares two itself,
+  `requires: command:follow-ups, skill:follow-ups-resolve` (the second for
+  the mid-run follow-up protocol and the post-report execution of approved
+  items): its CLOSING THE RUN section applies the first
   command's rules — body read by name, never invoked — as the *Follow-ups*
   group of the closing report, once per run (completion, a `--to`/`--only`/
   `--steps` bound, the end branch, a user-requested stop after a step, or a
@@ -1593,8 +1595,10 @@ Currently shipped:
   defined in CHAT OUTPUT) and one line at its end
   (`Step 4 done (abc1234). Starting step 5.`, or the failure line), no
   narration of spawn/wait/classify/`Done:`/commit, the progress line the only
-  status line on a forced mid-step turn, relayed questions and
-  spawn-relay lines still verbatim — with the **closing report as the record of
+  status line on a forced mid-step turn, relayed questions,
+  spawn-relay lines and the one-line `Follow-up: <item>` printed when a
+  follow-up arises mid-run (`follow-ups-resolve` § DURING A RUNBOOK RUN) never
+  suppressed — with the **closing report as the record of
   the run**, printed the same at completion, at a bound, at the end branch
   and at a failure halt; a parked step's question under its handle is never
   suppressed, like a relayed block; nothing extra read for it; no opt-out
@@ -1613,7 +1617,12 @@ Currently shipped:
   steps outside the range / `--steps` count / never started, and what
   `/follow-ups`' rules yield applied to the run's reading, de-duplicated by
   action with the command form kept. An empty group prints `none`;
-  `FEATURES.md` still never written by the orchestrator.
+  `FEATURES.md` still never written by the orchestrator. When the user
+  resolved or approved follow-ups mid-run, the group is that working list in
+  its two-section shape (Approved, then Awaiting approval, the run's own items
+  folded into the second), and after the report the approved items execute
+  under `follow-ups-resolve` — conversation after the run, so no commit and no
+  status flip of the report's own; a `FEATURES.md` flip is a delegated item.
   **Commit convention: one commit per completed step**, staging exactly the
   runbook (its `File:` path; both old and new path on the step that migrated
   it) and the index, then push; `--no-commit`/`--no-push` usual meanings.
@@ -1887,7 +1896,8 @@ Currently shipped:
   numbering is the handle: acting on a reply is `skills/follow-ups-resolve/`'s,
   not something the command implements; once a working list exists in the
   conversation, the output is that list in its two-section shape (Approved,
-  then Awaiting approval, gaps added to the second). Takes no arguments, opens no project file,
+  then Awaiting approval, gaps added to the second) — invoked while a
+  `/runbook-run` is in flight, the list collected so far in that shape. Takes no arguments, opens no project file,
   writes nothing, commits nothing, invokes nothing. Deliberately short — a
   reading rule, an exclusion rule, an output shape and a stop; `runbook-suggest`
   is the register it imitates. States in one sentence that a run-closing
@@ -1912,7 +1922,7 @@ Currently shipped:
   question, an unrelated request, producing a list). **Skill not a section of
   `/follow-ups`** because the command is read-only by contract and only a skill
   auto-loads on a reply. `requires: command:follow-ups` — it cites that body's
-  item form and § WHAT DOES NOT by name. Body is five rules over one **working
+  item form and § WHAT DOES NOT by name. Body is six rules over one **working
   list** (numbered from 1 each printing, the reply handle; split into
   Approved / Awaiting approval once anything is approved): resolve (feedback
   rewrites the list, re-presented until approved, nothing executes before);
@@ -1922,11 +1932,19 @@ Currently shipped:
   while the gate's draft stays inside the item; genuine questions are relayed
   verbatim, never answered by the orchestrator); new follow-ups go to the user
   then join the list; on a project with `.claude/RUNBOOKS.md` every task a
-  follow-up creates brings a companion runbook-placement item. Writes nothing
+  follow-up creates brings a companion runbook-placement item; during a
+  runbook run (resolution and approval allowed mid-run, execution deferred to
+  the run's end; an arising follow-up printed once as one `Follow-up: <item>`
+  line; the list on demand only, via `/follow-ups`; approvals merge into
+  Approved; a `P<n>` reply is never an approval; after the closing report the
+  approved items start at once, except one whose precondition is an item still
+  awaiting approval). Writes nothing
   of its own. `runbook-suggest` and `pipeline-suggest` exclude a reply to a
   Follow-ups list in their descriptions; `runbook-run` and `task-implement`
-  name the skill (never a path — it is optional) where their closing reports
-  say how a reply by number is handled. Carries a `routing.md` row in the
+  name the skill (never a path) where their closing reports say how a reply by
+  number is handled — `runbook-run` also cites it in CHAT OUTPUT and CLOSING
+  THE RUN and declares `requires: skill:follow-ups-resolve`; for
+  `task-implement` it stays optional. Carries a `routing.md` row in the
   `runbook-suggest` shape.
 - `commands/refactor-codebase.md` — behaviour-preserving, plan-first,
   test-gated refactor: extract constants/enums, dedupe, split oversized
