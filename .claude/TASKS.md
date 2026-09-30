@@ -403,7 +403,7 @@ Preconditions: none
 
 ## 270. `follow-ups-resolve` skill: the general protocol for answering a Follow-ups list
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/follow-ups-resolve/SKILL.md, commands/follow-ups.md, skills/runbook-run/SKILL.md, skills/task-implement/SKILL.md, skills/runbook-suggest/SKILL.md, skills/pipeline-suggest/SKILL.md, README.md, docs/reference.md, docs/cli-help.txt, .claude/context/features.md, VERSION, CHANGELOG.md
 Preconditions: none

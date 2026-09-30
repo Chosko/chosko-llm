@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.10.2
+version: 1.10.3
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups
@@ -848,8 +848,9 @@ Body Hints named ./test-runner.md for the policy marker — the marker's rule is
 
 **The numbering is the reply handle.** It starts at 1 in every report,
 carries no meaning beyond the handle, and a report with a single item still
-numbers it. Replying by number is ordinary conversation — "execute 1 and 2
-now" — handled as any other request is. A parked task keeps its `P<n>`
+numbers it. A reply by number — "execute 1 and 2 now" — is acted on by the
+`follow-ups-resolve` skill when it is available, and otherwise handled as any
+other request is. A parked task keeps its `P<n>`
 handle, the one it held this run or the next unused one, and a reply by it
 is that task's answer, recorded exactly as a reply mid-run is (BETWEEN TASKS
 step 2a), and the next run unparks the task.
@@ -906,8 +907,8 @@ return none; that is the field working, not failing.
 
 The rest of the group still comes from the launcher's own conversation — the
 delegation split, tasks skipped for unmet preconditions, failure lines,
-declined feature slugs. Where the user then asks to execute or plan a listed
-follow-up that came from a delegated agent, forwarding it to that same agent
+declined feature slugs. When a listed follow-up that came from a delegated
+agent is executed or planned, forwarding it to that same agent
 is often the convenient thing to do, and is allowed. Judgement, not a rule —
 this is not a new relay protocol.
 

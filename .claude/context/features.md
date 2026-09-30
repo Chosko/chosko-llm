@@ -1884,8 +1884,10 @@ Currently shipped:
   follow-up (`/runbook-run X to continue` isn't one — the runbook tracks it),
   while a task created in the conversation and not yet appended to the running
   runbook is, because nothing on disk connects it to the work in flight. The
-  numbering is the handle: replying by number is ordinary conversation, not
-  something the command implements. Takes no arguments, opens no project file,
+  numbering is the handle: acting on a reply is `skills/follow-ups-resolve/`'s,
+  not something the command implements; once a working list exists in the
+  conversation, the output is that list in its two-section shape (Approved,
+  then Awaiting approval, gaps added to the second). Takes no arguments, opens no project file,
   writes nothing, commits nothing, invokes nothing. Deliberately short — a
   reading rule, an exclusion rule, an output shape and a stop; `runbook-suggest`
   is the register it imitates. States in one sentence that a run-closing
@@ -1902,6 +1904,30 @@ Currently shipped:
   `Nothing`, no preconditions, no arguments, Amend `—`) in the shape
   `runbook-suggest` and `pipeline-suggest` use; `check-routing.sh` does not
   demand one — it declares no engine — but consistency does.
+- `skills/follow-ups-resolve/` — the general protocol for acting on a user
+  reply to a numbered Follow-ups list, whatever produced it (`/follow-ups`, a
+  `/runbook-run` or `/task-implement` closing report, any list of that shape).
+  Auto-trigger skill — selected from its description, which is written to the
+  150-word budget with a "Not for" list last (a `P<n>` reply to a parked
+  question, an unrelated request, producing a list). **Skill not a section of
+  `/follow-ups`** because the command is read-only by contract and only a skill
+  auto-loads on a reply. `requires: command:follow-ups` — it cites that body's
+  item form and § WHAT DOES NOT by name. Body is five rules over one **working
+  list** (numbered from 1 each printing, the reply handle; split into
+  Approved / Awaiting approval once anything is approved): resolve (feedback
+  rewrites the list, re-presented until approved, nothing executes before);
+  execute (orchestrator delegates items to subagents, independent ones in
+  parallel, may do one-line fixes itself); gates (delegated prompts
+  auto-confirm an approval-only gate, but the item's approval stands in only
+  while the gate's draft stays inside the item; genuine questions are relayed
+  verbatim, never answered by the orchestrator); new follow-ups go to the user
+  then join the list; on a project with `.claude/RUNBOOKS.md` every task a
+  follow-up creates brings a companion runbook-placement item. Writes nothing
+  of its own. `runbook-suggest` and `pipeline-suggest` exclude a reply to a
+  Follow-ups list in their descriptions; `runbook-run` and `task-implement`
+  name the skill (never a path — it is optional) where their closing reports
+  say how a reply by number is handled. Carries a `routing.md` row in the
+  `runbook-suggest` shape.
 - `commands/refactor-codebase.md` — behaviour-preserving, plan-first,
   test-gated refactor: extract constants/enums, dedupe, split oversized
   files, clean imports, rename. `scope=` / `focus=` limit work; `--commit`
@@ -1988,8 +2014,8 @@ as one `- name: description` line and truncates each at 1,536 chars (and at
 a literal ` --- ` before that), so a description costs every session whether
 or not the feature runs. Each says what the feature does and when to use it,
 front-loaded: ≤ 60 words / 400 chars for a feature invoked by name; ≤ 150
-words / 1,000 chars for the four auto-trigger skills (`claude-council`,
-`runbook-suggest`, `pipeline-suggest`, `unity-mcp-skill`), trigger phrases
+words / 1,000 chars for the five auto-trigger skills (`claude-council`,
+`runbook-suggest`, `pipeline-suggest`, `follow-ups-resolve`, `unity-mcp-skill`), trigger phrases
 first, "Not for" list last; pipeline stage in exactly one clause. Flags,
 argument grammar, refusals, read-only contracts and commit/push defaults
 live in the body's leading `#` header (`# /name`, summary, `# Usage:`,
@@ -1997,7 +2023,7 @@ live in the body's leading `#` header (`# /name`, summary, `# Usage:`,
 under the description ([cmd-show.md](./cmd-show.md)). Every shipped body has
 one; the two engines' is a two-line "read by path; not invoked" note. The
 repo-local `/context-budget` flags a description over 60 words (150 for the
-four auto-trigger skills), over 1,536 chars or containing ` --- `. Measured:
+five auto-trigger skills), over 1,536 chars or containing ` --- `. Measured:
 rendered list 45,105 chars at v1.57.4 → 13,035 on disk, 9,977 model-visible.
 
 **Loading-control keys** — three Claude Code frontmatter keys this repo may

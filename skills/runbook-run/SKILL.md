@@ -1,6 +1,6 @@
 ---
 name: runbook-run
-version: 0.18.4
+version: 0.18.5
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user — or, under the `unattended` policy, parking the step that asked and going on — recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
 requires: command:follow-ups
@@ -1024,8 +1024,9 @@ An empty group prints its heading and `none`.
 
 **The numbering is the reply handle.** It starts at 1 in every report, carries
 no meaning beyond the handle, and a report with a single item still numbers
-it. Replying by number is ordinary conversation — "execute 2", "insert 3 as
-the next step" — handled as any other request is. A parked step keeps its
+it. A reply by number — "execute 2", "insert 3 as the next step" — is acted
+on by the `follow-ups-resolve` skill when it is available, and otherwise
+handled as any other request is. A parked step keeps its
 `P<n>` handle (`./references/parking.md` § *The handles*), and a reply by it
 is that step's answer, recorded exactly as a mid-run reply is (`./references/parking.md` § *Mid-run answers*), and the next run
 selects the step.
@@ -1071,8 +1072,8 @@ never touches. Under `--inline`
 nothing changes — there are no step reports, and the session's own
 conversation is the whole reading.
 
-Where the user then asks to execute or plan one of the listed follow-ups
-that came from a step subagent, forwarding it to that same subagent is often
+When a listed follow-up that came from a step subagent is executed or
+planned, forwarding it to that same subagent is often
 the convenient thing to do, and is allowed. Judgement, not a rule — this is
 not a new relay protocol and adds no round to the cap.
 

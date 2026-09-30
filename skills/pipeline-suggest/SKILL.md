@@ -1,8 +1,8 @@
 ---
 name: pipeline-suggest
-version: 0.2.0
+version: 0.2.1
 type: skill
-description: 'Name, in one line, the pipeline command a free-form request fits. Trigger whenever the user asks in their own words to build, change, fix, remove or sequence work — "add a login to the page", "fix this bug", "drop the export step", "do this before that" — on a project that has a .claude/FEATURES.md or a .claude/TASKS.md, and the request does not already name a slash command. Emits one or two lines naming the command and stops. Not for: a question; a request that names a command; a request that says "just do it" or "directly"; work already under way in a /task-implement run; an enumeration inside an explanation; a follow-up list meant for later sessions, which runbook-suggest owns; or a project with neither a feature index nor a backlog.'
+description: 'Name, in one line, the pipeline command a free-form request fits. Trigger whenever the user asks in their own words to build, change, fix, remove or sequence work — "add a login to the page", "fix this bug", "drop the export step", "do this before that" — on a project that has a .claude/FEATURES.md or a .claude/TASKS.md, and the request does not already name a slash command. Emits one or two lines naming the command and stops. Not for: a question; a request that names a command; a request that says "just do it" or "directly"; work already under way in a /task-implement run; an enumeration inside an explanation; a follow-up list meant for later sessions, which runbook-suggest owns; a reply to a Follow-ups list, which follow-ups-resolve owns; or a project with neither a feature index nor a backlog.'
 requires: skill:pipeline-engine, skill:pipeline-revise
 ---
 

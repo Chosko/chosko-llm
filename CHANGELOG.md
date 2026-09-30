@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.73.0 — 2026-09-30
+
+- **New skill `follow-ups-resolve`: answer a Follow-ups list once, not the same policy every time.** It fires on its own when you reply to a numbered Follow-ups list — from `/follow-ups`, a `/runbook-run` or `/task-implement` closing report, or any list of that shape. Your reply rewrites the list (merged items, items you take on removed, questions asked now), which comes back until you approve it; nothing runs before. Approved items are handed to subagents, independent ones in parallel. A subagent auto-confirms a gate that only asks for approval while its draft stays inside the approved item; any real question comes to you. New follow-ups found along the way wait for your approval, and on a project with runbooks each task a follow-up creates brings an item proposing where it goes in a runbook.
+- **`/follow-ups` prints the working list once one exists** — **Approved** first, then **Awaiting approval** — and points replies to `follow-ups-resolve`, as do the `/runbook-run` and `/task-implement` closing reports. `runbook-suggest` and `pipeline-suggest` no longer fire on such a reply.
+
 ## 1.72.7 — 2026-09-30
 
 - **`/runbook-run` prints a progress line as each step starts:** `Step 5 running. Current run progress (2/4). Total runbook progress (5/9).` — this run's step out of what it set out to run (fixed at launch, a parked or failed step does not shrink it), then the runbook's finished steps, counting the one starting. It is also the only status line a turn forced mid-step may print, besides the spawn relay's own lines, so no more free-form explanations of what is in flight. The step-end line is unchanged.

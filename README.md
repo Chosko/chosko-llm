@@ -417,7 +417,11 @@ It takes no arguments, opens no project file and writes nothing, and
 `/runbook-run` and `/task-implement` apply its rules inside the *Follow-ups*
 list that closes every run — at a bound, a user-requested stop and a failure
 halt as much as at completion — so a run never ends leaving unrecorded work
-visible only in the transcript.
+visible only in the transcript. When you answer such a list — "do 1 and 3",
+"ask me about 2 now", "I'll handle 4, remove it" — **`follow-ups-resolve`**
+fires on its own: it rewrites the list from your reply until you approve it,
+then executes it, handing items to subagents and bringing back only the
+questions that are really yours.
 
 **Session handoffs** are for work in flight. **`/session-save`** writes what
 this conversation knows into `.claude/sessions/`: what was tried and failed,
@@ -525,7 +529,7 @@ cd chosko-llm
 
 Every feature requires YAML frontmatter (`name`, `version`, `type`, `description`). `add` and `update` refuse to install a file missing a `version` field. Three keys are optional: `replaces: <kind>:<name>` on a feature that changed kind, `requires: <kind>:<name>[, …]` on a feature whose body reads a file inside another installed feature, and the hook-only `event:` (required there) / `matcher:` pair.
 
-**The `description` is short by contract.** Claude Code injects every installed feature's `description` into the system prompt at session start and truncates each at 1,536 characters, so a description is a cost every session pays whether or not the feature is invoked. Each one says what the feature does and when to use it, front-loaded: at most 60 words / 400 characters for a feature you invoke by name, 150 words / 1,000 characters for the four skills Claude selects on its own (`claude-council`, `runbook-suggest`, `pipeline-suggest`, `unity-mcp-skill`), trigger phrases first and any "Not for" list last, never a literal ` --- `. Flags, refusals, read-only contracts and commit defaults live in the body's leading `#` header instead, which loads only when the feature runs and which `chosko-llm show` prints under the description. The full contract is in [docs/authoring-guide.md](docs/authoring-guide.md#the-description-contract).
+**The `description` is short by contract.** Claude Code injects every installed feature's `description` into the system prompt at session start and truncates each at 1,536 characters, so a description is a cost every session pays whether or not the feature is invoked. Each one says what the feature does and when to use it, front-loaded: at most 60 words / 400 characters for a feature you invoke by name, 150 words / 1,000 characters for the five skills Claude selects on its own (`claude-council`, `runbook-suggest`, `pipeline-suggest`, `follow-ups-resolve`, `unity-mcp-skill`), trigger phrases first and any "Not for" list last, never a literal ` --- `. Flags, refusals, read-only contracts and commit defaults live in the body's leading `#` header instead, which loads only when the feature runs and which `chosko-llm show` prints under the description. The full contract is in [docs/authoring-guide.md](docs/authoring-guide.md#the-description-contract).
 
 **Some features are hidden from the model by design.** Ten carry `disable-model-invocation: true` — the two reference libraries `task-engine` and `pipeline-engine`, and the wizards and housekeeping commands `/project-setup`, `/task-setup`, `/domain-setup`, `/unity-mcp-setup`, `/refactor-codebase`, `/refactor-tests`, `/runbook-prune`, `/runbook-clean`. Each stays listed and typeable, but its description never enters the model's context, since none is useful to suggest unprompted. `unity-mcp-skill` carries a `paths:` filter (`Assets/**`, `ProjectSettings/**`, `Packages/**`) so it loads only in a Unity project. `parse_frontmatter` ignores keys it does not know, so these pass through `add` / `update` untouched.
 

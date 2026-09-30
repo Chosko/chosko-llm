@@ -796,6 +796,8 @@ doesn't already name a slash command. It stays out of the way for:
 - work already under way in a `/task-implement` run;
 - an enumeration inside an explanation;
 - a list of follow-ups meant for later sessions, which is `runbook-suggest`'s;
+- a reply to a Follow-ups list, which is
+  [`follow-ups-resolve`](#follow-ups-resolve)'s;
 - a project with neither a feature index nor a backlog.
 
 If it fires too often, the fix is a narrower description, never a setting.
@@ -1510,8 +1512,11 @@ Each item is written as a slash command plus a short "to …" explanation
 wherever a command fits — `/task-add feature=password-auth to reconcile tasks
 12 and 14, which went stale after the amendment` — with free-form items legal
 where none does. The numbering is the handle: reply "execute 1 and 2 now" or
-"insert 3 as the next step in this runbook" and that's ordinary conversation,
-not something the command implements.
+"insert 3 as the next step in this runbook" and
+[`follow-ups-resolve`](#follow-ups-resolve) acts on it — the command itself
+implements nothing. Once you've replied to a list, the conversation holds a
+working list, and `/follow-ups` prints that list: **Approved** items first,
+then **Awaiting approval**, anything new added to the second.
 
 It takes no arguments and is read-only: it opens no project file, writes
 nothing, commits nothing, and invokes no other command.
@@ -1523,6 +1528,46 @@ halted on a failure is exactly the one most likely to strand unrecorded work;
 the standalone command is unchanged by that. It is the
 inverse of `runbook-suggest`, which fires on its own: a `/follow-ups` list of
 three or more ordered items is precisely what that skill watches for.
+
+### `follow-ups-resolve`
+
+What happens when you answer a Follow-ups list?
+
+`follow-ups-resolve` is a skill that fires on its own description, written to
+the auto-trigger budget, when you reply to a numbered
+Follow-ups list — "do 1 and 3", "flip all eligible features to `[DONE]`", "ask
+me about 2 now", "I'll handle 4 myself, remove it" — whether the list came
+from `/follow-ups`, from the report that closes a `/runbook-run` or
+`/task-implement` run, or from anything else in that shape. It saves you
+restating the same execution policy every time.
+
+It keeps one **working list** for the conversation, and runs it in two
+phases:
+
+- **Resolve.** Your reply rewrites the list: items sharing an action merge,
+  items you take on disappear, a question you ask to be asked is put now, a
+  new instruction becomes a new item. The rewritten list comes back to you,
+  and keeps coming back until you approve it. Nothing runs before that.
+- **Execute.** Approved items run. The session orchestrates and hands each
+  item to a subagent, independent items in parallel; a one-line fix it may
+  make itself.
+
+The list is numbered from 1 every time it is printed, and those numbers are
+what you reply with. Once anything is approved it prints in two sections under
+the `Follow-ups` heading, **Approved** first, then **Awaiting approval**.
+
+Three rules keep execution honest. A subagent auto-confirms a gate that asks
+only for approval ("Approve and write?") — your approval of the item stands in
+for it, but only while the gate's draft stays inside that item; a draft that
+diverges from the item's design, or a gate asking a real question, comes to
+you, relayed verbatim, never answered by the orchestrator. A new follow-up
+that turns up during execution joins the list awaiting your approval. And on
+a project with runbooks, every task a follow-up creates brings a companion
+item proposing the runbook and the position it belongs at, so the task
+doesn't drift out of the pipeline.
+
+It writes nothing of its own: each item commits the way the command it runs
+does.
 
 ### `/session-save` and `/session-resume`
 
@@ -1782,7 +1827,7 @@ contracts and commit defaults live, because the `description` is short by
 contract: Claude Code injects every installed description into the system
 prompt at session start and truncates each at 1,536 characters, so each one
 says what the feature does and when to use it in at most 60 words (150 for
-the four skills Claude selects on its own), and nothing else. The header
+the five skills Claude selects on its own), and nothing else. The header
 loads only when the feature is invoked, so `show` is how a human reads the
 flags without paying for them every session. `--content` prints the full
 body in place of the header; a body with no header (the two `.sh` kinds)

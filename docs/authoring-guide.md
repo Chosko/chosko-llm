@@ -80,7 +80,8 @@ The contract every shipped `description` follows:
   invokes by name.
 - **Auto-trigger skills: ≤ 150 words / 1,000 chars.** The skills Claude selects
   on its own — `claude-council`, `runbook-suggest`, `pipeline-suggest`,
-  `unity-mcp-skill`. Trigger phrases first; any "Not for" list last.
+  `follow-ups-resolve`, `unity-mcp-skill`. Trigger phrases first; any "Not
+  for" list last.
 - **Hard fail above 1,536 chars.** The harness cuts there; a description that
   long has already lost whatever it put at the end.
 - **Never ` --- ` inside a description.** The harness truncates the description
@@ -95,7 +96,7 @@ The contract every shipped `description` follows:
 
 Budgets are in characters and words, not tokens: the repo forbids a tokenizer
 dependency, and characters are what the harness caps on anyway. `/context-budget`
-(repo-local, see below) flags a description over 60 words (150 for the four
+(repo-local, see below) flags a description over 60 words (150 for the five
 auto-trigger skills), over 1,536 chars, or containing ` --- `.
 
 ### <a id="the-body-header"></a>The body header — where the flags live
@@ -613,7 +614,7 @@ What that means concretely:
   a session in this repo, so a repo-local skill sharing a name with a shipped
   one would be ambiguous. Check the shipped catalogue before naming a new one.
 - **`/context-budget` is where the `description` contract gets checked.** It
-  flags a description over 60 words (150 for the four auto-trigger skills),
+  flags a description over 60 words (150 for the five auto-trigger skills),
   over the 1,536-char hard cap, or containing ` --- ` — an observation, not a
   gate; see § The `description` contract for the rule it measures against.
 
