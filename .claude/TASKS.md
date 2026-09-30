@@ -460,7 +460,7 @@ Feature: unattended-parking
 
 ## 276. Update documentation for feature `unattended-parking`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: docs/reference.md, .claude/context/features.md
 Preconditions: 275

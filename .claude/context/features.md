@@ -209,8 +209,10 @@ Currently shipped:
   `Parking Branch:`, `Question:` verbatim and multi-line, `Answer:` only after
   a failed unpark; the `park/task-<N>` branch holding the work-in-progress in
   one commit, minus `TASKS.md` and the body, pushed unless `--no-push`, never
-  overwritten; the park sequence ending in a bookkeeping commit that leaves
-  the base tree clean; the transactional unpark — ask first, gates
+  overwritten; the park sequence — first deleting a leftover `park/task-<N>`
+  (the task's own unpark branch, met by a resumed task asking again), local
+  and remote, a failed delete failing the park as a Step 7 failure — ending
+  in a bookkeeping commit that leaves the base tree clean; the transactional unpark — ask first, gates
   cherry-pick first, cherry-pick without committing, resume at the step
   named, rollback on conflict, then delete the branch as the task's last act
   — after its Step 7 commit and push, best-effort, a failed delete a
@@ -358,8 +360,9 @@ Currently shipped:
   second run reports nothing to recover. THE PARK-BRANCH SWEEP runs on every
   prune (not `--backfill`, not under a `## VCS` override): `git branch --list
   'park/task-*'` plus `git ls-remote --heads origin` (remote skipped under
-  NO_PUSH), orphan = no summary block or `Status:` neither `[PARKED]` nor `[IN PROGRESS]` as PHASE 1
-  read it; orphans get a plan section (none → nothing said), are deleted in
+  NO_PUSH), orphan = no summary block or `Status:` neither `[PARKED]` nor
+  `[IN PROGRESS]` as PHASE 1 read it (a resumed task keeps its branch as
+  rollback source until its commit); orphans get a plan section (none → nothing said), are deleted in
   PHASE 2 step 7 on the same gate (`git branch -D` / `git push origin
   --delete`), a failed delete reported, not fatal; "No tasks to prune." only
   when there are neither tasks nor orphans; a sweep-only run commits nothing.
@@ -415,7 +418,8 @@ Currently shipped:
   (delegation → no, dirty tree → abort, `Proceed?` → yes, …), each a *For the
   record* line; an ambiguous test runner aborts. A question about the work —
   inside the per-task workflow only — runs `parking.md`'s park sequence:
-  handoff, `park/task-<N>`, bookkeeping commit, question printed under the
+  leftover `park/task-<N>` deleted first, handoff, `park/task-<N>`,
+  bookkeeping commit, question printed under the
   run's next `P<n>` handle, on to BETWEEN TASKS. PRE-FLIGHT step 2a
   **pre-asks**: one block of every `[PARKED]` task, each under its `P<n>` handle, in the resolved
   list with its `Question:` verbatim — the one pre-flight body read, handoff

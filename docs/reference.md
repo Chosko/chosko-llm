@@ -930,8 +930,12 @@ the branch back and resumes the task at the step it stopped at; a conflict
 rolls everything back and leaves the task `[PARKED]`. The branch is deleted
 only once the task's commit (and push) has landed, and only best-effort: a
 delete that is refused or fails leaves the task's status alone and becomes a
-Follow-ups item naming the branch, and the next `/task-clean` sweeps it. A parked
-task with nobody to answer is skipped with one line, never re-parked.
+Follow-ups item naming the branch, and the next `/task-clean` sweeps it. A
+resumed task that asks a second question parks again under the same branch
+name: the leftover `park/task-<N>` from its unpark is deleted first, local and
+remote, and a delete that fails stops the run with the task `[IN PROGRESS]`
+and the tree intact. A parked task with nobody to answer is skipped with one
+line, never re-parked.
 
 An implementer that finds a passage its own approved change made stale
 updates it — a *consequential edit*: the passage brought into agreement with
