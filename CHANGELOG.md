@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.75.3 — 2026-09-30
+
+- **`check-home-paths.sh` catches wrapped `$CLAUDE_HOME` and `$HOME/.claude` citations.** Its line-wrap pass lost every backslash in its pattern to awk's `-v` escape processing, so only `~/.claude` spellings were caught across a line break, and it printed escape-sequence warnings.
+
 ## 1.75.2 — 2026-09-30
 
 - **A resumed task can park a second time.** When a task unparked under `--unattended` asks another question, `/task-implement` deletes its leftover `park/task-<N>` branch, local and on origin, before parking again — its work is already in the tree. A delete that fails stops the run with the task `[IN PROGRESS]`.

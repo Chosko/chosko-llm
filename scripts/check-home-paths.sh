@@ -57,10 +57,13 @@ hits="$(grep -rnE "$pattern" "$REPO_ROOT/commands" "$REPO_ROOT/skills" || true)"
 # in silence. Each file is re-scanned over a two-line window: the leading
 # blockquote marker and indentation of the continuation line are stripped, the
 # pair is joined, and a match that neither line produced on its own is an
-# offence reported against the line the literal starts on.
+# offence reported against the line the literal starts on. The pattern reaches
+# awk through the environment, not -v: -v processes escapes, which would strip
+# every backslash from the regex and leave `$` an end-of-line anchor.
 wrapped="$(
   find "$REPO_ROOT/commands" "$REPO_ROOT/skills" -type f -print0 \
-    | xargs -0 awk -v pat="$pattern" '
+    | PAT="$pattern" xargs -0 awk '
+        BEGIN { pat = ENVIRON["PAT"] }
         FNR == 1 { prev = ""; prevno = 0 }
         {
           cur = $0
