@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 276
+Last task number: 277
 
 ---
 
@@ -465,5 +465,14 @@ Target: claude
 Files: docs/reference.md, .claude/context/features.md
 Preconditions: 275
 Feature: unattended-parking
+
+---
+
+## 277. Harden the spawn relay against relay children that reply in-turn
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/SKILL.md, skills/runbook-run/references/subagent-contract.md, skills/task-review/SKILL.md, .claude/domain/features/runbook-suite.md, docs/reference.md, VERSION, CHANGELOG.md
+Preconditions: none
 
 ---
