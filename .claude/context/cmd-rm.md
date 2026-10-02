@@ -74,7 +74,7 @@ dependent left to break.
   (in `resolve_installed`), checks installed state direct
   (`inst_command_path`, `inst_skill_path`, `claudemd_is_installed`,
   `inst_statusline_path`, `inst_hook_path`). Its prefix-parsing case statement is one of the
-  three parsers [shared-lib.md](./shared-lib.md) § Internal patterns keeps in
+  three parsers [shared-lib-kinds.md](./shared-lib-kinds.md) § Internal patterns keeps in
   sync.
 
 ## Domain dependencies
@@ -85,9 +85,10 @@ dependent left to break.
 ## Cross-references
 
 - [shared-lib.md](./shared-lib.md) — uses `inst_command_path`,
-  `inst_skill_path` / `inst_skill_dir`, `claudemd_is_installed` /
-  `remove_section`, `requires_specs` (dependents guard), scope helpers
+  `inst_skill_path` / `inst_skill_dir`, scope helpers
   `resolve_scope` / `scope_supports_kind` / `claudemd_target_path`.
+- [shared-lib-kinds.md](./shared-lib-kinds.md) — uses `claudemd_is_installed` /
+  `remove_section`, `requires_specs` (dependents guard).
 - [cmd-add.md](./cmd-add.md) — inverse op.
 - [cli-entry.md](./cli-entry.md) — `uninstall.sh`.
 

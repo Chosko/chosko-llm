@@ -23,8 +23,8 @@ CLI:
 `--since <value>` takes a version (`1.10.0`), a date (`2026-08-01`) or a
 duration (`30d` / `2w` / `6mo` / `1y`), auto-detected; a duration selects exactly
 as the date that many units before today would; classification and the
-sections each selects: [shared-lib.md](./shared-lib.md) § Public API ›
-Changelog readout.
+sections each selects: [shared-lib-changelog.md](./shared-lib-changelog.md) §
+Public API › Changelog readout.
 
 Exit codes:
 - 0 on success, **including a `--since` matching no section** (says so via
@@ -40,11 +40,11 @@ Env read: `VISUAL`, `EDITOR`, `PAGER`, `NO_COLOR`, `LINES`.
 - **Colour captured from ORIGINAL stdout, before anything redirects it.**
   `STDOUT_WAS_TTY` set at top of script, `_changelog_use_color` closes over it,
   and that predicate is what's handed to the renderer — why in
-  [shared-lib.md](./shared-lib.md) § Changelog readout. Don't "simplify" this
+  [shared-lib-changelog.md](./shared-lib-changelog.md) § Changelog readout. Don't "simplify" this
   into `_use_color_stdout`.
 - **Renderer shared with `upgrade`; only the stream and the colour predicate
   differ.** Layout comes from `_render_changelog_sections` in `lib.sh`
-  ([shared-lib.md](./shared-lib.md) § Changelog readout).
+  ([shared-lib-changelog.md](./shared-lib-changelog.md) § Changelog readout).
 - **Filtered output on stdout, deliberately.** `--since` output is the
   command's product and must pipe into `grep`; `upgrade`'s readout stays on
   stderr because it's commentary on another action. Every diagnostic here
@@ -94,11 +94,12 @@ Env read: `VISUAL`, `EDITOR`, `PAGER`, `NO_COLOR`, `LINES`.
   file's schema, its descending-semver ordering, the maintenance rule, and the
   `upgrade` readout this subcommand shares a renderer with.
 - `../../CHANGELOG.md` — the file being read; parser contract:
-  [shared-lib.md](./shared-lib.md) § Public API › Changelog readout.
+  [shared-lib-changelog.md](./shared-lib-changelog.md) § Public API › Changelog readout.
 
 ## Cross-references
 
-- [shared-lib.md](./shared-lib.md) — `src_changelog_path`,
+- [shared-lib.md](./shared-lib.md) — `src_changelog_path`.
+- [shared-lib-changelog.md](./shared-lib-changelog.md) —
   `_render_changelog_sections`, `changelog_since_kind`,
   `changelog_duration_to_date`, `select_changelog_sections`,
   `terminal_height`. All selection and rendering lives there; this script is

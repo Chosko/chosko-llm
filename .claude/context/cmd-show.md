@@ -51,10 +51,10 @@ than one view flag, or unresolvable/ambiguous name.
 - **Own resolver, not `lib.sh::resolve_feature`.** `resolve_show_feature`
   matches feature existing in EITHER managed clone OR `$CLAUDE_HOME`,
   so local-only installs inspectable. Its prefix parsing and 5-way ambiguity
-  stay in sync with the other resolvers per [shared-lib.md](./shared-lib.md)
+  stay in sync with the other resolvers per [shared-lib-kinds.md](./shared-lib-kinds.md)
   § Internal patterns.
 - **An unmanaged skills directory resolves too.** An unmanaged skills
-  directory ([shared-lib.md](./shared-lib.md) § Public API › Feature kind)
+  directory ([shared-lib-kinds.md](./shared-lib-kinds.md) § Public API › Feature kind)
   sets `has_skill` via `lib.sh::skill_is_unmanaged`, then the local
   `unmanaged` flag: columns match the `ls` row ([cmd-ls.md](./cmd-ls.md) §
   Public API), `Path:` is the directory,
@@ -105,9 +105,10 @@ than one view flag, or unresolvable/ambiguous name.
 ## Cross-references
 
 - [shared-lib.md](./shared-lib.md) — `src_*` / `inst_*` path helpers,
-  `read_frontmatter_field`, `claudemd_is_installed` /
-  `claudemd_installed_version` / `claudemd_target_path`, scope helpers
+  `read_frontmatter_field`, `claudemd_target_path`, scope helpers
   `resolve_scope` / `scope_is_local`, and `C_*` colors.
+- [shared-lib-kinds.md](./shared-lib-kinds.md) — `claudemd_is_installed` /
+  `claudemd_installed_version`.
 - [cmd-ls.md](./cmd-ls.md) — multi-feature listing; `show` single-feature
   deep-dive, footer tip point back at `add`/`update`.
 

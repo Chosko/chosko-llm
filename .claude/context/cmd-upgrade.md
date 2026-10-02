@@ -49,7 +49,7 @@ Side effects:
   don't "fix" it.
 - **Extraction lives in `print_changelog_range` (`lib.sh`), never inline
   here.** Range bounds, layout, colour gate, and degrade-never-fail handling
-  of a missing or broken `CHANGELOG.md` per [shared-lib.md](./shared-lib.md)
+  of a missing or broken `CHANGELOG.md` per [shared-lib-changelog.md](./shared-lib-changelog.md)
   § Changelog readout.
 - **Commit-list dump suppressed exactly when a range printed.** Branch keys off
   `print_changelog_range`'s return code (0 = printed) — a subject dump beside a
@@ -85,7 +85,8 @@ Side effects:
   sharing the same renderer but writing to stdout under its own colour gate.
 - [shared-lib.md](./shared-lib.md) — sources `lib.sh` for logging,
   `$CHOSKO_LLM_HOME`, `auto_upgrade_*` state helpers behind
-  toggle flags and opt-in tip, and `raw_version` +
+  toggle flags and opt-in tip, and `raw_version` behind the readout.
+- [shared-lib-changelog.md](./shared-lib-changelog.md) —
   `print_changelog_range` behind the readout.
 
 ## When to read the source
@@ -101,4 +102,4 @@ Side effects:
 - Changing the changelog readout → *where* it sits, which versions bracket it,
   and whether the commit dump is suppressed live in `cmd-upgrade.sh`; the range
   extraction, layout and colours live in `print_changelog_range` in `lib.sh`
-  (see [shared-lib.md](./shared-lib.md)).
+  (see [shared-lib-changelog.md](./shared-lib-changelog.md)).

@@ -83,14 +83,14 @@ followed; flagged in the source comment as a thing not to "fix" later.
 
 - Single-feature path only: after install, `apply_replaces` honours the
   source's optional `replaces: <kind>:<name>` (behaviour:
-  [shared-lib.md](./shared-lib.md) § Public API › Kind migration). `--all`
+  [shared-lib-kinds.md](./shared-lib-kinds.md) § Public API › Kind migration). `--all`
   loop does **not** call it; a stale artifact left that way is picked up by
   `update --all`'s migration path.
 
 ## Internal patterns
 
 - **Resolution delegated** to `resolve_feature` in
-  [shared-lib.md](./shared-lib.md). Script never parses
+  [shared-lib-kinds.md](./shared-lib-kinds.md). Script never parses
   `command:` / `skill:` prefix itself.
 - **Validation precedes copy, and requirements sit between the two.**
   `require_versioned_source` runs before any filesystem mutation —
@@ -122,11 +122,12 @@ followed; flagged in the source comment as a thing not to "fix" later.
 
 ## Cross-references
 
-- [shared-lib.md](./shared-lib.md) — `resolve_feature`,
-  `require_versioned_source`, `requires_specs` / `parse_replaces_spec` /
-  `artifact_is_installed` (the dependency path), `src_*` / `inst_*` path
-  helpers, scope helpers `resolve_scope` / `scope_supports_kind` /
+- [shared-lib.md](./shared-lib.md) — `require_versioned_source`, `src_*` /
+  `inst_*` path helpers, scope helpers `resolve_scope` / `scope_supports_kind` /
   `claudemd_target_path`.
+- [shared-lib-kinds.md](./shared-lib-kinds.md) — `resolve_feature`,
+  `requires_specs` / `parse_replaces_spec` / `artifact_is_installed` (the
+  dependency path).
 - [cmd-update.md](./cmd-update.md) — "refresh / reinstall" counterpart;
   `update` installs if missing, usable in place of `add`.
 - [cmd-rm.md](./cmd-rm.md) — inverse operation.

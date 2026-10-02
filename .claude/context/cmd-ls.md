@@ -24,8 +24,8 @@ to `STATUS_WIDTH` (18, one wider than `migration pending`) so `REQUIRES` can be
 last and unpadded. `REQUIRES` is the row's comma-separated kind-prefixed specs
 as declared (`skill:task-engine`), or a dimmed `—` when none. Missing values
 render `—`. Installed file w/ no `version` frontmatter shows `unversioned`. An
-unmanaged skills directory ([shared-lib.md](./shared-lib.md) § Public API ›
-Feature kind) is installed, not missing: the row renders `unversioned` / `—` /
+unmanaged skills directory ([shared-lib-kinds.md](./shared-lib-kinds.md) §
+Public API › Feature kind) is installed, not missing: the row renders `unversioned` / `—` /
 `local only`, and being `local only` it is never counted installable and never
 named in the footer `add` hint. Rows print as one sequence ordered ascending by
 feature name, not grouped by kind; two rows sharing a name break the tie on
@@ -91,7 +91,7 @@ in global. The claude-md rows read `claudemd_target_path` (in `lib.sh`).
   so its `req_raw` is `src_req` or empty. Entries come from
   `lib.sh::requires_specs_from_value_into` — the lenient split, NOT
   `requires_specs`: a malformed entry renders raw + dimmed and the listing
-  continues. Lenient versus strict split: [shared-lib.md](./shared-lib.md)
+  continues. Lenient versus strict split: [shared-lib-kinds.md](./shared-lib-kinds.md)
   § Public API › Dependencies.
 - **One awk for the whole listing.** Pass 1 collects the paths under **two
   separate guards**: `-f` decides whether the file counts (an existing file
@@ -144,10 +144,11 @@ in global. The claude-md rows read `claudemd_target_path` (in `lib.sh`).
 
 - [shared-lib.md](./shared-lib.md) — uses `feature_path_var` and
   `claudemd_target_path_var` (the fork-free path helpers; `cmd-ls` is why they
-  exist), `read_frontmatter_table` (the one-awk batch reader; likewise),
+  exist), `read_frontmatter_table` (the one-awk batch reader; likewise), and
+  scope helpers `resolve_scope` / `scope_is_local` / `scope_label`.
+- [shared-lib-kinds.md](./shared-lib-kinds.md) — uses
   `requires_specs_from_value_into`, `find_replacement` /
-  `check_migration_pending` over the `replaces:` index, and scope helpers
-  `resolve_scope` / `scope_is_local` / `scope_label`.
+  `check_migration_pending` over the `replaces:` index.
 - [cmd-add.md](./cmd-add.md) / [cmd-update.md](./cmd-update.md) — features
   `ls` shows produced/consumed by these.
 - [cmd-show.md](./cmd-show.md) — single-feature deep-dive footer's

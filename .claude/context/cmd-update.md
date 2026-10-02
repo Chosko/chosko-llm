@@ -45,7 +45,7 @@ Side effects:
   of what was merged into settings.json, which has no version. The warning
   names both slots via `hook_wiring_label`;
   claude-md re-inject via `inject_section` into `claudemd_target_path`.
-  Then `apply_replaces` (see [shared-lib.md](./shared-lib.md) § Kind
+  Then `apply_replaces` (see [shared-lib-kinds.md](./shared-lib-kinds.md) § Kind
   migration).
 - `--all`: per installed feature, compare versions with `version_cmp`,
   log `Already up-to-date` (equal), `Local version ahead … — skipping`
@@ -97,9 +97,10 @@ before `update_one` runs.
 
 ## Cross-references
 
-- [shared-lib.md](./shared-lib.md) — `resolve_feature`,
-  `require_versioned_source`, path helpers, scope helpers `resolve_scope` /
-  `scope_supports_kind` / `claudemd_target_path`.
+- [shared-lib.md](./shared-lib.md) — `require_versioned_source`, path
+  helpers, scope helpers `resolve_scope` / `scope_supports_kind` /
+  `claudemd_target_path`.
+- [shared-lib-kinds.md](./shared-lib-kinds.md) — `resolve_feature`.
 - [cmd-add.md](./cmd-add.md) — installs-only-if-absent counterpart.
 - [cmd-upgrade.md](./cmd-upgrade.md) — typical user flow:
   `upgrade` (refresh source) then `update --all` (refresh installs).

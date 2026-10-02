@@ -18,15 +18,15 @@ Feature kinds, keyed by feature name (kebab-case):
   lives in bash no-op heredoc (`: <<'CHOSKO_FRONTMATTER' ... CHOSKO_FRONTMATTER`)
   right after shebang, so `parse_frontmatter`'s first-`---`-pair scan still
   find it. `chosko-llm add` does not edit `settings.json`; it prints a merge
-  prompt ([shared-lib.md](./shared-lib.md) § Public API › statusline
+  prompt ([shared-lib-kinds.md](./shared-lib-kinds.md) § Public API › statusline
   scripts). `chosko-llm add/rm/update/ls/show` treat as `statusline:` kind.
 - `hooks/<name>.sh` — executable script Claude Code runs on hook event.
   Frontmatter in same bash no-op heredoc as statusline, plus two hook-only
   keys: `event:` (required — `PreToolUse`, `SessionStart`, …; enforced per
-  [shared-lib.md](./shared-lib.md) § Public API › hooks) and `matcher:`
+  [shared-lib-kinds.md](./shared-lib-kinds.md) § Public API › hooks) and `matcher:`
   (optional, narrows event to one tool). Installed to
   `$CLAUDE_HOME/hooks/<name>.sh`; `add` prints a settings.json wiring prompt
-  ([shared-lib.md](./shared-lib.md) § Public API › hooks). **Local-only kind** — exact
+  ([shared-lib-kinds.md](./shared-lib-kinds.md) § Public API › hooks). **Local-only kind** — exact
   mirror of statusline's global-only rule; see `scope_supports_kind` in
   [shared-lib.md](./shared-lib.md). Both halves (script + settings.json) must
   be committed, and Claude Code snapshots hook config at session start, so
@@ -2017,14 +2017,14 @@ use; `parse_frontmatter` ignores unknown keys, so they pass through
 a feature changes kind (`commands/<n>.md` rewritten as `skills/<n>/SKILL.md`),
 so the install verbs remove the superseded artifact instead of leaving two
 definitions of one slash command — which verbs, and when:
-[shared-lib.md](./shared-lib.md) § Public API › Kind migration. Live
+[shared-lib-kinds.md](./shared-lib-kinds.md) § Public API › Kind migration. Live
 examples: `skills/context-build/SKILL.md`, `skills/context-update/SKILL.md` and
 `skills/task-clean/SKILL.md`.
 Drop the key once the migration has propagated.
 
 `requires:` is the other optional key, valid on every kind: a comma-separated
 list of kind-prefixed specs naming features whose files this one reads at run
-time. Install and removal semantics: [shared-lib.md](./shared-lib.md) §
+time. Install and removal semantics: [shared-lib-kinds.md](./shared-lib-kinds.md) §
 Public API › Dependencies (`requires:`); the `--force` override:
 [cmd-rm.md](./cmd-rm.md) § Public API. Live examples: `commands/task-add.md`,
 `commands/task-list.md`, `skills/task-clean/SKILL.md` and
@@ -2047,7 +2047,7 @@ its state in versioned project document.
   as a common mistake.
 - **Skills are folders, not single files.** Bare `skills/foo.md` is
   ignored by every script. See `feature_kind` in
-  [shared-lib.md](./shared-lib.md).
+  [shared-lib-kinds.md](./shared-lib-kinds.md).
 - **Supporting files are read on demand.** A skill folder's non-`SKILL.md`
   files exist so the common path stays cheap: `SKILL.md` names the branch
   and the file to read when it fires, and nothing else reads them.
