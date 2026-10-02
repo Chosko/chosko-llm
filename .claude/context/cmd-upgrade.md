@@ -88,7 +88,7 @@ Side effects:
   toggle flags and opt-in tip, and `raw_version` +
   `print_changelog_range` behind the readout.
 
-## When to read source
+## When to read the source
 
 - Changing pull strategy (e.g. allowing rebases, recovering from dirty
   state) → `scripts/cmd-upgrade.sh`.

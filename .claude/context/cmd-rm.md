@@ -18,7 +18,7 @@ CLI:
 Exit codes:
 - 0 success.
 - 1 (via `die`) if: no arg, `<name>` ambiguous (more than one of
-  command/skill/claude-md/statusline installed) without prefix, nothing
+  command/skill/claude-md/statusline/hook installed) without prefix, nothing
   matching installed, the resolved kind is one the scope does not support
   (`statusline` with `--local`, `hook` with `--global`), or an
   installed feature still declares this one in `requires:` and `--force` was
@@ -70,10 +70,10 @@ dependent left to break.
 ## Internal patterns
 
 - **Resolution local, not via `resolve_feature`.** `cmd-rm.sh` parses
-  `command:` / `skill:` / `claude-md:` / `statusline:` prefix itself (in
-  `resolve_installed`), checks installed state direct
+  `command:` / `skill:` / `claude-md:` / `statusline:` / `hook:` prefix itself
+  (in `resolve_installed`), checks installed state direct
   (`inst_command_path`, `inst_skill_path`, `claudemd_is_installed`,
-  `inst_statusline_path`). Its prefix-parsing case statement is one of the
+  `inst_statusline_path`, `inst_hook_path`). Its prefix-parsing case statement is one of the
   three parsers [shared-lib.md](./shared-lib.md) § Internal patterns keeps in
   sync.
 

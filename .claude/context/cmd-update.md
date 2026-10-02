@@ -11,7 +11,7 @@ unlike `add`, no refuse on absence.
 CLI:
 - `chosko-llm update <feature> [<feature> ...]` — one or more
   space-separated specs, same spec syntax as `add` (`<name>`,
-  `command:`/`skill:`/`claude-md:`/`statusline:` prefixed). Each name
+  `command:`/`skill:`/`claude-md:`/`statusline:`/`hook:` prefixed). Each name
   resolved/updated independently via `update_one_spec` (see Internal
   patterns); install if missing.
 - `chosko-llm update --all` — iterate installed commands
@@ -104,7 +104,7 @@ before `update_one` runs.
 - [cmd-upgrade.md](./cmd-upgrade.md) — typical user flow:
   `upgrade` (refresh source) then `update --all` (refresh installs).
 
-## When to read source
+## When to read the source
 
 - Change `--all` version-comparison semantics → `version_cmp` and
   per-kind `--all` blocks in `scripts/cmd-update.sh`.

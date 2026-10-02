@@ -25,6 +25,7 @@ Windows shim `bin/chosko-llm.cmd` carries no dispatch logic and is transparent t
 `install.sh` accepts no arguments. Uses these env vars:
 - `CHOSKO_LLM_HOME` — managed clone path. Default `~/.chosko-llm`.
 - `BIN_DIR` — proxy install dir. Default `~/bin`.
+- `REPO_URL` — repo cloned on the `curl | bash` path. Default `https://github.com/Chosko/chosko-llm.git`.
 
 `uninstall.sh` interactive: up-front confirmation gates any removal, then prompts before removing features and before removing managed clone; `-y`/`--yes` auto-confirms.
 
@@ -35,9 +36,9 @@ Windows shim `bin/chosko-llm.cmd` carries no dispatch logic and is transparent t
 - **`.cmd` shim ships via `install.sh`, not `upgrade`.** `upgrade` only does `git pull` + proxy refresh — first-time Windows setup needs re-run of `install.sh` to drop `.cmd` into `$BIN_DIR`.
 - **Windows PATH vs MSYS PATH.** Installer reminds Windows users to add `$BIN_DIR` to *Windows* PATH (via System Properties), not just MSYS PATH. Uses `cygpath -w` when available to print native path.
 - **Origin URL inferred** from working repo's `origin` remote when cloning managed clone. If absent, install fails with clear message.
-- **`curl | bash` install path.** No script file → `BASH_SOURCE[0]` unset; `install.sh` guards reference (needed under `set -u`), leaves `SCRIPT_DIR` empty. Empty `SCRIPT_DIR` (no `$SCRIPT_DIR/.git`) selects third clone branch: `git clone "$REPO_URL"` (default `https://github.com/Chosko/chosko-llm.git`, overridable via `REPO_URL`) instead of cloning local working copy's `origin`.
+- **`curl | bash` install path.** No script file → `BASH_SOURCE[0]` unset; `install.sh` guards reference (needed under `set -u`), leaves `SCRIPT_DIR` empty. Empty `SCRIPT_DIR` (no `$SCRIPT_DIR/.git`) selects third clone branch: `git clone "$REPO_URL"` (see Public API) instead of cloning local working copy's `origin`.
 - **Re-running install.sh** on populated `$CHOSKO_LLM_HOME` does `git pull --ff-only` instead of cloning. Idempotent.
-- **uninstall.sh removes features by intersecting** managed clone's `commands/` and `skills/` listings with `$CLAUDE_HOME` — user-authored files in `~/.claude/` untouched.
+- **uninstall.sh removes features by intersecting** managed clone's `commands/`, `skills/` and `claude-md/` listings with `$CLAUDE_HOME` — files under `commands/` / `skills/` deleted, claude-md sections stripped (awk, between their `chosko-llm:<name>` markers) from `$CLAUDE_HOME/CLAUDE.md`; statusline scripts and hooks never removed; user-authored files in `~/.claude/` untouched.
 - **Daily auto-upgrade (opt-in).** Fires `chosko-llm upgrade` at most once per calendar day, skipping `upgrade`/`channel`/`help`/empty/`uninstall`/`version`/`changelog` subcommands, never recursing (no point pulling clone `uninstall` may delete, or for a read-only version or changelog view). Preference + last-run date live in **gitignored** state file `$CHOSKO_LLM_HOME/.auto-upgrade-state` (`enabled`, `last_run`); missing file means enabled (opt-in default). `install.sh` writes it with `enabled=true`. `cmd-upgrade.sh` exposes toggle-only `--enable-auto`/`--disable-auto`. `last_run` stamped before upgrade so failure doesn't retry all day; `CHOSKO_LLM_NO_AUTO_UPGRADE` force-skips. Hook lives in `bin/chosko-llm` — existing users gain it only after one `upgrade` (refreshes proxy) or re-run of `install.sh`.
 
 ## Domain dependencies

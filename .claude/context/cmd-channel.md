@@ -56,7 +56,7 @@ Side effects:
 - [shared-lib.md](./shared-lib.md) — sources `lib.sh` for `die`, `log_info`,
   `log_success`, `log_warn`, and `$CHOSKO_LLM_HOME`.
 
-## When to read source
+## When to read the source
 
 - Changing switch sequence (fetch/checkout/pull order, adding `--force`
   or rebase mode) → `scripts/cmd-channel.sh`.
