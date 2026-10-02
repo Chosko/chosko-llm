@@ -563,7 +563,8 @@ Currently shipped:
   mechanism, not an optimizable detail — with an eight-item prompt (repo path,
   `task=<n>`, this round's diff scope, round number, prior rejection ledger
   from round 2 on, and the statement that it was spawned by
-  `/task-implement --review` so it writes nothing to disk, the test-suite
+  `/task-implement --review`, which selects `/task-review`'s spawned output
+  destination rather than restating its rule, the test-suite
   state — green under the resolved policy, or skip-tests and nothing ran,
   handed in because the reviewer runs no test command itself — and the
   budget block, omitted entirely when the effort resolved to `same`). That spawn
@@ -644,12 +645,15 @@ Currently shipped:
   rejected across rounds; the report also carries a per-criterion verdict
   (`met` / `not met` / `unverifiable`) and one overall line, and the two
   halves must agree. Output destination branches on invocation: spawned by
-  `/task-implement --review` → structured return, nothing on disk; invoked
+  `/task-implement --review` → structured return through the channel the
+  run's rules name, nothing else on disk — the result file for a relay child
+  under `/runbook-run`'s RELAY CHILD RULES, the reply otherwise; invoked
   manually → asks once whether to also write
   `.claude/reviews/<task>-R<round>.md`, chat-only being the default on
   silence or EOF. No `--rounds` flag — the loop belongs to
-  `/task-implement`. Read-only contract: no edit to any source/test/task/
-  status/feature file, no `git add`/`commit`/`checkout`/`stash`/`push`, no
+  `/task-implement`. Read-only contract: its only writes are that opted-into
+  review file or a spawned run's named result file; no edit to any source/
+  test/task/status/feature file, no `git add`/`commit`/`checkout`/`stash`/`push`, no
   `gh` write, no PR opened, and no subagents of its own (one reviewer, one
   pass — a dimension-reviewer fan-out is the token cost this repo exists to
   avoid).
@@ -1453,7 +1457,12 @@ Currently shipped:
   `<RUNBOOK>`, `<N>` and `<FILE>` (the body's `File:` path, for the never-edit
   rule; relay file names stay built from `<RUNBOOK>`/`<N>`), plus
   `<PROMPT>`/`<RESULT>` on the child block alone,
-  and it now carries the `SPAWN REQUEST` rule), both cited by the other three
+  and it carries the `SPAWN REQUEST` rule; OPERATING RULES make the literal
+  `DONE` line mandatory — a finished turn without it is a hard failure however
+  complete the work, and work that made no commit omits the sha and diffstat;
+  RELAY CHILD RULES carry a precedence line: `<RESULT>` is the child's return
+  channel, overriding any instruction in `<PROMPT>` or a skill it invokes to
+  reply in the turn or write nothing to disk), both cited by the other three
   by a `./references/<f>.md` path relative to the citing body. A third, `references/inline-contract.md`,
   holds the fixed inline rule set that replaces the OPERATING RULES under
   `--inline`, read only when that flag is passed. Both contracts carry, as
@@ -1583,7 +1592,13 @@ Currently shipped:
   read, the same discipline as *compresses, does not answer*, and what keeps the
   child's output out of its context. The child is bound by the verbatim RELAY
   CHILD RULES block, and the one exception is an existence check on the result
-  path — one re-prompt, then the step fails. Detection is the SUBAGENT's, not
+  path. A **miss** — a `DONE` child whose result file is absent or empty, or a
+  turn carrying no marker that does not plainly declare its own failure — buys
+  that child one re-prompt (not a relay round), since it still holds its
+  report in context; a second miss fails the step, and a declared failure
+  fails it at once. The unmarked-turn re-prompt is the one departure from the
+  four result cases and is the relay child's alone: a step's own agent's
+  unmarked turn still fails the step. Detection is the SUBAGENT's, not
   the orchestrator's — only the agent needing the tool can tell if it has it,
   and a probe would measure the wrong environment. The caller stays suspended
   throughout, so one agent works at a time — the one stated exception to *never
@@ -2023,7 +2038,9 @@ Currently shipped:
 - `statusline/session-statusline.sh` — statusline artifact: model · cwd ·
   git branch · context% · cost · 5h/7d rate limits. Installed/updated/removed
   via `statusline:` kind; `chosko-llm add` prints settings.json
-  wiring prompt after copying script.
+  wiring prompt after copying script. Parses the session JSON with its own
+  awk flattener (scalars to `dotted.path<TAB>value` lines, `null` dropped so
+  missing and null read the same) — no `jq`, per the no-new-dependencies rule.
 
 ## Public API (per-feature contract)
 
@@ -2168,6 +2185,12 @@ its state in versioned project document.
   followed immediately by `/skills/` or `/commands/`; a bare literal with
   nothing joined onto it is prose or a shell assignment and is not matched,
   which is what lets the install-path notes explain why the form is wrong.
+  Two passes: `grep` one line at a time, then an awk two-line window that
+  catches a citation wrapped across a line break (continuation line's
+  blockquote marker and indentation stripped), reported against the line the
+  literal starts on. The pattern reaches that awk through the environment
+  (`ENVIRON`), never `-v`, whose escape processing strips the regex's
+  backslashes and leaves `$` an end-of-line anchor.
   **No exceptions.** A body asking whether an *optional* feature is installed
   names it ("is the `claude-council` skill available") and lets Claude resolve
   it across every scope; a path picks one scope and misses the other, and the
