@@ -8,18 +8,19 @@ order.
 
 Everything here is opt-in. Install a feature with `chosko-llm add <feature>`,
 then run it as a slash command (`/<name>`) inside Claude Code. Two commit
-conventions recur throughout: **authoring** features (those that write a
-document you review) leave their output uncommitted by default and commit
-under `--commit` (`--commit --no-push` commits without pushing); **working**
-features (those that advance a backlog) commit and push by default and take
-`--no-commit` / `--no-push` to hold back. The four design skills —
+conventions recur throughout: **authoring** features (setup scaffolding, the
+context layer's `/context-build` and `/context-convert`, the refactors and
+`/doc-consolidate` — output you review in the working tree) leave it
+uncommitted by default and commit under `--commit` (`--commit --no-push`
+commits without pushing); every other feature that writes files commits and
+pushes by default and takes `--no-commit` / `--no-push` to hold back. That
+second group holds the backlog features and also the four design skills —
 `/product-design`, `/product-roadmap`, `/architect` and `/production-plan` —
-write documents but follow the second convention: their output is written
-once and read again by the next session, usually on another machine. So do
-`/runbook-create` and `/session-save`, for the same reason. Each still accepts
-`--commit`, now as a silent no-op. `/pipeline-revise` commits by default too,
-but owns the commit: every owner step it runs stays uncommitted, and the whole
-revision lands as one commit at the end.
+with `/runbook-create` and `/session-save`, whose output is read again by the
+next session, usually on another machine; those six accept `--commit` as a
+silent no-op. `/pipeline-revise` commits by default too, but owns the commit:
+every owner step it runs stays uncommitted, and the whole revision lands as
+one commit at the end.
 
 ---
 
@@ -294,7 +295,7 @@ runbook step run later applies the rule above on its own.
 
 A `[NEW]` feature has no tasks, so it gets no guard; it is classified by the
 same rule and stays `[NEW]` either way. An amendment writes no progress
-marker, makes one commit for the whole run, and `--commit` / `--no-push`
+marker, makes one commit for the whole run, and `--no-commit` / `--no-push`
 work as on any other run.
 
 At a genuine design fork (the stack choice, the shape of the architecture,
@@ -767,7 +768,7 @@ for deferred steps included — commits them with the `Revised …` report line
 as the subject, and pushes. A sequence that stops part-way, or a run that
 wrote nothing, commits nothing: the report lists every path written so far,
 so every commit holds a complete revision. `--no-push` commits without
-pushing, `--no-commit` commits nothing, and `--commit` is still accepted and
+pushing, `--no-commit` commits nothing, and `--commit` is accepted and
 changes nothing. Requires `skill:pipeline-engine`, `skill:architect`,
 `skill:task-engine`, `skill:runbook-run`, `skill:product-design`,
 `skill:production-plan` and `skill:product-roadmap`, which `chosko-llm add`
@@ -1488,7 +1489,7 @@ after it was authored.
 
 Commit behaviour: `/runbook-create` commits and pushes the runbook it wrote
 by default (`--no-commit` / `--no-push`), since a runbook is read by the next
-session and its review already happens at the plan gate; `--commit` is still
+session and its review already happens at the plan gate; `--commit` is
 accepted and changes nothing. `/runbook-clean` and `/runbook-prune` commit and
 push by default (`--no-commit` / `--no-push`) — for the same two reasons: their
 plan gate has already served as the review pass, and a removal left uncommitted

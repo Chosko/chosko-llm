@@ -978,45 +978,42 @@ feature, no frontmatter, not a subcommand, installed nowhere.
 
 ## Commit-and-push convention
 
-Features that write files split into two groups, each exposing one opt-in
-flag so the user can override the default commit behaviour. The split is about
-*behaviour*, not kind — several members of both groups (`/context-build`,
-`/context-update`, `/context-convert`, `/task-implement`, `/product-design`,
-`/architect`) ship as skills, and the rules below apply to them unchanged:
+Features that write files split into two groups by their default, each
+exposing one flag that overrides it. The split is about *behaviour*, not
+kind — commands and skills sit in both groups, and the rules below apply to
+either kind unchanged:
 
-- **Authoring commands (uncommitted by default).** `/context-build`,
-  `/context-convert`, `/refactor-codebase`, `/refactor-tests`,
+- **Uncommitted by default.** `/context-build`, `/context-convert`,
+  `/refactor-codebase`, `/refactor-tests`, `/doc-consolidate`,
   `/task-setup`, `/domain-setup`, `/unity-mcp-setup` and `/project-setup`
   write their output and leave it in the working tree for review. They
   accept **`--commit`** to commit what they wrote at the end.
-- **Auto-committing commands.** `/task-add`, `/task-clean`,
-  `/task-implement`, `/task-iterate`, `/context-update`, `/architect`,
-  `/product-design`, `/product-roadmap`, `/production-plan`,
-  `/runbook-create` and `/session-save` commit automatically. They accept
-  **`--no-commit`** to write their changes but skip the commit.
+- **Committed by default.** `/task-add`, `/task-clean`, `/task-implement`,
+  `/task-iterate`, `/context-update`, `/product-design`, `/product-roadmap`,
+  `/architect`, `/production-plan`, `/pipeline-revise`, `/runbook-create`,
+  `/runbook-run`, `/runbook-prune`, `/runbook-clean` and `/session-save`
+  commit and push what they wrote. They accept **`--no-commit`** to write
+  their changes and run no git command. Their output either advances a
+  backlog or is read again by the next session, usually on another machine,
+  where an uncommitted working tree helps nobody; the design skills among
+  them gate the director's review inside the run.
 
-  `/runbook-create` and `/session-save` joined this group for the design
-  skills' reason: a runbook and a handoff are both read by the next session,
-  often on another machine. Both keep accepting `--commit` as a silent no-op.
-
-  The four design skills — `/architect`, `/product-design`,
-  `/product-roadmap`, `/production-plan` — joined this group rather than
-  starting in it. Their output is written and then read again by the next
-  session, usually on another machine, which is the one place an uncommitted
-  working tree helps nobody, and each already gates the director's review
-  inside the run. They keep accepting `--commit` as a silent no-op so
-  existing invocations do not break.
+  `/product-design`, `/product-roadmap`, `/architect`, `/production-plan`,
+  `/pipeline-revise`, `/runbook-create` and `/session-save` also accept
+  `--commit`, as a silent no-op naming the default.
 
 `/task-review` belongs to neither group: it never commits anything, because it
 never changes anything. It is read-only by contract — no edit to a source file,
 a task body or a status line, no mutating `git` or `gh` command — so it has
 neither `--commit` nor `--no-commit`, and the one file it may write (the opt-in
 `.claude/reviews/<task>-R<round>.md` report a manual run asked for) is a
-transient artifact the user owns, not output to be committed.
+transient artifact the user owns, not output to be committed. The
+`follow-ups-resolve` skill commits nothing of its own either: each item it runs
+commits the way the command it runs does.
 
-`/task-iterate` sits in the auto-committing group but has one caller-dependent
-departure, spelled out here so it is not mistaken for a bug: invoked standalone
-it commits and pushes like every other member of the group, and invoked inside a
+`/task-iterate` commits by default with one caller-dependent departure,
+spelled out here so it is not mistaken for a bug: invoked standalone it commits
+and pushes like every other member of its group, and invoked inside a
 `/task-implement --review` round it commits nothing, leaving the corrected tree
 for that run's own commit. The reason is `/task-implement`'s one-commit-per-task
 contract — a fix commit alongside the implementation commit would be two commits
@@ -1063,9 +1060,9 @@ section by name rather than re-deriving it.
    command's work happens — report the conflict output and tell the user to
    resolve manually and re-run. "Already up to date" or a clean fast-forward:
    proceed normally.
-2. Do the command's own work and commit exactly as already specified above
-   (unchanged: explicit paths only, no empty commits, no
-   `--no-verify`/`--amend`, report-and-stop on commit failure).
+2. Do the command's own work and commit exactly as specified above
+   (explicit paths only, no empty commits, no `--no-verify`/`--amend`,
+   report-and-stop on commit failure).
 3. **Pre-push re-sync.** Immediately before pushing, run `git pull` again —
    other commits may have landed upstream while the command was running. A
    clean fast-forward/merge: continue to push. A conflict: abort the merge,
@@ -1075,16 +1072,14 @@ section by name rather than re-deriving it.
 4. **Push.** `git push`. On failure (rejected, no upstream, no remote):
    report the exact output and stop. Never retry, never force-push.
 
-**`--no-push` flag.** Every pushing command accepts `--no-push` to skip
-steps 1, 3, and 4 above while still committing as it does today.
-- For auto-committing commands (`/task-add`, `/task-clean`,
-  `/task-implement`, `/context-update`), `--no-commit` implies `--no-push`
-  — there is nothing to push.
-- For authoring commands (`/context-build`, `/context-convert`,
-  `/refactor-codebase`, `/refactor-tests`, `/task-setup`, `/domain-setup`,
-  `/unity-mcp-setup`, `/product-design`, `/architect`, `/project-setup`),
-  which only commit under `--commit`, `--commit --no-push` is a valid
-  combination: commit locally, skip the sync/push cycle.
+**`--no-push` flag.** Every command that commits accepts `--no-push`, which
+skips steps 1, 3 and 4 above and still commits.
+- On a command committed by default, `--no-commit` implies `--no-push` —
+  nothing is committed, so there is nothing to push, and the run makes no
+  pull either.
+- On a command uncommitted by default, `--no-push` matters only beside
+  `--commit`: `--commit --no-push` commits locally and skips the sync/push
+  cycle.
 
 **Non-git VCS exemption.** When the project's CLAUDE.md defines a `## VCS`
 section overriding git (e.g. Plastic SCM), skip the entire pull → re-sync →

@@ -105,7 +105,7 @@ agents that cannot run `install.sh` still have the commands they need.
   decides. The scaffolding, context-layer and refactoring commands add a
   second pause, leaving their output uncommitted unless
   `--commit` is passed. The four design-pipeline skills — `/product-design`,
-  `/product-roadmap`, `/architect`, `/production-plan` — no longer do:
+  `/product-roadmap`, `/architect`, `/production-plan` — add no such pause:
   their review happens inside the run, at their own approval gates, and
   their output is read by the next session on another machine, so they
   commit and push by default and take `--no-commit` to hold back.
