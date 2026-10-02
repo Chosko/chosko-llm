@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 277
+Last task number: 280
 
 ---
 
@@ -474,5 +474,32 @@ Status: [DONE]
 Target: claude
 Files: skills/runbook-run/SKILL.md, skills/runbook-run/references/subagent-contract.md, skills/task-review/SKILL.md, .claude/domain/features/runbook-suite.md, docs/reference.md, VERSION, CHANGELOG.md
 Preconditions: none
+
+---
+
+## 278. Stop shipped bodies from citing `docs/authoring-guide.md`
+
+Status: [MISSING]
+Target: claude
+Files: commands/refactor-codebase.md, commands/refactor-tests.md, commands/unity-mcp-setup.md, commands/task-setup.md, commands/domain-setup.md, commands/project-setup.md, skills/product-design/SKILL.md, skills/product-roadmap/SKILL.md, skills/architect/SKILL.md, skills/task-engine/references/commit.md, skills/task-engine/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 279. Accept a bare `--commit` as a silent no-op on every commit-by-default feature
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-engine/references/commit.md, skills/task-engine/SKILL.md, commands/task-add.md, skills/task-clean/SKILL.md, skills/task-implement/SKILL.md, skills/task-iterate/SKILL.md, skills/context-update/SKILL.md, skills/runbook-run/SKILL.md, commands/runbook-clean.md, commands/runbook-prune.md, docs/authoring-guide.md, docs/reference.md, VERSION, CHANGELOG.md
+Preconditions: 278
+
+---
+
+## 280. Remove history wording from `/refactor-codebase`, `/refactor-tests` and `/context-build`
+
+Status: [MISSING]
+Target: claude
+Files: commands/refactor-codebase.md, commands/refactor-tests.md, skills/context-build/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: 278
 
 ---
