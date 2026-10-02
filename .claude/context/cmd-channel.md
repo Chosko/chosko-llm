@@ -2,17 +2,17 @@
 
 ## Overview
 
-`scripts/cmd-channel.sh` switch managed clone (`$CHOSKO_LLM_HOME`) onto branch — a **channel** — so user try features before land on `master`, then switch back. Checked-out branch = entire persistence mechanism: auto-upgrade's `git pull --ff-only` already follow whatever branch checked out, so no state file. Return to stable = just `chosko-llm channel master`.
+`scripts/cmd-channel.sh` switch managed clone (`$CHOSKO_LLM_HOME`) onto branch — a **channel** — so user try features before land on `master`, then switch back. Return to stable = just `chosko-llm channel master`.
 
 ## Public API
 
 CLI:
-- `chosko-llm channel` — print branch clone currently on. Exit 0.
-- `chosko-llm channel --list` (also `-l`) — `git fetch` origin, then list branches available on `origin`, mark current one with `* … (current)`. Exit 0.
-- `chosko-llm channel <branch>` — `git fetch`, `git checkout <branch>`,
+- `chosko-llm channel` — print branch clone currently on.
+- `chosko-llm channel --list` (also `-l`) — `git fetch --prune origin`, then list branches available on `origin`, mark current one with `* … (current)`.
+- `chosko-llm channel <branch>` — `git fetch --prune origin`, `git checkout <branch>`,
   `git pull --ff-only`, then refresh proxy at `$BIN_DIR/chosko-llm` and
   `chmod +x` clone's scripts. Print reminder to run `update --all`
-  (does NOT run it). Exit 0.
+  (does NOT run it).
 
 Exit codes:
 - 0 on success (all three forms).
@@ -21,23 +21,16 @@ Exit codes:
   on original branch, nothing half-applied.
 
 Side effects:
-- `--list` and `<branch>` run `git fetch --prune origin` in clone.
-- `<branch>` also checks out and fast-forwards branch, and (like
-  `cmd-upgrade.sh`) copies `bin/chosko-llm` over `$BIN_DIR/chosko-llm` if that
-  proxy exists, then `chmod +x`es clone's `scripts/*.sh` and proxy.
+- `<branch>` also checks out and fast-forwards branch, then `refresh_proxy`
+  refreshes the proxy and the clone's executable bits exactly as `upgrade`
+  does ([cmd-upgrade.md](./cmd-upgrade.md) § Public API).
 
 ## Internal patterns
 
-- **No state file.** Checked-out branch persists in clone;
-  auto-upgrade's `--ff-only` tracks it. Matches "no lockfiles/state files"
-  hard rule — filesystem is state.
-- **Proxy refresh reuses cmd-upgrade.sh's logic** (`refresh_proxy`): only
-  overwrites `$BIN_DIR/chosko-llm` if already exists (creation is
-  `install.sh`'s job), then re-marks scripts executable.
-- **Switch full but deploy explicit.** Switch does
-  fetch + checkout + `pull --ff-only` + proxy refresh in one shot, but only
-  *suggests* `update --all` — deploying features into `$CLAUDE_HOME` stays
-  explicit user step, consistent with `upgrade`.
+- **No state file.** Checked-out branch = entire persistence mechanism:
+  auto-upgrade's `git pull --ff-only` follows whatever branch checked out.
+- **Deploy explicit**, as for `upgrade` ([cmd-upgrade.md](./cmd-upgrade.md)
+  § Overview).
 - **Fetch-first for `--list`** so branch list reflects origin, not stale
   local view — point is discover channels just pushed.
 - **`BIN_DIR` env var with `~/bin` default**, matching `cmd-upgrade.sh` /
@@ -57,8 +50,7 @@ Side effects:
   and `[ -d "$CHOSKO_LLM_HOME/.git" ]` guard; `upgrade` pulls *current*
   channel, `channel` switches between them.
 - [cli-entry.md](./cli-entry.md) — proxy dispatches `channel` →
-  `cmd-channel.sh`; `scripts/auto-upgrade.sh` skips `channel` (like `upgrade`),
-  and its daily `pull --ff-only` is what makes switched channel stick.
+  `cmd-channel.sh`; `scripts/auto-upgrade.sh` skips `channel` (like `upgrade`), and its daily `pull --ff-only` is what makes a switched channel stick.
 - [cmd-update.md](./cmd-update.md) — recommended follow-up after switching
   to actually deploy channel's features into `$CLAUDE_HOME`.
 - [shared-lib.md](./shared-lib.md) — sources `lib.sh` for `die`, `log_info`,
@@ -71,5 +63,5 @@ Side effects:
 - Changing how channels listed (e.g. showing local branches too, or
   annotating merge status) → `--list` branch of `scripts/cmd-channel.sh`.
 - Changing proxy-refresh behavior → keep in sync with
-  `scripts/cmd-upgrade.sh` (both carry same block).
+  `scripts/cmd-upgrade.sh`.
 - Changing which subcommands auto-upgrade skips → `scripts/auto-upgrade.sh`.

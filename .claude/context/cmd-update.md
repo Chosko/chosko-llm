@@ -1,5 +1,3 @@
-Compressed markdown ready.
-
 # cmd-update
 
 ## Overview
@@ -12,28 +10,29 @@ unlike `add`, no refuse on absence.
 
 CLI:
 - `chosko-llm update <feature> [<feature> ...]` — one or more
-  space-separated specs (task 105), same spec syntax as `add` (`<name>`,
+  space-separated specs, same spec syntax as `add` (`<name>`,
   `command:`/`skill:`/`claude-md:`/`statusline:` prefixed). Each name
-  resolved/updated independently via `update_one_spec` (function, runs
-  each name in its own subshell — same isolation pattern as `cmd-add`'s
-  `add_one`, see Internal patterns); install if missing.
+  resolved/updated independently via `update_one_spec` (see Internal
+  patterns); install if missing.
 - `chosko-llm update --all` — iterate installed commands
   (`$CLAUDE_HOME/commands/*.md`), skills (`$CLAUDE_HOME/skills/*/`),
   claude-md sections (markers in `claudemd_target_path`), hooks
   (`$CLAUDE_HOME/hooks/*.sh`, skipped entirely in GLOBAL scope — the mirror
-  rule), statusline
-  scripts (`$CLAUDE_HOME/statusline/*.sh`, skipped entirely in local
-  scope), update only those whose managed-clone source version **newer**
-  than installed. Dies if combined with any explicit feature name.
+  rule), statusline scripts (`$CLAUDE_HOME/statusline/*.sh`; in local scope
+  the whole pass is skipped up front with one info log), update only those
+  whose managed-clone source version **newer** than installed.
 - `chosko-llm update <feature> --local` / `--global` — scope, see below.
 
 Exit codes:
-- 0 if every name succeeded (including `--all` with nothing to update).
+- 0 if every name succeeded, including `--all` with nothing to update — an
+  `--all` skip is a warning, never an error, so a run that skipped every
+  candidate still exits 0.
 - 1 if `--all` combined with explicit names, no argument, or **any**
   name in the list failed (missing source, missing/invalid frontmatter,
-  or a `statusline` request with `--local`) — best-effort: other names
-  in the same invocation still run; each failure logs via `log_error`
-  (through `die` inside the per-name subshell) and the run continues.
+  or a kind the scope does not support: `statusline` with `--local`, `hook`
+  with `--global`) — best-effort: each failure logs via `log_error`
+  (through `die` inside the per-name subshell) and other names in the same
+  invocation still run.
 
 Side effects:
 - Single feature: delete existing target (`rm -f` for command/statusline/hook,
@@ -46,44 +45,35 @@ Side effects:
   of what was merged into settings.json, which has no version. The warning
   names both slots via `hook_wiring_label`;
   claude-md re-inject via `inject_section` into `claudemd_target_path`.
-  Then `apply_replaces` — if source frontmatter carries
-  `replaces: <kind>:<name>` and that artifact installed, remove it, log
-  `Migrated <old-kind> '<name>' -> <new-kind> '<name>'`. Silent otherwise.
+  Then `apply_replaces` (see [shared-lib.md](./shared-lib.md) § Kind
+  migration).
 - `--all`: per installed feature, compare versions with `version_cmp`,
   log `Already up-to-date` (equal), `Local version ahead … — skipping`
   (installed newer), or update (source newer). When source disappeared,
   try `migrate_stale` first (below); only on no replacement emit
   `Skipping <kind> '<base>': no source in managed clone.`.
-  `Skipping … version unreadable` when version unparseable. In local
-  scope the statusline pass is skipped up front with one info log
-  instead of iterating (statusline is global-only).
+  `Skipping … version unreadable` when version unparseable.
 - One `Updated <kind> '<name>' -> v<version> (scope: <scope>)` log line
   per actual update.
 
-**Scope (`--local` / `--global`, task 103).** First line after sourcing
-`lib.sh` calls `resolve_scope "$@"` then re-sets `$@` from `SCOPE_ARGS`;
-existing flag parsing runs unchanged on the cleaned arguments. No flag =
-`--global`, byte-identical to pre-103 behavior. Single-feature path: after
-`resolve_feature` returns `kind`, `scope_supports_kind "$kind"` gates the
-update — `die`s naming statusline global-only if it fails, before
-`update_one` runs.
+**Scope (`--local` / `--global`).** Resolved per
+[shared-lib.md](./shared-lib.md) § Scope resolution. Single-feature path:
+after `resolve_feature` returns `kind`, `scope_supports_kind "$kind"` gates
+the update — `die`s with `scope_violation_message` if it fails (both scope
+rules: [shared-lib.md](./shared-lib.md) § Public API › Scope resolution),
+before `update_one` runs.
 
 ## Internal patterns
 
-- **Replace, not merge.** Skills deleted then re-copied wholesale; file
-  removed from source skill folder disappears from installed skill folder.
-  By design.
+- **Replace, not merge.** A file removed from the source skill folder
+  disappears from the installed one. By design.
 - **Validation before mutation.** Same `require_versioned_source` guard as
   `cmd-add`.
 - **`--all` version-aware.** `version_cmp` (awk semver comparator,
-  expects `x.y.z`) gates each update — only genuinely-newer sources
-  copied; up-to-date and locally-ahead features left alone. Skip
-  warning *not* error — script exits 0 even if all skipped, logs
-  `Nothing to update.` only when no candidates touched.
-- **Single-feature path uses `resolve_feature`** (managed clone) — can
-  install-if-missing. `--all` path iterates `$CLAUDE_HOME` directly,
-  including CLAUDE.md section markers for claude-md artifacts.
-- **Per-name isolation via subshell (task 105).** `update_one_spec`
+  expects `x.y.z`) gates each update; logs `Nothing to update.` only when
+  no candidates touched.
+- **Single-feature path uses `resolve_feature`** (managed clone).
+- **Per-name isolation via subshell.** `update_one_spec`
   wraps `resolve_feature` + `scope_supports_kind` + `update_one` +
   `apply_replaces` in `( ... )` so any `die` inside terminates only that
   subshell; the caller's `for spec in "$@"` loop keeps going and tracks
@@ -91,19 +81,18 @@ update — `die`s naming statusline global-only if it fails, before
   file's Internal patterns for the `resolve_feature`/`mapfile`
   double-nesting note.
 - **`migrate_stale <kind> <name>`** (script-local, defined above
-  `version_cmp`) hooks the existing "no source" branch of all four `--all`
-  loops — no new iteration pass. Calls `find_replacement`; on hit runs
-  `update_one` for the replacement then `apply_replaces` to drop the stale
-  artifact, and sets `any=1`. Returns 1 on no hit so the `elif` falls through
-  to the unchanged warning. Globs expand before the loop body runs, so
-  deleting the current entry mid-loop is safe.
+  `version_cmp`). Calls `find_replacement`; on hit runs `update_one` for the
+  replacement then `apply_replaces` to drop the stale artifact, and sets
+  `any=1`. Returns 1 on no hit so the `elif` falls through to the no-source
+  warning. Globs expand before the loop body runs, so deleting the current
+  entry mid-loop is safe.
 
 ## Domain dependencies
 
 - `../../docs/authoring-guide.md` — versioning rules. `update --all` is
-  user's primary mechanism for picking up new versions; unbumped
-  `version` defeats it visually but copy still happens (file content
-  refreshed regardless).
+  user's primary mechanism for picking up new versions; an unbumped
+  `version` makes `update --all` skip the feature as up-to-date — only an
+  explicit `update <name>` re-copies it.
 - `../../CLAUDE.md` — "filesystem is source of truth".
 
 ## Cross-references
@@ -127,6 +116,6 @@ update — `die`s naming statusline global-only if it fails, before
 - Changing multi-name looping or best-effort/continue-on-error
   semantics → `update_one_spec` function and the trailing
   `for spec in "$@"` loop in `cmd-update.sh`.
-- Change scope behavior (statusline refusal/skip) → `resolve_scope` call,
+- Change scope behavior (scope refusal/skip) → `resolve_scope` call,
   `scope_supports_kind` check, and the `--all` statusline block in
   `cmd-update.sh`.

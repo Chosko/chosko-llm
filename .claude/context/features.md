@@ -17,17 +17,16 @@ Feature kinds, keyed by feature name (kebab-case):
   installed verbatim to `$CLAUDE_HOME/statusline/<name>.sh`. Frontmatter
   lives in bash no-op heredoc (`: <<'CHOSKO_FRONTMATTER' ... CHOSKO_FRONTMATTER`)
   right after shebang, so `parse_frontmatter`'s first-`---`-pair scan still
-  find it. Since `settings.json`'s `"statusLine"` key not this repo's
-  shape to own, `chosko-llm add` skip editing it — prints copy-pasteable
-  prompt for Claude Code session to merge key in safely. `chosko-llm
-  add/rm/update/ls/show` treat as `statusline:` kind.
+  find it. `chosko-llm add` does not edit `settings.json`; it prints a merge
+  prompt ([shared-lib.md](./shared-lib.md) § Public API › statusline
+  scripts). `chosko-llm add/rm/update/ls/show` treat as `statusline:` kind.
 - `hooks/<name>.sh` — executable script Claude Code runs on hook event.
   Frontmatter in same bash no-op heredoc as statusline, plus two hook-only
-  keys: `event:` (required — `PreToolUse`, `SessionStart`, …; install refuses
-  without it) and `matcher:` (optional, narrows event to one tool). Installed
-  to `$CLAUDE_HOME/hooks/<name>.sh`; `add` prints settings.json wiring prompt
-  same way statusline does, naming `$CLAUDE_PROJECT_DIR/...` not absolute path
-  since settings.json is committed and travels. **Local-only kind** — exact
+  keys: `event:` (required — `PreToolUse`, `SessionStart`, …; enforced per
+  [shared-lib.md](./shared-lib.md) § Public API › hooks) and `matcher:`
+  (optional, narrows event to one tool). Installed to
+  `$CLAUDE_HOME/hooks/<name>.sh`; `add` prints a settings.json wiring prompt
+  ([shared-lib.md](./shared-lib.md) § Public API › hooks). **Local-only kind** — exact
   mirror of statusline's global-only rule; see `scope_supports_kind` in
   [shared-lib.md](./shared-lib.md). Both halves (script + settings.json) must
   be committed, and Claude Code snapshots hook config at session start, so
@@ -35,10 +34,9 @@ Feature kinds, keyed by feature name (kebab-case):
 
 **Not a kind — `.claude/skills/`.** `skills/<name>/` is shipped: versioned,
 walked by `cmd-ls --available`, installed by `cmd-add`. This repo's OWN
-`.claude/skills/<name>/SKILL.md` is repo-local development tooling — no
-`version:` frontmatter, invisible to every CLI verb (`ls`, `show`, `add`,
-`update`, `rm`), installed nowhere, invocable only while working in this repo.
-Two exist (`context-budget`, `rule-overlap`). Deliberately absent from
+`.claude/skills/<name>/SKILL.md` is repo-local development tooling, invocable
+only while working in this repo — what that means is `../../CLAUDE.md`
+§ Versioning's `.claude/skills/` exception. Two exist (`context-budget`, `rule-overlap`). Deliberately absent from
 "Currently shipped" below, which lists artifacts the CLI installs; the whole
 point of the location is that these are not. See
 `../domain/features/repo-local-audits.md` and
@@ -61,16 +59,15 @@ Currently shipped:
   `/context-build`'s DOMAIN DEPENDENCIES sections link to domain files; its
   GATHER step detects existing `.claude/domain/` and offers indexing docs
   already there), then
-  `/context-build` (a skill since v0.46.0; most context-hungry, gated
-  step, and the wizard always invokes it in its default FLAT layout —
-  never `nested`). On Unity
+  `/context-build` (most context-hungry, gated step, and the wizard always
+  invokes it in its default FLAT layout — never `nested`). On Unity
   projects also offers `/unity-mcp-setup`, invoked LAST (after
   `/context-build`, so freshly-built context layer exists for its
   `mcp-tools.md` doc) — wizard only offers and delegates, holds no MCP
   logic itself. By default everything, including
   sub-commands' output, left uncommitted for user review and commit
-  in one pass — matching other authoring features (`/context-build`,
-  `/context-convert`, `/refactor-*`). With `--commit` it
+  in one pass — `../../docs/authoring-guide.md` § Commit-and-push
+  convention. With `--commit` it
   commits own artifacts first, then runs sub-commands with `--commit`
   so each commits own output. VCS detection decides whether to inject
   VCS-mapping section (and, under `--commit`, which VCS commits target).
@@ -102,8 +99,8 @@ Currently shipped:
   (smart / `full` / `files=`+`git=` targeted / `-y`), backfills
   `Layout: flat` into any INDEX lacking the marker, then auto-commits
   context files it updated (explicit paths only; no commit when nothing
-  changed). Joins auto-committing group with `/task-add` and
-  `/task-clean`. `--no-commit` leaves updates uncommitted. One supporting
+  changed) — its commit group is `../../docs/authoring-guide.md`
+  § Commit-and-push convention. `--no-commit` leaves updates uncommitted. One supporting
   file, `nested.md`, read ON DEMAND when the layer's marker says
   `Layout: nested` — covers per-leaf `Last updated` (each leaf its own
   date authority, router has none), one-leaf-per-file ownership, and
@@ -120,7 +117,7 @@ Currently shipped:
   date, never max, never today). No `nested.md` split — every run of this
   skill concerns the nested layout, so there is no cheap flat path to
   keep. Authoring-command commit family: `--commit` to commit and push.
-  No `replaces:` — it is new, not a migration.
+  No `replaces:`.
 - `commands/domain-setup.md` — initializes domain knowledge layer, same
   way `/task-setup` initializes backlog: `.claude/domain/`,
   `.claude/domain/features/`, `.claude/domain/INDEX.md` whose
@@ -155,8 +152,7 @@ Currently shipped:
   holder — it says which reference file owns what and repeats the
   not-invocable statement, as a two-line "read by path; not invoked" `#`
   header, for an agent that opened the file without reading frontmatter;
-  `disable-model-invocation: true` in that frontmatter is what keeps it out
-  of suggestions — the description never reaches the model.
+  that frontmatter carries `disable-model-invocation: true` (§ Public API).
   Nine files under `references/`, one authority each:
   `resolution.md` (`.claude/TASKS.md` schema and parsing — appearance
   order is the backlog's order and need not be numeric, since
@@ -176,8 +172,8 @@ Currently shipped:
   eligible for `all` / `next` exactly when an answerer exists, and the
   `## Parking handoff` named as the one body section `/task-implement`
   writes), `status.md` (the nine-value status
-  vocabulary — `[PARKED]` the ninth: non-terminal, never in a default prune
-  set, written and unparked only by `/task-implement`, `[IN PROGRESS]` →
+  vocabulary — `[PARKED]` the ninth: non-terminal, written and unparked
+  only by `/task-implement`, `[IN PROGRESS]` →
   `[PARKED]` → `[IN PROGRESS]` its transitions, `[PARKED]` → `[SKIP]`
   reconciliation's — which statuses are terminal, which implementable, legal
   transitions), `targets.md` (`Target:` values, the `## Manual
@@ -200,10 +196,9 @@ Currently shipped:
   sections and summary-block fields may change, a dropped `Preconditions:`
   edge named in `## Decisions`, deleting a live task as `[SKIP]` never by
   removal, `Feature:` added only to an orphan, one gate, a closed write set;
-  authored in the engine rather than extracted, and read by NO `task-*`
-  feature — only by whatever amends a single task, by path:
+  read by NO `task-*` feature — only by whatever amends a single task, by path:
   `pipeline-revise`), and `parking.md` (task parking under the `unattended`
-  policy, also authored in the engine: the ONE event that parks — a question
+  policy: the ONE event that parks — a question
   the agent asked, nothing else; the prompts that take their default instead,
   each a *For the record* line; the trailing `## Parking handoff` — `Parked:`,
   `Parking Branch:`, `Question:` verbatim and multi-line, `Answer:` only after
@@ -218,20 +213,11 @@ Currently shipped:
   — after its Step 7 commit and push, best-effort, a failed delete a
   Follow-ups item (a delegated agent's fifth field) and never a halt, the
   branch kept under `--no-commit`; the answerer rule; the two
-  refusals, `--unattended` beside `--no-commit` and on a non-git VCS; read by
-  `/task-implement` only when UNATTENDED is true or a resolved task is
-  `[PARKED]`). A
-  consumer cites the file by a path **relative to the citing body** —
-  `../skills/task-engine/references/<f>.md` from a command,
-  `../task-engine/references/<f>.md` from another skill's `SKILL.md`,
-  `../../task-engine/references/<f>.md` from another skill's reference file —
-  and states only its own deviations. Installed like any other skill
-  (`cp -R` of the folder), which is exactly why the engine had to be a
-  skill and not a command — see
-  `../domain/features/shared-phase-engine.md`. Its five consumers declare
-  `requires: skill:task-engine` (`task-review` joined when it took the read
-  budget on), so `add` pulls it in and `rm` refuses to
-  take it away while any of them is installed.
+  refusals, `--unattended` beside `--no-commit` and on a non-git VCS). A
+  consumer cites the file by a path **relative to the citing body** and
+  states only its own deviations. Installed like any other skill (`cp -R`
+  of the folder) — see `../domain/features/shared-phase-engine.md`. Its
+  five consumers declare `requires: skill:task-engine`.
 - `commands/task-add.md` — plans and writes new task conversationally:
   writes summary block to `.claude/TASKS.md` and thin body file at
   `.claude/tasks/<N>.md`. **Placement**: new blocks append at the end by
@@ -265,8 +251,8 @@ Currently shipped:
   When work includes steps
   only human can perform in external tool (e.g. Unity editor),
   sets `Target: claude+human` (or `human`) and authors
-  `## Manual interventions` checkpoint section — two always go
-  together. Refuses if `/task-setup` not run. May propose splitting
+  `## Manual interventions` checkpoint section — the pairing rule is
+  `targets.md`'s. Refuses if `/task-setup` not run. May propose splitting
   description into multiple tasks (independent deliverables, or one
   task too large); on acceptance writes every part with sequential
   IDs and auto-wired `Preconditions:` in one run. `--no-split` always
@@ -305,27 +291,22 @@ Currently shipped:
   `task-engine/references/amend.md`) re-checks only points it adds.
   Agreement authorises that task's implementer — `/task-add` still never
   edits an owned document. Free-form text alongside slug narrows scope;
-  feature document read-only to `/task-add` itself. Free-form path unchanged when
-  `feature=` absent, save the orphan question above on a project with
-  `FEATURES.md`.
+  feature document read-only to `/task-add` itself.
   Documents two product-pipeline additions to backlog schema: optional
   `Feature: <slug>` summary-block line (feature-derived tasks
   only; absent, not `none`, on free-form ones) and `[STALE]` status
-  (set by `/architect`, never by `/task-add`; resolved by
-  `/task-add feature=<slug>` reconciliation).
+  (resolved by `/task-add feature=<slug>` reconciliation).
   Declares `requires: skill:task-engine` and is the largest consumer of it:
   PHASE 0's setup check and the index-file format reference
   `references/resolution.md`, the status-tag block `status.md`, target values
   and manual interventions `targets.md`, the `[STALE]` and
   reconciliation-classification rules `stale.md`, and PHASE 5 `commit.md`.
-  What survives inline is what is unique to authoring.
-- `skills/task-clean/` — archives terminal-status tasks. Was
-  `commands/task-clean.md`; rewritten as a skill by feature `task-archive`
-  and carries `replaces: command:task-clean`, so `add` / `update` retire an
-  installed command copy. The migration exists for one reason: `--backfill`'s
-  procedure sits in supporting file `backfill.md`, read ON DEMAND only when
-  the flag is present, so an ordinary prune never pays its tokens — a
-  command is one file and can carry nothing beside it. Terminal means
+  What stays inline is what is unique to authoring.
+- `skills/task-clean/` — archives terminal-status tasks. Carries
+  `replaces: command:task-clean`, so `add` / `update` retire an installed
+  command copy. `--backfill`'s procedure sits in supporting file
+  `backfill.md`, read ON DEMAND only when the flag is present, so an
+  ordinary prune never pays its tokens. Terminal means
   `[DONE]` and `[SKIP]` and nothing else — `[STALE]` is live work awaiting
   reconciliation and `[PARKED]` live work awaiting an answer, and neither is
   ever pruned by default (naming either explicitly warns and confirms; for
@@ -344,11 +325,9 @@ Currently shipped:
   refused (task stays in the backlog), never overwritten. Survivors'
   `Preconditions:` drop archived ids — an archived precondition is a
   satisfied one. Never renumbers — task IDs stable across project's
-  lifetime; `Last task number` counter never decreases. **The
-  `FEATURES.md` write is gone:** a prune never opens `.claude/FEATURES.md`,
-  so a feature keeps every id it generated on `Tasks:` and `Tasks: none`
-  means never planned; an id there with no summary block is archived and
-  terminal. `--backfill` (exclusive with a status set, git only — a `## VCS`
+  lifetime; `Last task number` counter never decreases. A prune never
+  opens `.claude/FEATURES.md`, so a feature keeps every id it generated on
+  `Tasks:` and `Tasks: none` means never planned. `--backfill` (exclusive with a status set, git only — a `## VCS`
   override stops it — same **"Apply?"** gate) recovers bodies earlier runs
   deleted: `git log --diff-filter=D` under `.claude/tasks/`, latest deletion
   per path, ids live or already archived dropped; body from the deleting
@@ -371,8 +350,8 @@ Currently shipped:
   `.claude/tasks/archive/<N>.md` (`git mv` already staged both halves of the
   rename); backfill `task-clean: backfill <N> archived tasks`, adding
   `.claude/FEATURES.md` when a line was restored. `--no-commit` leaves them
-  uncommitted, the move still made. Declares `requires: skill:task-engine` —
-  first *writing* consumer of it: backlog parsing and the archive form and
+  uncommitted, the move still made. Declares `requires: skill:task-engine`:
+  backlog parsing and the archive form and
   rule reference `references/resolution.md` (§ *The archive*; its
   `/task-clean` note makes the skill the archive's only writer and its one
   exception to the read prohibition — a per-destination existence check),
@@ -380,22 +359,17 @@ Currently shipped:
   and the commit/push gating `commit.md`.
 - `skills/task-implement/` — implements backlog tasks end-to-end with
   tests-first sequence. `SKILL.md` carries common path (clean
-  tree, known test runner, numbered `target: claude` task); last of the four
-  to move onto `task-engine`, and declares `requires: skill:task-engine` —
+  tree, known test runner, numbered `target: claude` task) and declares
+  `requires: skill:task-engine` —
   backlog resolution and selectors reference
   `references/resolution.md`, implementable/terminal statuses `status.md`,
   `Target:` handling and the delegation guard `targets.md`, the STALE
   protocol `stale.md`, the dirty-tree check `tree.md`, and PRE-FLIGHT step 5
-  plus Step 7 `commit.md`. Its own `dirty-tree.md` supporting file was
-  DELETED in that migration (`tree.md` was extracted from it and now holds
-  the protocol once), leaving seven
-  supporting files read only when their branch fires —
-  `test-runner.md` (runner must
+  plus Step 7 `commit.md`. Seven supporting files are read only when their
+  branch fires — `test-runner.md` (runner must
   be inferred; mirrors task-setup's table), `no-test-suite.md`,
   `human-in-loop.md`, `unity-mcp-checkpoints.md` (Unity-MCP-driven
-  checkpoints — read only when current human-in-loop task's project
-  declares `Unity MCP for /task-implement:` marker AND
-  `mcp__UnityMCP__*` tools connected this session), `body-schemas.md`
+  checkpoints), `body-schemas.md`
   (non-current body schema), `delegated-runs.md` (2+-task run user delegated to subagents),
   and `review-rounds.md` (`--review` passed; read once after argument
   parsing, before the first task, never otherwise) — plus `task-engine`'s
@@ -413,14 +387,12 @@ Currently shipped:
   UNATTENDED is true when the flag was passed OR the conversation declares
   the run unattended — the one sentence a runbook step's preamble or a
   delegated-agent prompt carries; a merely *non-interactive* notice is not
-  that. Refused beside `--no-commit` and on a `## VCS` override
-  (`parking.md` § Refusals). Under it every prompt with a default takes it
+  that. Refusals: `parking.md` § Refusals. Under it every prompt with a default takes it
   (delegation → no, dirty tree → abort, `Proceed?` → yes, …), each a *For the
   record* line; an ambiguous test runner aborts. A question about the work —
-  inside the per-task workflow only — runs `parking.md`'s park sequence:
-  leftover `park/task-<N>` deleted first, handoff, `park/task-<N>`,
-  bookkeeping commit, question printed under the
-  run's next `P<n>` handle, on to BETWEEN TASKS. PRE-FLIGHT step 2a
+  inside the per-task workflow only — runs `parking.md`'s park sequence,
+  question printed under the run's next `P<n>` handle, on to BETWEEN
+  TASKS. PRE-FLIGHT step 2a
   **pre-asks**: one block of every `[PARKED]` task, each under its `P<n>` handle, in the resolved
   list with its `Question:` verbatim — the one pre-flight body read, handoff
   section only — answered by handle (`P1: Q1a, Q2b`) or `skip` / `skip P<n>` / `skip all`,
@@ -465,8 +437,7 @@ Currently shipped:
   `all`, BETWEEN TASKS step 2 (and `delegated-runs.md`'s between-agents
   re-read, which then spawns no agent for it) re-checks the upcoming task's
   `Preconditions:` and skips it with one line when they no longer hold,
-  adding no read; an explicit-number list is never re-checked, a task named
-  by number never blocked. On run resolving to 2+ tasks, offers
+  adding no read; an explicit-number list is never re-checked. On run resolving to 2+ tasks, offers
   to implement each task in fresh subagent so later tasks don't inherit
   earlier ones' context; agents spawned one at a time, never
   parallel (shared working tree, branch, `TASKS.md`), each owning own
@@ -496,19 +467,18 @@ Currently shipped:
   is excluded and how an item is written are that command's and are
   deliberately not restated in either `delegated-runs.md` or SKILL.md,
   leaving only the cap and the omit-when-empty to the channel. **Named, never
-  pathed**: `--local` installs into `$PWD/.claude` rather than the global
-  home, so a shipped body naming the command by an absolute install home
-  would miss every local install; a relative path would resolve, but the agent
-  is handed a prompt rather than a file and has no anchor to resolve one
-  against, so the command's **name** is what resolves in both scopes.
+  pathed** (`../../docs/authoring-guide.md` § "Asking whether a feature is
+  installed: name it"): the agent is handed a prompt rather than a file and
+  has no anchor to resolve a relative path against, so the command's
+  **name** is what resolves in both scopes.
   **Reads the rules, never invokes the command** — invoking would be the
   per-task call the DO NOT list forbids, and a read degrades where an
   invocation would not: no file to read means skip the field silently, the
   same rule the closing report follows, never a failed task. The lines feed
   the report's *Follow-ups* group and nothing else, and the parent neither acts on nor
-  verifies one. Prompt O(1) in batch size and
-  in task size, so parent's context no longer grows with batch. Tasks
-  parent keeps still get body read in Step 1, unchanged. Commits each task
+  verifies one. Prompt O(1) in batch size and in task size, so the
+  parent's context does not grow with the batch; tasks the parent keeps
+  get their body read in Step 1. Commits each task
   separately; `--no-commit` runs full sequence but skips
   per-task commits, leaving every task's changes uncommitted. When a
   `Feature:`-tagged task lands `[DONE]` and leaves every task for that
@@ -585,11 +555,10 @@ Currently shipped:
   ride through the fixed-size hand-off prompt as two more strings and each
   implementor spawns
   its own reviewer, measuring its own diff (launcher → implementor →
-  reviewer; the launcher measures nothing); the return contract's first four
-  fields are unchanged and no finding travels up to the parent — the fifth
-  does not reopen that door either, and needs no rule of its own to stop it,
-  since `/follow-ups`' exclusion rule already does: a finding is not an
-  unrecorded piece of work. What its reading does catch is a deferral
+  reviewer; the launcher measures nothing); no finding travels up to the
+  parent through the return contract: `/follow-ups`' exclusion rule keeps a
+  finding out of the fifth field, a finding not being an unrecorded piece
+  of work. What its reading does catch is a deferral
   `/task-iterate` noted should become a task and that never did.
 - `skills/task-review/` — audits a diff against the acceptance criteria of
   the task that produced it and reports structured findings; on a
@@ -599,8 +568,8 @@ Currently shipped:
   Claude Code's built-in `/code-review` because of that one difference:
   generic review asks *is this good code*, this asks *does this satisfy task
   N's criteria*; where the two overlap it defers to the built-in rather than
-  reimplementing it. Declares `requires: skill:task-engine` — the fifth
-  consumer, and the only one that reads the engine for a single file:
+  reimplementing it. Declares `requires: skill:task-engine` — the only
+  consumer that reads the engine for a single file:
   `references/review-budget.md`, and only when the invocation carried a
   budget block. Three input forms resolved from the argument after
   stripping `task=<n>` and `base=<ref>`: empty → local (`git diff HEAD`), a
@@ -618,11 +587,8 @@ Currently shipped:
   scenario, why existing guards miss it; missing one ⇒ demote).
   A spawn from `/task-implement --review` may carry a **budget block**
   naming a read tier (`shallow` / `standard` / `deep`), honoured off
-  `review-budget.md`: navigation layer (CLAUDE.md chain, context INDEX +
-  the diff's rows, task body, feature doc) read in full and NEVER counted at
-  any tier; only distinct source/test files beyond the diff count, and
-  re-opening a counted file is free; a cap that actually BINDS is reported
-  in one line, because a silent cap cannot be retuned. **No budget block
+  `review-budget.md`, which owns what a tier counts and what it reports.
+  **No budget block
   means no budget** — a manual run and a spawn whose effort resolved to
   `same` both read unbounded, and a tier is never assumed unnamed. The
   budget caps reads, never admissibility: **no fourth gate is added**, and
@@ -723,8 +689,8 @@ Currently shipped:
   terse bullets w/ superseded entries deleted outright — no dated revision
   headers, no `[SUPERSEDED]` retention, no closing-record essay) immediately
   before writing the process-complete marker, and says so in its report.
-  Four supporting files load only when their
-  branch fires: `document-templates.md` (per-section stubs, read in PHASE 1,
+  Six supporting files load only when their branch fires: `amend.md`
+  (above), `document-templates.md` (per-section stubs, read in PHASE 1,
   3, 5, 7), `business-model.md` (strategy question bank — opt-in
   only), `technical-direction.md` (technical question bank, read at
   start of PHASE 6 and again before PHASE 7 writes), `resuming.md` (read
@@ -734,17 +700,15 @@ Currently shipped:
   *is* complete, offers a third arm first — **amend a decision**: edits the
   relevant document directly, re-runs no phase, leaves the marker on
   complete, and applies the same compression before the session ends, so an
-  amendment leaves the file no larger than it found it). The stage marker in `design-process.md`
+  amendment leaves the file no larger than it found it), and `council-gate.md`
+  (below). The stage marker in `design-process.md`
   is rewritten before every phase ends, so an interrupted session resumes
   from a truthful stage — there is no `resume` argument, since the document
-  is the state. A fifth supporting file, `council-gate.md`, loads only when
-  PHASE 6 reaches a genuine technical fork on the GREENFIELD branch: it
-  delegates the decision to the claude-council skill this repo ships
-  (vendored under `skills/claude-council/`, opt-in — installed only when the
-  user runs `chosko-llm add skill:claude-council`)
-  (detected **by name** — "is the `claude-council` skill available" — never by
-  a path, since a path picks one install scope and misses the other while the
-  gate's silence makes a wrong "absent" invisible; silent and no-op when
+  is the state. `council-gate.md` loads only when PHASE 6 reaches a genuine
+  technical fork on the GREENFIELD branch: it delegates the decision to the
+  claude-council skill this repo ships (detected **by name** — "is the
+  `claude-council` skill available", per `../../docs/authoring-guide.md`
+  § "Asking whether a feature is installed: name it" — silent and no-op when
   absent), invoked with no mode argument so
   claude-council's own Quick/Standard/Deep triage applies. The brownfield
   branch is excluded — confirm-and-record over an existing stack is not a
@@ -758,9 +722,8 @@ Currently shipped:
   `technical-direction.md` is one document where stack and
   infrastructure detail belongs. Never writes `.claude/FEATURES.md`,
   feature docs, or tasks. **Commits by default — stages exactly the documents
-  written, `design-process.md` included, in one commit and pushes;
-  `--no-commit` runs no git command, `--no-push` skips the push; `--commit`
-  accepted as a silent no-op.**
+  written, `design-process.md` included, in one commit and pushes**; `--no-commit` runs no git command, `--no-push` skips the push;
+  `--commit` accepted as a silent no-op.
 - `skills/product-roadmap/` — product-level WHEN of the pipeline, between
   `/product-design` and `/architect`. Writes one document,
   `.claude/domain/product-roadmap.md`, plus its `.claude/domain/INDEX.md`
@@ -783,8 +746,8 @@ Currently shipped:
   decomposition instruction for `/architect`, not delivery claim, so partial
   coverage of section across milestones is normal case and nothing validates
   completeness. Carries NO milestone state: no `Status:` line, no dates, no
-  estimates — that's a later feature's, same intent/state split keeping
-  feature statuses out of `product-design.md`. Dates/status bar binds
+  estimates — milestone status is `/production-plan`'s, the same
+  intent/state split that keeps feature statuses out of `product-design.md`. Dates/status bar binds
   `Strategy:` too; deadline surfacing there becomes open sequencing question.
   PHASE 0 gates on
   `/domain-setup` (only refusal in skill), reads domain INDEX,
@@ -801,7 +764,7 @@ Currently shipped:
   in other. Reply maps straight: yes → `given`, no → `propose`. `given` = take milestone
   skeleton first, draft goals/criteria/rationale/slices from it, governed by
   `/product-design`'s contribute-don't-just-ask so branch doesn't decay into
-  transcription; `propose` = original draft-first behaviour, unchanged.
+  transcription; `propose` = draft first.
   Question SKIPPED (not asked as ceremony) when `$ARGUMENTS` carried an
   ordering or revision already has roadmap. PHASE 1 is
   conversation and run's single approval gate (steer question is a question,
@@ -812,11 +775,11 @@ Currently shipped:
   on user's say-so — `[ITERATED]` stays `/architect`'s field), and revision
   whose deltas contradict recorded premise (names contradiction, asks which
   moves — premise is read as input on revision, NEVER rewritten to agree with
-  a newly-decided order). No supporting
-  files — schema inline, one file per folder. **Commits by default — stages
-  exactly the written paths in one commit and pushes; `--no-commit` runs no
-  git command, `--no-push` skips the push; `--commit` accepted as a silent
-  no-op; nothing written makes no commit and says so.**
+  a newly-decided order). One supporting file, `amend.md`, read for the
+  amend form; schema inline. **Commits by default — stages exactly the
+  written paths in one commit and pushes; nothing written makes no commit
+  and says so**; `--no-commit` runs no git command, `--no-push` skips the push;
+  `--commit` accepted as a silent no-op.
 - `skills/architect/` — stage 3 of product pipeline: turns one or more
   high-level features into low-level feature documents under
   `.claude/domain/features/`, each indexed by `.claude/FEATURES.md` entry.
@@ -828,8 +791,8 @@ Currently shipped:
   `.claude/domain/product-roadmap.md` carrying at least one milestone with a
   `Covers:` line (no flag file, no settings key, no frontmatter switch), and
   a target whose section that roadmap does not slice takes the traditional
-  path anyway, stated in one line — so adoption is incremental and a project
-  with no roadmap behaves exactly as before. `--no-slices` forces traditional
+  path anyway, stated in one line; a project with no roadmap takes the
+  traditional path. `--no-slices` forces traditional
   mode per run (silent no-op where there is no roadmap). PHASE 0 gates on
   `/domain-setup`, reads design/technical-
   direction/feature/context layers, probes for the roadmap, detects whether stack exists — a
@@ -879,10 +842,10 @@ Currently shipped:
   progress marker), `tech-stack-
   selection.md` (no existing stack in either form — an existing stack
   always wins), `council-gate.md` (PHASE 2 hit a genuine design fork —
-  optional delegation to the claude-council skill this repo ships (opt-in,
-  installed only on `chosko-llm add skill:claude-council`) at
-  the stack choice, the architecture shape, and the low-level split;
-  detected under `CLAUDE_HOME`, silent and no-op when absent, invoked with
+  optional delegation to the claude-council skill this repo ships at the
+  stack choice, the architecture shape, and the low-level split; detected
+  **by name** ("is the `claude-council` skill available"), silent and no-op
+  when absent, invoked with
   no mode argument, dissent folding into the feature document's Open
   questions, its verdict recorded in the PHASE 2 progress marker so a
   resumed session never re-convenes, and its report/transcript kept out of
@@ -896,7 +859,7 @@ Currently shipped:
   lets it share the file with `/task-add`. `Source:` carries an optional
   ` (<milestone-slug>)` suffix written only in slice mode
   (`product-design.md § Authentication (m1-mvp)`), absent on traditional-mode
-  and `prompt` features, backward compatible, and the sole mechanism by which
+  and `prompt` features, and the sole mechanism by which
   a low-level feature knows its milestone. Reads `product-roadmap.md`, never
   writes it, and never reads `PLAN.md`. The only writer of `[STALE]`:
   the iterate guard refuses outright while any generated task is
@@ -910,20 +873,15 @@ Currently shipped:
   self-transition, `[PLANNED]`/`[DONE]` → `[ITERATED]`, named in closing
   report). An ID absent from `TASKS.md` is archived and terminal
   (`resolution.md` § *The archive*), so it has nothing to refuse on, ask
-  about or mark `[STALE]`; `/task-clean` now archives and leaves `Tasks:`
-  intact, so a cleaned feature lands in the nothing-resolves case with its
-  IDs kept. `Status:` still decides because on a backlog cleaned before task
-  archiving `/task-clean` dropped resolved IDs and left `Status:` alone,
-  leaving `Tasks: none` there unable to tell a cleaned feature from a
-  never-planned one — the special case is kept for those. That guard and `amend.md`'s precision guard are the
+  about or mark `[STALE]`. That guard and `amend.md`'s precision guard are the
   only reasons it touches `.claude/TASKS.md`; both write nothing there but
   `Status:` lines. Slugs
   stable, never renamed. Never writes `technical-direction.md` — that
   is `/product-design`'s document. **Commits by default — stages exactly the
   written paths (including TASKS.md when guard fired) in one commit and
-  pushes; `--no-commit` runs no git command, `--no-push` skips the push;
-  `--commit` accepted as a silent no-op. `amend.md` run by path keeps no
-  default of its own — only `/architect amend` inherits this one.**
+  pushes**; `--no-commit` runs no git command, `--no-push` skips the push;
+  `--commit` accepted as a silent no-op. **`amend.md` run by path keeps no default
+  of its own — only `/architect amend` inherits this one.**
 - `skills/production-plan/` — feature-level WHEN of the pipeline, between
   `/architect` and `/task-add`. Sole writer of `.claude/PLAN.md`, a third
   index beside `TASKS.md` and `FEATURES.md`, and writes NOTHING else — never
@@ -966,8 +924,9 @@ Currently shipped:
   instead — `Unscheduled` has no position, so it cannot be "later"); each
   milestone's `Features:` must be a topological order of the edges restricted
   to it. PHASE 2 ends at the run's single approval gate; PHASE 3 is the only
-  write phase. One supporting file, `reconciling.md`, read on demand when
-  PHASE 0 finds an existing `PLAN.md` — the five-situation re-run table
+  write phase. Two supporting files, `reconciling.md` and `amend.md`
+  (above); `reconciling.md` is read on demand when PHASE 0 finds an
+  existing `PLAN.md` — the five-situation re-run table
   (feature absent from the plan proposed for placement; plan slug gone from
   `FEATURES.md` reported and dropped along with its edges; `[ITERATED]`
   feature's dependencies re-read as a DIFF, never a wholesale replacement;
@@ -978,9 +937,9 @@ Currently shipped:
   no features is a warning, `>1 [ACTIVE]` reports and asks. Nothing
   plan-aware exists in `/task-add`, `/task-implement`, or the bash CLI —
   deferred by the feature's open questions. **Commits by default — stages
-  exactly `.claude/PLAN.md` in one commit and pushes; `--no-commit` runs no
-  git command, `--no-push` skips the push; `--commit` accepted as a silent
-  no-op; nothing written makes no commit and says so.**
+  exactly `.claude/PLAN.md` in one commit and pushes; nothing written makes
+  no commit and says so**; `--no-commit` runs no git command, `--no-push` skips the push;
+  `--commit` accepted as a silent no-op.
 - `skills/unity-mcp-skill/` — Unity-MCP operator guide vendored from
   upstream skill. `SKILL.md` carries resource-first workflow,
   core tool categories, best-practice patterns for driving Unity
@@ -1048,9 +1007,8 @@ Currently shipped:
   [DONE] in FEATURES.md` (`[PLANNED]`, nothing left but `[DONE]`/`[SKIP]`/
   archived tasks, an all-archived `Tasks:` line and the zero-task case
   included), `/task-implement <N>` (`[PLANNED]`, work
-  left, not blocked — N the first open task, never an archived id, in `TASKS.md` appearance order
-  whose `Preconditions:` are all `[DONE]`/`[SKIP]`, unresolvable ids
-  ignored: `task-engine`'s eligibility clause stated inline, fed by the
+  left, not blocked — N the first open task, never an archived id —
+  `task-engine`'s eligibility clause stated inline, fed by the
   summary blocks already read, so no new read and still never a body),
   `blocked by <slug>` (checked first, whatever the preconditions say) or
   `waits on task <id>` (not blocked, but every open task has an unmet
@@ -1082,8 +1040,7 @@ Currently shipped:
   `../domain/features/pipeline-engine.md`). Same pattern: no arguments, runs
   nothing, no output; `SKILL.md` is a MAP carrying no rule text, the
   not-invocable statement in its `#` header and
-  `disable-model-invocation: true` in its frontmatter so skill selection
-  never sees it. Four files under `references/`, one authority
+  `disable-model-invocation: true` in its frontmatter (§ Public API). Four files under `references/`, one authority
   each: `probes.md` (fixed set of cheap filesystem probes describing a
   project's pipeline setup, the one-line verdict every consumer prints
   identically, and the in-session reuse rule naming the writers whose runs
@@ -1100,26 +1057,20 @@ Currently shipped:
   LINE, no two rows claiming one line or value; every row verified against
   the shipped body, never a design doc; agrees with `/task-add`'s
   DESIGN-CHANGE CHECK table and is the one fixed if they diverge), `lint.md`
-  (closed catalogue of eleven structural drift findings L1–L11, each with a
+  (closed catalogue of thirteen structural drift findings L1–L13, each with a
   detection rule over `graph.md`'s edges, severity `ERROR` or `WARNING` —
   two levels, deliberately clear of every status vocabulary — one fix command
   and a fixed output template; two deliberate absences recorded: a `Tasks:`
   id absent from `TASKS.md` (archived, not drift) and a pending runbook step
   naming a finished task (needs a body read); absent index drops its
   findings, malformed block is its own `ERROR`; no rule reads a body or
-  probes `.claude/tasks/archive/`). Consumers cite
-  `../skills/pipeline-engine/references/<f>.md` (from a command) or
-  `../pipeline-engine/references/<f>.md` (from another skill's `SKILL.md`),
-  relative to the citing body, and state only deviations. Two consumers: `/pipeline-check`,
-  `pipeline-revise`. A third feature, `pipeline-suggest`,
-  declares `requires: skill:pipeline-engine` but reads none of the four files
-  — installation only, and it buys the skill a routing row. Routing
-  table kept honest by repo-local `scripts/check-routing.sh` (sibling of
-  `check-changelog.sh` and `check-home-paths.sh`; not a feature, no
-  frontmatter, installed nowhere):
-  two existence invariants — every row names a `commands/<n>.md` or
-  `skills/<n>/SKILL.md` in this repo; every shipped feature declaring
-  `requires: skill:pipeline-engine` has a row. Row shape (line beginning
+  probes `.claude/tasks/archive/`). Consumers cite each file by a path
+  relative to the citing body (§ Internal patterns) and state only
+  deviations. Two consumers: `/pipeline-check`, `pipeline-revise`. A third
+  feature, `pipeline-suggest`, declares `requires: skill:pipeline-engine`
+  but reads none of the four files. Routing table kept honest by repo-local
+  `scripts/check-routing.sh`, whose invariants are
+  `../../docs/authoring-guide.md` § The routing guard. Row shape (line beginning
   `` | ` ``, name inside first backquotes, one leading `/` stripped) shared
   with `probes.md`'s `installed` probe. Cell semantics not checked. No
   context file of its own — `CLAUDE.md` § Versioning says when to run it.
@@ -1169,7 +1120,7 @@ Currently shipped:
   describing however many changes, or a numbered list in `/follow-ups`'
   output shape (one item per number); free-form splits into items at the
   changes it describes, the split said back at the gate for the user to
-  correct. `<anchor> "<change>"` still accepted for a single item. Anchor,
+  correct. `<anchor> "<change>"` is also accepted for a single item. Anchor,
   four forms: `feature=<slug>`, `task=<N>`,
   `runbook=<id|name|id-name> step=<n>` (resolved by `runbook-schema.md`'s
   rule), and a milestone named in an item's own text (`m3`, an exit criterion
@@ -1231,7 +1182,7 @@ Currently shipped:
   (`because step 1 stales 12, 14`; none rendered when the carried
   classification is editorial for every feature); an id unknown until a step
   runs is a placeholder (`<id from step 5>`) in every later step. Tiers
-  editorial / local / structural still set a sequence's length, judged by the
+  editorial / local / structural set a sequence's length, judged by the
   branch file (`reorder.md` fixed structural; `insert.md` structural when it
   adds scope, local when the doc already promises it; `delete.md` local only
   for a task nothing else names — insert/delete/reorder never editorial);
@@ -1294,10 +1245,7 @@ Currently shipped:
   sequence stopped part-way (left uncommitted on purpose, every path listed),
   an empty write, or `--no-commit`.
 - `skills/pipeline-suggest/` — the pipeline's auto-suggested entry point
-  (feature `pipeline-suggest`) and the second artifact nobody invokes, built
-  in `runbook-suggest`'s shape: Claude Code selects it from its
-  `description`, so the frontmatter IS the trigger — no hook, no event
-  registration, no flag; fire rate tuned by narrowing the description. Fires
+  (feature `pipeline-suggest`), built in `runbook-suggest`'s shape. Fires
   on a free-form request to build, change, fix, remove or sequence work that
   names no slash command. Anti-triggers, deliberately longer than the
   triggers: a question, a request naming a command, "just do it" /
@@ -1343,11 +1291,11 @@ Currently shipped:
   heading; empty milestones get no heading. Marker order stated explicitly in
   the body: `⚠ <target>`, `[<slug>]`, `(deps: N, M)`, `⚠ stale` |
   `⚠ parked`, `⚠ blocked by <slug>`. Filter applies before grouping, so it works within
-  groups; summary line unchanged. NO `PLAN.md` → byte-for-byte the old output,
-  a silent no-op with no warning and no pointer at `/production-plan`. Reads
+  groups; the summary line is the same with or without grouping. NO
+  `PLAN.md` → no grouping, a silent no-op with no warning and no pointer at `/production-plan`. Reads
   `.claude/TASKS.md`, plus `PLAN.md` and `FEATURES.md` when a plan exists;
-  never opens body files, feature docs or the roadmap. First consumer of
-  `task-engine` and declares `requires: skill:task-engine`: backlog
+  never opens body files, feature docs or the roadmap. Declares
+  `requires: skill:task-engine`: backlog
   resolution references `references/resolution.md` and the status vocabulary
   `status.md`, leaving only the rendering rules inline.
 - `commands/session-save.md` — writes per-project handoff file so an in-flight
@@ -1369,7 +1317,7 @@ Currently shipped:
   from overlooked one), and **evidence or it's a guess**. Form picked by
   artifact detection, which is the COMMAND's job — skills declare nothing, so
   skill gaining/losing artifact needs no change here. Known-artifact table has
-  exactly ONE row today: `/product-design` → `.claude/domain/design-process.md`.
+  exactly ONE row: `/product-design` → `.claude/domain/design-process.md`.
   Row qualifies only for **project-scoped state document carrying a resume
   marker** (current-stage/phase/next-step line, rewritten as work progresses) —
   static instruction file shipped inside installed skill folder never qualifies
@@ -1389,7 +1337,8 @@ Currently shipped:
   deletes nothing when it can't tell, so an unresumed file is never
   auto-deleted. Writes nothing outside `.claude/sessions/` — not `.gitignore`,
   not `TASKS.md`/`FEATURES.md`, not a feature or context file. **Commits and
-  pushes by default** (`--no-commit` / `--no-push`, `--commit` a no-op): pull
+  pushes by default** (flags per `../../docs/authoring-guide.md`
+  § Commit-and-push convention): pull
   at start before writing, then ONE commit `Save session <slug>` staging the
   new file plus, when the superseded file was tracked, its deletion; shell use
   is a clock read plus the commit-and-push protocol's git commands, none under
@@ -1463,8 +1412,8 @@ Currently shipped:
   RELAY CHILD RULES carry a precedence line: `<RESULT>` is the child's return
   channel, overriding any instruction in `<PROMPT>` or a skill it invokes to
   reply in the turn or write nothing to disk), both cited by the other three
-  by a `./references/<f>.md` path relative to the citing body. A third, `references/inline-contract.md`,
-  holds the fixed inline rule set that replaces the OPERATING RULES under
+  by a `./references/<f>.md` path relative to the citing body.
+  `references/inline-contract.md` holds the fixed inline rule set that replaces the OPERATING RULES under
   `--inline`, read only when that flag is passed. Both contracts carry, as
   fixed text, one unconditional rule — a step command's dirty-tree prompt
   listing only the runbook and the index is answered `proceed` (never
@@ -1473,20 +1422,19 @@ Currently shipped:
   tree clean of your own changes before ending with a question (work a skill
   parked on a branch is not yours) and say so; and a `Context:` bullet
   `unparked with answer:` answers the invoked skill's question, never relayed
-  back. A `references/parking.md`, read once per run on two triggers only
+  back. `references/parking.md`, read once per run on two triggers only
   (policy resolved to `unattended` in step 1; step 3 selecting or blocked by
   a `[P]` step), holds the fifth result row, the end branch, unparking, the
   pre-ask, mid-run answers, the rejections and the attended handling of a
   `[P]` step — bookkeeping in the two files only, never a task body, branch
-  or diff. A fourth, `references/step-amend.md`
-  (amending one pending step: strike it as `[x]` with a `Done:` line opening
+  or diff. `references/step-amend.md` (amending one pending step: strike it as `[x]` with a `Done:` line opening
   `struck — <reason>` and no commit sha, never deleted or renumbered; insert
   through `/runbook-create --append --before`/`--after`; add dated `Context:`
   facts; the prompt block immutable, so a wrong prompt is struck and a
   corrected step inserted; a `[RUNNING]` runbook accepting changes only after
   its current step), is never read by this body — whatever amends a step
   (`pipeline-revise`) reads it by path, and reads and writes
-  the body at `File:`. A fifth, `references/body-migration.md` (the lazy rename
+  the body at `File:`. `references/body-migration.md` (the lazy rename
   of a legacy `<name>.md` body: plain `mv` to `<id>-<name>.md` then rewrite
   `File:`, nothing staged until the writing command's one commit, which names
   old path, new path and the index explicitly — never `git mv`, whose staged
@@ -1507,17 +1455,14 @@ Currently shipped:
   spawned mode that
   reading covers the step subagents' result reports — already in hand from
   step 7, so no file is opened and neither the "reads three files" contract
-  nor the spawn relay's never-read-a-relay-file rule is touched — and
-  `--inline` is unchanged. **The execution policy**, one value per run:
+  nor the spawn relay's never-read-a-relay-file rule is touched.
+  **The execution policy**, one value per run:
   `--attended` / `--unattended` when passed, else the header
   `Execution policy:`, else `attended`; resolved last in step 1, never
   written back. `--unattended`: a step that asks is parked and the run goes
-  on; at launch, unless `--skip-parked` (requires `--unattended`), the
-  **pre-ask** — one block of every `[P]` step in range under its `P<n>`
-  handle with its question verbatim, answered by handle or `skip` /
-  `skip P<n>` / `skip all`,
-  approval-gate items skip-only, silence = `skip all`, each answer unparking
-  its step at once in one bookkeeping commit. `--attended` overrides a header
+  on; at launch, unless `--skip-parked` (requires `--unattended`), the same
+  **pre-ask** as `/task-implement`'s, over every `[P]` step in range, each
+  answer unparking its step at once in one bookkeeping commit. `--attended` overrides a header
   `unattended`; both together an error. All three compose with `--inline`.
   Under `unattended` the spawned preamble carries ONE sentence declaring the
   run unattended (never *non-interactive*, which an attended step's agent is
@@ -1636,22 +1581,21 @@ Currently shipped:
   the run**, printed the same at completion, at a bound, at the end branch
   and at a failure halt; a parked step's question under its handle is never
   suppressed, like a relayed block; nothing extra read for it; no opt-out
-  flag; `--inline` unchanged. THE CLOSING
+  flag. THE CLOSING
   REPORT: the same two groups `/task-implement` closes in. **For the record**:
   one line per executed step in list order,
   `<step n> — <outcome, commit sha and diffstat> — <what changed in one line;
   decision or wrong premise flagged; questions relayed and their answers>`,
   then any run-level deviation on one line; each drawn from the `Done:` line
-  and the step report already in hand. **Follow-ups** (numbered `1.`/`2.`/…,
-  any length — the reply handle, restarting at 1 per report, a number naming
-  a parked step's question being its answer): the feature completion
+  and the step report already in hand. **Follow-ups** (numbered `1.`/`2.`/…, any length — the reply handle,
+  restarting at 1 per report, a number naming a parked step's question being
+  its answer): the feature completion
   candidates the step reports named plus one flip question asked once after
   the run, a failed step with its reason, a step left `[~]` to resume, every
   step left `[P]` with its question verbatim and the steps waiting on it, the
   steps outside the range / `--steps` count / never started, and what
   `/follow-ups`' rules yield applied to the run's reading, de-duplicated by
-  action with the command form kept. An empty group prints `none`;
-  `FEATURES.md` still never written by the orchestrator. When the user
+  action with the command form kept. An empty group prints `none`. When the user
   resolved or approved follow-ups mid-run, the group is that working list in
   its two-section shape (Approved, then Awaiting approval, the run's own items
   folded into the second), and after the report the approved items execute
@@ -1680,18 +1624,12 @@ Currently shipped:
   through to normal handling, which preserves the real forgotten-commit check.
   Second case, spawned mode only: while a spawned step is in flight (spawned,
   result not yet arrived) reply `stop hook ignored on subagent WIP` whatever is
-  dirty; `--inline` keeps the runbook-WIP case alone.
-  Under `--inline` the runbook-WIP condition answers a step command's dirty-tree
-  prompt (`task-engine` `tree.md`) with `1` / `proceed`, never `include`, in one
-  line — rule in `references/inline-contract.md`, pointer from the Stop-hook
-  reply; `tree.md` itself knows nothing of runbooks.
+  dirty; `--inline` keeps the runbook-WIP case alone. `task-engine`'s
+  `tree.md` itself knows nothing of runbooks.
   Lives in THIS body, not a global `claude-md`: `Stop` fires for the main
   session (a subagent's is `SubagentStop`), which is the orchestrator holding
   this skill, so it costs zero resident tokens in every non-runbook session.
-  Chosen after a `SessionStart` hook that patched `stop-hook-git-check.sh` in
-  place was written and abandoned — a script rewriting a session guard reads as
-  weakening it, and cloud sessions (the only place its positive-only gate can
-  fire) refuse to run, install or commit it. Hard contracts (the reads/writes,
+  Hard contracts (the reads/writes,
   does-no-work and subagent-result ones are **default-mode contracts**; `--inline`
   is their one opt-in exception, executing every selected step in the session
   itself, refused beside `--relay-spawns` or `--model` — see
@@ -1724,9 +1662,9 @@ Currently shipped:
   exactly like a `--to` bound (back to `[PENDING]` unless all `[x]`). Depth
   budget stated plainly in the body: orchestrator +
   step agent leaves one confirmed level **where nesting works at all** (depth 3
-  verified locally 2026-08-24; a cloud subagent cannot spawn, and depth 4 was
-  never probed anywhere) — and the spawn relay is why that mostly no longer
-  matters: a step wanting its own subagent needs no third level.
+  confirmed locally; a cloud subagent cannot spawn, and depth 4 was never
+  probed anywhere) — with the spawn relay, a step wanting its own subagent
+  needs no third level.
 - `commands/runbook-create.md` — authors a runbook, or appends to one.
   `requires: skill:runbook-run` — it cites that skill's `runbook-schema.md` for
   the body/index shape rather than carrying a second copy. **The only assigner
@@ -1781,8 +1719,8 @@ Currently shipped:
   file a moment later. `Context:` is authored as `none`: decisions belong INSIDE
   the fenced prompt, which keeps it pasteable into a fresh session by hand.
   **Commits and pushes by default** (`Add runbook <name>` / `Append <n> steps
-  to runbook <name>`, staging exactly the written paths); `--no-commit` writes
-  only, `--no-push` commits only, `--commit` accepted as a no-op.
+  to runbook <name>`, staging exactly the written paths); flags per
+  `../../docs/authoring-guide.md` § Commit-and-push convention.
 - `commands/runbook-list.md` — read side. `requires: skill:runbook-run`, for
   vocabulary rather than parsing: the status set and index block shape are
   specified once in `runbook-schema.md`. One pass over `.claude/RUNBOOKS.md`,
@@ -1814,7 +1752,7 @@ Currently shipped:
   `Last step number:` or
   re-propose count), an `Archived: <ids>   (pruned; counted as done)` line
   directly under it **only when the body carries an `Archive:` line** (absent
-  renders nothing — a never-pruned runbook is byte-identical to before 0.3.0),
+  renders nothing),
   one line per step (marker as the body carries it, `[P]` included — printed
   with nothing of its `Context:`, the question staying in the body; `deps:`
   only when non-empty and printed verbatim even when it names an archived id —
@@ -1835,7 +1773,7 @@ Currently shipped:
   text, never `.claude/tasks/` (archive included), `.claude/domain/`,
   `.claude/context/` or another body; task ids in `Done:` printed as written.
   Malformed body reported as found, never compensated by reading more. No
-  `Needs:` inference (removed in 0.2.0). Writes nothing, runs no shell,
+  `Needs:` inference. Writes nothing, runs no shell,
   corrects no status, count, marker, `Failed at:` or `Parked:` line however
   wrong the index looks — deriving the count from
   the body's steps *and* its `Archive:` line is derivation, not
@@ -1846,8 +1784,7 @@ Currently shipped:
   stages: resolve (no arg = every `[DONE]`; `<id|name|id-name>` arguments,
   by the schema's rule = exactly those,
   and a named non-`[DONE]` runbook is refused BY NAME with its actual status,
-  never silently skipped; survivors are never renumbered and the counter never
-  moves down) → plan and confirm (name, created date, steps done/total, both paths;
+  never silently skipped) → plan and confirm (name, created date, steps done/total, both paths;
   empty plan says so and stops) → remove and commit (delete each body at its
   block's `File:` path, printed verbatim in the plan, a legacy `<name>.md`
   included — never renames, never reads `body-migration.md`; remove
@@ -1878,8 +1815,7 @@ Currently shipped:
   surviving `Depends on:` naming a pruned step is **left exactly as it is**,
   which is what `Archive:` is for. **Never touches `Last step number:`** on a
   body that has one — up or down — so pruning the highest-numbered step is
-  legal; the one exception is the backfill, which runs *before* any removal and
-  counts the steps about to go, so a prune can never lower the next append's id.
+  legal.
   Both derived values (`Archive:`, `Steps:`) and the backfill are computed in
   STAGE 1 and printed in STAGE 2's plan with their previous values beside them,
   ending in **"Apply?"** — nothing is written before an explicit answer, and a
@@ -1937,13 +1873,8 @@ Currently shipped:
   is the register it imitates. States in one sentence that a run-closing
   skill may apply its rules as the second group of its own closing report,
   under this same `Follow-ups` heading, its own items folded into the one
-  numbering — the standalone command unchanged by that. No `requires:` of its
-  own; the dependency runs
-  the other way — `skills/runbook-run/` and `skills/task-implement/` both
-  declare `requires: command:follow-ups` for the *Follow-ups* group of the
-  report that closes every run, where they read this body by name and apply
-  it without invoking it — the rules must be installed to be read, which is
-  what installs it alongside them. Carries a
+  numbering. No `requires:` of its own; `skills/runbook-run/` and
+  `skills/task-implement/` require it. Carries a
   `routing.md` row (Consumes the conversation only, Produces the list, Owns
   `Nothing`, no preconditions, no arguments, Amend `—`) in the shape
   `runbook-suggest` and `pipeline-suggest` use; `check-routing.sh` does not
@@ -1977,8 +1908,7 @@ Currently shipped:
   Follow-ups list in their descriptions; `runbook-run` and `task-implement`
   name the skill (never a path) where their closing reports say how a reply by
   number is handled — `runbook-run` also cites it in CHAT OUTPUT and CLOSING
-  THE RUN and declares `requires: skill:follow-ups-resolve`; for
-  `task-implement` it stays optional. Carries a `routing.md` row in the
+  THE RUN; for `task-implement` it stays optional. Carries a `routing.md` row in the
   `runbook-suggest` shape.
 - `commands/refactor-codebase.md` — behaviour-preserving, plan-first,
   test-gated refactor: extract constants/enums, dedupe, split oversized
@@ -2003,8 +1933,7 @@ Currently shipped:
   header, context six sections, feature-doc sections. Line counts reported
   as observation, never a target. Uncommitted by default; `--commit`.
 - `claude-md/tool-usage-policy.md` — claude-md artifact: global tool-usage
-  guidance injected into `$CLAUDE_HOME/CLAUDE.md`. Installed/updated/removed
-  via `claude-md:` kind, not as copied file.
+  guidance injected into `$CLAUDE_HOME/CLAUDE.md`.
 - `claude-md/editing-discipline.md` — claude-md artifact: nine rules for
   editing a rules document (supersede, no history in body, rule not decision,
   cite not paraphrase, carry consequences). Installed `--local` into this
@@ -2029,16 +1958,10 @@ Currently shipped:
   explicitly NOT a signal — local sessions are sandboxed too. Carries no
   `set -euo pipefail` by design: exit 2 from a `PreToolUse` hook blocks the
   call, so every path ends in explicit `exit 0`. Chosen over a `CLAUDE.md`
-  section (the first implementation, dropped before merge) because a hook costs
-  zero resident tokens in the sessions where it never fires, and denial is
-  enforcement rather than guidance. Verified end-to-end against live cloud
-  sessions: project-committed hooks are trusted in containers, the matcher
-  binds, the deny lands, and the model asked in text without retrying the
-  denied tool.
+  section because a hook costs zero resident tokens in the sessions where it
+  never fires, and denial is enforcement rather than guidance.
 - `statusline/session-statusline.sh` — statusline artifact: model · cwd ·
-  git branch · context% · cost · 5h/7d rate limits. Installed/updated/removed
-  via `statusline:` kind; `chosko-llm add` prints settings.json
-  wiring prompt after copying script. Parses the session JSON with its own
+  git branch · context% · cost · 5h/7d rate limits. Parses the session JSON with its own
   awk flattener (scalars to `dotted.path<TAB>value` lines, `null` dropped so
   missing and null read the same) — no `jq`, per the no-new-dependencies rule.
 
@@ -2061,24 +1984,13 @@ paths:                       # OPTIONAL, skills only; see below
 ---
 ```
 
-**`description` is short by contract** (tasks 240–242;
-`../../docs/authoring-guide.md` § The `description` contract). Claude Code
-injects every installed description into the system prompt at session start
-as one `- name: description` line and truncates each at 1,536 chars (and at
-a literal ` --- ` before that), so a description costs every session whether
-or not the feature runs. Each says what the feature does and when to use it,
-front-loaded: ≤ 60 words / 400 chars for a feature invoked by name; ≤ 150
-words / 1,000 chars for the five auto-trigger skills (`claude-council`,
-`runbook-suggest`, `pipeline-suggest`, `follow-ups-resolve`, `unity-mcp-skill`), trigger phrases
-first, "Not for" list last; pipeline stage in exactly one clause. Flags,
+**`description` is short by contract** — `../../docs/authoring-guide.md`
+§ The `description` contract. Flags,
 argument grammar, refusals, read-only contracts and commit/push defaults
 live in the body's leading `#` header (`# /name`, summary, `# Usage:`,
 `# Examples:`), which loads only on invocation and which `cmd-show` prints
 under the description ([cmd-show.md](./cmd-show.md)). Every shipped body has
-one; the two engines' is a two-line "read by path; not invoked" note. The
-repo-local `/context-budget` flags a description over 60 words (150 for the
-five auto-trigger skills), over 1,536 chars or containing ` --- `. Measured:
-rendered list 45,105 chars at v1.57.4 → 13,035 on disk, 9,977 model-visible.
+one; the two engines' is a two-line "read by path; not invoked" note.
 
 **Loading-control keys** — three Claude Code frontmatter keys this repo may
 use; `parse_frontmatter` ignores unknown keys, so they pass through
@@ -2096,33 +2008,29 @@ use; `parse_frontmatter` ignores unknown keys, so they pass through
   `task-iterate` deliberately NOT hidden — `/task-implement --review` spawns
   them by name.
 - `user-invocable: false` (commands, skills) — hidden from the `/` menu;
-  model-only. Carried by nothing currently.
+  model-only. Carried by nothing.
 - `paths:` (skills only) — loads only when files matching its globs are in
   play. **Carried by one:** `skills/unity-mcp-skill/` (`Assets/**`,
   `ProjectSettings/**`, `Packages/**`), so it loads only in a Unity project.
 
 `replaces:` is an optional key from the kind-migration path: set it when
 a feature changes kind (`commands/<n>.md` rewritten as `skills/<n>/SKILL.md`),
-so `add`/`update`/`update --all` remove the superseded artifact from
-`$CLAUDE_HOME` instead of leaving two definitions of one slash command. Live
+so the install verbs remove the superseded artifact instead of leaving two
+definitions of one slash command — which verbs, and when:
+[shared-lib.md](./shared-lib.md) § Public API › Kind migration. Live
 examples: `skills/context-build/SKILL.md`, `skills/context-update/SKILL.md` and
 `skills/task-clean/SKILL.md`.
 Drop the key once the migration has propagated.
 
 `requires:` is the other optional key, valid on every kind: a comma-separated
 list of kind-prefixed specs naming features whose files this one reads at run
-time. `add` installs them first, `rm` refuses to remove one while a dependent
-is installed (`--force` overrides). One level deep, unversioned,
-non-transitive. Live examples: `commands/task-add.md`,
+time. Install and removal semantics: [shared-lib.md](./shared-lib.md) §
+Public API › Dependencies (`requires:`); the `--force` override:
+[cmd-rm.md](./cmd-rm.md) § Public API. Live examples: `commands/task-add.md`,
 `commands/task-list.md`, `skills/task-clean/SKILL.md` and
 `skills/task-implement/SKILL.md`, all declaring `requires: skill:task-engine`;
-and `commands/pipeline-check.md`, declaring `requires: skill:pipeline-engine` —
-the second engine, built on the same non-invocable-skill pattern.
-`skills/pipeline-revise/SKILL.md` declares seven
-at once (`skill:pipeline-engine, skill:architect, skill:task-engine,
-skill:runbook-run, skill:product-design, skill:production-plan,
-skill:product-roadmap`) — the engine plus every owner whose amend arm it loads
-by path.
+and `commands/pipeline-check.md`, declaring `requires: skill:pipeline-engine`.
+`skills/pipeline-revise/SKILL.md` declares seven at once.
 Unlike `replaces:`, it is permanent — the dependency does not "propagate" and
 the key is dropped only when the reference is.
 
@@ -2133,17 +2041,17 @@ its state in versioned project document.
 
 ## Internal patterns
 
-- **Filename = folder name = `name` field.** Mismatch breaks `update --all`
-  since `cmd-ls`/`cmd-update` iterate filesystem entries while resolution
-  by user input goes via `name`. Authoring guide flags this as common
-  mistake.
+- **Filename = folder name = `name` field.** Every verb resolves by
+  filename, never by `name` ([cmd-ls.md](./cmd-ls.md) § Internal patterns),
+  so a mismatched `name` is silently ignored; the authoring guide flags this
+  as a common mistake.
 - **Skills are folders, not single files.** Bare `skills/foo.md` is
   ignored by every script. See `feature_kind` in
   [shared-lib.md](./shared-lib.md).
 - **Supporting files are read on demand.** A skill folder's non-`SKILL.md`
   files exist so the common path stays cheap: `SKILL.md` names the branch
   and the file to read when it fires, and nothing else reads them.
-  `skills/task-implement/` (seven), `skills/product-design/` (four),
+  `skills/task-implement/` (seven), `skills/product-design/` (six),
   `skills/architect/` (seven), `skills/pipeline-revise/` (four, one per
   branch), `skills/task-review/remote-diffs.md`,
   `skills/context-build/nested.md` and
@@ -2162,47 +2070,20 @@ its state in versioned project document.
   in step" for the case where this does NOT apply (an optional dependency,
   which `requires:` cannot express).
 - **A shipped body cites another shipped file by a path relative to
-  itself**, never by an absolute install home. Depth decides the form — count
-  directories up to the install home, then down: `./<f>.md` (or
-  `./references/<f>.md` from a `SKILL.md`) within one skill; `../<other>/…`
-  from a file at a skill's root, `SKILL.md` and supporting files alike;
-  `../../<other>/…` from a file under a skill's `references/`;
-  `../skills/<other>/…` from a command. Never
-  `${CLAUDE_HOME:-$HOME/.claude}/…`, `$HOME/.claude/…` or `~/.claude/…` —
-  `chosko-llm add --local` repoints `CLAUDE_HOME` to `$PWD/.claude` at
-  install time only, while the executing agent expands the variable itself
-  at read time and always lands on the global home, so an absolute citation
-  reads a different copy or nothing on every `--local` install, silently.
-  Relative is correct by construction: `--local` repoints the whole home and
-  `cmd-add` installs `requires:` dependencies into that same home, so citing
-  body and cited file are always siblings under one root. `CLAUDE_HOME`
-  still governs where `install.sh` and every `scripts/cmd-*.sh` **writes** —
-  only shipped bodies stopped re-deriving it.
-- **`scripts/check-home-paths.sh` guards that.** Repo-local, sibling of
-  `check-changelog.sh` and `check-routing.sh`; not a feature, no frontmatter,
-  installed nowhere. Silent on success, non-zero naming each offending file
-  and line. Parser contract: an offence is one of the three home literals
-  followed immediately by `/skills/` or `/commands/`; a bare literal with
-  nothing joined onto it is prose or a shell assignment and is not matched,
-  which is what lets the install-path notes explain why the form is wrong.
-  Two passes: `grep` one line at a time, then an awk two-line window that
+  itself**, never by an absolute install home — `../../CLAUDE.md`
+  § Versioning and `../../docs/authoring-guide.md` § `requires:`.
+- **`scripts/check-home-paths.sh` guards that** — its contract is
+  `../../CLAUDE.md` § Versioning and `../../docs/authoring-guide.md` § The
+  home-path guard. Two passes: `grep` one line at a time, then an awk two-line window that
   catches a citation wrapped across a line break (continuation line's
   blockquote marker and indentation stripped), reported against the line the
   literal starts on. The pattern reaches that awk through the environment
   (`ENVIRON`), never `-v`, whose escape processing strips the regex's
-  backslashes and leaves `$` an end-of-line anchor.
-  **No exceptions.** A body asking whether an *optional* feature is installed
-  names it ("is the `claude-council` skill available") and lets Claude resolve
-  it across every scope; a path picks one scope and misses the other, and the
-  gate's own silence makes a wrong "absent" invisible. Both `council-gate.md`
-  copies work this way, as `/follow-ups` already did. `probes.md`'s
-  `installed`/`council` probes are the one place a home is derived at all —
-  shell cannot resolve a skill by name — and they check both scopes and union
-  the `routing.md` row names across them, so neither a `--local` install nor a
-  stale copy in one home can silently shrink the answer; see `probes.md`
-  § *Which install home — both of them*. Proves absence of that one shape only
-  — not that a relative citation resolves, and not that the probe's shell
-  looks in the right scopes.
+  backslashes and leaves `$` an end-of-line anchor. Asking whether an
+  optional feature is installed goes by name, never by path —
+  `../../docs/authoring-guide.md` § "Asking whether a feature is installed:
+  name it"; for the one place a home is derived, see `probes.md` § *Which
+  install home — both of them*.
   No CI and no pre-commit hook, so `CLAUDE.md` § Versioning plus each task's
   acceptance criteria are the whole enforcement mechanism.
 - **No state file.** Versions live in frontmatter; what's installed is

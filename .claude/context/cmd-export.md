@@ -7,9 +7,7 @@
 `.claude/` — into single hand-off artifact. Default shape: one
 concatenated Markdown file, fit for Claude Project's knowledge base
 (ingested all at once). `--archive` writes zip instead, fit for Claude
-chat, where assistant reads members selectively. Both shapes built
-from `select_export_files`, one function deciding what's included, so
-two artifacts never disagree on what repo's config is.
+chat, where assistant reads members selectively.
 
 ## Public API
 
@@ -32,11 +30,10 @@ CLI:
 Selection (`select_export_files <repo_dir>`, repo-relative paths on stdout):
 - Includes: `CLAUDE.md`, `AGENTS.md`, `README.md` at repo root, plus files
   under `.claude/` matching `*.md`, `*.json`, `*.toml`, `*.sh` (recursively).
-  `*.sh` is in the subset because a repo's Claude config now contains
+  `*.sh` is in the subset because a repo's Claude config contains
   executables that other *selected* files point at: `.claude/hooks/*.sh`
   (named by `settings.json`'s `hooks` key) and `.claude/external/run-*-tests.sh`
-  (named by the task-setup wiring). Without it an export carried the
-  reference and not its target — the wiring arrived pointing at nothing.
+  (named by the task-setup wiring).
 - Excludes: `.claude/projects/`, `.claude/history/`, `.claude/todos/`,
   `.claude/tasks/` (all pruned, not just filtered — kept off `find`
   traversal entirely so large `projects/` history or task backlog don't
@@ -56,9 +53,10 @@ Exit codes:
 
 ## Internal patterns
 
-- **One selection function, two consumers.** Both Markdown writer and
-  zip stager iterate same `select_export_files` output — adding
-  include/exclude rule means editing exactly one place.
+- **One selection function, two consumers.** Markdown writer and zip
+  stager iterate same `select_export_files` output, so two artifacts never
+  disagree on what repo's config is and include/exclude rule is edited in
+  exactly one place.
 - **Three-way VCS detection: git / Plastic SCM / neither** (same probe
   `/project-setup` PHASE 1a uses: `.plastic/` present, or `cm` binary
   resolves and `cm status` succeeds from `<repo>`). Drives both `Commit:`
@@ -71,14 +69,11 @@ Exit codes:
     (falls back to `unknown changeset` if `cm` errors). `Created:` via
     `cm find revision "where date <= 'now'" --order-ascending
     --format="{date}" --limit=1`, truncated to first 10 characters.
-  - Neither: unchanged legacy behavior — warn, prompt to continue with
-    `sha=not a git repository`, `Created:` omitted; "no" answer exits 0
-    without writing anything; non-TTY stdin can't be prompted, so hard
-    `die`.
+  - Neither: warn, prompt to continue with `sha=not a git repository`,
+    `Created:` omitted.
 - **`Version:` read from `<repo>/VERSION`** (trimmed contents) when file
-  exists; omitted entirely (not blank/"none") when it doesn't, matching
-  how missing optional root files already handled. Placed right after
-  `Repo:`; `Created:` placed right after `Commit:` — same relative order
+  exists; omitted entirely (not blank/"none") when it doesn't. Placed
+  right after `Repo:`; `Created:` placed right after `Commit:` — same relative order
   in both manifest shapes.
 - **Zip via `zip -r`, falling back to `powershell.exe -Command
   Compress-Archive`** when `zip` not on `PATH` (Git Bash on Windows ships
@@ -92,9 +87,9 @@ Exit codes:
   `zip -rq` or `Compress-Archive`s whole staging dir.
 - **Existing output files overwritten** without prompting — filename
   deterministic per repo, export is regenerable artifact.
-- **Output directory resolution single-sourced** in `lib.sh`'s
-  `export_dir_path` (see [shared-lib.md](./shared-lib.md)); `cmd-export.sh`
-  never concatenates `$CHOSKO_LLM_EXPORT_DIR` inline.
+- **Output directory from `lib.sh`'s `export_dir_path`** (see
+  [shared-lib.md](./shared-lib.md)); `cmd-export.sh` never concatenates
+  `$CHOSKO_LLM_EXPORT_DIR` inline.
 
 ## Domain dependencies
 
@@ -107,14 +102,13 @@ Exit codes:
 - [shared-lib.md](./shared-lib.md) — sources `lib.sh` for `die`, `log_*`, and
   `export_dir_path`.
 - [cli-entry.md](./cli-entry.md) — proxy dispatches `export` →
-  `cmd-export.sh`; not on `auto-upgrade.sh`'s skip list (unlike
-  `upgrade`/`channel`/`uninstall`), so daily auto-upgrade can still fire
-  before `export` run like any other subcommand.
+  `cmd-export.sh`; not on `auto-upgrade.sh`'s skip list (unlike `upgrade`/`channel`/`uninstall`), so daily
+  auto-upgrade can still fire before `export` run like any other subcommand.
 
 ## When to read the source
 
 - Changing what's included/excluded from export → `select_export_files`
-  in `scripts/cmd-export.sh` (only place selection rules live).
+  in `scripts/cmd-export.sh`.
 - Changing either output shape's layout (Markdown header/manifest format,
   fixed-width `===`/`FILE: <path>`/`===` banner between concatenated files, or
   zip's staging/`MANIFEST.md` content) → two branches at bottom

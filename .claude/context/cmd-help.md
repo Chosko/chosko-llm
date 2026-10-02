@@ -2,13 +2,12 @@
 
 ## Overview
 
-`scripts/cmd-help.sh` print CLI usage. Default: cat `docs/cli-help.txt` from managed clone; missing → fall back small inline heredoc.
+`scripts/cmd-help.sh` print CLI usage. Default: cat `docs/cli-help.txt` from managed clone; when that file deleted or moved, fall back to small inline heredoc listing core subcommands.
 
 ## Public API
 
 CLI:
-- `chosko-llm help` — also reachable via `chosko-llm`, `-h`, `--help`
-  (proxy `bin/chosko-llm` route all these here).
+- `chosko-llm help` — also reachable via `chosko-llm`, `-h`, `--help`.
 
 Exit code: 0.
 
@@ -16,12 +15,10 @@ Side effects: print stdout. No filesystem writes.
 
 ## Internal patterns
 
-- **Two sources for help text:** shipped `docs/cli-help.txt` primary source. Inline heredoc minimal fallback, used only when someone deleted/moved that file in managed clone (lists core subcommands). Keep two in rough sync, but `.txt` file canonical, user-visible help.
+- **Two sources for help text.** Keep two in rough sync, but `.txt` file canonical, user-visible help.
 - **`Usage:` headings bolded.** Both paths pipe through
   `_bold_usage_headings` (`sed` wrap `Usage:` in `C_BOLD`/`C_RESET`
   from `lib.sh`), color apply on TTY.
-- **Proxy short-circuits to `cmd-help.sh` for no-arg case.** See
-  routing in [cli-entry.md](./cli-entry.md).
 
 ## Domain dependencies
 
@@ -38,5 +35,4 @@ Side effects: print stdout. No filesystem writes.
 ## When to read the source
 
 - Change fallback heredoc → `scripts/cmd-help.sh`.
-- Change user-facing usage → edit `docs/cli-help.txt` (canonical),
-  not this script.
+- Change user-facing usage → `docs/cli-help.txt`.

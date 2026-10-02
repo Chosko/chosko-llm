@@ -20,10 +20,11 @@ CLI:
   Composes w/ `--since`: forces that range out unpaged.
 - `chosko-llm changelog -h` / `--help` — one usage line, exit 0.
 
-`--since <value>` auto-detected, three disjoint forms — no flag per form:
-- version `1.10.0` — that section and everything newer, **inclusive**.
-- date `2026-08-01` — every section whose header date on or after it.
-- duration `30d` / `2w` / `6mo` / `1y` — same, counted back from today.
+`--since <value>` takes a version (`1.10.0`), a date (`2026-08-01`) or a
+duration (`30d` / `2w` / `6mo` / `1y`), auto-detected; a duration selects exactly
+as the date that many units before today would; classification and the
+sections each selects: [shared-lib.md](./shared-lib.md) § Public API ›
+Changelog readout.
 
 Exit codes:
 - 0 on success, **including a `--since` matching no section** (says so via
@@ -38,15 +39,12 @@ Env read: `VISUAL`, `EDITOR`, `PAGER`, `NO_COLOR`, `LINES`.
 
 - **Colour captured from ORIGINAL stdout, before anything redirects it.**
   `STDOUT_WAS_TTY` set at top of script, `_changelog_use_color` closes over it,
-  and that predicate is what's handed to the renderer. Deciding from write fd
-  would strip every escape in exactly the pager case, since fd 1 is a pipe
-  there. Don't "simplify" this into `_use_color_stdout`.
-- **Renderer shared w/ `upgrade`, gate is not.** Layout comes from
-  `_render_changelog_sections` in `lib.sh` — same two-space version indent,
-  four-space bullets, blank line between sections and after block, bold version
-  / dim ` — <date>` / accent ASCII `- ` marker / bold `**Subject**` span inside
-  the bullet (markers stripped, never literal, when colour is off). Only
-  difference from `upgrade`'s block is which stream + which colour predicate.
+  and that predicate is what's handed to the renderer — why in
+  [shared-lib.md](./shared-lib.md) § Changelog readout. Don't "simplify" this
+  into `_use_color_stdout`.
+- **Renderer shared with `upgrade`; only the stream and the colour predicate
+  differ.** Layout comes from `_render_changelog_sections` in `lib.sh`
+  ([shared-lib.md](./shared-lib.md) § Changelog readout).
 - **Filtered output on stdout, deliberately.** `--since` output is the
   command's product and must pipe into `grep`; `upgrade`'s readout stays on
   stderr because it's commentary on another action. Every diagnostic here
@@ -54,9 +52,8 @@ Env read: `VISUAL`, `EDITOR`, `PAGER`, `NO_COLOR`, `LINES`.
 - **Paged only on overflow, only on TTY, never under `--print`.** Block
   rendered into variable first, measured against `terminal_height`, then either
   written straight out (no child process) or piped to `$PAGER`, else `less -R`.
-  Short range — common case — never pushes user into `less` for four lines; a
-  pipe or redirect stays plain stream whatever the length. Default pager
-  carries `-R` so escapes pass through.
+  Short range — common case — never pushes user into `less` for four lines.
+  Default pager carries `-R` so escapes pass through.
 - **Command substitution strips block's trailing blank line; script puts it
   back** (`"$(...)"$'\n'`), so the block is byte-identical to `upgrade`'s.
 - **Editor chain degrades, never refuses.** `$VISUAL` → `$EDITOR` →
@@ -79,8 +76,7 @@ Env read: `VISUAL`, `EDITOR`, `PAGER`, `NO_COLOR`, `LINES`.
   status is inspected instead of blanket `|| true`: 126/127 mean the pager
   couldn't run at all, so the block is written out plainly; every other status
   (incl. the 141 `pipefail` reports when a reader quits early and SIGPIPEs the
-  `printf`) means it ran. An unusable `$PAGER` must never cost the user the
-  output they asked for.
+  `printf`) means it ran.
 - **`--since` given-ness tracked separately from its value** (`since_given`).
   `--since=` with an empty value is a malformed request, not an absent one: it
   takes the same `die` as `banana`, rather than falling through to the
@@ -88,19 +84,17 @@ Env read: `VISUAL`, `EDITOR`, `PAGER`, `NO_COLOR`, `LINES`.
 - **Missing `CHANGELOG.md` dies here, unlike in `upgrade`** which is silent
   about it. Silence is right when the readout is a side effect of another
   action; wrong when the file is the thing the user asked for.
-- **Not scope-aware.** No `resolve_scope` call — `CHANGELOG.md` lives in the
-  managed clone and is never installed, so `--local` / `--global` mean nothing
-  here.
+- **Not scope-aware.** No `resolve_scope` call — `CHANGELOG.md` is clone-only
+  ([shared-lib.md](./shared-lib.md) § Public API › Path resolution), so
+  `--local` / `--global` mean nothing here.
 
 ## Domain dependencies
 
 - `../domain/features/version-changelog.md` — the feature this extends: the
   file's schema, its descending-semver ordering, the maintenance rule, and the
   `upgrade` readout this subcommand shares a renderer with.
-- `../../CHANGELOG.md` — the file being read. Parser contract: `^## `
-  introduces a section, first whitespace-delimited token after it is the
-  version, everything until next `^## ` is the body, anything above the first
-  `## ` is preamble and never printed.
+- `../../CHANGELOG.md` — the file being read; parser contract:
+  [shared-lib.md](./shared-lib.md) § Public API › Changelog readout.
 
 ## Cross-references
 
@@ -127,4 +121,4 @@ Env read: `VISUAL`, `EDITOR`, `PAGER`, `NO_COLOR`, `LINES`.
 - Changing which sections a `--since` value selects → `select_changelog_sections`
   in `lib.sh` (two awk scans, one per kind).
 - Changing the block's layout or colours → `_render_changelog_sections` in
-  `lib.sh`. It is shared with `upgrade`; a change there moves both.
+  `lib.sh`.

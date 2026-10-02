@@ -10,7 +10,7 @@ CLI:
 - `chosko-llm upgrade` — pull + refresh.
 - `chosko-llm upgrade --enable-auto` / `--disable-auto` — **toggle-only**:
   set daily auto-upgrade preference in state file, exit; do
-  NOT pull. Mutually exclusive (`die` if both).
+  NOT pull. Mutually exclusive.
 
 Exit codes:
 - 0 on success (including "already up to date", and toggle flags).
@@ -20,14 +20,15 @@ Exit codes:
 
 Side effects:
 - `git pull --ff-only` in `$CHOSKO_LLM_HOME`.
-- If `$BIN_DIR/chosko-llm` exists, copies freshly-pulled
-  `bin/chosko-llm` over it, `chmod +x`. If absent, warns, tells
-  user re-run `install.sh`.
+- If `$BIN_DIR/chosko-llm` exists, copies freshly-pulled `bin/chosko-llm`
+  over it, `chmod +x`; it never creates it — creation is `install.sh`'s job —
+  so when absent it warns and tells the user to re-run `install.sh`.
 - `chmod +x` on `scripts/*.sh` and `bin/chosko-llm` in managed clone
   (silenced).
 - On non-empty pulls, prints **exactly one of two** things to stderr: the
   curated changelog range when the version moved, else the commit range
-  pulled (`git log --oneline before..after`). See Internal patterns.
+  pulled (`git log --oneline before..after`) — also when the clone has no
+  `CHANGELOG.md`. See Internal patterns.
 - Reads managed clone's raw `VERSION` twice — once before `git pull --ff-only`,
   once after — and passes both to `print_changelog_range` in `lib.sh`. Reads
   only; writes nothing, persists nothing between runs.
@@ -40,34 +41,20 @@ Side effects:
 
 ## Internal patterns
 
-- **Fast-forward only.** Divergent or dirty managed clone fails pull;
-  script won't try recover. Authoring guide warns users not edit
-  managed clone for this reason.
-- **Proxy refresh conditional.** Only overwrites `$BIN_DIR/chosko-llm` if
-  already exists — never creates it. Creation `install.sh`'s job.
+- **Fast-forward only.** Script won't try to recover.
 - **Reads `BIN_DIR` env var, `~/bin` default**, matching `install.sh`.
   `lib.sh` doesn't set this default.
-- **Version reads use `raw_version`, never `resolve_version`.** Latter appends
-  ` (<git describe>)`; no tags in this repo, so that's a bare sha changing every
-  commit — useless as a comparison. Comment in source says so; don't "fix" it.
-- **Changelog range two-sided, descending semver**: new version's section
-  inclusive, down to but excluding old version's. Old bound is **exclusive on
-  purpose** — the user already had that version; `changelog --since` is
-  inclusive for the mirror reason. Extraction lives in `print_changelog_range`
-  (`lib.sh`), never inline here; the layout is `_render_changelog_sections`,
-  which `changelog --since` shares. Colour handling belongs in `lib.sh`, and
-  this block goes to stderr, so `print_changelog_range` hands the renderer
-  `_use_color`, not the stdout-gated `C_*` vars.
+- **Version reads use `raw_version`, never `resolve_version`** — why in
+  [shared-lib.md](./shared-lib.md) § Version. Comment in source says so;
+  don't "fix" it.
+- **Extraction lives in `print_changelog_range` (`lib.sh`), never inline
+  here.** Range bounds, layout, colour gate, and degrade-never-fail handling
+  of a missing or broken `CHANGELOG.md` per [shared-lib.md](./shared-lib.md)
+  § Changelog readout.
 - **Commit-list dump suppressed exactly when a range printed.** Branch keys off
-  `print_changelog_range`'s return code (0 = printed): curated bullets when the
-  version moved, `git log --oneline` subjects when it didn't or the clone has no
-  `CHANGELOG.md`. Never both — a subject dump beside a curated summary is
-  strictly worse for this audience, and commits stay one
+  `print_changelog_range`'s return code (0 = printed) — a subject dump beside a
+  curated summary is strictly worse for this audience, and commits stay one
   `git -C ~/.chosko-llm log` away.
-- **Readout degrades, never fails.** Nothing in it can change `upgrade`'s exit
-  code or abort the run: a malformed, truncated or unreadable `CHANGELOG.md`
-  costs the user their release notes, never their upgrade. Missing changelog is
-  silent (clones predating the feature are the normal case).
 - **Placement deliberate**: after the pull and its reporting, before the proxy
   refresh — news about what changed arrives before mechanical follow-up hints
   (`ls --available`, `update --all`).
@@ -78,8 +65,7 @@ Side effects:
 - **No flag gates it.** No `--changelog`, no `--no-changelog`; unconditional
   behaviour of a version-changing pull. `chosko-llm channel <branch>` prints
   nothing of this — a channel switch can move `VERSION` either direction and is
-  a developer action, not an upgrade. The on-demand view is a separate
-  subcommand, `chosko-llm changelog`, not a flag here.
+  a developer action, not an upgrade.
 
 ## Domain dependencies
 
@@ -91,19 +77,16 @@ Side effects:
 
 ## Cross-references
 
-- [cli-entry.md](./cli-entry.md) — `install.sh` only path that
-  *creates* proxy; `upgrade` only refreshes it.
-- [cmd-update.md](./cmd-update.md) — recommended follow-up after
-  `upgrade` to actually deploy new versions to `$CLAUDE_HOME`.
+- [cli-entry.md](./cli-entry.md) — `install.sh` (the only path that creates
+  the proxy) and `scripts/auto-upgrade.sh` (invoked by the proxy, calls this
+  script once daily, reads the preference the toggle flags set).
+- [cmd-update.md](./cmd-update.md) — `update --all`.
 - [cmd-changelog.md](./cmd-changelog.md) — on-demand view onto the same file,
   sharing the same renderer but writing to stdout under its own colour gate.
 - [shared-lib.md](./shared-lib.md) — sources `lib.sh` for logging,
   `$CHOSKO_LLM_HOME`, `auto_upgrade_*` state helpers behind
   toggle flags and opt-in tip, and `raw_version` +
   `print_changelog_range` behind the readout.
-- [cli-entry.md](./cli-entry.md) — `scripts/auto-upgrade.sh` (invoked by
-  proxy) calls this script once daily; toggle flags set preference it
-  reads.
 
 ## When to read source
 

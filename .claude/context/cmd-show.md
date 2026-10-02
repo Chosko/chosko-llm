@@ -4,10 +4,10 @@
 
 `scripts/cmd-show.sh` inspect single feature detail: name, kind,
 installed/latest version, status, description, path, then the body's
-leading `#` header (the `# /name` / `# Usage:` block carrying the flags
-the short-by-contract `description` no longer does) — optional print
-full body or line-by-line diff instead. Unlike `ls`, can also inspect
-**local-only** feature (installed but absent from managed clone).
+leading `#` header (the `# /name` / `# Usage:` block carrying the flags,
+which the short-by-contract `description` does not) — optional print
+full body or line-by-line diff instead. Can also inspect a **local-only**
+feature (installed but absent from the managed clone).
 
 ## Public API
 
@@ -37,55 +37,42 @@ than one view flag, or unresolvable/ambiguous name.
 
 ## Internal patterns
 
-- **Scope (`--local` / `--global`, task 103).** First line after sourcing
-  `lib.sh` calls `resolve_scope "$@"` then re-sets `$@` from `SCOPE_ARGS`;
-  existing flag parsing runs unchanged on the cleaned arguments. No flag =
-  `--global`, byte-identical to pre-103 behavior. The claude-md `inst_file`
-  and `loc` come from `claudemd_target_path` (task 103, in `lib.sh`)
-  instead of a hardcoded `$CLAUDE_HOME/CLAUDE.md`, so local scope inspects
-  `<cwd>/CLAUDE.md` rather than `<cwd>/.claude/CLAUDE.md`. `show` never
-  `die`s on a statusline feature in local scope (unlike `add`/`rm`/`update`)
-  — instead the footer's tip block is replaced with a
-  "hooks are local-only" note whenever `kind = hook` and scope is global, and
-  the
-  "statusline scripts are global-only" note whenever `kind = statusline`
-  and `scope_is_local`, while the metadata block above still renders
-  normally (naturally showing "not installed" since no local statusline
-  path exists).
+- **Colors come from `lib.sh`** per [shared-lib.md](./shared-lib.md) §
+  Public API › Stdout color variables.
+- **Scope (`--local` / `--global`).** Scope flags are resolved before any
+  other flag parsing, per [shared-lib.md](./shared-lib.md) § Public API ›
+  Scope resolution. The claude-md `inst_file` and `loc` come from
+  `claudemd_target_path` (in `lib.sh`). Where the scope does not support the
+  kind — a statusline in local scope, a hook in global — `show` does not
+  `die` (unlike `add`/`rm`/`update`): the footer's tip block is replaced with
+  the "statusline scripts are global-only" or "hooks are local-only" note,
+  while the metadata block above still renders normally (a statusline in
+  local scope shows "not installed", since no local statusline path exists).
 - **Own resolver, not `lib.sh::resolve_feature`.** `resolve_show_feature`
   matches feature existing in EITHER managed clone OR `$CLAUDE_HOME`,
-  so local-only installs inspectable. Keep its `command:`/`skill:`/
-  `claude-md:`/`statusline:`/`hook:` prefix parsing and 5-way ambiguity in sync with
-  resolvers in `lib.sh` and `cmd-rm.sh`.
-- **An unmanaged skills directory resolves too.** A
-  `$CLAUDE_HOME/skills/<dir>` with no `SKILL.md` (Claude Code's
-  `skills/synced/` bucket) sets `has_skill` via
-  `lib.sh::skill_is_unmanaged`, then the local `unmanaged` flag: columns match
-  the `ls` row (`unversioned` / `—` / `local only`), `Path:` is the directory,
+  so local-only installs inspectable. Its prefix parsing and 5-way ambiguity
+  stay in sync with the other resolvers per [shared-lib.md](./shared-lib.md)
+  § Internal patterns.
+- **An unmanaged skills directory resolves too.** An unmanaged skills
+  directory ([shared-lib.md](./shared-lib.md) § Public API › Feature kind)
+  sets `has_skill` via `lib.sh::skill_is_unmanaged`, then the local
+  `unmanaged` flag: columns match the `ls` row ([cmd-ls.md](./cmd-ls.md) §
+  Public API), `Path:` is the directory,
   and the footer states that this CLI does not manage it and `rm` refuses it.
   The flag also suppresses every read of the absent `SKILL.md` — version,
-  description, body — and the `--content` hint. `ls`'s footer always ends with
-  `Run 'chosko-llm show <feature>'`, so a row `show` rejected would be a dead
-  end.
-- **Status vocabulary mirrors `cmd-ls`** exactly: `up-to-date` / `updatable`
-  / `not installed` / `local only` / `superseded` / `migration pending`,
-  same color mapping (`superseded` `C_MAGENTA`, `migration pending`
-  `C_BLUE`, task 104 — each side of a migration distinct). Change
-  vocabulary means change both scripts.
-- **Kind-migration statuses (task 104).** After the base status is
-  computed, a `local only` result is re-checked via
-  `lib.sh::find_replacement` — if some clone feature's `replaces:` claims
-  this installed artifact, status becomes `superseded` and `mig_kind`/
-  `mig_name` hold the replacement's kind/name. A `not installed` result is
-  re-checked via `lib.sh::check_migration_pending` — if this clone
-  feature's own `replaces:` names a currently installed artifact, status
-  becomes `migration pending` and `mig_kind`/`mig_name` hold that stale
-  artifact's kind/name. Both feed a dedicated footer tip pointing at
-  `chosko-llm update --all`. `resolve_show_feature`'s ambiguous-name `die`
+  description, body — and the `--content` hint.
+- **Status vocabulary mirrors `cmd-ls`** exactly — the STATUS values in
+  [cmd-ls.md](./cmd-ls.md) § Public API. Change vocabulary means change both
+  scripts.
+- **Kind-migration statuses.** After the base status is computed,
+  `superseded` / `migration pending` are derived as in
+  [cmd-ls.md](./cmd-ls.md) § Internal patterns; `mig_kind`/`mig_name` hold
+  the replacement (superseded) or the stale artifact (migration pending).
+  Both feed a dedicated footer tip pointing
+  at `chosko-llm update --all`. `resolve_show_feature`'s ambiguous-name `die`
   also probes `check_migration_pending` across every kind the bare name
-  matches, appending one line naming the pending migration when found —
-  the die itself is unchanged otherwise; only the message gains a line.
-- **Header block (`print_header_block`, task 240).** Awk over the file
+  matches, appending one line naming the pending migration when found.
+- **Header block (`print_header_block`).** Awk over the file
   past the frontmatter's second `---`: skips blank lines, then prints the
   contiguous run of lines matching `^#($|[^#])` — single-`#` comment lines,
   `##` headings excluded — and stops at the first blank or non-`#` line. A
@@ -93,27 +80,25 @@ than one view flag, or unresolvable/ambiguous name.
   kinds (heredoc terminator sits between frontmatter and first comment).
   Read from the copy the view shows (`inst_file` for `installed`,
   `src_file` otherwise), falling back to `src_file` when the chosen file is
-  absent or kind is claude-md (installed section carries no frontmatter).
-  Indented two spaces via `sed`, printed only when `show_content` is 0 —
-  `--content` prints the full body, which opens with the same block. This
-  is the human-facing side of the `description` contract
-  (`../../docs/authoring-guide.md` § The body header): flags live in the
-  header, so `show` must surface it without a flag.
+  absent or kind is claude-md. Indented two spaces via `sed`, printed only
+  when `show_content` is 0 — `--content` prints the full body, which opens
+  with the same block. This is the human-facing side of the `description`
+  contract (`../../docs/authoring-guide.md` § The body header): flags live in
+  the header, so `show` must surface it without a flag.
 - **claude-md bodies have no frontmatter once installed.** Installed
   description unavailable for claude-md (managed section carries no
-  YAML); body extracted from begin/end markers in
-  `$CLAUDE_HOME/CLAUDE.md`, latest body is managed file minus
+  YAML); body extracted from begin/end markers in the file
+  `claudemd_target_path` names, latest body is managed file minus
   frontmatter.
 - **statusline bodies behave like commands/skills.** Unlike claude-md, installed
   `.sh` file carries own frontmatter (in no-op heredoc), so
   `print_installed_body`/`print_latest_body` just `cat` file.
-- **Colors come from `lib.sh`** (`C_*`, set on TTY); never inline escapes.
 
 ## Domain dependencies
 
 - `../../docs/authoring-guide.md` — frontmatter (`version`, `description`)
   this surfaces; § The `description` contract and § The body header explain
-  why the header block is printed (flags moved out of the description).
+  why the header block is printed.
 - `../../CLAUDE.md` — "filesystem is source of truth"; status derived
   by comparing two homes, no lockfile.
 
@@ -132,7 +117,7 @@ than one view flag, or unresolvable/ambiguous name.
   `scripts/cmd-show.sh`.
 - Change how local-only features resolve → `resolve_show_feature` in
   `cmd-show.sh`.
-- Change diff rendering (currently `diff -u` over extracted bodies) →
+- Change diff rendering (`diff -u` over extracted bodies) →
   `diff)` branch in `cmd-show.sh`.
 - Change what counts as the header block, or which copy it is read from →
   `print_header_block` and the `header_file` selection just below it in
