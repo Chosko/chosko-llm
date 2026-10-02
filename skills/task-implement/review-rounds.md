@@ -114,8 +114,8 @@ The spawn prompt carries exactly eight things:
 4. the round number, so the findings carry `R<round>-<n>` ids;
 5. from round 2 on, the previous rounds' **rejection ledger**, verbatim as
    `/task-iterate` returned it;
-6. the statement that it was spawned by `/task-implement --review`, so it
-   returns its structured report to the caller and writes nothing to disk;
+6. the statement that it was spawned by `/task-implement --review`, which
+   selects `/task-review`'s spawned output destination;
 7. **the test-suite state** — that the full suite is green under the
    project's resolved testing policy, or that the run is in skip-tests mode
    and nothing ran. The reviewer runs no test command under any budget, so

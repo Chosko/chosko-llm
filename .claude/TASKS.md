@@ -470,7 +470,7 @@ Feature: unattended-parking
 
 ## 277. Harden the spawn relay against relay children that reply in-turn
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/SKILL.md, skills/runbook-run/references/subagent-contract.md, skills/task-review/SKILL.md, .claude/domain/features/runbook-suite.md, docs/reference.md, VERSION, CHANGELOG.md
 Preconditions: none

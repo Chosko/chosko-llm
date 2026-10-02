@@ -1,6 +1,6 @@
 ---
 name: task-review
-version: 0.4.2
+version: 0.4.3
 type: skill
 description: Audit a diff against the acceptance criteria of the task that produced it and report structured findings, each cited to a file:line with a BLOCKING, IMPORTANT or ADVISORY severity. Use it on an uncommitted tree, a branch or a pull request before the work is accepted; /task-implement's review rounds spawn it as a fresh-context reviewer.
 requires: skill:task-engine
@@ -21,7 +21,8 @@ requires: skill:task-engine
 # command (a green suite is an input its caller hands it; in skip-tests mode
 # a runtime-dependent criterion is reported unverifiable), opens no pull
 # request, and writes at most the opt-in .claude/reviews/<task>-R<round>.md
-# report a manual run asked for. A spawn from /task-implement --review may
+# report a manual run asked for, or the result file a spawned run's rules
+# name as its return channel. A spawn from /task-implement --review may
 # carry a budget block naming a read tier (shallow / standard / deep),
 # honoured from task-engine's references/review-budget.md; with no block it
 # reads unbounded.
@@ -314,8 +315,11 @@ Branch on how this run was invoked:
 
 - **Spawned by `/task-implement --review`** — the invocation says so, and
   supplies the round number and any previous-round context. Return the
-  structured report to the caller and **write nothing to disk**. The parent
-  is the only consumer; a file would be state nobody reads.
+  structured report to the caller through the return channel the run's rules
+  name, and **write nothing else to disk**. Where those rules name a result
+  file — a relay child under `/runbook-run`'s `RELAY CHILD RULES` — writing the
+  report there is how it is returned; otherwise the channel is the reply. The
+  parent is the only consumer; any other file would be state nobody reads.
 - **Invoked manually** — the round number is 1 unless the caller gave one.
   Ask once, before writing the report:
 
@@ -359,7 +363,8 @@ the user decides what to do with it; the loop belongs to `/task-implement`.
 ## THE READ-ONLY CONTRACT
 
 This skill **writes nothing** except the `.claude/reviews/` report a manual
-run explicitly opted into, and mutates nothing at all:
+run explicitly opted into, or the result file a spawned run's rules name as
+its return channel (OUTPUT DESTINATION), and mutates nothing at all:
 
 - no edit to any source file, test file, task body, `TASKS.md` status,
   `FEATURES.md` entry, or any other project document;

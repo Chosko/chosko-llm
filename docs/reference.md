@@ -1407,7 +1407,11 @@ output never enters the orchestrator's context. The child is bound by a fixed
 `RELAY CHILD RULES` block pasted ahead of the operating rules rather than by
 prose the orchestrator composes, and the one thing the orchestrator does touch
 is whether the result file exists and is non-empty before it replies — a
-missing one buys that child a single re-prompt, then fails the step. Detection
+missing one, or a child reply that carries no marker and doesn't report a
+failure, buys that child a single re-prompt, then fails the step; a child that
+reports failure fails it at once. The result file is the child's return
+channel even when the skill it runs says to reply in the turn or write nothing
+to disk. Detection
 sits with the
 subagent, because only the agent that needs the tool can tell whether it has
 it. Where you already know the environment is flat, `--relay-spawns` skips

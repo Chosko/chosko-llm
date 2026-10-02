@@ -665,10 +665,14 @@ it, and replies to the suspended caller that the result file is ready. It
 output out of its context, and is the same discipline as the question relay's
 *compresses, does not answer*. The child is bound by its own verbatim block,
 `RELAY CHILD RULES`, pasted ahead of the operating rules, rather than by prose
-the orchestrator composes per spawn. The one stated exception to *forwards,
-does not read* is an existence check on the result path before the caller is
-told the file is ready: a missing or empty file buys the same child one
-re-prompt, and still missing fails the step.
+the orchestrator composes per spawn, and that block overrides any output
+destination a skill the child invokes sets for itself: the result file is the
+child's return channel, whatever the skill says about replying in the turn or
+writing nothing to disk. The one stated exception to *forwards, does not read*
+is an existence check on the result path before the caller is told the file is
+ready. A missing or empty file, or a child turn that carries no marker and is
+not a report of failure, buys the same child one re-prompt, and a second miss
+fails the step; a child that reports failure fails it at once.
 
 Four decisions inside it are worth naming:
 

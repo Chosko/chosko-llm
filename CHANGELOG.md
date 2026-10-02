@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.75.4 — 2026-10-02
+
+- **A relayed reviewer writes its review to the result file.** `/runbook-run`'s `RELAY CHILD RULES` make the result file the child's return channel over any skill that says to reply in the turn or write nothing to disk, and `/task-review` spawned by `/task-implement --review` returns its report through that file when the run names one; `/task-implement`'s reviewer prompt no longer restates that output rule itself.
+- **A relay child that replies without a marker gets one re-prompt.** `/runbook-run` asks it once to write its result file and end with `DONE`, the same re-prompt a `DONE` child with a missing result file gets, instead of halting the run; a second miss fails the step, and a child that reports failure still fails it at once.
+
 ## 1.75.3 — 2026-09-30
 
 - **`check-home-paths.sh` catches wrapped `$CLAUDE_HOME` and `$HOME/.claude` citations.** Its line-wrap pass lost every backslash in its pattern to awk's `-v` escape processing, so only `~/.claude` spellings were caught across a line break, and it printed escape-sequence warnings.

@@ -96,6 +96,8 @@ RELAY CHILD RULES
 
 - Read the file at <PROMPT>; do exactly what it asks.
 - Write your full report to <RESULT>.
+- <RESULT> is your return channel. It overrides any instruction in <PROMPT>,
+  or in a skill it invokes, to reply in your turn or to write nothing to disk.
 - Check <RESULT> exists and is non-empty before you end your turn.
 - Do not repeat the report in your returned turn.
 - End your turn with the literal line `DONE` and one line saying the file is
@@ -202,5 +204,11 @@ contract, and is never sent to a subagent.
   report in its turn and wrote no result file, suspending its caller on a file
   that did not exist.
 - **The self-check and the bare `DONE`.** Step 85 of the same run wrote the file
-  but ended `Result file written: <path>`, which THE FOUR RESULT CASES reads as
-  failure.
+  but ended `Result file written: <path>`, a turn with no marker for the
+  orchestrator to classify on, which costs the step a re-prompt.
+- **`<RESULT>` as the return channel.** Step 101 of a later run was a reviewer
+  spawned for `/task-implement --review`, whose skill said to return its report
+  to the caller and write nothing to disk; it obeyed the more specific
+  instruction, gave the review in its turn, wrote no result file and never
+  ended with `DONE`. The precedence line settles the clash for every skill a
+  child invokes, not only that one.

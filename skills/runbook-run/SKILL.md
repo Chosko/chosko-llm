@@ -1,6 +1,6 @@
 ---
 name: runbook-run
-version: 0.19.1
+version: 0.19.2
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user — or, under the `unattended` policy, parking the step that asked and going on — recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
 requires: command:follow-ups, skill:follow-ups-resolve
@@ -752,25 +752,31 @@ On a `SPAWN REQUEST` result, read only the marker and the three lines under it
    `<RUNBOOK>`, `<N>` and `<FILE>` as for any spawn. Compose nothing else.
 2. **Wait for the child's result**, exactly as for a step's own agent. The
    spawn call returns an id, not the result.
-3. **Classify the child's returned turn exactly as a step's own agent's**, by
-   THE FOUR RESULT CASES — on its marker alone, never on the result file. Only
-   a `DONE` child reaches step 4.
+3. **Classify the child's returned turn on its marker**, never on the result
+   file's content. Only a `DONE` child whose result file is in place reaches
+   step 4. A relay child's unmarked turn is the one departure from THE FOUR
+   RESULT CASES: it is re-prompted rather than failed, because the child still
+   holds its report in context. A step's own agent is not a relay child, and its
+   unmarked turn still fails the step.
    - `QUESTIONS FOR USER` or `SPAWN REQUEST` — handle them for the child, as
      *What is preserved* below says, then come back here.
-   - **Anything else, or a report of failure** — the step has failed. Mark it
-     `[!]`, write a `Done:` line opening with the reason and naming which
-     relayed child failed, set the index to `[FAILED]` with `Failed at:`, halt
-     and report. Do **not** tell the caller its child is finished: a caller
-     told that reads an absent or failure-noting file, finishes its step, and
-     the runbook gets a `Done:` line for work that never happened — the one
-     outcome this suite exists to prevent.
-   - **A `DONE` child, before step 4** — check `<result path>` exists and is
-     non-empty, opening nothing; if absent or empty, re-prompt that same child
-     once ("Your result file at `<result path>` is missing. Write your full
-     report there and end your turn with `DONE`.") and, if it is still absent or
-     empty, fail the step exactly as above, the `Done:` line naming the missing
-     result file. The re-prompt is not a relay round and does not count toward
+   - **A report of failure** — the step has failed. Mark it `[!]`, write a
+     `Done:` line opening with the reason and naming which relayed child failed,
+     set the index to `[FAILED]` with `Failed at:`, halt and report. Do **not**
+     tell the caller its child is finished: a caller told that reads an absent
+     or failure-noting file, finishes its step, and the runbook gets a `Done:`
+     line for work that never happened — the one outcome this suite exists to
+     prevent.
+   - **A miss** — a `DONE` turn whose `<result path>` is absent or empty (an
+     existence check, opening nothing), or a turn carrying no marker that does
+     not plainly declare its own failure. Re-prompt that same child once
+     ("Your result file at `<result path>` is missing. Write your full report
+     there and end your turn with `DONE`.") and classify its next turn by these
+     same bullets. The re-prompt is not a relay round and does not count toward
      the cap.
+   - **A second miss** from the same child fails the step exactly as a report
+     of failure does, the `Done:` line naming the relayed child and the missing
+     result file.
 4. **Reply to the same caller subagent** — the one that is suspended awaiting
    this — with one line: the child is finished, and its report is at
    `<result path>`. The caller reads the file and continues.
