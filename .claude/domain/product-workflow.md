@@ -491,7 +491,7 @@ No `resume` argument. Weeks can pass between sessions, flag wouldn't be remember
 - [`../../CLAUDE.md`](../../CLAUDE.md) — hard rules (authoring, versioning, copy-not-symlink, no new deps).
 - [`./task-workflow.md`](./task-workflow.md) — backlog schema this pipeline feeds: `TASKS.md` summary blocks, body schemas, `Target:` values.
 - [`./context-workflow.md`](./context-workflow.md) — context layer, structure/domain boundary reconciled above.
-- [`../context/features.md`](../context/features.md) — shipped artifacts, including every command named here.
+- [`../context/pipeline.md`](../context/pipeline.md), [`../context/task-suite.md`](../context/task-suite.md), [`../context/features.md`](../context/features.md) — shipped artifacts, including every command named here.
 - [`./features/pipeline-revision.md`](./features/pipeline-revision.md) — feature design behind the revision surface.
 - [`./features/task-archive.md`](./features/task-archive.md) — feature design behind the task archive: why `Tasks:` keeps archived IDs, the archived-and-terminal rule, `--backfill`.
 - `commands/domain-setup.md`, `commands/task-add.md`, `skills/task-clean/`, `commands/task-list.md`, `commands/production-status.md`, `commands/pipeline-check.md`, `skills/pipeline-engine/`, `skills/pipeline-revise/`, `skills/product-design/SKILL.md`, `skills/product-roadmap/SKILL.md`, `skills/architect/SKILL.md`, `skills/production-plan/SKILL.md` — the implementations.

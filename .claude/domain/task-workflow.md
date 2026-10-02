@@ -376,5 +376,5 @@ Order at the end of a run: the `[DONE]` feature-completion proposal, then this r
 - [`./features/task-archive.md`](./features/task-archive.md) — feature design behind the task archive: the archived-file form, the archived-and-terminal rule, `/task-clean` as a skill, and `--backfill`.
 - [`./features/unattended-parking.md`](./features/unattended-parking.md) — feature design behind `[PARKED]`, `--unattended`, the pre-ask and answering by number, the delegated attended relay, and the closing report's single *Follow-ups* list.
 - [`../../docs/authoring-guide.md`](../../docs/authoring-guide.md) — the `requires:` frontmatter contract, and the council-gate exception that `requires:` cannot cover.
-- [`../context/features.md`](../context/features.md) — shipped artifacts including every `task-*` command and skill, plus `skills/task-engine/`.
+- [`../context/task-suite.md`](../context/task-suite.md) — shipped artifacts including every `task-*` command and skill, plus `skills/task-engine/`.
 - `commands/task-setup.md`, `commands/task-add.md`, `skills/task-clean/SKILL.md` + `skills/task-clean/backfill.md`, `commands/task-list.md`, `skills/task-implement/SKILL.md`, `skills/task-engine/SKILL.md` + `skills/task-engine/references/*.md`, `skills/task-review/SKILL.md`, `skills/task-iterate/SKILL.md` — command and skill implementations.

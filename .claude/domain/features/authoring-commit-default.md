@@ -82,7 +82,7 @@ Built on the repository's own stack per
 bodies interpreted by Claude Code, POSIX bash for the CLI. No code executes
 this change — it is a change to what four prompt bodies instruct, and to the
 documents that describe them. See
-[`.claude/context/features.md`](../../context/features.md) for where each
+[`.claude/context/pipeline.md`](../../context/pipeline.md) for where each
 body lives.
 
 ### The inverted boolean, four times
@@ -169,7 +169,7 @@ The old default is asserted in eight places outside the shipped bodies:
 paragraph and the four skills' own entries, plus `/pipeline-revise`'s
 forwarding paragraph), `docs/authoring-guide.md` §
 *Commit-and-push convention*, `.claude/domain/product-workflow.md` §
-*Commit and push*, `.claude/context/features.md` (six rows, with
+*Commit and push*, `.claude/context/pipeline.md` (six rows, with
 `.claude/context/INDEX.md`'s `Last updated` anchor refreshed alongside),
 `.claude/domain/features/owner-amend-arms.md`,
 `.claude/domain/features/production-plan.md` and

@@ -42,7 +42,7 @@ Deliberately out:
 Built on the stack recorded in
 [technical-direction.md](../technical-direction.md): markdown prompts, no
 code. The command being extended is described in
-[`.claude/context/features.md`](../../context/features.md).
+[`.claude/context/task-suite.md`](../../context/task-suite.md).
 
 **`/production-status`** is a command, not a skill — a thin read-only
 reporter with no conversation and no supporting files, exactly the register

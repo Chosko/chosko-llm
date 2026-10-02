@@ -199,7 +199,7 @@ Domain files, source code and `CLAUDE.md` are untouched, matching the rest of th
 ## Cross-references
 
 - [`../../CLAUDE.md`](../../CLAUDE.md) — navigation instruction lives at top; hard rules below.
-- [`../context/INDEX.md`](../context/INDEX.md) — live navigation index for this repo, with `Layout: flat` marker and `Last updated` anchor. Reference example of marker-bearing flat index; this repo stays flat deliberately (thirteen context files, no unit seams worth a router).
+- [`../context/INDEX.md`](../context/INDEX.md) — live navigation index for this repo, with `Layout: flat` marker and `Last updated` anchor. Reference example of marker-bearing flat index; this repo stays flat deliberately (eighteen context files, no unit seams worth a router).
 - `skills/context-build/SKILL.md` (+ `nested.md`), `skills/context-update/SKILL.md` (+ `nested.md`), `skills/context-convert/SKILL.md` — skill implementations.
 - [`../context/features.md`](../context/features.md) — shipped-artifact inventory; per-skill entries for all three.
 - [`../../README.md`](../../README.md) — user-facing account of the family and the two layouts.

@@ -72,7 +72,8 @@ Deliberately out:
 Built on the repo's existing shape per `technical-direction.md`: shipped
 markdown skills whose runtime is Claude Code. The change lands in
 `skills/task-implement/`, `skills/task-engine/references/` and
-`skills/runbook-run/` (see `.claude/context/features.md`), plus the small
+`skills/runbook-run/` (see `.claude/context/task-suite.md` and
+`.claude/context/runbook-suite.md`), plus the small
 ripple named at the end. It adds no CLI surface and no script.
 
 ### Load discipline

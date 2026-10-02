@@ -50,7 +50,7 @@ Deliberately out:
 ## Architecture
 
 Built on the repo's existing shape per the codebase: a change to the shipped
-`skills/runbook-run/` skill (see `.claude/context/features.md`), plus its row in
+`skills/runbook-run/` skill (see `.claude/context/runbook-suite.md`), plus its row in
 the pipeline-engine routing table.
 
 ### The flag and its composition

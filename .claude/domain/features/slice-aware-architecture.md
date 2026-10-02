@@ -56,7 +56,7 @@ Deliberately out:
 Built on the stack recorded in
 [technical-direction.md](../technical-direction.md): a markdown prompt, no
 code. The skill being extended is described in
-[`.claude/context/features.md`](../../context/features.md); its existing
+[`.claude/context/pipeline.md`](../../context/pipeline.md); its existing
 phase structure is the thing this feature must leave intact.
 
 **The activation probe.** Slice mode activates on the presence of

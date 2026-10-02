@@ -229,7 +229,7 @@ file is absent is told the file is not there, with no guess at why. Under
   commit-message form), `.claude/domain/task-workflow.md`,
   `.claude/domain/product-workflow.md` (the illegal-transition rationale
   and the who-writes-what row for `/task-clean`),
-  `.claude/context/features.md` (the command-to-skill migration),
+  `.claude/context/task-suite.md` (the command-to-skill migration),
   `.claude/context/INDEX.md` (its `Last updated:` anchor).
 
 ## Open questions
