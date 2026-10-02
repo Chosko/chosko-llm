@@ -40,7 +40,7 @@ than one view flag, or unresolvable/ambiguous name.
 - **Colors come from `lib.sh`** per [shared-lib.md](./shared-lib.md) §
   Public API › Stdout color variables.
 - **Scope (`--local` / `--global`).** Scope flags are resolved before any
-  other flag parsing, per [shared-lib.md](./shared-lib.md) § Public API ›
+  other flag parsing, per [shared-lib-scope.md](./shared-lib-scope.md) § Public API ›
   Scope resolution. The claude-md `inst_file` and `loc` come from
   `claudemd_target_path` (in `lib.sh`). Where the scope does not support the
   kind — a statusline in local scope, a hook in global — `show` does not
@@ -104,7 +104,8 @@ than one view flag, or unresolvable/ambiguous name.
 
 ## Cross-references
 
-- [shared-lib.md](./shared-lib.md) — `src_*` / `inst_*` path helpers,
+- [shared-lib.md](./shared-lib.md), [shared-lib-scope.md](./shared-lib-scope.md),
+  [shared-lib-frontmatter.md](./shared-lib-frontmatter.md) — `src_*` / `inst_*` path helpers,
   `read_frontmatter_field`, `claudemd_target_path`, scope helpers
   `resolve_scope` / `scope_is_local`, and `C_*` colors.
 - [shared-lib-kinds.md](./shared-lib-kinds.md) — `claudemd_is_installed` /

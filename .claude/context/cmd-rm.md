@@ -38,10 +38,10 @@ Side effects:
 - Logs one `Removed <kind> '<name>' (<path>) (scope: <scope>)` line.
 
 **Scope (`--local` / `--global`).** Resolved per
-[shared-lib.md](./shared-lib.md) § Scope resolution. Right after
+[shared-lib-scope.md](./shared-lib-scope.md) § Scope resolution. Right after
 `resolve_installed` determines `kind`, `scope_supports_kind "$kind"` gates the
 removal — `die`s with `scope_violation_message` if it fails (both scope
-rules: [shared-lib.md](./shared-lib.md) § Public API › Scope resolution),
+rules: [shared-lib-scope.md](./shared-lib-scope.md) § Public API › Scope resolution),
 before any filesystem check.
 
 **Dependents guard (`requires:`).** Runs after the scope gate and
@@ -84,10 +84,11 @@ dependent left to break.
 
 ## Cross-references
 
-- [shared-lib.md](./shared-lib.md) — uses `inst_command_path`,
+- [shared-lib-scope.md](./shared-lib-scope.md) — uses `inst_command_path`,
   `inst_skill_path` / `inst_skill_dir`, scope helpers
   `resolve_scope` / `scope_supports_kind` / `claudemd_target_path`.
-- [shared-lib-kinds.md](./shared-lib-kinds.md) — uses `claudemd_is_installed` /
+- [shared-lib-kinds.md](./shared-lib-kinds.md),
+  [shared-lib-requires.md](./shared-lib-requires.md) — uses `claudemd_is_installed` /
   `remove_section`, `requires_specs` (dependents guard).
 - [cmd-add.md](./cmd-add.md) — inverse op.
 - [cli-entry.md](./cli-entry.md) — `uninstall.sh`.

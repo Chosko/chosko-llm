@@ -169,7 +169,8 @@ The old default is asserted in eight places outside the shipped bodies:
 paragraph and the four skills' own entries, plus `/pipeline-revise`'s
 forwarding paragraph), `docs/authoring-guide.md` §
 *Commit-and-push convention*, `.claude/domain/product-workflow.md` §
-*Commit and push*, `.claude/context/pipeline.md` (six rows, with
+*Commit and push*, `.claude/context/` (six rows across `product-design.md`,
+`pipeline-planning.md`, `architect.md` and `pipeline-revise-plan.md`, with
 `.claude/context/INDEX.md`'s `Last updated` anchor refreshed alongside),
 `.claude/domain/features/owner-amend-arms.md`,
 `.claude/domain/features/production-plan.md` and

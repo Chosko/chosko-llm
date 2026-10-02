@@ -6,13 +6,16 @@
 `$CLAUDE_HOME`. Refuse overwrite already-installed feature — for
 that, use `update`.
 
+Per-name isolation of `add_one` (the subshell, the multi-name loop):
+[cmd-add-isolation.md](./cmd-add-isolation.md).
+
 ## Public API
 
 CLI:
 - `chosko-llm add <feature> [<feature> ...]` — `<feature>` is `<name>`,
   `command:<name>`, `skill:<name>`, `claude-md:<name>`, `statusline:<name>`,
   or `hook:<name>`. One or more space-separated specs; each
-  resolved/installed independently via `add_one` (see Internal patterns).
+  resolved/installed independently via `add_one` (see [cmd-add-isolation.md](./cmd-add-isolation.md) § Internal patterns).
   Anything the source names in `requires:` is installed first — see
   Dependencies below.
 - `chosko-llm add --all` — install every feature in managed clone
@@ -53,7 +56,7 @@ Side effects:
 
 **Scope: two mirrored kind rules.** Scope flags are resolved before any other
 flag parsing, and the kinds each scope supports are defined, in
-[shared-lib.md](./shared-lib.md) § Public API › Scope resolution.
+[shared-lib-scope.md](./shared-lib-scope.md) § Public API › Scope resolution.
 Single-feature path: after `resolve_feature` returns `kind`,
 `scope_supports_kind "$kind"` gates the install, and on failure it `die`s via
 `scope_violation_message "$kind"`, which words both the statusline-global-only
@@ -83,8 +86,8 @@ followed; flagged in the source comment as a thing not to "fix" later.
 
 - Single-feature path only: after install, `apply_replaces` honours the
   source's optional `replaces: <kind>:<name>` (behaviour:
-  [shared-lib-kinds.md](./shared-lib-kinds.md) § Public API › Kind migration). `--all`
-  loop does **not** call it; a stale artifact left that way is picked up by
+  [shared-lib-migration.md](./shared-lib-migration.md) § Public API › Kind migration).
+  `--all` loop does **not** call it; a stale artifact left that way is picked up by
   `update --all`'s migration path.
 
 ## Internal patterns
@@ -104,15 +107,6 @@ followed; flagged in the source comment as a thing not to "fix" later.
   missing requirement before failing.
 - **Refuses to clobber.** If target file/dir exists, `die`s with pointer to `chosko-llm update`. Contract distinguishes `add` from `update` — keep
   it.
-- **Per-name isolation via subshell.** `add_one` wraps its
-  whole body in `( ... )` so any `die` inside — `resolve_feature`,
-  `require_versioned_source`, the "already installed" checks —
-  terminates only that subshell, not the parent script; the caller's
-  `for spec in "$@"` loop keeps going and tracks a `failed` flag.
-  `resolve_feature` failure is doubly nested (its own `die` fires
-  inside the `<(...)` process substitution feeding `mapfile`), so
-  `add_one` explicitly checks `kind`/`name` came back non-empty rather
-  than relying on `mapfile` raising an error.
 
 ## Domain dependencies
 
@@ -122,12 +116,14 @@ followed; flagged in the source comment as a thing not to "fix" later.
 
 ## Cross-references
 
-- [shared-lib.md](./shared-lib.md) — `require_versioned_source`, `src_*` /
-  `inst_*` path helpers, scope helpers `resolve_scope` / `scope_supports_kind` /
+- [shared-lib-frontmatter.md](./shared-lib-frontmatter.md) — `require_versioned_source`.
+- [shared-lib-scope.md](./shared-lib-scope.md) — `src_*` / `inst_*` path
+  helpers, scope helpers `resolve_scope` / `scope_supports_kind` /
   `claudemd_target_path`.
-- [shared-lib-kinds.md](./shared-lib-kinds.md) — `resolve_feature`,
-  `requires_specs` / `parse_replaces_spec` / `artifact_is_installed` (the
-  dependency path).
+- [shared-lib-kinds.md](./shared-lib-kinds.md) — `resolve_feature`.
+- [shared-lib-requires.md](./shared-lib-requires.md),
+  [shared-lib-migration.md](./shared-lib-migration.md) — `requires_specs` /
+  `parse_replaces_spec` / `artifact_is_installed` (the dependency path).
 - [cmd-update.md](./cmd-update.md) — "refresh / reinstall" counterpart;
   `update` installs if missing, usable in place of `add`.
 - [cmd-rm.md](./cmd-rm.md) — inverse operation.
@@ -136,9 +132,6 @@ followed; flagged in the source comment as a thing not to "fix" later.
 
 - Changing "already installed → error" policy (e.g. adding `--force`
   flag) → `scripts/cmd-add.sh`.
-- Changing multi-name looping or best-effort/continue-on-error
-  semantics → `add_one` function and the trailing `for spec in "$@"`
-  loop in `cmd-add.sh`.
 - Changing what gets copied for skill (e.g. excluding patterns) →
   `cp -R` call in `skill)` branch and `--all` loop of `cmd-add.sh`.
 - Tweaking success log line format → `cmd-add.sh`.

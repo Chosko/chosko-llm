@@ -45,7 +45,7 @@ Side effects:
   of what was merged into settings.json, which has no version. The warning
   names both slots via `hook_wiring_label`;
   claude-md re-inject via `inject_section` into `claudemd_target_path`.
-  Then `apply_replaces` (see [shared-lib-kinds.md](./shared-lib-kinds.md) § Kind
+  Then `apply_replaces` (see [shared-lib-migration.md](./shared-lib-migration.md) § Kind
   migration).
 - `--all`: per installed feature, compare versions with `version_cmp`,
   log `Already up-to-date` (equal), `Local version ahead … — skipping`
@@ -57,10 +57,10 @@ Side effects:
   per actual update.
 
 **Scope (`--local` / `--global`).** Resolved per
-[shared-lib.md](./shared-lib.md) § Scope resolution. Single-feature path:
+[shared-lib-scope.md](./shared-lib-scope.md) § Scope resolution. Single-feature path:
 after `resolve_feature` returns `kind`, `scope_supports_kind "$kind"` gates
 the update — `die`s with `scope_violation_message` if it fails (both scope
-rules: [shared-lib.md](./shared-lib.md) § Public API › Scope resolution),
+rules: [shared-lib-scope.md](./shared-lib-scope.md) § Public API › Scope resolution),
 before `update_one` runs.
 
 ## Internal patterns
@@ -77,9 +77,9 @@ before `update_one` runs.
   wraps `resolve_feature` + `scope_supports_kind` + `update_one` +
   `apply_replaces` in `( ... )` so any `die` inside terminates only that
   subshell; the caller's `for spec in "$@"` loop keeps going and tracks
-  a `failed` flag. Same pattern as `cmd-add.sh`'s `add_one` — see that
-  file's Internal patterns for the `resolve_feature`/`mapfile`
-  double-nesting note.
+  a `failed` flag. Same pattern as `cmd-add.sh`'s `add_one` — see
+  [cmd-add-isolation.md](./cmd-add-isolation.md) § Internal patterns for the
+  `resolve_feature`/`mapfile` double-nesting note.
 - **`migrate_stale <kind> <name>`** (script-local, defined above
   `version_cmp`). Calls `find_replacement`; on hit runs `update_one` for the
   replacement then `apply_replaces` to drop the stale artifact, and sets
@@ -97,7 +97,8 @@ before `update_one` runs.
 
 ## Cross-references
 
-- [shared-lib.md](./shared-lib.md) — `require_versioned_source`, path
+- [shared-lib-frontmatter.md](./shared-lib-frontmatter.md),
+  [shared-lib-scope.md](./shared-lib-scope.md) — `require_versioned_source`, path
   helpers, scope helpers `resolve_scope` / `scope_supports_kind` /
   `claudemd_target_path`.
 - [shared-lib-kinds.md](./shared-lib-kinds.md) — `resolve_feature`.

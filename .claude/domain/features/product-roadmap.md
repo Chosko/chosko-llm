@@ -57,7 +57,7 @@ Built on the stack recorded in
 executed by Claude Code, operating on markdown documents. No bash, no new
 dependencies. The shipped-artifact conventions this follows — frontmatter,
 per-feature versioning, the authoring-command commit family — are in
-[`.claude/context/features.md`](../../context/features.md).
+[`.claude/context/feature-contract.md`](../../context/feature-contract.md).
 
 **The skill.** A skill rather than a command, because the work is a
 multi-round conversation with supporting material, matching

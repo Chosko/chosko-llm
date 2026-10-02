@@ -86,7 +86,7 @@ archiving run is the only writer, and no feature removes from it.
 The command becomes a skill folder, `skills/task-clean/SKILL.md`, declaring
 `replaces: command:task-clean` so `chosko-llm add` and `update` retire the
 command file per the kind-migration path
-([features.md](../../context/features.md)). The migration exists for one
+([feature-contract.md](../../context/feature-contract.md)). The migration exists for one
 reason: `--backfill`'s procedure must sit in a supporting file that the
 ordinary prune never loads, and a command is a single file that can carry
 nothing beside it. `SKILL.md` keeps the whole of today's prune flow and
@@ -229,7 +229,7 @@ file is absent is told the file is not there, with no guess at why. Under
   commit-message form), `.claude/domain/task-workflow.md`,
   `.claude/domain/product-workflow.md` (the illegal-transition rationale
   and the who-writes-what row for `/task-clean`),
-  `.claude/context/task-suite.md` (the command-to-skill migration),
+  `.claude/context/task-backlog.md` (the command-to-skill migration),
   `.claude/context/INDEX.md` (its `Last updated:` anchor).
 
 ## Open questions

@@ -85,7 +85,7 @@ Env read: `VISUAL`, `EDITOR`, `PAGER`, `NO_COLOR`, `LINES`.
   about it. Silence is right when the readout is a side effect of another
   action; wrong when the file is the thing the user asked for.
 - **Not scope-aware.** No `resolve_scope` call — `CHANGELOG.md` is clone-only
-  ([shared-lib.md](./shared-lib.md) § Public API › Path resolution), so
+  ([shared-lib-scope.md](./shared-lib-scope.md) § Public API › Path resolution), so
   `--local` / `--global` mean nothing here.
 
 ## Domain dependencies
@@ -98,7 +98,7 @@ Env read: `VISUAL`, `EDITOR`, `PAGER`, `NO_COLOR`, `LINES`.
 
 ## Cross-references
 
-- [shared-lib.md](./shared-lib.md) — `src_changelog_path`.
+- [shared-lib-scope.md](./shared-lib-scope.md) — `src_changelog_path`.
 - [shared-lib-changelog.md](./shared-lib-changelog.md) —
   `_render_changelog_sections`, `changelog_since_kind`,
   `changelog_duration_to_date`, `select_changelog_sections`,

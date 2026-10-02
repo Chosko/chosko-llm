@@ -88,7 +88,7 @@ Exit codes:
 - **Existing output files overwritten** without prompting — filename
   deterministic per repo, export is regenerable artifact.
 - **Output directory from `lib.sh`'s `export_dir_path`** (see
-  [shared-lib.md](./shared-lib.md)); `cmd-export.sh` never concatenates
+  [shared-lib-scope.md](./shared-lib-scope.md)); `cmd-export.sh` never concatenates
   `$CHOSKO_LLM_EXPORT_DIR` inline.
 
 ## Domain dependencies
@@ -100,7 +100,7 @@ Exit codes:
 ## Cross-references
 
 - [shared-lib.md](./shared-lib.md) — sources `lib.sh` for `die`, `log_*`, and
-  `export_dir_path`.
+  `export_dir_path` ([shared-lib-scope.md](./shared-lib-scope.md)).
 - [cli-entry.md](./cli-entry.md) — proxy dispatches `export` →
   `cmd-export.sh`; not on `auto-upgrade.sh`'s skip list (unlike `upgrade`/`channel`/`uninstall`), so daily
   auto-upgrade can still fire before `export` run like any other subcommand.

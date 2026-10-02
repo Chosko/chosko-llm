@@ -199,9 +199,9 @@ Domain files, source code and `CLAUDE.md` are untouched, matching the rest of th
 ## Cross-references
 
 - [`../../CLAUDE.md`](../../CLAUDE.md) — navigation instruction lives at top; hard rules below.
-- [`../context/INDEX.md`](../context/INDEX.md) — live navigation index for this repo, with `Layout: flat` marker and `Last updated` anchor. Reference example of marker-bearing flat index; this repo stays flat deliberately (eighteen context files, no unit seams worth a router).
+- [`../context/INDEX.md`](../context/INDEX.md) — live navigation index for this repo, with `Layout: flat` marker and `Last updated` anchor. Reference example of marker-bearing flat index; this repo stays flat deliberately (fifty context files, each family grouped behind a hub file).
 - `skills/context-build/SKILL.md` (+ `nested.md`), `skills/context-update/SKILL.md` (+ `nested.md`), `skills/context-convert/SKILL.md` — skill implementations.
-- [`../context/features.md`](../context/features.md) — shipped-artifact inventory; per-skill entries for all three.
+- [`../context/context-skills.md`](../context/context-skills.md) — shipped-artifact inventory; per-skill entries for all three.
 - [`../../README.md`](../../README.md) — user-facing account of the family and the two layouts.
 - [`../../commands/project-setup.md`](../../commands/project-setup.md) — wizard that orchestrates `/context-build` (flat only).
 - [`../../docs/authoring-guide.md`](../../docs/authoring-guide.md) — frontmatter schema incl. `replaces:` kind-migration key.
