@@ -9,8 +9,8 @@ list. Everything SKILL.md says that this file does not restate still
 applies — in particular the P.1 locate step, the `-y` / `--yes`,
 `--no-commit` and `--no-push` flags, the pull-at-start, all of Phase 1, the
 Phase 2 rules 2.1–2.3 (in-place section edits, the 150-line split flag, the
-hands-off rule for domain files), and the commit-and-push protocol of
-Phase 3.
+shape of a test context file, the hands-off rule for domain files), and the
+commit-and-push protocol of Phase 3.
 
 `BACKFILL_MARKER` is never true here: the layer's marker was read as
 `nested`, so there is nothing to backfill.

@@ -1,6 +1,6 @@
 ---
 name: context-update
-version: 1.4.1
+version: 1.5.0
 type: skill
 description: Update an existing navigation context layer after code changes — by default only the context files the commits since INDEX.md's Last updated date touched — then commit and push what it updated. Use it after landing code a context file describes.
 replaces: command:context-update
@@ -258,6 +258,23 @@ PHASE 2 — Update the context files
     f) If a context file has grown beyond 150 lines after updates, flag it for
        splitting — do not split it now, flag only with a suggestion for how to
        divide it.
+
+    g) A test context file — one whose subject is a test tree rather than
+       source code (`<unit>-tests.md`) — carries two kinds of content and no
+       third, in its existing sections:
+       - **Placement and running** (its layout section): where a test of each
+         kind goes, the directory layout, the shared helpers and fixtures a new
+         test should reuse, and how the suite runs.
+       - **Tripwires** (WHEN TO READ THE SOURCE): a test that pins something
+         an unrelated-looking change will break. One entry names the test file
+         and says in a line what change trips it and why.
+       It never catalogues what each test asserts: the `describe`/`it` names
+       answer that through grep, and are never stale. A new or changed test
+       earns an entry only when it is a tripwire or changes a placement rule,
+       a shared helper or a fixture; a test that only adds coverage earns
+       none, and a catalogue line found in the file is removed rather than
+       updated. The file's row in its index describes it in the same terms,
+       never as a list of the suites it covers.
 
 2.2 Do not touch context files where Phase 1 found no changes.
 

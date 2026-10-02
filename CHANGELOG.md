@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.76.0 — 2026-10-02
+
+- **`/context-update` keeps test context files lean.** A context file about a test tree (`<unit>-tests.md`) holds only where each kind of test goes and how the suite runs, plus tripwires — tests an unrelated-looking change will break, one line each. It never lists what each test asserts; a test that only adds coverage adds nothing, and an existing catalogue line is removed rather than updated.
+
 ## 1.75.4 — 2026-10-02
 
 - **A relayed reviewer writes its review to the result file.** `/runbook-run`'s `RELAY CHILD RULES` make the result file the child's return channel over any skill that says to reply in the turn or write nothing to disk, and `/task-review` spawned by `/task-implement --review` returns its report through that file when the run names one; `/task-implement`'s reviewer prompt no longer restates that output rule itself.

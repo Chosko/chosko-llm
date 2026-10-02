@@ -77,6 +77,9 @@ files they need, saving tokens. All three ship as **skills**.
   for you). Commits only under `--commit`, and pushes too unless `--no-push`
   is also passed.
 - `/context-update` — refresh only the parts the latest diffs touched.
+  A test context file (`<unit>-tests.md`) keeps only where tests go and how
+  they run, plus tripwire tests an unrelated-looking change will break —
+  never a catalogue of what each test asserts.
   Commits and pushes automatically; `--no-commit` skips both, `--no-push`
   commits without pushing.
 - `/context-convert` — restructure a layer you already have from one layout
