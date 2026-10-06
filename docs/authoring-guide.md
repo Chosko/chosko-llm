@@ -744,9 +744,10 @@ versions side by side, so a forgotten bump leaves both columns showing the
 same value and users have no signal that there is anything to refresh.
 
 **Project documentation does not bump root `VERSION`.** A change confined to
-`README.md`, `docs/`, `.claude/domain/`, `.claude/context/` or `CLAUDE.md`
-itself bumps nothing and gets no changelog entry: no shipped artifact behaves
-differently, so a user who upgrades receives an identical `~/.claude/` and a
+`README.md`, `CONTRIBUTING.md`, `LICENSE`, `NOTICE`, `docs/`, `.claude/domain/`,
+`.claude/context/` or `CLAUDE.md` itself bumps nothing and gets no changelog
+entry: no shipped artifact behaves differently, so a user who upgrades
+receives an identical `~/.claude/` and a
 version number that moved for nothing. The version stamp is a signal about
 shipped behaviour, and spending it on internal prose is what makes it stop
 meaning anything.

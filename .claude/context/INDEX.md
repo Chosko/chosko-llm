@@ -9,6 +9,7 @@ Nav layer for `chosko-llm`. How to read it: `../../CLAUDE.md` § Navigation.
 Canonical project docs live outside this folder, stay authoritative:
 - `../../CLAUDE.md` — hard rules, authoring entry-point.
 - `../../README.md` — user-facing overview.
+- `../../CONTRIBUTING.md` — developer install, authoring pointers, guards, repo layout.
 - `../../docs/reference.md` — complete feature + CLI reference the README links into.
 - `../../docs/authoring-guide.md` — frontmatter/versioning truth.
 - `../../docs/cli-help.txt` — CLI help text shipped to users.
