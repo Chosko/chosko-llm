@@ -147,7 +147,7 @@ Context: none
 
 Done: 2026-10-06, commit `20db180` (9 files, +411/-3). Tasks 281–287; task 287 may edit five architect-owned feature docs, by the user-approved exception recorded in its Decisions.
 
-## [ ] 5. Rewrite pilot: measure cost on 4 files (scratch, no commit)
+## [x] 5. Rewrite pilot: measure cost on 4 files (scratch, no commit)
 
 Depends on: 1
 
@@ -173,6 +173,8 @@ A feasibility study in the design conversation found: session-save went 2487 →
 
 Report, and put in your Done: line: files done, words before → after per file, rounds per file, blocking findings per round, total subagent tokens spent, and the extrapolated cost for the remaining ~100 files. Do not re-litigate whether to rewrite; that is the next step's decision.
 ```
+
+Done: 2026-10-06, no commit — measurement only. 4 files 8121 → 6635 words (−18%), 1 round each, 0 blocking findings; relay children 227,854 tokens (~57k per file). Extrapolated to the remaining ~100 files: ~5.3M tokens at 1 round, ~10.5M at 2, ~15.8M at 3; plan on 2 (a spelled-out implicit rule was rated advisory, a stricter reviewer would add a round).
 
 ## [ ] 6. Decide whether to run the full rewrite
 
