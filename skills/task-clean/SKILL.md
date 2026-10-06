@@ -1,6 +1,6 @@
 ---
 name: task-clean
-version: 0.10.1
+version: 0.10.2
 type: skill
 description: Prune tasks in a terminal status from the backlog by archiving them — each summary block leaves TASKS.md and the body moves to .claude/tasks/archive/<N>.md, never deleted. Use it when finished tasks clutter the backlog; a backfill mode recovers, from git history, bodies earlier runs deleted.
 replaces: command:task-clean
@@ -46,8 +46,8 @@ with the user before writing. Never renumber, and never delete a body.
 
 $ARGUMENTS
 
-ARGUMENT NOTE — the `--no-commit` and `--no-push` flags, and everything they
-gate, are
+ARGUMENT NOTE — the `--commit`, `--no-commit` and `--no-push` flags, and
+everything they gate, are
 `../task-engine/references/commit.md`.
 Scan `$ARGUMENTS` for them before PHASE 1 and strip whichever appear.
 

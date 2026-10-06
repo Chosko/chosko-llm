@@ -1,6 +1,6 @@
 ---
 name: domain-setup
-version: 0.2.4
+version: 0.2.5
 type: command
 description: Initialize the project's domain knowledge layer — creates .claude/domain/ with its features/ folder and INDEX.md, the .claude/FEATURES.md feature index, and a CLAUDE.md pointer to the domain index. Run it once before any other pipeline command; stage 0 of the pipeline: scaffolds the layer every later stage writes into.
 disable-model-invocation: true
@@ -51,8 +51,8 @@ By default this is a pure authoring command: it writes the scaffolding and
 leaves everything uncommitted in the working tree, matching `/task-setup`,
 `/context-build`, and `/project-setup`. The user reviews and commits when
 ready. Passing `--commit` opts in to committing exactly what this run wrote, then
-pushing per docs/authoring-guide.md's commit-and-push protocol (see
-PHASE — COMMIT below); `--commit --no-push` commits without pushing.
+pushing (see PHASE — COMMIT below); `--commit --no-push` commits without
+pushing.
 
 This command shells out for exactly two things: filesystem prep (`mkdir -p`
 for `.claude/domain` and `.claude/domain/features`) and, ONLY when
@@ -70,9 +70,8 @@ If present, set COMMIT = true. When COMMIT is false (the default), the run
 leaves its scaffolding uncommitted.
 
 Also parse the optional `--no-push` flag; if present, set NO_PUSH = true.
-NO_PUSH only matters when COMMIT is true: it skips the pull-at-start /
-re-sync / push steps of the commit-and-push protocol
-(docs/authoring-guide.md) while still committing as always. If COMMIT is
+NO_PUSH only matters when COMMIT is true: it skips the pull at start, the
+pre-push re-sync and the push while still committing as always. If COMMIT is
 true and the project's CLAUDE.md does not carry a `## VCS` override
 (non-git), pull at start: run `git pull` on the current branch before any
 artifact is checked. A conflict stops the run here — report the conflict
@@ -255,8 +254,8 @@ If COMMIT is true (the pull-at-start already ran in WORKFLOW):
    `## VCS` mapping in CLAUDE.md (git→`cm`).
 3. On commit success, report the commit hash (`git rev-parse --short
    HEAD`). Then, unless NO_PUSH is true or the non-git VCS exemption
-   applies, re-sync (`git pull`) and `git push` per
-   docs/authoring-guide.md's commit-and-push protocol.
+   applies, re-sync with `git pull` immediately before pushing — other
+   commits may have landed upstream during the run — then `git push`.
 4. On commit failure (e.g. a pre-commit hook rejects the commit): surface
    the exact output. Do NOT retry, amend, or use `--no-verify` /
    `--no-gpg-sign`. Files remain staged but uncommitted; tell the user.

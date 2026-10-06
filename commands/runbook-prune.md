@@ -1,6 +1,6 @@
 ---
 name: runbook-prune
-version: 0.1.2
+version: 0.1.3
 type: command
 description: Prune the finished steps out of one runbook — remove every [x] step and record its id on the body's Archive: line, so a surviving dependency and the index's step count still resolve. Use it to shrink a long-running runbook without renumbering a step or touching a pending one.
 disable-model-invocation: true
@@ -53,6 +53,7 @@ what is left is this command's own argument — **exactly one** runbook, as
 
 | Flag | Effect |
 | --- | --- |
+| `--commit` | Accepted and stripped, a silent no-op: committing is the default. Refused beside `--no-commit` with `--commit and --no-commit cannot be combined. Pick one.` |
 | `--no-commit` | Set NO_COMMIT = true. Prune the body and rewrite the index, but make no commit and no push. |
 | `--no-push` | Set NO_PUSH = true. Commit as usual, skip the pull/re-sync/push. |
 

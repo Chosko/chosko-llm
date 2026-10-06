@@ -1,6 +1,6 @@
 ---
 name: task-add
-version: 2.5.7
+version: 2.5.8
 type: command
 description: Plan one new task with the user and write it to the backlog — a summary block in TASKS.md plus a body file — from a prose description or from an /architect feature document. Use it for any new unit of work; stage 5 of the pipeline: turns a feature document into tasks; its output is /task-implement's input.
 requires: skill:task-engine
@@ -67,8 +67,8 @@ Never write to any file before the user confirms the draft.
 
 $ARGUMENTS
 
-ARGUMENT NOTE — the `--no-commit` and `--no-push` flags, and everything they
-gate, are
+ARGUMENT NOTE — the `--commit`, `--no-commit` and `--no-push` flags, and
+everything they gate, are
 `../skills/task-engine/references/commit.md`.
 Scan `$ARGUMENTS` for them before PHASE 1 and strip whichever appear; what
 is left, after the flags below are stripped too, is the task description.

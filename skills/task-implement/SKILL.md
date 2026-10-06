@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.10.6
+version: 1.10.7
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups
@@ -142,8 +142,8 @@ ARGUMENT PARSING
 Before resolving the task list, scan `$ARGUMENTS` for the flags below and
 strip whichever appear; what is left is the task selector.
 
-The `--no-commit` and `--no-push` flags, their mutual exclusion with
-`--commit`, and everything they gate are
+The `--commit`, `--no-commit` and `--no-push` flags, the mutual exclusion
+of the first two, and everything they gate are
 `../task-engine/references/commit.md`.
 Here NO_COMMIT true means the run performs the full test sequence and the
 `Status:` flips but skips the per-task commit in Step 7 (see that step and
