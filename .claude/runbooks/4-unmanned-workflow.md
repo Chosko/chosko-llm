@@ -4,7 +4,7 @@ Created: 2026-10-06 · Source: conversation (unmanned-workflow design) · Model:
 Last step number: 21
 Sequencing: All design and task authoring precedes all implementation; the rewrite runs last so its review compares against final behaviour.
 
-## [ ] 1. Merge master (with tasks 278–280 landed) into unmanned
+## [x] 1. Merge master (with tasks 278–280 landed) into unmanned
 
 Depends on: none
 
@@ -17,6 +17,8 @@ Precondition: tasks 278, 279 and 280 must already be implemented on master. Run 
 
 Then merge `origin/master` into `unmanned` with a merge commit (never rebase), resolve any conflict keeping both sides' intent, run `./scripts/check-changelog.sh`, `./scripts/check-home-paths.sh` and `./scripts/check-routing.sh`, and push `unmanned`.
 ```
+
+Done: 2026-10-06, commit `eff9f9f` (25 files, +121/-110).
 
 ## [ ] 2. Architect the interaction policy (A–D)
 
