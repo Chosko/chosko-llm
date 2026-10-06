@@ -2,7 +2,7 @@
 
 Created: 2026-10-06 · Source: conversation (unmanned-workflow design) · Model: opus
 Last step number: 21
-Sequencing: Steps needing a person run first (2–6); the policy is then built and installed so later task-adds run unattended; the rewrite runs last so its review compares against final behaviour.
+Sequencing: All design and task authoring precedes all implementation; the rewrite runs last so its review compares against final behaviour.
 
 ## [ ] 1. Merge master (with tasks 278–280 landed) into unmanned
 
@@ -150,7 +150,7 @@ Context: none
 ```prompt
 A cost pilot for a later lossless rewrite of every shipped body (commands/, skills/*/SKILL.md, skills/*/*.md, skills/*/references/*.md, claude-md/ — about 102 files, ~196k words) into an imperative, bullet-style, protocol-first form. This step only measures; it writes nothing to the repo and commits nothing.
 
-Before you start, ask the user to run `/usage` and tell you the figures; ask again when you finish.
+Measure cost from the token counts each subagent you spawn reports (sum them per file and in total); do not ask the user for /usage.
 
 Files: commands/session-save.md, commands/session-resume.md, commands/runbook-list.md, commands/runbook-describe.md. Work in a scratch directory outside the repo.
 
@@ -162,7 +162,7 @@ Process per file, each role a fresh subagent:
 
 A feasibility study in the design conversation found: session-save went 2487 → 1830 words in 2 rounds (each round caught something the previous one missed — subtle meaning shifts such as "X and Y" turned into a comma list, and a ban narrowed when a DO NOT list was folded); task-engine's parking.md gained only 5% (already dense). Expect dense files to gain little.
 
-Report, and put in your Done: line: files done, words before → after per file, rounds per file, blocking findings per round, the user's /usage before and after, and the extrapolated cost for the remaining ~100 files. Do not re-litigate whether to rewrite; that is the next step's decision.
+Report, and put in your Done: line: files done, words before → after per file, rounds per file, blocking findings per round, total subagent tokens spent, and the extrapolated cost for the remaining ~100 files. Do not re-litigate whether to rewrite; that is the next step's decision.
 ```
 
 ## [ ] 6. Decide whether to run the full rewrite
@@ -174,7 +174,67 @@ Needs: human
 Context: none
 
 ```prompt
-Show the user the pilot result recorded in step 5's Done: line (word reduction per file, rounds, /usage delta, extrapolated cost for the remaining ~100 files) in a few plain lines, then ask one question: run the full imperative rewrite at the end of this runbook (go), or skip it (no-go)? Record the answer verbatim in this step's report so step 20 can read it. Change no files.
+Show the user the pilot result recorded in step 5's Done: line (word reduction per file, rounds, tokens spent, extrapolated cost for the remaining ~100 files) in a few plain lines, then ask one question: run the full imperative rewrite at the end of this runbook (go), or skip it (no-go)? Record the answer verbatim in this step's report so step 20 can read it. Change no files.
+```
+
+## [ ] 9. Task the Unity MCP removal
+
+Depends on: 3
+
+Context: none
+
+```prompt
+/task-add feature=unity-mcp-removal
+```
+
+## [ ] 10. Task setup sync
+
+Depends on: 3
+
+Context: none
+
+```prompt
+/task-add feature=setup-sync
+```
+
+## [ ] 12. Task the session readers
+
+Depends on: 3
+
+Context: none
+
+```prompt
+/task-add feature=session-readers
+```
+
+## [ ] 14. Task quick-implement
+
+Depends on: 3
+
+Context: none
+
+```prompt
+/task-add feature=quick-implement
+```
+
+## [ ] 16. Task orchestrate-mode
+
+Depends on: 3
+
+Context: none
+
+```prompt
+/task-add feature=orchestrate-mode
+```
+
+## [ ] 18. Task objective-run
+
+Depends on: 3
+
+Context: none
+
+```prompt
+/task-add feature=objective-run
 ```
 
 ## [ ] 7. Implement the interaction policy
@@ -187,46 +247,9 @@ Context: none
 Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:` line is `interaction-policy`, in backlog order, as one invocation: /task-implement <ids> --review --unattended
 ```
 
-## [ ] 8. Install the unmanned channel's features on this machine
-
-Depends on: 7
-
-Context: none
-
-```prompt
-Make this machine's installed chosko-llm features match branch `unmanned`, so later steps run the new interaction policy (features are copied into ~/.claude; edits in the working repo don't reach it until installed).
-
-- If `chosko-llm` is not on PATH (no managed clone at `${CHOSKO_LLM_HOME:-$HOME/.chosko-llm}`), run `./install.sh` from this repo first.
-- `chosko-llm channel unmanned`
-- `chosko-llm add --all`, then `chosko-llm update --all`.
-- Verify with `chosko-llm ls --installed` that `interaction-engine` is installed and task-add's installed version matches the repo's `commands/task-add.md` frontmatter.
-
-Change no file in the repo; nothing to commit.
-```
-
-## [ ] 9. Task the Unity MCP removal
-
-Depends on: 3, 8
-
-Context: none
-
-```prompt
-/task-add feature=unity-mcp-removal --unattended
-```
-
-## [ ] 10. Task setup sync
-
-Depends on: 3, 8
-
-Context: none
-
-```prompt
-/task-add feature=setup-sync --unattended
-```
-
 ## [ ] 11. Implement the Unity removal, then setup sync
 
-Depends on: 9, 10
+Depends on: 7, 9, 10
 
 Context: none
 
@@ -234,19 +257,9 @@ Context: none
 Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:` line is `unity-mcp-removal`, then every one whose `Feature:` line is `setup-sync`, in that order (setup-sync edits project-setup's Unity branch after the removal), as one invocation: /task-implement <ids> --review --unattended
 ```
 
-## [ ] 12. Task the session readers
-
-Depends on: 3, 8
-
-Context: none
-
-```prompt
-/task-add feature=session-readers --unattended
-```
-
 ## [ ] 13. Implement the session readers
 
-Depends on: 12
+Depends on: 7, 12
 
 Context: none
 
@@ -254,34 +267,14 @@ Context: none
 Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:` line is `session-readers`, in backlog order, as one invocation: /task-implement <ids> --review --unattended
 ```
 
-## [ ] 14. Task quick-implement
-
-Depends on: 3, 8
-
-Context: none
-
-```prompt
-/task-add feature=quick-implement --unattended
-```
-
 ## [ ] 15. Implement quick-implement
 
-Depends on: 14
+Depends on: 7, 14
 
 Context: none
 
 ```prompt
 Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:` line is `quick-implement`, in backlog order, as one invocation: /task-implement <ids> --review --unattended
-```
-
-## [ ] 16. Task orchestrate-mode
-
-Depends on: 3, 8
-
-Context: none
-
-```prompt
-/task-add feature=orchestrate-mode --unattended
 ```
 
 ## [ ] 17. Implement orchestrate-mode
@@ -294,16 +287,6 @@ Context: none
 Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:` line is `orchestrate-mode`, in backlog order, as one invocation: /task-implement <ids> --review --unattended
 
 This goes after session-readers and quick-implement: orchestrate-mode extends session-save/resume/describe for handoff subfolders and delegates quick-implement's implementation step.
-```
-
-## [ ] 18. Task objective-run
-
-Depends on: 3, 8
-
-Context: none
-
-```prompt
-/task-add feature=objective-run --unattended
 ```
 
 ## [ ] 19. Implement objective-run
