@@ -65,7 +65,7 @@ Also in scope: this repo's own CLAUDE.md, the context layer and domain layer mus
 
 Done: 2026-10-06, commit `4dd2316` (4 files, +353/-1). Decision: output and question rules apply under both policies; only gate classes depend on the policy.
 
-## [ ] 3. Architect all remaining features in one sitting
+## [x] 3. Architect all remaining features in one sitting
 
 Depends on: 2
 
@@ -130,6 +130,8 @@ Read `.claude/domain/features/interaction-policy.md` (written by the previous st
 - Under orchestrate-mode it does not split rounds into areas (it already delegates each round).
 - Reuses runbook-run's subagent contract, parking, and the review-round loop shape.
 ```
+
+Done: 2026-10-06, commits `769f344`, `b4df3f8` (10 files, +1135/-25). Also applied the editorial amend of interaction-policy flagged by the review of step 2.
 
 ## [ ] 4. Task the interaction policy
 
@@ -255,7 +257,9 @@ Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:`
 
 Depends on: 7, 9, 10
 
-Context: none
+Context:
+- 2026-10-06 (from step 3): this repo also keeps `--local` installed copies under `.claude/skills/` and `.claude/commands/` (incl. `task-implement/unity-mcp-checkpoints.md`); the removal must refresh those copies, not only the sources.
+- 2026-10-06 (from step 3): under setup-sync the testing-policy line's `project-policy:` declaration goes on `/task-implement` (quick-implement's plumbing later moves the rule to `task-engine`).
 
 ```prompt
 Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:` line is `unity-mcp-removal`, then every one whose `Feature:` line is `setup-sync`, in that order (setup-sync edits project-setup's Unity branch after the removal), as one invocation: /task-implement <ids> --review --unattended
