@@ -133,8 +133,8 @@ agents that cannot run `install.sh` still have the commands they need.
 
 ## High-level features
 
-Twelve features, listed in the order the product is experienced: the four
-that distribute configuration to a machine, then the eight that author it.
+Eleven features, listed in the order the product is experienced: the four
+that distribute configuration to a machine, then the seven that author it.
 Where a feature's mechanism is already specified in a workflow document, this
 section names the experience and points there rather than restating it.
 
@@ -311,14 +311,3 @@ to one concern. `/refactor-tests` splits oversized test files, running the
 suite before and after each split to keep the baseline green. Serves the
 director; changes no observable behaviour by construction. The philosophy
 and invariants are in [refactor-workflow.md](./refactor-workflow.md).
-
-### Unity/MCP integration
-
-Makes a Unity project ready for MCP-assisted implementation.
-`/unity-mcp-setup` installs the Unity-side package, records the fact in the
-project's versioned artifacts, and registers and verifies the machine-local
-server; `unity-mcp-skill` is what Claude then reads to drive the editor.
-Serves the director on Unity projects and Claude as the operator of one.
-Born for a single repository and expected to serve others — the working
-example of the decision above that a feature may start project-specific and
-generalize.

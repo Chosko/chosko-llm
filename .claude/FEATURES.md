@@ -199,3 +199,57 @@ Source: prompt
 Tasks: none
 
 ---
+
+## unity-mcp-removal — Delete the Unity MCP integration; keep its generic checkpoint behaviour in the human-in-the-loop protocol
+
+Status: [NEW]
+Doc: .claude/domain/features/unity-mcp-removal.md
+Source: product-design.md § Unity/MCP integration
+Tasks: none
+
+---
+
+## setup-sync — Setup commands offer every per-project fact a feature reads, guarded by `project-policy:` and `check-setup.sh`
+
+Status: [NEW]
+Doc: .claude/domain/features/setup-sync.md
+Source: prompt
+Tasks: none
+
+---
+
+## session-readers — `/session-list` and `/session-describe`, and path/date/slug resolution for every session command
+
+Status: [NEW]
+Doc: .claude/domain/features/session-readers.md
+Source: prompt
+Tasks: none
+
+---
+
+## quick-implement — `/quick-implement`: spec conversation to one commit, no backlog entry, docs caught up by `/pipeline-revise --catch-up`
+
+Status: [NEW]
+Doc: .claude/domain/features/quick-implement.md
+Source: prompt
+Tasks: none
+
+---
+
+## orchestrate-mode — `/orchestrate-mode`: a conversation that delegates every change to per-area agents with handoff files
+
+Status: [NEW]
+Doc: .claude/domain/features/orchestrate-mode.md
+Source: prompt
+Tasks: none
+
+---
+
+## objective-run — `/objective-run`: worker and checker rounds toward checkable criteria, with a committed, resumable log
+
+Status: [NEW]
+Doc: .claude/domain/features/objective-run.md
+Source: prompt
+Tasks: none
+
+---
