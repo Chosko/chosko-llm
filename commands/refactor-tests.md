@@ -1,6 +1,6 @@
 ---
 name: refactor-tests
-version: 0.3.2
+version: 0.3.4
 type: command
 description: Split oversized test files into smaller, focused files, running the test suite before and after each split so the baseline stays green. Use it when a test file has grown past a readable size; splitting only — no renaming, deduplication, import sorting or constant extraction.
 disable-model-invocation: true
@@ -41,13 +41,12 @@ Parse `$ARGUMENTS` for an optional `threshold=<N>` key-value pair
 (e.g. `threshold=200`). If absent, use 300.
 
 Also parse the optional `--commit` flag: if present, set COMMIT = true.
-When COMMIT is false (the default), the run leaves its splits uncommitted,
-exactly as before.
+When COMMIT is false (the default), the run leaves its splits uncommitted for
+review.
 
 Also parse the optional `--no-push` flag: if present, set NO_PUSH = true.
-NO_PUSH only matters when COMMIT is true — it skips the pull-at-start /
-re-sync / push steps of the commit-and-push protocol
-(docs/authoring-guide.md) while still committing as always. When COMMIT is
+NO_PUSH only matters when COMMIT is true — it skips the pull at start, the
+pre-push re-sync and the push while still committing as always. When COMMIT is
 true and no non-git `## VCS` override applies, pull at start here (before
 STEP 1) — run `git pull` on the current branch. A conflict stops the run
 immediately; report the conflict output and tell the user to resolve
@@ -180,8 +179,8 @@ If COMMIT is true (the pull-at-start from ARGUMENT PARSING already ran):
 4. Commit once: `git commit -m "Split oversized test files"`.
 5. On commit success, report the commit hash (`git rev-parse --short
    HEAD`). Then, unless NO_PUSH is true or the non-git VCS exemption
-   applies, re-sync (`git pull`) and push per docs/authoring-guide.md's
-   commit-and-push protocol.
+   applies, re-sync with `git pull` immediately before pushing — other
+   commits may have landed upstream during the run — then `git push`.
 6. On commit failure (e.g. a pre-commit hook rejects the commit): surface
    the exact output. Do NOT retry, amend, or use `--no-verify` /
    `--no-gpg-sign`. Files remain staged but uncommitted; tell the user.

@@ -1,6 +1,6 @@
 ---
 name: runbook-clean
-version: 0.2.4
+version: 0.2.5
 type: command
 description: Prune finished runbooks — delete each [DONE] runbook's body under .claude/runbooks/ and remove its .claude/RUNBOOKS.md index block, every finished runbook by default or exactly the ones named. Use it once a runbook's work has landed and its record is no longer needed.
 disable-model-invocation: true
@@ -56,6 +56,7 @@ what is left is this command's own argument — a list of runbooks, each as
 
 | Flag | Effect |
 | --- | --- |
+| `--commit` | Accepted and stripped, a silent no-op: committing is the default. Refused beside `--no-commit` with `--commit and --no-commit cannot be combined. Pick one.` |
 | `--no-commit` | Set NO_COMMIT = true. Delete and rewrite the index, but make no commit and no push. |
 | `--no-push` | Set NO_PUSH = true. Commit as usual, skip the pull/re-sync/push. |
 

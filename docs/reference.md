@@ -17,10 +17,10 @@ pushes by default and takes `--no-commit` / `--no-push` to hold back. That
 second group holds the backlog features and also the four design skills —
 `/product-design`, `/product-roadmap`, `/architect` and `/production-plan` —
 with `/runbook-create` and `/session-save`, whose output is read again by the
-next session, usually on another machine; those six accept `--commit` as a
-silent no-op. `/pipeline-revise` commits by default too, but owns the commit:
-every owner step it runs stays uncommitted, and the whole revision lands as
-one commit at the end.
+next session, usually on another machine. Every feature in that group
+accepts a bare `--commit` as a silent no-op. `/pipeline-revise` commits by
+default too, but owns the commit: every owner step it runs stays
+uncommitted, and the whole revision lands as one commit at the end.
 
 ---
 

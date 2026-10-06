@@ -1,6 +1,6 @@
 ---
 name: context-build
-version: 0.5.1
+version: 0.5.2
 type: skill
 description: Build a navigation context layer under .claude/context/ — an INDEX.md plus one context file per area of the codebase — so future sessions read a map instead of the source. Use it once on a project with no layer yet; flat by default, nested on request. Restructuring a layer is /context-convert's job.
 replaces: command:context-build
@@ -31,7 +31,7 @@ $ARGUMENTS
 ARGUMENT NOTE — before Phase 1, scan $ARGUMENTS for the optional `--commit`
 flag. If present, set COMMIT = true and strip it (the remaining text, if
 any, is a structure hint). When COMMIT is false (the default), the run
-leaves all output uncommitted, exactly as before.
+leaves all output uncommitted for review.
 
 Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
 matters when COMMIT is true: it skips the pull-at-start / re-sync / push

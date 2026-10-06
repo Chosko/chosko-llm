@@ -1,6 +1,6 @@
 ---
 name: architect
-version: 0.13.0
+version: 0.13.1
 type: skill
 description: Turn high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md and grounded in the technical direction or the existing code. Use it from a design section, named features or a bare prompt, or to amend an existing document; stage 3 of the pipeline: turns a design section into feature documents; its output is /task-add's input.
 ---
@@ -94,9 +94,8 @@ stripped, and is a silent no-op naming the default. `--commit` and
 `--commit and --no-commit cannot be combined. Pick one.`
 
 Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
-matters when COMMIT is true: it skips the pull-at-start / re-sync / push
-steps of the commit-and-push protocol (docs/authoring-guide.md) while
-still committing as always.
+matters when COMMIT is true: it skips the pull at start, the pre-push
+re-sync and the push while still committing as always.
 
 Also scan for the optional `--no-slices` flag and strip it. If present, set
 NO_SLICES = true: PHASE 0 skips the roadmap probe entirely and every target
@@ -433,8 +432,8 @@ ran):
    use the project's `## VCS` mapping in CLAUDE.md (git→`cm`).
 3. On commit success, report the commit hash (`git rev-parse --short
    HEAD`). Then, unless NO_PUSH is true or the non-git VCS exemption
-   applies, re-sync (`git pull`) and push per docs/authoring-guide.md's
-   commit-and-push protocol.
+   applies, re-sync with `git pull` immediately before pushing — other
+   commits may have landed upstream during the run — then `git push`.
 4. On commit failure (e.g. a pre-commit hook rejects the commit): surface
    the exact output. Do NOT retry, amend, or use `--no-verify` /
    `--no-gpg-sign`. Files remain staged but uncommitted; tell the user.

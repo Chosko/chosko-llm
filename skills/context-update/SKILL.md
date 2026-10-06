@@ -1,6 +1,6 @@
 ---
 name: context-update
-version: 1.5.0
+version: 1.5.1
 type: skill
 description: Update an existing navigation context layer after code changes — by default only the context files the commits since INDEX.md's Last updated date touched — then commit and push what it updated. Use it after landing code a context file describes.
 replaces: command:context-update
@@ -129,8 +129,9 @@ P.3 Parse $ARGUMENTS. First, check for the confirmation flag:
     If "--no-commit" is present in $ARGUMENTS, set NO_COMMIT = true and strip
     it before parsing the rest. When NO_COMMIT is true, PHASE 3 skips the
     auto-commit (and the push — nothing was committed) and leaves the
-    updated context files uncommitted. `--commit` and `--no-commit` are
-    mutually exclusive — if both appear, stop with:
+    updated context files uncommitted. A bare `--commit` is accepted
+    and stripped, a silent no-op — committing is the default. `--commit` and
+    `--no-commit` are mutually exclusive — if both appear, stop with:
     `--commit and --no-commit cannot be combined. Pick one.`
 
     --no-push flag (optional, combinable with any mode):

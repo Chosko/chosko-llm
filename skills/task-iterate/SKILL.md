@@ -1,6 +1,6 @@
 ---
 name: task-iterate
-version: 0.1.2
+version: 0.1.3
 type: skill
 description: Triage review findings it did not produce — fix, defer or reject each one, apply the fixes and record why the rest were not — on an uncommitted tree, a branch or a pull request. Use it after /task-review has reported; /task-implement's review rounds run it in-session between the review and the task's single commit.
 ---
@@ -101,6 +101,8 @@ Scan the argument string and strip these tokens, in any order and any position:
 - `base=<ref>` — override the base for branch mode. Meaningful only in branch
   mode; on a local or PR run, say it was ignored and continue.
 - `--no-commit` — apply the fixes and commit nothing. Implies `--no-push`.
+- `--commit` — accepted and stripped, a silent no-op: committing is the
+  default.
 - `--no-push` — commit as usual, skip the pull-at-start and the re-sync/push.
 
 `--commit` and `--no-commit` are mutually exclusive — if both appear, stop
