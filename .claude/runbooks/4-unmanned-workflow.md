@@ -20,7 +20,7 @@ Then merge `origin/master` into `unmanned` with a merge commit (never rebase), r
 
 Done: 2026-10-06, commit `eff9f9f` (25 files, +121/-110).
 
-## [ ] 2. Architect the interaction policy (A–D)
+## [x] 2. Architect the interaction policy (A–D)
 
 Depends on: 1
 
@@ -62,6 +62,8 @@ Questions
 
 Also in scope: this repo's own CLAUDE.md, the context layer and domain layer must describe the new policy. Out of scope until the experiment ships: README.md, docs/reference.md and other user-facing docs.
 ```
+
+Done: 2026-10-06, commit `4dd2316` (4 files, +353/-1). Decision: output and question rules apply under both policies; only gate classes depend on the policy.
 
 ## [ ] 3. Architect all remaining features in one sitting
 
