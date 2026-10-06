@@ -40,11 +40,10 @@ domain layer describing the policy.
 Deliberately out:
 
 - **Unattended by default.** The policy is opt-in: an absent line is
-  `attended`, and a project that never adds it keeps today's gate behaviour.
-- **Picking an option for the user.** No gate class, and no "trivial
-  question" exception, lets an agent choose among options on the user's
-  behalf. A real decision is parked where the feature can park, and
-  otherwise ends the run with the question.
+  `attended`, and a project that never adds it keeps each feature's own gate
+  behaviour.
+- **Picking an option for the user.** No gate class and no "trivial
+  question" exception changes the *Real decisions* rule below.
 - **A new parking mechanism.** Parking stays what each feature already owns
   — task parking in `task-engine`, step parking in `runbook-run`, and later
   objective runs. A feature with no mechanism stops instead of parking.
@@ -92,7 +91,7 @@ Three references, each opened only when it can apply:
   feature at argument parsing.
 - **`gates.md`** — the three gate classes, the auto-pass summary, and the
   park-else-stop rule for real decisions. Read only when the policy resolves
-  to `unattended`; under `attended` every gate waits, as today, and the file
+  to `unattended`; under `attended` every gate waits and the file
   is never opened.
 - **`messages.md`** — the output rules and the question rules. Read by every
   interactive feature before its first gate, question or closing report.
@@ -112,7 +111,7 @@ match wins:
 4. `attended`.
 
 This one rule absorbs `/task-implement`'s `--unattended` and `/runbook-run`'s
-`--attended` / `--unattended`: their flags keep working, now as instances of
+`--attended` / `--unattended`: their flags keep working as instances of
 the shared flags, and their own resolution passages are replaced by a
 citation. `/task-implement` gains `--attended`; `--skip-parked` stays a flag
 of the two parking features, with its existing refusals.
@@ -192,8 +191,8 @@ unusable.
 
 **Real decisions.** A question about the work — not a confirmation — is
 parked whenever the feature can park, and otherwise ends the run with the
-question. The agent never picks an option for the user. A run collects its
-questions and asks them together when it stops.
+question. The agent never picks an option for the user. Questions are asked
+together when the run stops, per *Questions* below.
 
 ### Output
 
@@ -241,7 +240,7 @@ The templates rewritten to these rules: `/task-implement`'s
 feature-completion proposal; the `task-engine` stale-task prompt; the
 parked-question lines of both parking mechanisms; `/pipeline-check`'s
 finding lines, message first — its rule against rewording a `lint.md`
-template now points at the rewritten templates; `/architect`'s amend
+template points at the rewritten templates; `/architect`'s amend
 evidence lines; and the one-line "Amended …" reports.
 
 ### Adoption
@@ -260,7 +259,7 @@ deletes it. The engines, the two suggesters, the claude-md artifacts, the
 hook, the statusline and the read-only listings are not interactive and
 take no dependency. Each adopting feature's change is a frontmatter line, a
 row in its supporting-files table, a class tag on each gate, the two flags,
-and the deletion of every passage the engine now states.
+and the deletion of every passage the engine states.
 
 Two passages of [unattended-parking](./unattended-parking.md) are
 superseded and are rewritten with the domain layer: *the policy and its
@@ -308,7 +307,7 @@ Interaction policy: unattended               (CLAUDE.md) the project's default f
 Failure contract: `--attended` beside `--unattended` is an argument error; a
 `CLAUDE.md` policy value outside the two words is an argument error naming
 it; an auto-passed gate whose commit fails stops the run exactly as that
-feature's commit failure does today, and nothing after it auto-passes; a
+feature's own commit failure does; a
 missing `interaction-engine` install is caught by `requires:` at
 `chosko-llm add` time.
 
