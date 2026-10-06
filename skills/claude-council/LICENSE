@@ -1,15 +1,5 @@
-chosko-llm
-Copyright 2026 Ruben Caliandro (Chosko)
-https://github.com/Chosko/chosko-llm
-
-This product is licensed under the Apache License, Version 2.0 (see LICENSE).
-Redistributions, modified or not, must carry this NOTICE file.
-
--------------------------------------------------------------------------------
-
-This product includes software from claude-council
-(https://github.com/TorpedoD/claude-council), vendored under
-skills/claude-council/ and distributed under the MIT License:
+claude-council is the work of TorpedoD — https://github.com/TorpedoD/claude-council
+This folder is a vendored copy, adapted for chosko-llm; the license below is upstream's.
 
 MIT License
 

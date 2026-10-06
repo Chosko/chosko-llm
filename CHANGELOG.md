@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.76.1 — 2026-10-06
+
+- **`claude-council` ships its upstream license.** The installed skill folder carries TorpedoD's MIT `LICENSE`, crediting the original project.
+
 ## 1.76.0 — 2026-10-02
 
 - **`/context-update` keeps test context files lean.** A context file about a test tree (`<unit>-tests.md`) holds only where each kind of test goes and how the suite runs, plus tripwires — tests an unrelated-looking change will break, one line each. It never lists what each test asserts; a test that only adds coverage adds nothing, and an existing catalogue line is removed rather than updated.

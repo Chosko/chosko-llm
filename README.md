@@ -9,7 +9,7 @@ Every decision, plan and handoff lives as plain Markdown in your repo,
 so the next session — yours, a teammate's or an unattended agent's —
 starts from what was decided, not from a blank chat.
 
-[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Built for Claude Code](https://img.shields.io/badge/built%20for-Claude%20Code-d97757.svg)](https://claude.com/claude-code)
 [![bash · no dependencies](https://img.shields.io/badge/bash-no%20dependencies-4eaa25.svg)](#the-cli)
 
@@ -470,5 +470,6 @@ versioning rules — is covered in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-[Apache License 2.0](LICENSE). Redistributions must keep the copyright
-notice and the attributions in [NOTICE](NOTICE).
+[MIT](LICENSE). Copies must keep the copyright notice. The vendored
+`claude-council` skill is © TorpedoD, MIT-licensed, with its own
+[LICENSE](skills/claude-council/LICENSE).

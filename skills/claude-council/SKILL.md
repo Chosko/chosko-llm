@@ -1,6 +1,6 @@
 ---
 name: claude-council
-version: 0.1.4
+version: 0.1.5
 type: skill
 description: 'Pressure-test a high-stakes decision with a structured LLM Council — five thinking-lens advisors, anonymised peer review, forced debate when consensus looks too clean, and a dual-chairman synthesis that preserves dissent. Trigger on /claude-council, "convene the council", "council this", "pressure-test this", "stress-test this", "war room this", "debate this", "torn between two options", "this is a big decision", "I need outside perspectives". Not for factual questions, coding help, debugging, quick yes/no calls, or emotional support.'
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent, AskUserQuestion
