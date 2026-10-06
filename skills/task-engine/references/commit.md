@@ -20,6 +20,10 @@ and `/task-implement`'s `ARGUMENT PARSING`, `PRE-FLIGHT` step 5 and
 
 ## The flags
 
+`--commit`: accepted and stripped, a silent no-op — committing is already
+the default, so a bare `--commit` never reaches what the consumer parses
+next.
+
 `--no-commit`: skip committing (and pushing) entirely; the changes stay
 uncommitted in the working tree. `--commit` and `--no-commit` are mutually
 exclusive — if both appear, stop with:

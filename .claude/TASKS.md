@@ -488,7 +488,7 @@ Preconditions: none
 
 ## 279. Accept a bare `--commit` as a silent no-op on every commit-by-default feature
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-engine/references/commit.md, skills/task-engine/SKILL.md, commands/task-add.md, skills/task-clean/SKILL.md, skills/task-implement/SKILL.md, skills/task-iterate/SKILL.md, skills/context-update/SKILL.md, skills/runbook-run/SKILL.md, commands/runbook-clean.md, commands/runbook-prune.md, docs/authoring-guide.md, docs/reference.md, VERSION, CHANGELOG.md
 Preconditions: 278

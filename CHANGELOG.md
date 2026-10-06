@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.76.2 — 2026-10-06
+
+- **A bare `--commit` is a silent no-op on every feature that commits by default.** `/task-add`, `/task-clean`, `/task-implement`, `/task-iterate`, `/context-update`, `/runbook-run`, `/runbook-clean` and `/runbook-prune` strip it and carry on, as the design skills already did — `/task-add` no longer leaves it in the task description. `--commit` beside `--no-commit` is still refused.
+
 ## 1.76.1 — 2026-10-06
 
 - **Commit-and-push steps are spelled out in every authoring body.** `/refactor-codebase`, `/refactor-tests`, `/unity-mcp-setup`, `/task-setup`, `/domain-setup`, `/project-setup`, `/product-design`, `/product-roadmap`, `/architect` and the task engine's commit rules state their pull, re-sync and push steps themselves instead of pointing at a docs file that is never installed. Behaviour is unchanged.

@@ -998,9 +998,9 @@ either kind unchanged:
   where an uncommitted working tree helps nobody; the design skills among
   them gate the director's review inside the run.
 
-  `/product-design`, `/product-roadmap`, `/architect`, `/production-plan`,
-  `/pipeline-revise`, `/runbook-create` and `/session-save` also accept
-  `--commit`, as a silent no-op naming the default.
+  Every feature that commits by default also accepts a bare `--commit`,
+  stripped as a silent no-op naming the default, and refuses it beside
+  `--no-commit`.
 
 `/task-review` belongs to neither group: it never commits anything, because it
 never changes anything. It is read-only by contract — no edit to a source file,

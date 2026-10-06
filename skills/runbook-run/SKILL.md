@@ -1,6 +1,6 @@
 ---
 name: runbook-run
-version: 0.19.2
+version: 0.19.3
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user — or, under the `unattended` policy, parking the step that asked and going on — recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
 requires: command:follow-ups, skill:follow-ups-resolve
@@ -186,6 +186,7 @@ under `--inline`.
 | `--unattended` | Run under the `unattended` execution policy for this whole run, whatever the header says: a step that asks a question is parked and the run goes on (`./references/parking.md`). At launch, unless `--skip-parked`, the `[P]` steps in range are pre-asked. |
 | `--attended` | Run under the `attended` policy for this whole run, overriding a header `Execution policy: unattended`: a question is relayed and the run waits. Refused beside `--unattended`. |
 | `--skip-parked` | No pre-ask at launch: a `[P]` step in range stays parked unless a reply in chat answers it. For a launch no human sees — a routine, a scheduler, an orchestrator that is itself a subagent. Requires `--unattended`. |
+| `--commit` | Accepted and stripped, a silent no-op: committing is the default. Refused beside `--no-commit` with `--commit and --no-commit cannot be combined. Pick one.` |
 | `--no-commit` | Do the work and write the bookkeeping, but commit nothing. Implies `--no-push`. |
 | `--no-push` | Commit each step as usual, skip the push. |
 
