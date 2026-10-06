@@ -193,10 +193,10 @@ Tasks: 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 275, 276
 
 ## interaction-policy — One opt-in policy for gates, gate summaries, reports and questions across every interactive feature
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/interaction-policy.md
 Source: prompt
-Tasks: none
+Tasks: 281, 282, 283, 284, 285, 286, 287
 
 ---
 

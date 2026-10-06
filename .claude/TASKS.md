@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 280
+Last task number: 287
 
 ---
 
@@ -501,5 +501,75 @@ Status: [DONE]
 Target: claude
 Files: commands/refactor-codebase.md, commands/refactor-tests.md, skills/context-build/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 278
+
+---
+
+## 281. Add the `interaction-engine` reference skill
+
+Status: [MISSING]
+Target: claude
+Files: skills/interaction-engine/SKILL.md, skills/interaction-engine/references/policy.md, skills/interaction-engine/references/gates.md, skills/interaction-engine/references/messages.md, VERSION, CHANGELOG.md
+Preconditions: none
+Feature: interaction-policy
+
+---
+
+## 282. Adopt the interaction policy in the `task-*` suite
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, skills/task-implement/no-test-suite.md, skills/task-engine/SKILL.md, skills/task-engine/references/parking.md, skills/task-engine/references/stale.md, skills/task-engine/references/amend.md, commands/task-add.md, commands/task-setup.md, skills/task-iterate/SKILL.md, skills/task-clean/SKILL.md, skills/task-clean/backfill.md, VERSION, CHANGELOG.md
+Preconditions: 281
+Feature: interaction-policy
+
+---
+
+## 283. Adopt the interaction policy in the runbook suite
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/SKILL.md, skills/runbook-run/references/subagent-contract.md, skills/runbook-run/references/inline-contract.md, skills/runbook-run/references/parking.md, skills/runbook-run/references/step-amend.md, commands/runbook-create.md, commands/runbook-clean.md, commands/runbook-prune.md, VERSION, CHANGELOG.md
+Preconditions: 281
+Feature: interaction-policy
+
+---
+
+## 284. Adopt the interaction policy in the pipeline's authoring stages
+
+Status: [MISSING]
+Target: claude
+Files: skills/architect/SKILL.md, skills/architect/amend.md, skills/product-design/SKILL.md, skills/product-design/amend.md, skills/product-roadmap/SKILL.md, skills/product-roadmap/amend.md, skills/production-plan/SKILL.md, skills/production-plan/amend.md, skills/production-plan/reconciling.md, commands/domain-setup.md, VERSION, CHANGELOG.md
+Preconditions: 281
+Feature: interaction-policy
+
+---
+
+## 285. Rewrite `/pipeline-revise`'s gate and `/pipeline-check`'s findings to the interaction policy
+
+Status: [MISSING]
+Target: claude
+Files: skills/pipeline-revise/SKILL.md, skills/pipeline-revise/amend.md, skills/pipeline-revise/delete.md, skills/pipeline-revise/insert.md, skills/pipeline-revise/reorder.md, commands/pipeline-check.md, skills/pipeline-engine/references/lint.md, VERSION, CHANGELOG.md
+Preconditions: 281
+Feature: interaction-policy
+
+---
+
+## 286. Adopt the interaction policy in the context, refactor, setup and session features
+
+Status: [MISSING]
+Target: claude
+Files: skills/context-build/SKILL.md, skills/context-build/nested.md, skills/context-update/SKILL.md, skills/context-convert/SKILL.md, commands/refactor-codebase.md, commands/refactor-tests.md, skills/doc-consolidate/SKILL.md, commands/project-setup.md, commands/session-save.md, skills/follow-ups-resolve/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: 281
+Feature: interaction-policy
+
+---
+
+## 287. Update documentation for feature `interaction-policy`
+
+Status: [MISSING]
+Target: claude
+Files: CLAUDE.md, .claude/context/INDEX.md, .claude/context/features.md, .claude/context/interaction-engine.md, .claude/context/task-engine.md, .claude/context/task-implement.md, .claude/context/task-implement-delegation.md, .claude/context/runbook-run-loop.md, .claude/context/runbook-run-contracts.md, .claude/context/pipeline.md, .claude/context/pipeline-revise-plan.md, .claude/domain/task-workflow.md, .claude/domain/product-workflow.md, .claude/domain/features/unattended-parking.md, .claude/domain/features/runbook-suite.md, .claude/domain/features/runbook-inline.md, .claude/domain/features/pipeline-revision.md, .claude/domain/features/owner-amend-arms.md
+Preconditions: 281, 282, 283, 284, 285, 286
+Feature: interaction-policy
 
 ---
