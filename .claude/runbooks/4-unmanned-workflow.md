@@ -133,7 +133,7 @@ Read `.claude/domain/features/interaction-policy.md` (written by the previous st
 
 Done: 2026-10-06, commits `769f344`, `b4df3f8` (10 files, +1135/-25). Also applied the editorial amend of interaction-policy flagged by the review of step 2.
 
-## [ ] 4. Task the interaction policy
+## [x] 4. Task the interaction policy
 
 Depends on: 2
 
@@ -145,13 +145,16 @@ Context: none
 /task-add feature=interaction-policy
 ```
 
+Done: 2026-10-06, commit `20db180` (9 files, +411/-3). Tasks 281–287; task 287 may edit five architect-owned feature docs, by the user-approved exception recorded in its Decisions.
+
 ## [ ] 5. Rewrite pilot: measure cost on 4 files (scratch, no commit)
 
 Depends on: 1
 
 Needs: agent+human
 
-Context: none
+Context:
+- 2026-10-06 (orchestrator): this is a cloud session, so a step agent cannot spawn subagents and every child goes through the spawn relay (cap 8 per step). Batch by role: one relay child per role per round covering all four files (rewriter → reviewer → fixer → reviewer …), at most 3 rounds, so at most 6 relay rounds. A child cannot see its own token usage; the orchestrator records each relayed child's tokens and adds the totals to this step's Done: line — report everything else.
 
 ```prompt
 A cost pilot for a later lossless rewrite of every shipped body (commands/, skills/*/SKILL.md, skills/*/*.md, skills/*/references/*.md, claude-md/ — about 102 files, ~196k words) into an imperative, bullet-style, protocol-first form. This step only measures; it writes nothing to the repo and commits nothing.
