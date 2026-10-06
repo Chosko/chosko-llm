@@ -1,6 +1,6 @@
 ---
 name: refactor-codebase
-version: 0.3.3
+version: 0.3.4
 type: command
 description: Refactor a codebase by applying clean-code principles — extract constants and enums, eliminate duplication, split oversized files, clean imports, rename ambiguous identifiers — without changing observable behaviour, plan-first and test-suite-protected. Use it on a codebase that works but has grown untidy, whole or limited to a scope or a single concern.
 disable-model-invocation: true
@@ -70,7 +70,7 @@ P.2 Parse $ARGUMENTS:
 
     --commit (optional flag) — if present, set COMMIT = true; the refactor
     is committed (and pushed) at the end (see PHASE 6). When COMMIT is
-    false (the default), the run leaves all changes uncommitted, as before.
+    false (the default), the run leaves all changes uncommitted for review.
 
     --no-push (optional flag, only meaningful with --commit) — if present,
     set NO_PUSH = true; PHASE 6 skips the pull at start, the pre-push

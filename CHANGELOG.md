@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.76.3 — 2026-10-06
+
+- **`/refactor-codebase`, `/refactor-tests` and `/context-build` state their uncommitted default as a plain rule.** Wording only; behaviour is unchanged.
+
 ## 1.76.2 — 2026-10-06
 
 - **A bare `--commit` is a silent no-op on every feature that commits by default.** `/task-add`, `/task-clean`, `/task-implement`, `/task-iterate`, `/context-update`, `/runbook-run`, `/runbook-clean` and `/runbook-prune` strip it and carry on, as the design skills already did — `/task-add` no longer leaves it in the task description. `--commit` beside `--no-commit` is still refused.

@@ -497,7 +497,7 @@ Preconditions: 278
 
 ## 280. Remove history wording from `/refactor-codebase`, `/refactor-tests` and `/context-build`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/refactor-codebase.md, commands/refactor-tests.md, skills/context-build/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 278

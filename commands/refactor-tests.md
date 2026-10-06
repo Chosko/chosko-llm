@@ -1,6 +1,6 @@
 ---
 name: refactor-tests
-version: 0.3.3
+version: 0.3.4
 type: command
 description: Split oversized test files into smaller, focused files, running the test suite before and after each split so the baseline stays green. Use it when a test file has grown past a readable size; splitting only — no renaming, deduplication, import sorting or constant extraction.
 disable-model-invocation: true
@@ -41,8 +41,8 @@ Parse `$ARGUMENTS` for an optional `threshold=<N>` key-value pair
 (e.g. `threshold=200`). If absent, use 300.
 
 Also parse the optional `--commit` flag: if present, set COMMIT = true.
-When COMMIT is false (the default), the run leaves its splits uncommitted,
-exactly as before.
+When COMMIT is false (the default), the run leaves its splits uncommitted for
+review.
 
 Also parse the optional `--no-push` flag: if present, set NO_PUSH = true.
 NO_PUSH only matters when COMMIT is true — it skips the pull at start, the
