@@ -108,7 +108,10 @@ agents that cannot run `install.sh` still have the commands they need.
   `/product-roadmap`, `/architect`, `/production-plan` — add no such pause:
   their review happens inside the run, at their own approval gates, and
   their output is read by the next session on another machine, so they
-  commit and push by default and take `--no-commit` to hold back.
+  commit and push by default and take `--no-commit` to hold back. Under
+  the opt-in `unattended` interaction policy a gate that only confirms
+  passes on its own and names the commit that undoes it; gates that carry
+  design judgement or destroy a record still wait.
 - **Governance stays simple on purpose.** One person holds write access;
   authoring teammates open pull requests. A richer permission model was
   judged not worth the scope.
