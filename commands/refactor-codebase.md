@@ -1,6 +1,6 @@
 ---
 name: refactor-codebase
-version: 0.3.2
+version: 0.3.3
 type: command
 description: Refactor a codebase by applying clean-code principles — extract constants and enums, eliminate duplication, split oversized files, clean imports, rename ambiguous identifiers — without changing observable behaviour, plan-first and test-suite-protected. Use it on a codebase that works but has grown untidy, whole or limited to a scope or a single concern.
 disable-model-invocation: true
@@ -73,9 +73,8 @@ P.2 Parse $ARGUMENTS:
     false (the default), the run leaves all changes uncommitted, as before.
 
     --no-push (optional flag, only meaningful with --commit) — if present,
-    set NO_PUSH = true; PHASE 6 skips the pull-at-start / re-sync / push
-    steps of the commit-and-push protocol (docs/authoring-guide.md) while
-    still committing as always. When COMMIT is true and no non-git `## VCS`
+    set NO_PUSH = true; PHASE 6 skips the pull at start, the pre-push
+    re-sync and the push while still committing as always. When COMMIT is true and no non-git `## VCS`
     override applies, pull at start here (before P.3) — run `git pull` on
     the current branch. A conflict stops the run immediately; report the
     conflict output and tell the user to resolve manually and re-run.
@@ -300,8 +299,8 @@ REPORT) — the pull-at-start from P.2 already ran:
    repo's existing commit style.
 4. On commit success, report the commit hash (`git rev-parse --short
    HEAD`). Then, unless NO_PUSH is true or the non-git VCS exemption
-   applies, re-sync (`git pull`) and push per docs/authoring-guide.md's
-   commit-and-push protocol.
+   applies, re-sync with `git pull` immediately before pushing — other
+   commits may have landed upstream during the run — then `git push`.
 5. On commit failure (e.g. a pre-commit hook rejects the commit): surface
    the exact output. Do NOT retry, amend, or use `--no-verify` /
    `--no-gpg-sign`. Files remain staged but uncommitted; tell the user.

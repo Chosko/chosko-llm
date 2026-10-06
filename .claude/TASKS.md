@@ -479,7 +479,7 @@ Preconditions: none
 
 ## 278. Stop shipped bodies from citing `docs/authoring-guide.md`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/refactor-codebase.md, commands/refactor-tests.md, commands/unity-mcp-setup.md, commands/task-setup.md, commands/domain-setup.md, commands/project-setup.md, skills/product-design/SKILL.md, skills/product-roadmap/SKILL.md, skills/architect/SKILL.md, skills/task-engine/references/commit.md, skills/task-engine/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: none

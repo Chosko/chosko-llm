@@ -9,13 +9,12 @@ AND PUSH`, `/task-clean`'s `ARGUMENT NOTE` and `PHASE 3 — COMMIT AND PUSH`,
 and `/task-implement`'s `ARGUMENT PARSING`, `PRE-FLIGHT` step 5 and
 `Step 7`.
 
-> **A note on the protocol's name.** The consumers all defer to
-> `docs/authoring-guide.md`'s commit-and-push protocol *by name*, and this
-> file keeps that wording. It is a citation of where the protocol was
-> authored, for a reader working on the `chosko-llm` repo — never an
-> instruction to open that path at run time. `docs/` is authoring-time-only
-> and is not installed, so the four numbered steps under **The push
-> protocol** below stand on their own and nothing needs fetching.
+> **A note on the protocol's origin.** The commit-and-push protocol was
+> authored in `docs/authoring-guide.md`. That is a citation for a reader
+> working on the `chosko-llm` repo — never an instruction to open that path
+> at run time. `docs/` is authoring-time-only and is not installed, so the
+> four numbered steps under **The push protocol** below stand on their own
+> and nothing needs fetching.
 
 ---
 
@@ -28,8 +27,8 @@ exclusive — if both appear, stop with:
 implies NO_PUSH true — nothing is committed to push.
 
 `--no-push`: only matters when NO_COMMIT is false. It skips the
-pull-at-start / re-sync / push steps of the commit-and-push protocol
-(docs/authoring-guide.md) while still committing as always.
+pull at start, the pre-push re-sync and the push of **The push protocol**
+below while still committing as always.
 
 Under `--no-commit`, report what was written or changed and remind the user
 that nothing was committed — they should commit when ready. Do not run any
@@ -74,8 +73,7 @@ parking branch, `./parking.md`.
 ## The push protocol
 
 Every command that commits (whether by default or under `--commit`) also
-pushes, once it has actually committed something, per
-docs/authoring-guide.md's commit-and-push protocol:
+pushes, once it has actually committed something, in four steps:
 
 1. **Pull at start**, as above.
 2. Do the command's own work and commit exactly as already specified above.

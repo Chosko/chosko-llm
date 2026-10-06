@@ -1,6 +1,6 @@
 ---
 name: product-roadmap
-version: 0.4.0
+version: 0.4.1
 type: skill
 description: Write the product's roadmap into .claude/domain/product-roadmap.md — ordered milestones, each with a goal, exit criteria, rationale and the scope slices it takes from each high-level feature. Use it once the design exists, or from a bare description, and re-run it to revise; stage 2 of the pipeline: turns the design into ordered milestones; its output is /architect's input.
 ---
@@ -70,9 +70,8 @@ stripped, and is a silent no-op naming the default. `--commit` and
 `--commit and --no-commit cannot be combined. Pick one.`
 
 Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
-matters when COMMIT is true: it skips the pull-at-start / re-sync / push
-steps of the commit-and-push protocol (docs/authoring-guide.md) while still
-committing as always.
+matters when COMMIT is true: it skips the pull at start, the pre-push
+re-sync and the push while still committing as always.
 
 Then check whether what remains opens with the literal token `amend`
 followed by a quoted change. If so, set AMEND = true: the change is the
@@ -408,8 +407,8 @@ ran):
    use the project's `## VCS` mapping in CLAUDE.md (git→`cm`).
 3. On commit success, report the commit hash (`git rev-parse --short HEAD`).
    Then, unless NO_PUSH is true or the non-git VCS exemption applies,
-   re-sync (`git pull`) and push per docs/authoring-guide.md's
-   commit-and-push protocol.
+   re-sync with `git pull` immediately before pushing — other
+   commits may have landed upstream during the run — then `git push`.
 4. On commit failure (e.g. a pre-commit hook rejects the commit): surface
    the exact output. Do NOT retry, amend, or use `--no-verify` /
    `--no-gpg-sign`. Files remain staged but uncommitted; tell the user.

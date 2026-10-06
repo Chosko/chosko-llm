@@ -1,6 +1,6 @@
 ---
 name: task-setup
-version: 2.0.2
+version: 2.0.3
 type: command
 description: Initialize the project's task backlog — creates .claude/TASKS.md, the .claude/tasks/ directory and the test-dispatch wrappers under .claude/external/. Run it once on a project before its first /task-add; a re-run only creates what is missing.
 disable-model-invocation: true
@@ -48,8 +48,8 @@ By default this is a pure authoring command: it writes the scaffolding and
 leaves everything uncommitted in the working tree, matching `/context-build`
 and the other authoring commands. The user reviews and commits when ready.
 Passing `--commit` opts in to committing exactly what this run wrote, then
-pushing per docs/authoring-guide.md's commit-and-push protocol (see
-PHASE — COMMIT below); `--commit --no-push` commits without pushing.
+pushing (see PHASE — COMMIT below); `--commit --no-push` commits without
+pushing.
 
 This command shells out for exactly two things: filesystem prep (`mkdir -p`
 for `.claude/tasks` and `.claude/external`, `chmod +x` on the wrapper
@@ -65,13 +65,12 @@ If present, set COMMIT = true. When COMMIT is false (the default), the run
 leaves its scaffolding uncommitted.
 
 Also parse the optional `--no-push` flag; if present, set NO_PUSH = true.
-NO_PUSH only matters when COMMIT is true: it skips the pull-at-start /
-re-sync / push steps of the commit-and-push protocol
-(docs/authoring-guide.md) while still committing as always. When COMMIT is
-false, there is nothing to push regardless of NO_PUSH.
+NO_PUSH only matters when COMMIT is true: it skips the pull at start, the
+pre-push re-sync and the push while still committing as always. When
+COMMIT is false, there is nothing to push regardless of NO_PUSH.
 
 If COMMIT is true and the project's CLAUDE.md does not carry a `## VCS`
-override (non-git), pull at start per the commit-and-push protocol: run
+override (non-git), pull at start: run
 `git pull` on the current branch before any artifact is checked. A conflict
 stops the run here — report the conflict output and tell the user to
 resolve manually and re-run.
@@ -155,8 +154,8 @@ If COMMIT is true:
    `git add .`, or `git add -u`.
 3. On commit success, report the commit hash (`git rev-parse --short HEAD`).
    Then, unless NO_PUSH is true or this project's CLAUDE.md carries a
-   `## VCS` override, re-sync (`git pull`) and `git push` per
-   docs/authoring-guide.md's commit-and-push protocol.
+   `## VCS` override, re-sync with `git pull` immediately before pushing —
+   other commits may have landed upstream during the run — then `git push`.
 4. On commit failure (e.g. a pre-commit hook rejects the commit): surface
    the exact output. Do NOT retry, amend, or use `--no-verify` /
    `--no-gpg-sign`. Files remain staged but uncommitted; tell the user.

@@ -1,6 +1,6 @@
 ---
 name: project-setup
-version: 0.7.3
+version: 0.7.4
 type: command
 description: Interactive first-time project initialization wizard — gathers every choice up front (VCS, CLAUDE.md content, AGENTS.md, task backlog, domain layer, context layer), confirms once, then runs /task-setup, /domain-setup and /context-build in a fixed order. Use it once, on a project the chosko-llm tooling has not been set up on yet.
 disable-model-invocation: true
@@ -123,12 +123,11 @@ with: `--commit and --no-commit cannot be combined. Pick one.` COMMIT drives
 the commit behavior described in COMMIT POLICY above and PHASE 3 below.
 
 Also scan for the optional `--no-push` flag; if present, set NO_PUSH = true
-and strip it. NO_PUSH only matters when COMMIT is true: it skips the
-pull-at-start / re-sync / push steps of Step 4c's commit-and-push protocol
-(docs/authoring-guide.md), and is forwarded to every nested command invoked
-with `--commit` below. If COMMIT is true and the project's chosen VCS is
-git (not a non-git `## VCS` exemption), pull at start per the protocol —
-run `git pull` on the current branch before PHASE 2 (EXECUTE) begins. A
+and strip it. NO_PUSH only matters when COMMIT is true: it skips the pull
+at start below and Step 4c's pre-push re-sync and push, and is forwarded to
+every nested command invoked with `--commit` below. If COMMIT is true and
+the project's chosen VCS is git (not a non-git `## VCS` exemption), pull at
+start — run `git pull` on the current branch before PHASE 2 (EXECUTE) begins. A
 conflict stops the run here — report the conflict output and tell the
 user to resolve manually and re-run.
 
@@ -506,8 +505,8 @@ already present), make no commit (and no push). Stage only the explicit
 paths written — never a catch-all (`git add -A`/`.`/`-u`). On a non-git
 VCS, use the `## VCS` mapping (git→`cm`) and skip the push step entirely
 (per that section's push exemption). On commit success, unless NO_PUSH is
-true, re-sync (`git pull`) and `git push` per docs/authoring-guide.md's
-commit-and-push protocol; on push failure or a pre-push conflict, surface
+true, re-sync with `git pull` immediately before pushing — other commits
+may have landed upstream during the run — then `git push`; on push failure or a pre-push conflict, surface
 the exact output, never retry or force-push — the commit exists locally
 and needs a manual sync + push. On commit failure (e.g. a pre-commit
 hook), surface the output; do NOT retry, amend, or use hook-skipping

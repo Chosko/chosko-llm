@@ -1,6 +1,6 @@
 ---
 name: unity-mcp-setup
-version: 0.2.3
+version: 0.2.4
 type: command
 description: Make a Unity project ready for MCP-assisted task implementation — install the Unity-side MCP package, record the project-side marker in CLAUDE.md and the context layer, and register and verify the machine-local UnityMCP server. Use it once per Unity project and once per machine; a re-run configures only what is missing.
 disable-model-invocation: true
@@ -49,9 +49,8 @@ leaves every VERSIONED file it writes — `Packages/manifest.json`,
 UNCOMMITTED in the working tree for you to review and commit in one pass,
 matching the other authoring commands (`/project-setup`, `/context-build`,
 the `/refactor-*` commands). With `--commit` it commits
-exactly those written paths in one focused commit, then pushes per
-docs/authoring-guide.md's commit-and-push protocol (`--commit --no-push`
-commits without pushing).
+exactly those written paths in one focused commit, then pushes as Step F
+says (`--commit --no-push` commits without pushing).
 
 The Claude-side `claude mcp add` registration is NOT a repo change — it
 writes machine-local, per-project config into `~/.claude.json` (local
@@ -65,9 +64,8 @@ present, set COMMIT = true and strip it. COMMIT drives PHASE 3's Step F
 only.
 
 Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
-matters when COMMIT is true: it skips the pull-at-start / re-sync / push
-steps of Step F's commit-and-push protocol (docs/authoring-guide.md) while
-still committing as always. If COMMIT is true and the project's CLAUDE.md
+matters when COMMIT is true: it skips the pull at start below and Step F's
+pre-push re-sync and push while still committing as always. If COMMIT is true and the project's CLAUDE.md
 does not carry a `## VCS` override (non-git), pull at start — run
 `git pull` on the current branch before PHASE 0 begins. A conflict stops
 the run here — report the conflict output and tell the user to resolve
@@ -327,8 +325,9 @@ commit (and no push). Never stage a catch-all (`git add -A`/`.`/`-u`). The
 Claude-side registration is NOT part of this commit — it lives outside the
 repo. On a non-git VCS, use the project's `## VCS` mapping (git→`cm`) and
 skip the push step entirely (per that section's push exemption). On
-commit success, unless NO_PUSH is true, re-sync (`git pull`) and
-`git push` per docs/authoring-guide.md's commit-and-push protocol; on push
+commit success, unless NO_PUSH is true, re-sync with `git pull`
+immediately before pushing — other commits may have landed upstream during
+the run — then `git push`; on push
 failure or a pre-push conflict, surface the exact output, never retry or
 force-push — the commit exists locally and needs a manual sync + push. On
 commit failure (e.g. a pre-commit hook), surface the output; do NOT retry,
