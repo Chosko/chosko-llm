@@ -250,7 +250,7 @@ Context: none
 
 Done: 2026-10-07, commit `49eb078` (6 files, +275/-3). Tasks 306–309; pipeline-suggest stays silent while the mode is on.
 
-## [ ] 18. Task objective-run
+## [x] 18. Task objective-run
 
 Depends on: 3
 
@@ -259,6 +259,8 @@ Context: none
 ```prompt
 /task-add feature=objective-run
 ```
+
+Done: 2026-10-07, commit `f09226c` (4 files, +177/-3). Tasks 310–311; each round's log commit is pushed, no --no-commit/--no-push.
 
 ## [ ] 7. Implement the interaction policy
 
