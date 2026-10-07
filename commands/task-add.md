@@ -1,9 +1,9 @@
 ---
 name: task-add
-version: 2.5.8
+version: 2.6.0
 type: command
 description: Plan one new task with the user and write it to the backlog — a summary block in TASKS.md plus a body file — from a prose description or from an /architect feature document. Use it for any new unit of work; stage 5 of the pipeline: turns a feature document into tasks; its output is /task-implement's input.
-requires: skill:task-engine
+requires: skill:task-engine, skill:interaction-engine
 ---
 
 # /task-add
@@ -27,10 +27,13 @@ requires: skill:task-engine
 # with target claude+human or human. A drafted task that names a document
 # another pipeline command owns has every design change it implies agreed at
 # the approval gate and recorded in its body, so the implementer never has to
-# ask. Commits and pushes what it wrote by default.
+# ask. Commits and pushes what it wrote by default. Under the `unattended`
+# interaction policy (`--unattended`, or the `CLAUDE.md` line) the approval
+# gate passes on its own; an open question stops the run with nothing written.
 # Usage: /task-add [--short] [--no-split] [--before <N> | --after <N>] [--no-commit] [--no-push] <free-form description of the task>
 #        /task-add feature=<slug> [--no-split] [--before <N> | --after <N>] [--no-commit] [--no-push] [scope-narrowing text]
 #        /task-add feature=<slug> --single [--before <N> | --after <N>] [--no-commit] [--no-push] <description of the one task>
+#        /task-add <any of the above> --attended | --unattended
 # Example: /task-add fix the URL normalization so two LinkedIn URLs dedupe
 # Example: /task-add --short document the current deployment method
 # Example: /task-add --no-split add CSV export and PDF export commands
@@ -63,7 +66,8 @@ implies — see PLACEMENT. With `feature=<slug> --single`, exactly one task is
 attached to a `[PLANNED]` feature without re-planning it — see SINGLE-TASK
 ATTACHMENT.
 
-Never write to any file before the user confirms the draft.
+Never write to any file before the draft is approved — by the user, or by
+PHASE 3's gate passing on its own under `unattended`.
 
 $ARGUMENTS
 
@@ -72,6 +76,17 @@ everything they gate, are
 `../skills/task-engine/references/commit.md`.
 Scan `$ARGUMENTS` for them before PHASE 1 and strip whichever appear; what
 is left, after the flags below are stripped too, is the task description.
+
+Also scan for the optional `--attended` and `--unattended` flags and strip
+whichever appear. The run's interaction policy resolves from them, a policy
+handed down by a parent run and the project's `CLAUDE.md`, per
+`../skills/interaction-engine/references/policy.md`, which also holds their
+argument errors. When it resolves to `unattended`, read
+`../skills/interaction-engine/references/gates.md`: each gate below carries
+its class tag, and this command cannot park, so whatever waits stops the run
+with nothing written. Read `../skills/interaction-engine/references/messages.md`
+before the first question or gate; every question and every gate summary
+this command prints follows it.
 
 Also scan for the optional `--no-split` flag (independent of `--no-commit`,
 coexists with it). If present, set NO_SPLIT = true and
@@ -401,6 +416,10 @@ This looks like it would work better as N tasks:
 Split into N tasks, keep as one, or adjust the breakdown?
 ```
 
+Gate class: `design`. Under `unattended` the run stops here with this
+proposal, together with any PHASE 2 question already known, and writes
+nothing.
+
 - On acceptance (as proposed or after adjustment): set SPLIT = the
   confirmed ordered list of parts (title + one-line scope each). Note
   which parts depend on earlier parts (used later to auto-wire
@@ -426,6 +445,10 @@ under `--short`.
 
 If there are zero open questions after PHASE 1 (and PHASE 1.5), say so in
 one line and skip to PHASE 3.
+
+Under `unattended` an open question here is a real decision
+(`gates.md` § *Real decisions*): the run stops with every open question
+asked together, and writes nothing.
 
 Position questions are unnecessary by default — new tasks are appended at
 the end, and `--before <N>` / `--after <N>` are how a position is expressed
@@ -481,7 +504,7 @@ Target: <claude|claude+human|human>
 - …
 
 ## Manual interventions   ← only when Target is claude+human or human;
-…                           rendered in full when it is
+…                           summarized like the rest: who does what, when
 ```
 
 **When SHORT is true** (SPLIT is always none in this mode, per PHASE 1.5),
@@ -511,7 +534,7 @@ Target: <claude|claude+human|human>
 - …
 
 ## Manual interventions   ← only when Target is claude+human or human;
-…                           rendered in full when it is
+…                           summarized like the rest: who does what, when
 
 ... (repeat for each remaining part) ...
 ```
@@ -538,13 +561,21 @@ Before the closing prompt, render the design-change question for every
 drafted task that diverges from an owned document — see DESIGN-CHANGE CHECK.
 On a free-form run, render THE ORPHAN QUESTION here too, under the same rule.
 
-End with: **"Approve and write?"**
+End with: **"Approve and write?"** A `show` reply prints the drafted body
+files in full and asks again.
 
 This is the run's only gate: the reconciliation, the design-change question
 and the orphan question are all answered in this same exchange, never at a
 second one. Wait for explicit approval. Iterate on changes and re-present
 the full plan (all parts, when split) after any non-trivial revision.
 Silence is not approval.
+
+Gate class: `confirmation`. Under `unattended` it passes on its own: PHASE 4
+writes the plan as drafted, PHASE 5 commits it, and the closing report is
+the gate's summary naming that commit. The orphan question is then
+unanswered, so its default stands. A diverging design-change point is the
+exception: it is a real decision, so the run stops with the plan's summary
+and the design-change question, and writes nothing.
 
 ---
 
@@ -729,11 +760,13 @@ answer is the `--single` path, which `--short` cannot take.
 
 Just before **"Approve and write?"**, render:
 
-> Does this task belong to a feature?
+> These features are planned and could take this task:
 >
->   `<slug-a>` — <title>
->   `<slug-b>` — <title>
->   none — keep it free-form (the default)
+>   <title> (`<slug-a>`)
+>   <title> (`<slug-b>`)
+>
+> Does the task belong to one of them — name it — or stay on its own (the
+> default)?
 
 listing every `[PLANNED]` entry in `.claude/FEATURES.md`, in index order —
 the only status an attached task leaves true. When no entry is `[PLANNED]`
@@ -795,14 +828,15 @@ A detected file with no points is a path in `## Hints` like any other.
 one block per task, every detected file's diverging points together, settling
 points listed beneath for the record:
 
-> Task `<N>` as drafted changes the design at these points:
+> The task to <title, in plain words>, as drafted, would change the design:
 >
->   1. `<path>` § <section>: <before> → <after> — <one line of context>
+>   1. <what the design says now, what the task would do instead, and why>
+>      (`<path>` § <section>)
 >   2. …
 >
-> Agree?
+> It also settles, without conflict: <the point> (`<path>` § <section>).
 >
-> It also settles, without conflict: <path> § <section> — <the point>.
+> Agree to these design changes? (task <N>)
 
 A task whose points all settle asks nothing; its settled points still go into
 the body below.
@@ -851,7 +885,7 @@ as the open questions, redraft, and re-present the plan at the same gate.
 
 ---
 
-PHASE 4 — WRITE (only after explicit approval)
+PHASE 4 — WRITE (only after the PHASE 3 gate is approved or passes on its own)
 
 Task IDs never repeat — a collision is an error; stop and report.
 

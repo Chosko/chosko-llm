@@ -1,10 +1,10 @@
 ---
 name: task-clean
-version: 0.10.2
+version: 0.11.0
 type: skill
 description: Prune tasks in a terminal status from the backlog by archiving them — each summary block leaves TASKS.md and the body moves to .claude/tasks/archive/<N>.md, never deleted. Use it when finished tasks clutter the backlog; a backfill mode recovers, from git history, bodies earlier runs deleted.
 replaces: command:task-clean
-requires: skill:task-engine
+requires: skill:task-engine, skill:interaction-engine
 ---
 
 # /task-clean
@@ -28,6 +28,7 @@ requires: skill:task-engine
 #        /task-clean <STATUS> [<STATUS> ...]
 #        /task-clean --backfill                   (recover bodies earlier runs deleted)
 #        /task-clean [<STATUS> ...] --no-commit   (write changes, skip the commit and push)
+#        /task-clean <any of the above> --attended | --unattended   (every gate here waits either way)
 #        /task-clean [<STATUS> ...] --no-push     (commit as usual, skip the push)
 # Examples: /task-clean
 #           /task-clean DONE
@@ -50,6 +51,16 @@ ARGUMENT NOTE — the `--commit`, `--no-commit` and `--no-push` flags, and
 everything they gate, are
 `../task-engine/references/commit.md`.
 Scan `$ARGUMENTS` for them before PHASE 1 and strip whichever appear.
+
+Also scan for `--attended` and `--unattended` and strip whichever appear.
+The run's interaction policy resolves from them, a policy handed down by a
+parent run and the project's `CLAUDE.md`, per
+`../interaction-engine/references/policy.md`, which also holds their
+argument errors. Every gate here is `destructive`, so the policy changes no
+gate: under `unattended`, where nobody answers, the run stops at the gate
+with its plan, writing nothing. Read
+`../interaction-engine/references/messages.md` before the gate; the final
+report follows its output rules.
 
 Also scan for `--backfill`. When it appears, set BACKFILL = true and strip
 it. It is a mode, not a prune set, so if anything is left in `$ARGUMENTS`
@@ -215,7 +226,8 @@ PHASE 1 — REPORT (no file writes, no moves)
    so the user notices unfinished work before pruning around it>
    ```
 
-   End with a single explicit prompt: **"Apply?"**
+   End with a single explicit prompt: **"Apply?"** Gate class:
+   `destructive` (`../interaction-engine/references/gates.md`).
 
    Wait for the user. If they ask to change the prune set or exclude
    specific tasks, re-render the plan after the change. Do NOT proceed

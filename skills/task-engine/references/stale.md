@@ -39,15 +39,15 @@ which is why the tag and the index agree.
 A stale task is implementable, but only on the user's explicit say-so.
 Before doing anything else on such a task, warn:
 
-> Task <N> is `[STALE]`. Feature `<slug>` was re-architected after this task
-> was written, so its spec may no longer match the current design — see
-> `.claude/domain/features/<slug>.md`. Options:
+> The design of <feature title> changed after this task was written, so
+> what the task asks for may no longer match it
+> (task <N>, `<slug>`, `.claude/domain/features/<slug>.md`).
 >
 > A. **Implement anyway** — the task still looks right to you.
-> B. **Stop** — reconcile the backlog first with
->    `/task-add feature=<slug>`, then re-run.
+> B. **Stop** — bring the backlog in line with the new design first
+>    (`/task-add feature=<slug>`), then re-run.
 >
-> Which?
+> Implement it anyway, or stop?
 
 Take the feature slug from the task's `Feature:` line in its TASKS.md
 summary block; if there is no such line, say the originating feature is

@@ -1,9 +1,9 @@
 ---
 name: task-implement
-version: 1.10.7
+version: 1.11.0
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
-requires: skill:task-engine, command:follow-ups
+requires: skill:task-engine, skill:interaction-engine, command:follow-ups
 ---
 
 # /task-implement
@@ -27,8 +27,10 @@ requires: skill:task-engine, command:follow-ups
 # after the last round stop the run with the task `[IN PROGRESS]`. When a
 # `Feature:`-tagged task completes its feature, proposes flipping its
 # `FEATURES.md` `Status:` from `[PLANNED]` to `[DONE]` once, at the end of
-# the run. Under `--unattended` — or when the conversation declares the run
-# unattended — a question about the work parks the task (`[PARKED]`, its
+# the run, and flips it unasked under `unattended`. Under the `unattended`
+# interaction policy — `--unattended`, a policy handed down, or the
+# `CLAUDE.md` line; `--attended` overrides it — a question about the work
+# parks the task (`[PARKED]`, its
 # work-in-progress on `park/task-<N>`) and the run continues; the run's
 # `[PARKED]` tasks are pre-asked at launch unless `--skip-parked`, and a
 # parked question is answered by its `P<n>` handle in chat. Every run ends with one
@@ -48,6 +50,7 @@ requires: skill:task-engine, command:follow-ups
 #        /task-implement <args> --review --review-effort shallow|standard|deep|same|auto  (reviewer's read budget; default auto)
 #        /task-implement <args> --unattended  (park a task at a question instead of halting; pre-ask the list's parked tasks first)
 #        /task-implement <args> --unattended --skip-parked  (no pre-ask; a parked task with no answer is skipped)
+#        /task-implement <args> --attended    (every gate waits, whatever CLAUDE.md says)
 # Examples: /task-implement 12
 #           /task-implement 12 13 14
 #           /task-implement all
@@ -114,12 +117,16 @@ guarantees they are installed.
 
 SUPPORTING FILES (read on demand — not up front)
 
-This skill's common path is the whole of SKILL.md: a clean working tree, a
-project whose test command is already known, and numbered `Target: claude`
-tasks. Everything below is loaded only when its branch actually applies.
+This skill's common path is the whole of SKILL.md plus the interaction
+engine's `policy.md` and `messages.md`: a clean working tree, a project whose
+test command is already known, and numbered `Target: claude` tasks.
+Everything else below is loaded only when its branch actually applies.
 
 | Read this file | Exactly when |
 | -------------- | ------------ |
+| `../interaction-engine/references/policy.md` | Every run, at ARGUMENT PARSING, to resolve the interaction policy. |
+| `../interaction-engine/references/messages.md` | Every run, before its first question, gate or closing report. |
+| `../interaction-engine/references/gates.md` | UNATTENDED is true (read at ARGUMENT PARSING). Never on an attended run. |
 | `./test-runner.md`   | Neither CLAUDE.md/README/`.claude/` nor a testing-policy marker names the test command, so you must infer it. |
 | `./no-test-suite.md` | The project has no test suite at all, OR CLAUDE.md declares `Testing policy for /task-implement: skip-tests`. |
 | `./human-in-loop.md` | The current task's `Target:` is `claude+human` or `human`. |
@@ -204,27 +211,34 @@ the default, neither value is ever resolved or used, `./review-rounds.md` is
 never opened, no loop runs, nothing new is asked, and the output says nothing
 about reviewing.
 
-Also scan for the optional `--unattended` and `--skip-parked` flags and strip
-whichever appear. `--skip-parked` sets SKIP_PARKED = true and suppresses
-PRE-FLIGHT step 2a's pre-ask, for a launch no human sees — a routine, a
-scheduler, an orchestrator that is itself a subagent; `--skip-parked` without
-`--unattended` stops the run with: `--skip-parked requires --unattended.`
+Also scan for the optional `--attended`, `--unattended` and `--skip-parked`
+flags and strip whichever appear. The run's interaction policy resolves from
+the first two, a policy handed down by the parent run and the project's
+`CLAUDE.md`, per `../interaction-engine/references/policy.md`, which also
+holds their argument errors; read `CLAUDE.md` here if it has not been read
+yet. UNATTENDED is true when the policy resolves to `unattended`; under
+`attended`, nothing in this skill changes.
 
-UNATTENDED is true when `--unattended` was passed **or** the conversation
-declares this run unattended — the one sentence a runbook step's preamble or
-a delegated-agent prompt carries under that policy, which cannot be typed
-into a prompt block as a flag. A notice that the run is merely
-*non-interactive* is not that declaration: an attended runbook's step agent
-is non-interactive too, and it relays rather than parks. Default false —
-`attended`, under which nothing in this skill changes. When UNATTENDED is
-true:
+`--skip-parked` sets SKIP_PARKED = true and suppresses PRE-FLIGHT step 2a's
+pre-ask, for a launch no human sees — a routine, a scheduler, an
+orchestrator that is itself a subagent; `--skip-parked` on a run whose
+policy is not `unattended` stops the run with:
+`--skip-parked requires --unattended.`
+
+When UNATTENDED is true:
 
 - read `../task-engine/references/parking.md` now and apply its
-  § *Refusals* before anything else: `--unattended` beside `--no-commit`
-  stops the run, and so does a project whose `CLAUDE.md` carries a `## VCS`
-  override (`commit.md`) — the parking branch is the mechanism and there is
-  no equivalent there — each with the one-line message that section gives.
-  Read `CLAUDE.md` here if it has not been read yet.
+  § *Refusals* before anything else, to a policy that came from the flag
+  or from the parent: `--unattended` beside `--no-commit` stops the run,
+  and so does a project whose `CLAUDE.md` carries a `## VCS` override
+  (`commit.md`) — the parking branch is the mechanism and there is no
+  equivalent there — each with the one-line message that section gives. A
+  policy from the `CLAUDE.md` line is never refused: the run goes on, and a
+  question that would park stops it instead, per
+  `../interaction-engine/references/gates.md` § *A run that does not
+  commit*.
+- read `../interaction-engine/references/gates.md`; the class tag on each
+  of this skill's gates applies.
 - every prompt this run can raise that has a default takes it when it goes
   unanswered — a contract the session runs under, such as a runbook step's
   OPERATING RULES, answers it first — per `parking.md` § *Prompts with a
@@ -460,14 +474,15 @@ PRE-FLIGHT CHECKS (before any task)
    `Question:` lines only, the body's one pre-flight read — and print one
    block, one item per parked task in list order, each under its handle:
 
-   > Parked tasks in this run — answer each by handle (`P1: Q1a, Q2b`), or
-   > reply `skip` for one (`skip P2`) or for all (`skip all`):
+   > Some tasks in this run stopped earlier on a question. Answer each by
+   > its handle (`P1: Q1a, Q2b`), or `skip P2` / `skip all`:
    >
-   > P1. Task 42 — parked 2026-09-23 at Step 3
+   > P1. Add the session timeout — stopped while implementing
+   >     (task 42, parked 2026-09-23 at Step 3)
    >     <its `Question:`, verbatim and multi-line, options included>
-   > P2. Task 47 — parked 2026-09-23 at the review round, approval gate —
-   >     skip-only: its draft is approved in an attended run, with the
-   >     draft in the tree
+   > P2. Add the login form — its draft waits for approval, which only a
+   >     run you watch can give, with the draft in front of you; skip-only
+   >     here (task 47, parked 2026-09-23 at the review round)
 
    Wait for a reply. Each answer is held in run memory for its task and fed
    to the unpark in Step 1 — nothing on disk changes, so a run that dies
@@ -742,6 +757,7 @@ before starting the next:
    M." / "Task N skipped — parked, no answer held. Starting task M."
 4. In skip-tests mode, ask "Proceed?" before starting the next task,
    unless AUTO_CONFIRM is true or UNATTENDED is true — `./no-test-suite.md`.
+   Gate class: `confirmation`.
 
 ---
 
@@ -772,7 +788,7 @@ during the delegated-run "re-read TASKS.md" step (`./delegated-runs.md`) for
 a task a subagent implemented. Either way it's the parent that accumulates
 the candidate list across the whole run.
 
-**A non-interactive run never proposes** — under a delegated agent, or a runbook
+**A nested run never proposes** — under a delegated agent, or a runbook
 step whose prompt ends with `OPERATING RULES`, the proposal belongs to the
 outermost run. A runbook step names each candidate in its `DONE` report, one
 line; a delegated agent names none — the launcher derives them from `TASKS.md`.
@@ -780,23 +796,23 @@ line; a delegated agent names none — the launcher derives them from `TASKS.md`
 **Propose once, at the very end of the run** — after the last requested
 task's Step 7 (or Step 6, under `--no-commit`), never mid-run even on a
 many-task batch. If the candidate list is empty, say nothing about this at
-all. Otherwise, present every candidate together:
+all. Gate class: `confirmation` — under UNATTENDED the proposal passes on
+its own: every candidate is approved, flipped and committed as below, and
+the closing report names the commit. Otherwise, present every candidate
+together:
 
-> All tasks for this feature are now `[DONE]`/`[SKIP]`:
->
->   password-auth — Password authentication (tasks 31, 32, 33, 34, 35)
->
-> Flip it to `[DONE]` in FEATURES.md?
+> Every task of Password authentication is now done or skipped, so the
+> feature itself is finished. Mark it done in the feature list?
+> (password-auth, tasks 31–35)
 
 or, with more than one candidate:
 
-> All tasks for these features are now `[DONE]`/`[SKIP]`:
+> Every task of these features is now done or skipped:
 >
->   password-auth — Password authentication (tasks 31, 32, 33, 34, 35)
->   session-handling — Session handling (tasks 36, 37)
+>   Password authentication (password-auth, tasks 31–35)
+>   Session handling (session-handling, tasks 36–37)
 >
-> Flip any of these to `[DONE]` in FEATURES.md? Name the slugs, or say
-> "all" / "none".
+> Mark them done in the feature list — all, none, or the ones you name?
 
 Wait for an explicit answer; silence is not approval and leaves every
 candidate `[PLANNED]`. A slug the user declines, or doesn't name, stays
@@ -820,7 +836,9 @@ THE CLOSING REPORT
 
 Every run ends with one closing report — at completion, at a failure halt
 and at a stop the user asked for alike — in two groups, in this order, each
-under its heading:
+under its heading. Its length and what it names follow
+`../interaction-engine/references/messages.md` § *Output*; every question
+in it follows § *Questions*:
 
 - **For the record** — one line per item, in exactly this shape:
   `<what deviated> — <why> — <resolved by whom>`. A criterion overshot, a

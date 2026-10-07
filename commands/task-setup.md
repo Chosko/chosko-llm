@@ -1,9 +1,10 @@
 ---
 name: task-setup
-version: 2.0.3
+version: 2.1.0
 type: command
 description: Initialize the project's task backlog — creates .claude/TASKS.md, the .claude/tasks/ directory and the test-dispatch wrappers under .claude/external/. Run it once on a project before its first /task-add; a re-run only creates what is missing.
 disable-model-invocation: true
+requires: skill:interaction-engine
 ---
 
 # /task-setup
@@ -19,6 +20,7 @@ disable-model-invocation: true
 # Usage: /task-setup                     (leaves the scaffolding uncommitted)
 # Usage: /task-setup --commit            (commit and push the scaffolding this run wrote)
 # Usage: /task-setup --commit --no-push  (commit locally, skip the push)
+# Usage: /task-setup <any of the above> --attended | --unattended
 
 GOAL
 Create the artifacts that the rest of the task-* workflow assumes:
@@ -63,6 +65,16 @@ WORKFLOW
 Before anything else, parse $ARGUMENTS for the optional `--commit` flag.
 If present, set COMMIT = true. When COMMIT is false (the default), the run
 leaves its scaffolding uncommitted.
+
+Also parse the optional `--attended` and `--unattended` flags and strip
+whichever appear. The run's interaction policy resolves from them, a policy
+handed down by a parent run and the project's `CLAUDE.md`, per
+`../skills/interaction-engine/references/policy.md`, which also holds their
+argument errors; under `unattended`, read
+`../skills/interaction-engine/references/gates.md`. Read
+`../skills/interaction-engine/references/messages.md` before the first
+question and before the step 3 report, which follows its output rules. This
+command cannot park: under `unattended` a question it asks stops the run.
 
 Also parse the optional `--no-push` flag; if present, set NO_PUSH = true.
 NO_PUSH only matters when COMMIT is true: it skips the pull at start, the
@@ -188,7 +200,9 @@ LOCATING THE TEST RUNNER section. In order:
    - `go.mod` → `go test ./...`.
    - `Gemfile` with rspec → `bundle exec rspec`.
    - Otherwise, scan for a `Makefile` target named `test` → `make test`.
-3. If still ambiguous, ask the user before writing the wrappers.
+3. If still ambiguous, ask the user before writing the wrappers — a real
+   decision: under `unattended` the run stops with the question
+   (`gates.md` § *Real decisions*), leaving the wrappers unwritten.
 
 Once the test command is known, write `run-affected-tests.sh` so it
 invokes the runner against the test files passed on its command line
@@ -209,7 +223,10 @@ project has no test suite. Prompt the user once:
 >    wired to the test-dispatch convention keeps working while the
 >    project has no suite.
 >
-> Which would you like?
+> Halt, or write skip-tests stubs?
+
+A real decision: under `unattended` the run stops with this question,
+leaving the wrappers unwritten (`gates.md` § *Real decisions*).
 
 If the user picks **A**, do not write the wrapper scripts and report
 the artifacts left missing.
@@ -245,7 +262,9 @@ detectable test runner (the user added one since the last
 > <runner> setup in this project. Replace the stubs with real wrappers?
 > [y/N]
 
-On `y`, overwrite both stubs with the inferred real wrappers. On `n`,
+Gate class: `destructive` — it waits under every policy; under
+`unattended`, where nobody answers, the run stops with it and the stubs
+stay. On `y`, overwrite both stubs with the inferred real wrappers. On `n`,
 leave them alone.
 
 **Wrappers that are not stubs are never overwritten** — once the user

@@ -153,11 +153,16 @@ Every task whose `Preconditions:` names the skipped one is named at the gate:
 
 ## The gate
 
-One gate, carrying: task `<N>`'s id, status and title; each field and
-section that changes, before → after; any dropped edge with its reason; any
-task a `[SKIP]` releases; any cycle an added edge closes; any owned-document
-question. End with **"Apply?"** and wait for an explicit answer. Silence, an
-unclear reply or EOF writes nothing.
+One gate, gate class `confirmation`
+(`../../interaction-engine/references/gates.md`), carrying a plain-language
+summary per `../../interaction-engine/references/messages.md`: the task by
+its title, what changes in it and why, any dropped edge with its reason, any
+task a `[SKIP]` releases, any cycle an added edge closes, and the task's
+number and status last, in parentheses. A `show` reply prints the draft and
+asks again. End with **"Apply?"** and wait for an explicit answer. Silence,
+an unclear reply or EOF writes nothing. Under `unattended` the gate passes
+on its own and the consumer's commit is named in its summary — except when
+it carries an owned-document question, which is a real decision and waits.
 
 **With a draft passed in** — a revision surface that drafted the same fields
 and sections at its own gate passes them in — compare it with the draft this
@@ -189,8 +194,11 @@ explicit path as one unit of work, per
 ## The closing report line
 
 ```
-Amended task <N> — <fields and sections changed>[; skipped: <reason>][; dropped precondition <M>: <reason>][; still [STALE]].
+Amended <task title> — <what changed, in plain words>[; dropped because <reason>][; no longer waits on <title of M> because <reason>][; still waits for its design to be reconciled] (task <N>).
 ```
+
+The last optional clause stands for `[STALE]`; the identifiers go last, per
+`../../interaction-engine/references/messages.md` § *Questions*.
 
 ---
 

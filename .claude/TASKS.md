@@ -516,7 +516,7 @@ Feature: interaction-policy
 
 ## 282. Adopt the interaction policy in the `task-*` suite
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, skills/task-implement/no-test-suite.md, skills/task-engine/SKILL.md, skills/task-engine/references/parking.md, skills/task-engine/references/stale.md, skills/task-engine/references/amend.md, commands/task-add.md, commands/task-setup.md, skills/task-iterate/SKILL.md, skills/task-clean/SKILL.md, skills/task-clean/backfill.md, VERSION, CHANGELOG.md
 Preconditions: 281

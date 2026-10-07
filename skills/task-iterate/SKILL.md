@@ -1,8 +1,9 @@
 ---
 name: task-iterate
-version: 0.1.3
+version: 0.2.0
 type: skill
 description: Triage review findings it did not produce — fix, defer or reject each one, apply the fixes and record why the rest were not — on an uncommitted tree, a branch or a pull request. Use it after /task-review has reported; /task-implement's review rounds run it in-session between the review and the task's single commit.
+requires: skill:interaction-engine
 ---
 
 # /task-iterate
@@ -25,6 +26,7 @@ description: Triage review findings it did not produce — fix, defer or reject 
 #        /task-iterate <args> task=<n>        (pin the task explicitly)
 #        /task-iterate <args> --no-commit     (apply the fixes, commit nothing)
 #        /task-iterate <args> --no-push       (commit as usual, skip the push)
+#        /task-iterate <args> --attended | --unattended
 # Examples: /task-iterate
 #           /task-iterate feature/password-auth
 #           /task-iterate 214
@@ -69,12 +71,19 @@ reviewer, and grades its own work.
 
 ---
 
-## NO SUPPORTING FILES
+## SUPPORTING FILES
 
-Everything this skill does is in this file, PR mode included. Do not look for a
-sibling reference file and do not read one from another skill's folder — each
-skill installs as a self-contained folder, so a path outside this one does not
-resolve on an installed machine.
+Everything this skill does is in this file, PR mode included. The one
+exception is the interaction engine, which `requires: skill:interaction-engine`
+installs beside it:
+
+| Read this file | Exactly when |
+| --- | --- |
+| `../interaction-engine/references/policy.md` | At ARGUMENT PARSING, to resolve the interaction policy. |
+| `../interaction-engine/references/messages.md` | Before the first question or the returned summary. |
+| `../interaction-engine/references/gates.md` | The policy resolved to `unattended`. |
+
+Do not look for any other reference file outside this folder.
 
 ---
 
@@ -104,6 +113,11 @@ Scan the argument string and strip these tokens, in any order and any position:
 - `--commit` — accepted and stripped, a silent no-op: committing is the
   default.
 - `--no-push` — commit as usual, skip the pull-at-start and the re-sync/push.
+- `--attended` / `--unattended` — the interaction policy, resolved with a
+  policy handed down by the caller and the project's `CLAUDE.md` per
+  `../interaction-engine/references/policy.md`, which also holds their
+  argument errors. This skill cannot park, so under `unattended` each of its
+  questions stops the run with nothing applied.
 
 `--commit` and `--no-commit` are mutually exclusive — if both appear, stop
 with: `--commit and --no-commit cannot be combined. Pick one.`
@@ -134,7 +148,7 @@ First hit wins:
 3. **`git remote show origin`**, whose `HEAD branch:` line says the same thing
    when the symbolic ref is absent locally.
 4. **`master` or `main`**, whichever exists as a ref. If both do, or neither,
-   stop and ask for `base=<ref>`.
+   stop and ask for `base=<ref>` (gate class: `design`).
 
 Resolve the branch itself with `git rev-parse --verify` against the local ref,
 then `origin/<branch>`. If neither exists, stop and say the branch was not
@@ -215,7 +229,7 @@ Exactly one of three sources, resolved in this order:
    `/task-review` run that opted into one. Use the highest `<n>` present for
    the resolved task, and name the file you read in the report. If several
    files could plausibly apply and the highest round is ambiguous, ask which
-   before triaging anything.
+   before triaging anything (gate class: `design`).
 3. **The PR's review comments** — pr mode only, read with
    `gh pr view <N> --comments` or the review-comments API through `gh api`.
    Each thread is one finding. A thread already resolved is prior context, not
@@ -411,7 +425,8 @@ should not exist looks like a commit that should.
 
 ## WHAT THIS SKILL RETURNS
 
-Whatever the mode, end by returning three things:
+Whatever the mode, end by returning three things, written to
+`../interaction-engine/references/messages.md` § *Output*:
 
 1. **The triage summary** — per finding id, the verdict, and for each `fix`
    what actually changed (the file, and one line on the change). A verdict that

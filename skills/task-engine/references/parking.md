@@ -28,7 +28,7 @@ questions `Q1`, `Q2`, … and their options `a`, `b`, …, and the run prints it
 under a `P<n>` handle, so a reply names both without colliding —
 `Unpark P1: Q1a, Q2b`.
 
-Every other gate keeps its existing outcome, and none gets a handoff:
+Every other gate keeps its own outcome, and none gets a handoff:
 
 - an unmet precondition skips the task — `./resolution.md` § *Eligibility*;
 - a runbook step whose `Depends on:` is not done is unselectable, untouched —
@@ -42,14 +42,16 @@ Every other gate keeps its existing outcome, and none gets a handoff:
 
 Under UNATTENDED a prompt whose silence already resolves to a value takes
 that value, and each value taken is one *For the record* line in the closing
-report:
+report. Two rows are `confirmation` gates, which pass on their own per
+`../../interaction-engine/references/gates.md`; the table records the value
+that passing writes:
 
 | Prompt | Value taken |
 | --- | --- |
 | the delegation question (PRE-FLIGHT step 2b) | no — in-context |
 | the `[PARTIAL]` surfacing (Step 6) | `[PARTIAL]` is written |
-| the feature-flip proposal (FEATURE COMPLETION) | none |
-| `Proceed?` in skip-tests mode | yes |
+| the feature-flip proposal (FEATURE COMPLETION) — `confirmation` | every candidate flipped to `[DONE]` |
+| `Proceed?` in skip-tests mode — `confirmation` | yes |
 | the dirty-tree prompt at pre-flight (`./tree.md`) | abort |
 | a `[STALE]` task named explicitly (`./stale.md`) | skip, with one line |
 
@@ -59,8 +61,9 @@ dirty-tree prompt that lists only the runbook and its index, and that
 answer stands. The value in the table is what an **unanswered** prompt
 resolves to.
 
-The one prompt with no default — an ambiguous test runner — aborts the run.
-A pre-flight prompt can never park, because there is no current task yet;
+The prompts with no default — an ambiguous test runner, and the
+no-test-suite question of whether to scaffold a suite — stop the run. A
+pre-flight prompt can never park, because there is no current task yet;
 that is why it needs this rule and nothing more.
 
 ## The handoff
@@ -131,7 +134,10 @@ in place.
    `Task <N>: parked — <reason>`, and push unless NO_PUSH.
 
 The base tree is clean afterwards, so the next task meets no dirty tree.
-Print the question in chat under the run's next `P<n>` handle, then continue.
+Print it in chat under the run's next `P<n>` handle, then continue: one lead
+line in plain words — what the task was doing and why it stopped — with the
+task number and date last, in parentheses, then the `Question:` as recorded,
+per `../../interaction-engine/references/messages.md` § *Questions*.
 
 ## The unpark transaction
 
@@ -194,6 +200,12 @@ a block. Both run skills carry exactly this set, and no other rejection.
 
 ## Refusals
 
+Both apply to a policy that came from the `--unattended` flag or from a
+parent run, never to one from the `CLAUDE.md` line: under that one the run
+goes on and a question that would park stops it instead
+(`../../interaction-engine/references/gates.md` § *A run that does not
+commit*).
+
 - `--unattended` beside `--no-commit`: parking is made of commits. Stop
   with `--unattended and --no-commit cannot be combined.`
 - `--unattended` on a project whose `CLAUDE.md` maps git to another VCS
@@ -207,8 +219,8 @@ a block. Both run skills carry exactly this set, and no other rejection.
 
 - **`/task-implement`** — the only reader of this file and the only writer
   of everything it describes: the tag, the handoff, the branch and the
-  three commit forms. The `--unattended` flag, UNATTENDED's resolution from
-  the flag or the conversation, the pre-ask, the chat handle and the
+  three commit forms. UNATTENDED — the interaction policy resolved per
+  `../../interaction-engine/references/policy.md` — the pre-ask, the chat handle and the
   in-memory answers are its own and are stated in its body, not here.
 - **`/task-list`** — meets `[PARKED]` only as a tag, per `./status.md`,
   and never opens this file.

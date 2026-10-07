@@ -132,7 +132,8 @@ the non-git behaviour.
    line for a hand deletion.
 
    End with a single explicit prompt: **"Apply?"** — the same gate as a
-   prune. If the user asks to exclude specific ids, re-render the plan
+   prune, gate class `destructive`
+   (`../interaction-engine/references/gates.md`). If the user asks to exclude specific ids, re-render the plan
    after the change. Do NOT proceed to PHASE B2 without an explicit
    approval. Silence is not approval.
 
