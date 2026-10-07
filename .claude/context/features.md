@@ -55,7 +55,8 @@ Currently shipped:
 - [context-skills.md](./context-skills.md) — `skills/context-build/`,
   `skills/context-update/`, `skills/context-convert/`.
 - [session-handoff.md](./session-handoff.md) — `commands/session-save.md`,
-  `commands/session-resume.md`.
+  `commands/session-resume.md`, `commands/session-list.md`,
+  `commands/session-describe.md`.
 - [refactor-doc-consolidate.md](./refactor-doc-consolidate.md) —
   `commands/refactor-codebase.md`, `commands/refactor-tests.md`, `skills/doc-consolidate/`.
 - [claude-md-hook-statusline.md](./claude-md-hook-statusline.md) —

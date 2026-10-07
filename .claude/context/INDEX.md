@@ -43,7 +43,7 @@ Canonical project docs live outside this folder, stay authoritative:
 | [feature-contract.md](./feature-contract.md) | The per-feature contract — frontmatter block incl. optional `replaces:` / `requires:` / `project-policy:` and its setup guard (`scripts/check-setup.sh`); the `description` contract (short what+when, flags in the body `#` header) and the loading-control keys `disable-model-invocation:` / `paths:` with the eleven hidden features that carry the first; supporting-file conventions and the home-path guard (`scripts/check-home-paths.sh`); cross-refs to authoring guide. |
 | [setup-commands.md](./setup-commands.md) | Project-initialization commands — `project-setup`, `domain-setup`. |
 | [context-skills.md](./context-skills.md) | The navigation-context skills — `context-build`, `context-update`, `context-convert`. |
-| [session-handoff.md](./session-handoff.md) | The session-handoff pair — `session-save`, `session-resume`. |
+| [session-handoff.md](./session-handoff.md) | The session commands — the handoff pair `session-save`, `session-resume`, and the read-only readers `session-list`, `session-describe`. |
 | [refactor-doc-consolidate.md](./refactor-doc-consolidate.md) | Behaviour-preserving rewrite tools — `refactor-codebase`, `refactor-tests`, `doc-consolidate`. |
 | [claude-md-hook-statusline.md](./claude-md-hook-statusline.md) | The shipped claude-md artifacts (`tool-usage-policy`, `editing-discipline`, `git-commit-style`), the `remote-session-protocol` hook and the `session-statusline` statusline. |
 | [task-suite.md](./task-suite.md) | The `task-*` suite's family-wide contract and domain pointers; hub for `task-setup`, `task-add`, `task-list`, `task-clean`, `task-implement`, `task-review`, `task-iterate` and `task-engine`. |

@@ -69,8 +69,9 @@ files, the same register `/task-list` and `/production-status` occupy.
 ```
 
 `<slug>` is a two-or-three word kebab-case summary of the work, not a random
-id — it makes the directory listing readable, which is the only way the user
-finds an old session. The timestamp prefix sorts chronologically and prevents
+id — it is how the user finds an old session: `/session-list` shows it beside
+each handoff's anchor and next step, and `/session-resume <slug>` resolves by
+it. The timestamp prefix sorts chronologically and prevents
 same-day collisions without a hash. Markdown, not `.tmp`: the file is a
 document, and the extension should say so.
 
@@ -192,18 +193,31 @@ session legible without inventing an anchor for it.
 
 ### Resolution in `/session-resume`
 
+Four forms, tried in order:
+
 | Argument | Behaviour |
 |---|---|
-| *(none)* | newest candidate in `.claude/sessions/` |
-| `YYYY-MM-DD` | newest candidate from that date |
 | a path | read that file directly |
+| `YYYY-MM-DD` | newest candidate from that date |
+| a slug | newest candidate whose filename's slug part equals it exactly |
+| *(none)* | newest candidate in `.claude/sessions/` |
 
-Three forms, not four. A **task-number selector** — newest file whose `Work:`
+The slug form makes the store findable by the one human-readable part of a
+filename, and the readers (`/session-list`, `/session-describe`) make it
+findable without opening files. A slug with no exact match names the nearest
+existing slugs and **stops** — no substring fallback, no fall-through to the
+newest candidate. It is the one exception to `/session-resume`'s
+degrade-never-refuse contract, because guessing the newest file for a typed
+name would load the wrong session. The rule lives once, in `/session-resume`'s
+body, and `/session-describe` applies it by name.
+
+A **task-number selector** — newest file whose `Work:`
 line names a given task — was designed in and dropped: `/task-implement` runs
 are the least likely sessions to be paused, being much shorter than the
 product-design and architect sessions this feature exists for, so a selector
 scoped to them is too specific for the actual usage. `Work:` keeps `task <n>`
-as a value; only the lookup by it goes.
+as a value; only the lookup by it goes, and a bare number is an unrecognized
+argument, not a slug.
 
 **Only a file carrying a `Work:` line is a candidate.** The store holds
 companion documents too — a hand-written notes file, a scratch plan dropped
@@ -277,7 +291,7 @@ Nothing derives from session files. `/task-list`, `/production-status` and every
 /session-save                      write a session file for the current session
 /session-save <slug>               override the generated slug
 /session-resume                    load the newest session file
-/session-resume <date|path>        load a specific one
+/session-resume <path|date|slug>   load a specific one
 ```
 
 Both commands need `name`, `version`, `type`, `description` frontmatter per

@@ -676,7 +676,7 @@ Feature: session-readers
 
 ## 298. Update documentation for feature `session-readers`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: .claude/context/session-handoff.md, .claude/context/features.md, .claude/context/INDEX.md, .claude/domain/features/session-continuity.md
 Preconditions: 295, 296, 297
