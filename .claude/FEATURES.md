@@ -211,10 +211,10 @@ Tasks: 288, 289, 290
 
 ## setup-sync — Setup commands offer every per-project fact a feature reads, guarded by `project-policy:` and `check-setup.sh`
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/setup-sync.md
 Source: prompt
-Tasks: none
+Tasks: 291, 292, 293, 294
 
 ---
 

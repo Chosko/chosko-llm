@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 290
+Last task number: 294
 
 ---
 
@@ -601,5 +601,45 @@ Target: claude
 Files: .claude/context/INDEX.md, .claude/context/setup-commands.md, .claude/context/task-implement.md, .claude/context/features.md, .claude/context/feature-contract.md, .claude/context/product-design.md, docs/authoring-guide.md, .claude/domain/technical-direction.md, .claude/domain/features/authoring-commit-default.md, .claude/domain/features/repo-local-audits.md
 Preconditions: 288, 289
 Feature: unity-mcp-removal
+
+---
+
+## 291. Replace `/task-setup`'s and `/domain-setup`'s schema copies with citations and fix `/task-setup`'s drift
+
+Status: [MISSING]
+Target: claude
+Files: commands/task-setup.md, commands/domain-setup.md, VERSION, CHANGELOG.md
+Preconditions: 282, 284
+Feature: setup-sync
+
+---
+
+## 292. Bring `/project-setup`'s wizard in line with the features it sets up
+
+Status: [MISSING]
+Target: claude
+Files: commands/project-setup.md, VERSION, CHANGELOG.md
+Preconditions: 286, 289
+Feature: setup-sync
+
+---
+
+## 293. Add the `project-policy:` frontmatter key, its declarations and the `check-setup.sh` guard
+
+Status: [MISSING]
+Target: claude
+Files: scripts/lib.sh, scripts/check-setup.sh, skills/interaction-engine/SKILL.md, skills/task-implement/SKILL.md, skills/doc-consolidate/SKILL.md, skills/task-engine/SKILL.md, skills/task-clean/SKILL.md, skills/context-convert/SKILL.md, commands/session-save.md, skills/task-review/SKILL.md, skills/task-iterate/SKILL.md, CLAUDE.md, VERSION, CHANGELOG.md
+Preconditions: 281, 291, 292
+Feature: setup-sync
+
+---
+
+## 294. Update documentation for feature `setup-sync`
+
+Status: [MISSING]
+Target: claude
+Files: .claude/context/setup-commands.md, .claude/context/task-backlog.md, .claude/context/shared-lib-frontmatter.md, .claude/context/feature-contract.md, docs/authoring-guide.md
+Preconditions: 291, 292, 293
+Feature: setup-sync
 
 ---
