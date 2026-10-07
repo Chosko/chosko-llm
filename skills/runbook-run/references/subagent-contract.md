@@ -36,9 +36,12 @@ OPERATING RULES
 - At any clarifying question or approval gate, stop and end your turn with the
   literal line `QUESTIONS FOR USER`, followed by the questions labelled `Q1`,
   `Q2`, …, the options for each lettered `a`, `b`, …, and a recommendation for
-  each. At an approval gate, include the full
-  draft, unabridged, so it can be approved as-is. The user's answer will be
-  sent back to you in this same conversation; then continue.
+  each. At an approval gate, include a plain summary of the draft — what it
+  changes, why, what it affects; a `show` answer asks you to end your turn
+  again with the full draft. The user's answer will be sent back to you in
+  this same conversation; then continue. When the preamble declares this run
+  unattended, a gate a skill you invoke tags `confirmation` passes on its own,
+  as that skill says: that is the gate's own behaviour, not a skipped gate.
 - One prompt is the exception: the dirty-tree prompt (`Working tree has
   uncommitted changes. Choose:`) a step's command puts before it starts. When
   the only uncommitted changes it lists are <FILE> and .claude/RUNBOOKS.md —
@@ -121,8 +124,11 @@ contract, and is never sent to a subagent.
 - **`QUESTIONS FOR USER`.** The literal marker is what the orchestrator
   classifies on. Options and a recommendation are required because the relay
   compresses but never answers — the user must be able to decide from the block
-  alone. The full unabridged draft at an approval gate is the one thing the
-  orchestrator must not compress: a summarized draft cannot be approved.
+  alone. At an approval gate the block carries a plain summary of the draft
+  and `show` fetches the draft itself, per the interaction engine's
+  `messages.md`; the orchestrator relays both and adds nothing. A
+  `confirmation` gate passing on its own under `unattended` is the interaction
+  engine's `gates.md` rule, so the agent does not stop at it there.
 - **The dirty-tree prompt answers itself.** The orchestrator writes `[~]` and
   `[RUNNING]` before it spawns, uncommitted by design, so the step's
   `/task-implement` meets exactly those two dirty paths at pre-flight and would

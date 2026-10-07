@@ -45,13 +45,16 @@ step's agent, from a relay child, or from the session itself under
 3. Print the question in chat under the next handle, in one fixed block:
 
    ```
-   Parked (P3) — Step 4 of 7 — Peer review — the agent asked:
+   P3. Peer review stopped on a question and waits for your answer; the run
+   goes on with the steps that do not need it (step 4 of 7).
+   Answer with `Unpark P3: Q1a, …`.
 
      <the question, its options and the recommendation, verbatim>
-
-   Reply `Unpark P3: <answers>` (e.g. `Unpark P3: Q1a, Q2b`) to unpark it;
-   the run goes on meanwhile.
    ```
+
+   The lead line says in plain words what stopped and why, identifiers last
+   in parentheses, and the question comes last, per
+   `../../interaction-engine/references/messages.md` § *Questions*.
 
 4. Write the index `Parked: steps <ids>` line — this id added, ascending
    (`runbook-schema.md` § *The index block*); `Status:` stays `[RUNNING]`
@@ -122,13 +125,14 @@ marked, print one block listing every `[P]` step in range under its handle,
 in list order, each with the question its `parked:` bullet holds, verbatim:
 
 ```
-Parked steps in this run — answer each by handle (`P1: Q1a, Q2b`), or reply
-`skip` for one (`skip P2`) or for all (`skip all`):
+Some steps stopped earlier on a question. Answer each by its handle
+(`P1: Q1a, Q2b`), or `skip P2` / `skip all`:
 
-P1. Step 4 — Peer review — parked 2026-09-23
+P1. Peer review — stopped on a question (step 4, parked 2026-09-23)
     <the question, options included>
-P2. Step 6 — Approve the migration draft — parked 2026-09-23, approval gate —
-    skip-only: its draft is approved in an attended run, when the step runs
+P2. Approve the migration draft — its draft waits for approval, which only a
+    run you watch can give, when the step runs; skip-only here
+    (step 6, parked 2026-09-23)
 ```
 
 Wait for a reply. Each answer unparks its step at once, per § *Unparking a

@@ -37,9 +37,12 @@ INLINE RULES
   it.
 - At any clarifying question or approval gate: if you are a top-level session,
   ask the user directly in the fixed block
-  `Step <N> of <total> — <title> — asking (round <r>)`, with any gate draft
-  verbatim and unabridged. Never answer your own question, and never skip a
-  gate because you "already know" the answer. If you are yourself a subagent,
+  `Step <N> of <total> — <title> — asking (round <r>)`, with a plain summary
+  of any gate draft, the full draft only on `show`. Never answer your own
+  question, and never skip a gate because you "already know" the answer —
+  except that under an unattended run a gate the invoked skill tags
+  `confirmation` passes on its own, as that skill says, and is not a skipped
+  gate. If you are yourself a subagent,
   end your turn under `QUESTIONS FOR USER` instead, as in the default mode.
 - One prompt is the exception: the dirty-tree prompt (`Working tree has
   uncommitted changes. Choose:`) a step's command puts before it starts. When
@@ -100,7 +103,9 @@ Not part of the rule set — this section is for whoever maintains the contract.
 - **Asking directly.** There is no relay hop, because the asker and the user's
   interlocutor are the same agent. The prohibition carries anyway: a session
   that answers its own question, or skips a gate it thinks it can predict, has
-  made a decision the user never made. The fixed block tells the user which
+  made a decision the user never made. A `confirmation` gate passing on its
+  own under `unattended` is not that: the gate's owner declared the decision
+  already made. The fixed block tells the user which
   step is asking.
 - **The dirty-tree prompt answers itself.** Under `--inline` a step's
   `/task-implement` runs in the session that set `[~]` and `[RUNNING]` one

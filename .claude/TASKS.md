@@ -526,7 +526,7 @@ Feature: interaction-policy
 
 ## 283. Adopt the interaction policy in the runbook suite
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/SKILL.md, skills/runbook-run/references/subagent-contract.md, skills/runbook-run/references/inline-contract.md, skills/runbook-run/references/parking.md, skills/runbook-run/references/step-amend.md, commands/runbook-create.md, commands/runbook-clean.md, commands/runbook-prune.md, VERSION, CHANGELOG.md
 Preconditions: 281

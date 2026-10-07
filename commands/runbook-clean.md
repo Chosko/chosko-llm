@@ -1,10 +1,10 @@
 ---
 name: runbook-clean
-version: 0.2.5
+version: 0.3.0
 type: command
 description: Prune finished runbooks — delete each [DONE] runbook's body under .claude/runbooks/ and remove its .claude/RUNBOOKS.md index block, every finished runbook by default or exactly the ones named. Use it once a runbook's work has landed and its record is no longer needed.
 disable-model-invocation: true
-requires: skill:runbook-run
+requires: skill:runbook-run, skill:interaction-engine
 ---
 
 # /runbook-clean
@@ -24,6 +24,7 @@ requires: skill:runbook-run
 #        /runbook-clean <id|name|id-name> [<id|name|id-name> ...]
 #        /runbook-clean [<id|name|id-name> ...] --no-commit   (delete, skip the commit and push)
 #        /runbook-clean [<id|name|id-name> ...] --no-push     (commit as usual, skip the push)
+#        /runbook-clean [<id|name|id-name> ...] --attended | --unattended   (the gate waits either way)
 # Examples: /runbook-clean
 #           /runbook-clean ecc-import-landing
 #           /runbook-clean 1 5
@@ -59,6 +60,10 @@ what is left is this command's own argument — a list of runbooks, each as
 | `--commit` | Accepted and stripped, a silent no-op: committing is the default. Refused beside `--no-commit` with `--commit and --no-commit cannot be combined. Pick one.` |
 | `--no-commit` | Set NO_COMMIT = true. Delete and rewrite the index, but make no commit and no push. |
 | `--no-push` | Set NO_PUSH = true. Commit as usual, skip the pull/re-sync/push. |
+| `--attended` / `--unattended` | The interaction policy for this run, resolved with a parent's policy and the project's `CLAUDE.md` per `../skills/interaction-engine/references/policy.md`, which holds their argument errors. The one gate here is `destructive`, so the policy changes nothing: under `unattended`, where nobody answers, the run stops at the gate with its plan and writes nothing. |
+
+Read `../skills/interaction-engine/references/messages.md` before the gate;
+the closing report follows its output rules.
 
 NO_COMMIT implies NO_PUSH — there is nothing to push. There is **no
 `--force`**, and there is **no status argument**; see WHY ONLY `[DONE]` below
@@ -207,7 +212,8 @@ Nothing else in .claude/runbooks/ is touched.
   is exactly the reconciliation the user wants.
 - Omit the `Refused` section entirely when nothing was refused.
 
-End with a single explicit prompt: **"Apply?"**
+End with a single explicit prompt: **"Apply?"** Gate class: `destructive`
+(`../skills/interaction-engine/references/gates.md`).
 
 Wait for the user. **Nothing is written or deleted before an explicit
 answer** — "yes", "go", "apply" or similar. Silence is not approval. If the

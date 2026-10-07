@@ -1,9 +1,9 @@
 ---
 name: runbook-run
-version: 0.19.3
+version: 0.20.0
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user — or, under the `unattended` policy, parking the step that asked and going on — recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
-requires: command:follow-ups, skill:follow-ups-resolve
+requires: command:follow-ups, skill:follow-ups-resolve, skill:interaction-engine
 ---
 
 # /runbook-run
@@ -23,9 +23,9 @@ requires: command:follow-ups, skill:follow-ups-resolve
 # step's agent ends with a SPAWN REQUEST that the orchestrator serves at its
 # own nesting level. A legacy body at `.claude/runbooks/<name>.md` is
 # renamed to `<id>-<name>.md` lazily, never while [RUNNING], per
-# `references/body-migration.md`. Under the `unattended` execution policy —
-# the header's `Execution policy:` line, or --unattended / --attended
-# overriding it for one run — a step that asks a question is parked ([P])
+# `references/body-migration.md`. Under the `unattended` interaction policy —
+# resolved per the interaction engine, the header's `Execution policy:` line
+# ranking second — a step that asks a question is parked ([P])
 # with its question recorded and printed under a `P<n>` handle, and the run
 # goes on to the steps that do not depend on it, per
 # `references/parking.md`; under `attended`, the default, a question is
@@ -86,6 +86,9 @@ everything else is unchanged — see THE INLINE MODE.
 > | `./references/subagent-contract.md` | Always — THE SPAWNED PROMPT part 6, and a relay child's rules. |
 > | `./references/inline-contract.md` | **Only under `--inline`**, once, in step 1. It holds the inline rule set that replaces the subagent contract's OPERATING RULES under that flag; a default run never loads it. |
 > | `./references/parking.md` | **Once, on two triggers only**: when the policy resolves to `unattended` (step 1), or when step 3 selects a `[P]` step or finds one blocking selection. It holds the fifth result row, the end branch that is not a deadlock, unparking, the pre-ask, mid-run answers and the rejections. A default attended run that meets no `[P]` step never loads it. |
+> | `../interaction-engine/references/policy.md` | Always — in step 1, to resolve the run's policy. |
+> | `../interaction-engine/references/messages.md` | Always — before the first relayed question, gate or closing report. |
+> | `../interaction-engine/references/gates.md` | **Only when the policy resolves to `unattended`**, in step 1. |
 > | `./references/body-migration.md` | **Only when the migration check fires** in step 1 — a legacy body to rename. A run with nothing to migrate never loads it. |
 > | `./references/step-amend.md` | **Never by this body.** It sits beside the others, holding the rules for amending one step, read by path by whatever amends one. |
 
@@ -183,16 +186,17 @@ under `--inline`.
 | `--model <model>` | Override the runbook header's `Model:` for **this whole run**. There is no per-step model. |
 | `--inline` | Execute every selected step in **this session** instead of in a fresh subagent, for the whole run. Composes with `--from`, `--to`, `--only`, `--steps N`, `--no-commit`, `--no-push`, `--attended`, `--unattended` and `--skip-parked`, and changes nothing about selection, committing or the policy. Refused beside `--relay-spawns` or `--model`; the header `Model:` is not applied. See THE INLINE MODE. |
 | `--relay-spawns` | Force the spawn relay for the whole run, for an environment already known to be flat. Without it the relay still works — the step's own subagent triggers it when it finds it cannot spawn. See THE SPAWN RELAY. |
-| `--unattended` | Run under the `unattended` execution policy for this whole run, whatever the header says: a step that asks a question is parked and the run goes on (`./references/parking.md`). At launch, unless `--skip-parked`, the `[P]` steps in range are pre-asked. |
-| `--attended` | Run under the `attended` policy for this whole run, overriding a header `Execution policy: unattended`: a question is relayed and the run waits. Refused beside `--unattended`. |
-| `--skip-parked` | No pre-ask at launch: a `[P]` step in range stays parked unless a reply in chat answers it. For a launch no human sees — a routine, a scheduler, an orchestrator that is itself a subagent. Requires `--unattended`. |
+| `--unattended` | Run under the `unattended` policy for this whole run: a step that asks a question is parked and the run goes on (`./references/parking.md`). At launch, unless `--skip-parked`, the `[P]` steps in range are pre-asked. |
+| `--attended` | Run under the `attended` policy for this whole run: a question is relayed and the run waits. |
+| `--skip-parked` | No pre-ask at launch: a `[P]` step in range stays parked unless a reply in chat answers it. For a launch no human sees — a routine, a scheduler, an orchestrator that is itself a subagent. Requires the policy to resolve to `unattended`. |
 | `--commit` | Accepted and stripped, a silent no-op: committing is the default. Refused beside `--no-commit` with `--commit and --no-commit cannot be combined. Pick one.` |
 | `--no-commit` | Do the work and write the bookkeeping, but commit nothing. Implies `--no-push`. |
 | `--no-push` | Commit each step as usual, skip the push. |
 
-**The execution policy** is one value for the whole run, `attended` or
-`unattended`: `--attended` or `--unattended` when passed, else the header's
-`Execution policy:` line, else `attended`. Under `attended` nothing in this
+**The execution policy** is the run's interaction policy, resolved per
+`../interaction-engine/references/policy.md` — the runbook header's
+`Execution policy:` line ranks second there, after a flag or a parent's
+policy and before the project's `CLAUDE.md` line. Under `attended` nothing in this
 body changes and `./references/parking.md` is opened only for a `[P]` step an
 earlier run left behind (step 3). Under `unattended` the fifth result row
 parks a step at its question instead of relaying it, the spawned preamble
@@ -243,8 +247,10 @@ Nine argument errors — name the problem and stop, having run nothing:
   for.
 - `--inline` together with `--model`. The session's model cannot be changed
   from inside the run.
-- `--attended` together with `--unattended`. One policy per run.
-- `--skip-parked` without `--unattended` — beside `--attended` or alone.
+- `--attended` together with `--unattended`, or a `CLAUDE.md`
+  `Interaction policy:` value outside the two words — `policy.md`
+  § *Argument errors*, with its messages.
+- `--skip-parked` on a run whose policy does not resolve to `unattended`.
   There is no pre-ask to skip under `attended`; it asks when it reaches the
   step.
 - A header `Execution policy:` value that is neither `attended` nor
@@ -333,7 +339,8 @@ here, once, and give the run's opening line — see THE INLINE MODE
 **Resolve the execution policy** last in this step, from the header as it now
 stands at the resolved path, per ARGUMENTS § *The execution policy* — a header
 value outside the two words is the ninth argument error. When the policy is
-`unattended`, read `./references/parking.md` here, once, and run its
+`unattended`, read `../interaction-engine/references/gates.md` and
+`./references/parking.md` here, once, and run its
 § *The pre-ask* unless `--skip-parked` was passed: it is the one thing that
 writes to the body before step 4, and its commit is its own. Under `attended`
 nothing more happens here.
@@ -577,15 +584,18 @@ outside this rule: one is verbatim, the other fixed text.
    which is precisely not this case, and editing it per run would break the
    one property that makes it a contract.
 
-   **Under the `unattended` policy, and only then, the preamble carries one
-   more sentence, in that same slot**: *This run is unattended: a question
-   about the work parks this step, and a skill you invoke reads it as
-   unattended too.* The sentence says **unattended** — never
-   *non-interactive*, which an attended step's agent is too, and which would
-   make it park where it must relay. It is what turns on the two conditional
-   OPERATING RULES in part 6 and what `/task-implement` reads as *the
-   conversation declares this run unattended*. Under `attended` the preamble
-   says nothing about the policy.
+   **The preamble states the run's policy, under both values, in that same
+   slot** — the policy a skill the step invokes resolves as handed down by its
+   parent, per `../interaction-engine/references/policy.md`:
+   - under `attended`: *This run is attended: a question about the work is
+     relayed to the user and waited on, and a skill you invoke reads it as
+     attended too.*
+   - under `unattended`: *This run is unattended: a question about the work
+     parks this step, and a skill you invoke reads it as unattended too.*
+
+   The sentence says **attended** or **unattended** — never
+   *non-interactive*, which an attended step's agent is too. The unattended
+   one is what turns on the two conditional OPERATING RULES in part 6.
 2. **Background.** The `Companion:` document named in the runbook header, if
    there is one. Offer it as background to read if needed, not as required
    reading.
@@ -676,10 +686,10 @@ Step 3 of 7 — Peer review — the agent is asking (round 1):
 Recommendation: (b), because <one line>.
 ```
 
-At an **approval gate**, the full draft follows the block **verbatim and
-unabridged**. This is the one place the orchestrator must not compress: a
-summarized draft cannot be approved, and an approval given against a summary
-approves something the user never saw.
+At an **approval gate**, the block carries the agent's plain summary of the
+draft, per `../interaction-engine/references/messages.md`. A `show` reply is
+relayed to the agent like any answer, and its next turn carries the full
+draft, relayed unchanged in the same block's next round.
 
 The user's answer is relayed to the **same** subagent, whose context is
 intact — never to a fresh one, which would have to be re-briefed and would
@@ -707,9 +717,14 @@ never answers on the user's behalf in either position.
 
 **Under `--inline`** there is no relay hop: the asker is the session itself.
 A top-level session **asks the user directly**, in the fixed block headed
-`Step <n> of <total> — <title> — asking (round <r>)`, with any approval-gate
-draft verbatim and unabridged. It never answers its own question, and never
-skips a gate the step's skill defines because it "already knows" the answer.
+`Step <n> of <total> — <title> — asking (round <r>)`, with a plain summary of
+any approval-gate draft and the full draft on `show`. It never answers its own
+question, and never skips a gate the step's skill defines because it "already
+knows" the answer. That rule holds under `attended`, and under `unattended`
+for every gate but a `confirmation` one, which passes on its own as its owner
+says (`../interaction-engine/references/gates.md`): that is the gate's own
+behaviour under that policy, not a skipped gate. The same holds in a spawned
+step.
 The subagent-position rule above is unchanged: an inline session that is itself
 a subagent ends its turn under `QUESTIONS FOR USER` and resumes when the answer
 returns.
@@ -1019,7 +1034,9 @@ Every run ends with one closing report — at completion, at a `--to` / `--only`
 / `--steps` bound, at the end branch and at a failure halt alike — in two
 groups, in this order, each under its heading. Every entry is drawn from a
 step's `Done:` line and its own report, both already in hand, and from the
-run's own conversation.
+run's own conversation. Its length and what it names follow
+`../interaction-engine/references/messages.md` § *Output*; every question in
+it follows § *Questions*.
 
 - **For the record** — one line per step the run executed, in list order, in
   exactly this shape: `<step n> — <outcome, commit sha and diffstat> — <what

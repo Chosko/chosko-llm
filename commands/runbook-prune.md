@@ -1,10 +1,10 @@
 ---
 name: runbook-prune
-version: 0.1.3
+version: 0.2.0
 type: command
 description: Prune the finished steps out of one runbook — remove every [x] step and record its id on the body's Archive: line, so a surviving dependency and the index's step count still resolve. Use it to shrink a long-running runbook without renumbering a step or touching a pending one.
 disable-model-invocation: true
-requires: skill:runbook-run
+requires: skill:runbook-run, skill:interaction-engine
 ---
 
 # /runbook-prune
@@ -23,6 +23,7 @@ requires: skill:runbook-run
 # Usage: /runbook-prune <id|name|id-name>
 #        /runbook-prune <id|name|id-name> --no-commit   (prune, skip the commit and push)
 #        /runbook-prune <id|name|id-name> --no-push     (commit as usual, skip the push)
+#        /runbook-prune <id|name|id-name> --attended | --unattended   (the gate waits either way)
 # Examples: /runbook-prune ecc-import-landing
 #           /runbook-prune 1
 #           /runbook-prune 1-ecc-import-landing
@@ -56,6 +57,10 @@ what is left is this command's own argument — **exactly one** runbook, as
 | `--commit` | Accepted and stripped, a silent no-op: committing is the default. Refused beside `--no-commit` with `--commit and --no-commit cannot be combined. Pick one.` |
 | `--no-commit` | Set NO_COMMIT = true. Prune the body and rewrite the index, but make no commit and no push. |
 | `--no-push` | Set NO_PUSH = true. Commit as usual, skip the pull/re-sync/push. |
+| `--attended` / `--unattended` | The interaction policy for this run, resolved with a parent's policy and the project's `CLAUDE.md` per `../skills/interaction-engine/references/policy.md`, which holds their argument errors. The one gate here is `destructive`, so the policy changes nothing: under `unattended`, where nobody answers, the run stops at the gate with its plan and writes nothing. |
+
+Read `../skills/interaction-engine/references/messages.md` before the gate;
+the closing report follows its output rules.
 
 NO_COMMIT implies NO_PUSH — there is nothing to push. There is **no step
 argument and no `--all`**: a prune is per runbook and takes every `[x]` step in
@@ -223,7 +228,8 @@ bullet, no prompt block, and no other runbook.
 - Print the surviving step ids. A plan that lists only removals leaves the user
   to work out what is left, which is the one thing they are approving.
 
-End with a single explicit prompt: **"Apply?"**
+End with a single explicit prompt: **"Apply?"** Gate class: `destructive`
+(`../skills/interaction-engine/references/gates.md`).
 
 Wait for the user. **Nothing is written before an explicit answer** — "yes",
 "go", "apply" or similar. Silence is not approval. If the user asks to keep a

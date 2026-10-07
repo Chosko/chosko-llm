@@ -1,9 +1,9 @@
 ---
 name: runbook-create
-version: 0.8.6
+version: 0.9.0
 type: command
 description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/, indexed in .claude/RUNBOOKS.md — from this conversation's follow-up list or a free-form description, or append steps to one. Use it to hand ordered work to later sessions that lack this conversation's context.
-requires: skill:runbook-run
+requires: skill:runbook-run, skill:interaction-engine
 ---
 
 # /runbook-create
@@ -34,6 +34,7 @@ requires: skill:runbook-run
 #        /runbook-create <args> --no-commit  (write the runbook, skip the commit and push)
 #        /runbook-create <args> --no-push    (commit as usual, skip the push)
 #        /runbook-create <args> --commit     (accepted; changes nothing — the default already commits)
+#        /runbook-create <args> --attended | --unattended
 # Examples: /runbook-create implement-ecc-import
 #           /runbook-create --append implement-ecc-import
 #           /runbook-create --append 3 --before 4
@@ -70,6 +71,12 @@ is left is the target name or the free-form description.
 | `--no-commit` | Set COMMIT = false. Write the runbook, but make no commit and no push. Implies NO_PUSH. |
 | `--no-push` | Set NO_PUSH = true. Commit as usual, skip the pull/re-sync/push. |
 | `--commit` | Accepted and changes nothing — COMMIT is already true. |
+| `--attended` / `--unattended` | The interaction policy for this run, resolved with a parent's policy and the project's `CLAUDE.md` per `../skills/interaction-engine/references/policy.md`, which holds their argument errors. Under `unattended`, read `../skills/interaction-engine/references/gates.md`. It is not the runbook's own `Execution policy:` header, which this command writes only on request. |
+
+Read `../skills/interaction-engine/references/messages.md` before the first
+question or gate; the questions, the gate summary and the closing report
+follow it. This command cannot park: under `unattended` a question it would
+ask stops the run with nothing written.
 
 `--before` and `--after` each take a value — a **step id**, the number in a
 step's heading, never a position in the list — and both the flag and its value
@@ -112,7 +119,7 @@ which is what makes appending safe while a run is in progress:
 | Line | Written here | Never written here |
 | --- | --- | --- |
 | the header, `Last step number:`, `Sequencing:`, `Companion:` | yes | `Archive:`, which is `/runbook-prune`'s — an append never writes, normalises or drops it |
-| `Execution policy:` | only when the user asks for an unattended runbook | by default — absent means `attended`, the way an absent `Needs:` means `agent`; and never by a run, which overrides it per run with a flag instead |
+| `Execution policy:` | only when the user asks for an unattended runbook | by default — absent, the project's `CLAUDE.md` policy decides, else `attended`; and never by a run, which overrides it per run with a flag instead |
 | a step's title and its ```prompt``` block | yes | — |
 | `Depends on:` | yes | — |
 | `Needs:` | `agent+human` and `human` only | `agent`, which is the default and is never written |
@@ -269,7 +276,9 @@ step-specific ones go in the step's own prompt instead.
 
 Applies when the argument was a free-form description. Nothing useful is in
 context, so ask for it — as **one batch**, with a recommended answer for each,
-so the whole interview can be settled in a sentence:
+so the whole interview can be settled in a sentence. Under `unattended`
+these are real decisions (`gates.md` § *Real decisions*): the run stops with
+the batch, writing nothing.
 
 1. **What must be true when this runbook is finished?** The end state. It is
    what makes the last step recognizable as the last step.
@@ -425,7 +434,11 @@ Fixes applied:
 Do not re-propose: <n> items
 ```
 
-End with a single explicit prompt: **"Approve and write?"**
+End with a single explicit prompt: **"Approve and write?"** Gate class:
+`confirmation` — under `unattended` it passes on its own: PHASE 5 writes the
+plan as shown, PHASE 6 commits it, and the closing report is the gate's
+summary, naming that commit — or, under `--no-commit`, the uncommitted
+files.
 
 On an append the list shows only the new steps, under the ids they will be
 written with, and `Position:` says where in the list they land — so a step
@@ -440,16 +453,17 @@ titles, and it decides whether they can start the run and walk away.
 
 **Only the shape.** Full prompts are deliberately not shown back: they are a
 wall of text that gets skimmed, and they are in the file a moment later, where
-a fix is one `/pipeline-revise` or `--append` away. The gate exists to catch a **wrong order or a
+a fix is one `/pipeline-revise` or `--append` away; a `show` reply prints
+them and asks again. The gate exists to catch a **wrong order or a
 missing step** — both expensive after the first step has run, and cheap now.
 
-Wait for an explicit answer. Iterate and re-render the whole plan after any
-non-trivial change. Silence is not approval, and nothing is written before
-one.
+Wait for an explicit answer — under `attended`. Iterate and re-render the
+whole plan after any non-trivial change. Silence is not approval, and nothing
+is written before one.
 
 ---
 
-PHASE 5 — WRITE (only after explicit approval)
+PHASE 5 — WRITE (only after the gate is approved or passes on its own)
 
 Emit the body and the index block exactly as `runbook-schema.md` specifies.
 Two cases.

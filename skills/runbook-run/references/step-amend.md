@@ -131,11 +131,16 @@ ahead of the steps that depended on the struck one; say so at the gate.
 
 ## The gate
 
-One gate for a strike or a context amendment: the runbook, the step (id,
-marker, title), the operation with the exact lines to be written, the steps a
-strike releases, and — on a `[RUNNING]` runbook — which step is current. End
-with **"Apply?"** and wait for an explicit answer. Silence, an unclear reply
-or EOF writes nothing.
+One gate for a strike or a context amendment, gate class `confirmation`
+(`../../interaction-engine/references/gates.md`), carrying a plain-language
+summary per `../../interaction-engine/references/messages.md`: the step by
+its title, what the operation does to it and why, the steps a strike
+releases, and — on a `[RUNNING]` runbook — which step is current, with the
+runbook's name and the step's id and marker last, in parentheses. A `show`
+reply prints the exact lines to be written and asks again. End with
+**"Apply?"** and wait for an explicit answer. Silence, an unclear reply or
+EOF writes nothing. Under `unattended` the gate passes on its own and the
+consumer's commit is named in its summary.
 
 **With a draft passed in** — a revision surface that decided the strike, the
 fact or the inserted step at its own gate passes it in — compare it with the
@@ -161,5 +166,5 @@ at its `File:` path and the index, by explicit path.
 ## The closing report line
 
 ```
-Amended runbook <name>, step <id>: <struck — <reason> | +<n> context fact(s) | inserted step(s) <ids> <before|after> step <id>>.
+Amended <step title> — <struck because <reason> | <n> new fact(s) recorded for it | <n> step(s) inserted <before|after> it> (runbook <name>, step <id>).
 ```

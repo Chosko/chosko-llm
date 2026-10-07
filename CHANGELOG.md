@@ -2,6 +2,13 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.79.0 — 2026-10-07
+
+- **The runbook suite follows the interaction policy.** `/runbook-run`, `/runbook-create`, `/runbook-clean` and `/runbook-prune` accept `--attended` and `--unattended` and read `Interaction policy:` from `CLAUDE.md`; for `/runbook-run` a runbook's `Execution policy:` header still outranks the `CLAUDE.md` line, and a flag outranks both.
+- **Every step is told its policy.** A spawned step's prompt says "This run is attended" as well as "This run is unattended", so a skill it invokes follows the run's policy rather than the project's `CLAUDE.md` line.
+- **Confirmation gates pass on their own in unattended runs.** Inside a step, and at `/runbook-create`'s approval and the step-amend gate, a gate tagged as a confirmation passes on its own under `unattended` and names its commit; `/runbook-clean` and `/runbook-prune` always wait.
+- **Summaries instead of full drafts.** A relayed approval shows a plain summary of the draft; reply `show` to see it whole. Parked-question lines and the "Amended …" line lead with what happened, step numbers last.
+
 ## 1.78.0 — 2026-10-07
 
 - **The `task-*` suite follows the interaction policy.** `/task-implement`, `/task-add`, `/task-setup`, `/task-iterate` and `/task-clean` accept `--attended` and `--unattended`, and read `Interaction policy: attended|unattended` from `CLAUDE.md`. Under `unattended`, `/task-add`'s approval and `/task-implement`'s feature-done proposal and skip-tests "Proceed?" pass on their own; an open question stops `/task-add`, `/task-setup` and `/task-iterate` with nothing written; `/task-clean` and `/task-setup`'s stub overwrite always wait.
