@@ -365,7 +365,7 @@ Each feature lands as its own commit with a patch bump of its `version:` frontma
 
 Done: 2026-10-07, 29 commits `cb98c14`…`b4e3c06` (43 files, +6213/-7248). 28 features rewritten (≤2 rounds each), 18 kept their text (no real gain; claude-council is vendored and left alone); about −8% words, not the pilot's −18%. Ran locally, so no relay cap applied; about 7M tokens.
 
-## [ ] 21. Final consistency sweep
+## [x] 21. Final consistency sweep
 
 Depends on: 20
 
@@ -377,6 +377,8 @@ Context:
 ```prompt
 Run /pipeline-check and fix any finding it reports for the features this runbook added or changed (interaction-policy, unity-mcp-removal, setup-sync, session-readers, quick-implement, orchestrate-mode, objective-run). Then run /context-update. Then run `./scripts/check-changelog.sh`, `./scripts/check-home-paths.sh`, `./scripts/check-routing.sh` and `./scripts/check-setup.sh`; all must be silent. Report in a few lines what was fixed, if anything.
 ```
+
+Done: 2026-10-07, commit `e940aff` (56 files, +6070/-5997). Nothing to fix: /pipeline-check clean for the seven features; /context-update wrote nothing because its date anchor (`Last updated: 2026-10-07`) counts no same-day commit, step 20's included.
 
 ## Do not re-propose
 
