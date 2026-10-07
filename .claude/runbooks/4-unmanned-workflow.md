@@ -262,21 +262,25 @@ Context: none
 
 Done: 2026-10-07, commit `f09226c` (4 files, +177/-3). Tasks 310–311; each round's log commit is pushed, no --no-commit/--no-push.
 
-## [ ] 7. Implement the interaction policy
+## [x] 7. Implement the interaction policy
 
 Depends on: 4
 
-Context: none
+Context:
+- 2026-10-07 (orchestrator): cloud session — the step agent cannot spawn, so each reviewer /task-implement --review wants goes through the spawn relay, capped at 8 per step; keep one reviewer round per task (--rounds 1) and do not add --agents.
 
 ```prompt
 Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:` line is `interaction-policy`, in backlog order, as one invocation: /task-implement <ids> --review --unattended
 ```
+
+Done: 2026-10-07, commits `6c815d0`, `a33adec`, `5767b01`, `0e440f6`, `90ce941`, `2152406`, `77cac87` (91 files, +1419/-474). Decision: task-engine and pipeline-engine take no `requires: skill:interaction-engine` (feature doc wins over task 282's wording).
 
 ## [ ] 11. Implement the Unity removal, then setup sync
 
 Depends on: 7, 9, 10
 
 Context:
+- 2026-10-07 (orchestrator): cloud session — the step agent cannot spawn, so each reviewer /task-implement --review wants goes through the spawn relay, capped at 8 per step; keep one reviewer round per task (--rounds 1) and do not add --agents.
 - 2026-10-06 (from step 3): this repo also keeps `--local` installed copies under `.claude/skills/` and `.claude/commands/` (incl. `task-implement/unity-mcp-checkpoints.md`); the removal must refresh those copies, not only the sources.
 - 2026-10-06 (from step 3): under setup-sync the testing-policy line's `project-policy:` declaration goes on `/task-implement` (quick-implement's plumbing later moves the rule to `task-engine`).
 
@@ -288,7 +292,8 @@ Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:`
 
 Depends on: 7, 12
 
-Context: none
+Context:
+- 2026-10-07 (orchestrator): cloud session — the step agent cannot spawn, so each reviewer /task-implement --review wants goes through the spawn relay, capped at 8 per step; keep one reviewer round per task (--rounds 1) and do not add --agents.
 
 ```prompt
 Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:` line is `session-readers`, in backlog order, as one invocation: /task-implement <ids> --review --unattended
@@ -298,7 +303,8 @@ Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:`
 
 Depends on: 7, 14
 
-Context: none
+Context:
+- 2026-10-07 (orchestrator): cloud session — the step agent cannot spawn, so each reviewer /task-implement --review wants goes through the spawn relay, capped at 8 per step; keep one reviewer round per task (--rounds 1) and do not add --agents.
 
 ```prompt
 Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:` line is `quick-implement`, in backlog order, as one invocation: /task-implement <ids> --review --unattended
@@ -308,7 +314,8 @@ Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:`
 
 Depends on: 13, 15, 16
 
-Context: none
+Context:
+- 2026-10-07 (orchestrator): cloud session — the step agent cannot spawn, so each reviewer /task-implement --review wants goes through the spawn relay, capped at 8 per step; keep one reviewer round per task (--rounds 1) and do not add --agents.
 
 ```prompt
 Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:` line is `orchestrate-mode`, in backlog order, as one invocation: /task-implement <ids> --review --unattended
@@ -320,7 +327,8 @@ This goes after session-readers and quick-implement: orchestrate-mode extends se
 
 Depends on: 15, 18
 
-Context: none
+Context:
+- 2026-10-07 (orchestrator): cloud session — the step agent cannot spawn, so each reviewer /task-implement --review wants goes through the spawn relay, capped at 8 per step; keep one reviewer round per task (--rounds 1) and do not add --agents.
 
 ```prompt
 Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:` line is `objective-run`, in backlog order, as one invocation: /task-implement <ids> --review --unattended
