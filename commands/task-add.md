@@ -1,6 +1,6 @@
 ---
 name: task-add
-version: 2.6.1
+version: 2.6.2
 type: command
 description: Plan one new task with the user and write it to the backlog — a summary block in TASKS.md plus a body file — from a prose description or from an /architect feature document. Use it for any new unit of work; stage 5 of the pipeline: turns a feature document into tasks; its output is /task-implement's input.
 requires: skill:task-engine, skill:interaction-engine
@@ -83,8 +83,8 @@ handed down by a parent run and the project's `CLAUDE.md`, per
 `../skills/interaction-engine/references/policy.md`, which also holds their
 argument errors. When it resolves to `unattended`, read
 `../skills/interaction-engine/references/gates.md`: each gate below carries
-its class tag, and this command cannot park, so whatever waits stops the run
-with nothing written. Read `../skills/interaction-engine/references/messages.md`
+its class tag, this command has no parking mechanism, and a stopped run
+writes nothing. Read `../skills/interaction-engine/references/messages.md`
 before the first question or gate; every question and every gate summary
 this command prints follows it.
 

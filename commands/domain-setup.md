@@ -1,6 +1,6 @@
 ---
 name: domain-setup
-version: 0.3.1
+version: 0.3.2
 type: command
 description: Initialize the project's domain knowledge layer — creates .claude/domain/ with its features/ folder and INDEX.md, the .claude/FEATURES.md feature index, and a CLAUDE.md pointer to the domain index. Run it once before any other pipeline command; stage 0 of the pipeline: scaffolds the layer every later stage writes into.
 disable-model-invocation: true
@@ -76,10 +76,10 @@ whichever appear. The run's interaction policy resolves from them, a policy
 handed down by a parent run and the project's `CLAUDE.md`, per
 `../skills/interaction-engine/references/policy.md`, which holds their
 argument errors; under `unattended`, read
-`../skills/interaction-engine/references/gates.md`. Read
+`../skills/interaction-engine/references/gates.md` — this command has no
+parking mechanism. Read
 `../skills/interaction-engine/references/messages.md` before the first
-question and before the step 4 report, which follows its output rules. This
-command cannot park: under `unattended` a gate that waits stops the run.
+question and before the step 4 report, which follows its output rules.
 
 Also parse the optional `--no-push` flag; if present, set NO_PUSH = true.
 NO_PUSH only matters when COMMIT is true: it skips the pull at start, the

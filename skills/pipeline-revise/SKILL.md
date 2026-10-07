@@ -1,6 +1,6 @@
 ---
 name: pipeline-revise
-version: 1.2.0
+version: 1.2.1
 type: skill
 description: Revise already-planned work — a set of changes to feature documents, tasks, plan edges and runbook steps — through the owners of every artifact they reach, as one numbered plan behind one gate. Use it for any change to work that is already planned, from one wording fix to a list of amendments, deletions, insertions and reorders.
 requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run, skill:product-design, skill:production-plan, skill:product-roadmap, skill:interaction-engine
@@ -105,8 +105,8 @@ The run's interaction policy resolves from them, a policy handed down by a
 parent run and the project's `CLAUDE.md`, per
 `../interaction-engine/references/policy.md`, which holds their argument
 errors. The policy is handed down to every owner the run drives, as the
-flag. This skill cannot park: a gate that waits under `unattended` stops the
-run there, nothing written.
+flag. This skill has no parking mechanism
+(`../interaction-engine/references/gates.md`); a stopped run writes nothing.
 
 Then scan for `--catch-up` and strip it. CATCH_UP is true when present, and
 what follows it is its input: a path to a spec file, or a quoted description

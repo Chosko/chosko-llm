@@ -1,6 +1,6 @@
 ---
 name: quick-implement
-version: 0.2.1
+version: 0.2.2
 type: skill
 description: Take one small change from conversation to commit in a single run — a spec conversation with a drift check against the documented design, one gate, then tests first and one commit holding the change and its spec file under .claude/specs/ — with no backlog entry. Use it for a change one person can describe and one commit can hold; anything bigger goes to /task-add.
 requires: skill:task-engine, skill:interaction-engine, command:follow-ups
@@ -176,10 +176,9 @@ say why in one or two lines, name the parts it would split into, and point to
 `/task-add "<change>"`. Nothing is written, under either policy.
 
 Gate class: `confirmation` when the spec has no open question, `design`
-otherwise. Under `unattended`, a `confirmation` gate passes on its own: the
-run continues to step 4 and the closing report names the commit. A `design`
-gate cannot park — there is no task to park — so the run stops with the
-summary and the open questions last, and writes nothing. Divergences never
+otherwise. Under `unattended` the gate follows
+`../interaction-engine/references/gates.md`, this skill having no parking
+mechanism; a stopped run writes nothing. Divergences never
 make the gate `design` on their own: they are listed, never blocking.
 
 Wait for an explicit approval under `attended`; silence is not approval. A

@@ -1,6 +1,6 @@
 ---
 name: task-setup
-version: 2.1.3
+version: 2.1.4
 type: command
 description: Initialize the project's task backlog — creates .claude/TASKS.md, the .claude/tasks/ directory and the test-dispatch wrappers under .claude/external/. Run it once on a project before its first /task-add; a re-run only creates what is missing.
 disable-model-invocation: true
@@ -73,10 +73,10 @@ whichever appear. The run's interaction policy resolves from them, a policy
 handed down by a parent run and the project's `CLAUDE.md`, per
 `../skills/interaction-engine/references/policy.md`, which also holds their
 argument errors; under `unattended`, read
-`../skills/interaction-engine/references/gates.md`. Read
+`../skills/interaction-engine/references/gates.md` — this command has no
+parking mechanism. Read
 `../skills/interaction-engine/references/messages.md` before the first
-question and before the step 3 report, which follows its output rules. This
-command cannot park: under `unattended` a question it asks stops the run.
+question and before the step 3 report, which follows its output rules.
 
 Also parse the optional `--no-push` flag; if present, set NO_PUSH = true.
 NO_PUSH only matters when COMMIT is true: it skips the pull at start, the

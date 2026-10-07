@@ -1,6 +1,6 @@
 ---
 name: project-setup
-version: 0.10.0
+version: 0.10.1
 type: command
 description: Interactive first-time project initialization wizard — gathers every choice up front (VCS, CLAUDE.md content, AGENTS.md, task backlog, domain layer, context layer), confirms once, then runs /task-setup, /domain-setup and /context-build in a fixed order. Use it once, on a project the chosko-llm tooling has not been set up on yet.
 disable-model-invocation: true
@@ -140,12 +140,12 @@ whichever appear. The run's interaction policy resolves from them, a policy
 handed down by a parent run and the project's `CLAUDE.md`, per
 `../skills/interaction-engine/references/policy.md`, which holds their
 argument errors; under `unattended`, read
-`../skills/interaction-engine/references/gates.md`. Read
+`../skills/interaction-engine/references/gates.md` — this wizard has no
+parking mechanism, its GATHER questions are real decisions, and a stopped
+run writes nothing. Read
 `../skills/interaction-engine/references/messages.md` before the first
 question — every question, the PHASE 2 plan and the closing report follow
 it. The resolved policy is handed down to every nested command, as its flag.
-This wizard cannot park: under `unattended` the GATHER questions are real
-decisions, so the run stops with them, nothing written.
 
 ---
 

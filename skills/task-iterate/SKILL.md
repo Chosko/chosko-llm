@@ -1,6 +1,6 @@
 ---
 name: task-iterate
-version: 0.3.0
+version: 0.3.1
 type: skill
 description: Triage review findings it did not produce — fix, defer or reject each one, apply the fixes and record why the rest were not — on an uncommitted tree, a branch or a pull request. Use it after /task-review has reported; /task-implement's review rounds run it in-session between the review and the task's single commit.
 requires: skill:interaction-engine
@@ -123,8 +123,9 @@ Scan the argument string and strip these tokens, in any order and any position:
 - `--attended` / `--unattended` — the interaction policy, resolved with a
   policy handed down by the caller and the project's `CLAUDE.md` per
   `../interaction-engine/references/policy.md`, which also holds their
-  argument errors. This skill cannot park, so under `unattended` each of its
-  questions stops the run with nothing applied.
+  argument errors. This skill has no parking mechanism
+  (`../interaction-engine/references/gates.md`); a stopped run applies
+  nothing.
 
 `--commit` and `--no-commit` are mutually exclusive — if both appear, stop
 with: `--commit and --no-commit cannot be combined. Pick one.`

@@ -1,6 +1,6 @@
 ---
 name: runbook-create
-version: 0.9.0
+version: 0.9.1
 type: command
 description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/, indexed in .claude/RUNBOOKS.md — from this conversation's follow-up list or a free-form description, or append steps to one. Use it to hand ordered work to later sessions that lack this conversation's context.
 requires: skill:runbook-run, skill:interaction-engine
@@ -71,12 +71,11 @@ is left is the target name or the free-form description.
 | `--no-commit` | Set COMMIT = false. Write the runbook, but make no commit and no push. Implies NO_PUSH. |
 | `--no-push` | Set NO_PUSH = true. Commit as usual, skip the pull/re-sync/push. |
 | `--commit` | Accepted and changes nothing — COMMIT is already true. |
-| `--attended` / `--unattended` | The interaction policy for this run, resolved with a parent's policy and the project's `CLAUDE.md` per `../skills/interaction-engine/references/policy.md`, which holds their argument errors. Under `unattended`, read `../skills/interaction-engine/references/gates.md`. It is not the runbook's own `Execution policy:` header, which this command writes only on request. |
+| `--attended` / `--unattended` | The interaction policy for this run, resolved with a parent's policy and the project's `CLAUDE.md` per `../skills/interaction-engine/references/policy.md`, which holds their argument errors. Under `unattended`, read `../skills/interaction-engine/references/gates.md` — this command has no parking mechanism, and a stopped run writes nothing. It is not the runbook's own `Execution policy:` header, which this command writes only on request. |
 
 Read `../skills/interaction-engine/references/messages.md` before the first
 question or gate; the questions, the gate summary and the closing report
-follow it. This command cannot park: under `unattended` a question it would
-ask stops the run with nothing written.
+follow it.
 
 `--before` and `--after` each take a value — a **step id**, the number in a
 step's heading, never a position in the list — and both the flag and its value
