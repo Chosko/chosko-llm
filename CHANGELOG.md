@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.89.2 — 2026-10-07
+
+- **`/task-implement`'s testing-policy resolution, tests-first sequence and closing report now live in `task-engine`.** Each is one reference file `/task-implement` cites, so other commands can share them; the test-runner heuristics and no-test-suite mode move with them. The `Testing policy for /task-implement:` line keeps its exact wording, and `/task-implement` behaves exactly as before.
+
 ## 1.89.1 — 2026-10-07
 
 - **`/task-add`'s design-change check, reconciliation and orphan question now live in `task-engine`.** Each is one reference file `/task-add` cites, so other commands can share them. `/task-add` behaves exactly as before.

@@ -293,7 +293,8 @@ prints the returned question under the run's next `P<n>` handle exactly as
 SKILL.md's *Parking at a question* does for an in-context task, prints its
 progress line (§ *Between delegated tasks*), and spawns the next agent. The
 closing report lists the task under *Follow-ups* with that question, per
-SKILL.md's THE CLOSING REPORT — the parent still opens no body for it.
+`../task-engine/references/closing-report.md` — the parent still opens no
+body for it.
 
 **The fifth field applies `/follow-ups`' rules; it does not define its own.**
 The agent reads that command's own body and applies what it finds there to its
@@ -333,8 +334,9 @@ still holds fifty short rows.
 
 The parent does not act on them, does not judge them and does not ask about
 them mid-run. It records them beside the other four fields and they feed
-exactly one place: the *Follow-ups* group of the closing report, SKILL.md's
-THE CLOSING REPORT, attributed to their task and de-duplicated by action
+exactly one place: the *Follow-ups* group of the closing report,
+`../task-engine/references/closing-report.md`, attributed to their task and
+de-duplicated by action
 against the run's own items there. A follow-up line is the agent's claim, not
 the parent's finding — the parent never opened the task and is in no position
 to verify it, which is also why it is never a reason to halt the run.

@@ -40,8 +40,9 @@ carries only the unconditional `requires: skill:task-engine`.
 
 ## Where the loop sits
 
-After Step 5 (the full test suite) and **before** Step 6 (the terminal
-status flip), on the uncommitted tree.
+After Step 5 (the full test suite,
+`../task-engine/references/tests-first.md`) and **before** Step 6 (the
+terminal status flip), on the uncommitted tree.
 
 ```
 Step 3  Implement

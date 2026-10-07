@@ -39,7 +39,7 @@ root, with the result shape the verdict line prints.
 | `plan` | `.claude/PLAN.md` exists. | `yes` \| `no` |
 | `runbooks` | `.claude/RUNBOOKS.md` exists. | `yes` \| `no` |
 | `council` | `skills/claude-council/SKILL.md` exists under either install home (see below) — the same question the council gates of `/architect` and `/product-design` ask, though they ask it by name rather than by path. | `yes` \| `no` |
-| `testing` | The project's `CLAUDE.md` carries a line `Testing policy for /task-implement: <value>`, and its value. The marker and its values are `/task-implement`'s; the probe reads the value and interprets nothing. | the value, or `none` |
+| `testing` | The project's `CLAUDE.md` carries a line `Testing policy for /task-implement: <value>`, and its value. The marker and its values are `task-engine`'s testing-policy resolution's; the probe reads the value and interprets nothing. | the value, or `none` |
 | `installed` | Which pipeline features are installed under either install home — each feature a row of `routing.md` names, found as `commands/<name>.md` or `skills/<name>/SKILL.md`, either kind. Row names are unioned across both homes. | `<found>/<rows>`, plus ` (missing: <name>, …)` when any is absent; `unknown` when neither home has a `routing.md` |
 
 `sliced` follows `/architect`'s own reading of a roadmap: a roadmap with no

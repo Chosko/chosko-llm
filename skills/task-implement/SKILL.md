@@ -1,10 +1,9 @@
 ---
 name: task-implement
-version: 1.12.1
+version: 1.12.2
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, skill:interaction-engine, command:follow-ups
-project-policy: line:Testing policy for /task-implement=skip-tests|full-tdd|skip-tests-unattended
 ---
 
 # /task-implement
@@ -98,17 +97,20 @@ $ARGUMENTS
 
 SHARED RULES (the `task-engine`)
 
-Eight rules this skill shares with the rest of the `task-*` suite have exactly
-one authority each, under
+Eleven rules this skill shares with the rest of the `task-*` suite have
+exactly one authority each, under
 `../task-engine/references/`:
 `resolution.md` (where the backlog lives and how a run resolves its task
 list), `status.md` (the status vocabulary), `targets.md` (the `Target:`
 values and the delegation guard), `stale.md` (`[STALE]`), `tree.md` (the
 dirty-tree protocol), `commit.md` (commit and push gating),
 `review-budget.md` (the review cost controls behind `--review-model` /
-`--review-effort`) and `parking.md` (task parking under the `unattended`
-policy — read only on the condition SUPPORTING FILES gives). Every one of
-them carries a `/task-implement` note holding this skill's own departures.
+`--review-effort`), `testing-policy.md` (the testing-policy marker and how
+the test runner is resolved), `tests-first.md` (the tests-first sequence,
+Steps 2–5), `closing-report.md` (the closing report) and `parking.md` (task
+parking under the `unattended` policy — read only on the condition
+SUPPORTING FILES gives). Every one of them carries a `/task-implement` note
+holding this skill's own departures.
 
 The sections below cite those files where they apply and state only what is
 this skill's own. `requires: skill:task-engine` in the frontmatter is what
@@ -119,8 +121,10 @@ guarantees they are installed.
 SUPPORTING FILES (read on demand — not up front)
 
 This skill's common path is the whole of SKILL.md plus the interaction
-engine's `policy.md` and `messages.md`: a clean working tree, a project whose
-test command is already known, and numbered `Target: claude` tasks.
+engine's `policy.md` and `messages.md` and the task engine's
+`testing-policy.md`, `tests-first.md` and `closing-report.md`: a clean
+working tree, a project whose test command is already known, and numbered
+`Target: claude` tasks.
 Everything else below is loaded only when its branch actually applies.
 
 | Read this file | Exactly when |
@@ -128,8 +132,11 @@ Everything else below is loaded only when its branch actually applies.
 | `../interaction-engine/references/policy.md` | Every run, at ARGUMENT PARSING, to resolve the interaction policy. |
 | `../interaction-engine/references/messages.md` | Every run, before its first question, gate or closing report. |
 | `../interaction-engine/references/gates.md` | UNATTENDED is true (read at ARGUMENT PARSING). Never on an attended run. |
-| `./test-runner.md`   | Neither CLAUDE.md/README/`.claude/` nor a testing-policy marker names the test command, so you must infer it. |
-| `./no-test-suite.md` | The project has no test suite at all, OR CLAUDE.md declares `Testing policy for /task-implement: skip-tests`. |
+| `../task-engine/references/testing-policy.md` | Every run, at RESOLVING THE TEST RUNNER. |
+| `../task-engine/references/tests-first.md` | Every task, at Step 2 (Step 3 when Steps 2, 4 and 5 are skipped). |
+| `../task-engine/references/closing-report.md` | Every run, at THE CLOSING REPORT. |
+| `../task-engine/references/test-runner.md` | Neither CLAUDE.md/README/`.claude/` nor a testing-policy marker names the test command, so you must infer it. |
+| `../task-engine/references/no-test-suite.md` | The project has no test suite at all, OR CLAUDE.md declares `Testing policy for /task-implement: skip-tests`. |
 | `./human-in-loop.md` | The current task's `Target:` is `claude+human` or `human`. |
 | `./body-schemas.md`  | The task body does NOT match the current schema (Goal / Acceptance criteria / Decisions / Hints). |
 | `./delegated-runs.md` | DELEGATE is true — the resolved list holds 2+ tasks and the user opted into per-task subagents (or passed `--agents`). Never on a single-task run, nor when the user declined. |
@@ -160,11 +167,12 @@ in Step 7 while every task still commits.
 
 Also scan for the optional `-y` flag. If present, set AUTO_CONFIRM = true
 and strip it. AUTO_CONFIRM only changes behavior in skip-tests mode (see
-RESOLVING THE TEST RUNNER and `./no-test-suite.md`): it suppresses the
+RESOLVING THE TEST RUNNER and
+`../task-engine/references/no-test-suite.md`): it suppresses the
 per-task "Proceed?" confirmation that mode would otherwise ask before each
 task. It has no effect in full test mode, which never asks that prompt. A
 `skip-tests-unattended` policy marker sets it for a whole run without the
-flag — RESOLVING THE TEST RUNNER step 0 — and `-y` passed as well is
+flag — `testing-policy.md` step 0 — and `-y` passed as well is
 redundant but harmless, never an error.
 
 Also scan for the optional `--agents` / `--no-agents` pair and strip
@@ -243,7 +251,7 @@ When UNATTENDED is true:
   unanswered — a contract the session runs under, such as a runbook step's
   OPERATING RULES, answers it first — per `parking.md` § *Prompts with a
   default*, each value taken being one *For the record* line; the one prompt with none, an ambiguous test runner,
-  aborts the run (RESOLVING THE TEST RUNNER step 2). Only a question about
+  aborts the run (`testing-policy.md` step 2). Only a question about
   the work parks a task, and only inside the per-task workflow (PER-TASK
   WORKFLOW § *Parking at a question*).
 
@@ -371,45 +379,11 @@ that meets no `[PARKED]` task.
 
 RESOLVING THE TEST RUNNER
 
-The skill must work on any project. Establish how tests run before doing
-anything else:
-
-0. **Testing policy marker (checked first).** Read `CLAUDE.md` if it
-   exists and look for a line of the form:
-   `Testing policy for /task-implement: skip-tests`,
-   `Testing policy for /task-implement: full-tdd`, or
-   `Testing policy for /task-implement: skip-tests-unattended`. This is a
-   project's own durable declaration and overrides heuristic detection:
-   - `skip-tests` → the project has stated it has no automated test
-     suite. Read `./no-test-suite.md` and go straight to its skip-tests
-     mode, without asking the A/B question.
-   - `skip-tests-unattended` → same as `skip-tests`, plus set
-     AUTO_CONFIRM = true (as if `-y` had been passed) for the whole run,
-     so skip-tests mode's per-task "Proceed?" prompt is also suppressed.
-   - `full-tdd` → the project has stated it does have a test suite, even
-     if no runner is auto-detectable. Never enter no-test-suite mode;
-     continue at step 1 to resolve the actual test command.
-   - No marker found → continue to step 1.
-1. If a CLAUDE.md, README.md, or `.claude/` context file specifies a test
-   command, use it. Project conventions beat heuristics. **On the common
-   path this resolves the runner and you are done here.**
-2. Otherwise, read `./test-runner.md` and infer the runner from the
-   project's files. If it is still ambiguous after that, ask the user
-   before starting any task — or, under UNATTENDED, abort the run with one
-   line naming the ambiguity: this is the one prompt with no default, and
-   nothing has started that could park (`parking.md` § *Prompts with a
-   default*).
-3. If the project has no test suite at all (no runner inferable AND no
-   test directory like `tests/`, `test/`, `__tests__/`, `spec/`), read
-   `./no-test-suite.md` and follow it. A project that has one — runner
-   found OR test directory present — and carries no `skip-tests` marker
-   never enters skip-tests mode: it runs in full test mode, without
-   per-task confirmations.
-
-For "affected tests", prefer running just the test file(s) listed in the
-task's `Files:` field. If that's not feasible, fall back to running tests
-by keyword/marker matching the task's subject. The full suite is always
-run at the end of each task regardless.
+Before anything else, establish how tests run, per
+`../task-engine/references/testing-policy.md` — the
+`Testing policy for /task-implement:` marker first, then project
+convention, then inference, then the no-test-suite branch, and which tests
+count as affected. Its `/task-implement` note carries this skill's half.
 
 ---
 
@@ -604,47 +578,16 @@ Use the Edit tool to change this task's `Status:` line in
 `.claude/TASKS.md` (the summary block) to `[IN PROGRESS]`. Do not
 commit this change yet — it will be bundled into the task's commit.
 
-### Step 2 — Update tests   [skipped in skip-tests mode, or when Step 1 determined DOC_ONLY]
+### Steps 2–5 — Tests first, implement, run the suite
 
-Use the Read tool to open the test files listed in the task's `Files:`
-field on its TASKS.md summary block (or implied by the task's tests
-section). Use the Edit tool to add or modify tests to encode the
-behavior the task specifies — every assertion the body calls for, plus
-regression guards for its acceptance criteria.
-
-If a test file doesn't exist yet but the task expects one, use the Write tool
-to create it.
-
-Do NOT touch production code yet.
-
-### Step 3 — Implement
-
-Use the Read tool to open each file before editing it. Use the Edit tool to
-make targeted changes; use the Write tool only when creating a new file from
-scratch. Modify only the files listed in `Files:` plus genuine collateral
-(imports, type hints, fixture updates). If you find yourself touching files
-not listed, pause and explain why — surface the surprise rather than
-expanding scope silently.
-
-Follow the project's existing code style. Don't add comments, error
-handling, or abstractions beyond what the task requires.
+Follow `../task-engine/references/tests-first.md` for this task — Step 2
+updates the tests, Step 3 implements, Step 4 runs the affected tests and
+Step 5 the full suite, with Steps 2, 4 and 5 skipped as that file says. Its
+`/task-implement` note says what the specification, the declared files and
+"documentation-only" are here.
 
 On a `claude+human` or `human` task, apply the checkpoint protocol from
-`./human-in-loop.md` at each checkpoint's trigger point.
-
-### Step 4 — Run the affected tests, watch them pass   [skipped in skip-tests mode, or when Step 1 determined DOC_ONLY]
-
-Run the affected tests. They MUST pass. If they don't, fix the
-production code (not the test) and rerun. If after a reasonable attempt
-the code still doesn't pass and the spec itself looks wrong, stop and
-report — do not weaken the test, and never continue past a failing test
-with a "todo: fix later" comment.
-
-### Step 5 — Run the full test suite   [skipped in skip-tests mode, or when Step 1 determined DOC_ONLY]
-
-Run the full test suite. It MUST pass entirely. If unrelated tests fail,
-the change has caused a regression — fix it before continuing. Do not
-commit with red tests.
+`./human-in-loop.md` at each checkpoint's trigger point during Step 3.
 
 ### Review rounds   [only when REVIEW is true]
 
@@ -753,7 +696,8 @@ before starting the next:
    a task that did not commit, "Task N parked (question 3). Starting task
    M." / "Task N skipped — parked, no answer held. Starting task M."
 4. In skip-tests mode, ask "Proceed?" before starting the next task,
-   unless AUTO_CONFIRM is true or UNATTENDED is true — `./no-test-suite.md`.
+   unless AUTO_CONFIRM is true or UNATTENDED is true —
+   `../task-engine/references/no-test-suite.md`.
    Gate class: `confirmation`.
 
 ---
@@ -832,55 +776,13 @@ gives there.
 THE CLOSING REPORT
 
 Every run ends with one closing report — at completion, at a failure halt
-and at a stop the user asked for alike — in two groups, in this order, each
-under its heading. Its length and what it names follow
-`../interaction-engine/references/messages.md` § *Output*; every question
-in it follows § *Questions*:
-
-- **For the record** — one line per item, in exactly this shape:
-  `<what deviated> — <why> — <resolved by whom>`. A criterion overshot, a
-  wrong premise or cross-reference in the body, a consequential edit outside
-  `Files:`, a deliberate departure from the body, the `--no-commit` reminder
-  that nothing was committed. The one line in another shape is the review
-  pair, `./review-rounds.md` § *Reporting the resolved pair*. No item in this
-  group runs past one line, and none is a question.
-- **Follow-ups** — one numbered list, `1.`, `2.`, …, each item as long as it
-  needs to be, holding two kinds of item under the one numbering. The run's
-  own items: an unresolved `BLOCKING` finding, a task left `[IN PROGRESS]`
-  and why, a follow-up naming an owner's command with its anchor and
-  passages, a precondition that no longer held, a slug declined at the
-  FEATURE COMPLETION proposal, a parking branch whose delete failed, a task
-  parked this run or skipped for want of
-  an answer — its `Question:` verbatim and multi-line under its `P<n>`
-  handle in place of an item number, options included. And the items the `/follow-ups` command's rules yield
-  when applied to the run's reading — the command's body read by name and
-  applied, never invoked (CLOSING THE RUN). Two items naming the same action
-  are one item, in the command form where either had it.
-
-An empty group prints its heading and `none`. Two lines in the first
-group's shape:
-
-```
-Task 245 asked ~25 net lines across two files — the mandated block needed 19 — +31, reviewer approved.
-Body Hints named ./test-runner.md for the policy marker — the marker's rule is RESOLVING THE TEST RUNNER step 0 — edit cites the right one, reviewer confirmed.
-```
-
-**The numbering is the reply handle.** It starts at 1 in every report,
-carries no meaning beyond the handle, and a report with a single item still
-numbers it. A reply by number — "execute 1 and 2 now" — is acted on by the
-`follow-ups-resolve` skill when it is available, and otherwise handled as any
-other request is. A parked task keeps its `P<n>`
-handle, the one it held this run or the next unused one, and a reply by it
-is that task's answer, recorded exactly as a reply mid-run is (BETWEEN TASKS
-step 2a), and the next run unparks the task.
-
-Order at the end of a run: the FEATURE COMPLETION proposal first, then this
-report, the run's last act (CLOSING THE RUN). Under `--agents`, the parent
-renders the report from the per-agent returns it holds: each agent's sixth
-field is its *For the record* lines, attributed to its task, its fifth field
-feeds the *Follow-ups* group attributed the same way, and each `[PARKED]`
-return is a *Follow-ups* item with the question the return carried
-(`./delegated-runs.md`).
+and at a stop the user asked for alike. Its two groups, *For the record* and
+*Follow-ups*, their shapes, the empty-group form and the numbering as the
+reply handle are
+`../task-engine/references/closing-report.md`;
+its `/task-implement` note carries this skill's own items, the review-pair
+line, the `P<n>` handles of parked tasks, the order after FEATURE
+COMPLETION and how the report is rendered under `--agents`.
 
 ---
 

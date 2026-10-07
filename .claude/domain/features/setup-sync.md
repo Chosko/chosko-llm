@@ -117,10 +117,8 @@ comma-separated list of specs, each `<kind>:<value>`:
   translate, e.g. `vcs:mv`.
 
 Declared where the rule lives: the interaction-policy line by
-`interaction-engine`, the testing-policy line by the feature holding the
-testing-policy resolution (`task-engine` once
-[quick-implement](./quick-implement.md)'s plumbing lands, `/task-implement`
-until then), `section:editing-discipline` by `/doc-consolidate`, and each
+`interaction-engine`, the testing-policy line by `task-engine`, which holds
+the testing-policy resolution, `section:editing-discipline` by `/doc-consolidate`, and each
 `vcs:` op by the features whose own bodies run it (`git mv` and `git show`
 in `/task-clean`, `git branch` in task parking, and so on). The full set of
 declarations is settled at planning time against the bodies as they then

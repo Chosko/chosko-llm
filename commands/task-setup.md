@@ -1,6 +1,6 @@
 ---
 name: task-setup
-version: 2.1.1
+version: 2.1.2
 type: command
 description: Initialize the project's task backlog — creates .claude/TASKS.md, the .claude/tasks/ directory and the test-dispatch wrappers under .claude/external/. Run it once on a project before its first /task-add; a re-run only creates what is missing.
 disable-model-invocation: true
@@ -182,12 +182,12 @@ If COMMIT is true:
 TEST RUNNER INFERENCE
 
 > **MIRRORED COPY** — the runner-inference heuristics below are duplicated in
-> `skills/task-implement/test-runner.md`. Any edit here must be mirrored
-> there.
+> `skills/task-engine/references/test-runner.md`. Any edit here must be
+> mirrored there.
 
 Determine how this project runs its tests, then write the two wrapper
-scripts. Inference uses the same heuristics as `/task-implement`'s
-RESOLVING THE TEST RUNNER section. In order:
+scripts. Inference uses the same heuristics as `task-engine`'s
+testing-policy resolution. In order:
 
 1. **Project convention beats heuristics.** If a `CLAUDE.md`, `README.md`,
    or `.claude/` context file specifies a test command, use it.

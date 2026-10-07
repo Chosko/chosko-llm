@@ -694,7 +694,7 @@ Feature: quick-implement
 ---
 
 ## 300. Move `/task-implement`'s testing-policy resolution, tests-first sequence and closing report into `task-engine`
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-engine/references/testing-policy.md, skills/task-engine/references/tests-first.md, skills/task-engine/references/closing-report.md, skills/task-engine/references/test-runner.md, skills/task-engine/references/no-test-suite.md, skills/task-engine/SKILL.md, skills/task-implement/SKILL.md, skills/task-implement/test-runner.md, skills/task-implement/no-test-suite.md, skills/task-implement/delegated-runs.md, skills/task-implement/review-rounds.md, commands/task-setup.md, VERSION, CHANGELOG.md
 Preconditions: 282, 288, 293
