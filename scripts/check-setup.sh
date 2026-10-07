@@ -36,7 +36,7 @@ done
 violations=0
 violation() { printf '%s\n' "$1"; violations=$((violations + 1)); }
 
-offered_by_setup()   { cat "${SETUP_BODIES[@]}" | grep -qF -- "$1"; }
+offered_by_setup()   { grep -qF -- "$1" "${SETUP_BODIES[@]}"; }
 offered_by_project() { grep -qF -- "$1" "$PROJECT_SETUP"; }
 # A `## VCS` template row is a line beginning "- `git <op>" followed by a
 # space or the closing backquote.

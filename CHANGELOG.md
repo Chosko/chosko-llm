@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.97.4 — 2026-10-07
+
+- Fix check-setup.sh failing at random.
+
 ## 1.97.3 — 2026-10-07
 
 - **Shorter unattended-policy notes.** Ten commands and skills without task parking — `/task-add`, `/task-setup`, `/task-iterate`, `/runbook-create`, `/runbook-clean`, `/runbook-prune`, `/project-setup`, `/domain-setup`, `/pipeline-revise` and `/quick-implement` — point at the shared gate rules instead of restating them. Behaviour is unchanged.
