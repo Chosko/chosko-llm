@@ -13,22 +13,26 @@ and the CLI that installs it anywhere.
 
 Claude Code is very good at the next step but **forgetful** about everything before it.
 This workflow allows Claude to pick up any stage cold **without drifting away from the big picture**.
+[Read how →](#keep-the-vision)
 
 ### Optimize token usage
 
 As your **project grows bigger**, Claude becomes **token-hungry** and even small tasks drain your subscription quickly.
 chosko-llm orients Claude within your codebase so that **reads are constrained** to what really matters.
+[Read how →](#spend-fewer-tokens)
 
 ### Reduce human-in-the-loop bottlenecks
 
 Claude sessions require your presence, but **you mostly wait in chat** while the agent works. Then the roles switch in an infinite **hiccup**.
 chosko-llm promotes **deep-focused design and planning sessions** to prepare big batches of work for a later moment.
+[Read how →](#plan-once-build-later)
 
 ### Make it work overnight
 
 Design, planning and implementation all **draw tokens from the same 5h pool**. Use **your day to design and plan**, and **Claude's night to implement**. 
 chosko-llm allows for totally **unmanned cloud sessions** that you can run and check from your phone while **your PC is off**.
 When unexpected problems arise, unmanned sessions will **park problematic tasks** and go on with the rest of the work. You'll catch up when you have time.
+[Read how →](#run-it-overnight)
 
 
 </div>
