@@ -34,7 +34,13 @@ conversation to commit, no `TASKS.md` entry.
   staged and stops); the closing report per `closing-report.md`, its
   follow-ups `/architect amend` for a diverging feature-document point and
   `/pipeline-revise --catch-up <spec>` for the rest. Never writes `TASKS.md`
-  or `FEATURES.md`. Behaviour under orchestrate mode is not built here.
+  or `FEATURES.md`. Under orchestrate mode (`interaction-engine`'s
+  `mode.md`, checked at step 2): step 2 runs in one fresh subagent whose
+  questions the session relays, returning spec, drift hits, size judgement,
+  testing policy and open questions, the gate staying in the session; step
+  5's implementation is split into areas by the `orchestrate-mode` skill's
+  rules, named never pathed, area agents committing nothing; still one
+  commit.
 
 ## Public API
 
@@ -56,6 +62,8 @@ conversation to commit, no `TASKS.md` entry.
 ## Cross-references
 
 - [task-engine.md](./task-engine.md) — the shared checks it reads.
+- [orchestrate-mode.md](./orchestrate-mode.md) — the area split step 5 uses
+  under the mode.
 - [task-review-iterate.md](./task-review-iterate.md) — `spec=<path>` on the
   review pair.
 - [pipeline-revise.md](./pipeline-revise.md) — `--catch-up`, which deletes

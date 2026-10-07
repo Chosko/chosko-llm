@@ -16,7 +16,10 @@ suite: [task-suite.md](./task-suite.md).
   task's status flips, commit, push, while `claude+human` / `human` /
   explicitly requested `[STALE]` tasks stay in parent conversation
   since need user present. `--agents` / `--no-agents`
-  pre-answer prompt; single-task runs never see it. On such run parent
+  pre-answer prompt; single-task runs never see it. Under orchestrate mode
+  (`interaction-engine`'s `mode.md`, checked at PRE-FLIGHT step 2b)
+  DELEGATE is true for every run, one task included, nothing asked; only
+  `--no-agents` turns it off; the delegation guard unchanged. On such run parent
   is **launcher**, not orchestrator: evaluates delegation guard
   (`Target:`, `Status:`, `Feature:`) from `TASKS.md` summary blocks
   PRE-FLIGHT step 2 already read, so never opens `.claude/tasks/<N>.md`

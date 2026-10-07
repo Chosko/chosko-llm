@@ -12,7 +12,7 @@ frontmatter contract all four follow: [feature-contract.md](./feature-contract.m
   single pass, no phases, no supporting files — same register `/task-list` and
   `/production-status` occupy. One file per save at
   `.claude/sessions/YYYY-MM-DD-HHMM-<slug>.md`; directory created by write, no
-  separate `mkdir`. `<slug>` is two-or-three-word kebab-case summary of the
+  separate `mkdir` for the session file. `<slug>` is two-or-three-word kebab-case summary of the
   work (how an old session is found — `/session-list` shows it,
   `/session-resume <slug>` resumes by it), or the single argument verbatim. NEVER updates file in place — second save is second
   file with later timestamp. Two forms. **Pointer form**: header block +
@@ -45,13 +45,20 @@ frontmatter contract all four follow: [feature-contract.md](./feature-contract.m
   path taken from conversation (`/session-resume` states it), never guessed;
   deletes nothing when it can't tell, so an unresumed file is never
   auto-deleted. Writes nothing outside `.claude/sessions/` — not `.gitignore`,
-  not `TASKS.md`/`FEATURES.md`, not a feature or context file. **Commits and
+  not `TASKS.md`/`FEATURES.md`, not a feature or context file. HANDOFF MOVE,
+  after the write and any supersession delete: orchestrate-mode area handoffs
+  (`agent-*.md`, found by Glob) in `pending/` and in the previous save's or the
+  resumed file's `<stem>/` folder are moved — `mkdir -p` the new stem folder,
+  one `mv` each, content never read — into `<new-stem>/`, and each source
+  folder left empty is `rmdir`ed; moves run under `--no-commit` too.
+  **Commits and
   pushes by default** (flags per `../../docs/authoring-guide.md`
   § Commit-and-push convention): pull
   at start before writing, then ONE commit `Save session <slug>` staging the
-  new file plus, when the superseded file was tracked, its deletion; shell use
-  is a clock read plus the commit-and-push protocol's git commands, none under
-  `--no-commit`.
+  new file, the moved handoffs' new paths and old paths' removals, plus, when
+  the superseded file was tracked, its deletion; shell use is a clock read,
+  HANDOFF MOVE's `mkdir`/`mv`/`rmdir`, and the commit-and-push protocol's git
+  commands, none of the git under `--no-commit`.
 - `commands/session-resume.md` — reads one handoff and briefs current
   conversation from it. Command not skill, same single-pass shape. Holds THE
   RESOLUTION RULE — the one home of argument resolution, written
@@ -83,7 +90,10 @@ frontmatter contract all four follow: [feature-contract.md](./feature-contract.m
   and instructing the resumed session to delete it once its `Work:` is finished
   — an instruction, never an action, which is what keeps the command read-only
   and what lets `/session-save`'s supersession delete take the path from the
-  conversation. Never names the pointed-at artifact for deletion; only the
+  conversation. Before that close, when the resolved file has a `<stem>/`
+  folder, lists each `agent-<area>.md` by area with its path, from the file
+  listing alone — no handoff body read, orchestrate mode not turned on.
+  Never names the pointed-at artifact for deletion; only the
   session file is superseded. Reads nothing under `.claude/tasks/`, nor
   `FEATURES.md`/`PLAN.md`, unless `Work:` points there. Writes nothing, deletes
   nothing, stages nothing; no `--prune`, no `--commit`. As with

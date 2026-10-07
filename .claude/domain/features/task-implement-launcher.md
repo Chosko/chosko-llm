@@ -27,7 +27,9 @@ agent does on arrival, and what the parent accumulates on return.
 Deliberately out:
 
 - **Single-task runs.** `/task-implement 12` runs in the conversation and is
-  untouched. There is no agent, no hand-off, nothing to shrink.
+  untouched. There is no agent, no hand-off, nothing to shrink — except under
+  orchestrate mode, where `--agents` is on by default and a single task is
+  delegated too ([orchestrate-mode](./orchestrate-mode.md)).
 - **Parallel agents.** Agents still run one at a time, in order. The existing
   prohibition stands and is unrelated to this change.
 - **Changing the delegation guard.** `human`, `claude+human` and explicitly

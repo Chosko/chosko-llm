@@ -779,7 +779,7 @@ Feature: orchestrate-mode
 
 ## 309. Update documentation for feature `orchestrate-mode`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: .claude/context/INDEX.md, .claude/context/features.md, .claude/context/orchestrate-mode.md, .claude/context/interaction-engine.md, .claude/context/task-implement-delegation.md, .claude/context/quick-implement.md, .claude/context/session-handoff.md, .claude/domain/features/session-continuity.md, .claude/domain/features/task-implement-launcher.md
 Preconditions: 306, 307, 308

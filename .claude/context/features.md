@@ -66,6 +66,9 @@ Currently shipped:
 - [quick-implement.md](./quick-implement.md) — `skills/quick-implement/`,
   one change from conversation to commit with no backlog entry, reading
   `task-engine`'s shared checks.
+- [orchestrate-mode.md](./orchestrate-mode.md) — `skills/orchestrate-mode/`,
+  a conversation-scoped mode turning every change request into per-area
+  subagents with disjoint file ownership.
 - [interaction-engine.md](./interaction-engine.md) — `skills/interaction-engine/`,
   the non-invocable reference library for the interaction policy. Every
   interactive feature, in every family, declares
@@ -106,6 +109,7 @@ authoring patterns every feature follows: [feature-contract.md](./feature-contra
 - [feature-contract.md](./feature-contract.md), [setup-commands.md](./setup-commands.md),
   [context-skills.md](./context-skills.md), [session-handoff.md](./session-handoff.md),
   [quick-implement.md](./quick-implement.md),
+  [orchestrate-mode.md](./orchestrate-mode.md),
   [refactor-doc-consolidate.md](./refactor-doc-consolidate.md),
   [claude-md-hook-statusline.md](./claude-md-hook-statusline.md) — the
   contract and the rest of the shipped inventory.

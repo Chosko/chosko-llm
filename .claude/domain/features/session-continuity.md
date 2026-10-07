@@ -75,6 +75,16 @@ it. The timestamp prefix sorts chronologically and prevents
 same-day collisions without a hash. Markdown, not `.tmp`: the file is a
 document, and the extension should say so.
 
+Beside the session files, the store can hold the area handoffs of an
+orchestrate-mode conversation, one `agent-<area>.md` per area: under
+`.claude/sessions/pending/` before the conversation's first save, and in a
+`<stem>/` folder named after the newest session file's stem afterwards.
+`/session-save` moves them — from `pending/`, or from the previous save's or
+the resumed file's folder — into the new file's folder and stages them in the
+save's commit; `/session-resume` lists the areas found in the resolved file's
+folder, each with its handoff path, after the briefing. Neither reads a
+handoff's body.
+
 **The store is not gitignored, and neither command touches `.gitignore`.**
 Session files are working state and can be noise in a diff, which argues for
 ignoring the directory in `/task-setup` or `/project-setup`. Against it: a
@@ -242,7 +252,8 @@ the pointer file's header alone, calling the briefing thin. The file it resumed
 the skill that maintains it and is never named for deletion.
 
 After reading, `/session-resume` emits a fixed briefing — what was being built,
-what must not be retried, the exact next step — and then **stops and waits**.
+what must not be retried, the exact next step, then the file's areas when it
+has a `<stem>/` folder — and then **stops and waits**.
 It never starts work, never edits, never runs a command. Resuming into
 unrequested action is the failure mode that makes handoff tooling untrustworthy.
 
@@ -278,8 +289,9 @@ the user did not demonstrably finish with.
 
 ## Data and state
 
-The session file is the only artifact. It is written once per invocation and
-never updated in place — a second save writes a second file, because a handoff
+The session file is the primary artifact, beside the area handoffs `/session-save`
+moves into its `<stem>/` folder ([The store](#the-store)). It is written once
+per invocation and never updated in place — a second save writes a second file, because a handoff
 is a snapshot and rewriting history in it defeats the purpose.
 
 Nothing derives from session files. `/task-list`, `/production-status` and every

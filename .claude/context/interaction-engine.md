@@ -14,7 +14,7 @@ family, so it has its own file rather than a section of
   `../../interaction-engine/…` from a skill's `references/`,
   `../skills/interaction-engine/…` from a command) and a three-row map
   saying when each file is opened; frontmatter carries
-  `disable-model-invocation: true`. Three files under `references/`, one
+  `disable-model-invocation: true`. Four files under `references/`, one
   authority each:
   - `policy.md` — opened by every interactive feature at argument parsing.
     One value per run, `attended` (default) or `unattended`. Precedence,
@@ -46,6 +46,14 @@ family, so it has its own file rather than a section of
     most a one-line hint. Questions: a message that asks ends with its
     questions; plain language first, identifiers last in parentheses (the
     bad/good login-timeout example); one ask per stop.
+  - `mode.md` — opened by a feature whose behaviour changes under
+    orchestrate mode, where that behaviour applies. Mode is on when this
+    conversation ran `/orchestrate-mode` and not `--off`, or a context
+    summary carries `orchestrator mode: on`; no file records it, a spawned
+    subagent is not in the mode, and it is independent of the policy. What
+    a citer does with the answer stays in the citer: `/task-implement`
+    (delegates every run), `/quick-implement` (subagent spec phase, area
+    split), `pipeline-suggest` (silent).
 
   Consumers declare `requires: skill:interaction-engine`: `/task-implement`,
   `/task-add`, `/task-setup`, `/task-iterate`, `/task-clean`,
@@ -55,7 +63,9 @@ family, so it has its own file rather than a section of
   no gate; the plain-language rule reaches it through `lint.md`'s
   templates), `/context-build`, `/context-update`, `/context-convert`,
   `/refactor-codebase`, `/refactor-tests`, `/doc-consolidate`,
-  `/project-setup`, `/session-save`, `/follow-ups-resolve`. The engines
+  `/project-setup`, `/session-save`, `/follow-ups-resolve`,
+  `/quick-implement`, `/orchestrate-mode`, `pipeline-suggest` (for
+  `mode.md` only). The engines
   (`task-engine`, `pipeline-engine`) cite it from their reference files but
   take no `requires:` — their consumers carry it.
 

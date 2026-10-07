@@ -71,8 +71,10 @@ entry point every stage shares:
   names no slash command. Anti-triggers, deliberately longer than the
   triggers: a question, a request naming a command, "just do it" /
   "directly", work under way in a `/task-implement` run, an enumeration
-  inside an explanation, a follow-up list (`runbook-suggest`'s), a project
-  with neither index. Gate is TWO existence probes — `.claude/FEATURES.md`,
+  inside an explanation, a follow-up list (`runbook-suggest`'s), any request
+  while orchestrate mode is on (`interaction-engine`'s `mode.md`, answered
+  from the conversation, file never opened; also
+  `requires: skill:interaction-engine`), a project with neither index. Gate is TWO existence probes — `.claude/FEATURES.md`,
   `.claude/TASKS.md` — both absent → silence, an erroring probe counts as
   absent; no third probe, never the files' contents, NO reference file (not
   the engine's `probes.md`, not `routing.md`). Body carries an eight-row
