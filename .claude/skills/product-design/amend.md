@@ -22,7 +22,7 @@ and leaves the process complete.
 - `--commit`, `--no-commit`, `--no-push` — unchanged in meaning; see
   *Committing*.
 - **A draft, optionally**, when a revision surface runs this arm: the edit
-  it drafted at plan time, in the before → after shape of § 3. See § *The
+  it drafted at plan time, each pinned section's new text. See § *The
   gate*.
 
 It reads `.claude/domain/design-process.md`, for its stage marker, and the
@@ -58,10 +58,15 @@ NOTs apply unchanged: no tasks, no `FEATURES.md` entries, nothing under
 
 ## 3. The gate
 
-One message: each pinned section, before → after, and nothing else. Then:
+Gate class: `confirmation` (`../interaction-engine/references/gates.md`).
+One message, per `../interaction-engine/references/messages.md`: for each
+pinned section, what it will say differently and why, in plain words, the
+section named last; nothing else. A `show` reply prints each pinned section
+before → after and asks again. Then:
 
 - **With no draft passed in** — wait for an explicit approval. Silence, an
-  unclear reply or EOF writes nothing.
+  unclear reply or EOF writes nothing. Under `unattended` the gate passes on
+  its own instead, and the report names the commit.
 - **With a draft passed in** — compare it with the draft § 2 produced from
   the same reads. When they match, write without waiting: the consumer's
   gate already approved this edit. When they differ, render the difference
@@ -83,7 +88,7 @@ in, and its path joins `WRITTEN` only when a line changed.
 ## 5. Report
 
 ```
-Amended <document>: § <section>[, § <section>][; design-process.md compressed].
+Amended the <product design | technical direction | business model> — <what changed, in plain words>[; the design log compressed] (<document>: § <section>[, § <section>]).
 ```
 
 When `WRITTEN` is non-empty and the run committed nothing, end with an

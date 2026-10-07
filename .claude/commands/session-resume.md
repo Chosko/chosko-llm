@@ -1,8 +1,8 @@
 ---
 name: session-resume
-version: 0.1.1
+version: 0.3.1
 type: command
-description: Brief this session from a handoff file under .claude/sessions/ — the newest, the newest from a given date, or a path you name — reporting what was being built, what must not be retried and the next step, then stop. Use it when picking up work /session-save recorded.
+description: Brief this session from a handoff file under .claude/sessions/ — the newest, the newest from a given date or with a given slug, or a path you name — reporting what was being built, what must not be retried and the next step, then stop. Use it when picking up work /session-save recorded.
 ---
 
 # /session-resume
@@ -14,97 +14,107 @@ description: Brief this session from a handoff file under .claude/sessions/ — 
 # resolves, and hands the deletion of the file it resumed from to the user.
 # Usage: /session-resume
 #        /session-resume <YYYY-MM-DD>
+#        /session-resume <slug>
 #        /session-resume <path>
 # Examples: /session-resume
 #           /session-resume 2026-08-24
+#           /session-resume ecc-import-architecture
 #           /session-resume .claude/sessions/2026-08-24-1430-ecc-import-architecture.md
 
 GOAL
-Resolve one file out of `.claude/sessions/`, brief this session from it, and
-stop. The briefing carries the three things a new conversation would otherwise
-repeat or lose: what was being built, what must not be retried, and the exact
-next step.
 
-This command **reads** a handoff — it does not act on one. Its value is
-entirely in the stopping. A resume command that starts working is the failure
-mode that makes handoff tooling untrustworthy: the user asked to be told where
-things stood, not to have the next step taken for them while they were reading.
+- Resolve one file out of `.claude/sessions/`, brief this session from it, and
+  stop.
+- The briefing carries what a new conversation would otherwise repeat or lose:
+  what was being built, what must not be retried, and the exact next step.
+- **Read** the handoff; never act on it. The user asked to be told where
+  things stood, not to have the next step taken for them.
 
 $ARGUMENTS
 
 ---
 
+THE RESOLUTION RULE
+
+This section — ARGUMENT PARSING and FINDING THE FILE together — is the whole,
+self-contained rule for turning an argument into one handoff file. Another
+session command applies it by name, as "the resolution rule in
+`/session-resume`", without restating it: such a command names the picked file
+on its own first output line, in its own words; everything else here applies
+to it unchanged.
+
 ARGUMENT PARSING
 
-`$ARGUMENTS` has exactly three recognized forms:
+Try the four recognized forms of `$ARGUMENTS` in this order:
 
 | Argument | Behaviour |
 |---|---|
-| *(none)* | the newest candidate file in `.claude/sessions/` |
-| `YYYY-MM-DD` | the newest candidate from that date |
-| a path | read that file directly |
+| a path — contains `/` or `\`, or ends in `.md` | read that file directly, with no candidacy check |
+| a date — matches `YYYY-MM-DD` exactly | the newest candidate from that date |
+| a slug — anything else that is not purely numeric | the newest candidate whose filename's slug part equals it exactly |
+| *(none)* | the newest candidate in `.claude/sessions/` |
 
-An argument is a **path** when it contains `/` or `\`, or ends in `.md`. It is
-a **date** when it matches `YYYY-MM-DD` exactly.
-
-**There is no task-number selector.** A bare number is not a recognized
-argument. Say so in one line and carry on with the newest candidate — like
-`/session-save`, this command never refuses over its own arguments. Anything
-else unrecognized is handled the same way.
-
----
+- **Slug part:** what follows the `YYYY-MM-DD-HHMM-` prefix and precedes
+  `.md`. `2026-08-24-1430-ecc-import-architecture.md` has the slug
+  `ecc-import-architecture`.
+- Match slugs exactly, on the filename alone.
+- A slug that equals no candidate's slug part: name the nearest existing slugs
+  — up to five, those sharing the longest prefix or the most words with it —
+  and stop. No substring or fuzzy fallback, no fall-through to the newest
+  candidate: guessing a file for a name the user typed would load the wrong
+  session.
+- **There is no task-number selector.** A bare number is not a slug (no slug
+  `/session-save` generates is purely numeric) and not a recognized argument.
+  Say so in one line and carry on with the newest candidate — like
+  `/session-save`, do not refuse over a bare number.
 
 FINDING THE FILE
 
-List `.claude/sessions/` with the file-listing tool. Do **not** run `ls`,
-`find`, `git`, or any other shell command to do it.
-
-**Only a file carrying a `Work:` line is a candidate.** `.claude/sessions/`
-may hold companion documents that are not handoffs — a hand-written notes
-file, a scratch plan someone dropped beside the real thing — and a file with
-no `Work:` line would otherwise be selected as "the newest file" and briefed
-from as though it were a handoff. The `Work:` line is mandatory in both forms
-`/session-save` writes, which makes it the cheapest reliable discriminator.
-
-A non-candidate is **skipped silently**. It is not an error, not a warning,
-and not worth a line of output — the directory is allowed to hold other
-things.
-
-**Ties break deterministically.** Two files can share the identical
-`YYYY-MM-DD-HHMM` prefix, so "newest" is ambiguous on the prefix alone. Sort
-candidates on the **full filename**, descending, and take the first. Then
-**name the file that was picked**, on the first line of the output, before
-anything else:
+1. List `.claude/sessions/` with the file-listing tool, and match dates and
+   slugs against the filenames it returns. Do **not** run `ls`, `find`,
+   `grep`, `git`, or any other shell command to do it.
+2. **Only a top-level file carrying a `Work:` line is a candidate.** The
+   directory may hold companion documents that are not handoffs (a
+   hand-written notes file, a scratch plan) and subfolders (such as the area
+   handoffs of an orchestrated session, and `pending/`). The `Work:` line is
+   mandatory in both forms `/session-save` writes, so it is the discriminator.
+3. **Skip a non-candidate silently** — a file with no `Work:` line, a
+   subfolder, anything inside a subfolder. Not an error, not a warning, not a
+   line of output.
+4. **Break ties deterministically.** Files can share the identical
+   `YYYY-MM-DD-HHMM` prefix, and several can carry the same slug. Sort the
+   candidates on the **full filename**, descending, and take the first.
+5. **Name the picked file** on the first line of the output, before anything
+   else, so the user can correct a wrong pick by re-running with an explicit
+   path:
 
 ```
 Resuming from .claude/sessions/2026-08-24-1430-ecc-import-architecture.md
 ```
 
-Naming it is what makes the tie-break correctable: if it picked the wrong one,
-the user re-runs with an explicit path.
+- **Read an explicit path as given**, with no candidacy check. If it has no
+  `Work:` line, brief from whatever it does carry and say so in one line.
 
-A **path given explicitly is read as given**, with no candidacy check. The
-user named the file; that settles it. If it has no `Work:` line, brief from
-whatever it does carry and say so in one line.
-
-Two situations stop the command, reported plainly:
+Stop, reporting plainly, in four situations:
 
 - No `.claude/sessions/` directory — say the project has no session store and
   point at `/session-save`. Do **not** create the directory.
 - The directory exists but holds no candidate, or none from the requested
-  date — say so, and for the date form name the dates that do have candidates.
-  Do not fall back to a different date.
+  date — say so, and for the date form name the dates that do have
+  candidates. Do not fall back to a different date.
+- A slug matches no candidate — name the nearest existing slugs, as above.
+- An explicit path does not exist — say so. Do not fall back to the newest
+  candidate.
 
-**Never invent a briefing.** With no file there is nothing to report, and a
-plausible-sounding summary of a session that was never saved is worse than the
-plain admission that nothing was.
+**Never invent a briefing.** With no file, there is nothing to report; say
+plainly that nothing was saved rather than give a plausible-sounding summary.
 
 ---
 
 FOLLOWING A POINTER
 
-A **pointer-form** file carries a `Resume from:` line and one sentence. It
-holds no state itself, so briefing from it alone would report nothing:
+A **pointer-form** file carries a `Resume from:` line and one sentence, and
+holds no state itself:
 
 ```markdown
 # Session: 2026-08-24 14:32
@@ -114,23 +124,20 @@ Running: /product-design
 Resume from: .claude/domain/design-process.md
 ```
 
-Read the artifact named by `Resume from:` and brief from **that**, using the
-session file only for its header block.
-
-If that path no longer resolves, say so on its own line and brief from what
-the pointer file itself carries — its `Work:` and `Running:` lines and nothing
-more. That is a thin briefing, and saying it is thin is the honest report.
-
-The file this command resumed from is the **session file**, never the
-artifact. The artifact belongs to the skill that maintains it and is never
-named for deletion.
+- Read the artifact named by `Resume from:` and brief from **that**, using the
+  session file only for its header block.
+- If that path no longer resolves, say so on its own line and brief from what
+  the pointer file itself carries — its `Work:` and `Running:` lines and
+  nothing more — and say the briefing is thin.
+- The file this command resumed from is the **session file**, never the
+  artifact. The artifact belongs to the skill that maintains it; never name it
+  for deletion.
 
 ---
 
 BEFORE THE BRIEFING
 
-Both of these run **before** the briefing, not after. A warning that arrives
-after the reader has already absorbed the briefing has arrived too late.
+Run both checks **before** the briefing, never after it.
 
 **1. Staleness — 14 days.** Compare the file's date prefix against today. If
 it is more than 14 days old, flag it:
@@ -140,15 +147,14 @@ This handoff is 23 days old. Treat its file state and next step as claims
 about a repository that has since moved.
 ```
 
-Take today's date from the session context. If the context carries none, a
-single clock read (`date`) is the only shell command this command may run —
-never `git`, never `ls`, never `grep`. Staleness is a **flag, never a
-refusal**: brief the file anyway. For a file that is never resumed this flag
-is the only pruning signal that will ever fire.
+- Take today's date from the session context. If the context carries none, a
+  single clock read (`date`) is the only shell command this command may run —
+  never `git`, never `ls`, never `grep`.
+- Staleness is a **flag, never a refusal**: brief the file anyway.
 
-**2. Paths that no longer resolve.** The `Current state of files` table names
-files; so may `Work:`, `Resume from:` and the prose. Check them, and name each
-one that is gone:
+**2. Paths that no longer resolve.** Check the files the `Current state of
+files` table names, and any named by `Work:`, `Resume from:` and the prose.
+Name each one that is gone:
 
 ```
 Paths this handoff names that no longer exist:
@@ -156,36 +162,49 @@ Paths this handoff names that no longer exist:
   .claude/tasks/118.md
 ```
 
-Then brief without treating them as present. A briefing that reports "the
-implementation is half-finished in `scripts/cmd-impl.sh`" about a file that
-was deleted three commits ago sends the next session looking for something
-that is not there.
+Then brief without treating them as present.
 
 ---
 
 THE BRIEFING
 
-Fixed in shape. Three things, in this order, and nothing padded around them:
+Fixed in shape: three things, in this order, nothing padded around them.
 
-**1. What was being built.** From `Work:`, `Running:` and the file's *What we
-are building* section. One short paragraph. `Work: none` is a first-class
+**1. What was being built.** One short paragraph from `Work:`, `Running:` and
+the file's *What we are building* section. `Work: none` is a first-class
 value — report it as an anchorless session, not as missing information.
 
-**2. What must not be retried.** From *What did not work (and why)*, *What has
-not been tried yet*, and *Decisions made*. This is the highest-value part of
-the briefing and the whole reason the file exists: without it the next session
-repeats the same dead ends at full cost before discovering the same thing.
-Keep the reasons attached — a decision without its reason gets silently
-inherited instead of revisited, and an approach that was skipped is not an
-approach that was ruled out.
+**2. What must not be retried.** From *What did not work (and why)*, *What
+has not been tried yet*, and *Decisions made* — the highest-value part of the
+briefing. Keep the reasons attached: a decision without its reason gets
+silently inherited instead of revisited, and an approach that was skipped is
+not an approach that was ruled out.
 
 **3. The exact next step.** From *Exact next step*, **verbatim**. Do not
 paraphrase it, do not improve it, and do not split it into a plan.
 
-Then the file's own *Current state of files* table if it has one, and its
-blockers and environment notes if they carry anything. Everything else in the
-file is on disk and stays there — the user can read it, and re-narrating it
-costs tokens the handoff exists to save.
+Then:
+
+- The file's own *Current state of files* table if it has one, and its
+  blockers and environment notes if they carry anything. Leave everything
+  else in the file on disk — do not re-narrate it.
+- A full-form file missing sections: brief the sections it has, name the ones
+  it lacks in one line. Never fill a missing section with a plausible guess.
+
+**Then the areas, when the file has a folder.** When `.claude/sessions/` holds
+a folder named after the resolved file's stem (its filename without `.md`),
+list it with the file-listing tool and name each `agent-<area>.md` in it by
+area, with its path:
+
+```
+Area handoffs (give each area's next agent its file):
+  ui       .claude/sessions/2026-08-24-1430-ecc-import-architecture/agent-ui.md
+  storage  .claude/sessions/2026-08-24-1430-ecc-import-architecture/agent-storage.md
+```
+
+- Build the list from filenames alone; never read a handoff's body.
+- Listing the areas does not turn orchestrate mode on.
+- No folder, or no `agent-*.md` in it: say nothing about areas.
 
 **End by naming the file and handing over the deletion:**
 
@@ -195,10 +214,10 @@ costs tokens the handoff exists to save.
 > removes it automatically as superseded; otherwise remove it at the final
 > commit, or when the work is confirmed done.
 
-That sentence is the only way this command participates in pruning. It
-**deletes nothing itself**, and it is the resumed session that acts on it. It
-also states the path explicitly so `/session-save`'s supersession delete can
-take it from the conversation rather than guessing at the directory.
+- That sentence is the only way this command participates in pruning. It
+  **deletes nothing itself**; the resumed session acts on it.
+- State the path explicitly, so `/session-save`'s supersession delete can take
+  it from the conversation rather than guessing at the directory.
 
 ---
 
@@ -214,27 +233,30 @@ Say so plainly and end the turn:
 Stopping here. Say what to pick up and I will start.
 ```
 
-The user resumed a session to be told where it stood. Deciding on their behalf
-that the next step should just be done is how a handoff tool becomes something
-they stop invoking.
-
 ---
 
 READ-ONLY THROUGHOUT
 
-- Writes nothing, creates nothing, deletes nothing, stages nothing, commits
+- Write nothing, create nothing, delete nothing, stage nothing, commit
   nothing. There is no `--prune` and no `--commit`.
-- Runs no shell command except the single clock read under BEFORE THE
+- Run no shell command except the single clock read under BEFORE THE
   BRIEFING, and never `git`.
-- Reads nothing under `.claude/tasks/`, and neither `.claude/FEATURES.md` nor
+- Read nothing under `.claude/tasks/`, and neither `.claude/FEATURES.md` nor
   `.claude/PLAN.md`, **unless the `Work:` line points there** — `Work: task
   118` makes `.claude/tasks/118.md` fair reading, and nothing else in the
   backlog becomes fair reading with it.
-- Opens no context or domain file the handoff does not name.
+- Open no context or domain file the handoff does not name, and do not
+  re-narrate a document the handoff merely links to.
 
 ---
 
-FAILURE CONTRACT — degradation, never refusal
+FAILURE CONTRACT — degradation, never refusal, with one exception
+
+Every situation below either degrades to the most useful report the files
+allow or, when there is nothing to brief from, says so and stops. The one
+exception is a slug that matches nothing: the command stops instead of
+briefing from the newest file, because guessing a file for a name the user
+typed loads the wrong session.
 
 | Situation | Behaviour |
 | --- | --- |
@@ -242,33 +264,10 @@ FAILURE CONTRACT — degradation, never refusal
 | Directory holds no candidate | Say so and stop. Files with no `Work:` line were skipped silently and are not mentioned. |
 | No candidate from the requested date | Say so, name the dates that do have candidates, stop. |
 | An explicit path that does not exist | Say so and stop. Do not fall back to the newest candidate. |
+| A slug with no exact match | Name the nearest existing slugs and stop. No substring or fuzzy match, no fall-back to the newest candidate. |
 | An explicit path with no `Work:` line | Brief from what it carries, say so in one line. |
 | `Resume from:` names a path that is gone | Say so, brief from the pointer file's header alone, call the briefing thin. |
 | A full-form file missing sections | Brief the sections it has, name the ones it lacks in one line. |
 | File older than 14 days | Flag before the briefing, then brief normally. Never a refusal. |
 | Paths in the file that no longer exist | Name each one before the briefing, then brief without them. |
-| An unrecognized argument | Say so in one line, carry on with the newest candidate. |
-
----
-
-DO NOT:
-- Start, continue or finish the work being handed off — including its first
-  step, its obvious step, or its one-line step.
-- Edit, create or delete any file, including the session file itself. The
-  deletion is handed to the resumed session as an instruction, never performed
-  here.
-- Run any shell command other than the single clock read, and never `git`,
-  `ls`, `find` or `grep`.
-- Invent a briefing when no file was found, or fill a missing section with a
-  plausible guess.
-- Select a file with no `Work:` line as "the newest", or report skipping one
-  as an error.
-- Pick between same-prefix candidates without naming which one was picked.
-- Fall back to another date, or to the newest candidate, when an explicit path
-  or date found nothing.
-- Delete or name for deletion the artifact a pointer file points at. Only the
-  session file is ever superseded.
-- Put the staleness flag or the missing-path list after the briefing.
-- Paraphrase the exact next step, or expand it into a plan.
-- Read `.claude/tasks/`, `FEATURES.md` or `PLAN.md` when `Work:` does not
-  point there, or re-narrate a document the handoff merely links to.
+| A bare number | Say it is not a recognized argument in one line, carry on with the newest candidate. |

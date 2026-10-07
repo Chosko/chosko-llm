@@ -33,6 +33,10 @@ anything else in the body. Parking leaves state an index cannot summarise —
 a handoff lives in a body, `[P]` on a step heading — so a finding about it
 must look there; no other finding does.
 
+**L14 lists `.claude/specs/` and reads no spec.** A spec file has no index
+line: its presence is the whole fact, so the finding lists the directory's
+`*.md` files and opens none of them.
+
 **No rule probes `.claude/tasks/archive/`, opens an archived file, or reports
 on its contents.** The prohibition is stated once, here, and holds for the
 whole catalogue and for any finding ever added to it: an archived task is
@@ -56,16 +60,20 @@ of every status vocabulary, so a grep for a status never returns a severity.
 ## The output line
 
 Every finding prints as one line: the severity padded to seven characters,
-then the artifact, then the offending identifier — always in those three
-positions — then its message and its fix:
+then its message in plain words, then — in parentheses — the artifact, the
+offending identifier and the index lines that prove it, then its fix:
 
 ```
-<SEVERITY> <artifact> <identifier> — <message> → <fix>
+<SEVERITY> <message> (<artifact> <identifier>[, <evidence>]) → <fix>
 ```
 
+The message says what is wrong and why it matters, with no identifier in
+it, per the plain-language rule of
+`../../interaction-engine/references/messages.md` § *Questions*.
 `<artifact>` is the index whose line the fix changes: `FEATURES.md`,
-`PLAN.md`, `TASKS.md` or `RUNBOOKS.md`. `<identifier>` is `task <N>`,
-`feature <slug>`, `runbook <id>. <name>`, or `header` for a line outside any
+`PLAN.md`, `TASKS.md` or `RUNBOOKS.md` — or `.claude/specs/` for L14, whose
+fix removes a file rather than changing a line. `<identifier>` is `task <N>`,
+`feature <slug>`, `runbook <id>. <name>`, `spec <file>`, or `header` for a line outside any
 block. Each finding below carries its own template; the fix is printed
 verbatim.
 
@@ -73,7 +81,7 @@ verbatim.
 
 ## The catalogue
 
-Thirteen findings, and no others. The catalogue is closed: adding a finding
+Fourteen findings, and no others. The catalogue is closed: adding a finding
 is an edit to this file, so every consumer gains it at once and none can
 disagree about whether it exists.
 
@@ -85,7 +93,7 @@ disagree about whether it exists.
   `FEATURES.md`.
 
 ```
-ERROR   TASKS.md task <N> — Feature: <slug> names no feature in FEATURES.md → /pipeline-revise
+ERROR   A task names a feature that does not exist (TASKS.md task <N>, Feature: <slug>) → /pipeline-revise
 ```
 
 ### L2 — a task with no `Feature:` line · WARNING
@@ -97,7 +105,7 @@ ERROR   TASKS.md task <N> — Feature: <slug> names no feature in FEATURES.md �
   feature index, it is work no feature accounts for.
 
 ```
-WARNING TASKS.md task <N> — no Feature: line on a project with FEATURES.md → /pipeline-revise
+WARNING A task belongs to no feature, on a project that keeps a feature index (TASKS.md task <N>, no Feature: line) → /pipeline-revise
 ```
 
 ### L3 — a `Preconditions:` id that resolves to no task · ERROR
@@ -110,7 +118,7 @@ WARNING TASKS.md task <N> — no Feature: line on a project with FEATURES.md →
   precondition, and is not a finding.
 
 ```
-ERROR   TASKS.md task <N> — Preconditions: <id> was never assigned (Last task number: <K>) → /pipeline-revise
+ERROR   A task waits on a task that was never created (TASKS.md task <N>, Preconditions: <id>, Last task number: <K>) → /pipeline-revise
 ```
 
 ### L4 — a `Preconditions:` id naming a `[SKIP]` task · ERROR
@@ -122,7 +130,7 @@ ERROR   TASKS.md task <N> — Preconditions: <id> was never assigned (Last task 
   becomes eligible on work that was abandoned rather than done.
 
 ```
-ERROR   TASKS.md task <N> — Preconditions: <id> is [SKIP] → /pipeline-revise
+ERROR   A task waits on a task that was dropped, so it can never start (TASKS.md task <N>, Preconditions: <id> is [SKIP]) → /pipeline-revise
 ```
 
 ### L5 — a precondition cycle · ERROR
@@ -137,7 +145,7 @@ ERROR   TASKS.md task <N> — Preconditions: <id> is [SKIP] → /pipeline-revise
   tasks appears first in `TASKS.md`.
 
 ```
-ERROR   TASKS.md task <N> — precondition cycle <N> → <M> → … → <N> → /pipeline-revise
+ERROR   Tasks wait on each other in a circle, so none of them can start (TASKS.md task <N>, cycle <N>, <M>, …, <N>) → /pipeline-revise
 ```
 
 ### L6 — an `[ITERATED]` feature · WARNING
@@ -148,7 +156,7 @@ ERROR   TASKS.md task <N> — precondition cycle <N> → <M> → … → <N> →
   backlog not yet re-planned against the new design.
 
 ```
-WARNING FEATURES.md feature <slug> — [ITERATED]: re-architected, backlog not re-planned → /task-add feature=<slug>
+WARNING A feature's design changed and its tasks were not re-planned (FEATURES.md feature <slug>, [ITERATED]) → /task-add feature=<slug>
 ```
 
 ### L7 — a `[STALE]` task · WARNING
@@ -161,7 +169,7 @@ WARNING FEATURES.md feature <slug> — [ITERATED]: re-architected, backlog not r
   unrecorded.
 
 ```
-WARNING TASKS.md task <N> — [STALE]: feature <slug> was re-architected after this task was written → /pipeline-revise
+WARNING A task was written before its feature's design changed, so it may ask for the old design (TASKS.md task <N>, [STALE], feature <slug>) → /pipeline-revise
 ```
 
 ### L8 — a `FEATURES.md` slug absent from `PLAN.md` · WARNING
@@ -174,7 +182,7 @@ WARNING TASKS.md task <N> — [STALE]: feature <slug> was re-architected after t
   absent from the plan.
 
 ```
-WARNING PLAN.md feature <slug> — in FEATURES.md, nowhere in PLAN.md → /production-plan
+WARNING A feature is in no milestone of the plan (PLAN.md feature <slug>) → /production-plan
 ```
 
 ### L9 — a plan edge naming an unknown slug · ERROR
@@ -186,7 +194,7 @@ WARNING PLAN.md feature <slug> — in FEATURES.md, nowhere in PLAN.md → /produ
   no entry in `FEATURES.md`. One finding per unknown slug per line.
 
 ```
-ERROR   PLAN.md feature <slug> — named by <milestone-slug> Features: | Unscheduled | Dependencies (<dependent>) but not in FEATURES.md → /pipeline-revise
+ERROR   The plan names a feature that does not exist (PLAN.md feature <slug>, named by <milestone-slug> Features: | Unscheduled | Dependencies (<dependent>)) → /pipeline-revise
 ```
 
 Print exactly one of the three `named by` forms: the line that carries the
@@ -205,7 +213,7 @@ slug.
   itself, and neither half needs the body to see it.
 
 ```
-WARNING RUNBOOKS.md runbook <id>. <name> — [PENDING] with Steps: <n>/<n> → /pipeline-revise
+WARNING A runbook has every step done but is still marked pending (RUNBOOKS.md runbook <id>. <name>, [PENDING], Steps: <n>/<n>) → /pipeline-revise
 ```
 
 ### L11 — a fully resolved `[PLANNED]` feature · WARNING
@@ -219,7 +227,7 @@ WARNING RUNBOOKS.md runbook <id>. <name> — [PENDING] with Steps: <n>/<n> → /
   ready to flip. `Tasks: none` satisfies it trivially.
 
 ```
-WARNING FEATURES.md feature <slug> — [PLANNED], every task on Tasks: resolved → flip to [DONE]
+WARNING Every task of a feature is finished, but the feature is still marked planned (FEATURES.md feature <slug>, [PLANNED]) → flip to [DONE]
 ```
 
 ### L12 — a `[PARKED]` task with no `## Parking handoff` · ERROR
@@ -241,7 +249,7 @@ WARNING FEATURES.md feature <slug> — [PLANNED], every task on Tasks: resolved 
   branch reports its absence itself.
 
 ```
-ERROR   TASKS.md task <N> — [PARKED] with no ## Parking handoff in its body → /task-implement <N>
+ERROR   A parked task has lost the question it waits on (TASKS.md task <N>, [PARKED], no ## Parking handoff in its body) → /task-implement <N>
 ```
 
 ### L13 — a runbook's `[P]` steps and its `Parked:` line disagree · WARNING
@@ -262,7 +270,25 @@ ERROR   TASKS.md task <N> — [PARKED] with no ## Parking handoff in its body �
   index from the body at its next commit.
 
 ```
-WARNING RUNBOOKS.md runbook <id>. <name> — Parked: <ids | absent> but body marks [P] on <ids | none> → /runbook-run <id>
+WARNING A runbook's list of parked steps disagrees with its body (RUNBOOKS.md runbook <id>. <name>, Parked: <ids | absent>, body [P] on <ids | none>) → /runbook-run <id>
+```
+
+### L14 — a spec file still under `.claude/specs/` · WARNING
+
+- **Walks.** No edge: a directory listing of `.claude/specs/*.md` — the one
+  finding that lists a directory, § *What no rule reads*.
+- **Needs.** `.claude/specs/`; the probe's `specs` count says whether it
+  holds any.
+- **Fires when** a `*.md` file sits directly under `.claude/specs/`. One
+  finding per file. `/quick-implement` commits a spec beside the change it
+  describes, and only `/pipeline-revise --catch-up`, the run that brings the
+  documentation up to date, deletes it — so a spec still present means the
+  documentation still lags code that has landed. `WARNING` because nothing is
+  misdirected: the code is right and the spec records what it decided; the
+  documentation has a catch-up to take.
+
+```
+WARNING A change landed but the documentation has not caught up with it yet (.claude/specs/ spec <file>) → /pipeline-revise --catch-up .claude/specs/<file>
 ```
 
 ---
@@ -293,7 +319,8 @@ index-only version possible; until it does, the finding stays out.
 ## Failure rules
 
 **An absent index drops its findings.** A finding whose **Needs** names an
-index the project does not have is not evaluated and not reported — dropped
+index — or, for L14, a directory — the project does not have is not
+evaluated and not reported — dropped
 from the run, never an error. A project with no `PLAN.md` has no plan
 findings; that is not drift. An absent **body**, by contrast, is what L12 and
 L13 exist to see: a `[PARKED]` task with no body is L12, and a non-`[DONE]`
@@ -306,7 +333,7 @@ a line some finding reads, or carrying a value outside that line's vocabulary
 list of ids — is reported, and the run carries on:
 
 ```
-ERROR   <artifact> <identifier> — malformed: <the line missing or unreadable> → /pipeline-revise
+ERROR   An index line is missing or unreadable, so nothing that depends on it can be checked (<artifact> <identifier>, <the line>) → /pipeline-revise
 ```
 
 It is `ERROR` because a block that cannot be read will misdirect any command

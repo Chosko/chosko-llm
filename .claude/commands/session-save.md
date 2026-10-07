@@ -1,117 +1,116 @@
 ---
 name: session-save
-version: 0.2.2
+version: 0.4.1
 type: command
 description: Capture what this conversation knows — what was tried, what failed, what was left alone on purpose, which files are half-finished and the exact next step — into a timestamped handoff file under .claude/sessions/. Use it before a conversation ends with work in flight.
+requires: skill:interaction-engine
+project-policy: vcs:rm
 ---
 
 # /session-save
 # Global command: write a per-project handoff file so the state of an
-# in-flight conversation survives the end of that conversation. Single pass —
-# no phases, no conversation, no supporting files. Writes the handoff in
-# full nine-section form, or shrunk to a pointer when the work already has
-# its own resume artifact; never rewrites a file in place. Commits and
-# pushes the handoff by default, since a handoff usually crosses machines.
+# in-flight conversation survives its end. Single pass — no phases, no
+# conversation, no supporting files. Writes the full nine-section form, or a
+# pointer when the work already has its own resume artifact; never rewrites a
+# file in place. Commits and pushes the handoff by default, since a handoff
+# usually crosses machines.
 # Usage: /session-save
 #        /session-save <slug>
 #        /session-save [<slug>] --no-commit  (write the handoff, skip the commit and push)
+#        /session-save [<slug>] --attended | --unattended
 #        /session-save [<slug>] --no-push    (commit as usual, skip the push)
 #        /session-save [<slug>] --commit     (accepted; changes nothing — the default already commits)
 # Examples: /session-save
 #           /session-save ecc-import-architecture
 
 GOAL
-Write one file under `.claude/sessions/` capturing what this session knows and
-nothing else knows: what was tried, what failed and why, what was deliberately
-not tried, which files are half-finished, and the exact next step. The task
-backlog records *what* was done and `.claude/context/` records *where things
-are*; neither records the middle, so it is re-derived from scratch at full
-token cost every time a session ends mid-flight, with no guarantee the
-re-derivation matches.
 
-This command **writes** a handoff and commits it — it does not finish the
-work, and does not clean up after itself beyond the one deletion described
-under SUPERSESSION DELETE. A handoff exists to cross the gap between sessions,
-which is usually a gap between machines, and an untracked file crosses
-nothing.
+- Write one file under `.claude/sessions/` capturing what this session knows
+  and nothing else knows: what was tried, what failed and why, what was
+  deliberately not tried, which files are half-finished, and the exact next
+  step. The task backlog records *what* was done and `.claude/context/`
+  records *where things are*; neither records the middle.
+- Write the handoff and commit it. Do not start, finish or continue the work
+  being handed off — writing the file is where this command ends — and clean
+  up nothing beyond the one deletion under SUPERSESSION DELETE.
+- A handoff crosses the gap between sessions, usually between machines, and an
+  untracked file crosses nothing.
 
 $ARGUMENTS
 
 ---
 
-ARGUMENT PARSING
+## ARGUMENT PARSING
 
-First scan `$ARGUMENTS` for the flags below and strip whichever appear:
+1. Scan `$ARGUMENTS` for these flags and strip whichever appear:
 
-| Flag | Effect |
-|---|---|
-| `--no-commit` | Set COMMIT = false. Write the handoff, but make no commit and no push. Implies NO_PUSH. |
-| `--no-push` | Set NO_PUSH = true. Commit as usual, skip the pull/re-sync/push. |
-| `--commit` | Accepted and changes nothing — COMMIT is already true. |
+   | Flag | Effect |
+   |---|---|
+   | `--no-commit` | Set COMMIT = false. Write the handoff, but make no commit and no push. Implies NO_PUSH. |
+   | `--no-push` | Set NO_PUSH = true. Commit as usual, skip the pull/re-sync/push. |
+   | `--commit` | Accepted and changes nothing — COMMIT is already true. |
+   | `--attended` / `--unattended` | The interaction policy, resolved with a parent's policy and the project's `CLAUDE.md` per `../skills/interaction-engine/references/policy.md`, which holds their argument errors. Under `unattended`, read `../skills/interaction-engine/references/gates.md`. |
 
-COMMIT is true unless `--no-commit` is passed. `--commit` and `--no-commit`
-together stop the run with:
-`--commit and --no-commit cannot be combined. Pick one.` That is the only
-argument this command refuses over.
-
-What is left is either empty or a single slug.
-
-- Empty — generate the slug yourself (see WHERE THE FILE GOES).
-- A slug — use it verbatim as `<slug>`, lower-casing it and replacing spaces
-  with hyphens if it is not already kebab-case.
-
-Anything else is not a recognized argument. Say so in one line and carry on
-with a generated slug — this command never refuses over any other argument.
-
-**Pull at start.** Unless COMMIT is false or NO_PUSH is true, run `git pull`
-on the current branch once, before anything is written. A conflict stops the run there: report the output and tell
-the user to resolve manually and re-run. On a non-git VCS (a `## VCS` section
-in `CLAUDE.md`) skip it.
+2. Read `../skills/interaction-engine/references/messages.md` before the first
+   question; every question and the closing report follow it.
+3. COMMIT is true unless `--no-commit` is passed. If `--commit` and
+   `--no-commit` both appear, stop with:
+   `--commit and --no-commit cannot be combined. Pick one.` That and the
+   interaction policy's own argument errors are the only refusals over an
+   argument.
+4. Treat what is left as empty or a single slug:
+   - Empty — generate the slug yourself (see WHERE THE FILE GOES).
+   - A slug — use it verbatim as `<slug>`, lower-casing it and replacing
+     spaces with hyphens if it is not already kebab-case.
+   - Anything else is not a recognized argument. Say so in one line and carry
+     on with a generated slug — never refuse over any other argument.
+5. **Pull at start.** Unless COMMIT is false or NO_PUSH is true, run
+   `git pull` on the current branch once, before anything is written.
+   - On a conflict, stop the run there: report the output and tell the user to
+     resolve manually and re-run.
+   - On a non-git VCS (a `## VCS` section in `CLAUDE.md`), skip it.
 
 ---
 
-WHERE THE FILE GOES
+## WHERE THE FILE GOES
 
 ```
 .claude/sessions/YYYY-MM-DD-HHMM-<slug>.md
 ```
 
-- `.claude/sessions/` is created on the first save. Writing the file creates
-  the directory; no separate `mkdir` step.
+- Writing the file creates `.claude/sessions/` on the first save; run no
+  separate `mkdir` for the session file.
 - `YYYY-MM-DD-HHMM` is the local date and time now. Read the clock **once**:
   use the date and time the session context already carries if it has them,
-  otherwise run `date` a single time. That clock read and the git commands of
-  the commit-and-push protocol (ARGUMENT PARSING's pull at start, COMMIT AND
-  PUSH) are the only
-  shell commands this command is allowed to run — it runs no `ls`, no `grep`,
-  and no other `git`.
-- `<slug>` is a **two-or-three-word kebab-case summary of the work**, not a
-  random id and not a generic word like `session` or `handoff`. The directory
-  listing is the only way the user ever finds an old session, so the slug has
-  to say what the session was about: `ecc-import-architecture`,
-  `upgrade-readout-bug`, `roadmap-milestones`.
-
-**Never update a session file in place.** A second `/session-save` in the same
-conversation writes a second file with a later timestamp. A handoff is a
-snapshot; rewriting history inside one defeats the point of taking it. The
-only file this command ever removes is the one named under SUPERSESSION
-DELETE, and it removes it whole — it never edits it.
-
-Write nothing outside `.claude/sessions/`. Do not touch `.gitignore`, do not
-edit `TASKS.md`, `FEATURES.md`, a feature document, or a context file, and do
-not create a placeholder anywhere.
-
-A session file is context for a human or an agent and never input to tooling.
-No `chosko-llm` subcommand walks `.claude/sessions/`, and nothing derives from
-what is written here — `/task-list`, `/production-status` and every CLI
-subcommand are unaffected and unaware. Write for a reader, not for a parser.
+  otherwise run `date` a single time.
+- Run only these shell commands: that clock read, the `mkdir`, `mv` and
+  `rmdir` commands of HANDOFF MOVE, and the git commands of the
+  commit-and-push protocol (ARGUMENT PARSING's pull at start, COMMIT AND
+  PUSH). Run no `ls`, no `grep`, and no other `git`.
+- Make `<slug>` a **two-or-three-word kebab-case summary of the work** — not a
+  random id and not a generic word like `session` or `handoff`. The user finds
+  an old session by its slug (`/session-list` shows it,
+  `/session-resume <slug>` resumes by it), so it has to say what the session was about:
+  `ecc-import-architecture`, `upgrade-readout-bug`, `roadmap-milestones`.
+- **Never update a session file in place**, append to one, or reuse its
+  filename. Every save is a new file: a second `/session-save` in the same
+  conversation writes a second file with a later timestamp. A handoff is a
+  snapshot.
+- Remove no file except the one named under SUPERSESSION DELETE, and remove
+  it whole — never edit it.
+- Write nothing outside `.claude/sessions/`. Do not touch `.gitignore`; do not
+  write to `TASKS.md`, `FEATURES.md`, `PLAN.md`, a feature document, or
+  anything under `.claude/context/`; do not create a placeholder anywhere.
+- Write for a reader, not for a parser. A session file is context for a human
+  or an agent and never input to tooling: no `chosko-llm` subcommand walks
+  `.claude/sessions/`, and nothing derives from it — `/task-list`,
+  `/production-status` and every CLI subcommand are unaffected and unaware.
 
 ---
 
-THE HEADER BLOCK — both forms
+## THE HEADER BLOCK — both forms
 
-Every session file, full form or pointer form, opens with the same three
-lines:
+Open every session file, full form or pointer form, with the same three lines:
 
 ```markdown
 # Session: 2026-08-24 14:30
@@ -120,8 +119,8 @@ Work: task 118
 Running: /task-implement
 ```
 
-**`Work:`** takes exactly one of four values — it is the one typed line that
-links this session to the document the work belongs to:
+**`Work:`** — the one typed line linking this session to the document the work
+belongs to. Write exactly one of four values:
 
 | Value | Written when | Points at |
 |---|---|---|
@@ -130,83 +129,87 @@ links this session to the document the work belongs to:
 | `document <path>` | product-design, roadmap, plan, or context work | that file |
 | `none` | a generic session with no anchor | — |
 
-`none` is a **first-class value, not a failure**. A debugging session that
-touched no backlog document is exactly the case the generic form exists for,
-and inventing a link for an anchorless session would make the link
-untrustworthy everywhere else. `none` may carry a short trailing explanation
-after an em dash:
+- Treat `none` as a **first-class value, not a failure** — e.g. a debugging
+  session that touched no backlog document. Inventing a link for an
+  anchorless session would make the link untrustworthy everywhere else.
+- `none` may carry a short trailing explanation after an em dash:
 
 ```
 Work: none — cross-feature architecture session, five features authored
 ```
 
-Never write two `Work:` values, never write a list, and never guess a task
-number to avoid writing `none`.
+- Never write two `Work:` values, never write a list, and never guess a task
+  number to avoid writing `none`.
 
-**`Running:`** names the skill or command in flight — `/task-implement`,
-`/product-design`, `/architect` — or what the session was doing when there was
+**`Running:`** — name the skill or command in flight (`/task-implement`,
+`/product-design`, `/architect`), or what the session was doing when there was
 none (`free-form debugging`, `/claude-council, then free-form architecture`).
-Infer it from the conversation. **Do not read any state to find out**; if the
-inference is not clear, ask the user once, which is cheap and honest.
+
+- Infer it from the conversation. **Do not read any state to find out.**
+- If the inference is not clear, ask the user once.
 
 ---
 
-WHICH FORM — artifact detection
+## WHICH FORM — artifact detection
 
-The command picks the form by detecting whether the work in flight already has
-a **resume artifact**: a project-scoped state document that carries a resume
-marker — a current-stage, phase, or next-step line a later session reads to
-know where the last one stopped. Two properties are required, and both matter:
-it lives inside the user's project (not inside an installed skill folder), and
-its marker is rewritten as the work progresses.
+Pick the form by detecting whether the work in flight already has a **resume
+artifact**: a project-scoped state document carrying a resume marker — a
+current-stage, phase, or next-step line a later session reads to know where
+the last one stopped. Both properties are required: it lives inside the user's
+project (not inside an installed skill folder), and its marker is rewritten as
+the work progresses.
 
-**The command detects; skills declare nothing.** A skill that gains a resume
-artifact later needs no change here, and a skill that loses one degrades to
-the full form on its own.
+The command detects; skills declare nothing. A skill that gains a resume
+artifact needs no change here, and one that loses it degrades to the full form
+on its own.
 
 Resolve in two steps, in this order:
 
-**1. The known-artifact table.**
+1. **The known-artifact table.**
 
-| Skill in flight | Resume artifact |
-|---|---|
-| `/product-design` | `.claude/domain/design-process.md` |
+   | Skill in flight | Resume artifact |
+   |---|---|
+   | `/product-design` | `.claude/domain/design-process.md` |
 
-That is the whole table today. It is short by design and grows **only** when a
-skill actually ships a project-scoped state document carrying a resume marker
-— nothing else qualifies for a row. A static instruction file that ships with
-an installed skill is not a resume artifact: it holds no session state, and
-its path is relative to the installed skill folder rather than to the project.
-`/task-implement` deliberately has no entry — its state is a half-finished
-working tree plus what was tried, not a file — so its sessions take the full
-form.
+   - That is the whole table. Add a row **only** when a skill actually ships a
+     project-scoped state document carrying a resume marker — nothing else
+     qualifies.
+   - A static instruction file shipping with an installed skill is not a
+     resume artifact: it holds no session state, and its path is relative to
+     the installed skill folder rather than to the project.
+   - `/task-implement` deliberately has no row — its state is a half-finished
+     working tree plus what was tried, not a file — so its sessions take the
+     full form.
 
-**2. The recency check.** If no table row matches, look for a file **written
-during this session** that carries a resume marker. If one is found, offer the
-pointer form:
+2. **The recency check.** If no table row matches, look for a file **written
+   during this session** that carries a resume marker. If one is found, offer
+   the pointer form:
 
-> `<path>` was written this session and carries a resume marker, so it already
-> holds the state. Write a pointer to it instead of a full handoff? [Y/n]
+   > `<path>` was written this session and carries a resume marker, so it already
+   > holds the state. Write a pointer to it instead of a full handoff? [Y/n]
 
-On yes, write the pointer form. On no, or on anything unclear, write the full
-form.
+   - On yes, write the pointer form. On no, or on anything unclear, write the
+     full form.
+   - Gate class: `confirmation`
+     (`../skills/interaction-engine/references/gates.md`) — under
+     `unattended` it passes on its own and the pointer form is written.
 
-No table row and no recent artifact, or no skill running at all: **full form**.
-That is the generic case and the common one.
+No table row and no recent artifact, or no skill running at all: write the
+**full form** — the generic and common case. Never write both forms.
 
 ---
 
-FULL FORM
+## FULL FORM
 
-The header block, then an **optional one-paragraph preamble** framing the
+Write the header block, then an **optional one-paragraph preamble** framing the
 handoff, then all nine sections below, in this order, as `##` headings:
 
 1. **What we are building** — the goal in the session's own terms.
 2. **What worked (with evidence)** — every claim carries the command output,
    test name, or file that proves it.
-3. **What did not work (and why)** — the highest-value section. This is what
-   the next session would otherwise repeat, at full cost, before discovering
-   the same thing.
+3. **What did not work (and why)** — the highest-value section: what the next
+   session would otherwise repeat, at full cost, before discovering the same
+   thing.
 4. **What has not been tried yet** — approaches considered and skipped, so a
    later session does not mistake them for approaches already ruled out.
 5. **Current state of files** — a table with columns `File | Status | Notes`.
@@ -220,26 +223,24 @@ handoff, then all nine sections below, in this order, as `##` headings:
 9. **Environment and setup notes** — anything non-obvious about how to run
    things.
 
-Two rules govern what goes in them:
+Rules for the content:
 
 - **Write every section, always.** Put `N/A` or `nothing yet` where a section
-  is genuinely empty. A skipped section is indistinguishable from an
-  overlooked one, and an honest empty section is information — it tells the
-  next session that nothing was blocked, or that nothing failed, rather than
-  leaving it to wonder whether anyone looked.
-- **Evidence or it is a guess.** A claim under "what worked" that has no
-  command output, test name or file behind it is a guess, and is written as
-  one ("believed to work — not verified"). Confident prose about unverified
-  behaviour is the failure this section exists to prevent.
-
-Write what only this conversation knows. Do not restate what is already on
-disk in `TASKS.md`, a feature document or a context file — link to it instead.
+  is genuinely empty — a skipped section is indistinguishable from an
+  overlooked one.
+- **Evidence or it is a guess.** Write a claim under "what worked" that has no
+  command output, test name or file behind it as a guess ("believed to work —
+  not verified"). Never present an inference as a verified result.
+- Write what only this conversation knows. Do not restate or copy what is
+  already on disk in `TASKS.md`, a feature document or a context file — link
+  to it instead.
 
 ---
 
-POINTER FORM
+## POINTER FORM
 
-The header block, a `Resume from:` line, and one sentence. The whole file:
+Write the header block, a `Resume from:` line, and one sentence — the whole
+file:
 
 ```markdown
 # Session: 2026-08-24 14:32
@@ -251,101 +252,108 @@ Resume from: .claude/domain/design-process.md
 Read that file. It holds the state; this one only says where it is.
 ```
 
-No narrative, no file table, no decisions, no next step. Anything more would
-be a second account of state the artifact already owns, and two accounts of
-the same state that can disagree is worse than one.
+Add no narrative, no file table, no decisions, no next step: the artifact owns
+the state, and a second account of it could disagree.
 
 ---
 
-SUPERSESSION DELETE
+## SUPERSESSION DELETE
 
 If **this conversation itself resumed from a session file**, write the new
-snapshot first, then delete the file it resumed from. That file is superseded
-— its state now lives in the newer one — and two snapshots of the same work
-must never coexist in the directory.
+snapshot first, then delete the file it resumed from — it is superseded, and
+two snapshots of the same work must never coexist in the directory.
 
 - Take the path from the conversation. `/session-resume` states which file it
   loaded, explicitly, in its briefing.
 - **Delete nothing when you cannot tell.** No searching the directory for a
   likely candidate, no deleting by date, no deleting the second-newest file on
-  a hunch. An unresumed session file is never auto-deleted.
+  a hunch. Never auto-delete an unresumed session file.
 - Delete only after the new file is written. Never before, and never instead.
 - Report the deletion on its own line, beside the path written.
 
 ---
 
-COMMIT AND PUSH (skipped under `--no-commit`)
+## HANDOFF MOVE
 
-If COMMIT is false, do nothing here and run no git command.
+Area handoffs — one `agent-<area>.md` per area of an orchestrate-mode
+conversation — live in `.claude/sessions/pending/` until the conversation's
+first save, and afterwards in the folder named after the newest session file's
+stem (its filename without `.md`). After the new file is written and any
+SUPERSESSION DELETE is done, bring them under the new stem:
 
-Otherwise (the default), after the file is written and any SUPERSESSION DELETE
-is done, follow the commit-and-push protocol — four steps, in this order:
+1. **Find them** with the Glob tool, never a shell listing:
+   `.claude/sessions/pending/agent-*.md`, and — when this conversation
+   already wrote a session file, or resumed from one — the same pattern in
+   that file's stem folder, `.claude/sessions/<previous-stem>/agent-*.md`.
+   None found: nothing changes, and this section ends.
+2. **Move each one** into `.claude/sessions/<new-stem>/`, keeping its
+   filename: create the folder once with
+   `mkdir -p -- .claude/sessions/<new-stem>`, then
+   `mv -- <old-path> <new-path>`, one per file. Never read or edit its
+   content.
+3. **Remove each source folder left empty** — `pending/`, or the previous
+   stem's folder — with `rmdir -- <folder>`, which refuses a folder that is
+   not empty.
 
-1. **Pull at start.** Already run before anything was written, per ARGUMENT
-   PARSING.
-2. **Commit.** Stage by explicit path exactly the new session file
-   (`git add -- <new-path>`) — plus, when SUPERSESSION DELETE removed a file,
-   that file's deletion, in its own command:
-   `git rm --cached --quiet --ignore-unmatch -- <superseded-path>`. It stages
-   the deletion when git was tracking the file and does nothing when it was
-   not — a handoff written by an earlier `--no-commit` save, say — so this
-   command never needs to know which, and an untracked superseded path can
-   never abort staging of the new file. Make
-   one commit: `git commit -m "Save session <slug>"`. The new snapshot and the
-   removal of the one it replaces are one unit of work, so they ride in one
-   commit.
-3. **Pre-push re-sync.** Unless NO_PUSH is true, `git pull` again. A conflict:
-   abort the merge, keep the local commit, do not push, and report that it
-   needs a manual sync and push.
-4. **Push.** Unless NO_PUSH is true, `git push`. On failure, report the exact
-   output and stop — never retry, never force-push.
-
-On a non-git VCS (a `## VCS` section in `CLAUDE.md`), only the commit step
-runs. On a commit failure (a pre-commit hook, say), surface the exact output
-and stop — do not retry, amend or skip hooks. The session file stays written
-either way.
+Run the moves under `--no-commit` too; only the staging is skipped there.
 
 ---
 
-REPORTING
+## COMMIT AND PUSH (skipped under `--no-commit`)
+
+If COMMIT is false, do nothing here and run no git command.
+
+Otherwise (the default), after the file is written, any SUPERSESSION DELETE is
+done and HANDOFF MOVE has run, follow the commit-and-push protocol — four
+steps, in this order:
+
+1. **Pull at start.** Already run before anything was written, per ARGUMENT
+   PARSING.
+2. **Commit.** Stage by explicit path, in separate commands:
+   - Exactly the new session file: `git add -- <new-path>`.
+   - When SUPERSESSION DELETE removed a file, its deletion:
+     `git rm --cached --quiet --ignore-unmatch -- <superseded-path>`. This
+     stages the deletion when git was tracking the file and does nothing when
+     it was not (a handoff written by an earlier `--no-commit` save, say), so
+     an untracked superseded path never aborts staging of the new file.
+   - When HANDOFF MOVE moved handoffs, each new path
+     (`git add -- <new-path> …`) and each old path's removal
+     (`git rm --cached --quiet --ignore-unmatch -- <old-path> …`).
+   - Stage nothing else — never `git add -A`, `git add .` or `git add -u`.
+
+   Make one commit: `git commit -m "Save session <slug>"`. The new snapshot,
+   the removal of the one it replaces and the moved handoffs are one unit of
+   work.
+3. **Pre-push re-sync.** Unless NO_PUSH is true, `git pull` again. On a
+   conflict: abort the merge, keep the local commit, do not push, and report
+   that it needs a manual sync and push.
+4. **Push.** Unless NO_PUSH is true, `git push`. On failure, report the exact
+   output and stop — never retry, never force-push.
+
+- On a non-git VCS (a `## VCS` section in `CLAUDE.md`), run only the commit
+  step.
+- On a commit failure (a pre-commit hook, say), surface the exact output and
+  stop — do not retry, amend or skip hooks.
+- The session file stays written either way.
+- Never commit twice, amend, skip hooks, force-push, branch, or tag.
+
+---
+
+## REPORTING
 
 On success, report exactly this much:
 
 ```
 Wrote .claude/sessions/2026-08-24-1430-ecc-import-architecture.md (full form)
 Deleted .claude/sessions/2026-08-23-0915-ecc-import-architecture.md (superseded)
+Moved 3 area handoffs into .claude/sessions/2026-08-24-1430-ecc-import-architecture/
 Committed a1b2c3d — Save session ecc-import-architecture
 ```
 
-The deletion line appears only when SUPERSESSION DELETE actually removed a
-file. The last line carries the commit hash (`git rev-parse --short HEAD`),
-with `(not pushed)` appended under `--no-push`. Under `--no-commit` it is
-instead one line — `Nothing committed — the session file is uncommitted.` —
-and is not repeated or expanded on.
-
----
-
-DO NOT:
-- Stage with `git add -A`, `git add .` or `git add -u`, stage anything but the
-  new session file and the superseded file's deletion, commit twice, amend,
-  skip hooks, force-push, retry a failed push, branch, or tag.
-- Run any git command under `--no-commit`.
-- Touch `.gitignore`, or write anything at all outside `.claude/sessions/`.
-- Update a previous session file in place, append to one, or reuse its
-  filename. Every save is a new file.
-- Delete a session file other than the one this conversation demonstrably
-  resumed from, or delete that one before the new file is written.
-- Skip a section of the full form because it would be empty. Write `N/A`.
-- Write a claim under "what worked" without the evidence that backs it, or
-  present an inference as a verified result.
-- Invent a `Work:` value to avoid `none`, or write more than one.
-- Add a row to the known-artifact table for anything that is not a
-  project-scoped state document carrying a resume marker.
-- Write both forms, or add narrative to the pointer form.
-- Write to `TASKS.md`, `FEATURES.md`, `PLAN.md`, a feature document, or
-  anything under `.claude/context/`, or copy their contents into a section
-  instead of linking to them.
-- Run any shell command other than the single clock read and the git
-  commands of the commit-and-push protocol.
-- Start, finish, or continue the work being handed off. Writing the file is
-  where this command ends.
+- Include the deletion line only when SUPERSESSION DELETE actually removed a
+  file, and the move line only when HANDOFF MOVE moved at least one handoff.
+- The last line carries the commit hash (`git rev-parse --short HEAD`), with
+  `(not pushed)` appended under `--no-push`.
+- Under `--no-commit`, the last line is instead
+  `Nothing committed — the session file is uncommitted.` — not repeated or
+  expanded on.

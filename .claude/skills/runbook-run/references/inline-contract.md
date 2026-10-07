@@ -2,17 +2,15 @@
 
 Fixed text. Under `/runbook-run --inline`, the session executing a step
 follows the rule set below **in place of** the subagent contract's OPERATING
-RULES (`subagent-contract.md`). It is read once per run, in loop step 1, and
-**only when `--inline` is passed** — a default run never loads this file.
+RULES (`subagent-contract.md`).
 
-It is a reference file rather than prose the session composes for the same
-reason the subagent contract is one: a rule set re-worded per step is a rule
-set the session can talk itself out of, and under `--inline` the session is
-both the one bound by the rules and the one tempted to relax them.
-
-Three placeholders, as in the subagent contract, stand for the runbook's name
-(`<RUNBOOK>`), the step being executed (`<N>`) and the body's path as its
-index block's `File:` line holds it (`<FILE>`).
+- Read it once per run, in loop step 1, and **only when `--inline` is
+  passed** — a default run never loads this file.
+- Never re-word it per step: under `--inline` the session is both bound by the
+  rules and tempted to relax them.
+- Three placeholders, as in the subagent contract: the runbook's name
+  (`<RUNBOOK>`), the step being executed (`<N>`) and the body's path as its
+  index block's `File:` line holds it (`<FILE>`).
 
 ---
 
@@ -37,9 +35,12 @@ INLINE RULES
   it.
 - At any clarifying question or approval gate: if you are a top-level session,
   ask the user directly in the fixed block
-  `Step <N> of <total> — <title> — asking (round <r>)`, with any gate draft
-  verbatim and unabridged. Never answer your own question, and never skip a
-  gate because you "already know" the answer. If you are yourself a subagent,
+  `Step <N> of <total> — <title> — asking (round <r>)`, with a plain summary
+  of any gate draft, the full draft only on `show`. Never answer your own
+  question, and never skip a gate because you "already know" the answer —
+  except that under an unattended run a gate the invoked skill tags
+  `confirmation` passes on its own, as that skill says, and is not a skipped
+  gate. If you are yourself a subagent,
   end your turn under `QUESTIONS FOR USER` instead, as in the default mode.
 - One prompt is the exception: the dirty-tree prompt (`Working tree has
   uncommitted changes. Choose:`) a step's command puts before it starts. When
@@ -81,60 +82,49 @@ INLINE RULES
 
 ## Why each rule is in there
 
-Not part of the rule set — this section is for whoever maintains the contract.
+Not part of the rule set — for whoever maintains the contract.
 
 - **The phase boundary.** In the default mode a second agent separates the one
-  who does the work from the one who records it. Under `--inline` the only
-  separation left is the boundary between the two phases, so the rule names
-  where the execution phase ends: at a written outcome.
-- **The same brief, in order.** A runbook must stay executable by either mode
-  without re-authoring. Assembling the spawned brief keeps the step's inputs
-  identical, so only *who executes* changes.
-- **The brief is the authority / records win.** A fresh subagent cannot carry a
-  half-decision from step 1 into step 4; an inline session can. These two
-  rules replace that structural guarantee: memory is never an instruction, and
-  where it disagrees with the written record, the record is right.
-- **Facts are still written down.** The session already knows what it learned,
-  but a resumed or spawned run of the same runbook does not, and "records win"
-  only works if the record exists.
+  who does the work from the one who records it. Under `--inline` only the
+  phase boundary is left, so the rule names where the execution phase ends: at
+  a written outcome.
+- **The same brief, in order.** A runbook stays executable by either mode
+  without re-authoring; only *who executes* changes.
+- **The brief is the authority / records win.** A fresh subagent cannot carry
+  a half-decision from step 1 into step 4; an inline session can. These two
+  rules replace that structural guarantee.
+- **Facts are still written down.** A resumed or spawned run of the same
+  runbook does not share the session's memory, and "records win" only works
+  if the record exists.
 - **Asking directly.** There is no relay hop, because the asker and the user's
-  interlocutor are the same agent. The prohibition carries anyway: a session
-  that answers its own question, or skips a gate it thinks it can predict, has
-  made a decision the user never made. The fixed block tells the user which
-  step is asking.
-- **The dirty-tree prompt answers itself.** Under `--inline` a step's
-  `/task-implement` runs in the session that set `[~]` and `[RUNNING]` one
-  moment earlier, so its pre-flight check meets them and would stall on a
-  question whose answer is already known. The condition mirrors SKILL.md's
-  Stop-hook reply — the runbook and the index the run marked in-flight, which
-  under `--inline` this session wrote itself — so the two read as one rule
-  applied twice, and its fall-through is the same: anything else dirty still
-  reaches the user. `proceed`, never `include`, because folding the markers
-  into the task's commit would commit the in-flight state COMMIT CADENCE
-  forbids. The rule is word for word the one the subagent contract's OPERATING
-  RULES carry for a spawned step, and it lives in the two contracts rather than
-  in `task-engine`'s `tree.md`: the runbook side answers its own prompt, and
-  `/task-implement` learns nothing about runbooks.
-- **The two unattended rules.** The same two the subagent contract's
-  OPERATING RULES carry, for the same reasons, in the inline session's own
-  register: there is no turn to end, so the question becomes the execution
-  phase's written outcome, which step 7 parks by the fifth result row instead
-  of asking. The tree is left clean because the run goes on to the next step
-  in this same session, which would otherwise meet its own leftovers at the
-  next dirty-tree prompt; the answer is read from `Context:` because the step
-  re-runs whole and the invoked skill asks again.
-- **Children one level down, never inline.** The default mode's step agent sat
-  one level below the orchestrator; under `--inline` that level is free, so a
-  wanted child goes there. Doing a child's work in the session destroys the
-  fresh context that was the reason for a child (an implementer reviewing its
-  own diff is not a review). When no level is reachable, failing the step and
-  naming the default mode as the fix is honest; improvising is not.
+  interlocutor are the same agent. A session that answers its own question,
+  or skips a gate it thinks it can predict, has made a decision the user never
+  made. A `confirmation` gate passing on its own under `unattended` is not
+  that: the gate's owner declared the decision already made. The fixed block
+  tells the user which step is asking.
+- **The dirty-tree prompt answers itself.** A step's `/task-implement` runs in
+  the session that set `[~]` and `[RUNNING]` one moment earlier, so its
+  pre-flight check meets them. The condition mirrors SKILL.md's Stop-hook
+  reply, with the same fall-through: anything else dirty still reaches the
+  user. `proceed`, never `include`, because folding the markers into the
+  task's commit would commit the in-flight state COMMIT CADENCE forbids. The
+  rule is word for word the subagent contract's, and lives in the two
+  contracts rather than in `task-engine`'s `tree.md`: the runbook side answers
+  its own prompt, and `/task-implement` learns nothing about runbooks.
+- **The two unattended rules.** The subagent contract's two, in the inline
+  session's register: there is no turn to end, so the question becomes the
+  execution phase's written outcome, which step 7 parks by the fifth result
+  row. The tree is left clean because the next step runs in this same
+  session; the answer is read from `Context:` because the step re-runs whole
+  and the invoked skill asks again.
+- **Children one level down, never inline.** Under `--inline` the level a
+  step's agent occupied is free, so a wanted child goes there. Doing a child's
+  work in the session destroys the fresh context that was the reason for a
+  child. When no level is reachable, failing the step and naming the default
+  mode as the fix is honest; improvising is not.
 - **Never edit the runbook or the index during execution.** The bookkeeping
-  phase writes exactly those two files; the execution phase writes everything
-  else. Mixing them is how a `Done:` line gets written for work that did not
-  finish.
-- **The written outcome.** It is the inline analogue of waiting for a spawn's
+  phase writes exactly those two files; mixing the phases is how a `Done:`
+  line gets written for work that did not finish.
+- **The written outcome.** The inline analogue of waiting for a spawn's
   result. Classifying on a written statement — never on a re-inspection of the
-  session's own diff — keeps the orchestrator from reviewing, and an outcome
-  the session cannot state confidently is a failure for the same reason an
-  ambiguous subagent report is.
+  session's own diff — keeps the orchestrator from reviewing.
