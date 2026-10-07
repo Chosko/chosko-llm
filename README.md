@@ -23,8 +23,8 @@ chosko-llm orients Claude within your codebase so that **reads are constrained**
 
 ### Reduce human-in-the-loop bottlenecks
 
-Claude sessions require your presence, but **you mostly wait in chat** while the agent works. Then the roles switch in an infinite **hiccup**.
-chosko-llm promotes **deep-focused design and planning sessions** to prepare big batches of work for a later moment.
+A Claude session is a **hiccuping workflow**: you wait while the agent works, it waits while you answer, and you never know when the next switch comes.
+chosko-llm **lets you answer those questions up front**, in focused design and planning sessions, so that Claude can implement later without you.
 [Read how →](#plan-once-build-later)
 
 ### Make it work overnight
