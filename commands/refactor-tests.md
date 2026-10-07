@@ -1,9 +1,10 @@
 ---
 name: refactor-tests
-version: 0.3.4
+version: 0.4.0
 type: command
 description: Split oversized test files into smaller, focused files, running the test suite before and after each split so the baseline stays green. Use it when a test file has grown past a readable size; splitting only — no renaming, deduplication, import sorting or constant extraction.
 disable-model-invocation: true
+requires: skill:interaction-engine
 ---
 
 # /refactor-tests
@@ -50,7 +51,16 @@ pre-push re-sync and the push while still committing as always. When COMMIT is
 true and no non-git `## VCS` override applies, pull at start here (before
 STEP 1) — run `git pull` on the current branch. A conflict stops the run
 immediately; report the conflict output and tell the user to resolve
-manually and re-run. Any other arguments are ignored.
+manually and re-run.
+
+Also parse the optional `--attended` and `--unattended` flags and strip
+whichever appear. The run's interaction policy resolves from them, a policy
+handed down by a parent run and the project's `CLAUDE.md`, per
+`../skills/interaction-engine/references/policy.md`, which holds their
+argument errors; under `unattended`, read
+`../skills/interaction-engine/references/gates.md`. Read
+`../skills/interaction-engine/references/messages.md` before STEP 3 — the
+proposal and the final summary follow it. Any other arguments are ignored.
 
 ---
 
@@ -104,7 +114,9 @@ Then ask:
 > Proceed with splitting these <N> file(s)? [y/N]
 
 Wait for explicit confirmation. If the user answers anything other than
-`y` or `yes` (case-insensitive), stop without modifying any file.
+`y` or `yes` (case-insensitive), stop without modifying any file. Gate class:
+`confirmation` — under `unattended` it passes on its own, and the final
+summary names the commit or, without `--commit`, the uncommitted splits.
 
 ---
 

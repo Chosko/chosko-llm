@@ -1,9 +1,10 @@
 ---
 name: context-build
-version: 0.5.2
+version: 0.6.0
 type: skill
 description: Build a navigation context layer under .claude/context/ — an INDEX.md plus one context file per area of the codebase — so future sessions read a map instead of the source. Use it once on a project with no layer yet; flat by default, nested on request. Restructuring a layer is /context-convert's job.
 replaces: command:context-build
+requires: skill:interaction-engine
 ---
 
 # /context-build
@@ -42,6 +43,17 @@ before Phase 1 begins. A conflict stops the run here — report the conflict
 output and tell the user to resolve manually and re-run. (No pull happens
 when COMMIT is false — there is nothing this run will commit or push.)
 
+Also scan for the optional `--attended` and `--unattended` flags and strip
+whichever appear. The run's interaction policy resolves from them, a policy
+handed down by a parent run and the project's `CLAUDE.md`, per
+`../interaction-engine/references/policy.md`, which holds their argument
+errors; under `unattended`, read
+`../interaction-engine/references/gates.md`. Read
+`../interaction-engine/references/messages.md` before the first gate,
+question or report — each of them follows it. A gate that passes on its
+own has the closing report name the Phase 4 commit or, without `--commit`,
+the uncommitted files.
+
 Finally, scan for the optional nested-layout argument and strip it:
 
 - `nested` — set NESTED = true and NESTED_UNITS = unset. The skill proposes
@@ -62,6 +74,9 @@ a sibling file, so a flat run never pays for it.
 
 | Read this file | Exactly when |
 | -------------- | ------------ |
+| `../interaction-engine/references/policy.md` | Every run, at ARGUMENT NOTE. |
+| `../interaction-engine/references/messages.md` | Every run, before the first gate, question or report. |
+| `../interaction-engine/references/gates.md` | The policy resolved to `unattended`. |
 | `./nested.md`  | NESTED is true (the `nested` / `nested=` argument was passed), OR Phase 1 step 1.0 read `Layout: nested` from an existing index. |
 
 Do not read `./nested.md` speculatively. On a flat run the file is never
@@ -151,7 +166,7 @@ Report:
   turn this into a question that gates the flat run: the flat proposal
   above stands as-is and the approval gate below is about the flat plan.
 
-STOP and wait for user approval before Phase 2.
+STOP and wait for user approval before Phase 2. Gate class: `confirmation`.
 
 ---
 
@@ -212,7 +227,7 @@ Report:
 - Any area where the codebase resisted summarization (a signal for future refactoring,
   but do not refactor now — flag only).
 
-STOP and wait for user approval before Phase 3.
+STOP and wait for user approval before Phase 3. Gate class: `confirmation`.
 
 ---
 
@@ -239,7 +254,7 @@ PHASE 3 — Wire the entry point
     marker is present directly under the title.
 
 Report:
-- The exact changes made to CLAUDE.md (show as a diff or before/after).
+- What changed in CLAUDE.md, in plain words; the diff only on `show`.
 - Any orphaned source files and suggested home context file for each.
 - A validation checklist the user can run manually to confirm the navigation layer
   works as intended. Example items:

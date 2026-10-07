@@ -1,8 +1,9 @@
 ---
 name: context-convert
-version: 0.1.1
+version: 0.2.0
 type: skill
 description: Convert an existing navigation context layer between the flat layout (one INDEX.md with every context file beside it) and the nested layout (a router INDEX plus per-unit leaves), moving content, never rewriting it. Use it when a layer has outgrown one layout or shrunk out of the other.
+requires: skill:interaction-engine
 ---
 
 # /context-convert
@@ -58,7 +59,8 @@ CONSTRAINTS
   skill moves what exists; if the unit breakdown suggests a file should be
   split, flag it and let `/context-update` or the user handle it.
 - Never write anything before the Phase 1 plan has been reported (and
-  approved, unless AUTO_CONFIRM is true). Every stop condition in this file
+  approved, unless AUTO_CONFIRM is true or the gate passed on its own under
+  `unattended`). Every stop condition in this file
   is a stop *before* any write — a half-converted layer is worse than an
   unconverted one.
 - CLAUDE.md's navigation instruction points at `.claude/context/INDEX.md`,
@@ -103,6 +105,18 @@ P.3 Parse $ARGUMENTS:
     `--no-commit` is not a flag of this skill (uncommitted is already the
     default). If both `--commit` and `--no-commit` appear, stop with:
     `--commit and --no-commit cannot be combined. Pick one.`
+
+    --attended / --unattended (optional): strip whichever appears. The run's
+    interaction policy resolves from them, a policy handed down by a parent run
+    and the project's `CLAUDE.md`, per
+    `../interaction-engine/references/policy.md`, which holds their argument
+    errors; under `unattended`, read
+    `../interaction-engine/references/gates.md`. Read
+    `../interaction-engine/references/messages.md` before the first gate,
+    question or report — each of them follows it. A gate that passes on
+    its own has the closing report name the Phase 4 commit or, without
+    `--commit`, the uncommitted conversion. `-y` keeps its own meaning. A
+    stop condition is not a gate and stops under every policy.
 
     `to=nested` / `to=flat` (optional): set TARGET explicitly and strip it.
     Any other value is an error — stop and say which values are accepted.
@@ -274,7 +288,8 @@ reject without reading anything else:
 - Anything flagged and not acted on: index/disk mismatches, files that look
   too large, orphan entries.
 
-If AUTO_CONFIRM is false: STOP and wait for user approval before Phase 2.
+If AUTO_CONFIRM is false: STOP and wait for user approval before Phase 2
+(gate class: `confirmation`).
 If AUTO_CONFIRM is true: proceed immediately to Phase 2.
 
 ---

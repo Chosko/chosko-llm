@@ -1,9 +1,9 @@
 ---
 name: follow-ups-resolve
-version: 0.2.0
+version: 0.3.0
 type: skill
 description: 'Act on a user reply to a numbered Follow-ups list: rewrite the list from the feedback until the user approves it, then execute it, delegating items to subagents. Trigger whenever the user answers such a list by number or as a whole — "do 1 and 3", "flip all eligible features to [DONE]", "ask me about 2 now", "fix it in place", "I will handle 4 myself, remove it" — whatever produced it: /follow-ups, a /runbook-run or /task-implement closing report, or any numbered list in that shape. Not for: a reply by the P<n> handle of a parked question, which answers that question; a new request unrelated to the list; producing a list, which is the job of /follow-ups.'
-requires: command:follow-ups
+requires: command:follow-ups, skill:interaction-engine
 ---
 
 # /follow-ups-resolve
@@ -14,6 +14,18 @@ requires: command:follow-ups
 # every new follow-up back for approval. Beside a running /runbook-run it
 # resolves and approves but defers execution to the run's end. Commits nothing
 # of its own — each item commits the way the command it runs does.
+
+THE POLICY
+The interaction policy resolves from `--attended` / `--unattended` when the
+reply carries one, a policy handed down by a parent run, and the project's
+`CLAUDE.md`, per `../interaction-engine/references/policy.md`, which holds
+their argument errors; under `unattended`, read
+`../interaction-engine/references/gates.md`. Read
+`../interaction-engine/references/messages.md` before printing the list —
+the list, every relayed gate and every question follow it. The list's
+approval is a `design` gate: it waits under either policy, and under
+`unattended`, with nobody to answer, nothing executes. Every delegated prompt
+hands the resolved policy down.
 
 THE WORKING LIST
 One list per conversation. It starts as the Follow-ups list the user replied
@@ -35,7 +47,8 @@ The user's feedback rewrites the list: items that share an action are merged
 into one, items the user takes on are removed, a question the user asks to be
 asked is put now and its answer rewrites the item it belongs to, and a new
 instruction becomes a new item. Print the rewritten list and wait. It is
-re-presented after every reply until the user approves it.
+re-presented after every reply until the user approves it. Gate class:
+`design`.
 
 Nothing executes before approval. A reply that says to execute named items
 as printed — "do 1 and 3", "go" for the whole list — approves them; a reply
@@ -59,7 +72,9 @@ states, or leaves a question open, is surfaced, and goes to the user.
 
 The orchestrator never answers a gate raised to it — auto-mode policy may
 refuse an agent answering on the user's behalf. It relays the gate to the
-user verbatim, and the reply goes back to the subagent that raised it.
+user — its question as asked, its draft as the subagent's plain summary,
+the full draft on `show` — and the reply goes back to the subagent that
+raised it.
 
 NEW FOLLOW-UPS
 A follow-up that arises during execution — named in a subagent's report, or

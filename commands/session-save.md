@@ -1,8 +1,9 @@
 ---
 name: session-save
-version: 0.2.2
+version: 0.3.0
 type: command
 description: Capture what this conversation knows — what was tried, what failed, what was left alone on purpose, which files are half-finished and the exact next step — into a timestamped handoff file under .claude/sessions/. Use it before a conversation ends with work in flight.
+requires: skill:interaction-engine
 ---
 
 # /session-save
@@ -15,6 +16,7 @@ description: Capture what this conversation knows — what was tried, what faile
 # Usage: /session-save
 #        /session-save <slug>
 #        /session-save [<slug>] --no-commit  (write the handoff, skip the commit and push)
+#        /session-save [<slug>] --attended | --unattended
 #        /session-save [<slug>] --no-push    (commit as usual, skip the push)
 #        /session-save [<slug>] --commit     (accepted; changes nothing — the default already commits)
 # Examples: /session-save
@@ -48,11 +50,16 @@ First scan `$ARGUMENTS` for the flags below and strip whichever appear:
 | `--no-commit` | Set COMMIT = false. Write the handoff, but make no commit and no push. Implies NO_PUSH. |
 | `--no-push` | Set NO_PUSH = true. Commit as usual, skip the pull/re-sync/push. |
 | `--commit` | Accepted and changes nothing — COMMIT is already true. |
+| `--attended` / `--unattended` | The interaction policy, resolved with a parent's policy and the project's `CLAUDE.md` per `../skills/interaction-engine/references/policy.md`, which holds their argument errors. Under `unattended`, read `../skills/interaction-engine/references/gates.md`. |
+
+Read `../skills/interaction-engine/references/messages.md` before the first
+question; every question and the closing report follow it.
 
 COMMIT is true unless `--no-commit` is passed. `--commit` and `--no-commit`
 together stop the run with:
-`--commit and --no-commit cannot be combined. Pick one.` That is the only
-argument this command refuses over.
+`--commit and --no-commit cannot be combined. Pick one.` That and the
+interaction policy's own argument errors are the only refusals over an
+argument.
 
 What is left is either empty or a single slug.
 
@@ -189,7 +196,9 @@ pointer form:
 > holds the state. Write a pointer to it instead of a full handoff? [Y/n]
 
 On yes, write the pointer form. On no, or on anything unclear, write the full
-form.
+form. Gate class: `confirmation`
+(`../skills/interaction-engine/references/gates.md`) — under `unattended` it
+passes on its own and the pointer form is written.
 
 No table row and no recent artifact, or no skill running at all: **full form**.
 That is the generic case and the common one.

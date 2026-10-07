@@ -1,9 +1,10 @@
 ---
 name: context-update
-version: 1.5.1
+version: 1.6.0
 type: skill
 description: Update an existing navigation context layer after code changes — by default only the context files the commits since INDEX.md's Last updated date touched — then commit and push what it updated. Use it after landing code a context file describes.
 replaces: command:context-update
+requires: skill:interaction-engine
 ---
 
 # /context-update
@@ -64,6 +65,9 @@ a sibling file, so a flat run never pays for it.
 
 | Read this file | Exactly when |
 | -------------- | ------------ |
+| `../interaction-engine/references/policy.md` | Every run, at P.3. |
+| `../interaction-engine/references/messages.md` | Every run, before the first gate, question or report. |
+| `../interaction-engine/references/gates.md` | The policy resolved to `unattended`. |
 | `./nested.md`  | PREPARATION step P.2a read `Layout: nested` from the index. |
 
 Do not read `./nested.md` speculatively. On a flat run the file is never
@@ -140,6 +144,18 @@ P.3 Parse $ARGUMENTS. First, check for the confirmation flag:
     it skips the pull-at-start / re-sync / push steps of PHASE 3's
     commit-and-push protocol while still committing as always.
 
+    --attended / --unattended (optional): strip whichever appears. The run's
+    interaction policy resolves from them, a policy handed down by a parent run
+    and the project's `CLAUDE.md`, per
+    `../interaction-engine/references/policy.md`, which holds their argument
+    errors; under `unattended`, read
+    `../interaction-engine/references/gates.md`. Read
+    `../interaction-engine/references/messages.md` before the first gate,
+    question or report — each of them follows it. A gate that passes on
+    its own has the closing report name the PHASE 3 commit or, under
+    `--no-commit`, the uncommitted files. `-y` keeps its own meaning: it
+    passes this skill's confirmations for one run, whatever the policy.
+
     Unless NO_COMMIT is true or the project's CLAUDE.md carries a `## VCS`
     override (non-git), pull at start here, before determining the update
     scope: run `git pull` on the current branch. A conflict stops the run
@@ -196,7 +212,8 @@ P.4 Report the parsed scope before doing any work:
     - If Mode A found no changes: state this clearly, note whether a marker
       backfill will still be written, and exit without proceeding further.
 
-If AUTO_CONFIRM is false: STOP and wait for user confirmation before proceeding.
+If AUTO_CONFIRM is false: STOP and wait for user confirmation before proceeding
+(gate class: `confirmation`).
 If AUTO_CONFIRM is true: proceed immediately to Phase 1.
 If the scope looks wrong and AUTO_CONFIRM is false, the user can correct the
 arguments before any files are touched.
@@ -232,7 +249,8 @@ Report:
 - Any cross-reference breakage detected (a context file references another that
   no longer covers what it claims).
 
-If AUTO_CONFIRM is false: STOP and wait for user confirmation before Phase 2.
+If AUTO_CONFIRM is false: STOP and wait for user confirmation before Phase 2
+(gate class: `confirmation`).
 If AUTO_CONFIRM is true: proceed immediately to Phase 2.
 
 ---

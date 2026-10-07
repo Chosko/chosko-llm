@@ -163,7 +163,8 @@ Report before doing any work:
 - If Mode A found no changes anywhere: state it clearly and exit without
   proceeding further.
 
-If AUTO_CONFIRM is false: STOP and wait for user confirmation.
+If AUTO_CONFIRM is false: STOP and wait for user confirmation (gate class:
+`confirmation`, `../interaction-engine/references/gates.md`).
 If AUTO_CONFIRM is true: proceed immediately to Phase 1.
 
 ## PHASE 1 — Assess what has changed

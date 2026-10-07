@@ -2,6 +2,12 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.82.0 — 2026-10-07
+
+- **The rest of the interactive features follow the interaction policy.** `/context-build`, `/context-update`, `/context-convert`, `/refactor-codebase`, `/refactor-tests`, `/doc-consolidate`, `/project-setup`, `/session-save` and `/follow-ups-resolve` accept `--attended` and `--unattended`, and read `Interaction policy:` from `CLAUDE.md`.
+- **What passes on its own when unattended:** the context skills' phase stops, the refactor plans' LOW- and MEDIUM-risk items, `/refactor-tests`' split confirmation, `/project-setup`'s final approval and `/session-save`'s pointer offer. A HIGH-risk refactor item is left unapplied and asked about at the end. `/doc-consolidate`'s judgement calls and `/follow-ups-resolve`'s list approval still wait. `/project-setup` passes its policy to the commands it runs.
+- **`-y` is unchanged** on `/context-update` and `/context-convert`: it still skips that run's confirmations, whatever the policy.
+
 ## 1.81.0 — 2026-10-07
 
 - **`/pipeline-revise`'s gate is short.** It shows one verdict line, one plain sentence per change, then the open questions. The owner-step table, the headless/GATED tags and the drafts appear only on `show`, an edit re-shows only the lines it changed, and lint prints only failures. With nothing open, an `unattended` run passes the gate on its own; with a question open, it stops there.

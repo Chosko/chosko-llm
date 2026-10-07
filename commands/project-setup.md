@@ -1,9 +1,10 @@
 ---
 name: project-setup
-version: 0.7.4
+version: 0.8.0
 type: command
 description: Interactive first-time project initialization wizard — gathers every choice up front (VCS, CLAUDE.md content, AGENTS.md, task backlog, domain layer, context layer), confirms once, then runs /task-setup, /domain-setup and /context-build in a fixed order. Use it once, on a project the chosko-llm tooling has not been set up on yet.
 disable-model-invocation: true
+requires: skill:interaction-engine
 ---
 
 # /project-setup
@@ -27,6 +28,8 @@ disable-model-invocation: true
 #   (commit and push the wizard's own artifacts, and run the sub-commands with --commit)
 # Usage without push: /project-setup --commit --no-push
 #   (commit locally only — forwarded to the sub-commands too)
+# Usage with a policy: /project-setup --attended | --unattended
+#   (forwarded to the sub-commands too)
 
 GOAL
 Walk a first-time user through configuring this project: detect the VCS,
@@ -130,6 +133,18 @@ the project's chosen VCS is git (not a non-git `## VCS` exemption), pull at
 start — run `git pull` on the current branch before PHASE 2 (EXECUTE) begins. A
 conflict stops the run here — report the conflict output and tell the
 user to resolve manually and re-run.
+
+Also scan for the optional `--attended` and `--unattended` flags and strip
+whichever appear. The run's interaction policy resolves from them, a policy
+handed down by a parent run and the project's `CLAUDE.md`, per
+`../skills/interaction-engine/references/policy.md`, which holds their
+argument errors; under `unattended`, read
+`../skills/interaction-engine/references/gates.md`. Read
+`../skills/interaction-engine/references/messages.md` before the first
+question — every question, the PHASE 2 plan and the closing report follow
+it. The resolved policy is handed down to every nested command, as its flag.
+This wizard cannot park: under `unattended` the GATHER questions are real
+decisions, so the run stops with them, nothing written.
 
 ---
 
@@ -336,14 +351,16 @@ All changes are left UNCOMMITTED for you to review and commit in one pass.
 (With --commit: each step commits its own output as a focused commit, then pushes unless --no-push.)
 ```
 
-End with: **"Approve and run?"**
+End with: **"Approve and run?"** Gate class: `confirmation` — under
+`unattended` it passes on its own, and the closing report names the commits
+or, without `--commit`, the uncommitted files.
 
 Wait for explicit approval. Silence is not approval. Iterate and re-present
 the full plan after any change.
 
 ---
 
-PHASE 3 — EXECUTE (only after explicit approval)
+PHASE 3 — EXECUTE (only after the PHASE 2 gate is approved or passes on its own)
 
 Run the steps in this exact order. Skip any step the user opted out of.
 Report each step's result as you go. Steps 1-4 are the wizard's own work;
@@ -542,8 +559,8 @@ argument, so it builds its default flat layer and stamps `Layout: flat` into
 the `INDEX.md` it writes. Never pass `nested` / `nested=…` from this wizard.
 
 Run it LAST and treat its
-phases as authoritative — it has its own STOP-and-approve gates that pause
-for user input; honor them, do not flatten them. It creates CLAUDE.md if
+phases as authoritative — it has its own STOP-and-approve gates, which
+follow the policy this run hands it; honor them, do not flatten them. It creates CLAUDE.md if
 missing and adds its navigation instruction at the top (additive to anything
 Steps 1-2 wrote) — that instruction points at `.claude/context/INDEX.md`,
 which is the entry point in either layout, so a later `/context-convert` run

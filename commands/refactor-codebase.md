@@ -1,9 +1,10 @@
 ---
 name: refactor-codebase
-version: 0.3.4
+version: 0.4.0
 type: command
 description: Refactor a codebase by applying clean-code principles — extract constants and enums, eliminate duplication, split oversized files, clean imports, rename ambiguous identifiers — without changing observable behaviour, plan-first and test-suite-protected. Use it on a codebase that works but has grown untidy, whole or limited to a scope or a single concern.
 disable-model-invocation: true
+requires: skill:interaction-engine
 ---
 
 # /refactor-codebase
@@ -79,6 +80,15 @@ P.2 Parse $ARGUMENTS:
     the current branch. A conflict stops the run immediately; report the
     conflict output and tell the user to resolve manually and re-run.
 
+    --attended / --unattended (optional flags) — strip whichever appears.
+    The run's interaction policy resolves from them, a policy handed down
+    by a parent run and the project's `CLAUDE.md`, per
+    `../skills/interaction-engine/references/policy.md`, which holds their
+    argument errors; under `unattended`, read
+    `../skills/interaction-engine/references/gates.md`. Read
+    `../skills/interaction-engine/references/messages.md` before the plan
+    report — the plan gate, any question and the summary follow it.
+
 P.3 Locate the context layer (e.g. .claude/context/INDEX.md) if it exists.
     Read INDEX.md to understand the current module map — do not read context files
     or source files yet.
@@ -104,8 +114,16 @@ P.5 Produce a refactoring plan — no code changes yet. The plan must list every
 P.6 Estimate the impact on file sizes: for each file being split, show current line
     count and projected line count of each resulting file.
 
-Report the full plan. STOP and wait for user approval before writing any code.
-If the user requests changes to the plan, revise and re-report before proceeding.
+Report the plan as a summary — per item, what changes and why, its risk, the
+file named last; `show` prints every field of every item. STOP and wait for
+user approval before writing any code. If the user requests changes to the
+plan, revise and re-report before proceeding.
+
+Gate class: `confirmation` for the LOW and MEDIUM items, `design` for each
+HIGH-risk item. Under `unattended` the run proceeds with the LOW and MEDIUM
+items on their own and leaves every HIGH-risk item unapplied: it is
+deferred, and the summary ends with one question asking which of them to
+apply.
 
 ---
 

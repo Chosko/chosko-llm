@@ -97,7 +97,8 @@ Report:
 - The cross-reference convention from N.4.
 - Estimated total size of the context layer in lines.
 
-STOP and wait for user approval before Phase 2.
+STOP and wait for user approval before Phase 2. Gate class: `confirmation`
+(`../interaction-engine/references/gates.md`).
 
 ## PHASE 2 — Author the layer
 
@@ -178,7 +179,7 @@ Report:
   `Last updated`, and that every leaf carries its own `Last updated`.
 - Any area that resisted summarization (flag only, do not refactor).
 
-STOP and wait for user approval before Phase 3.
+STOP and wait for user approval before Phase 3. Gate class: `confirmation`.
 
 ## PHASE 3 — Wire the entry point
 

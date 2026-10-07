@@ -556,7 +556,7 @@ Feature: interaction-policy
 
 ## 286. Adopt the interaction policy in the context, refactor, setup and session features
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/context-build/SKILL.md, skills/context-build/nested.md, skills/context-update/SKILL.md, skills/context-convert/SKILL.md, commands/refactor-codebase.md, commands/refactor-tests.md, skills/doc-consolidate/SKILL.md, commands/project-setup.md, commands/session-save.md, skills/follow-ups-resolve/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 281

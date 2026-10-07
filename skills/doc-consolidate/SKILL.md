@@ -1,9 +1,10 @@
 ---
 name: doc-consolidate
-version: 0.2.0
+version: 0.3.0
 type: skill
 description: Rewrite a rules document — a command or skill body, a feature document, a context file, a CLAUDE.md — or every document under a folder, under the editing discipline, dropping superseded, historical, duplicated and restated statements without changing what it means. Use it on a document that has stratified.
 disable-model-invocation: true
+requires: skill:interaction-engine
 ---
 
 # /doc-consolidate
@@ -66,6 +67,14 @@ authoring run leaves its result uncommitted for review) and `--no-push`
 `--no-commit` together stop the run with: `--commit and --no-commit cannot be
 combined. Pick one.`
 
+Also scan for `--attended` and `--unattended` and strip whichever appear.
+The run's interaction policy resolves from them, a policy handed down by a
+parent run and the project's `CLAUDE.md`, per
+`../interaction-engine/references/policy.md`, which holds their argument
+errors. The gate in step 4 is a `design` gate, so under `unattended` a run
+with judgement calls stops there, nothing rewritten; a run with none is not
+gated under either policy.
+
 What remains is `<path>`, required: a file, or a folder. A missing path
 stops with `/doc-consolidate needs a file or folder to consolidate.`; a path
 that does not exist stops naming it. A folder is consolidated one file at a
@@ -78,6 +87,9 @@ SUPPORTING FILES (read on demand — not up front)
 
 | Read this file | Exactly when |
 | -------------- | ------------ |
+| `../interaction-engine/references/policy.md` | Every run, at ARGUMENT PARSING. |
+| `../interaction-engine/references/messages.md` | Before the step 4 gate and the closing report — both follow it. |
+| `../interaction-engine/references/gates.md` | The policy resolved to `unattended`. |
 | `./verifier.md` | Step 5, once per file, to assemble the verifier's prompt. |
 
 ---
@@ -177,7 +189,8 @@ citation, a historical tail, a rule-6 DO NOT bullet and a meaning-preserving
 merge are never judgement calls — the rules settle each of them, and the
 verifier in step 5 is the check that they were settled right.
 
-**4. The gate — once per run.** Present every judgement call across every
+**4. The gate — once per run.** Gate class: `design`
+(`../interaction-engine/references/gates.md`). Present every judgement call across every
 file and section as one numbered list, each a short block naming the file and
 the section, the entry, the options and a recommendation:
 
