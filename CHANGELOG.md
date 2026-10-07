@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.90.0 — 2026-10-07
+
+- **`/task-review` and `/task-iterate` take `spec=<path>`.** Point either one at a spec file instead of a task, and it reads that file's acceptance criteria, goal, decisions and hints in place of a task body. It never falls back to guessing a task. `spec=` and `task=` cannot be combined. A manual review saved to a file is named after the spec.
+
 ## 1.89.2 — 2026-10-07
 
 - **`/task-implement`'s testing-policy resolution, tests-first sequence and closing report now live in `task-engine`.** Each is one reference file `/task-implement` cites, so other commands can share them; the test-runner heuristics and no-test-suite mode move with them. The `Testing policy for /task-implement:` line keeps its exact wording, and `/task-implement` behaves exactly as before.

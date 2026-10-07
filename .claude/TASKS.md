@@ -703,7 +703,7 @@ Feature: quick-implement
 ---
 
 ## 301. Add `spec=<path>` to `/task-review` and `/task-iterate`
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-review/SKILL.md, skills/task-iterate/SKILL.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
 Preconditions: 282, 293

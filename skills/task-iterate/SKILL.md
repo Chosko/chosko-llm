@@ -1,6 +1,6 @@
 ---
 name: task-iterate
-version: 0.2.1
+version: 0.3.0
 type: skill
 description: Triage review findings it did not produce — fix, defer or reject each one, apply the fixes and record why the rest were not — on an uncommitted tree, a branch or a pull request. Use it after /task-review has reported; /task-implement's review rounds run it in-session between the review and the task's single commit.
 requires: skill:interaction-engine
@@ -12,6 +12,8 @@ project-policy: vcs:branch
 # why the rest did not. Fixes only what it was handed — it never finds anything
 # itself. Findings come from exactly one of the review subagent's structured
 # output, a .claude/reviews/<task>-R<n>.md file, or the PR's review comments.
+# The scope a defer is measured against is the task's — or, with spec=<path>,
+# a spec file's, with no fallback.
 # Triage is mandatory and explicit: every finding gets exactly one of fix,
 # defer or reject — defer needs a follow-up task number or a note that one
 # should be authored, reject a one-line reason — and the full verdict table is
@@ -25,6 +27,7 @@ project-policy: vcs:branch
 #        /task-iterate <branch> base=<ref>    (override the base)
 #        /task-iterate <pr-number|pr-url>     (iterate on a GitHub PR)
 #        /task-iterate <args> task=<n>        (pin the task explicitly)
+#        /task-iterate <args> spec=<path>     (measure against a spec file instead of a task)
 #        /task-iterate <args> --no-commit     (apply the fixes, commit nothing)
 #        /task-iterate <args> --no-push       (commit as usual, skip the push)
 #        /task-iterate <args> --attended | --unattended
@@ -108,6 +111,9 @@ Scan the argument string and strip these tokens, in any order and any position:
 
 - `task=<n>` — pin the task explicitly. `<n>` must be a bare integer; anything
   else is an error, stop and say so.
+- `spec=<path>` — measure against a spec file instead of a task body
+  (RESOLVING THE TASK). `task=` and `spec=` together stop the run with:
+  `task= and spec= cannot be combined. Pick one.`
 - `base=<ref>` — override the base for branch mode. Meaningful only in branch
   mode; on a local or PR run, say it was ignored and continue.
 - `--no-commit` — apply the fixes and commit nothing. Implies `--no-push`.
@@ -195,9 +201,13 @@ check for it on those paths.
 
 The task body is what a `defer` verdict is measured against — "valid, but out
 of scope for this task" needs the task's scope in hand. Resolve it in this
-order, taking the first that yields a `.claude/tasks/<n>.md` that exists:
+order, taking the first that yields a task body at `.claude/tasks/<n>.md`, or
+a spec file, that exists:
 
-1. **`task=<n>`** — explicit, always wins.
+1. **`task=<n>` or `spec=<path>`** — explicit, always wins. A `spec=` run
+   reads that file in place of a task body and never falls back to the steps
+   below: a path that does not exist stops the run with
+   `No spec file at <path>.`
 2. **The branch name** — a number in it (`feature/118-dual-llm`, `task-118`,
    `118-dual-llm`) names the task.
 3. **The PR title** — pr mode only; a leading `Task <n>:` or a bare number.
@@ -210,7 +220,8 @@ If none of the four resolves, **stop**:
 > I could not work out which task these findings belong to. Re-run with
 > `task=<n>` — without the task's scope I cannot tell a `defer` from a `fix`.
 
-Read the resolved body: its **Acceptance criteria** (a finding that names an
+Read the resolved body — a spec carries the same sections as a task body and
+is read exactly as one: its **Acceptance criteria** (a finding that names an
 unmet criterion is not deferrable — see TRIAGE), its **Decisions** (a finding
 that argues against a recorded decision is a `reject`, and the decision is the
 reason), and its **Hints**. Then read what the fixes will touch — the callers,
@@ -226,9 +237,10 @@ Exactly one of three sources, resolved in this order:
 1. **The caller passed them in.** `/task-implement --review` spawns
    `/task-review` as a subagent and hands its structured output here. This is
    the common path and it needs no file.
-2. **A review file** at `.claude/reviews/<task>-R<n>.md`, written by a manual
-   `/task-review` run that opted into one. Use the highest `<n>` present for
-   the resolved task, and name the file you read in the report. If several
+2. **A review file** at `.claude/reviews/<task>-R<n>.md` — on a `spec=` run
+   `.claude/reviews/<spec-stem>-R<n>.md`, the spec's filename without its
+   extension — written by a manual `/task-review` run that opted into one.
+   Use the highest `<n>` present for the resolved task, and name the file you read in the report. If several
    files could plausibly apply and the highest round is ambiguous, ask which
    before triaging anything (gate class: `design`).
 3. **The PR's review comments** — pr mode only, read with
@@ -387,6 +399,9 @@ Iterate on task <n> review findings
 
 <one line per finding fixed>
 ```
+
+On a `spec=` run the subject names the spec's stem instead:
+`Iterate on <spec-stem> review findings`.
 
 ### Inside a `/task-implement --review` round
 

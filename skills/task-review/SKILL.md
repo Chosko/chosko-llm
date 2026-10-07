@@ -1,6 +1,6 @@
 ---
 name: task-review
-version: 0.4.4
+version: 0.5.0
 type: skill
 description: Audit a diff against the acceptance criteria of the task that produced it and report structured findings, each cited to a file:line with a BLOCKING, IMPORTANT or ADVISORY severity. Use it on an uncommitted tree, a branch or a pull request before the work is accepted; /task-implement's review rounds spawn it as a fresh-context reviewer.
 requires: skill:task-engine
@@ -16,14 +16,15 @@ project-policy: vcs:branch, vcs:diff, vcs:log
 # body, a duplicate statement, an old sentence left beside its replacement)
 # is a finding; no findings is a valid, complete result. The task
 # resolves from task=<n>, the branch name, the PR title or the most recently
-# modified .claude/tasks file, and an unresolvable task stops the run rather
-# than degrading into a generic code review. Read-only — edits no source,
-# test, task or status file, runs no mutating command and never a test
-# command (a green suite is an input its caller hands it; in skip-tests mode
-# a runtime-dependent criterion is reported unverifiable), opens no pull
+# modified .claude/tasks file — or spec=<path> names a spec file to audit
+# against instead, with no fallback — and an unresolvable task stops the run
+# rather than degrading into a generic code review. Read-only — edits no
+# source, test, task or status file, runs no mutating command and never a
+# test command (a green suite is an input its caller hands it; in skip-tests
+# mode a runtime-dependent criterion is reported unverifiable), opens no pull
 # request, and writes at most the opt-in .claude/reviews/<task>-R<round>.md
-# report a manual run asked for, or the result file a spawned run's rules
-# name as its return channel. A spawn from /task-implement --review may
+# (or <spec-stem>-R<round>.md) report a manual run asked for, or the result
+# file a spawned run's rules name as its return channel. A spawn from /task-implement --review may
 # carry a budget block naming a read tier (shallow / standard / deep),
 # honoured from task-engine's references/review-budget.md; with no block it
 # reads unbounded.
@@ -32,6 +33,7 @@ project-policy: vcs:branch, vcs:diff, vcs:log
 #        /task-review <branch> base=<ref>    (override the base)
 #        /task-review <pr-number|pr-url>     (review a GitHub PR)
 #        /task-review <args> task=<n>        (pin the task explicitly)
+#        /task-review <args> spec=<path>     (audit against a spec file instead of a task)
 # Examples: /task-review
 #           /task-review feature/password-auth
 #           /task-review feature/password-auth base=develop
@@ -70,7 +72,7 @@ never opens a supporting file.
 
 | Read this file | Exactly when |
 | -------------- | ------------ |
-| `./remote-diffs.md` | The argument (after stripping `task=` and `base=`) is non-empty — it names a branch, a PR number, or a PR URL. |
+| `./remote-diffs.md` | The argument (after stripping `task=`, `spec=` and `base=`) is non-empty — it names a branch, a PR number, or a PR URL. |
 | `../task-engine/references/review-budget.md` | The invocation carries a **budget block** naming a read tier. A manual run carries none, and neither does a spawn whose effort resolved to `same`. |
 
 A local manual run loads neither. Do not read either speculatively.
@@ -92,11 +94,14 @@ READ-ONLY CONTRACT.
 
 ## ARGUMENT PARSING
 
-Scan the argument string for two `key=value` tokens and strip whichever
+Scan the argument string for three `key=value` tokens and strip whichever
 appear, in any order and any position:
 
 - `task=<n>` — pin the task explicitly. `<n>` must be a bare integer;
   anything else is an error, stop and say so.
+- `spec=<path>` — audit against a spec file instead of a task body (RESOLVING
+  THE TASK). `task=` and `spec=` together stop the run with:
+  `task= and spec= cannot be combined. Pick one.`
 - `base=<ref>` — override the base for branch mode. Meaningful only in
   branch mode; on a local or PR run, say it was ignored and continue.
 
@@ -123,9 +128,12 @@ branch, or the whole file set.
 
 The task's acceptance criteria are the standard the diff is measured
 against. Resolve the task in this order, taking the first that yields a
-`.claude/tasks/<n>.md` that exists:
+task body at `.claude/tasks/<n>.md`, or a spec file, that exists:
 
-1. **`task=<n>`** — explicit, always wins.
+1. **`task=<n>` or `spec=<path>`** — explicit, always wins. A `spec=` run
+   reads that file in place of a task body and never falls back to the steps
+   below: a path that does not exist stops the run with
+   `No spec file at <path>.`
 2. **The branch name** — a number in it (`feature/118-dual-llm`, `task-118`,
    `118-dual-llm`) names the task.
 3. **The PR title** — pr mode only; a leading `Task <n>:` or a bare number.
@@ -146,8 +154,12 @@ Do not proceed with a generic code review instead. Checking the diff against
 a task's acceptance criteria is this skill's entire reason to exist; a run
 without one would ship the weaker product under the stronger name.
 
-Read the resolved body at `.claude/tasks/<n>.md` and extract its
-**Acceptance criteria** section. Each bullet is one criterion, addressed
+Read the resolved body at `.claude/tasks/<n>.md` — or the spec file — and
+extract its **Acceptance criteria** section. A spec carries the same
+`## Goal`, `## Acceptance criteria`, `## Decisions` and `## Hints` sections
+as a task body and is read exactly as one. It has no summary block, so a
+lookup that needs one — the feature document a `Feature:` line names — is
+skipped. Each bullet is one criterion, addressed
 individually in the report. Read the body's Decisions and Hints too — a
 criterion often only makes sense with the decision behind it — and, subject to
 THE READ BUDGET below, whatever the diff touches: the callers, the imports,
@@ -284,8 +296,8 @@ R1-3  BLOCKING  scripts/cmd-add.sh:142
 
 The report as a whole:
 
-- a header naming the mode, the diff source, the resolved task and how it was
-  resolved, and the round number;
+- a header naming the mode, the diff source, the resolved task (or spec) and
+  how it was resolved, and the round number;
 - **a verdict per acceptance criterion** — `met`, `not met`, or
   `unverifiable` (the diff neither satisfies nor contradicts it; say what
   would settle it). Quote or paraphrase each criterion so the verdict is
@@ -326,6 +338,9 @@ Branch on how this run was invoked:
 
   > Report in chat only, or in chat and a file at
   > `.claude/reviews/<task>-R<round>.md`?
+
+  On a `spec=` run the file is `.claude/reviews/<spec-stem>-R<round>.md`,
+  `<spec-stem>` being the spec's filename without its extension.
 
   Reply mapping, pinned: chat only → chat; chat and a file → file. Silence,
   an unclear answer, or EOF means **chat only** — the default. On `file`,
