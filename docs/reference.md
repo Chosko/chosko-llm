@@ -466,7 +466,7 @@ two indexes that doesn't resolve, or an index state its owner hasn't acted on
 yet. Whether a feature document still describes what its tasks build is a
 judgement, not structure, and this command doesn't attempt it.
 
-The catalogue is closed. It has thirteen findings and no others:
+The catalogue is closed. It has fourteen findings and no others:
 
 | Severity | Finding | Fix it names |
 | --- | --- | --- |
@@ -483,6 +483,7 @@ The catalogue is closed. It has thirteen findings and no others:
 | `WARNING` | a `[PLANNED]` feature whose every task is `[DONE]`, `[SKIP]` or archived | `flip to [DONE]` |
 | `ERROR` | a `[PARKED]` task whose body has no `## Parking handoff` | `/task-implement <N>` in an attended session |
 | `WARNING` | a runbook whose `[P]` steps and index `Parked:` line disagree | `/runbook-run <id>` |
+| `WARNING` | a spec file still under `.claude/specs/`, whose documentation catch-up hasn't run | `/pipeline-revise --catch-up <spec>` |
 
 `ERROR` means something a pipeline command will act on wrongly if it's left;
 `WARNING` means a legal state that needs its owner's attention.
