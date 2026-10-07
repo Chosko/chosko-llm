@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 298
+Last task number: 305
 
 ---
 
@@ -681,5 +681,68 @@ Target: claude
 Files: .claude/context/session-handoff.md, .claude/context/features.md, .claude/context/INDEX.md, .claude/domain/features/session-continuity.md
 Preconditions: 295, 296, 297
 Feature: session-readers
+
+---
+
+## 299. Move `/task-add`'s design-change check, reconciliation and orphan question into `task-engine`
+Status: [MISSING]
+Target: claude
+Files: skills/task-engine/references/design-change.md, skills/task-engine/references/reconciliation.md, skills/task-engine/references/orphan-question.md, skills/task-engine/SKILL.md, commands/task-add.md, skills/task-engine/references/amend.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
+Preconditions: 282
+Feature: quick-implement
+
+---
+
+## 300. Move `/task-implement`'s testing-policy resolution, tests-first sequence and closing report into `task-engine`
+Status: [MISSING]
+Target: claude
+Files: skills/task-engine/references/testing-policy.md, skills/task-engine/references/tests-first.md, skills/task-engine/references/closing-report.md, skills/task-engine/references/test-runner.md, skills/task-engine/references/no-test-suite.md, skills/task-engine/SKILL.md, skills/task-implement/SKILL.md, skills/task-implement/test-runner.md, skills/task-implement/no-test-suite.md, skills/task-implement/delegated-runs.md, skills/task-implement/review-rounds.md, commands/task-setup.md, VERSION, CHANGELOG.md
+Preconditions: 282, 288, 293
+Feature: quick-implement
+
+---
+
+## 301. Add `spec=<path>` to `/task-review` and `/task-iterate`
+Status: [MISSING]
+Target: claude
+Files: skills/task-review/SKILL.md, skills/task-iterate/SKILL.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
+Preconditions: 282, 293
+Feature: quick-implement
+
+---
+
+## 302. Add the `/quick-implement` skill and its routing row
+Status: [MISSING]
+Target: claude
+Files: skills/quick-implement/SKILL.md, skills/quick-implement/spec.md, skills/quick-implement/drift-check.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
+Preconditions: 281, 299, 300, 301
+Feature: quick-implement
+
+---
+
+## 303. Add `/pipeline-revise --catch-up`
+Status: [MISSING]
+Target: claude
+Files: skills/pipeline-revise/SKILL.md, skills/pipeline-revise/catch-up.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
+Preconditions: 285, 302
+Feature: quick-implement
+
+---
+
+## 304. Probe `.claude/specs/` and report a leftover spec in `/pipeline-check`
+Status: [MISSING]
+Target: claude
+Files: skills/pipeline-engine/references/probes.md, skills/pipeline-engine/references/lint.md, commands/pipeline-check.md, VERSION, CHANGELOG.md
+Preconditions: 285, 302, 303
+Feature: quick-implement
+
+---
+
+## 305. Update documentation for feature `quick-implement`
+Status: [MISSING]
+Target: claude
+Files: .claude/context/INDEX.md, .claude/context/quick-implement.md, .claude/context/features.md, .claude/context/task-engine.md, .claude/context/task-add.md, .claude/context/task-implement.md, .claude/context/task-review-iterate.md, .claude/context/pipeline.md, .claude/context/pipeline-revise.md, .claude/context/pipeline-readers.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/domain/features/task-peer-review.md, .claude/domain/features/pipeline-revision.md, .claude/domain/features/pipeline-engine.md
+Preconditions: 299, 300, 301, 302, 303, 304
+Feature: quick-implement
 
 ---

@@ -229,10 +229,10 @@ Tasks: 295, 296, 297, 298
 
 ## quick-implement — `/quick-implement`: spec conversation to one commit, no backlog entry, docs caught up by `/pipeline-revise --catch-up`
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/quick-implement.md
 Source: prompt
-Tasks: none
+Tasks: 299, 300, 301, 302, 303, 304, 305
 
 ---
 
