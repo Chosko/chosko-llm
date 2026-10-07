@@ -557,8 +557,9 @@ the rule.
    The preamble carries exactly what the agent cannot derive — the navigation
    instruction, the runbook name and the step number (plus the one
    `--relay-spawns` sentence when that flag is passed, and the one sentence
-   declaring the run unattended under that policy,
-   [unattended-parking](./unattended-parking.md)) — and nothing more.
+   stating the run's policy under either value — *This run is attended* or
+   *This run is unattended*, [unattended-parking](./unattended-parking.md))
+   — and nothing more.
 2. **Background** — the `Companion:` document, if the header names one.
 3. **Do not re-propose** — the runbook's trailing section, if present.
 4. **Context** — the step's `Context:` bullets, if any.
@@ -598,9 +599,10 @@ Step 3 of 7 — Peer review — the agent is asking (round 1):
 Recommendation: (b), because <one line>.
 ```
 
-At an approval gate the full draft follows the block verbatim, unabridged — the
-one place the orchestrator must not compress, since a summarized draft cannot be
-approved. The user's answer is relayed to the **same** subagent, whose context is
+At an approval gate the block carries the agent's plain summary of the draft,
+per [interaction-policy](./interaction-policy.md); a `show` reply is relayed
+to the agent like any answer, and its next turn carries the draft whole,
+relayed unchanged. The user's answer is relayed to the **same** subagent, whose context is
 intact, and the loop repeats for as many rounds as it takes. The orchestrator
 may add facts it already holds — a `Done:` line from an earlier step that
 answers the question — and must say that it is doing so. It may never invent a
@@ -618,9 +620,9 @@ orchestrator that is itself a subagent — that is what allows a runbook to be
 driven from a batch parent — and such an orchestrator cannot address the user
 at all. It behaves identically: it emits the same fixed relay block as its own
 final turn, under a `QUESTIONS FOR USER` heading, for its parent to carry, and
-resumes when the answer comes back. Approval gates carry the full draft
-unabridged there too, since the parent's user is the one approving it. In
-neither position does it answer on the user's behalf.
+resumes when the answer comes back. Approval gates carry the plain summary
+there too, with `show` fetching the draft for the parent's user, the one
+approving it. In neither position does it answer on the user's behalf.
 
 **Fact propagation.** When a step's report changes a fact a later step relies
 on, the orchestrator appends a dated bullet to that step's `Context:` naming the

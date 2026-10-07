@@ -28,7 +28,17 @@ Each feature's contract is its bullet in its file's § Overview (listed above). 
 
 ## Internal patterns
 
-- None of their own: [feature-contract.md](./feature-contract.md) § Internal patterns.
+- [feature-contract.md](./feature-contract.md) § Internal patterns.
+- The interaction policy: `/task-implement`, `/task-add`, `/task-setup`,
+  `/task-iterate` and `/task-clean` declare `requires:
+  skill:interaction-engine`, accept `--attended` / `--unattended` and tag
+  each gate ([interaction-engine.md](./interaction-engine.md)).
+  `confirmation`: `/task-add`'s "Approve and write?", `/task-implement`'s
+  feature-done proposal and skip-tests `Proceed?`, the `task-engine` amend
+  gate. `destructive`: `/task-clean`'s prune and backfill, `/task-setup`'s
+  stub overwrite. Everything else is `design`. `/task-implement` is the
+  only one of them that parks; the rest stop at whatever waits.
+  `/task-review` and `/task-list` take no dependency.
 
 ## Domain dependencies
 

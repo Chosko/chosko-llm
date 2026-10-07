@@ -151,12 +151,14 @@ own skill bounds its own children.
 At a clarifying question or approval gate reached while executing a step, a
 top-level session asks the user directly, rendered in the same fixed block
 (`Step <n> of <total> — <title> — asking (round <r>)`) so the user can tell
-which step is asking, with any approval-gate draft verbatim and unabridged.
-There is no relay hop and no compression step, because the asker and the
+which step is asking, with a plain summary of any approval-gate draft and the
+full draft on `show`. There is no relay hop, because the asker and the
 user's interlocutor are the same agent — but the prohibition carries: the
 session never answers its own question on the user's behalf, and a gate the
 step's skill defines is never skipped because the session "already knows"
-the answer.
+the answer. Under `unattended`, a gate the skill tags `confirmation` passing
+on its own is not a skipped gate: it is that gate's own behaviour under the
+policy ([interaction-policy](./interaction-policy.md)).
 
 When the inline session is itself a subagent, the default mode's
 subagent-position rule applies unchanged: it emits the block as its own final

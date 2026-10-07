@@ -35,14 +35,18 @@ The rest of the suite: [task-suite.md](./task-suite.md).
   feature-completion proposal, at a user-requested stop between tasks and at
   a failure halt too, reading the per-agent returns under `--agents`, adding
   no commit; with the command absent the group holds the run's own items
-  only, silently. **`--unattended`** (PARKED TASKS; the `unattended`
-  execution policy, `attended` the default under which nothing changes):
-  UNATTENDED is true when the flag was passed OR the conversation declares
-  the run unattended — the one sentence a runbook step's preamble or a
-  delegated-agent prompt carries; a merely *non-interactive* notice is not
-  that. Refusals: `parking.md` § Refusals. Under it every prompt with a default takes it
-  (delegation → no, dirty tree → abort, `Proceed?` → yes, …), each a *For the
-  record* line; an ambiguous test runner aborts. A question about the work —
+  only, silently. **`--attended` / `--unattended`** (PARKED TASKS; the
+  interaction policy, resolved per [interaction-engine.md](./interaction-engine.md)
+  `policy.md` — flag or handed-down policy, then the `CLAUDE.md`
+  `Interaction policy:` line, then `attended`, under which nothing changes):
+  UNATTENDED is true when it resolves to `unattended`. Refusals: `parking.md`
+  § Refusals, for a flag or handed-down policy only — a `CLAUDE.md` policy
+  is never refused, a question then stops instead of parking. Under it
+  `gates.md` is read; the feature-done proposal and skip-tests `Proceed?` are
+  `confirmation` gates and pass on their own; every other prompt with a
+  default takes it (delegation → no, dirty tree → abort, …), each a *For the
+  record* line; an ambiguous test runner and the no-test-suite A/B question
+  stop the run. A question about the work —
   inside the per-task workflow only — runs `parking.md`'s park sequence,
   question printed under the run's next `P<n>` handle, on to BETWEEN
   TASKS. PRE-FLIGHT step 2a
@@ -50,7 +54,7 @@ The rest of the suite: [task-suite.md](./task-suite.md).
   list with its `Question:` verbatim — the one pre-flight body read, handoff
   section only — answered by handle (`P1: Q1a, Q2b`) or `skip` / `skip P<n>` / `skip all`,
   approval-gate items skip-only, answers held in run memory; silence is `skip
-  all`; `--skip-parked` (requires `--unattended`) suppresses it. BETWEEN
+  all`; `--skip-parked` (requires the policy to resolve to `unattended`) suppresses it. BETWEEN
   TASKS step 2a reads chat replies by handle, records the answer and moves
   the task to the front; a number never printed or a second answer is
   rejected with one line. Step 1 on a `[PARKED]` task decides the answerer

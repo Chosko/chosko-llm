@@ -63,6 +63,12 @@ Currently shipped:
   `claude-md/tool-usage-policy.md`, `claude-md/editing-discipline.md`,
   `claude-md/git-commit-style.md`, `hooks/remote-session-protocol.sh`,
   `statusline/session-statusline.sh`.
+- [interaction-engine.md](./interaction-engine.md) — `skills/interaction-engine/`,
+  the non-invocable reference library for the interaction policy. Every
+  interactive feature, in every family, declares
+  `requires: skill:interaction-engine`, accepts `--attended` /
+  `--unattended`, and tags each of its gates `confirmation`, `design` or
+  `destructive`.
 
 The frontmatter block, the `description` contract, the optional keys and the
 authoring patterns every feature follows: [feature-contract.md](./feature-contract.md).

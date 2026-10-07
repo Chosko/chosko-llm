@@ -133,22 +133,26 @@ reorder are never editorial. Only a borderline wording-versus-meaning
 classification stays open, and it is asked at the plan gate in
 `/architect amend`'s own question form, with the answer carried into the step.
 
-**One gate, and it always waits.** Nothing is written before it, by the skill
-or by any arm it drives. It carries the verdict line, the items as split with
-their branch and anchor, the artifacts touched and the ones judged untouched
-so a call can be overruled, the numbered owner steps with their tag,
-invocation, what each writes, the decision each carries or its `Will ask:`
-line, the lint findings each clears or creates, and any architect question
-still open. The reply edits the plan by number — run it, drop steps, move a
-step below another, defer a step to a runbook, answer an open question, or
-stop — and any edit re-renders the plan at the same gate. Deferral is per
+**One gate.** Nothing is written before it, by the skill or by any arm it
+drives. It follows the output and question rules of
+[interaction-policy](./interaction-policy.md): a verdict line, one plain
+sentence per change, numbered as the owner steps — what it changes and why,
+what a gated step will ask, a carried decision in words — the lint findings
+in scope only when there are any, then any architect question still open,
+last. The item split, the touched and untouched entries, the owner-step table
+with its headless / GATED tags and the drafts stay internal; `show` prints
+them. With no question open it is a `confirmation` gate, passing on its own
+under `unattended`; with one, a `design` gate, where an `unattended` run
+stops. The reply edits the plan by number — run it, drop steps, move a step
+below another, defer a step to a runbook, answer an open question, or stop —
+and an edit re-shows only the lines it changed, at the same gate. Deferral is per
 step: a deferred step is appended to a runbook, self-contained, carrying every
 decision taken at the gate, which is what lets a long plan be half run and
 half scheduled without splitting the analysis.
 
 **Verification bracket.** The scoped lint runs before the proposal, so the
 plan starts from the true state, and again after actuation, and the report
-shows the difference. This is the step that makes the downstream cost visible
+shows its failures — findings created or left unchanged. This is the step that makes the downstream cost visible
 at revision time rather than at implementation time. The reviser also reads
 the successor tasks' bodies where an insertion or deletion changed a
 precondition, to confirm the sequence still reads as a sequence — the check
@@ -165,8 +169,8 @@ steps have run; the reviser never writes a line of the runbook itself.
 hold: a task `/task-add` created that no open runbook has a step for, a
 successor that no longer reads as a sequence, a lint finding created, a
 feature an owner named for reconciliation that no step ran. These go to a
-second gate in the same numbered shape with the same reply grammar, skipped
-when nothing arose. Without it, either the skill writes past its own gate or
+second gate in the same shape — one plain sentence each, the question last —
+with the same reply grammar, skipped when nothing arose. Without it, either the skill writes past its own gate or
 the follow-up is left to a report nobody re-reads; this keeps the rule that
 nothing is written without a reply while still closing the loop in the same
 session.
@@ -193,7 +197,8 @@ is introduced.
   run with one item; anchor is `feature=<slug>`, `task=<N>` or
   `runbook=<id|name|id-name> step=<n>`, and an item's own text may name a
   roadmap milestone instead.
-- One gate, always waiting; steps sequential and in-session; per-step
+- One gate, waiting unless the run is `unattended` and no question is open;
+  steps sequential and in-session; per-step
   deferral to a runbook. Every owner step runs uncommitted; the revision lands
   as one commit, made at the end.
   `requires: skill:pipeline-engine, skill:architect, skill:task-engine,
@@ -201,8 +206,8 @@ is introduced.
   skill:product-roadmap`.
 - Hard contracts: it writes no line an owner owns; bodies are opened only
   within an item's scope; every decision an arm makes by a closed rule is made
-  at plan time and shown, a headless step therefore asking nothing and a gated
-  step announcing at the gate what it will ask; the editorial classification
+  at plan time and stated at the gate in words, a headless step therefore
+  asking nothing and a gated step announcing at the gate what it will ask; the editorial classification
   carried to an `/architect amend` step — decided at plan time, or the user's
   reply when the arm's rule left it ambiguous — is applied there without a
   prompt when the arm's findings agree and confirmed when they disagree; a
@@ -214,8 +219,8 @@ no artifact at all, stops the whole run by listing what exists; a step whose
 owner is not installed stops before the gate; an owner arm that refuses, such
 as a touched `[IN PROGRESS]` task, stops the sequence at that step with
 earlier steps' writes intact and reported, never rolled back, and left
-uncommitted; `/runbook-create` absent makes a deferral an error naming it and
-re-renders the plan.
+uncommitted; `/runbook-create` absent makes a deferral an error naming it,
+shown at the same gate.
 
 ## Dependencies
 

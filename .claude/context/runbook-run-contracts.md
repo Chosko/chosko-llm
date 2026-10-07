@@ -83,16 +83,17 @@ The rest of the bullet: [runbook-run.md](./runbook-run.md) and
   reads only `CLAUDE.md`, the runbook and the index — **never a step's task
   body or named document, not even to compose the prompt**, whose
   orchestrator-written parts 1–4 restate nothing the step will read itself
-  (preamble = navigation instruction + runbook name + step number, plus the
-  `--relay-spawns` sentence) — and **does not review** a
+  (preamble = navigation instruction + runbook name + step number + the
+  policy sentence under either value, plus the `--relay-spawns` sentence) — and **does not review** a
   step's diff or commit; **no step invokes `/runbook-run`** (nested runbooks
   refused at spawn time). `--from N`/`--to N`/`--only N` narrow selection but
   never weaken `Depends on:` — one model, not three (`--only N` **is**
   `--from N --to N`; naming `--only` beside either bound is an error, as is a
   `--to` naming a step listed above the `--from` step — nine argument errors
-  in all, the last three `--attended` with `--unattended`, `--skip-parked`
-  without `--unattended`, and a header `Execution policy:` value outside the
-  two words). The bounds name steps
+  in all, the last three `--attended` with `--unattended` or a `CLAUDE.md`
+  `Interaction policy:` value outside the two words (the engine's `policy.md`
+  errors), `--skip-parked` on a run not resolving to `unattended`, and a
+  header `Execution policy:` value outside the two words). The bounds name steps
   **by id** and cut the list **at those steps' positions**, so a range is
   always the stretch of steps the run walks. Bounds are re-applied against the
   body re-read each step, so a step appended mid-run inside the range runs and

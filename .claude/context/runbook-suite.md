@@ -32,7 +32,16 @@ Each feature's contract is its bullet in its file's § Overview (listed above). 
 
 ## Internal patterns
 
-- None of their own: [feature-contract.md](./feature-contract.md) § Internal patterns.
+- [feature-contract.md](./feature-contract.md) § Internal patterns.
+- The interaction policy: `/runbook-run`, `/runbook-create`,
+  `/runbook-clean`, `/runbook-prune` and `follow-ups-resolve` declare
+  `requires: skill:interaction-engine` and accept `--attended` /
+  `--unattended` ([interaction-engine.md](./interaction-engine.md)).
+  `confirmation`: `/runbook-create`'s gate and the step-amend gate.
+  `destructive`: `/runbook-clean` and `/runbook-prune`. `design`:
+  `follow-ups-resolve`'s list approval. `/runbook-run` parks a step;
+  relays and contracts carry a plain summary of a draft, never the draft,
+  with `show` fetching it.
 
 ## Domain dependencies
 

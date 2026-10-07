@@ -43,7 +43,8 @@ Deliberately out:
   `/production-plan`'s — is headless-capable: its one decision is a closed
   rule over its reads, so a consumer may draft the edit before the arm runs
   and pass it in, and the arm writes without waiting when the draft matches
-  what it would have drafted, showing the difference as its gate otherwise.
+  what it would have drafted, showing the difference, summarized, as its gate
+  otherwise.
   The routing table records where each owner's amend entry is.
 - **Editing `[DONE]` work.** No amend arm reopens a done task or rewrites a
   ticked runbook step. Follow-up work is a new task or a new step, as today.
@@ -79,8 +80,11 @@ blanket one:
 - A touched task that is `[IN PROGRESS]` refuses the amendment, exactly as
   the full guard would; an untouched `[IN PROGRESS]` task does not, which is
   the precision the blanket guard lacks.
-- One gate presents the change, the touched set and the proposed status
-  outcome, and decides whether the change is editorial when the evidence is
+- One gate — a `confirmation` gate of
+  [interaction-policy](./interaction-policy.md), passing on its own under
+  `unattended` — presents the change as a plain summary of what each edited
+  section will say differently and why (`show` prints the before → after),
+  the touched set and the proposed status outcome, and decides whether the change is editorial when the evidence is
   clear — a task touched on its summary block or a nameable added scope item
   is not editorial; no touched task, no added scope and no contract text
   changed is editorial — stating it in one `Classified:` evidence line and
@@ -135,8 +139,9 @@ nothing before it.
 
 ### What makes an arm consumable
 
-Each arm names its inputs, its single gate, exactly what it writes and its
-closing report line, so that a consumer that has read only the arm can execute
+Each arm names its inputs, its single gate — a `confirmation` gate showing a
+plain summary, never a diff — exactly what it writes and its closing report
+line, an "Amended …" line written plain language first, identifiers last, so that a consumer that has read only the arm can execute
 it end to end. The arm cites the owner's other references by path where a
 rule already lives there, and states nothing that any other file states — the
 same one-authority discipline the engines follow.
@@ -151,7 +156,7 @@ uses the existing step-marker vocabulary rather than a new one.
 ## Interfaces and contracts
 
 - `/architect amend feature=<slug>[,<slug>...] "<change>" [--no-commit]
-  [--no-push]` — one gate, precision guard per feature, same `WRITTEN`
+  [--no-push]` — one `confirmation` gate, precision guard per feature, same `WRITTEN`
   discipline as the full skill, one commit. Unknown slug stops the whole run
   by listing the slugs that exist. A `[NEW]` feature is amended with no guard
   at all, having no tasks.

@@ -24,9 +24,11 @@ suite: [task-suite.md](./task-suite.md).
   prompt — task number + repo's absolute path + run's resolved flags
   (open list, not closed set: NO_COMMIT/NO_PUSH/AUTO_CONFIRM, resolved
   testing mode w/ concrete test command, DIRTY_FOLD /
-  DIRTY_FOLD_UNTRACKED, UNATTENDED — attended: a question ends the agent's
-  turn under `QUESTIONS FOR USER` and the launcher relays it in the runbook's
-  fixed block, answer sent back to the same agent; unattended: the agent
+  DIRTY_FOLD_UNTRACKED, the resolved policy as `--attended`/`--unattended`,
+  stated in the prompt under both values — attended: a question ends the
+  agent's turn under `QUESTIONS FOR USER` and the launcher relays it in the
+  runbook's fixed block, an approval gate as a plain summary with `show`
+  fetching the draft, answer sent back to the same agent; unattended: the agent
   parks and returns `[PARKED]` with its question, recorded, never a halt —
   plus a held answer for a `[PARKED]` task) + instruction to read
   body, CLAUDE.md, context layer itself; keeps exactly six values per
@@ -57,9 +59,10 @@ suite: [task-suite.md](./task-suite.md).
   feature `[DONE]`/`[SKIP]`, records it as a completion candidate; once, at
   the very end of the run (batched across the whole run, never per-task),
   proposes flipping each candidate's `FEATURES.md` `Status:` from
-  `[PLANNED]` to `[DONE]` — user decides per feature, one commit covers
-  every flip approved. Non-interactive run (delegated agent, `/runbook-run`
-  step) never proposes: names candidates in its closing report, outermost run
+  `[PLANNED]` to `[DONE]` in a plain-language question — user decides per
+  feature, one commit covers every flip approved; a `confirmation` gate, so
+  under `unattended` every candidate flips unasked. A nested run (delegated
+  agent, `/runbook-run` step) never proposes: names candidates in its closing report, outermost run
   asks. THE CLOSING REPORT: two groups, **For the record** (one line each,
   `<what deviated> — <why> — <resolved by whom>`) then **Follow-ups** — last,
   nearest the prompt — one numbered list, `1.`/`2.`/…, any length: the run's

@@ -43,7 +43,10 @@ entry point every stage shares:
   (closed catalogue of thirteen structural drift findings L1–L13, each with a
   detection rule over `graph.md`'s edges, severity `ERROR` or `WARNING` —
   two levels, deliberately clear of every status vocabulary — one fix command
-  and a fixed output template; two deliberate absences recorded: a `Tasks:`
+  and a fixed output template written message first — `<SEVERITY>
+  <message> (<artifact> <identifier>[, <evidence>]) → <fix>`, the
+  plain-language rule of [interaction-engine.md](./interaction-engine.md)
+  `messages.md`; two deliberate absences recorded: a `Tasks:`
   id absent from `TASKS.md` (archived, not drift) and a pending runbook step
   naming a finished task (needs a body read); absent index drops its
   findings, malformed block is its own `ERROR`; no rule reads a body or
@@ -97,7 +100,17 @@ Each feature's contract is its bullet in its file's § Overview (listed above). 
 
 ## Internal patterns
 
-- None of their own: [feature-contract.md](./feature-contract.md) § Internal patterns.
+- [feature-contract.md](./feature-contract.md) § Internal patterns.
+- The interaction policy: every stage, `/domain-setup`, `pipeline-revise`
+  and `/pipeline-check` declare `requires: skill:interaction-engine` and
+  accept `--attended` / `--unattended`
+  ([interaction-engine.md](./interaction-engine.md)). `confirmation`: every
+  amend gate (plain summary, `show` for the before → after; "Amended …"
+  lines plain-language-first), `/production-plan`'s main gate when a
+  reconciliation found nothing, `pipeline-revise`'s gate with no open
+  question. `destructive`: `/product-design`'s discard. Everything else
+  `design` — the conversational rounds, `/product-roadmap`'s gate.
+  `/pipeline-check` has no gate. None of them parks.
 
 ## Domain dependencies
 

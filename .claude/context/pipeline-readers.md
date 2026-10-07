@@ -67,8 +67,10 @@ Covers the pipeline's two read-only reporters, `/production-status` and
 - `commands/pipeline-check.md` — second read-only reporter of the pipeline,
   beside `/production-status`, and like it spanning the whole pipeline
   rather than a stage. Command not skill (single pass, no supporting files);
-  declares `requires: skill:pipeline-engine` and restates no probe, edge or
-  finding — cites all four engine files by path. Probes (or reuses a verdict
+  declares `requires: skill:pipeline-engine, skill:interaction-engine` and
+  restates no probe, edge or finding — cites all four engine files by path;
+  accepts `--attended` / `--unattended` with no effect (it has no gate), the
+  plain-language rule reaching it only through `lint.md`'s templates. Probes (or reuses a verdict
   already in the conversation), reads each of `.claude/FEATURES.md`,
   `.claude/TASKS.md`, `.claude/PLAN.md`, `.claude/RUNBOOKS.md` that exists,
   evaluates `lint.md` over `graph.md`'s edges, prints findings in one fenced

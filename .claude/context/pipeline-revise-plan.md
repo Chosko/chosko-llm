@@ -38,21 +38,26 @@ pipeline family: [pipeline.md](./pipeline.md).
   adds scope, local when the doc already promises it; `delete.md` local only
   for a task nothing else names — insert/delete/reorder never editorial);
   only a borderline wording-vs-meaning architect classification stays open.
-  ONE gate, and it ALWAYS waits; nothing written before it by the skill or
-  any arm: verdict line; the items numbered with branch + anchor; touched
-  artifacts with the edge or read that reached each plus the untouched ones
-  listed for overruling; numbered owner steps on
-  `<owner> — <headless|GATED> — <invocation or arm path> — writes: <what>`
-  plus the carried decision or `Will ask:` line plus the lint findings each
-  clears or creates; the lint in scope; any still-open architect question in
-  that arm's ambiguous form. Reply grammar: `go`; `all but <n>[, <m>]`;
+  ONE gate, written to [interaction-engine.md](./interaction-engine.md)
+  `messages.md`; nothing written before it by the skill or any arm: a
+  verdict line; one plain sentence per change, numbered as the owner steps
+  (what it changes and why, identifiers last; what a gated step will ask; a
+  carried decision in words); step 5's findings only when there are any;
+  then any still-open architect question in that arm's ambiguous form, last,
+  with at most a one-line shortcut hint. The item split, classifications,
+  touched/untouched entries, the owner-step table with invocations and
+  headless/GATED tags, and the drafts stay internal — `show` (or
+  `show <n>`) prints them. Gate class `confirmation` when no question is
+  open (under `unattended` it passes on its own, as on `go`), `design`
+  otherwise (under `unattended` the run stops there, nothing written); the
+  policy is handed down to every owner it drives. Reply grammar: `go`; `all but <n>[, <m>]`;
   `<n> as runbook step` (the step deferred self-contained, carrying its
   invocation, anchor, change and every decision taken here, to a named
   runbook, the session's runbook, or a new one `/runbook-create` writes —
   `all as runbook steps` defers the plan); `<n> after <m>`; a letter for an
   open architect question or an overruled touched/untouched call or tier;
-  `stop`. Anything but `go`/`stop` re-renders at the SAME gate with the edit
-  applied; a dropped step drops its dependents, named; silence, unclear reply
+  `stop`. Anything but `go`/`stop` applies the edit and re-shows only the
+  changed lines at the SAME gate; a dropped step drops its dependents, named; silence, unclear reply
   or EOF is `stop`. Actuation: sequential in the session, never parallel,
   never subagents; a headless step runs its arm by path with the decision
   carried in, a gated step runs its owner's command with that owner's gate
@@ -76,13 +81,15 @@ pipeline family: [pipeline.md](./pipeline.md).
   surfaced and the plan did not hold — a created task no open runbook running
   its feature has a step for, a successor no longer reading as a sequence, a
   lint finding created, a feature an owner named for reconciliation that no
-  step ran — rendered in the same numbered shape with the same reply grammar,
-  skipped when nothing arose, nothing written without the reply. Failure
+  step ran — one plain sentence each, numbered, the question last, same
+  reply grammar, gate class `design`, skipped when nothing arose, nothing
+  written without the reply. The lint bracket prints failures only — findings
+  created or left unchanged. Failure
   contract: an owner refusing (touched `[IN PROGRESS]`, `[DONE]`, a
   `[RUNNING]` position) or a gated owner's gate answered stop stops the
   sequence there, earlier writes kept and reported, NEVER rolled back, the
   after-lint still runs; a missing owner stops before the gate; absent
-  `/runbook-create` makes `as runbook step` an error and re-renders. Write
+  `/runbook-create` makes `as runbook step` an error shown at the same gate. Write
   set empty — no line, no file, no report on disk; no status value, no change
   ledger. Owns the run's commit (COMMITTING, per `commit.md`): commits +
   pushes by default, `--no-commit` / `--no-push`, `--commit` a no-op; pull

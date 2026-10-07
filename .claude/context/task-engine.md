@@ -39,7 +39,8 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
   transitions), `targets.md` (`Target:` values, the `## Manual
   interventions` pairing rule, the delegation guard, per-consumer notes),
   `stale.md` (`[STALE]` detection, who writes and clears it, the
-  implement-anyway/stop protocol, reconciliation classification),
+  implement-anyway/stop protocol in a plain-language prompt, reconciliation
+  classification),
   `tree.md` (the dirty-tree prompt protocol, four options, `DIRTY_FOLD` /
   `DIRTY_FOLD_UNTRACKED` and the Step-7 fold), `commit.md` (pull-at-start,
   per-task commit and push, `--no-commit` / `--no-push` gating), and
@@ -55,12 +56,17 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
   what its feature promises, else route to `/architect amend` — which body
   sections and summary-block fields may change, a dropped `Preconditions:`
   edge named in `## Decisions`, deleting a live task as `[SKIP]` never by
-  removal, `Feature:` added only to an orphan, one gate, a closed write set;
+  removal, `Feature:` added only to an orphan, one `confirmation` gate
+  showing a plain summary (`show` prints the draft; an owned-document
+  question still waits), a closed write set, an "Amended …" line
+  plain-language-first;
   read by NO `task-*` feature — only by whatever amends a single task, by path:
   `pipeline-revise`), and `parking.md` (task parking under the `unattended`
   policy: the ONE event that parks — a question
   the agent asked, nothing else; the prompts that take their default instead,
-  each a *For the record* line; the trailing `## Parking handoff` — `Parked:`,
+  each a *For the record* line — the feature-flip proposal and skip-tests
+  `Proceed?` among them as `confirmation` gates that pass on their own;
+  parked-question lines plain-language-first; the trailing `## Parking handoff` — `Parked:`,
   `Parking Branch:`, `Question:` verbatim and multi-line, `Answer:` only after
   a failed unpark; the `park/task-<N>` branch holding the work-in-progress in
   one commit, minus `TASKS.md` and the body, pushed unless `--no-push`, never
@@ -73,7 +79,11 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
   — after its Step 7 commit and push, best-effort, a failed delete a
   Follow-ups item (a delegated agent's fifth field) and never a halt, the
   branch kept under `--no-commit`; the answerer rule; the two
-  refusals, `--unattended` beside `--no-commit` and on a non-git VCS). A
+  refusals, `--unattended` beside `--no-commit` and on a non-git VCS, for a
+  flag or handed-down policy only, never the `CLAUDE.md` line). The
+  reference files cite [interaction-engine.md](./interaction-engine.md)'s
+  files, but the engine itself takes no `requires:` — its consumers carry
+  it. A
   consumer cites the file by a path **relative to the citing body** and
   states only its own deviations. Installed like any other skill (`cp -R`
   of the folder) — see `../domain/features/shared-phase-engine.md`. Its

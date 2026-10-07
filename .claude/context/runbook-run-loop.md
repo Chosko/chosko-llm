@@ -9,18 +9,20 @@ relay and resolve. The rest of the bullet:
 [runbook-run-contracts.md](./runbook-run-contracts.md).
 
 - `skills/runbook-run/`, continued from [runbook-run.md](./runbook-run.md) § Overview:
-  **The execution policy**, one value per run:
-  `--attended` / `--unattended` when passed, else the header
-  `Execution policy:`, else `attended`; resolved last in step 1, never
-  written back. `--unattended`: a step that asks is parked and the run goes
-  on; at launch, unless `--skip-parked` (requires `--unattended`), the same
-  **pre-ask** as `/task-implement`'s, over every `[P]` step in range, each
-  answer unparking its step at once in one bookkeeping commit. `--attended` overrides a header
-  `unattended`; both together an error. All three compose with `--inline`.
-  Under `unattended` the spawned preamble carries ONE sentence declaring the
-  run unattended (never *non-interactive*, which an attended step's agent is
-  too) — what turns on the contract's two conditional rules and what
-  `/task-implement` reads as its own UNATTENDED. **Handles**: every parked
+  **The execution policy** is the interaction policy, one value per run,
+  resolved per [interaction-engine.md](./interaction-engine.md) `policy.md`:
+  flag or a parent's policy, then the header `Execution policy:`, then the
+  `CLAUDE.md` `Interaction policy:` line, then `attended`; resolved last in
+  step 1, never written back. Under `unattended` a step that asks is parked
+  and the run goes on; at launch, unless `--skip-parked` (requires the
+  policy to resolve to `unattended`), the same **pre-ask** as
+  `/task-implement`'s, over every `[P]` step in range, each answer
+  unparking its step at once in one bookkeeping commit. All three flags
+  compose with `--inline`. The spawned preamble states the policy under
+  both values — *This run is attended* / *This run is unattended*, never
+  *non-interactive* — the handed-down policy a skill the step invokes
+  resolves; the unattended sentence turns on the contract's two conditional
+  rules. **Handles**: every parked
   question printed carries a `P<n>` handle, its questions `Q1`, `Q2`, … and
   options `a`, `b`, … (`Unpark P1: Q1a, Q2b`, an example, not a grammar),
   one sequence per run (pre-ask from `P1`, later parks the next unused); a
@@ -110,8 +112,10 @@ relay and resolve. The rest of the bullet:
   left to the agent: two runs share one `$TMPDIR` and the orchestrator, never
   opening either file, could not detect a collision. Relay files are never
   staged. Question-relay block is fixed text: question, lettered
-  options with costs, a recommendation; at an approval gate the full draft
-  follows **unabridged** — the one place it must not compress. In the subagent
+  options with costs, a recommendation; at an approval gate the agent's
+  plain summary of the draft, a `show` reply relayed to the same agent
+  fetching the draft whole. A gate the step's skill tags `confirmation`
+  passing on its own under `unattended` is not a skipped gate. In the subagent
   position (depth 3, a batch parent driving the runbook) it emits the same block
   as its own final turn under `QUESTIONS FOR USER`, for its parent to carry.
   **Resolve** reads the body at `File:` (a missing file stops) and, before

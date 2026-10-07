@@ -48,6 +48,7 @@ Canonical project docs live outside this folder, stay authoritative:
 | [claude-md-hook-statusline.md](./claude-md-hook-statusline.md) | The shipped claude-md artifacts (`tool-usage-policy`, `editing-discipline`, `git-commit-style`), the `remote-session-protocol` hook and the `session-statusline` statusline. |
 | [task-suite.md](./task-suite.md) | The `task-*` suite's family-wide contract and domain pointers; hub for `task-setup`, `task-add`, `task-list`, `task-clean`, `task-implement`, `task-review`, `task-iterate` and `task-engine`. |
 | [task-backlog.md](./task-backlog.md) | Backlog maintenance — `task-setup`, `task-clean`, `task-list`. |
+| [interaction-engine.md](./interaction-engine.md) | `interaction-engine`, the non-invocable reference engine for the interaction policy every interactive feature reads — `policy.md` (attended/unattended, flags, precedence), `gates.md` (the three gate classes), `messages.md` (output and question rules). |
 | [task-engine.md](./task-engine.md) | `task-engine`, the non-invocable reference engine the `task-*` suite reads, and its `references/` files. |
 | [task-add.md](./task-add.md) | `task-add`, the backlog's authoring command. |
 | [task-implement.md](./task-implement.md) | `task-implement` — common path, supporting files, unattended parking, body reading, human-in-the-loop tasks, testing policy, `[STALE]` handling, `Preconditions:`. |

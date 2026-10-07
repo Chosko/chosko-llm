@@ -566,7 +566,7 @@ Feature: interaction-policy
 
 ## 287. Update documentation for feature `interaction-policy`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: CLAUDE.md, .claude/context/INDEX.md, .claude/context/features.md, .claude/context/interaction-engine.md, .claude/context/task-engine.md, .claude/context/task-implement.md, .claude/context/task-implement-delegation.md, .claude/context/runbook-run-loop.md, .claude/context/runbook-run-contracts.md, .claude/context/pipeline.md, .claude/context/pipeline-revise-plan.md, .claude/domain/task-workflow.md, .claude/domain/product-workflow.md, .claude/domain/features/unattended-parking.md, .claude/domain/features/runbook-suite.md, .claude/domain/features/runbook-inline.md, .claude/domain/features/pipeline-revision.md, .claude/domain/features/owner-amend-arms.md
 Preconditions: 281, 282, 283, 284, 285, 286

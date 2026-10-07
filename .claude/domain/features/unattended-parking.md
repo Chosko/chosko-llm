@@ -92,26 +92,35 @@ the flag row, the pointer to the reference.
 ### The policy and its carriers
 
 One signal, `attended` or `unattended`, with `attended` the default
-everywhere.
+everywhere. It is the interaction policy of
+[interaction-policy](./interaction-policy.md), resolved by one precedence,
+first match wins: `--attended` / `--unattended` passed to the run, or a
+policy handed down by the parent run; the runbook's own `Execution policy:`
+header (`/runbook-run` only); the project's `CLAUDE.md` line
+`Interaction policy: attended|unattended`; `attended`.
 
 - **Runbook.** A header line `Execution policy: attended|unattended`, authored
-  by `/runbook-create` and owned by it like the other header lines; absent
-  means `attended`. `/runbook-run --attended` and `--unattended` override it
-  for one run; both together is an argument error.
-- **`/task-implement`.** A `--unattended` flag and nothing else — no
-  `CLAUDE.md` marker, no header. `--unattended` beside `--no-commit` is an
-  argument error: parking is made of commits.
+  by `/runbook-create` and owned by it like the other header lines; it ranks
+  second in the precedence, so the flags override it for one run and the
+  `CLAUDE.md` line applies when it is absent. Both flags together is an
+  argument error.
+- **`/task-implement`.** `--attended` / `--unattended`, a handed-down policy,
+  or the `CLAUDE.md` line. `--unattended` beside `--no-commit`, and on a
+  non-git VCS, are argument errors for a flag or handed-down policy only:
+  parking is made of commits. A policy from the `CLAUDE.md` line is never
+  refused; a question there stops the run instead of parking.
 - **Into a step agent.** The runbook prompt block is verbatim and the
   subagent contract forbids adding a flag the user did not type, so the
   policy cannot be typed into a step's `/task-implement` line. It travels the
   way `--relay-spawns` does: one sentence in the spawned prompt's preamble,
-  present only under `unattended`. `/task-implement` resolves UNATTENDED as
-  *the flag was passed, or the conversation declares this run unattended*. The
-  sentence says **unattended**, not *non-interactive*: an attended runbook's
-  step agent is also non-interactive — it relays — and must not park.
+  under **both** values — *This run is attended* or *This run is
+  unattended* — and a skill the step invokes resolves that handed-down
+  policy, never the `CLAUDE.md` line. The sentence says **attended** or
+  **unattended**, never *non-interactive*: an attended runbook's step agent
+  is also non-interactive — it relays — and must not park.
 - **Into a delegated agent.** `./delegated-runs.md`'s fixed-size prompt
-  carries UNATTENDED in its resolved-flag list, which is already O(1) in the
-  batch.
+  carries the resolved policy in its resolved-flag list, which is already
+  O(1) in the batch.
 
 Under `attended`, delegated runs gain the question relay they lack today: a
 delegated agent's question returns to the launcher as its own result case,
@@ -129,9 +138,10 @@ it and spawns the next.
 about the work can park. The rule for the rest costs no list: **a prompt
 whose silence already resolves to a value takes that value** — the delegation
 question to *no*, the `[PARTIAL]` surfacing to writing `[PARTIAL]`, the
-feature-flip proposal to *none*, `Proceed?` to *yes*, the dirty-tree prompt at
-pre-flight to *abort*, an explicitly named `[STALE]` task to *skip with one
-line*. The one prompt with no default today, an ambiguous test runner, aborts
+dirty-tree prompt at pre-flight to *abort*, an explicitly named `[STALE]` task
+to *skip with one line*. The feature-flip proposal and `Proceed?` are
+`confirmation` gates of the interaction policy: they pass on their own, the
+proposal flipping every candidate feature. The one prompt with no default today, an ambiguous test runner, aborts
 the run. Each taken default is a *For the record* line. Pre-flight prompts
 can never park — there is no current task yet — which is why they need this
 rule and nothing more.
@@ -361,13 +371,14 @@ lock, a timestamp or a cache.
 
 ```
 /runbook-run <runbook> --unattended            park on a question; pre-ask parked steps in range first
-/runbook-run <runbook> --attended              override a header `Execution policy: unattended`
+/runbook-run <runbook> --attended              every gate waits, whatever the header or CLAUDE.md says
 /runbook-run <runbook> --unattended --skip-parked   no pre-ask; parked steps stay parked
 /runbook-run <runbook> --attended --unattended  error
 /task-implement <sel> --unattended             park on a question; pre-ask parked tasks in the list first
 /task-implement <sel> --unattended --skip-parked
-/task-implement <sel> --unattended --no-commit  error
-/task-implement <sel> --unattended             error on a non-git VCS
+/task-implement <sel> --attended               relay and wait, whatever CLAUDE.md says
+/task-implement <sel> --unattended --no-commit  error (the flag only, not the CLAUDE.md line)
+/task-implement <sel> --unattended             error on a non-git VCS (the flag only)
 ```
 
 | Contract today | Under `unattended` |
