@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 287
+Last task number: 290
 
 ---
 
@@ -571,5 +571,35 @@ Target: claude
 Files: CLAUDE.md, .claude/context/INDEX.md, .claude/context/features.md, .claude/context/interaction-engine.md, .claude/context/task-engine.md, .claude/context/task-implement.md, .claude/context/task-implement-delegation.md, .claude/context/runbook-run-loop.md, .claude/context/runbook-run-contracts.md, .claude/context/pipeline.md, .claude/context/pipeline-revise-plan.md, .claude/domain/task-workflow.md, .claude/domain/product-workflow.md, .claude/domain/features/unattended-parking.md, .claude/domain/features/runbook-suite.md, .claude/domain/features/runbook-inline.md, .claude/domain/features/pipeline-revision.md, .claude/domain/features/owner-amend-arms.md
 Preconditions: 281, 282, 283, 284, 285, 286
 Feature: interaction-policy
+
+---
+
+## 288. Move `/task-implement`'s checkpoint automation out of Unity MCP into a tool-agnostic human-in-the-loop passage
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-implement/human-in-loop.md, skills/task-implement/SKILL.md, skills/task-implement/unity-mcp-checkpoints.md, skills/task-engine/references/targets.md, VERSION, CHANGELOG.md
+Preconditions: 282
+Feature: unity-mcp-removal
+
+---
+
+## 289. Delete `/unity-mcp-setup` and `unity-mcp-skill`, and drop `/project-setup`'s Unity MCP offer
+
+Status: [MISSING]
+Target: claude
+Files: commands/unity-mcp-setup.md, skills/unity-mcp-skill/SKILL.md, skills/unity-mcp-skill/references/tools-reference.md, skills/unity-mcp-skill/references/workflows.md, commands/project-setup.md, .claude/skills/rule-overlap/SKILL.md, .claude/skills/context-budget/SKILL.md, .claude/skills/task-implement/SKILL.md, .claude/skills/task-implement/human-in-loop.md, .claude/skills/task-implement/unity-mcp-checkpoints.md, .claude/skills/task-engine/references/targets.md, VERSION, CHANGELOG.md
+Preconditions: 288
+Feature: unity-mcp-removal
+
+---
+
+## 290. Update documentation for feature `unity-mcp-removal`
+
+Status: [MISSING]
+Target: claude
+Files: .claude/context/INDEX.md, .claude/context/setup-commands.md, .claude/context/task-implement.md, .claude/context/features.md, .claude/context/feature-contract.md, .claude/context/product-design.md, docs/authoring-guide.md, .claude/domain/technical-direction.md, .claude/domain/features/authoring-commit-default.md, .claude/domain/features/repo-local-audits.md
+Preconditions: 288, 289
+Feature: unity-mcp-removal
 
 ---

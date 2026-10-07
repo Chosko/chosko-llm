@@ -202,10 +202,10 @@ Tasks: 281, 282, 283, 284, 285, 286, 287
 
 ## unity-mcp-removal — Delete the Unity MCP integration; keep its generic checkpoint behaviour in the human-in-the-loop protocol
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/unity-mcp-removal.md
 Source: product-design.md § Unity/MCP integration
-Tasks: none
+Tasks: 288, 289, 290
 
 ---
 
