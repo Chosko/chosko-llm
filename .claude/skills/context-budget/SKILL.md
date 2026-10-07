@@ -40,8 +40,8 @@ the default report anyway. This skill never refuses over its own arguments.
 
 NOT A GATE
 
-State this in the report, and mean it. A 2,109-line reference file may be
-exactly right — `skills/unity-mcp-skill/` covers a large external surface, and
+State this in the report, and mean it. A 1,100-line skill body may be
+exactly right — `skills/runbook-run/` runs a whole execution loop, and
 covering it takes the space it takes. A flag is an observation that something
 costs a lot, not a claim that it should cost less.
 
@@ -135,7 +135,7 @@ THRESHOLDS
 | `SKILL.md` length | > 400 lines |
 | supporting reference file | > 500 lines |
 | command length | > 400 lines |
-| `description:` frontmatter | > 60 words (> 150 for the auto-trigger skills `claude-council`, `runbook-suggest`, `pipeline-suggest`, `follow-ups-resolve`, `unity-mcp-skill`) |
+| `description:` frontmatter | > 60 words (> 150 for the auto-trigger skills `claude-council`, `runbook-suggest`, `pipeline-suggest`, `follow-ups-resolve`) |
 | `description:` frontmatter | > 1,536 chars — the hard cap; the harness truncates there |
 | `description:` frontmatter | contains ` --- ` — the harness cuts the description at it |
 | `CLAUDE.md` chain combined | > 300 lines |
@@ -159,7 +159,7 @@ three measure against.
 **Estimated saving per flagged item** = the excess over the threshold, priced
 at that file's own average: `(lines − threshold) × (est. tokens ÷ lines)`,
 rounded. For a `description:` flag: `(words − threshold) × 1.3`, where the
-threshold is 60, or 150 for the five auto-trigger skills. It is what trimming
+threshold is 60, or 150 for the four auto-trigger skills. It is what trimming
 to the threshold would recover — not a recommendation to trim. The hard-cap
 and ` --- ` flags carry no saving figure — they mark text the model never
 sees, not text it pays for — and print `—` in that column.
@@ -178,7 +178,7 @@ REPORT
 
    ```
    path                                         kind   lines  est. tokens  flag  est. saving
-   skills/unity-mcp-skill/references/workflows…  ref     2109      ≈18 600  >500      ≈14 200
+   skills/runbook-run/SKILL.md                   skill   1146      ≈12 000  >400       ≈7 800
    skills/task-implement/SKILL.md                skill    697       ≈7 300  >400       ≈3 100
    commands/task-add.md                          cmd      834       ≈7 200  >400       ≈3 800
    skills/context-convert/SKILL.md               skill    519       ≈4 900  >400       ≈1 100
@@ -186,7 +186,7 @@ REPORT
    ```
 
 3. **`description:` section** — every description over its word threshold (60,
-   or 150 for the five auto-trigger skills): feature name, word count,
+   or 150 for the four auto-trigger skills): feature name, word count,
    estimated saving. Below them, every description over 1,536
    chars (flag `cap`, with its character count) and every one containing
    ` --- ` (flag `---`), each on its own line with `—` for the saving.

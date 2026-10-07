@@ -124,8 +124,8 @@ per task and no body read can be justified by it.
 - **`/task-clean`** — does not read `Target:` at all.
 - **`/task-implement`** — the only consumer that acts on a target. It reads
   its supporting `human-in-loop.md` for a `claude+human` / `human` task,
-  which in turn carries the gate deciding whether the manual checkpoints
-  can be driven through Unity MCP. It applies the delegation guard on a run
+  which in turn carries the tool-agnostic passage on checkpoints a tool
+  connected this session can perform. It applies the delegation guard on a run
   resolving to 2+ tasks with delegation enabled. A delegated agent's
   question is not what the guard keeps in the parent: under attended the
   launcher relays it and carries the answer back (its `delegated-runs.md`

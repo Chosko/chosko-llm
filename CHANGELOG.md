@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.84.0 — 2026-10-07
+
+- **`/unity-mcp-setup` and `unity-mcp-skill` are removed**, superseded by Unity's official MCP. `/project-setup` no longer offers Unity MCP on Unity projects; its Unity detection, test-suite question and dirty-tree section are unchanged.
+- **If you installed them**, run `chosko-llm rm unity-mcp-setup` and `chosko-llm rm unity-mcp-skill` (add `--local` where you installed them locally). In each project they set up, delete the `Unity MCP for /task-implement:` line from `CLAUDE.md` and `.claude/context/mcp-tools.md` with its `INDEX.md` row, remove the `com.coplaydev.unity-mcp` line from `Packages/manifest.json`, remove the machine-local `UnityMCP` server registration (`claude mcp remove UnityMCP`), and connect Unity's official MCP instead. A project that keeps the old line runs exactly as one without it.
+
 ## 1.83.0 — 2026-10-07
 
 - **Manual checkpoints can be driven by any connected tool.** On a `claude+human` or `human` task, when a tool connected to the session can perform a checkpoint's manual step, `/task-implement` asks once per task whether it does the step (you verify) or you do (it verifies). It no longer reads the `Unity MCP for /task-implement:` line in `CLAUDE.md`; Unity's official MCP works through the same path.

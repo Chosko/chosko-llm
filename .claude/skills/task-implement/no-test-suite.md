@@ -37,6 +37,10 @@ tests-first flow cannot run; switch to interactive mode.
    the language at hand. If the project's language has no obvious default
    test framework, mention that and let the user direct.
 
+   Under UNATTENDED this is a real decision with no task yet to park, so the
+   run stops here with the question, per
+   `../interaction-engine/references/gates.md` § *Real decisions*.
+
 2. Do as the user tells. If they pick A, scaffold the suite first (in its
    own commit, separate from any task), then proceed in full test mode.
    If they pick B, proceed in skip-tests mode.
@@ -47,10 +51,10 @@ tests-first flow cannot run; switch to interactive mode.
      summarize what you're about to change and ask "Proceed?" Wait for
      explicit approval before editing any file. When AUTO_CONFIRM is true,
      skip this prompt — state the one-line summary anyway so the user can
-     see what's about to happen, then proceed without waiting. When
-     UNATTENDED is true the prompt takes its default, yes, and is one *For
-     the record* line — `../task-engine/references/parking.md` § *Prompts
-     with a default*; the one-line summary is still stated.
+     see what's about to happen, then proceed without waiting. Gate class:
+     `confirmation` (`../interaction-engine/references/gates.md`) — when
+     UNATTENDED is true the prompt passes on its own and is one *For the
+     record* line; the one-line summary is still stated.
    - Skip Steps 2, 4, and 5 of the per-task workflow (anything
      test-related). Steps 1, 3, 6, 7 still run.
    - The commit message should note "(no tests — manual verification

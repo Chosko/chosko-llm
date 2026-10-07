@@ -586,7 +586,7 @@ Feature: unity-mcp-removal
 
 ## 289. Delete `/unity-mcp-setup` and `unity-mcp-skill`, and drop `/project-setup`'s Unity MCP offer
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/unity-mcp-setup.md, skills/unity-mcp-skill/SKILL.md, skills/unity-mcp-skill/references/tools-reference.md, skills/unity-mcp-skill/references/workflows.md, commands/project-setup.md, .claude/skills/rule-overlap/SKILL.md, .claude/skills/context-budget/SKILL.md, .claude/skills/task-implement/SKILL.md, .claude/skills/task-implement/human-in-loop.md, .claude/skills/task-implement/unity-mcp-checkpoints.md, .claude/skills/task-engine/references/targets.md, VERSION, CHANGELOG.md
 Preconditions: 288

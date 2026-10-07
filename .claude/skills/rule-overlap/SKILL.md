@@ -67,11 +67,10 @@ COLLECT — scope
 
 Excluded, each for a stated reason:
 
-- **`skills/unity-mcp-skill/` and `skills/claude-council/`** — the two vendored
-  skills. They are re-synced from upstream (docs/authoring-guide.md § Vendored
-  skills), so a restatement found in one cannot be extracted without breaking
-  the vendoring contract. Surfacing it would be noise the reader can never act
-  on.
+- **`skills/claude-council/`** — the one vendored skill. It is re-synced from
+  upstream (docs/authoring-guide.md § Vendored skills), so a restatement found
+  in it cannot be extracted without breaking the vendoring contract. Surfacing
+  it would be noise the reader can never act on.
 - **`hooks/*.sh` and `statusline/*.sh`** — shell scripts, carrying no normative
   prose to collect. Stated here rather than left to inference.
 - **`.claude/`, `docs/`, `scripts/`, `bin/`** — not shipped feature bodies.
@@ -96,7 +95,6 @@ NORM='must|never|always|refuse|forbid|prohibit|do not|don.t|cannot|can.t|may not
 
 for f in $(find commands claude-md -maxdepth 1 -name '*.md' -size +0c 2>/dev/null; \
            find skills -type f -name '*.md' -size +0c \
-                -not -path 'skills/unity-mcp-skill/*' \
                 -not -path 'skills/claude-council/*' 2>/dev/null | sort); do
   awk -v norm="$NORM" '
     /^#+[ \t]/         { printf "%s\th\t%d\t%s\n", FILENAME, FNR, $0; next }
@@ -236,7 +234,7 @@ DO NOT:
   `awk` pass's job, and moving it into the model breaks the design.
 - Report a group carried by two features, or by one feature three times.
 - Hardcode a list of feature names anywhere in place of the globs.
-- Include the vendored skills, `hooks/`, `statusline/`, `docs/` or `.claude/`
+- Include the vendored skill, `hooks/`, `statusline/`, `docs/` or `.claude/`
   in the collection.
 - Treat a finding as a failure, exit non-zero, or block anything on the outcome.
 - Add a `version:` field to this file, or to any other skill under

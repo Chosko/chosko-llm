@@ -1,6 +1,6 @@
 ---
 name: task-engine
-version: 0.7.1
+version: 0.8.1
 type: skill
 description: Reference library for the task-* features — one authority per rule they share, under references/; read by path by the task-* commands and skills and by the pipeline revision surface, never invoked.
 disable-model-invocation: true
@@ -49,8 +49,8 @@ disable-model-invocation: true
 | `references/tree.md` | The dirty-tree prompt protocol and the folding rules that follow from it. |
 | `references/commit.md` | Commit and push gating: `--no-commit` / `--no-push`, pull-at-start, what may be staged, one commit per unit of work, and commit/push failure handling. |
 | `references/review-budget.md` | Review cost controls: the `--review-model` / `--review-effort` values and their `same` / `auto` reserved words, the deterministic `auto` tier table, the read budget behind the effort axis, what is counted and what never is, and the cap-bound and resolved-pair reports. |
-| `references/amend.md` | Changing one existing task: the two checks before writing (not `[IN PROGRESS]`, and no change to what its feature promises), which body sections and summary-block fields may change, rewriting a `Preconditions:` edge, deleting a live task as `[SKIP]`, adding `Feature:` to an orphan, the single gate, the closed write set and the closing report line. |
-| `references/parking.md` | Task parking under the `unattended` policy: the one event that parks, which prompts take their default instead, the `## Parking handoff` section, the `park/task-<N>` branch, the park sequence, the unpark transaction, the answerer rule and the two refusals. Read by `/task-implement` only when UNATTENDED is true or a resolved task is `[PARKED]`; never on an attended run that meets no parked task. |
+| `references/amend.md` | Changing one existing task: the two checks before writing (not `[IN PROGRESS]`, and no change to what its feature promises), which body sections and summary-block fields may change, rewriting a `Preconditions:` edge, deleting a live task as `[SKIP]`, adding `Feature:` to an orphan, the single gate (a `confirmation` gate under the interaction policy), the closed write set and the closing report line. |
+| `references/parking.md` | Task parking under the `unattended` policy: the one event that parks, which prompts take their default instead — two of them `confirmation` gates that pass on their own — the `## Parking handoff` section, the `park/task-<N>` branch, the park sequence, the unpark transaction, the answerer rule and the two refusals. Read by `/task-implement` only when UNATTENDED is true or a resolved task is `[PARKED]`; never on an attended run that meets no parked task. |
 
 Each file is the **single authority** for its rule. A consuming feature cites
 the file and states only what it does differently.

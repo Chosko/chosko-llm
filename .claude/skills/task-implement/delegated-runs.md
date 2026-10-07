@@ -104,11 +104,13 @@ It carries four things:
      earlier tasks is expected, so the agent must not re-run the prompt
      protocol in
      `../task-engine/references/tree.md`;
-   - UNATTENDED — the run's execution policy as ARGUMENT PARSING resolved
-     it. When it is true the prompt says so in the one sentence that
-     declares the run unattended, which is what makes the agent's own
-     UNATTENDED true; when false the prompt says the run is attended.
-     Whether the agent can ask is settled by this value alone, not by the
+   - the run's interaction policy as ARGUMENT PARSING resolved it — carried
+     in the flag list as `--attended` or `--unattended`, and stated in the
+     prompt under both values, *This run is attended* or *This run is
+     unattended*. The agent resolves this handed-down policy, never the
+     `CLAUDE.md` line, per
+     `../interaction-engine/references/policy.md`
+     § *A parent hands its policy down*. Whether the agent can ask is settled by this value alone, not by the
      fact that it is a subagent: a subagent can ask, because the launcher
      can carry an answer. Under attended, a question that genuinely needs
      the user — an acceptance criterion the body and the codebase cannot
@@ -151,7 +153,8 @@ The whole thing reads roughly:
 > not been given them. This run is attended: if something genuinely needs
 > the user's decision, end your turn under a `QUESTIONS FOR USER` heading —
 > the question, its options with what each costs, your recommendation, and
-> any draft awaiting approval verbatim — and the answer will come back in
+> for a draft awaiting approval a plain summary of it — the user replies
+> `show` to see it whole — and the answer will come back in
 > this conversation; never guess and never answer it yourself. *(Under
 > UNATTENDED, instead: This run is unattended: a question about the work
 > parks the task per `task-engine`'s `parking.md` and you return `[PARKED]`
@@ -229,10 +232,11 @@ before anything else:
    Recommendation: (b), because <one line>.
    ```
 
-   At an approval gate the draft follows the block **verbatim and
-   unabridged** — a summarized draft cannot be approved, and an approval
-   given against a summary approves something the user never saw. The
-   round number counts this task's questions, from 1.
+   At an approval gate the block carries the agent's plain-language summary
+   of the draft, per
+   `../interaction-engine/references/messages.md`; a `show` reply goes to
+   the same agent like any answer, and its next result prints the draft and
+   asks again. The round number counts this task's questions, from 1.
 2. Wait for the user's answer. Silence, EOF or an unrelated reply is not an
    answer; the run waits.
 3. Send the answer to the **same** agent, by its id — never to a fresh one,
