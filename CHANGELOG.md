@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.95.0 — 2026-10-07
+
+- **`/task-implement`, `/quick-implement` and route suggestions follow orchestrate mode.** While `/orchestrate-mode` is on, `/task-implement` runs every task in a fresh subagent, a single task included, without asking; `--no-agents` still keeps it in the conversation. `/quick-implement` holds its spec conversation in one fresh subagent, relaying its questions, and splits the implementation across per-area agents, still landing one commit. Route suggestions stay silent, since every change request is already a batch.
+
 ## 1.94.0 — 2026-10-07
 
 - **New `/orchestrate-mode` skill.** Switches a conversation into a mode where the session never edits code itself: each change request runs as a batch of subagents, one per area of the code, each owning its own files and carrying its state across agents in a handoff file under `.claude/sessions/`. The session reads only the navigation layer and the agents' short reports, and checks the work in as one commit per area at the end. `/orchestrate-mode --off` turns it off.

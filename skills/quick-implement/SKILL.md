@@ -1,6 +1,6 @@
 ---
 name: quick-implement
-version: 0.1.0
+version: 0.2.0
 type: skill
 description: Take one small change from conversation to commit in a single run — a spec conversation with a drift check against the documented design, one gate, then tests first and one commit holding the change and its spec file under .claude/specs/ — with no backlog entry. Use it for a change one person can describe and one commit can hold; anything bigger goes to /task-add.
 requires: skill:task-engine, skill:interaction-engine, command:follow-ups
@@ -51,6 +51,29 @@ SUPPORTING FILES (read on demand)
 | `../task-engine/references/commit.md` | Every run, at step 6. |
 | `../task-engine/references/closing-report.md` | Every run, at step 7. |
 | `../task-engine/references/review-budget.md` | `--review` was passed. |
+| `../interaction-engine/references/mode.md` | Every run, at step 2, to know whether orchestrate mode is on. |
+
+---
+
+UNDER ORCHESTRATE MODE
+
+When orchestrate mode is on — the check in
+`../interaction-engine/references/mode.md`, made at step 2 — two steps run
+differently and nothing else changes:
+
+- **STEP 2 runs in one fresh subagent.** It holds the spec conversation and
+  the drift check and returns the drafted spec, its drift hits, the size
+  judgement, the testing policy it resolved and any open question. This
+  session relays the subagent's questions to the user and the answers back
+  to the same subagent until it returns, then holds STEP 3's gate itself.
+- **STEP 5's implementation is split into areas** by the `orchestrate-mode`
+  skill's rules for splitting into areas, the area brief and launch, the
+  spec file being the owner's note. Each area agent follows
+  `../task-engine/references/tests-first.md` for its own files under the
+  testing policy resolved at step 2, and stages and commits nothing.
+
+The run still makes its one commit, the change and the spec together, at
+step 6.
 
 ---
 

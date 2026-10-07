@@ -759,7 +759,7 @@ Feature: orchestrate-mode
 
 ## 307. Make `/task-implement`, `/quick-implement` and `pipeline-suggest` honour orchestrate mode
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, skills/quick-implement/SKILL.md, skills/pipeline-suggest/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 300, 302, 306

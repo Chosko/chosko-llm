@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.12.2
+version: 1.13.0
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, skill:interaction-engine, command:follow-ups
@@ -21,7 +21,8 @@ requires: skill:task-engine, skill:interaction-engine, command:follow-ups
 # `claude+human` pauses at declared Manual interventions checkpoints, target
 # `human` runs as a guided walkthrough; a checkpoint a connected tool can
 # perform can be driven through that tool. On 2+
-# tasks offers one fresh subagent per task, sequentially. Under `--review`
+# tasks offers one fresh subagent per task, sequentially; under orchestrate
+# mode delegates every run, one task included. Under `--review`
 # each task is reviewed by `/task-review` in a subagent and corrected by
 # `/task-iterate` before its single commit; unresolved `BLOCKING` findings
 # after the last round stop the run with the task `[IN PROGRESS]`. When a
@@ -121,7 +122,7 @@ guarantees they are installed.
 SUPPORTING FILES (read on demand — not up front)
 
 This skill's common path is the whole of SKILL.md plus the interaction
-engine's `policy.md` and `messages.md` and the task engine's
+engine's `policy.md`, `messages.md` and `mode.md` and the task engine's
 `testing-policy.md`, `tests-first.md` and `closing-report.md`: a clean
 working tree, a project whose test command is already known, and numbered
 `Target: claude` tasks.
@@ -139,7 +140,8 @@ Everything else below is loaded only when its branch actually applies.
 | `../task-engine/references/no-test-suite.md` | The project has no test suite at all, OR CLAUDE.md declares `Testing policy for /task-implement: skip-tests`. |
 | `./human-in-loop.md` | The current task's `Target:` is `claude+human` or `human`. |
 | `./body-schemas.md`  | The task body does NOT match the current schema (Goal / Acceptance criteria / Decisions / Hints). |
-| `./delegated-runs.md` | DELEGATE is true — the resolved list holds 2+ tasks and the user opted into per-task subagents (or passed `--agents`). Never on a single-task run, nor when the user declined. |
+| `../interaction-engine/references/mode.md` | Every run without `--no-agents`, at PRE-FLIGHT step 2b, to know whether orchestrate mode is on. |
+| `./delegated-runs.md` | DELEGATE is true — the resolved list holds 2+ tasks and the user opted into per-task subagents (or passed `--agents`), or orchestrate mode is on (PRE-FLIGHT step 2b). Never otherwise on a single-task run, nor when the user declined or passed `--no-agents`. |
 | `./review-rounds.md` | REVIEW is true — the run was invoked with `--review`. Read once, after ARGUMENT PARSING and before the first task. Never on a run without the flag. |
 | `../task-engine/references/parking.md` | UNATTENDED is true (read at ARGUMENT PARSING, where its refusals apply), OR any task in the resolved list is `[PARKED]` (read at PRE-FLIGHT step 2). Never otherwise — an attended run that meets no parked task never opens it. |
 
@@ -182,7 +184,8 @@ PRE-FLIGHT step 2b's delegation question: `--agents` sets DELEGATE = true,
 `--no-agents` sets DELEGATE = false, and either way that question is not
 asked. With neither flag, DELEGATE is undecided here and step 2b resolves
 it. `--agents` on a run that resolves to fewer than 2 tasks is accepted and
-ignored — the run stays in-context — rather than being an error.
+ignored — the run stays in-context, unless orchestrate mode is on (step
+2b) — rather than being an error.
 
 Also scan for the optional `--review` flag and the optional `--rounds N`
 pair, and strip whichever appear:
@@ -472,12 +475,17 @@ PRE-FLIGHT CHECKS (before any task)
    handle and leaves no doubt which answer goes to which `Q<n>` is accepted
    (`parking.md` § *The one event that parks*).
 
-2b. **Delegation check.** Only when the resolved list holds 2 or more
-   tasks. With fewer than 2, DELEGATE is false, nothing is asked and the
-   run stays in-context — skip this step entirely.
+2b. **Delegation check.** If `--no-agents` was passed, DELEGATE is
+   already false; don't ask. Otherwise, when orchestrate mode is on — the
+   check in `../interaction-engine/references/mode.md` — DELEGATE is true
+   for any resolved list, a single task included, and nothing is asked.
 
-   If `--agents` or `--no-agents` was passed, DELEGATE is already set;
-   don't ask. Otherwise ask once:
+   With the mode off, this step runs only when the resolved list holds 2 or
+   more tasks. With fewer than 2, DELEGATE is false, nothing is asked and
+   the run stays in-context — skip the rest of this step.
+
+   If `--agents` was passed, DELEGATE is already set; don't ask. Otherwise
+   ask once:
 
    > This run covers <k> tasks. Implement each one in a fresh subagent, so
    > later tasks don't inherit the context of earlier ones? Agents run one

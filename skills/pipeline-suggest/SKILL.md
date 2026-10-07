@@ -1,9 +1,9 @@
 ---
 name: pipeline-suggest
-version: 0.2.1
+version: 0.3.0
 type: skill
-description: 'Name, in one line, the pipeline command a free-form request fits. Trigger whenever the user asks in their own words to build, change, fix, remove or sequence work — "add a login to the page", "fix this bug", "drop the export step", "do this before that" — on a project that has a .claude/FEATURES.md or a .claude/TASKS.md, and the request does not already name a slash command. Emits one or two lines naming the command and stops. Not for: a question; a request that names a command; a request that says "just do it" or "directly"; work already under way in a /task-implement run; an enumeration inside an explanation; a follow-up list meant for later sessions, which runbook-suggest owns; a reply to a Follow-ups list, which follow-ups-resolve owns; or a project with neither a feature index nor a backlog.'
-requires: skill:pipeline-engine, skill:pipeline-revise
+description: 'Name, in one line, the pipeline command a free-form request fits. Trigger whenever the user asks in their own words to build, change, fix, remove or sequence work — "add a login to the page", "fix this bug", "drop the export step", "do this before that" — on a project that has a .claude/FEATURES.md or a .claude/TASKS.md, and the request does not already name a slash command. Emits one or two lines naming the command and stops. Not for: a question; a request that names a command; a request that says "just do it" or "directly"; work already under way in a /task-implement run; an enumeration inside an explanation; a follow-up list meant for later sessions, which runbook-suggest owns; a reply to a Follow-ups list, which follow-ups-resolve owns; any request while orchestrate mode is on; or a project with neither a feature index nor a backlog.'
+requires: skill:pipeline-engine, skill:pipeline-revise, skill:interaction-engine
 ---
 
 # /pipeline-suggest
@@ -22,6 +22,11 @@ observing real sessions, never by a flag.
 `.claude/TASKS.md` exist. Both absent: say nothing and end. A probe that errors
 counts as absent. No third probe and no read of the engine's `probes.md` — this
 skill needs to know whether a pipeline exists, not its shape.
+
+**Silent under orchestrate mode.** While orchestrate mode is on — the check in
+`../interaction-engine/references/mode.md`, answered from this conversation
+without opening that file — say nothing and end: every change request there is
+already a batch.
 
 **The shape table** maps request shape → command. It is not the engine's routing
 table (feature → consumes / produces / owns): different job, different content.

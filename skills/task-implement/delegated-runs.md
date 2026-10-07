@@ -2,7 +2,9 @@
 
 Read this when DELEGATE is true — i.e. a run whose resolved task list holds
 2 or more tasks, and the user answered yes to PRE-FLIGHT's delegation
-question (or passed `--agents`). A single-task run never reads this file.
+question (or passed `--agents`), or any run while orchestrate mode is on and
+`--no-agents` was not passed (PRE-FLIGHT step 2b). A single-task run with the
+mode off never reads this file.
 
 The point is context, not concurrency: implementing several tasks in one
 conversation leaves task 1's reading, diffs, and test output loaded while
