@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.97.5 — 2026-10-07
+
+- Rewrite shipped bodies in imperative form; no behaviour change.
+
 ## 1.97.4 — 2026-10-07
 
 - Fix check-setup.sh failing at random.
