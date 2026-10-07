@@ -536,7 +536,7 @@ Feature: interaction-policy
 
 ## 284. Adopt the interaction policy in the pipeline's authoring stages
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/architect/SKILL.md, skills/architect/amend.md, skills/product-design/SKILL.md, skills/product-design/amend.md, skills/product-roadmap/SKILL.md, skills/product-roadmap/amend.md, skills/production-plan/SKILL.md, skills/production-plan/amend.md, skills/production-plan/reconciling.md, commands/domain-setup.md, VERSION, CHANGELOG.md
 Preconditions: 281

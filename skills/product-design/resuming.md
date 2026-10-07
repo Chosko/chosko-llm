@@ -74,7 +74,8 @@ for a finished design:
 >    design without re-running phases. I'd edit the relevant document
 >    directly and leave the process complete.
 
-Wait for an explicit answer. Silence is not an answer.
+Wait for an explicit answer. Silence is not an answer. Gate class:
+`design` (`../interaction-engine/references/gates.md`).
 
 ## 4. On resume (A)
 
@@ -99,6 +100,7 @@ Before writing anything, resolve the existing content:
 - **Discard** — confirm once more, naming the files, then overwrite them
   with fresh stubs. This is the only path in this skill that destroys
   written design content, and it requires the user to have said so twice.
+  Gate class: `destructive`.
 
 Either way, `design-process.md` is rewritten from PHASE 1 with a new phase
 table and a marker at PHASE 1. Carry forward anything under **Decisions

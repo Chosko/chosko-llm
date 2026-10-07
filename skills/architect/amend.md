@@ -134,11 +134,14 @@ gate with nothing written.
 
 ## 4. The gate
 
-The arm's one and only gate. One message, one section per feature that
-reached it, each carrying:
+The arm's one and only gate, gate class `confirmation`
+(`../interaction-engine/references/gates.md`), written to
+`../interaction-engine/references/messages.md`. One message, one section per
+feature that reached it, each carrying:
 
-1. **The change** — each section to be edited, with the drafted edit (before
-   → after, or the new text).
+1. **The change** — what each edited section will say differently, and why,
+   in plain words, the section named last. A `show` reply prints the drafted
+   edits and asks again.
 2. **The touched set** — each touched task's id, status and title, and what
    decided it: *summary block*, *body*, or *undecided*. Untouched live tasks
    follow, one line each, so a classification can be overruled.
@@ -180,28 +183,31 @@ and the edited text classify it like any other.
 No question. After items 1–3, one line:
 
 ```
-Classified: <editorial | not editorial> — <evidence>
+Classified: <editorial | not editorial> — <plain reason> (<evidence>)
 ```
 
-The evidence cites only what items 1–3 render, never an adjective:
-`touched on summary block: <ids>`, `touched on body: <ids>` and/or
-`scope added: <named scope item> (§ <edited section>)` for not editorial;
-`no task touched, no scope added, no contract text changed` for editorial.
+The plain reason says in words what decided it — *wording only, nothing any
+task builds changes*, or *tasks already planned build what this changes* /
+*it adds <the scope, in words>*. The evidence in the parentheses cites only
+what items 1–3 render, never an adjective: `touched on summary block: <ids>`,
+`touched on body: <ids>` and/or `scope added: <named scope item>
+(§ <edited section>)` for not editorial; `no task touched, no scope added,
+no contract text changed` for editorial.
 
 ### An ambiguous case
 
 The question, with one marked letter — the recommendation:
 
-> Is this change editorial for `<slug>` — wording only, with nothing any
-> task builds changing?
->
 > <evidence line>
 >
-> A. **Editorial** — edit the document; no task is staled and `Status:`
->    stays `<status>`.
-> B. **Not editorial** — edit the document, mark <ids | no tasks> `[STALE]`,
->    and `Status:` becomes `<outcome>`.
+> A. **Wording only** — edit the document; no task needs redoing and the
+>    feature's status stays `<status>`.
+> B. **More than wording** — edit the document, mark the tasks it touches
+>    for re-planning (<ids | none>), and the status becomes `<outcome>`.
 > C. **Stop** — write nothing for this feature.
+>
+> Is this change to <feature title> only wording, with nothing any task
+> builds changing — A, B or C? (`<slug>`)
 
 **The recommendation is derived, never judged.** It is a closed rule over two
 findings the gate already renders — the touched set (item 2) and the scope
@@ -214,13 +220,14 @@ The evidence line above the letters states which findings decided it, citing
 only what items 2–3 already render — a task id, an edited section, or the
 named scope item — never an adjective:
 
-- A marked: `Recommended: A — no task touched, no scope added; A and B write
-  the identical set here.` A is marked only on that pair of findings, and on
+- A marked: `Recommended: A — no task builds anything this touches and it
+  adds no scope, so A and B write the identical set here.` A is marked only on that pair of findings, and on
   it A and B do write the identical set — no task to stale, no `Status:`
   change — so the line says so. Both letters are still offered, so the
   classification can be overruled.
-- B marked: `Recommended: B — touched: <ids>` and/or `scope added: <named
-  scope item> (§ <edited section>)`.
+- B marked: `Recommended: B — <tasks already planned build what this
+  changes | it adds <the scope, in words>> (touched: <ids>; scope added:
+  <named scope item> (§ <edited section>))`.
 
 The marked letter is a recommendation, not an answer: the reply still has to
 name a letter, and nothing is written on it alone.
@@ -233,6 +240,11 @@ one letter for all of them (`B`). An asked feature the reply leaves unnamed
 is C — the marked letter is a recommendation there as everywhere, and
 nothing is written on it alone. Clear features never wait: with no feature
 asked, the gate renders its `Classified:` lines and goes straight to step 5.
+
+Under `unattended` an ambiguous feature's question is a real decision
+(`gates.md` § *Real decisions*): the clear features are written and
+committed, and the run then stops with every asked feature's question, its
+features written nothing.
 
 ### A classification carried from `/pipeline-revise`
 
@@ -313,7 +325,7 @@ answered C, or dropped, gets no write.
 One closing line per feature:
 
 ```
-Amended <slug>: <section>, <section>[; product-design.md § <section>] — <editorial | stale: <ids> | stale: none>[ — carried <carried>, applied not editorial] — <old status> → <new status>.
+Amended <feature title> — <what changed, in plain words>; <wording only | tasks to re-plan: <titles> | no task to re-plan>[; treated as more than wording, stricter than the revise gate's <carried> call] — status <old> → <new> (`<slug>`: <section>, <section>[; product-design.md § <section>]; stale: <ids | none>).
 ```
 
 A dropped feature reports the line step 2 or 3 gave it. When any task was

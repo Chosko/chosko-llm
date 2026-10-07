@@ -1,8 +1,9 @@
 ---
 name: architect
-version: 0.13.1
+version: 0.14.0
 type: skill
 description: Turn high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md and grounded in the technical direction or the existing code. Use it from a design section, named features or a bare prompt, or to amend an existing document; stage 3 of the pipeline: turns a design section into feature documents; its output is /task-add's input.
+requires: skill:interaction-engine
 ---
 
 # /architect
@@ -36,6 +37,7 @@ description: Turn high-level features into low-level feature documents under .cl
 #        /architect amend feature=<slug>[,<slug>...] "<change>"  (targeted change to one or more feature documents)
 #        /architect <args> --no-commit     (write everything, run no git command)
 #        /architect <args> --no-push       (commit what this run wrote, skip the push)
+#        /architect <args> --attended | --unattended
 
 GOAL
 Take what a feature must do and decide how it will be built, grounded in the
@@ -64,6 +66,9 @@ SUPPORTING FILES (read on demand — not up front)
 
 | Read this file | Exactly when |
 | -------------- | ------------ |
+| `../interaction-engine/references/policy.md` | Every run, at ARGUMENT PARSING, to resolve the interaction policy. |
+| `../interaction-engine/references/messages.md` | Every run, before the first question, gate or closing report — every one of them follows it. |
+| `../interaction-engine/references/gates.md` | The policy resolved to `unattended`. |
 | `./sectioned-input.md` | PHASE 0, for each target resolving in **traditional mode** — no roadmap, or `--no-slices`, or a roadmap that does not slice this target's section. Matching against `product-design.md`'s sections and existing `FEATURES.md` slugs, and the `Source:` value that produces. |
 | `./sliced-input.md` | PHASE 0, for each target resolving in **slice mode** — `.claude/domain/product-roadmap.md` carries at least one milestone with a `Covers:` line, a slice matches this target, and `--no-slices` was not passed. Slice resolution, disambiguation, exclusions into non-goals, and the extended `Source:`. |
 | `./iterating.md` | PHASE 0 finds the target feature already has a `FEATURES.md` entry. Read before PHASE 0b. |
@@ -96,6 +101,14 @@ stripped, and is a silent no-op naming the default. `--commit` and
 Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
 matters when COMMIT is true: it skips the pull at start, the pre-push
 re-sync and the push while still committing as always.
+
+Also scan for the optional `--attended` and `--unattended` flags and strip
+whichever appear. The run's interaction policy resolves from them, a policy
+handed down by a parent run and the project's `CLAUDE.md`, per
+`../interaction-engine/references/policy.md`, which holds their argument
+errors. Each gate below carries its class tag
+(`../interaction-engine/references/gates.md`). This skill cannot park: a run
+that stops on what waits leaves only the PHASE 2 progress marker written.
 
 Also scan for the optional `--no-slices` flag and strip it. If present, set
 NO_SLICES = true: PHASE 0 skips the roadmap probe entirely and every target
@@ -208,7 +221,8 @@ exists:
   `skills/product-design/resuming.md`, at this skill's smaller scale.
 - Ask whether to resume (continue PHASE 2 treating the summarized ground as
   already covered) or start fresh (delete the marker, begin PHASE 2 from the
-  top for this target). Wait for an explicit answer; do not guess.
+  top for this target). Wait for an explicit answer; do not guess. Gate
+  class: `design`.
 
 This check is independent of the `FEATURES.md`-entry check above: the
 marker tracks this skill's own conversational progress, not the feature's
@@ -229,7 +243,7 @@ existing target feature:
    both the task and the feature.
 3. **Any other non-`[DONE]` task → ask.** List them with statuses and
    titles, state that re-architecting may invalidate them, and offer stop or
-   proceed.
+   proceed. Gate class: `design`.
 4. **On proceed** — flip every non-`[DONE]` task to `[STALE]` in
    `.claude/TASKS.md` and set the feature's status to `[ITERATED]` (from
    `[PLANNED]` or `[DONE]`).
@@ -261,6 +275,10 @@ PHASE 1 — CLARIFY (skipped when everything is clear)
 Ask only what you cannot resolve from the design documents and the codebase.
 Cap it at a handful of focused questions, each with the answer you'd pick and
 why, so the user can confirm in a word.
+
+Under `unattended` these are real decisions
+(`../interaction-engine/references/gates.md` § *Real decisions*): the run
+stops with all of them asked together.
 
 If there are no open questions, say so in one line — "The feature is
 unambiguous as described; no questions." — and go straight to PHASE 2. Do
@@ -308,7 +326,7 @@ Then:
 4. Identify the seams: where does this feature end and the next begin? A
    high-level feature that will not fit in one document is where the
    low-level split comes from. Propose the split and let the user confirm
-   it. Where the split could defensibly fall in more than one place and the
+   it — gate class `design`. Where the split could defensibly fall in more than one place and the
    choice would shape every task generated from it, `./council-gate.md`
    applies here too.
 5. Name the dependencies on other features, and the open questions you could
@@ -338,7 +356,7 @@ it carries none of `FEATURES.md`'s or `TASKS.md`'s status vocabulary
 with either.
 
 The user confirms the architecture before PHASE 3 writes the feature
-document(s) themselves.
+document(s) themselves. Gate class: `design`.
 
 ---
 

@@ -1,8 +1,9 @@
 ---
 name: product-roadmap
-version: 0.4.1
+version: 0.5.0
 type: skill
 description: Write the product's roadmap into .claude/domain/product-roadmap.md — ordered milestones, each with a goal, exit criteria, rationale and the scope slices it takes from each high-level feature. Use it once the design exists, or from a bare description, and re-run it to revise; stage 2 of the pipeline: turns the design into ordered milestones; its output is /architect's input.
+requires: skill:interaction-engine
 ---
 
 # /product-roadmap
@@ -24,6 +25,7 @@ description: Write the product's roadmap into .claude/domain/product-roadmap.md 
 #        /product-roadmap amend "<change>"       (one pinned change to named milestone lines, no conversation)
 #        /product-roadmap --no-commit            (write the roadmap, run no git command)
 #        /product-roadmap --no-push              (commit the roadmap, skip the push)
+#        /product-roadmap <args> --attended | --unattended
 
 GOAL
 Produce an **ordered list of milestones**. Each one states the outcome it
@@ -52,6 +54,9 @@ SUPPORTING FILES (read on demand — not up front)
 
 | Read this file | Exactly when |
 | -------------- | ------------ |
+| `../interaction-engine/references/policy.md` | Every run, at ARGUMENT PARSING, to resolve the interaction policy. |
+| `../interaction-engine/references/messages.md` | Every run, before the first question, gate or closing report — every one of them follows it. |
+| `../interaction-engine/references/gates.md` | The policy resolved to `unattended`. |
 | `./amend.md` | ARGUMENT PARSING recognised `amend "<change>"`. Read once the gate has passed; it carries the whole amend path and replaces every phase for the run. |
 
 A full run reads nothing but `SKILL.md`: it is one document with one schema,
@@ -72,6 +77,14 @@ stripped, and is a silent no-op naming the default. `--commit` and
 Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
 matters when COMMIT is true: it skips the pull at start, the pre-push
 re-sync and the push while still committing as always.
+
+Also scan for the optional `--attended` and `--unattended` flags and strip
+whichever appear. The run's interaction policy resolves from them, a policy
+handed down by a parent run and the project's `CLAUDE.md`, per
+`../interaction-engine/references/policy.md`, which holds their argument
+errors. Each gate carries its class tag
+(`../interaction-engine/references/gates.md`). This skill cannot park: a run
+that stops on what waits — the steer question included — writes nothing.
 
 Then check whether what remains opens with the literal token `amend`
 followed by a quoted change. If so, set AMEND = true: the change is the
@@ -256,7 +269,7 @@ task IDs, feature slugs and milestone slugs.
 
 The user confirms the roadmap — the milestone list, their order, and the
 slices — before PHASE 2 writes anything. This is the run's one approval
-gate.
+gate, gate class `design`.
 
 ---
 

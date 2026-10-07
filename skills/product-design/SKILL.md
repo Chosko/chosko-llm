@@ -1,8 +1,9 @@
 ---
 name: product-design
-version: 0.8.1
+version: 0.9.0
 type: skill
 description: Design a product from the ground up with the user, writing the product design, the technical direction and an optional business model under .claude/domain/, resumable across sessions. Use it on a greenfield or brownfield product before anything is architected; stage 1 of the pipeline: turns a product idea into design documents; its output is /architect's input.
+requires: skill:interaction-engine
 ---
 
 # /product-design
@@ -25,6 +26,7 @@ description: Design a product from the ground up with the user, writing the prod
 #        /product-design --no-push          (commit the documents, skip the push)
 #        /product-design <free-form context about the product>
 #        /product-design amend "<change>"   (one pinned change to a finished design's documents, no phases)
+#        /product-design <args> --attended | --unattended
 
 GOAL
 Produce the high-level design of a product: what it is, who it is for, how
@@ -60,6 +62,9 @@ SUPPORTING FILES (read on demand — not up front)
 
 | Read this file | Exactly when |
 | -------------- | ------------ |
+| `../interaction-engine/references/policy.md` | Every run, at ARGUMENT PARSING, to resolve the interaction policy. |
+| `../interaction-engine/references/messages.md` | Every run, before the first question, gate or closing report — every one of them follows it. |
+| `../interaction-engine/references/gates.md` | The policy resolved to `unattended`. |
 | `./document-templates.md` | PHASE 1, 3, 5, and 7, when stubbing or filling the documents. |
 | `./business-model.md` | The user opted into business modelling — read before the business-model questions in PHASE 2 and before writing `business-model.md` in PHASE 3. |
 | `./technical-direction.md` | Start of PHASE 6, and again before PHASE 7 writes `technical-direction.md`. |
@@ -87,6 +92,14 @@ appear, stop with:
 Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
 matters when COMMIT is true: it skips the pull at start, the pre-push
 re-sync and the push while still committing as always.
+
+Also scan for the optional `--attended` and `--unattended` flags and strip
+whichever appear. The run's interaction policy resolves from them, a policy
+handed down by a parent run and the project's `CLAUDE.md`, per
+`../interaction-engine/references/policy.md`, which holds their argument
+errors. Each gate carries its class tag (`../interaction-engine/references/gates.md`).
+This skill cannot park: when the run stops on what waits, it rewrites the
+stage marker first, so the next session resumes there.
 
 Then check whether the remaining text opens with the literal token `amend`
 followed by a quoted change. If so, set AMEND = true: the change is the
@@ -171,7 +184,8 @@ PHASE 1 — ORIENT + STUB
    - `.claude/domain/business-model.md` — ONLY if business modelling was
      requested in step 2.
 
-   Never overwrite an existing document without explicit confirmation. If
+   Never overwrite an existing document without explicit confirmation —
+   gate class `design`. If
    `product-design.md` already exists on a first run (hand-written, no
    `design-process.md` beside it), treat it as canonical brownfield input:
    read it, say you'll build on it, and extend it in place rather than
@@ -212,7 +226,7 @@ you've built — is this still the intent?", not "what do you want to build?".
 Name the features you found and ask what has drifted.
 
 Ask questions a few at a time and follow the thread the user pulls on. The
-**user decides when this phase is done** — ask, and keep going until they
+**user decides when this phase is done** (gate class `design`) — ask, and keep going until they
 say so. Never advance on your own.
 
 Before leaving the phase, rewrite the stage marker.
@@ -286,7 +300,8 @@ without waiting on the others' internals. When two candidates cannot be
 described independently, say so and propose either merging them or naming
 the seam between them.
 
-The user confirms when the set is complete. Ask; do not decide.
+The user confirms when the set is complete. Ask; do not decide. Gate class:
+`design`.
 
 Rewrite the stage marker before the phase ends.
 

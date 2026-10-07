@@ -22,7 +22,7 @@ writes. A change that reaches the whole plan is a full run's.
 - `--commit`, `--no-commit`, `--no-push` — unchanged in meaning; see
   *Committing*.
 - **A draft, optionally**, when a revision surface runs this arm: the plan
-  diff it drafted at plan time, in the shape of § 3. See § *The gate*.
+  diff it drafted at plan time, line by line. See § *The gate*.
 
 It reads `.claude/PLAN.md`; the `.claude/FEATURES.md` entries of the features
 the change names; the `## Dependencies` section of each of their `Doc:`
@@ -69,11 +69,16 @@ carried into the report.
 
 ## 3. The gate
 
-One message: the diff, line by line, before → after, with each validation
-warning beneath it. Then:
+Gate class: `confirmation` (`../interaction-engine/references/gates.md`).
+One message, per `../interaction-engine/references/messages.md`: what the
+diff moves and why, in plain words — which feature changes milestone, which
+dependency is added or dropped, which status changes — with each validation
+warning beneath it, the `PLAN.md` lines named last. A `show` reply prints the
+diff line by line, before → after, and asks again. Then:
 
 - **With no draft passed in** — wait for an explicit approval. Silence, an
-  unclear reply or EOF writes nothing.
+  unclear reply or EOF writes nothing. Under `unattended` the gate passes on
+  its own instead, and the report names the commit.
 - **With a draft passed in** — compare it with the diff § 2 produced from
   the same reads. When they match, write without waiting: the consumer's
   gate already approved this diff. When they differ, render the difference
@@ -88,7 +93,7 @@ not `TASKS.md`, not a feature document, not the roadmap.
 ## 5. Report
 
 ```
-Amended PLAN.md: <what moved — feature → milestone, edge added/dropped, status → value>[; warning: <unscheduled dependency>].
+Amended the plan — <what moved, in plain words: a feature to a milestone, a dependency added or dropped, a status changed>[; warning: <a dependency no milestone schedules, in words>] (PLAN.md: <the lines>).
 ```
 
 When `WRITTEN` is non-empty and the run committed nothing, end with an

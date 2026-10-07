@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.80.0 — 2026-10-07
+
+- **The authoring stages follow the interaction policy.** `/architect`, `/product-design`, `/product-roadmap`, `/production-plan` and `/domain-setup` accept `--attended` and `--unattended` and read `Interaction policy:` from `CLAUDE.md`. Under `unattended`, every `amend` gate passes on its own and names its commit, and `/production-plan`'s approval does too when a re-run found nothing to reconcile. Design conversations, the roadmap's approval, questions and `/product-design`'s discard still wait, and the run stops at them.
+- **Amend gates show a summary, not a diff.** Each says what changes and why in plain words, and `show` prints the before → after. `/architect`'s classification lines, its editorial question and every "Amended …" report lead with what happened, with slugs and sections last.
+
 ## 1.79.0 — 2026-10-07
 
 - **The runbook suite follows the interaction policy.** `/runbook-run`, `/runbook-create`, `/runbook-clean` and `/runbook-prune` accept `--attended` and `--unattended` and read `Interaction policy:` from `CLAUDE.md`; for `/runbook-run` a runbook's `Execution policy:` header still outranks the `CLAUDE.md` line, and a flag outranks both.

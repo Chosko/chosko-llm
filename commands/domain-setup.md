@@ -1,9 +1,10 @@
 ---
 name: domain-setup
-version: 0.2.5
+version: 0.3.0
 type: command
 description: Initialize the project's domain knowledge layer — creates .claude/domain/ with its features/ folder and INDEX.md, the .claude/FEATURES.md feature index, and a CLAUDE.md pointer to the domain index. Run it once before any other pipeline command; stage 0 of the pipeline: scaffolds the layer every later stage writes into.
 disable-model-invocation: true
+requires: skill:interaction-engine
 ---
 
 # /domain-setup
@@ -18,6 +19,7 @@ disable-model-invocation: true
 # Usage: /domain-setup                     (leaves the scaffolding uncommitted)
 # Usage: /domain-setup --commit            (commit and push the scaffolding this run wrote)
 # Usage: /domain-setup --commit --no-push  (commit locally, skip the push)
+# Usage: /domain-setup <any of the above> --attended | --unattended
 
 GOAL
 Make the domain layer structural. `.claude/domain/` holds the project's
@@ -69,6 +71,16 @@ Before anything else, parse $ARGUMENTS for the optional `--commit` flag.
 If present, set COMMIT = true. When COMMIT is false (the default), the run
 leaves its scaffolding uncommitted.
 
+Also parse the optional `--attended` and `--unattended` flags and strip
+whichever appear. The run's interaction policy resolves from them, a policy
+handed down by a parent run and the project's `CLAUDE.md`, per
+`../skills/interaction-engine/references/policy.md`, which holds their
+argument errors; under `unattended`, read
+`../skills/interaction-engine/references/gates.md`. Read
+`../skills/interaction-engine/references/messages.md` before the first
+question and before the step 4 report, which follows its output rules. This
+command cannot park: under `unattended` a gate that waits stops the run.
+
 Also parse the optional `--no-push` flag; if present, set NO_PUSH = true.
 NO_PUSH only matters when COMMIT is true: it skips the pull at start, the
 pre-push re-sync and the push while still committing as always. If COMMIT is
@@ -78,7 +90,8 @@ artifact is checked. A conflict stops the run here — report the conflict
 output and tell the user to resolve manually and re-run.
 
 Each artifact is checked individually and created only if missing. Never
-overwrite an existing artifact without explicit user confirmation —
+overwrite an existing artifact without explicit user confirmation (gate
+class: `design`) —
 re-running `/domain-setup` on a partially or fully initialized project must
 be idempotent.
 

@@ -1,8 +1,9 @@
 ---
 name: production-plan
-version: 0.3.0
+version: 0.4.0
 type: skill
 description: Write the production plan into .claude/PLAN.md — which low-level feature belongs to which milestone, in what order and after what — confirming each feature's dependency edges with the user. Use it once features are architected and before their tasks are written; stage 4 of the pipeline: sequences feature documents into a plan; its output is what /production-status reads.
+requires: skill:interaction-engine
 ---
 
 # /production-plan
@@ -25,6 +26,7 @@ description: Write the production plan into .claude/PLAN.md — which low-level 
 #        /production-plan amend "<change>"       (reconcile only the features, edges or milestones the change names)
 #        /production-plan --no-commit            (write the plan, run no git command)
 #        /production-plan --no-push              (commit the plan, skip the push)
+#        /production-plan <args> --attended | --unattended
 
 GOAL
 Produce **one ordered plan**. Every architected feature is placed in a
@@ -53,6 +55,9 @@ SUPPORTING FILES (read on demand — not up front)
 
 | Read this file | Exactly when |
 | -------------- | ------------ |
+| `../interaction-engine/references/policy.md` | Every run, at ARGUMENT PARSING, to resolve the interaction policy. |
+| `../interaction-engine/references/messages.md` | Every run, before the first question, gate or closing report — every one of them follows it. |
+| `../interaction-engine/references/gates.md` | The policy resolved to `unattended`. |
 | `./reconciling.md` | PHASE 0 finds `.claude/PLAN.md` already exists. Read before PHASE 1 — it carries the five-situation re-run protocol. |
 | `./amend.md` | ARGUMENT PARSING recognised `amend "<change>"`. Read once PHASE 0's gate has passed; it carries the whole amend path — a reconciliation narrowed to what the change names — and replaces every phase for the run. |
 
@@ -75,6 +80,15 @@ stripped, and is a silent no-op naming the default. `--commit` and
 Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
 matters when COMMIT is true: it skips the pull-at-start / re-sync / push
 steps of the commit-and-push protocol while still committing as always.
+
+Also scan for the optional `--attended` and `--unattended` flags and strip
+whichever appear. The run's interaction policy resolves from them, a policy
+handed down by a parent run and the project's `CLAUDE.md`, per
+`../interaction-engine/references/policy.md`, which holds their argument
+errors. Each gate carries its class tag
+(`../interaction-engine/references/gates.md`). This skill cannot park: a run
+that stops on what waits — an edge to confirm, a milestone-status question
+included — writes nothing.
 
 Then check whether what remains opens with the literal token `amend`
 followed by a quoted change. If so, set AMEND = true: the change is the
@@ -298,8 +312,13 @@ one place and get the user's confirmation:
 - Every status change proposed, `[SHIPPED]` proposals foremost.
 - On a reconciliation, everything `./reconciling.md` turned up.
 
+A `show` reply prints `PLAN.md` as it would be written and asks again.
+
 **This is the run's one and only approval gate.** Do not gate anything
-earlier and do not add a second gate before the write.
+earlier and do not add a second gate before the write. Gate class:
+`confirmation` when the run is a reconciliation and `./reconciling.md`
+turned up nothing — under `unattended` it then passes on its own and the
+closing report names the commit; `design` otherwise.
 
 ---
 
