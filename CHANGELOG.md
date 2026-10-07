@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.93.0 — 2026-10-07
+
+- **`/pipeline-check` reports leftover specs.** A spec file still under `.claude/specs/` means the documentation has not caught up with a change `/quick-implement` landed. Each one is now a warning that names the `/pipeline-revise --catch-up` run that fixes it. The pipeline verdict line gains a `specs=` count.
+
 ## 1.92.0 — 2026-10-07
 
 - **New `/pipeline-revise --catch-up` mode.** Brings the documentation up to date with code that has already landed, from a `/quick-implement` spec or a description of the change. Wording the code already settled is amended without marking any task stale. Where the code breaks the documented design, you are asked whether to accept the code or keep the design and add a task. The run's commit deletes the spec, and it ends with `/context-update` when the change touched files the context layer describes.

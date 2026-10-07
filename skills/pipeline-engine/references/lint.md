@@ -33,6 +33,10 @@ anything else in the body. Parking leaves state an index cannot summarise —
 a handoff lives in a body, `[P]` on a step heading — so a finding about it
 must look there; no other finding does.
 
+**L14 lists `.claude/specs/` and reads no spec.** A spec file has no index
+line: its presence is the whole fact, so the finding lists the directory's
+`*.md` files and opens none of them.
+
 **No rule probes `.claude/tasks/archive/`, opens an archived file, or reports
 on its contents.** The prohibition is stated once, here, and holds for the
 whole catalogue and for any finding ever added to it: an archived task is
@@ -67,8 +71,9 @@ The message says what is wrong and why it matters, with no identifier in
 it, per the plain-language rule of
 `../../interaction-engine/references/messages.md` § *Questions*.
 `<artifact>` is the index whose line the fix changes: `FEATURES.md`,
-`PLAN.md`, `TASKS.md` or `RUNBOOKS.md`. `<identifier>` is `task <N>`,
-`feature <slug>`, `runbook <id>. <name>`, or `header` for a line outside any
+`PLAN.md`, `TASKS.md` or `RUNBOOKS.md` — or `.claude/specs/` for L14, whose
+fix removes a file rather than changing a line. `<identifier>` is `task <N>`,
+`feature <slug>`, `runbook <id>. <name>`, `spec <file>`, or `header` for a line outside any
 block. Each finding below carries its own template; the fix is printed
 verbatim.
 
@@ -76,7 +81,7 @@ verbatim.
 
 ## The catalogue
 
-Thirteen findings, and no others. The catalogue is closed: adding a finding
+Fourteen findings, and no others. The catalogue is closed: adding a finding
 is an edit to this file, so every consumer gains it at once and none can
 disagree about whether it exists.
 
@@ -268,6 +273,24 @@ ERROR   A parked task has lost the question it waits on (TASKS.md task <N>, [PAR
 WARNING A runbook's list of parked steps disagrees with its body (RUNBOOKS.md runbook <id>. <name>, Parked: <ids | absent>, body [P] on <ids | none>) → /runbook-run <id>
 ```
 
+### L14 — a spec file still under `.claude/specs/` · WARNING
+
+- **Walks.** No edge: a directory listing of `.claude/specs/*.md` — the one
+  finding that lists a directory, § *What no rule reads*.
+- **Needs.** `.claude/specs/`; the probe's `specs` count says whether it
+  holds any.
+- **Fires when** a `*.md` file sits directly under `.claude/specs/`. One
+  finding per file. `/quick-implement` commits a spec beside the change it
+  describes, and only `/pipeline-revise --catch-up`, the run that brings the
+  documentation up to date, deletes it — so a spec still present means the
+  documentation still lags code that has landed. `WARNING` because nothing is
+  misdirected: the code is right and the spec records what it decided; the
+  documentation has a catch-up to take.
+
+```
+WARNING A change landed but the documentation has not caught up with it yet (.claude/specs/ spec <file>) → /pipeline-revise --catch-up .claude/specs/<file>
+```
+
 ---
 
 ## Two deliberate absences
@@ -296,7 +319,8 @@ index-only version possible; until it does, the finding stays out.
 ## Failure rules
 
 **An absent index drops its findings.** A finding whose **Needs** names an
-index the project does not have is not evaluated and not reported — dropped
+index — or, for L14, a directory — the project does not have is not
+evaluated and not reported — dropped
 from the run, never an error. A project with no `PLAN.md` has no plan
 findings; that is not drift. An absent **body**, by contrast, is what L12 and
 L13 exist to see: a `[PARKED]` task with no body is L12, and a non-`[DONE]`

@@ -28,7 +28,7 @@ all trade the one definition for a saving that does not exist.
 
 ## The probe set
 
-Eight probes, fixed. Each is a cheap filesystem check run from the project
+Nine probes, fixed. Each is a cheap filesystem check run from the project
 root, with the result shape the verdict line prints.
 
 | Field | Checks | Result |
@@ -40,6 +40,7 @@ root, with the result shape the verdict line prints.
 | `runbooks` | `.claude/RUNBOOKS.md` exists. | `yes` \| `no` |
 | `council` | `skills/claude-council/SKILL.md` exists under either install home (see below) — the same question the council gates of `/architect` and `/product-design` ask, though they ask it by name rather than by path. | `yes` \| `no` |
 | `testing` | The project's `CLAUDE.md` carries a line `Testing policy for /task-implement: <value>`, and its value. The marker and its values are `task-engine`'s testing-policy resolution's; the probe reads the value and interprets nothing. | the value, or `none` |
+| `specs` | How many `*.md` files sit directly under `.claude/specs/` — the spec files `/quick-implement` leaves for `/pipeline-revise --catch-up`. A directory listing; no spec is read. | the count, `0` when the directory is absent |
 | `installed` | Which pipeline features are installed under either install home — each feature a row of `routing.md` names, found as `commands/<name>.md` or `skills/<name>/SKILL.md`, either kind. Row names are unioned across both homes. | `<found>/<rows>`, plus ` (missing: <name>, …)` when any is absent; `unknown` when neither home has a `routing.md` |
 
 `sliced` follows `/architect`'s own reading of a roadmap: a roadmap with no
@@ -111,6 +112,8 @@ runbooks=$(yn .claude/RUNBOOKS.md)
 council=no; have skills/claude-council/SKILL.md && council=yes
 testing=$(sed -n 's/^Testing policy for \/task-implement: *\([a-z-][a-z-]*\).*$/\1/p' CLAUDE.md 2>/dev/null | head -n 1)
 [ -n "$testing" ] || testing=none
+specs=0
+for f in .claude/specs/*.md; do [ -f "$f" ] && specs=$((specs + 1)); done
 # Row names are UNIONED across both homes, never taken from whichever is found
 # first: the two copies can differ, and a row missing from one would otherwise
 # drop out of the count and out of `missing:` alike — invisibly.
@@ -129,7 +132,7 @@ if [ -n "$row_names" ]; then
 else
   installed=unknown   # no routing.md in either home — not the same as 0/0
 fi
-echo "Pipeline: features=$features backlog=$backlog roadmap=$roadmap plan=$plan runbooks=$runbooks council=$council testing=$testing installed=$installed"
+echo "Pipeline: features=$features backlog=$backlog roadmap=$roadmap plan=$plan runbooks=$runbooks council=$council testing=$testing specs=$specs installed=$installed"
 ```
 
 The feature names come from `routing.md`'s rows, read by the row shape that
@@ -140,19 +143,19 @@ file states, so the list of pipeline features is written once — in the table.
 The probe prints exactly one line:
 
 ```
-Pipeline: features=<yes|no> backlog=<yes|partial|no> roadmap=<none|unsliced|sliced> plan=<yes|no> runbooks=<yes|no> council=<yes|no> testing=<value|none> installed=<found>/<rows>[ (missing: <name>, <name>)]|unknown
+Pipeline: features=<yes|no> backlog=<yes|partial|no> roadmap=<none|unsliced|sliced> plan=<yes|no> runbooks=<yes|no> council=<yes|no> testing=<value|none> specs=<count> installed=<found>/<rows>[ (missing: <name>, <name>)]|unknown
 ```
 
 Worked examples:
 
 ```
-Pipeline: features=yes backlog=yes roadmap=none plan=no runbooks=yes council=yes testing=skip-tests-unattended installed=24/24
-Pipeline: features=no backlog=partial roadmap=none plan=no runbooks=no council=no testing=none installed=22/24 (missing: pipeline-check, runbook-suggest)
-Pipeline: features=no backlog=no roadmap=none plan=no runbooks=no council=no testing=none installed=unknown
+Pipeline: features=yes backlog=yes roadmap=none plan=no runbooks=yes council=yes testing=skip-tests-unattended specs=1 installed=24/24
+Pipeline: features=no backlog=partial roadmap=none plan=no runbooks=no council=no testing=none specs=0 installed=22/24 (missing: pipeline-check, runbook-suggest)
+Pipeline: features=no backlog=no roadmap=none plan=no runbooks=no council=no testing=none specs=0 installed=unknown
 ```
 
 Every consumer prints it **identically**: the literal `Pipeline:` prefix, all
-eight fields, in that order, with those spellings — no per-consumer wording,
+nine fields, in that order, with those spellings — no per-consumer wording,
 no subset, no reordering, no added field. The probe's own output is the line,
 so it lands in the conversation as printed; a consumer that also shows the
 verdict in its report shows that line verbatim.
@@ -171,6 +174,7 @@ was printed. Each can change a probed fact:
 | `/product-roadmap` | `roadmap` |
 | `/production-plan` | `plan` |
 | `/runbook-create` | `runbooks` |
+| `/quick-implement`, `/pipeline-revise --catch-up` | `specs` |
 | `chosko-llm add`, `chosko-llm rm`, `chosko-llm update` | `council`, `installed` |
 | any edit to `CLAUDE.md` | `testing` |
 | a change of working directory | `council`, `installed` |

@@ -730,7 +730,7 @@ Feature: quick-implement
 ---
 
 ## 304. Probe `.claude/specs/` and report a leftover spec in `/pipeline-check`
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/pipeline-engine/references/probes.md, skills/pipeline-engine/references/lint.md, commands/pipeline-check.md, VERSION, CHANGELOG.md
 Preconditions: 285, 302, 303

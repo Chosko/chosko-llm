@@ -1,6 +1,6 @@
 ---
 name: pipeline-check
-version: 0.2.0
+version: 0.3.0
 type: command
 description: Report structural drift across the pipeline's indexes — FEATURES.md, TASKS.md, PLAN.md and RUNBOOKS.md — as findings grouped by artifact, each with its severity and the one command that fixes it. Use it when an index looks out of step with another, or before revising planned work.
 requires: skill:pipeline-engine, skill:interaction-engine
@@ -15,7 +15,8 @@ requires: skill:pipeline-engine, skill:interaction-engine
 # writes nothing, creates nothing, commits nothing, flips no status, never
 # opens a file under `.claude/tasks/archive/` or `.claude/domain/features/`,
 # opens a task body or a runbook body only where the two parking findings
-# need one, and runs no shell beyond the probe.
+# need one, lists `.claude/specs/` without opening a spec, and runs no shell
+# beyond the probe.
 # Usage: /pipeline-check
 #        /pipeline-check feature=<slug>      (scope to that feature and the tasks and plan edges naming it)
 #        /pipeline-check <args> --attended | --unattended   (accepted; this command has no gate)
@@ -84,6 +85,8 @@ WORKFLOW
    reads* names for L12 and L13 — each `[PARKED]` task's, each
    non-`[DONE]` runbook's — read in step 5, when those findings are
    evaluated, and only for the heading or the markers the finding checks.
+   When the probe's `specs` count is above `0`, list `.claude/specs/*.md`
+   with the Glob tool for L14 — a listing, never a read of a spec.
 
 3. **Stop only on a project with no index.** When step 2 read none of
    `.claude/FEATURES.md`, `.claude/TASKS.md`, `.claude/PLAN.md` and
@@ -110,7 +113,8 @@ WORKFLOW
    L12 on a parked one; and the plan lines that name the slug (L9). No
    runbook finding is in scope: `RUNBOOKS.md` ties no runbook to a slug
    (`graph.md` E7), and this command opens no runbook body to find one — L13
-   reads a body for its markers, never for its prompt blocks.
+   reads a body for its markers, never for its prompt blocks. L14 is not in
+   scope either: a spec carries no `Feature:` line to tie it to a slug.
 
 ---
 
@@ -128,8 +132,8 @@ is printed: no verdict echo, no empty group, no count of zero.
 **Otherwise**, print inside one fenced code block, so the lines stay literal:
 
 - the findings, grouped under their artifact's name, the groups in this fixed
-  order — `FEATURES.md`, `PLAN.md`, `TASKS.md`, `RUNBOOKS.md` — with an empty
-  group omitted;
+  order — `FEATURES.md`, `PLAN.md`, `TASKS.md`, `RUNBOOKS.md`,
+  `.claude/specs/` — with an empty group omitted;
 - within a group, in catalogue order, then in the order the offending line
   appears in its index;
 - each finding rendered from its `lint.md` output template exactly, its fix
@@ -160,7 +164,8 @@ status. It opens no file under `.claude/tasks/archive/` and none under
 `.claude/domain/features/`. Under `.claude/tasks/` and `.claude/runbooks/` it
 opens exactly the bodies `lint.md` § *What no rule reads* names for L12 and
 L13, and reads nothing else in them — never a prompt block, never a
-handoff's question. It runs no shell command beyond the probe.
+handoff's question. It lists `.claude/specs/` for L14 and opens no spec. It
+runs no shell command beyond the probe.
 
 It runs when the user invokes it, and at no other time.
 
