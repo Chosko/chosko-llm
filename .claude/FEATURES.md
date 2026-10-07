@@ -193,7 +193,7 @@ Tasks: 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 275, 276
 
 ## interaction-policy — One opt-in policy for gates, gate summaries, reports and questions across every interactive feature
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/interaction-policy.md
 Source: prompt
 Tasks: 281, 282, 283, 284, 285, 286, 287
@@ -202,7 +202,7 @@ Tasks: 281, 282, 283, 284, 285, 286, 287
 
 ## unity-mcp-removal — Delete the Unity MCP integration; keep its generic checkpoint behaviour in the human-in-the-loop protocol
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/unity-mcp-removal.md
 Source: product-design.md § Unity/MCP integration
 Tasks: 288, 289, 290
@@ -211,7 +211,7 @@ Tasks: 288, 289, 290
 
 ## setup-sync — Setup commands offer every per-project fact a feature reads, guarded by `project-policy:` and `check-setup.sh`
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/setup-sync.md
 Source: prompt
 Tasks: 291, 292, 293, 294
@@ -220,7 +220,7 @@ Tasks: 291, 292, 293, 294
 
 ## session-readers — `/session-list` and `/session-describe`, and path/date/slug resolution for every session command
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/session-readers.md
 Source: prompt
 Tasks: 295, 296, 297, 298
@@ -229,7 +229,7 @@ Tasks: 295, 296, 297, 298
 
 ## quick-implement — `/quick-implement`: spec conversation to one commit, no backlog entry, docs caught up by `/pipeline-revise --catch-up`
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/quick-implement.md
 Source: prompt
 Tasks: 299, 300, 301, 302, 303, 304, 305
@@ -238,7 +238,7 @@ Tasks: 299, 300, 301, 302, 303, 304, 305
 
 ## orchestrate-mode — `/orchestrate-mode`: a conversation that delegates every change to per-area agents with handoff files
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/orchestrate-mode.md
 Source: prompt
 Tasks: 306, 307, 308, 309
@@ -247,7 +247,7 @@ Tasks: 306, 307, 308, 309
 
 ## objective-run — `/objective-run`: worker and checker rounds toward checkable criteria, with a committed, resumable log
 
-Status: [PLANNED]
+Status: [DONE]
 Doc: .claude/domain/features/objective-run.md
 Source: prompt
 Tasks: 310, 311
