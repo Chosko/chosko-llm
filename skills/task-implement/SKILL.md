@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.11.0
+version: 1.12.0
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, skill:interaction-engine, command:follow-ups
@@ -19,8 +19,8 @@ requires: skill:task-engine, skill:interaction-engine, command:follow-ups
 # `[DONE]` or `[SKIP]`, and skip `[STALE]` tasks; a task named by number is
 # never blocked, and a `[STALE]` one is warned about first. Target
 # `claude+human` pauses at declared Manual interventions checkpoints, target
-# `human` runs as a guided walkthrough; on a Unity project with the MCP
-# plugin connected those checkpoints can be driven in the editor. On 2+
+# `human` runs as a guided walkthrough; a checkpoint a connected tool can
+# perform can be driven through that tool. On 2+
 # tasks offers one fresh subagent per task, sequentially. Under `--review`
 # each task is reviewed by `/task-review` in a subagent and corrected by
 # `/task-iterate` before its single commit; unresolved `BLOCKING` findings
@@ -130,7 +130,6 @@ Everything else below is loaded only when its branch actually applies.
 | `./test-runner.md`   | Neither CLAUDE.md/README/`.claude/` nor a testing-policy marker names the test command, so you must infer it. |
 | `./no-test-suite.md` | The project has no test suite at all, OR CLAUDE.md declares `Testing policy for /task-implement: skip-tests`. |
 | `./human-in-loop.md` | The current task's `Target:` is `claude+human` or `human`. |
-| `./unity-mcp-checkpoints.md` | A `claude+human`/`human` task where CLAUDE.md carries the `Unity MCP for /task-implement:` marker AND the `mcp__UnityMCP__*` tools are present this session (read after `./human-in-loop.md`, per its gate). |
 | `./body-schemas.md`  | The task body does NOT match the current schema (Goal / Acceptance criteria / Decisions / Hints). |
 | `./delegated-runs.md` | DELEGATE is true — the resolved list holds 2+ tasks and the user opted into per-task subagents (or passed `--agents`). Never on a single-task run, nor when the user declined. |
 | `./review-rounds.md` | REVIEW is true — the run was invoked with `--review`. Read once, after ARGUMENT PARSING and before the first task. Never on a run without the flag. |
@@ -595,10 +594,7 @@ running a `human` task as a guided walkthrough — are
 `../task-engine/references/targets.md`
 § *At implementation time*. If the target is `claude+human` or `human`,
 read `./human-in-loop.md` now and follow it for the rest of this task; it
-carries a gate that decides whether the manual checkpoints can be driven
-through Unity MCP (reading `./unity-mcp-checkpoints.md` only when
-eligible) — do not check for MCP yourself here; let that file's gate
-handle it.
+decides whether a tool connected this session drives a checkpoint.
 
 Apply the body schema guidance from USING THE TASK BODY above, and
 DOCUMENTATION-ONLY TASKS to set DOC_ONLY for this task.

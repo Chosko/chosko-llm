@@ -576,7 +576,7 @@ Feature: interaction-policy
 
 ## 288. Move `/task-implement`'s checkpoint automation out of Unity MCP into a tool-agnostic human-in-the-loop passage
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-implement/human-in-loop.md, skills/task-implement/SKILL.md, skills/task-implement/unity-mcp-checkpoints.md, skills/task-engine/references/targets.md, VERSION, CHANGELOG.md
 Preconditions: 282

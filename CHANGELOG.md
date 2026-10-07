@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.83.0 — 2026-10-07
+
+- **Manual checkpoints can be driven by any connected tool.** On a `claude+human` or `human` task, when a tool connected to the session can perform a checkpoint's manual step, `/task-implement` asks once per task whether it does the step (you verify) or you do (it verifies). It no longer reads the `Unity MCP for /task-implement:` line in `CLAUDE.md`; Unity's official MCP works through the same path.
+
 ## 1.82.0 — 2026-10-07
 
 - **The rest of the interactive features follow the interaction policy.** `/context-build`, `/context-update`, `/context-convert`, `/refactor-codebase`, `/refactor-tests`, `/doc-consolidate`, `/project-setup`, `/session-save` and `/follow-ups-resolve` accept `--attended` and `--unattended`, and read `Interaction policy:` from `CLAUDE.md`.
