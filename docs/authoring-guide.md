@@ -29,9 +29,10 @@ section for the one-line pointer back to this note.
 
 Every feature file starts with a YAML frontmatter block. All four fields below
 are required on every kind; hooks add `event:` (see the `replaces:` section for
-that table). Two further keys are optional on every kind: `replaces:`, for a
-feature that changes kind, and `requires:`, for a feature that reads a file
-inside another one. Each has its own section below. For the two `.sh` kinds the
+that table). Three further keys are optional on every kind: `replaces:`, for a
+feature that changes kind, `requires:`, for a feature that reads a file
+inside another one, and `project-policy:`, for a feature that states the rule
+for a per-project fact. Each has its own section below. For the two `.sh` kinds the
 block lives in a bash no-op heredoc rather than at the top of the file — see the
 statusline and hook sections.
 
@@ -145,7 +146,8 @@ invokes and for a wizard the user always starts by hand: the feature stays
 listed and typeable, and its description stops costing every session.
 
 `scripts/lib.sh`'s `parse_frontmatter` reads a fixed list of keys (`name`,
-`version`, `type`, `description`, `replaces`, `requires`, `event`, `matcher`)
+`version`, `type`, `description`, `replaces`, `requires`, `event`, `matcher`,
+`project-policy`)
 and quietly ignores every other key, so unknown keys — these three,
 `allowed-tools`, anything Claude Code adds later — pass through `chosko-llm
 add` / `update` untouched and are never a rejection path.
@@ -311,6 +313,26 @@ installed at all; see [§ Asking whether a feature is
 installed](#asking-whether-a-feature-is-installed).
 `scripts/check-home-paths.sh` is the guard — see [§ The home-path
 guard](#the-home-path-guard) below.
+
+### <a id="project-policy"></a>`project-policy:` — the per-project facts a feature rules on
+
+A feature that **states the rule** for a per-project fact — a `CLAUDE.md` line
+and its values, a claude-md section it needs, a git operation a `## VCS`
+mapping must translate — declares it, so the setup commands can be checked
+against it. Only the feature holding the rule declares; a feature that merely
+consumes the fact does not. The value is a comma-separated list of specs, each
+`<kind>:<value>`:
+
+| Spec | Declares | Example |
+| --- | --- | --- |
+| `line:<marker>=<v1>\|<v2>\|…` | a `CLAUDE.md` line, the marker text without its trailing colon, and its allowed values | `line:Interaction policy=attended\|unattended` |
+| `section:<claude-md feature>` | a claude-md section the feature reads or requires | `section:editing-discipline` |
+| `vcs:<op>` | a git operation the feature's own body runs, which a `## VCS` mapping must translate | `vcs:mv` |
+
+`git push` and `git pull` are not declared: the `## VCS` template handles them
+in prose, not rows. No CLI verb acts on the key — `parse_frontmatter` returns
+it for `scripts/check-setup.sh` alone, and a feature carrying it installs
+exactly as before. The guard is [§ The setup guard](#the-setup-guard).
 
 ## <a id="commands"></a>Authoring a command
 
@@ -889,7 +911,7 @@ subcommand.
 
 ## <a id="the-routing-guard"></a>The routing guard
 
-`check-changelog.sh` has two sibling authoring-time guards. The first is
+`check-changelog.sh` has three sibling authoring-time guards. The first is
 `scripts/check-routing.sh`. It keeps the pipeline routing table,
 `skills/pipeline-engine/references/routing.md` (the ownership authority the
 pipeline's revision features read), honest about existence. Run it whenever
@@ -972,7 +994,41 @@ both scopes; its own file carries the rule.
 
 The guard proves absence of that one shape and nothing more. Whether a
 relative citation resolves, and whether the probe's shell looks in the right
-scopes, are a reviewer's read. Like the other two it is repo-local: not a
+scopes, are a reviewer's read. Like the others it is repo-local: not a
+feature, no frontmatter, not a subcommand, installed nowhere.
+
+## <a id="the-setup-guard"></a>The setup guard
+
+The third sibling guard is `scripts/check-setup.sh`. It keeps the setup
+commands — `/project-setup`, `/task-setup` and `/domain-setup` — offering every
+per-project fact a shipped feature declares in
+[`project-policy:`](#project-policy). Run it whenever you add or change a
+`project-policy:` declaration, add a claude-md or hook feature, or edit a setup
+command:
+
+```sh
+./scripts/check-setup.sh
+```
+
+It takes no arguments, reads only the frontmatter of the shipped features and
+the three setup bodies, writes nothing, and exits 0 **in silence** when setup
+is in step. Otherwise it exits non-zero, one line per violation, each naming
+the file:
+
+1. A spec is malformed — no `kind:` prefix, an unknown kind, or a `line:` with
+   no `=`.
+2. A `line:` marker, or any one of its values, appears in none of the three
+   setup bodies.
+3. A `vcs:` op has no `` - `git <op>`` row in `/project-setup`'s `## VCS`
+   template.
+4. A `section:` names no shipped claude-md feature, or `/project-setup` does
+   not name it.
+5. A shipped claude-md or hook feature is not named by `/project-setup`,
+   whether or not anything declares it.
+
+It proves presence by text and nothing more: whether setup explains a fact
+well or writes it in the right place, and whether a feature that reads a fact
+declares it, are a reviewer's read. Like the others it is repo-local: not a
 feature, no frontmatter, not a subcommand, installed nowhere.
 
 ## Commit-and-push convention

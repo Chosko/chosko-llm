@@ -14,7 +14,13 @@ Covers the task suite's backlog-maintenance features: `task-setup`,
   Nothing in the `task-*` suite invokes them; `/task-implement`
   resolves its own test command and never reads them. No-test-suite
   projects get no-op stubs carrying the `# CHOSKO_TASK_IMPL_STUB`
-  sentinel, which is what marks a wrapper as a stub on a re-run.
+  sentinel, which is what marks a wrapper as a stub on a re-run, after it
+  asks `skip-tests` or `skip-tests-unattended` and writes
+  `Testing policy for /task-implement: <value>` into a
+  `## Tasks implementation` section of `CLAUDE.md`. Carries no copy of the
+  index or body formats — cites `task-engine`'s `resolution.md` § Index
+  file format and `/task-add`'s body format relatively, declaring
+  `requires: skill:task-engine, command:task-add`.
   Required before `/task-add`. Idempotent — re-runs only fill missing
   artifacts, never overwrite a non-stub wrapper. **Authoring command —
   leaves scaffolding uncommitted for user review by default;

@@ -18,6 +18,7 @@ type: command | skill | claude-md | statusline | hook
 description: <one line>
 replaces: command:<name>     # OPTIONAL, only on a kind change; see below
 requires: skill:<name>       # OPTIONAL, any kind; comma-separated; see below
+project-policy: vcs:<op>     # OPTIONAL, any kind; comma-separated; see below
 event: PreToolUse            # hook kind ONLY; required there
 matcher: AskUserQuestion     # hook kind ONLY; optional, narrows event to one tool
 disable-model-invocation: true   # OPTIONAL loading-control key; see below
@@ -62,7 +63,7 @@ examples: `skills/context-build/SKILL.md`, `skills/context-update/SKILL.md` and
 `skills/task-clean/SKILL.md`.
 Drop the key once the migration has propagated.
 
-`requires:` is the other optional key, valid on every kind: a comma-separated
+`requires:` is another optional key, valid on every kind: a comma-separated
 list of kind-prefixed specs naming features whose files this one reads at run
 time. Install and removal semantics: [shared-lib-requires.md](./shared-lib-requires.md) §
 Public API › Dependencies (`requires:`); the `--force` override:
@@ -73,6 +74,22 @@ and `commands/pipeline-check.md`, declaring `requires: skill:pipeline-engine`.
 `skills/pipeline-revise/SKILL.md` declares seven at once.
 Unlike `replaces:`, it is permanent — the dependency does not "propagate" and
 the key is dropped only when the reference is.
+
+`project-policy:` is the third optional key, valid on every kind and carried
+only by the feature that **states the rule** for a per-project fact: a
+comma-separated list of `line:<marker>=<v1>|<v2>` (a `CLAUDE.md` line and its
+values), `section:<claude-md feature>` and `vcs:<op>` (a git operation a
+`## VCS` mapping must translate) specs. No CLI verb acts on it. Declared by
+`skills/interaction-engine/` (the interaction-policy line),
+`skills/task-implement/` (the testing-policy line), `skills/doc-consolidate/`
+(`section:editing-discipline`), and for `vcs:` ops by `skills/task-engine/`
+(the commit and tree protocol's ops plus its own), `skills/task-clean/`,
+`skills/context-convert/`, `commands/session-save.md`, `skills/task-review/`
+and `skills/task-iterate/`. `scripts/check-setup.sh` is its guard —
+repo-local, silent on success, one line per violation: a malformed spec, a
+declared fact the three setup commands do not offer, or a shipped claude-md or
+hook feature `/project-setup` does not name
+(`../../docs/authoring-guide.md` § The setup guard).
 
 See `../../docs/authoring-guide.md` for canonical spec, including
 semver bump rules, commit-control convention, three places task

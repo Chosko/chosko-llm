@@ -16,13 +16,15 @@ would be a copy that drifts. It scans each file to the end rather than
 and clears `in_fm` there, so in both modes only the first `--- ... ---` block
 is read.
 - `parse_frontmatter <file>` — `mode=print`. Emits `key=value` lines, in file
-  order, for eight recognized keys: `name`, `version`, `type`, `description`,
-  `replaces`, `requires`, `event`, `matcher`. Quotes stripped. Unknown keys
+  order, for nine recognized keys: `name`, `version`, `type`, `description`,
+  `replaces`, `requires`, `event`, `matcher`, `project-policy`. Quotes stripped. Unknown keys
   silently dropped. First four required in practice; `replaces` optional (kind
   migration, [shared-lib-migration.md](./shared-lib-migration.md) § Public API › Kind
   migration), `requires` optional on every kind (dependencies,
   [shared-lib-requires.md](./shared-lib-requires.md) § Public API › Dependencies),
-  `event`/`matcher` read for hook kind only and ignored elsewhere. Split is on
+  `event`/`matcher` read for hook kind only and ignored elsewhere,
+  `project-policy` optional and read only by `scripts/check-setup.sh`
+  ([feature-contract.md](./feature-contract.md)). Split is on
   the FIRST colon, so a kind-prefixed value like `skill:task-engine` survives
   it intact.
 - `read_frontmatter_field <file> <field>` — prints one field's value, empty if absent.

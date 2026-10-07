@@ -636,7 +636,7 @@ Feature: setup-sync
 
 ## 294. Update documentation for feature `setup-sync`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: .claude/context/setup-commands.md, .claude/context/task-backlog.md, .claude/context/shared-lib-frontmatter.md, .claude/context/feature-contract.md, docs/authoring-guide.md
 Preconditions: 291, 292, 293
