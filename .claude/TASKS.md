@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 294
+Last task number: 298
 
 ---
 
@@ -641,5 +641,45 @@ Target: claude
 Files: .claude/context/setup-commands.md, .claude/context/task-backlog.md, .claude/context/shared-lib-frontmatter.md, .claude/context/feature-contract.md, docs/authoring-guide.md
 Preconditions: 291, 292, 293
 Feature: setup-sync
+
+---
+
+## 295. Add slug resolution to `/session-resume`
+
+Status: [MISSING]
+Target: claude
+Files: commands/session-resume.md, VERSION, CHANGELOG.md
+Preconditions: none
+Feature: session-readers
+
+---
+
+## 296. Add `/session-list`
+
+Status: [MISSING]
+Target: claude
+Files: commands/session-list.md, VERSION, CHANGELOG.md
+Preconditions: none
+Feature: session-readers
+
+---
+
+## 297. Add `/session-describe`
+
+Status: [MISSING]
+Target: claude
+Files: commands/session-describe.md, VERSION, CHANGELOG.md
+Preconditions: 295
+Feature: session-readers
+
+---
+
+## 298. Update documentation for feature `session-readers`
+
+Status: [MISSING]
+Target: claude
+Files: .claude/context/session-handoff.md, .claude/context/features.md, .claude/context/INDEX.md, .claude/domain/features/session-continuity.md
+Preconditions: 295, 296, 297
+Feature: session-readers
 
 ---

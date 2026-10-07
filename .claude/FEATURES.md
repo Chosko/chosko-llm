@@ -220,10 +220,10 @@ Tasks: 291, 292, 293, 294
 
 ## session-readers — `/session-list` and `/session-describe`, and path/date/slug resolution for every session command
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/session-readers.md
 Source: prompt
-Tasks: none
+Tasks: 295, 296, 297, 298
 
 ---
 
