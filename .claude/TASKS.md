@@ -506,7 +506,7 @@ Preconditions: 278
 
 ## 281. Add the `interaction-engine` reference skill
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/interaction-engine/SKILL.md, skills/interaction-engine/references/policy.md, skills/interaction-engine/references/gates.md, skills/interaction-engine/references/messages.md, VERSION, CHANGELOG.md
 Preconditions: none

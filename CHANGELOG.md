@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.77.0 — 2026-10-07
+
+- **New `interaction-engine` reference skill.** One home for the interaction policy: the `attended` / `unattended` policy with its `--attended` / `--unattended` flags and the `Interaction policy:` line in `CLAUDE.md`, the three gate classes (confirmation-only gates pass on their own when unattended; design-heavy and destructive ones wait), and the shared rules for gate summaries, closing reports and questions. Not invocable, and no feature reads it yet.
+
 ## 1.76.3 — 2026-10-06
 
 - **`/refactor-codebase`, `/refactor-tests` and `/context-build` state their uncommitted default as a plain rule.** Wording only; behaviour is unchanged.
