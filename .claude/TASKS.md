@@ -546,7 +546,7 @@ Feature: interaction-policy
 
 ## 285. Rewrite `/pipeline-revise`'s gate and `/pipeline-check`'s findings to the interaction policy
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/pipeline-revise/SKILL.md, skills/pipeline-revise/amend.md, skills/pipeline-revise/delete.md, skills/pipeline-revise/insert.md, skills/pipeline-revise/reorder.md, commands/pipeline-check.md, skills/pipeline-engine/references/lint.md, VERSION, CHANGELOG.md
 Preconditions: 281

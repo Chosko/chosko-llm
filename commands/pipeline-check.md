@@ -1,9 +1,9 @@
 ---
 name: pipeline-check
-version: 0.1.4
+version: 0.2.0
 type: command
 description: Report structural drift across the pipeline's indexes — FEATURES.md, TASKS.md, PLAN.md and RUNBOOKS.md — as findings grouped by artifact, each with its severity and the one command that fixes it. Use it when an index looks out of step with another, or before revising planned work.
-requires: skill:pipeline-engine
+requires: skill:pipeline-engine, skill:interaction-engine
 ---
 
 # /pipeline-check
@@ -18,6 +18,7 @@ requires: skill:pipeline-engine
 # need one, and runs no shell beyond the probe.
 # Usage: /pipeline-check
 #        /pipeline-check feature=<slug>      (scope to that feature and the tasks and plan edges naming it)
+#        /pipeline-check <args> --attended | --unattended   (accepted; this command has no gate)
 # Examples: /pipeline-check
 #           /pipeline-check feature=password-auth
 
@@ -54,6 +55,14 @@ what it does differently.
 ARGUMENT PARSING
 
 Scan `$ARGUMENTS` for `feature=<slug>`; set FEATURE to the slug and strip it.
+
+Also strip `--attended` and `--unattended`. The interaction policy has no
+effect here — this command has no gate and asks nothing — and both are
+accepted so a parent can hand its policy down without knowing that;
+`../skills/interaction-engine/references/policy.md` § *Argument errors*
+still applies to the pair. Of the interaction engine, only the
+plain-language rule reaches this command, and it reaches it through
+`lint.md`'s templates.
 
 Anything else in `$ARGUMENTS` is not a recognised argument. Say so in one
 line and carry on with the default report — this command never refuses over
@@ -129,11 +138,11 @@ is printed: no verdict echo, no empty group, no count of zero.
 
 ```
 FEATURES.md
-  WARNING FEATURES.md feature password-auth — [PLANNED], every task on Tasks: resolved → flip to [DONE]
+  WARNING Every task of a feature is finished, but the feature is still marked planned (FEATURES.md feature password-auth, [PLANNED]) → flip to [DONE]
 
 TASKS.md
-  ERROR   TASKS.md task 42 — Preconditions: 57 was never assigned (Last task number: 51) → /pipeline-revise
-  WARNING TASKS.md task 44 — [STALE]: feature session-handling was re-architected after this task was written → /pipeline-revise
+  ERROR   A task waits on a task that was never created (TASKS.md task 42, Preconditions: 57, Last task number: 51) → /pipeline-revise
+  WARNING A task was written before its feature's design changed, so it may ask for the old design (TASKS.md task 44, [STALE], feature session-handling) → /pipeline-revise
 
 1 ERROR, 2 WARNING — read FEATURES.md, TASKS.md, RUNBOOKS.md.
 ```
@@ -164,5 +173,6 @@ DO NOT:
 - Run any shell command other than the probe, `git` included.
 - Refuse over an absent index, a malformed block, an unknown `feature=` slug
   or an unrecognised argument. Each is reported, and the run carries on.
-- Print a finding `lint.md` does not define, reword its template, or name a
-  fix other than the one it gives.
+- Print a finding `lint.md` does not define, reword its template — each is
+  already written message first, identifiers last — or name a fix other
+  than the one it gives.

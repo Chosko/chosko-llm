@@ -2,6 +2,12 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.81.0 — 2026-10-07
+
+- **`/pipeline-revise`'s gate is short.** It shows one verdict line, one plain sentence per change, then the open questions. The owner-step table, the headless/GATED tags and the drafts appear only on `show`, an edit re-shows only the lines it changed, and lint prints only failures. With nothing open, an `unattended` run passes the gate on its own; with a question open, it stops there.
+- **`/pipeline-revise` and `/pipeline-check` accept `--attended` and `--unattended`.** `/pipeline-revise` hands the policy to every owner it drives; `/pipeline-check` has no gate and only accepts the flags.
+- **Drift findings read message first.** Every `/pipeline-check` finding states the problem in plain words, then the index, identifier and evidence in parentheses, then the fix.
+
 ## 1.80.0 — 2026-10-07
 
 - **The authoring stages follow the interaction policy.** `/architect`, `/product-design`, `/product-roadmap`, `/production-plan` and `/domain-setup` accept `--attended` and `--unattended` and read `Interaction policy:` from `CLAUDE.md`. Under `unattended`, every `amend` gate passes on its own and names its commit, and `/production-plan`'s approval does too when a re-run found nothing to reconcile. Design conversations, the roadmap's approval, questions and `/product-design`'s discard still wait, and the run stops at them.

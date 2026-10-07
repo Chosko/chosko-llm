@@ -1,9 +1,9 @@
 ---
 name: pipeline-revise
-version: 1.0.1
+version: 1.1.0
 type: skill
 description: Revise already-planned work — a set of changes to feature documents, tasks, plan edges and runbook steps — through the owners of every artifact they reach, as one numbered plan behind one gate. Use it for any change to work that is already planned, from one wording fix to a list of amendments, deletions, insertions and reorders.
-requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run, skill:product-design, skill:production-plan, skill:product-roadmap
+requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run, skill:product-design, skill:production-plan, skill:product-roadmap, skill:interaction-engine
 ---
 
 # /pipeline-revise
@@ -12,18 +12,19 @@ requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbo
 # reaches, by classifying each item, walking its impact over the index
 # graph, merging the items into one ordered owner sequence, deciding at plan
 # time everything an owner's arm decides by a closed rule over its reads,
-# and showing the whole thing once as a numbered plan. The gate always
-# waits; the reply edits the plan by number — go, all but N, N as runbook
-# step, N after M, stop. Steps tagged headless run their owner's arm with
-# the decision carried in and ask nothing; steps tagged GATED (/task-add)
-# announce at the gate what their owner will ask. Runs /pipeline-check
-# before the plan and after the sequence; what execution surfaces beyond
-# the plan is put to one closing follow-up gate in the same shape, never
-# written on its own. Writes nothing itself. Removal is [SKIP] or a struck
+# and showing the whole thing once as a numbered plan: a verdict line, one
+# plain sentence per change, then the questions. The gate waits unless the
+# run is unattended and nothing is open; the reply edits the plan by number
+# — go, all but N, N as runbook step, N after M, stop. A step whose owner
+# decides by rule runs its arm with the decision carried in and asks
+# nothing; a /task-add step asks at its owner's own gate, and the plan says
+# what. Runs /pipeline-check before the plan and after the sequence,
+# printing failures only; what execution surfaces beyond the plan is put to
+# one closing follow-up gate in the same shape, never written on its own. Writes nothing itself. Removal is [SKIP] or a struck
 # step, never physical deletion. One commit at the end holds the whole
 # revision; a sequence that stops part-way commits nothing.
-# Usage: /pipeline-revise "<change set>" [--no-commit] [--no-push]
-#        /pipeline-revise <anchor> "<change>" [--no-commit] [--no-push]
+# Usage: /pipeline-revise "<change set>" [--no-commit] [--no-push] [--attended | --unattended]
+#        /pipeline-revise <anchor> "<change>" [--no-commit] [--no-push] [--attended | --unattended]
 #        anchor: feature=<slug> | task=<N> | runbook=<id|name|id-name> step=<n>
 # Examples: /pipeline-revise task=42 "Hints: point at the new loader"
 #           /pipeline-revise "drop the contact URL from the user-agent (source-inventory, line 178); delete task 214; strike runbook 3 step 9"
@@ -68,6 +69,9 @@ SUPPORTING FILES (read on demand — not up front)
 
 | Read this file | Exactly when |
 | -------------- | ------------ |
+| `../interaction-engine/references/policy.md` | Every run, at ARGUMENT PARSING, to resolve the interaction policy. |
+| `../interaction-engine/references/messages.md` | Every run, before the gate — the gate, the closing follow-up gate and the report follow it. |
+| `../interaction-engine/references/gates.md` | The policy resolved to `unattended`. |
 | `./amend.md` | An item changes something that exists and adds, removes or moves nothing — a `Preconditions:` change that moves no entry included. |
 | `./insert.md` | An item makes a new task or runbook step exist at a position — with the scope its feature document must newly promise, when it must. |
 | `./delete.md` | An item ends a live task, a pending runbook step or a whole feature. |
@@ -91,6 +95,14 @@ and strip all three. COMMIT is true unless `--no-commit` is passed;
 `--commit and --no-commit cannot be combined. Pick one.` What each flag does
 is COMMITTING.
 
+Also scan for `--attended` and `--unattended` and strip whichever appear.
+The run's interaction policy resolves from them, a policy handed down by a
+parent run and the project's `CLAUDE.md`, per
+`../interaction-engine/references/policy.md`, which holds their argument
+errors. The policy is handed down to every owner the run drives, as the
+flag. This skill cannot park: a gate that waits under `unattended` stops the
+run there, nothing written.
+
 Then scan for an anchor in one of three forms, and strip it:
 
 - `feature=<slug>`
@@ -106,8 +118,8 @@ sentence — is one item per number. Free-form text is split into items at
 the changes it describes: each distinct thing to change, insert, delete or
 move is one item, and a sentence naming two is two. An anchor argument
 applies to every item that names no artifact of its own; an item that names
-one uses its own. Say the items back, numbered, in the gate; the split is
-the user's to correct there.
+one uses its own. The split is the user's to correct at the gate, where
+`show` prints it.
 
 ---
 
@@ -155,8 +167,8 @@ in this order; the first that matches wins:
 4. **amend** — anything else that changes what exists, a milestone line and
    a `Preconditions:` change that moves no entry included.
 
-Read each branch file the items need, once. Render `Item <i>: <branch> —
-<anchor>` for every item in the gate.
+Read each branch file the items need, once. Record `Item <i>: <branch> —
+<anchor>` for every item, for the plan `show` prints.
 
 **4. Walk each item's impact.** From its anchor, along `graph.md`'s edges
 and no other traversal, in the directions its branch file's *Impact walk*
@@ -253,24 +265,33 @@ run here, before the gate and before any write:
 > Can't revise: step <i> needs `<owner>`, which is not installed. Install it
 > with `chosko-llm add`, then re-run.
 
-**7. The gate.** One message, and it always waits. It carries:
+**7. The gate.** One message, written to
+`../interaction-engine/references/messages.md`. It carries, in order:
 
-1. the verdict line;
-2. the items, numbered as split, each with its branch, anchor and the tier
-   its branch file judged — `Item 2: delete — task=214 — structural`;
-3. the touched artifacts — each entry a walk reached, with the edge or the
-   body read that reached it — and, one line each, the entries examined and
-   judged untouched, so a call can be overruled;
-4. the owner steps, numbered, in order, each on the shape
-   `<n>. <owner> — <headless | GATED> — <invocation or arm path> — writes: <what>`,
-   followed by the decision carried (`Classified: editorial — …`, the draft
-   in before → after form, the struck id and reason) or the `Will ask:`
-   line, and the lint findings it clears or creates;
-5. the lint — step 5's findings in scope;
-6. any architect question still open, in `../architect/amend.md` § 4's
-   ambiguous form, one per feature.
+1. **the verdict** — one line: how many changes the plan makes, how many
+   ask something at their owner's own gate, and whether anything is open;
+2. **one plain sentence per change**, numbered as the owner steps are, in
+   order — what the step changes and why, in words, with the identifiers
+   last in parentheses; a step that will ask at its owner's own gate says
+   what it will ask, a conditional step says on what, and a step carrying a
+   decision says the decision in words (*wording only, no task to re-plan*);
+3. **step 5's findings in scope**, only when there are any;
+4. **the questions** — any architect question still open, in
+   `../architect/amend.md` § 4's ambiguous form, one per feature — last,
+   with at most a one-line hint of the reply shortcuts.
 
-Then wait for the reply. The reply grammar:
+The item split, the classification and tier per item, the touched and
+untouched entries, the owner-step table with its invocations, arm paths
+and headless / GATED tags, and the drafts stay internal: they are what the
+plan is built from, not what the gate prints. A `show` reply prints them —
+the full plan, drafts included — and asks again; a `show <n>` prints one
+step's.
+
+Gate class: `confirmation` when no question is open, `design` otherwise
+(`../interaction-engine/references/gates.md`). Under `unattended` a plan with
+no open question passes on its own — the run proceeds as on `go`, and the
+report names the commit — and a plan with one stops the run here, nothing
+written. Otherwise wait for the reply. The reply grammar:
 
 - `go` — run the plan as rendered;
 - `all but <n>[, <m>]` — drop those steps and run the rest;
@@ -285,8 +306,8 @@ Then wait for the reply. The reply grammar:
   touched/untouched call or tier, as the arm's own reply rules allow;
 - `stop` — write nothing.
 
-Any reply but `go` and `stop` re-renders the plan at the same gate, with
-the edit applied, and waits again. A step the reply drops that another step
+Any reply but `go` and `stop` applies the edit and re-shows only the lines
+it changed, at the same gate, and waits again. A step the reply drops that another step
 depends on drops that step too, named. Silence, an unclear reply or EOF is
 `stop`. Nothing is written before `go`, by this skill or by any arm it
 drives.
@@ -317,8 +338,8 @@ line of the runbook.
 
 **9. Lint — after, and verify.** Run step 5's scoped `/pipeline-check`
 again — also when the sequence stopped part-way, so the report shows the
-state it left. Report the difference: findings cleared, findings created,
-findings unchanged.
+state it left. Report failures only: findings created and findings left
+unchanged; a bracket with neither prints nothing.
 
 Where an insertion or a deletion changed a precondition, read the successor
 tasks' bodies afterwards — the tasks whose `Preconditions:` gained or lost
@@ -330,9 +351,9 @@ did not hold: a task a `/task-add` step created that no open runbook
 running its feature has a step for; a successor that no longer reads as a
 sequence; a lint finding step 9 reports as created; a feature an owner's
 closing line names for reconciliation that no step ran. When there is
-nothing, skip this step. Otherwise render the items numbered, in step 7's
-step shape with a proposed owner step each, and wait, with step 7's reply
-grammar: `go` runs them here, one at a time as step 8 does; `<n> as runbook
+nothing, skip this step. Otherwise render the items as step 7 does — one
+plain sentence each, numbered, proposing its owner step, the question last
+— and wait, with step 7's reply grammar; gate class `design`: `go` runs them here, one at a time as step 8 does; `<n> as runbook
 step` defers; `all but`; `stop` leaves them to the report. Nothing on this
 list is written without the reply. When anything ran here, step 9's scoped
 check runs once more afterwards, and the difference step 12 reports is
@@ -345,15 +366,16 @@ revision's one commit and push, per COMMITTING, the report line below as
 the subject. A sequence that stopped part-way, a run that wrote nothing, or
 `--no-commit` makes no commit.
 
-**12. Report.**
+**12. Report.** Written to `../interaction-engine/references/messages.md`
+§ *Output*.
 
 ```
 Revised <items> items — <run>/<k> owner steps run, <d> deferred, <m> dropped.
 ```
 
-then each step's closing line, the lint difference (`Lint: cleared <n>
-(<L-ids>), created <n> (<L-ids>), unchanged <n>.`), the sequence check's
-result, the follow-ups the closing gate left to the report, and every
+then each step's closing line, the lint failures when there are any
+(`Lint: created <n> (<L-ids>), unchanged <n> (<L-ids>).`), the sequence
+check's result when it failed, the follow-ups the closing gate left to the report, and every
 follow-up an owner named that no step covered. Then the commit hash. When
 anything was written and no commit was made — `--no-commit`, or a sequence
 that stopped part-way — list every path written so far and end with an
@@ -412,5 +434,5 @@ FAILURE CONTRACT
   that step.** Earlier steps' writes stay intact, uncommitted, and are
   reported path by path, **never rolled back**; the steps not run are
   listed; step 9 still runs; nothing is committed.
-- **`/runbook-create` absent** makes `as runbook step` an error naming it;
-  the plan is re-rendered.
+- **`/runbook-create` absent** makes `as runbook step` an error naming it,
+  shown at the same gate, which waits again.
