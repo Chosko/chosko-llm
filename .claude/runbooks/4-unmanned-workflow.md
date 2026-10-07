@@ -316,7 +316,7 @@ Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:`
 
 Done: 2026-10-07, commits `378ced5`, `73c5519`, `c4c5b4c`, `2016aac`, `6f28548`, `a050d14`, `bbb4253` (77 files, +1551/-512). /quick-implement carries its own short review loop (citing task-implement's review-rounds.md would need a requires: it should not have).
 
-## [ ] 17. Implement orchestrate-mode
+## [x] 17. Implement orchestrate-mode
 
 Depends on: 13, 15, 16
 
@@ -328,6 +328,8 @@ Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:`
 
 This goes after session-readers and quick-implement: orchestrate-mode extends session-save/resume/describe for handoff subfolders and delegates quick-implement's implementation step.
 ```
+
+Done: 2026-10-07, commits `b4eefd9`, `dbe4036`, `3d0743f`, `a845cd0` (32 files, +578/-58). Proof captures are made by the area agent that owns the single-instance tool, never the orchestrator. Open gap: under the mode, /quick-implement --review still applies fixes in the orchestrating session.
 
 ## [ ] 19. Implement objective-run
 
