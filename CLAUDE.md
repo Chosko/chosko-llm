@@ -129,42 +129,42 @@ next, who needs the rule, not the road to it. Every edit follows these rules.
    decision is never smuggled in as a consequence.
 <!-- chosko-llm:editing-discipline:end -->
 
-<!-- chosko-llm:git-commit-style:begin v0.1.1 -->
+<!-- chosko-llm:git-commit-style:begin v0.1.2 -->
 
 ## Commit Message Style
 
-A commit message is read in `git log`, one line at a time. Write it so that
-log stays scannable.
+Write each commit message so that `git log`, read one line at a time, stays
+scannable.
 
-**Subject.** One line, imperative mood ("Add the changelog subcommand", not
-"Added" or "Adds"), short enough to read whole in `git log --oneline`. It is
-the only part that is always required.
+**Local style wins.** The rules below are a default shape, not a mandate.
+- A repo's own convention overrides them — a CONTRIBUTING rule, its
+  CLAUDE.md, or simply the shape visible in its `git log`.
+- A command's own prescribed message form overrides them too (e.g.
+  task-engine's `Task <N>: …`, `Add task <N>: …`, `task-clean: archive tasks …`).
+- The trailer threshold is a default the same way: a repo's own trailer
+  convention, whether written down or just visible as an existing
+  `Co-Authored-By` habit in `git log`, wins over the numbers below.
 
-**Body.** OPTIONAL, and at most 2–3 lines when present. Write one only when
-it carries something the subject cannot — why the change was made, a
-constraint that forced this shape, a consequence a reader would otherwise
-miss. Never restate the diff: the diff is already in the commit. On a trivial
-commit, write no body at all.
+**Subject.** Always required; the only part that is.
+- One line, imperative mood ("Add the changelog subcommand", not "Added" or
+  "Adds").
+- Short enough to read whole in `git log --oneline`.
 
-No type-prefix vocabulary is mandated here — no `feat:` / `fix:` requirement.
-Whatever prefix convention a repo already uses is the one to use.
+**Body.** OPTIONAL; at most 2–3 lines when present.
+- Write one only when it carries something the subject cannot — why the
+  change was made, a constraint that forced this shape, a consequence a
+  reader would otherwise miss.
+- Never restate the diff: the diff is already in the commit.
+- On a trivial commit, write no body at all.
 
-**Trailers — only on big commits.** `Co-Authored-By: <model>` and
-`Claude-Session: <url>` are added only when the commit is big, and "big" is a
-size test, not a judgement call: **5 or more files changed, or 200 or more
-changed lines (insertions + deletions)**. Below that threshold both trailers
-are omitted — not "optional", omitted. Check it mechanically before
-committing with `git diff --cached --shortstat`.
+**Prefix.** No type-prefix vocabulary is mandated — no `feat:` / `fix:`
+requirement. Use whatever prefix convention the repo already uses.
 
-Those numbers are roughly the 75th percentile of the `chosko-llm` repo's own
-history (median 3 files / 82 changed lines; p75 6 files / 250 changed lines
-over the last 200 commits), i.e. the top quarter of commits by size.
-
-**Local style wins.** This is a default shape, not a mandate. A repo's own
-convention — a CONTRIBUTING rule, its CLAUDE.md, or simply the shape visible
-in its `git log` — overrides it, and so does any command's own prescribed
-message form (e.g. task-engine's `Task <N>: …`, `Add task <N>: …`,
-`task-clean: archive tasks …`). The trailer threshold is a default the same
-way: a repo's own trailer convention, whether written down or just visible as
-an existing `Co-Authored-By` habit in `git log`, wins over the numbers above.
+**Trailers — only on big commits.**
+- Add `Co-Authored-By: <model>` and `Claude-Session: <url>` only when the
+  commit is big.
+- "Big" is a size test, not a judgement call: **5 or more files changed, or
+  200 or more changed lines (insertions + deletions)**.
+- Below that threshold omit both trailers — not "optional", omitted.
+- Check it mechanically before committing with `git diff --cached --shortstat`.
 <!-- chosko-llm:git-commit-style:end -->
