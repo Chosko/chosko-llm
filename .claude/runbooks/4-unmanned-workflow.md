@@ -331,7 +331,7 @@ This goes after session-readers and quick-implement: orchestrate-mode extends se
 
 Done: 2026-10-07, commits `b4eefd9`, `dbe4036`, `3d0743f`, `a845cd0` (32 files, +578/-58). Proof captures are made by the area agent that owns the single-instance tool, never the orchestrator. Open gap: under the mode, /quick-implement --review still applies fixes in the orchestrating session.
 
-## [ ] 19. Implement objective-run
+## [x] 19. Implement objective-run
 
 Depends on: 15, 18
 
@@ -343,6 +343,8 @@ Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:`
 
 This goes after quick-implement: objective-run's docs follow-ups use `/pipeline-revise --catch-up`, which quick-implement's tasks add.
 ```
+
+Done: 2026-10-07, commits `9782036`, `3c38d31` (12 files, +522/-12). The worker brief always declares the run unattended so a worker question parks under either policy (an exception to the inherit-the-parent-policy rule).
 
 ## [ ] 20. Full imperative rewrite (only if step 6 said go)
 
