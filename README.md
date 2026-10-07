@@ -1,76 +1,89 @@
+<div align="center">
+
 # chosko-llm
 
-An opinionated, document-driven workflow for building software with Claude
-Code, and the CLI that installs it anywhere.
+**An opinionated, document-driven workflow for building software with Claude Code**,
+and the CLI that installs it anywhere.
 
-Claude Code is very good at the next step and forgetful about everything
-before it. This repo is a set of **commands and skills** that give a project
-enough written structure that Claude can pick up any stage cold: a domain
-layer that records what the product is and why, a navigation layer that
-records where things live, a backlog of tasks small enough to build in one
-sitting, and handoff documents for the work in between. You decide and
-approve; Claude designs, plans, implements and reviews inside that structure.
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Built for Claude Code](https://img.shields.io/badge/built%20for-Claude%20Code-d97757.svg)](https://claude.com/claude-code)
+[![bash · no dependencies](https://img.shields.io/badge/bash-no%20dependencies-4eaa25.svg)](#the-cli)
 
-Three principles run through all of it:
+### Keep your project's vision
 
-- **Documents, not conversations.** Every stage writes its output into the
-  repo, so the work survives sessions, machines and people.
-- **Stages are entered, not marched through.** Nothing downstream requires
-  that an upstream stage was ever run. Start wherever your project is.
-- **You decide, Claude executes.** Every writing feature stops at an approval
-  gate before it changes anything that matters, and the states that mean
-  "finished" are confirmed by a human, never inferred.
+Claude Code is very good at the next step but **forgetful** about everything before it.
+This workflow allows Claude to pick up any stage cold **without drifting away from the big picture**.
+[Read how →](#keep-the-vision)
 
-Everything is opt-in and installs with one command. The full flag-by-flag
-detail for every feature lives in [docs/reference.md](docs/reference.md);
-this page is the tour.
+### Optimize token usage
+
+As your **project grows bigger**, Claude becomes **token-hungry** and even small tasks drain your subscription quickly.
+chosko-llm orients Claude within your codebase so that **reads are constrained** to what really matters.
+[Read how →](#spend-fewer-tokens)
+
+### Reduce human-in-the-loop bottlenecks
+
+A Claude session is a **hiccuping workflow**: you wait while the agent works, it waits while you answer, and you never know when the next switch comes.
+chosko-llm **lets you answer those questions up front**, in focused design and planning sessions, so that Claude can implement later without you.
+[Read how →](#plan-once-build-later)
+
+### Make it work overnight
+
+Design, planning and implementation all **draw tokens from the same 5h pool**. Spend **your day designing and planning**, and **Claude's night implementing**.
+Queue a cloud batch before bed and **turn your PC off**. A task that needs you gets **parked** instead of stalling the run; the rest gets done. You catch up over coffee.
+[Read how →](#run-it-overnight)
+
+
+</div>
+
 
 ## Quick start
 
-```sh
-# install the CLI (clones a managed copy to ~/.chosko-llm, proxy at ~/bin/chosko-llm)
-curl -fsSL https://raw.githubusercontent.com/Chosko/chosko-llm/master/install.sh | bash
+1. **Install the CLI.** It clones a managed copy to `~/.chosko-llm` and puts
+   a small proxy at `~/bin/chosko-llm`.
 
-chosko-llm ls --available      # see what ships
-chosko-llm add --all           # or pick: chosko-llm add task-add task-implement context-build
+   ```sh
+   curl -fsSL https://raw.githubusercontent.com/Chosko/chosko-llm/master/install.sh | bash
+   ```
 
-# then, inside Claude Code, in a project:
-/project-setup                 # CLAUDE.md, backlog, domain and context layers, in one pass
-/task-add "add a health endpoint"
-/task-implement next
-```
+2. **Add the features** — all of them, or only the ones you want.
 
-`chosko-llm upgrade && chosko-llm update --all` picks up new versions. On
-Windows, run the installer from Git Bash. See [The CLI](#the-cli) below.
+   ```sh
+   chosko-llm add --all
+   chosko-llm add task-add task-implement context-build   # or pick
+   ```
 
-## How a project flows through it
+3. **Use them inside Claude Code**, in any project.
 
-| Stage | You run | It writes |
-| --- | --- | --- |
-| 1. Set up | `/project-setup`, `/task-setup`, `/domain-setup` | `CLAUDE.md`, `.claude/TASKS.md`, `.claude/domain/`, `.claude/FEATURES.md` |
-| 2. Orient | `/context-build`, `/context-update`, `/context-convert` | `.claude/context/` — the navigation layer |
-| 3. Design | `/product-design`, `/product-roadmap`, `/architect` | `product-design.md`, `technical-direction.md`, `product-roadmap.md`, one feature document per architected feature |
-| 4. Plan | `/production-plan`, `/production-status`, `/pipeline-check`, `/task-add`, `/pipeline-revise` | `.claude/PLAN.md`, task bodies + `TASKS.md` entries |
-| 5. Build | `/task-implement`, `/task-review`, `/task-iterate` | code, one reviewed commit per task |
-| 6. Continue | `/runbook-*`, `/session-save`, `/session-resume` | `.claude/runbooks/`, `.claude/sessions/` |
-| 7. Maintain | `/refactor-codebase`, `/refactor-tests`, `/doc-consolidate` | a cleaner codebase, tests green throughout; rules documents that state each rule once |
+   ```text
+   /project-setup                      # CLAUDE.md, backlog, domain and context layers, in one pass
+   /task-add "add a health endpoint"   # plan one task with you, criteria included
+   /task-implement next                # build it, test-first, as one commit
+   ```
 
-Two realistic starting points:
+> [!NOTE]
+> On Windows, run the installer from Git Bash.
 
-- **A brand new product.** `/project-setup`, then `/product-design` to work
-  out what you're building, `/architect` per feature, `/task-add
-  feature=<slug>`, `/task-implement`.
-- **An existing codebase.** `/project-setup` with the context layer, then go
-  straight to `/architect` (it reads your code and accepts a bare
-  description), or skip design entirely and use plain `/task-add
-  <description>`. The free-form path is unchanged by any of the pipeline.
+`chosko-llm upgrade && chosko-llm update --all` picks up new versions.
 
-## What it leaves in your repo
+## How it works
 
-Every stage writes into the project's own `.claude/` directory, beside a
-root `CLAUDE.md` that points at it. Nothing lives in your home directory
-except the installed features themselves. A fully set-up project looks like
-this; every entry is optional and appears only when its stage has run.
+Claude Code is good at the next step and forgetful about everything before
+it. chosko-llm gives each project three small sets of documents, each
+answering one question, so any session can pick up any stage cold.
+`CLAUDE.md` points at all three; every session starts by reading an index
+instead of the tree.
+
+| | Navigation | Knowledge | Work |
+| --- | --- | --- | --- |
+| **Answers** | *Where is what?* | *What is this, and why?* | *What's done, what's next?* |
+| **Lives in** | `.claude/context/` | `.claude/domain/` | `FEATURES.md`, `PLAN.md`, `TASKS.md`, runbooks, sessions |
+| **Written by** | `/context-build`, `/context-update`, from the code | the design stage, by interviewing you | the planning and build commands, as work moves |
+| **Changes when** | the code changes | the product changes | work moves |
+| **Holds status?** | never — it describes, it never decides | never — it records intent | yes — the only layer that does |
+
+<details>
+<summary><b>What a fully set-up project looks like</b> — every entry is optional and appears only when its stage has run</summary>
 
 ```
 CLAUDE.md                        # entry point every session reads first: pointers to the
@@ -97,390 +110,309 @@ CLAUDE.md                        # entry point every session reads first: pointe
 └── hooks/ + settings.json       #   local hooks (e.g. remote-session-protocol), committed
 ```
 
-Three kinds of document, three jobs:
+Nothing lives in your home directory except the installed features themselves.
 
-- **Navigation** (`CLAUDE.md`, `.claude/context/`) answers *where is what*.
-  Built from the code by `/context-build`, refreshed by `/context-update`,
-  read at the start of every session so Claude opens only the files it
-  needs. It describes the code; it never decides anything.
-- **Knowledge** (`.claude/domain/`) answers *what is this and why*. Written
-  by the design stage (`/product-design`, `/product-roadmap`, `/architect`)
-  through interviews with you, read by everything downstream. It changes
-  when the product changes, not when the code does.
-- **Work** (`FEATURES.md`, `PLAN.md`, `TASKS.md` and their bodies, runbooks,
-  sessions) answers *what is done, what is next*. Written and updated by the
-  planning and build commands as work moves. These are the only documents
-  with status.
+</details>
 
-### The production hierarchy
+### What a run looks like
 
-The design and work documents form one chain from the broadest statement of
-intent to the smallest unit of work. Each level is many-to-one with the
-level above, and each link is a named field in the document, so the whole
-chain can be walked in either direction by reading files.
+An abridged example of the build loop. The task is planned once, with you;
+the implementation needs no further input.
 
-```
-product-design.md               a section per HIGH-LEVEL FEATURE, from the user's side
-  │                             ("Authentication", "Billing")
-  │  product-roadmap.md         MILESTONES in order, each with `Covers:` slices saying
-  │  ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈       which share of a section it takes on ("email+password only")
-  ▼
-features/<slug>.md              one LOW-LEVEL FEATURE per architectural decision;
-  indexed in FEATURES.md        `Source: product-design.md § Authentication (m1-mvp)`
-  │                             links it up to its section and, if sliced, its milestone
-  │  PLAN.md                    orders the low-level features inside each milestone and
-  │  ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈       records the dependency edges between them
-  ▼
-tasks/<n>.md                    one TASK per unit of work, small enough for one sitting;
-  indexed in TASKS.md           `Feature: <slug>` links it up, and the feature's
-                                `Tasks: 31, 32, 33` entry in FEATURES.md links down
+```text
+> /task-add "add a health endpoint"
+  … reads the routing code, asks: auth-exempt? which checks? response shape?
+  … shows the task body with acceptance criteria — you approve
+  Task 14 added: [MISSING] Add a /health endpoint — committed and pushed
+
+> /task-implement next --review
+  Task 14 — tests written and failing → implemented → tests green
+  Review round 1: 1 finding (IMPORTANT) — fixed
+  Task 14 [DONE] — one commit, pushed
+
+  For the record
+  none
+
+  Follow-ups
+  1. /context-update — the new route module isn't in the context layer yet
 ```
 
-The two documents drawn to the side, the roadmap and the plan, don't hold
-features or tasks of their own. They *arrange* the level they sit beside:
-the roadmap decides how a high-level feature is split across releases (a
-business call), the plan decides in what order the resulting low-level
-features get built (an engineering call). Both are optional; without them
+## Pick your path
+
+| You have | Start with | Then |
+| --- | --- | --- |
+| **An idea, no code** | `/project-setup` → `/product-design` | `/architect` per feature, `/task-add feature=<slug>`, `/task-implement` |
+| **An existing codebase** | `/project-setup` with the context layer | `/architect` (it reads your code), or skip design and use `/task-add` directly |
+| **Just a backlog** | `/task-setup` | `/task-add "<description>"`, `/task-implement next` |
+
+## The workflow
+
+```mermaid
+flowchart LR
+    S["<b>Set up</b><br/>/project-setup"] --> O["<b>Orient</b><br/>/context-build"]
+    O --> D["<b>Design</b><br/>/product-design<br/>/product-roadmap<br/>/architect"]
+    D --> P["<b>Plan</b><br/>/production-plan<br/>/task-add"]
+    P --> B["<b>Build</b><br/>/task-implement<br/>/task-review"]
+    O -. "existing code:<br/>skip design" .-> P
+    B -. "design changed" .-> D
+    B --> C["<b>Continue</b><br/>/session-save<br/>/runbook-run"]
+```
+
+Every stage is optional, and each writes its output into the repo:
+
+| Stage | You run | It writes |
+| --- | --- | --- |
+| 1. Set up | `/project-setup`, `/task-setup`, `/domain-setup` | `CLAUDE.md`, `.claude/TASKS.md`, `.claude/domain/`, `.claude/FEATURES.md` |
+| 2. Orient | `/context-build`, `/context-update`, `/context-convert` | `.claude/context/` |
+| 3. Design | `/product-design`, `/product-roadmap`, `/architect` | design documents, one feature document per architected feature |
+| 4. Plan | `/production-plan`, `/task-add`, `/pipeline-revise` | `.claude/PLAN.md`, task bodies + `TASKS.md` entries |
+| 5. Build | `/task-implement`, `/task-review`, `/task-iterate` | code, one reviewed commit per task |
+| 6. Continue | `/runbook-*`, `/session-save`, `/session-resume`, `/follow-ups` | `.claude/runbooks/`, `.claude/sessions/` |
+| 7. Maintain | `/refactor-codebase`, `/refactor-tests`, `/doc-consolidate` | a cleaner codebase and rules documents, tests green throughout |
+
+**Commits.** Commands that write project work — design, planning, tasks,
+builds, runbooks, handoffs — commit and push by default and take
+`--no-commit` / `--no-push`. Setup and maintenance commands leave their
+output uncommitted for review and take `--commit`. Read-only commands write
+nothing. The tables below say which is which.
+
+### From product to task
+
+The design and work documents form one chain, from the broadest intent to
+the smallest unit of work. Each link is a named field, so the chain can be
+walked in either direction by reading files.
+
+```mermaid
+flowchart TB
+    PD["<b>product-design.md</b><br/>one section per HIGH-LEVEL FEATURE<br/>(“Authentication”, “Billing”)"]
+    F["<b>features/&lt;slug&gt;.md</b> · indexed in FEATURES.md<br/>one LOW-LEVEL FEATURE per architectural decision"]
+    T["<b>tasks/&lt;n&gt;.md</b> · indexed in TASKS.md<br/>one TASK, small enough for one sitting"]
+    RM["<b>product-roadmap.md</b><br/>milestones, each taking a slice of a section<br/>a business call"]
+    PL["<b>PLAN.md</b><br/>order and dependencies of features per milestone<br/>an engineering call"]
+
+    PD -- "Source: product-design.md § Authentication (m1-mvp)" --> F
+    F -- "Feature: &lt;slug&gt; ⇄ Tasks: 31, 32, 33" --> T
+    RM -.-> PD
+    PL -.-> F
+```
+
+The roadmap and the plan hold no features or tasks of their own; they
+*arrange* the level they sit beside. Both are optional. Without them,
 `/architect` designs whole sections and `PLAN.md` is simply absent.
 
-Each level has its own status vocabulary, and they mean different things:
+### Statuses
 
-| Level | Lives in | Statuses | Means |
-| --- | --- | --- | --- |
-| High-level feature | `product-design.md` | none | intent; never tracked |
-| Milestone (roadmap) | `product-roadmap.md` | none | intent; never tracked |
-| Milestone (plan) | `PLAN.md` | `[PLANNED]` `[ACTIVE]` `[SHIPPED]` | delivery; at most one active, shipped never reopens |
-| Low-level feature | `FEATURES.md` | `[NEW]` `[ITERATED]` `[PLANNED]` `[DONE]` | whether the **backlog matches the design**; `[DONE]` also means every task finished |
-| Task | `TASKS.md` | `[MISSING]` `[STUBBED]` `[INCORRECT]` `[PARTIAL]` `[IN PROGRESS]` `[DONE]` `[SKIP]` `[STALE]` | whether the **work** is done; the first four are the implementable states, `[STALE]` means the design moved underneath it |
+Only the work documents carry status, and each level means something
+different by it.
 
-`[ITERATED]` is the one state that demands action (re-plan the feature's
-tasks); `[DONE]` on a feature and `[SHIPPED]` on a milestone are the ones a
-human always confirms. `/production-status` reads across all three work
-indexes and tells you what to build next; `/task-list` groups the backlog by
-milestone through the same links.
+```mermaid
+stateDiagram-v2
+    direction LR
+    state "Feature (FEATURES.md)" as feature {
+        [*] --> NEW: /architect
+        NEW --> PLANNED: /task-add
+        PLANNED --> ITERATED: re-architected
+        ITERATED --> PLANNED: /task-add reconciles
+        PLANNED --> DONE: all tasks done,<br/>you confirm
+    }
+```
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    state "Task (TASKS.md)" as task {
+        [*] --> Implementable: /task-add
+        Implementable --> IN_PROGRESS: /task-implement
+        IN_PROGRESS --> DONE
+        IN_PROGRESS --> PARKED: question, --unattended
+        PARKED --> IN_PROGRESS: you answer
+        Implementable --> STALE: design changed
+        STALE --> Implementable: /task-add reconciles
+        Implementable --> SKIP: dropped, with a reason
+    }
+```
+
+*Implementable* is any of `[MISSING]`, `[STUBBED]`, `[INCORRECT]` and
+`[PARTIAL]`. Milestones in `PLAN.md` move `[PLANNED]` → `[ACTIVE]` →
+`[SHIPPED]`, at most one active, and a shipped milestone never reopens.
+`[ITERATED]` is the one state that demands action;
+[`/pipeline-check`](#4-plan-the-work) finds every one still waiting.
 
 ## 1. Set up a project
 
-**`/project-setup`** is the one-pass wizard: it seeds `CLAUDE.md` from
-whatever you paste, adds an optional `AGENTS.md` pointer, injects a VCS
-section for non-git projects, and offers to run the backlog, domain and
-context setups below. It gathers every choice up front and confirms once.
+One wizard, or two narrower commands you can run alone. All three leave
+their output uncommitted for review (`--commit` to commit).
 
-Behind it sit two narrower commands you can also run alone. **`/task-setup`**
-creates the backlog (`.claude/TASKS.md`, `.claude/tasks/`) and the project's
-test-dispatch scripts under `.claude/external/`, so `/task-implement` never
-has to guess the test command. **`/domain-setup`** scaffolds
-`.claude/domain/` with a `features/` folder, an index and the
-`.claude/FEATURES.md` feature index, then stops. It never writes design
-documents; those come from the design stage.
+| Command | What it does |
+| --- | --- |
+| `/project-setup` | Seeds `CLAUDE.md` from whatever you paste, adds an optional `AGENTS.md` pointer, a VCS section for non-git projects, and offers the setups below. Asks everything up front, confirms once. |
+| `/task-setup` | Creates the backlog and the project's test-dispatch scripts, so `/task-implement` never guesses the test command. |
+| `/domain-setup` | Scaffolds `.claude/domain/` and `FEATURES.md`, then stops. Design documents come from the design stage. |
 
-All three are authoring commands: uncommitted by default, `--commit` to
-commit and push. [Details →](docs/reference.md#1-setting-up-a-project)
+[Details →](docs/reference.md#1-setting-up-a-project)
 
 ## 2. Keep Claude oriented
 
-Two layers, two questions. The **context layer** under `.claude/context/`
-answers *where is what*: small structured summaries, one per source area,
-that let a session open only the files it needs. The **domain layer** under
-`.claude/domain/` answers *what is this and why*: the product design, the
-technical direction, one document per architected feature. `CLAUDE.md`
-points at both, so every session starts by reading an index instead of the
-tree.
+The context layer lets a session open only the files it needs.
 
-- **`/context-build`** creates the context layer once. Flat by default (one
-  `INDEX.md`, every context file beside it); `nested` builds a router index
-  plus one leaf per unit for repos where a single index is itself an
-  expensive read.
-- **`/context-update`** refreshes only the parts the latest diffs touched,
-  and commits. Run it after landing code.
-- **`/context-convert`** moves an existing layer between flat and nested
-  without rebuilding it, plan-first.
+| Command | What it does | Commits? |
+| --- | --- | --- |
+| `/context-build` | Builds the layer once: flat by default; `nested` for repos where one index is itself an expensive read. | `--commit` |
+| `/context-update` | Refreshes only what the latest commits touched. Run it after landing code. | yes |
+| `/context-convert` | Moves a layer between flat and nested without rebuilding it, plan first. | `--commit` |
 
-The domain layer is written by the design stage, not by a build command.
 [Details →](docs/reference.md#2-keeping-claude-oriented)
 
 ## 3. Design the product
 
-This is where the workflow is most opinionated. Design happens in three
-documents that hand off to each other, and each command is resumable because
-its state lives in the document it writes, not in the conversation.
+The most opinionated stage. Each command is resumable, because its state
+lives in the document it writes: run it again weeks later and it picks up
+where it stopped.
 
-**`/product-design`** brainstorms the product with you and writes
-`product-design.md` (what it is, who it's for, the key flows, the decisions,
-the high-level features from the user's side) and `technical-direction.md`
-(stack, topology, data, hosting for the product as a whole). It works on an
-existing codebase too: it opens with "here's what I see you've built; is this
-still the intent?". Run it again weeks later and it picks up where it
-stopped.
+| Command | What it does | Commits? |
+| --- | --- | --- |
+| `/product-design` | Works out the product with you: what it is, for whom, key flows, decisions, high-level features, and the technical direction. On existing code it opens with "here's what I see you've built — is this still the intent?" | yes |
+| `/product-roadmap` | Orders milestones, each with a goal, exit criteria and **scope slices** ("email and password only; no SSO"). No dates, no estimates: intent, not progress. | yes |
+| `/architect` | Decides how one feature will be built — components, data, contracts; no code — as a feature document. One product feature often becomes several. | yes |
 
-**`/product-roadmap`** writes `product-roadmap.md`: ordered milestones, each
-with a goal, exit criteria, a rationale, and **scope slices** saying which
-share of a high-level feature it takes on ("email and password only; no SSO").
-No status, no dates, no estimates: it records intent, not progress.
+- **Designs change after tasks exist.** Re-run `/architect` on a planned
+  feature and it marks the unfinished tasks `[STALE]` and the feature
+  `[ITERATED]`; `/task-add feature=<slug>` then reconciles them. For a
+  targeted change, `/architect amend` stales only the tasks the change
+  touches. It refuses while a task it would stale is `[IN PROGRESS]`.
+- **Hard calls get a council.** At a genuine fork, `/product-design` and
+  `/architect` can hand the decision to `claude-council`, a vendored copy of
+  [TorpedoD/claude-council](https://github.com/TorpedoD/claude-council): five
+  thinking lenses, anonymous peer review and a verdict that keeps dissent.
+  Optional, and needs `jq`; when it isn't installed the commands say nothing.
 
-**`/architect`** takes one high-level feature (or a bare description) and
-decides how it will actually be built, writing a low-level feature document
-under `.claude/domain/features/` and an entry in `FEATURES.md`. One product
-feature often becomes several architectural ones. It stops at components,
-data and contracts; no code, no file-by-file plans. On a roadmapped project
-it architects one slice at a time, so every low-level feature belongs to
-exactly one milestone.
-
-At a genuine fork, `/product-design` and `/architect` can hand the decision
-to **`claude-council`**, a vendored copy of
-[TorpedoD/claude-council](https://github.com/TorpedoD/claude-council): five
-thinking lenses, anonymous peer review, forced debate when consensus looks
-too clean, and a verdict that keeps dissent intact. Entirely optional; when
-it isn't installed the commands say nothing.
-
-**The iterate loop.** Designs change after tasks exist. Re-run `/architect`
-on a feature that already has tasks and it checks them first: if any is
-`[IN PROGRESS]` it refuses outright; otherwise it asks, rewrites the
-document, marks the unfinished tasks `[STALE]` and the feature `[ITERATED]`.
-Nothing is deleted. `/task-add feature=<slug>` then reconciles each stale
-task, and `[DONE]` tasks are never touched. For a targeted change rather
-than a redesign, `/architect amend feature=<slug>[,<slug>...] "<change>"`
-edits only the sections the change names, in one or more documents, and
-marks `[STALE]` only the tasks the change touches, judged from each task's
-title and `Files:` line. An `[IN PROGRESS]` task blocks it only when the
-change touches that task, and only for that feature. It decides on its own
-whether the change is editorial when its touched tasks and scope call settle
-it, and asks only when they don't; if it is editorial, nothing is staled. What each
-status means at each level is in
-[the production hierarchy](#the-production-hierarchy) above.
-
-`/product-design`, `/product-roadmap` and `/architect` commit and push what
-they wrote by default; pass `--no-commit` to hold the output back for
-review, or `--no-push` to commit without pushing.
 [Details →](docs/reference.md#3-designing-the-product)
 
 ## 4. Plan the work
 
-**`/production-plan`** writes `.claude/PLAN.md`: which architected feature
-belongs to which milestone, in what order, and after what. The order *is*
-the priority; there is no P0/P1 label, no size, no date, because a second
-ordering would eventually contradict the first. Dependency edges are
-proposed from the feature documents' prose and confirmed by you, and the
-skill refuses the two arrangements that cannot be built: a cycle, and a
-feature scheduled before something it needs.
+`/task-add` is the heart of the workflow: spend the focus in planning, then
+let the agent consume the tasks whenever it's convenient.
 
-**`/production-status`** is the read side. It joins `PLAN.md`,
-`FEATURES.md` and `TASKS.md` on every run and tells you the active
-milestone, what's ready, what's blocked and by what, and the single
-recommended next feature. It writes nothing and stores nothing; a plan that
-has fallen behind shows up as gaps, not as a date.
+| Command | What it does | Commits? |
+| --- | --- | --- |
+| `/task-add` | Turns a description, or a feature document (`feature=<slug>`), into tasks. Investigates the code, asks every question the work needs, and writes acceptance criteria you approve. | yes |
+| `/production-plan` | Orders features into milestones with dependency edges you confirm. The order *is* the priority; it refuses cycles and features scheduled before what they need. | yes |
+| `/production-status` | Tells you the active milestone, what's ready, what's blocked and by what, and the one feature to build next. | read-only |
+| `/pipeline-check` | Reports drift between the indexes — dangling links, cycles, stale work waiting — each finding with the one command that fixes it. | read-only |
+| `/pipeline-revise` | Changes already-planned work — one wording fix or a dozen edits — through the command that owns each file. | one commit at the end |
 
-**`/pipeline-check`** reports drift between those indexes and
-`RUNBOOKS.md`: a task whose `Feature:` names no feature, or that has no
-`Feature:` line on a project that keeps a feature index; a precondition
-pointing at a task that was never assigned or at a `[SKIP]` one; a
-precondition cycle; an `[ITERATED]` feature or a `[STALE]` task still waiting
-to be re-planned; a feature missing from the plan, or a plan line naming one
-that doesn't exist; a finished runbook still marked `[PENDING]`; and a
-`[PLANNED]` feature whose tasks have all resolved. Each finding carries an
-`ERROR` or `WARNING` severity and the one command that fixes it, and a clean
-project prints a single line. It fixes nothing: it writes nothing, and every
-fix stays with the command that owns the line. `feature=<slug>` narrows the
-report to one feature and the tasks and plan lines that name it. Its
-catalogue lives in the **`pipeline-engine`** skill, which installs alongside
-it.
+- **Tasks land where they belong.** `--before <N>` / `--after <N>` insert a
+  task mid-backlog with the precondition its position implies.
+- **Some work needs hands.** When part of a task only a person can do — an
+  editor step, a cloud console — `/task-add` records the checkpoints, and
+  `/task-implement` pauses at each one and verifies the outcome.
+- **Revisions are planned like anything else.** `/pipeline-revise` traces
+  each change up to the feature and down to its tasks and runbook steps,
+  shows every step as one numbered plan, and you reply by number. Nothing is
+  deleted: a removed task becomes `[SKIP]` with a reason.
 
-**`/task-add`** turns intent into tasks. Give it a short description and it
-investigates the codebase, asks every question needed to fill the gaps, and
-writes a task body with acceptance criteria you approve before anything is
-saved. This is the heart of the workflow: spend the focus in planning, then
-let the agent consume the tasks whenever it's convenient. With
-`feature=<slug>` it plans from an `/architect` document instead, so a
-feature becomes several tasks without re-explaining the work. New tasks go
-at the end of the backlog unless you say otherwise: `--before <N>` /
-`--after <N>` write the task at that spot together with the
-`Preconditions:` edge the position implies, so a task found mid-feature runs
-when it should rather than last, and `feature=<slug> --single` attaches one
-task to an already-planned feature without re-planning it. When part of
-a task only a human can do (an editor step, a cloud console) it records the
-checkpoints and marks the task human-in-the-loop.
-
-**Changing planned work.** Plans change after they're written, and a change
-rarely stops at one file — or at one change. **`/pipeline-revise`** is the
-one surface for all of it, and it writes nothing itself: every edit goes
-through the command that owns the artifact. You hand it a change set — a
-wording fix, or a dozen amendments, insertions, deletions and reorders
-described in your own words or pasted as a numbered list. It traces each
-item up to the feature document and down to the tasks and runbook steps
-built on it, decides in advance everything an owner would decide by rule,
-and shows the whole thing once as a numbered plan: every artifact touched,
-every owner step in order, what each writes, and which of them will stop to
-ask you something. You reply by number — run it, drop a step, move one,
-defer one to a runbook, or stop — and the steps run in order, in the
-session. It runs `/pipeline-check` before and after so you can see what the
-change fixed and what it broke, and asks once more at the end about anything
-the run surfaced that the plan didn't hold. Nothing is ever deleted: a
-removed task becomes `[SKIP]` with a reason, a removed runbook step is
-struck. And when you describe work in your own words instead of naming a
-command, `pipeline-suggest` fires on its own and points at the pipeline
-command that fits, in a line, then stops.
-
-`/production-plan` and `/task-add` both commit and push by default, and both
-take `--no-commit`; `/production-status`, `/pipeline-check` and
-`pipeline-suggest` write nothing;
-`/pipeline-revise` runs every owner step uncommitted and
-lands the whole revision as one commit at the end (`--no-commit`, `--no-push`). [Details →](docs/reference.md#4-planning-the-work)
+[Details →](docs/reference.md#4-planning-the-work)
 
 ## 5. Build and review
 
-**`/task-implement`** builds a task end-to-end, test-first, and lands it as
-exactly one commit. `next` takes the first eligible task and follows
-`Preconditions:`, so a task is picked only once everything it waits on is
-done; `all` works through the backlog in that same order. Both skip stale
-tasks so a batch run never guesses, and
-a multi-task run can hand each task to a fresh subagent so later tasks don't
-inherit earlier ones' context. On a human-in-the-loop task it pauses at each checkpoint,
-walks you through it, and verifies the outcome itself before moving on. On a
-Unity project set up with `/unity-mcp-setup` it can drive the editor over
-MCP instead and hand you a verification step in place of an instruction.
+| Command | What it does | Commits? |
+| --- | --- | --- |
+| `/task-implement` | Builds a task end-to-end, test-first, as one commit. `next` takes the first task whose preconditions are met; `all` works through the backlog. | yes, per task |
+| `/task-review` | Audits a diff against the task's acceptance criteria in a fresh context. Reports only findings it is confident in, each with a `file:line` and a concrete failure. | read-only |
+| `/task-iterate` | Triages review findings: each is fixed, deferred or rejected, and the reason is written down. | yes |
+| `/task-list` | Shows the backlog, grouped by milestone when a plan exists. | read-only |
+| `/task-clean` | Archives finished tasks out of the backlog — moved, never deleted. | yes |
 
-By default a run is **attended**: a question about the work is put to you and
-the run waits. Pass **`--unattended`** for a run nobody is watching and the
-task that asked is **parked** instead — `[PARKED]` in the backlog, its
-question recorded verbatim, its work-in-progress kept on a `park/task-<N>`
-branch — and the run goes on to the next task. You answer later: at the next
-launch, where the run lists its parked tasks and you reply by handle
-(`--skip-parked` skips that), in chat while the run is still going, or after
-the closing report; the task is then unparked and resumed where it stopped.
-Each parked question carries a handle `P<n>`, its questions `Q1`, `Q2`, …
-and options `a`, `b`, …, so a reply reads like `Unpark P1: Q1a, Q2b`.
-Every run ends with one closing report — *For the record*, then a numbered
-*Follow-ups* list whose numbers are the reply handle.
+- **`--review`** runs a review round before each commit, sized to the diff;
+  `--rounds N` loops it. Rejected findings carry into the next round, so the
+  same finding can't simply be raised again.
+- **A multi-task run** can hand each task to a fresh subagent, so later
+  tasks don't inherit earlier ones' context. Stale tasks are skipped, never
+  guessed at.
+- **Every run ends with one report:** what deviated, *for the record*, then
+  a numbered list of follow-ups. You reply by number.
 
-Pass **`--review`** and each task is peer-reviewed before it's committed.
-**`/task-review`** audits the diff against the task's acceptance criteria in
-a fresh subagent and reports only findings it holds at 80% confidence or
-better, each with a `file:line` and a concrete failure mode; it never runs
-the tests and never edits. **`/task-iterate`** triages those findings: every
-one gets exactly one of `fix`, `defer` or `reject`, written down before the
-first edit, and rejections travel into the next round so a finding can't
-simply be re-raised. The fixes ride in the task's own single commit. Reviewer
-cost is tiered automatically from the size of the diff; `--rounds N` loops
-it.
+### Unattended runs
 
-Around them, **`/task-list`** shows the backlog (grouped by milestone when a
-plan exists, with blocked features flagged) and **`/task-clean`** archives
-finished tasks out of it, moving each body under `.claude/tasks/archive/`
-rather than deleting it. The rules they all share live once, in the **`task-engine`**
-skill, which installs automatically alongside the commands that read it.
+By default a question about the work is put to you and the run waits. With
+**`--unattended`**, the task that asked is **parked** instead: marked
+`[PARKED]`, its question saved verbatim under a handle like `P1`, its work
+kept on a `park/task-<N>` branch. The run goes on to the next task. You
+answer whenever you're back — at the next launch, in chat, or after the
+report — with a reply like `Unpark P1: Q1a, Q2b`, and the task resumes where
+it stopped. `/runbook-run --unattended` parks runbook steps the same way.
 
-The build commands commit and push by default (`--no-commit`, `--no-push`).
 [Details →](docs/reference.md#5-building-and-reviewing)
 
 ## 6. Work across sessions
 
-Four features solve one problem: a conversation ends and its context dies
-with it.
+A conversation ends, and its context ends with it. Four tools keep what
+matters.
 
-**Runbooks** are for work not yet done. A design conversation ends with
-seven follow-up prompts; run them in one long session and step six drifts
-from step one's framing. **`/runbook-create`** captures them as an ordered
-list of self-contained prompts, each written for a fresh agent that has none
-of the conversation, and checks ten rules before it writes (self-contained,
-names its document, carries every decision that exists nowhere on disk and
-nothing that already does). **`/runbook-run`** executes it one step at a
-time, by default one subagent per step, relaying each agent's questions to you
-and your answers back, committing after every step. It never runs steps in
-parallel, by default never does a step's work itself, and never reviews what a
-step did; that is `/task-review`'s job, invoked from inside the step.
-`--inline` is the one opt-in exception: it executes the selected steps in your
-own session, sharing one context, instead of spawning a subagent for each.
-Relay-and-wait is the default `attended` policy. Under **`--unattended`** — or
-a runbook header line `Execution policy: unattended`, which `--attended`
-overrides for one run — the step that asked is parked (`[P]`, its question
-recorded and printed under a `P<n>` handle) and the run goes on to the steps
-that don't depend on it; at launch the parked steps in range are listed for
-you to answer by handle, unless `--skip-parked`, and a reply by handle in chat
-or after the closing report unparks a step too.
-`/runbook-create` commits and pushes the runbook it wrote by default
-(`--no-commit`, `--no-push`). `/runbook-list`,
-`/runbook-describe`, `/runbook-prune` and `/runbook-clean` round out the set —
-prune removes the finished **steps** from one live runbook, recording their ids
-on an `Archive:` line so a surviving `Depends on:` still resolves, while clean
-removes finished **runbooks** — and `runbook-suggest` fires on its own when a
-conversation produces a list worth capturing.
+| For | Command | What it does |
+| --- | --- | --- |
+| Work not yet done | `/runbook-create` | Captures a list of follow-up prompts as a runbook, each written for a fresh agent that has none of this conversation. |
+| | `/runbook-run` | Runs it one step at a time, each step in its own subagent, relaying questions to you and committing after every step. `--inline` runs the steps in your own session. |
+| | `/runbook-list`, `/runbook-describe`, `/runbook-prune`, `/runbook-clean` | List, inspect and tidy runbooks. |
+| Work about to be lost | `/follow-ups` | Lists what this conversation would lose if it ended now — or says `No follow-ups left`, and means it. |
+| Work in flight | `/session-save` | Writes a handoff: what was tried and failed, what was left alone on purpose, half-finished files, the exact next step. |
+| | `/session-resume` | Briefs a new session from the handoff, then **stops** — it takes no step of the plan itself. |
+| Cloud sessions | `hook:remote-session-protocol` | Has Claude batch every open question into one numbered message instead of asking while nobody is at the keyboard. |
 
-**`/follow-ups`** is for what the conversation is about to lose. It reads the
-session and lists what would go with it — actions proposed but never executed,
-outcomes never recorded on disk, decisions taken here and written down nowhere
-— as a numbered list, each item a slash command plus a short "to …" wherever
-one fits. The alternative answer is the single line `No follow-ups left`, and
-that is a guarantee rather than a shrug: the session can be quit without
-information or operation loss. Work already tracked on disk is never a
-follow-up; a task created here and not yet appended to the running runbook is.
-It takes no arguments, opens no project file and writes nothing, and
-`/runbook-run` and `/task-implement` apply its rules inside the *Follow-ups*
-list that closes every run — at a bound, a user-requested stop and a failure
-halt as much as at completion — so a run never ends leaving unrecorded work
-visible only in the transcript. When you answer such a list — "do 1 and 3",
-"ask me about 2 now", "I'll handle 4, remove it" — **`follow-ups-resolve`**
-fires on its own: it rewrites the list from your reply until you approve it,
-then executes it, handing items to subagents and bringing back only the
-questions that are really yours.
-
-**Session handoffs** are for work in flight. **`/session-save`** writes what
-this conversation knows into `.claude/sessions/`: what was tried and failed,
-what was deliberately not tried, which files are half-finished, the exact
-next step. Nine sections, every one written even when it's `N/A`. It commits
-and pushes the handoff by default (`--no-commit`, `--no-push`), since a handoff
-usually crosses machines. **`/session-resume`** briefs a new conversation from that file, flags it if
-stale, and **stops**; it takes no step of the plan it just described. A
-handoff is deleted by finishing the work, not by a flag.
-
-**`hook:remote-session-protocol`** is for cloud sessions, where a question
-asked through the `AskUserQuestion` tool can be re-asked while nobody is at
-the keyboard. The hook denies the tool there and has Claude batch every open
-question into one numbered message instead, then end its turn. Install it
-`--local` and commit it; it costs nothing in sessions where it doesn't fire.
+> [!IMPORTANT]
+> The hook is local-only: install it with `--local` and commit it to the
+> repository it governs.
 
 [Details →](docs/reference.md#6-working-across-sessions)
 
 ## 7. Keep the codebase healthy
 
-**`/refactor-codebase`** (constants, duplication, oversized files, imports,
-naming) and **`/refactor-tests`** (split bloated test files) do
-behaviour-preserving cleanup under a safety net: plan first, get approval,
-proceed phase by phase, run the suite between phases, halt on the first
-failure. Uncommitted by default.
+All three plan first, wait for your approval, and leave their work
+uncommitted.
 
-**`/doc-consolidate`** does the same for a rules document: it rewrites a
-command or skill body, a feature document or a context file under
-`claude-md:editing-discipline`, shows you only what it drops or merges, and
-has a fresh-context verifier list any rule the rewrite lost before the run
-ends. Meaning-preserving, never a style compressor. Uncommitted by default.
+| Command | What it does |
+| --- | --- |
+| `/refactor-codebase` | Constants, duplication, oversized files, imports, naming — behaviour-preserving, phase by phase, halting on the first failing test. |
+| `/refactor-tests` | Splits bloated test files, the suite green before and after each split. |
+| `/doc-consolidate` | Rewrites a rules document so each rule is stated once, and has a fresh-context verifier list anything the rewrite lost. |
+
 [Details →](docs/reference.md#7-keeping-the-codebase-healthy)
 
-## 8. Editor and shell extras
+## 8. Extras
 
-- **`/unity-mcp-setup`** wires a Unity project for MCP so `/task-implement`
-  can drive the editor itself; **`unity-mcp-skill`** is the operator guide
-  Claude leans on while doing so.
-- **`claude-md:git-commit-style`**, **`claude-md:tool-usage-policy`** and
-  **`claude-md:editing-discipline`** inject a managed section into
-  `CLAUDE.md` (global, or a project's with `--local`): scannable commit
-  messages with trailers only on big commits, built-in file tools over shell
-  commands, and rules documents that supersede instead of stratify.
-- **`statusline:session-statusline`** shows model, directory, branch,
-  context usage, cost and rate limits in the status bar. Global-only.
+| Feature | What it does |
+| --- | --- |
+| `/unity-mcp-setup` + `unity-mcp-skill` | Wires a Unity project for MCP, so `/task-implement` can drive the editor itself. |
+| `claude-md:git-commit-style` | Scannable commit messages, trailers only on big commits. |
+| `claude-md:tool-usage-policy` | Built-in file tools over shell commands. |
+| `claude-md:editing-discipline` | Rules documents that supersede instead of piling up. |
+| `statusline:session-statusline` | Model, directory, branch, context usage, cost and rate limits in the status bar. Global-only. |
 
+The `claude-md:*` features inject a managed section into `CLAUDE.md` —
+your global one, or a project's with `--local`.
 [Details →](docs/reference.md#8-editor-and-shell-extras)
+
+### Skills that fire on their own
+
+You never type these; Claude reaches for them when the conversation calls
+for it, and each says one or two lines.
+
+| Skill | Fires when |
+| --- | --- |
+| `pipeline-suggest` | You describe work in your own words — it names the pipeline command that fits. |
+| `runbook-suggest` | A conversation produces a list of follow-ups worth keeping — it suggests `/runbook-create`. |
+| `follow-ups-resolve` | You answer a follow-ups list ("do 1 and 3, I'll handle 4") — it confirms the plan with you, then carries it out. |
 
 ## The CLI
 
-The CLI is deliberately small: a managed clone at `~/.chosko-llm/`, a proxy
-at `~/bin/chosko-llm`, and copy-not-symlink installs into `~/.claude/`. The
-filesystem is the only state; there is no lockfile.
+Small on purpose: a managed clone at `~/.chosko-llm/`, a proxy at
+`~/bin/chosko-llm`, and plain file copies into `~/.claude/`. The filesystem
+is the only state; there is no lockfile.
 
 ```sh
 chosko-llm ls                     # every feature: installed vs available version
-chosko-llm show <feature>         # inspect one: description + the body's `#` header (its flags); --diff --content previews an update
-chosko-llm add <feature> ...      # install (pulls in anything it requires:)
-chosko-llm add --all              # install everything
+chosko-llm show <feature>         # description and flags; --diff --content previews an update
+chosko-llm add <feature> ...      # install (pulls in anything it requires)
 chosko-llm rm <feature>           # remove (refuses while something still requires it)
 chosko-llm upgrade                # pull the latest source; prints the changelog for what moved
 chosko-llm update --all           # re-copy every installed feature from that source
@@ -490,78 +422,43 @@ chosko-llm export [--archive]     # package a repo's Claude config for a Project
 chosko-llm uninstall              # tear it all down, prompting at each step
 ```
 
-**Five feature kinds.** Commands and skills copy into `~/.claude/`; claude-md
-snippets inject a managed section into `CLAUDE.md`; statusline scripts are
-global-only; hooks are local-only. A bare name matches any kind, and
-`kind:<name>` disambiguates.
-
-**Per-repository installs.** Every verb takes `--local` to target
-`<cwd>/.claude` instead of your home, so a cloud agent that can't run the
-installer still gets the commands the project needs.
-
-**Staying current.** The first command you run each day quietly runs
-`upgrade`; `update --all` remains an explicit step. `upgrade
---disable-auto` opts out. Feature names, dependencies between features,
-Windows notes and every environment variable are in the reference.
+- **Five feature kinds.** Commands and skills copy into `~/.claude/`;
+  claude-md snippets inject a managed section into `CLAUDE.md`; statusline
+  scripts are global-only; hooks are local-only. A bare name matches any
+  kind; `kind:<name>` disambiguates.
+- **Per-repository installs.** Every verb takes `--local` to target
+  `<cwd>/.claude`, so a cloud agent that can't run the installer still gets
+  the commands the project needs.
+- **Staying current.** The first command you run each day quietly runs
+  `upgrade`; `update --all` stays an explicit step. `upgrade
+  --disable-auto` opts out.
 
 [Details →](docs/reference.md#9-the-cli)
 
----
+## How it compares
 
-## Development
+Several projects give Claude Code a structured workflow. Where chosko-llm
+differs:
 
-This section is for contributors and authors working on the repo itself.
+| | chosko-llm | [Spec Kit](https://github.com/github/spec-kit) | [CCPM](https://github.com/automazeio/ccpm) | [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD) | [Task Master](https://github.com/eyaltoledano/claude-task-master) |
+| --- | --- | --- | --- | --- | --- |
+| **Center of gravity** | design → tasks → reviewed commits, kept in repo documents | specs per change | PRDs → epics → GitHub issues | agent personas across an agile lifecycle | a task list parsed from a PRD |
+| **Separate navigation layer for the code** | yes | — | — | — | — |
+| **Design changes re-plan only affected tasks** | yes | — | — | — | — |
+| **Unattended runs that park on a question** | yes | — | — | — | — |
+| **Where the work is tracked** | Markdown in the repo | Markdown in the repo | GitHub Issues | Markdown in the repo | JSON in the repo |
+| **Runtime** | bash + git | Python (uv) | bash + `gh` | Node | Node |
 
-### Developer install
+This comparison reflects each project's README at the time of writing; a
+dash means the README doesn't describe it.
 
-Clone the repo and run the installer from your working copy; it derives the origin URL from the local git remote:
+## Contributing
 
-```sh
-git clone https://github.com/Chosko/chosko-llm.git chosko-llm
-cd chosko-llm
-./install.sh
-```
+Working on chosko-llm itself — developer install, authoring a feature,
+versioning rules — is covered in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-### Authoring features
+## License
 
-- New command → single `.md` file under `commands/`. See [docs/authoring-guide.md](docs/authoring-guide.md#commands).
-- New skill → folder with a `SKILL.md` under `skills/`. See [docs/authoring-guide.md](docs/authoring-guide.md#skills).
-
-Every feature requires YAML frontmatter (`name`, `version`, `type`, `description`). `add` and `update` refuse to install a file missing a `version` field. Three keys are optional: `replaces: <kind>:<name>` on a feature that changed kind, `requires: <kind>:<name>[, …]` on a feature whose body reads a file inside another installed feature, and the hook-only `event:` (required there) / `matcher:` pair.
-
-**The `description` is short by contract.** Claude Code injects every installed feature's `description` into the system prompt at session start and truncates each at 1,536 characters, so a description is a cost every session pays whether or not the feature is invoked. Each one says what the feature does and when to use it, front-loaded: at most 60 words / 400 characters for a feature you invoke by name, 150 words / 1,000 characters for the five skills Claude selects on its own (`claude-council`, `runbook-suggest`, `pipeline-suggest`, `follow-ups-resolve`, `unity-mcp-skill`), trigger phrases first and any "Not for" list last, never a literal ` --- `. Flags, refusals, read-only contracts and commit defaults live in the body's leading `#` header instead, which loads only when the feature runs and which `chosko-llm show` prints under the description. The full contract is in [docs/authoring-guide.md](docs/authoring-guide.md#the-description-contract).
-
-**Some features are hidden from the model by design.** Ten carry `disable-model-invocation: true` — the two reference libraries `task-engine` and `pipeline-engine`, and the wizards and housekeeping commands `/project-setup`, `/task-setup`, `/domain-setup`, `/unity-mcp-setup`, `/refactor-codebase`, `/refactor-tests`, `/runbook-prune`, `/runbook-clean`. Each stays listed and typeable, but its description never enters the model's context, since none is useful to suggest unprompted. `unity-mcp-skill` carries a `paths:` filter (`Assets/**`, `ProjectSettings/**`, `Packages/**`) so it loads only in a Unity project. `parse_frontmatter` ignores keys it does not know, so these pass through `add` / `update` untouched.
-
-**Versioning.** There are two version axes. The per-feature `version:` frontmatter versions a single command or skill (and gates `add` / `update`). The root `VERSION` file is the repo-level stamp that `install.sh` reports: bump it on every shipped change, patch for fixes, minor for a new feature, major for a breaking CLI change. A feature change bumps both.
-
-Two things do not bump it. **Project documentation** (`README.md`, `docs/`, `.claude/domain/`, `.claude/context/` and `CLAUDE.md` itself) changes nothing a user receives, so it bumps nothing and gets no changelog entry; a shipped feature's own body (`commands/*.md`, `skills/*/SKILL.md`, `claude-md/*.md`, `statusline/*.sh`, `hooks/*.sh`) is the product rather than documentation and bumps as always, markdown or not. And the repo-local skills under this repo's own `.claude/skills/` are unversioned development tooling installed nowhere, so a change confined to them bumps neither axis.
-
-A `VERSION` bump without a matching `CHANGELOG.md` section is an incomplete change; conversely, a change that does not bump `VERSION` gets no changelog entry. Each entry is one line: a bold subject naming the command, subcommand or script that changed, then a short clause saying what a user would notice. Run [`./scripts/check-changelog.sh`](scripts/check-changelog.sh) after bumping. It is silent when the top section matches `VERSION`, has at least one bullet, and the version headers are strictly descending semver, and fails naming the first violation otherwise.
-
-### Repo layout
-
-| Path                         | Purpose                                                                  |
-| ---------------------------- | ------------------------------------------------------------------------ |
-| `install.sh` / `uninstall.sh` | Bootstrap the managed clone and `~/bin` proxy / tear them down.          |
-| `VERSION`                    | Repo-level version stamp, bumped on every shipped change (see above).     |
-| `CHANGELOG.md`               | User-facing changes per `VERSION`, newest first. Read by `upgrade` to print what a pull changed. |
-| `bin/chosko-llm`             | Proxy script copied to `~/bin/chosko-llm` by `install.sh`.               |
-| `bin/chosko-llm.cmd`         | Windows batch shim copied alongside the proxy on Windows.                |
-| `scripts/lib.sh`             | Shared shell helpers (logging, frontmatter, path resolution).            |
-| `scripts/cmd-*.sh`           | One file per CLI subcommand. The proxy delegates here.                   |
-| `scripts/check-changelog.sh` | Authoring-time guard: fails when a `VERSION` bump has no matching `CHANGELOG.md` section. Not a subcommand; run it by hand. |
-| `scripts/check-routing.sh`   | Authoring-time guard: fails when a row of the pipeline routing table (`skills/pipeline-engine/references/routing.md`) names no shipped feature, or a feature declaring `requires: skill:pipeline-engine` has no row. Not a subcommand; run it by hand. |
-| `scripts/check-home-paths.sh` | Authoring-time guard: fails when a body under `commands/` or `skills/` cites another shipped file by an absolute install home (`${CLAUDE_HOME:-$HOME/.claude}`, `$HOME/.claude`, `~/.claude`) instead of a path relative to itself — the form that silently misses every `--local` install. Catches the two-line wrap too, and has no exemptions. Not a subcommand; run it by hand. |
-| `commands/<name>.md`         | A Claude Code command. Frontmatter required.                             |
-| `skills/<name>/SKILL.md`     | A Claude Code skill. Frontmatter required.                               |
-| `claude-md/<name>.md`        | A CLAUDE.md snippet feature, merged into the user's CLAUDE.md.           |
-| `statusline/<name>.sh`       | A status-line script feature, installed to `~/.claude/statusline/`.      |
-| `hooks/<name>.sh`            | A hook-event script feature, installed to a project's `.claude/hooks/` (local-only). |
-| `.claude/context/`           | Navigation context layer (`INDEX.md` + per-source files) for this repo.  |
-| `.claude/domain/`            | Domain workflow docs (task, context, refactor, product) referenced by `CLAUDE.md`. |
-| `.claude/skills/`            | Repo-local audit skills used to develop this repo (`/context-budget`, `/rule-overlap`). Unversioned, never installed; not features. |
-| `.claude/TASKS.md` / `.claude/tasks/` | This repo's own task backlog and per-task body files.           |
-| `docs/reference.md`          | The complete feature and CLI reference this README links into.           |
-| `docs/authoring-guide.md`    | How to write a new feature of any kind.                                  |
-| `docs/cli-help.txt`          | Help text rendered by `chosko-llm help`.                                 |
+[MIT](LICENSE). Copies must keep the copyright notice. The vendored
+`claude-council` skill is © TorpedoD, MIT-licensed, with its own
+[LICENSE](skills/claude-council/LICENSE).

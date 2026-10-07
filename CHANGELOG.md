@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.76.4 — 2026-10-06
+
+- **`claude-council` ships its upstream license.** The installed skill folder carries TorpedoD's MIT `LICENSE`, crediting the original project.
+
 ## 1.76.3 — 2026-10-06
 
 - **`/refactor-codebase`, `/refactor-tests` and `/context-build` state their uncommitted default as a plain rule.** Wording only; behaviour is unchanged.
