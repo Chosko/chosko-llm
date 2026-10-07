@@ -17,7 +17,8 @@ Covers the task suite's backlog-maintenance features: `task-setup`,
   sentinel, which is what marks a wrapper as a stub on a re-run, after it
   asks `skip-tests` or `skip-tests-unattended` and writes
   `Testing policy for /task-implement: <value>` into a
-  `## Tasks implementation` section of `CLAUDE.md`. Carries no copy of the
+  `## Tasks implementation` section of `CLAUDE.md` — not asked when that
+  line already holds one of the two, as after `/project-setup`. Carries no copy of the
   index or body formats — cites `task-engine`'s `resolution.md` § Index
   file format and `/task-add`'s body format relatively, declaring
   `requires: skill:task-engine, command:task-add`.

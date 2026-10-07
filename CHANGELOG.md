@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.97.2 — 2026-10-07
+
+- **`/project-setup` asks the testing-policy question once.** On a project with no test suite, `/task-setup` keeps the `skip-tests` or `skip-tests-unattended` line `/project-setup` already wrote instead of asking for it again.
+
 ## 1.97.1 — 2026-10-07
 
 - **`/quick-implement --review` under orchestrate mode hands review fixes to the areas.** Each review finding goes to the area agent that owns the file it cites, and that agent decides and applies the fix; the orchestrating session only routes findings and never edits code. The run still makes one commit.

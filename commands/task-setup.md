@@ -1,6 +1,6 @@
 ---
 name: task-setup
-version: 2.1.2
+version: 2.1.3
 type: command
 description: Initialize the project's task backlog — creates .claude/TASKS.md, the .claude/tasks/ directory and the test-dispatch wrappers under .claude/external/. Run it once on a project before its first /task-add; a re-run only creates what is missing.
 disable-model-invocation: true
@@ -233,9 +233,13 @@ leaving the wrappers unwritten (`gates.md` § *Real decisions*).
 If the user picks **A**, do not write the wrapper scripts and report
 the artifacts left missing.
 
-If the user picks **B**, ask which testing policy `/task-implement` should
-record for the project — a real decision, stopping the run under
-`unattended` like the question above:
+If the user picks **B** and the project's `CLAUDE.md` already carries the
+line `Testing policy for /task-implement: skip-tests` or
+`… skip-tests-unattended` — `/project-setup` writes it before running this
+command — keep that line, ask nothing more, and go on to the stubs.
+Otherwise ask which testing policy `/task-implement` should record for the
+project — a real decision, stopping the run under `unattended` like the
+question above:
 
 > Which testing policy should `/task-implement` use here?
 >

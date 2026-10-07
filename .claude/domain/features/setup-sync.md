@@ -81,7 +81,10 @@ repo-local bash guards beside `check-routing.sh`, `check-home-paths.sh` and
 
 `/task-setup` (see `.claude/context/task-backlog.md`):
 
-- The no-test-suite option writes the testing-policy marker.
+- The no-test-suite option writes the testing-policy marker, and asks for
+  it only when `CLAUDE.md` does not already hold `skip-tests` or
+  `skip-tests-unattended` there — so a `/project-setup` run, which writes
+  the marker first, asks the question once.
 - The dead "LOCATING THE TEST RUNNER" citation points at "RESOLVING THE
   TEST RUNNER".
 - The index format gains `Target:`.
