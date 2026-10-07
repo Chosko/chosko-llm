@@ -646,7 +646,7 @@ Feature: setup-sync
 
 ## 295. Add slug resolution to `/session-resume`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/session-resume.md, VERSION, CHANGELOG.md
 Preconditions: none

@@ -1,8 +1,8 @@
 ---
 name: session-resume
-version: 0.1.1
+version: 0.2.0
 type: command
-description: Brief this session from a handoff file under .claude/sessions/ — the newest, the newest from a given date, or a path you name — reporting what was being built, what must not be retried and the next step, then stop. Use it when picking up work /session-save recorded.
+description: Brief this session from a handoff file under .claude/sessions/ — the newest, the newest from a given date or with a given slug, or a path you name — reporting what was being built, what must not be retried and the next step, then stop. Use it when picking up work /session-save recorded.
 ---
 
 # /session-resume
@@ -14,9 +14,11 @@ description: Brief this session from a handoff file under .claude/sessions/ — 
 # resolves, and hands the deletion of the file it resumed from to the user.
 # Usage: /session-resume
 #        /session-resume <YYYY-MM-DD>
+#        /session-resume <slug>
 #        /session-resume <path>
 # Examples: /session-resume
 #           /session-resume 2026-08-24
+#           /session-resume ecc-import-architecture
 #           /session-resume .claude/sessions/2026-08-24-1430-ecc-import-architecture.md
 
 GOAL
@@ -34,47 +36,64 @@ $ARGUMENTS
 
 ---
 
+THE RESOLUTION RULE
+
+This section — ARGUMENT PARSING and FINDING THE FILE together — is the whole
+rule for turning an argument into one handoff file. It is self-contained so
+another session command can apply it by name, as "the resolution rule in
+`/session-resume`", without restating it. Such a command names the picked
+file on its own first output line, in its own words; everything else here
+applies to it unchanged.
+
 ARGUMENT PARSING
 
-`$ARGUMENTS` has exactly three recognized forms:
+`$ARGUMENTS` has four recognized forms, tried in this order:
 
 | Argument | Behaviour |
 |---|---|
-| *(none)* | the newest candidate file in `.claude/sessions/` |
-| `YYYY-MM-DD` | the newest candidate from that date |
-| a path | read that file directly |
+| a path — contains `/` or `\`, or ends in `.md` | read that file directly, with no candidacy check |
+| a date — matches `YYYY-MM-DD` exactly | the newest candidate from that date |
+| a slug — anything else that is not purely numeric | the newest candidate whose filename's slug part equals it exactly |
+| *(none)* | the newest candidate in `.claude/sessions/` |
 
-An argument is a **path** when it contains `/` or `\`, or ends in `.md`. It is
-a **date** when it matches `YYYY-MM-DD` exactly.
+A filename's **slug part** is what follows the `YYYY-MM-DD-HHMM-` prefix and
+precedes `.md`: `2026-08-24-1430-ecc-import-architecture.md` has the slug
+`ecc-import-architecture`. Matching is exact and on the filename alone. A slug
+that equals no candidate's slug part names the nearest existing slugs — up to
+five, those sharing the longest prefix or the most words with it — and stops.
+There is no substring or fuzzy fallback and no fall-through to the newest
+candidate: guessing a file for a name the user typed would load the wrong
+session.
 
-**There is no task-number selector.** A bare number is not a recognized
-argument. Say so in one line and carry on with the newest candidate — like
-`/session-save`, this command never refuses over its own arguments. Anything
-else unrecognized is handled the same way.
-
----
+**There is no task-number selector.** A bare number is not a slug — no slug
+`/session-save` generates is purely numeric — and not a recognized argument.
+Say so in one line and carry on with the newest candidate: over a bare number,
+like `/session-save`, this command does not refuse.
 
 FINDING THE FILE
 
-List `.claude/sessions/` with the file-listing tool. Do **not** run `ls`,
-`find`, `git`, or any other shell command to do it.
+List `.claude/sessions/` with the file-listing tool, and match dates and slugs
+against the filenames it returns. Do **not** run `ls`, `find`, `grep`, `git`,
+or any other shell command to do it.
 
-**Only a file carrying a `Work:` line is a candidate.** `.claude/sessions/`
-may hold companion documents that are not handoffs — a hand-written notes
-file, a scratch plan someone dropped beside the real thing — and a file with
-no `Work:` line would otherwise be selected as "the newest file" and briefed
-from as though it were a handoff. The `Work:` line is mandatory in both forms
-`/session-save` writes, which makes it the cheapest reliable discriminator.
+**Only a top-level file carrying a `Work:` line is a candidate.**
+`.claude/sessions/` may hold companion documents that are not handoffs — a
+hand-written notes file, a scratch plan someone dropped beside the real thing —
+and subfolders, such as the area handoffs of an orchestrated session and
+`pending/`. A file with no `Work:` line would otherwise be selected as "the
+newest file" and briefed from as though it were a handoff. The `Work:` line is
+mandatory in both forms `/session-save` writes, which makes it the cheapest
+reliable discriminator.
 
-A non-candidate is **skipped silently**. It is not an error, not a warning,
-and not worth a line of output — the directory is allowed to hold other
-things.
+A non-candidate — a file with no `Work:` line, a subfolder, anything inside a
+subfolder — is **skipped silently**. It is not an error, not a warning, and
+not worth a line of output — the directory is allowed to hold other things.
 
 **Ties break deterministically.** Two files can share the identical
-`YYYY-MM-DD-HHMM` prefix, so "newest" is ambiguous on the prefix alone. Sort
-candidates on the **full filename**, descending, and take the first. Then
-**name the file that was picked**, on the first line of the output, before
-anything else:
+`YYYY-MM-DD-HHMM` prefix, and several can carry the same slug, so "newest" is
+ambiguous on the prefix alone. Sort the candidates on the **full filename**,
+descending, and take the first. Then **name the file that was picked**, on the
+first line of the output, before anything else:
 
 ```
 Resuming from .claude/sessions/2026-08-24-1430-ecc-import-architecture.md
@@ -87,13 +106,16 @@ A **path given explicitly is read as given**, with no candidacy check. The
 user named the file; that settles it. If it has no `Work:` line, brief from
 whatever it does carry and say so in one line.
 
-Two situations stop the command, reported plainly:
+Four situations stop the command, reported plainly:
 
 - No `.claude/sessions/` directory — say the project has no session store and
   point at `/session-save`. Do **not** create the directory.
 - The directory exists but holds no candidate, or none from the requested
   date — say so, and for the date form name the dates that do have candidates.
   Do not fall back to a different date.
+- A slug matches no candidate — name the nearest existing slugs, as above.
+- An explicit path does not exist — say so. Do not fall back to the newest
+  candidate.
 
 **Never invent a briefing.** With no file there is nothing to report, and a
 plausible-sounding summary of a session that was never saved is worse than the
@@ -234,7 +256,13 @@ READ-ONLY THROUGHOUT
 
 ---
 
-FAILURE CONTRACT — degradation, never refusal
+FAILURE CONTRACT — degradation, never refusal, with one exception
+
+Every situation below either degrades to the most useful report the files
+allow or, when there is nothing to brief from, says so and stops. The one
+exception is a slug that matches nothing: a briefing could be given from the
+newest file, but the command stops instead, because guessing a file for a name
+the user typed loads the wrong session.
 
 | Situation | Behaviour |
 | --- | --- |
@@ -242,12 +270,13 @@ FAILURE CONTRACT — degradation, never refusal
 | Directory holds no candidate | Say so and stop. Files with no `Work:` line were skipped silently and are not mentioned. |
 | No candidate from the requested date | Say so, name the dates that do have candidates, stop. |
 | An explicit path that does not exist | Say so and stop. Do not fall back to the newest candidate. |
+| A slug with no exact match | Name the nearest existing slugs and stop. No substring or fuzzy match, no fall-back to the newest candidate. |
 | An explicit path with no `Work:` line | Brief from what it carries, say so in one line. |
 | `Resume from:` names a path that is gone | Say so, brief from the pointer file's header alone, call the briefing thin. |
 | A full-form file missing sections | Brief the sections it has, name the ones it lacks in one line. |
 | File older than 14 days | Flag before the briefing, then brief normally. Never a refusal. |
 | Paths in the file that no longer exist | Name each one before the briefing, then brief without them. |
-| An unrecognized argument | Say so in one line, carry on with the newest candidate. |
+| A bare number | Say it is not a recognized argument in one line, carry on with the newest candidate. |
 
 ---
 
@@ -264,8 +293,8 @@ DO NOT:
 - Select a file with no `Work:` line as "the newest", or report skipping one
   as an error.
 - Pick between same-prefix candidates without naming which one was picked.
-- Fall back to another date, or to the newest candidate, when an explicit path
-  or date found nothing.
+- Fall back to another date, to a substring or fuzzy match, or to the newest
+  candidate, when an explicit path, date or slug found nothing.
 - Delete or name for deletion the artifact a pointer file points at. Only the
   session file is ever superseded.
 - Put the staleness flag or the missing-path list after the briefing.

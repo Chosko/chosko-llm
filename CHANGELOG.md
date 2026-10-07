@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.87.0 — 2026-10-07
+
+- **`/session-resume <slug>` resumes a session by name.** Type the human-readable part of a handoff's filename (`/session-resume ecc-import-architecture`) to resume the newest handoff carrying that slug. A slug that matches nothing exactly lists the nearest existing slugs and stops, rather than resuming a different session.
+
 ## 1.86.0 — 2026-10-07
 
 - **Features declare the project settings they read.** A new optional `project-policy:` frontmatter key names the `CLAUDE.md` lines (with their allowed values), `CLAUDE.md` sections and VCS operations a feature states the rule for. `interaction-engine`, `task-implement`, `doc-consolidate`, `task-engine`, `task-clean`, `context-convert`, `session-save`, `task-review` and `task-iterate` carry it. Installing and updating features is unchanged.
