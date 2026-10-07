@@ -190,7 +190,7 @@ Show the user the pilot result recorded in step 5's Done: line (word reduction p
 
 Done: 2026-10-07, no commit — user answered: "Go" (run the full rewrite at step 20).
 
-## [ ] 9. Task the Unity MCP removal
+## [x] 9. Task the Unity MCP removal
 
 Depends on: 3
 
@@ -199,6 +199,8 @@ Context: none
 ```prompt
 /task-add feature=unity-mcp-removal
 ```
+
+Done: 2026-10-07, commit `722395f` (5 files, +231/-3). Tasks 288–290; 289 also refreshes the tracked --local copies; 290 also edits docs/authoring-guide.md (authoring reference, not user-facing).
 
 ## [ ] 10. Task setup sync
 
