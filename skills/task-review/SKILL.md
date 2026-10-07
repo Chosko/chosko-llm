@@ -1,9 +1,10 @@
 ---
 name: task-review
-version: 0.4.3
+version: 0.4.4
 type: skill
 description: Audit a diff against the acceptance criteria of the task that produced it and report structured findings, each cited to a file:line with a BLOCKING, IMPORTANT or ADVISORY severity. Use it on an uncommitted tree, a branch or a pull request before the work is accepted; /task-implement's review rounds spawn it as a fresh-context reviewer.
 requires: skill:task-engine
+project-policy: vcs:branch, vcs:diff, vcs:log
 ---
 
 # /task-review

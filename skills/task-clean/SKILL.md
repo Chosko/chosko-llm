@@ -1,10 +1,11 @@
 ---
 name: task-clean
-version: 0.11.0
+version: 0.11.1
 type: skill
 description: Prune tasks in a terminal status from the backlog by archiving them — each summary block leaves TASKS.md and the body moves to .claude/tasks/archive/<N>.md, never deleted. Use it when finished tasks clutter the backlog; a backfill mode recovers, from git history, bodies earlier runs deleted.
 replaces: command:task-clean
 requires: skill:task-engine, skill:interaction-engine
+project-policy: vcs:mv, vcs:show, vcs:branch
 ---
 
 # /task-clean

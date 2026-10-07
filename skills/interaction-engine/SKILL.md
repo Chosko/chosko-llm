@@ -1,9 +1,10 @@
 ---
 name: interaction-engine
-version: 0.1.0
+version: 0.1.1
 type: skill
 description: Reference library for the interaction policy — the attended/unattended policy and its precedence, the three gate classes, and the output and question rules every interactive feature shares, under references/; read by path, never invoked.
 disable-model-invocation: true
+project-policy: line:Interaction policy=attended|unattended
 ---
 
 # interaction-engine

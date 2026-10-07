@@ -626,7 +626,7 @@ Feature: setup-sync
 
 ## 293. Add the `project-policy:` frontmatter key, its declarations and the `check-setup.sh` guard
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: scripts/lib.sh, scripts/check-setup.sh, skills/interaction-engine/SKILL.md, skills/task-implement/SKILL.md, skills/doc-consolidate/SKILL.md, skills/task-engine/SKILL.md, skills/task-clean/SKILL.md, skills/context-convert/SKILL.md, commands/session-save.md, skills/task-review/SKILL.md, skills/task-iterate/SKILL.md, CLAUDE.md, VERSION, CHANGELOG.md
 Preconditions: 281, 291, 292

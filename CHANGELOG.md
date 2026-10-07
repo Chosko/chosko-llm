@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.86.0 — 2026-10-07
+
+- **Features declare the project settings they read.** A new optional `project-policy:` frontmatter key names the `CLAUDE.md` lines (with their allowed values), `CLAUDE.md` sections and VCS operations a feature states the rule for. `interaction-engine`, `task-implement`, `doc-consolidate`, `task-engine`, `task-clean`, `context-convert`, `session-save`, `task-review` and `task-iterate` carry it. Installing and updating features is unchanged.
+
 ## 1.85.0 — 2026-10-07
 
 - **`/project-setup` asks the testing policy on every project**, not only on Unity ones, offering `full-tdd`, `skip-tests`, `skip-tests-unattended` or no line (the default, where `/task-implement` detects the runner). A chosen value goes into a `## Tasks implementation` section of `CLAUDE.md`.

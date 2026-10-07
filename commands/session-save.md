@@ -1,9 +1,10 @@
 ---
 name: session-save
-version: 0.3.0
+version: 0.3.1
 type: command
 description: Capture what this conversation knows — what was tried, what failed, what was left alone on purpose, which files are half-finished and the exact next step — into a timestamped handoff file under .claude/sessions/. Use it before a conversation ends with work in flight.
 requires: skill:interaction-engine
+project-policy: vcs:rm
 ---
 
 # /session-save

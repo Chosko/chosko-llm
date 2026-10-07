@@ -1,9 +1,10 @@
 ---
 name: task-iterate
-version: 0.2.0
+version: 0.2.1
 type: skill
 description: Triage review findings it did not produce — fix, defer or reject each one, apply the fixes and record why the rest were not — on an uncommitted tree, a branch or a pull request. Use it after /task-review has reported; /task-implement's review rounds run it in-session between the review and the task's single commit.
 requires: skill:interaction-engine
+project-policy: vcs:branch
 ---
 
 # /task-iterate

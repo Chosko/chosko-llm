@@ -169,7 +169,7 @@ scope_violation_message() {
 # markdown file.
 #
 # Recognised keys: name, version, type, description, replaces, requires, event,
-# matcher.
+# matcher, project-policy.
 # `replaces` is optional — see the kind-migration section below.
 # `requires` is optional and valid on every kind — see the dependency section
 # below. The value is a comma-separated list of kind-prefixed specs, and the
@@ -179,6 +179,8 @@ scope_violation_message() {
 # Claude Code hook event to wire the script into (PreToolUse, SessionStart, …)
 # and `matcher` optionally narrows it to one tool. Both are ignored on every
 # other kind.
+# `project-policy` is optional and read by scripts/check-setup.sh only: the
+# per-project facts a feature states the rule for. No CLI verb acts on it.
 _FM_AWK='
   function _flush(   i, out) {
     if (curfile == "") return
@@ -210,7 +212,7 @@ _FM_AWK='
     if (v ~ /^".*"$/ || v ~ /^'\''.*'\''$/) {
       v = substr(v, 2, length(v) - 2)
     }
-    if (key == "name" || key == "version" || key == "type" || key == "description" || key == "replaces" || key == "requires" || key == "event" || key == "matcher") {
+    if (key == "name" || key == "version" || key == "type" || key == "description" || key == "replaces" || key == "requires" || key == "event" || key == "matcher" || key == "project-policy") {
       if (mode == "print") { print key "=" v }
       else if (!(key in val)) { val[key] = v }
     }

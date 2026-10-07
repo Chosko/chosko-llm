@@ -1,9 +1,10 @@
 ---
 name: context-convert
-version: 0.2.0
+version: 0.2.1
 type: skill
 description: Convert an existing navigation context layer between the flat layout (one INDEX.md with every context file beside it) and the nested layout (a router INDEX plus per-unit leaves), moving content, never rewriting it. Use it when a layer has outgrown one layout or shrunk out of the other.
 requires: skill:interaction-engine
+project-policy: vcs:mv, vcs:rm
 ---
 
 # /context-convert

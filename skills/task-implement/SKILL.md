@@ -1,9 +1,10 @@
 ---
 name: task-implement
-version: 1.12.0
+version: 1.12.1
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, skill:interaction-engine, command:follow-ups
+project-policy: line:Testing policy for /task-implement=skip-tests|full-tdd|skip-tests-unattended
 ---
 
 # /task-implement

@@ -1,10 +1,11 @@
 ---
 name: doc-consolidate
-version: 0.3.0
+version: 0.3.1
 type: skill
 description: Rewrite a rules document — a command or skill body, a feature document, a context file, a CLAUDE.md — or every document under a folder, under the editing discipline, dropping superseded, historical, duplicated and restated statements without changing what it means. Use it on a document that has stratified.
 disable-model-invocation: true
 requires: skill:interaction-engine
+project-policy: section:editing-discipline
 ---
 
 # /doc-consolidate
