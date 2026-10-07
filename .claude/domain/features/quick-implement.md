@@ -83,8 +83,11 @@ and `interaction-engine` by relative path. `skills/quick-implement/` with a
    catch-up.
 
 Under orchestrate-mode, step 1 runs in one fresh subagent whose questions
-the orchestrator relays, and step 4 is split into areas; the run still makes
-one commit ([orchestrate-mode](./orchestrate-mode.md)).
+the orchestrator relays, and step 4 is split into areas, its review findings
+included: the orchestrator routes each finding to the area owning the file
+it cites, that area's agent triages and applies it with `/task-iterate`, and
+the orchestrator never edits code. The run still makes one commit
+([orchestrate-mode](./orchestrate-mode.md)).
 
 ### The spec file
 

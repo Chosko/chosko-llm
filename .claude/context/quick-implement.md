@@ -39,8 +39,11 @@ conversation to commit, no `TASKS.md` entry.
   questions the session relays, returning spec, drift hits, size judgement,
   testing policy and open questions, the gate staying in the session; step
   5's implementation is split into areas by the `orchestrate-mode` skill's
-  rules, named never pathed, area agents committing nothing; still one
-  commit.
+  rules, named never pathed, area agents committing nothing; under
+  `--review` the session routes each finding to the area owning the file it
+  cites (an unowned file opens a new area) and each area's fresh agent runs
+  `/task-iterate` on its findings, the session editing nothing and merging
+  the areas' rejection ledgers for the next round; still one commit.
 
 ## Public API
 

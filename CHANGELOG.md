@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.97.1 — 2026-10-07
+
+- **`/quick-implement --review` under orchestrate mode hands review fixes to the areas.** Each review finding goes to the area agent that owns the file it cites, and that agent decides and applies the fix; the orchestrating session only routes findings and never edits code. The run still makes one commit.
+
 ## 1.97.0 — 2026-10-07
 
 - **New `/objective-run` skill.** `/objective-run "<objective>"` turns one objective into checkable success criteria, then works toward them in rounds: each round a fresh worker subagent does one piece of work and commits, and a fresh checker marks every criterion met or not met with evidence. It stops when every criterion is met, when `--max-time` has passed, or after `--max-rounds` rounds in a row without progress (3 by default). A committed log under `.claude/objectives/` records every round, holds the questions a worker parked, and lets `/objective-run <id>` resume the run in a later session; the closing report proposes the documentation the run made stale as follow-ups.

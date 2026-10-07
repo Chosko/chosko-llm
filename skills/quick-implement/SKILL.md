@@ -1,6 +1,6 @@
 ---
 name: quick-implement
-version: 0.2.0
+version: 0.2.1
 type: skill
 description: Take one small change from conversation to commit in a single run — a spec conversation with a drift check against the documented design, one gate, then tests first and one commit holding the change and its spec file under .claude/specs/ — with no backlog entry. Use it for a change one person can describe and one commit can hold; anything bigger goes to /task-add.
 requires: skill:task-engine, skill:interaction-engine, command:follow-ups
@@ -58,7 +58,7 @@ SUPPORTING FILES (read on demand)
 UNDER ORCHESTRATE MODE
 
 When orchestrate mode is on — the check in
-`../interaction-engine/references/mode.md`, made at step 2 — two steps run
+`../interaction-engine/references/mode.md`, made at step 2 — these run
 differently and nothing else changes:
 
 - **STEP 2 runs in one fresh subagent.** It holds the spec conversation and
@@ -71,6 +71,16 @@ differently and nothing else changes:
   spec file being the owner's note. Each area agent follows
   `../task-engine/references/tests-first.md` for its own files under the
   testing policy resolved at step 2, and stages and commits nothing.
+- **The review loop's fixes are applied by the areas.** This session routes
+  each finding, by the file and region it cites, to the area that owns them,
+  and edits nothing itself; a finding citing a file no area owns opens a new
+  area for it. Each area with findings gets a fresh agent with the area
+  brief, the owner's note being its findings verbatim, `spec=<the spec
+  path>` and the in-run statement of step 4 below; the agent runs
+  `/task-iterate` on them — triage and fixes both — for its own files only,
+  stages and commits nothing, and reports its triage, its rejection ledger
+  and any `BLOCKING` finding left open. This session merges the areas'
+  ledgers into the one the next round's reviewer receives.
 
 The run still makes its one commit, the change and the spec together, at
 step 6.
@@ -215,7 +225,8 @@ and the change stay in the tree, and the closing report says what failed.
    id, never the findings.
 4. Invoke `/task-iterate` in this session with the findings and
    `spec=<the spec path>`, stating: "You are running inside a
-   `/task-implement --review` round; do not commit or push."
+   `/task-implement --review` round; do not commit or push." Under
+   orchestrate mode the areas run it instead (UNDER ORCHESTRATE MODE).
 5. Repeat while `BLOCKING` findings remain unresolved and rounds are left.
    Unresolved `BLOCKING` findings after the last round stop the run before
    step 6, the tree left as it is, the findings named in the closing report.

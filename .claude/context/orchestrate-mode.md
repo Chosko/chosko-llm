@@ -40,7 +40,8 @@ subagents.
   orchestrator stages, a shared file rides with the area that changed it
   most, then `/session-save`; a `confirmation` gate. The Option 3 boundary:
   areas only for free-form requests and `/quick-implement`'s implementation
-  step; `/task-implement` runs with `--agents`; `/runbook-run` unchanged;
+  step and `--review` fixes (each finding routed to the area owning its
+  file, that area's agent triaging and applying it); `/task-implement` runs with `--agents`; `/runbook-run` unchanged;
   `/task-add`, `/architect`, `/pipeline-revise` and `/quick-implement`'s spec
   phase run in one fresh subagent whose questions are relayed; each command
   keeps its commit rule; `/objective-run` not split. The NEVER list closes

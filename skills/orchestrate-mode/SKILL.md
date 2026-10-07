@@ -1,6 +1,6 @@
 ---
 name: orchestrate-mode
-version: 0.1.0
+version: 0.1.1
 type: skill
 description: Switch this conversation into orchestrate mode — the session never edits code itself and turns every change request into a batch of per-area subagents with disjoint file ownership, briefed from the navigation layer and a per-area handoff file, checked in as one commit per area at the end. Use it for a long working session of many change requests on one codebase.
 requires: skill:interaction-engine
@@ -147,7 +147,9 @@ THE BOUNDARY WITH OTHER COMMANDS
 The mode changes only how work runs:
 
 - **Areas** apply to free-form change requests and to `/quick-implement`'s
-  implementation step, nowhere else.
+  implementation step and `--review` fixes, nowhere else: the orchestrator
+  routes each review finding to the area owning the file it cites, and that
+  area's agent triages and applies it.
 - **`/task-implement`** runs with `--agents`, even for one task.
   **`/runbook-run`** is unchanged: it already runs each step in a fresh
   subagent.

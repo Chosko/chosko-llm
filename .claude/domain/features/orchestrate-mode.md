@@ -174,7 +174,9 @@ NEVER:
 The mode changes only how work runs:
 
 - **Areas** apply to free-form change requests and to `/quick-implement`'s
-  implementation step, nowhere else.
+  implementation step and `--review` fixes, nowhere else: the orchestrator
+  routes each review finding to the area owning the file it cites, and that
+  area's agent triages and applies it.
 - **Pipeline commands keep their own delegation**, switched on by default
   under the mode: `/task-implement` runs with `--agents` even for one task;
   `/runbook-run` is unchanged, since it already runs each step in a fresh
