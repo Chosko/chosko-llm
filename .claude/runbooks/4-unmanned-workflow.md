@@ -176,7 +176,7 @@ Report, and put in your Done: line: files done, words before → after per file,
 
 Done: 2026-10-06, no commit — measurement only. 4 files 8121 → 6635 words (−18%), 1 round each, 0 blocking findings; relay children 227,854 tokens (~57k per file). Extrapolated to the remaining ~100 files: ~5.3M tokens at 1 round, ~10.5M at 2, ~15.8M at 3; plan on 2 (a spelled-out implicit rule was rated advisory, a stricter reviewer would add a round).
 
-## [ ] 6. Decide whether to run the full rewrite
+## [x] 6. Decide whether to run the full rewrite
 
 Depends on: 5
 
@@ -187,6 +187,8 @@ Context: none
 ```prompt
 Show the user the pilot result recorded in step 5's Done: line (word reduction per file, rounds, tokens spent, extrapolated cost for the remaining ~100 files) in a few plain lines, then ask one question: run the full imperative rewrite at the end of this runbook (go), or skip it (no-go)? Record the answer verbatim in this step's report so step 20 can read it. Change no files.
 ```
+
+Done: 2026-10-07, no commit — user answered: "Go" (run the full rewrite at step 20).
 
 ## [ ] 9. Task the Unity MCP removal
 
@@ -318,7 +320,8 @@ This goes after quick-implement: objective-run's docs follow-ups use `/pipeline-
 
 Depends on: 6, 19
 
-Context: none
+Context:
+- 2026-10-07 (from step 6): the user answered "Go". Budget from step 5's pilot: plan on 2 rounds (~10.5M tokens); in the cloud each child goes through the spawn relay, so batch children by role per feature to stay under the relay cap of 8.
 
 ```prompt
 Read step 6's report in this runbook (its Done: line / Context). If the user said no-go, report "skipped: no-go at step 6" and change nothing.
