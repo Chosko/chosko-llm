@@ -214,7 +214,7 @@ Context: none
 
 Done: 2026-10-07, commit `8a90125` (6 files, +253/-3). Tasks 291–294; /task-setup's no-test-suite option asks skip-tests vs skip-tests-unattended.
 
-## [ ] 12. Task the session readers
+## [x] 12. Task the session readers
 
 Depends on: 3
 
@@ -223,6 +223,8 @@ Context: none
 ```prompt
 /task-add feature=session-readers
 ```
+
+Done: 2026-10-07, commit `dc96119` (6 files, +239/-3). Tasks 295–298.
 
 ## [ ] 14. Task quick-implement
 
