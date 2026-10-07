@@ -739,7 +739,7 @@ Feature: quick-implement
 ---
 
 ## 305. Update documentation for feature `quick-implement`
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: .claude/context/INDEX.md, .claude/context/quick-implement.md, .claude/context/features.md, .claude/context/task-engine.md, .claude/context/task-add.md, .claude/context/task-implement.md, .claude/context/task-review-iterate.md, .claude/context/pipeline.md, .claude/context/pipeline-revise.md, .claude/context/pipeline-readers.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/domain/features/task-peer-review.md, .claude/domain/features/pipeline-revision.md, .claude/domain/features/pipeline-engine.md
 Preconditions: 299, 300, 301, 302, 303, 304

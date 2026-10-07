@@ -61,7 +61,8 @@ Covers `/task-add`, the backlog's authoring command. The rest of the suite:
   skipped on reconciliation-only run. Owned documents MAY appear in any
   drafted task's Hints or `Files:` — doc task, free-form, split part,
   reconciled body alike — but never silently and never un-adjudicated:
-  detection off command's own four-row owner list
+  detection off the four-row owner list in `task-engine`'s
+  `references/design-change.md`, which `/task-add` cites
   (`domain/features/*.md` → `/architect`; `product-design.md` /
   `technical-direction.md` / `business-model.md` → `/product-design`;
   `product-roadmap.md` → `/product-roadmap`; `PLAN.md` →
@@ -87,8 +88,13 @@ Covers `/task-add`, the backlog's authoring command. The rest of the suite:
   PHASE 0's setup check and the index-file format reference
   `references/resolution.md`, the status-tag block `status.md`, target values
   and manual interventions `targets.md`, the `[STALE]` and
-  reconciliation-classification rules `stale.md`, and PHASE 5 `commit.md`.
-  What stays inline is what is unique to authoring.
+  reconciliation-classification rules `stale.md`, the DESIGN-CHANGE CHECK
+  `design-change.md`, the RECONCILIATION application rules (and PHASE 4
+  feature-case step 3) `reconciliation.md`, THE ORPHAN QUESTION
+  `orphan-question.md`, and PHASE 5 `commit.md` — each kept as
+  a heading with its conditions and a citation, its phase placement in that
+  file's `/task-add` note. What stays inline is what is unique to
+  authoring.
 
 ## Public API
 

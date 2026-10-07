@@ -30,8 +30,9 @@ Claude-as-operator, who executes it without inventing a sequence.
 
 ## Scope and non-goals
 
-In scope: the change set and its split into items; the four branches with
-their impact walks, tiers and owner sequences; the merge into one sequence;
+In scope: the change set and its split into items; the four branches over
+planned work with their impact walks, tiers and owner sequences, and the
+fifth, `--catch-up`, over code that has already landed; the merge into one sequence;
 the decisions taken at plan time and the headless / gated step distinction;
 the one plan gate with its reply grammar and per-step deferral; the
 verification bracket; the closing follow-up gate; deletion semantics.
@@ -39,8 +40,9 @@ verification bracket; the closing follow-up gate; deletion semantics.
 Deliberately out:
 
 - **Writing any artifact directly.** The skill executes owners' amend arms or
-  invokes owner commands. It owns no line in any index; the who-writes-what
-  table gains no row.
+  invokes owner commands. It owns no line in any index. The one file it
+  removes itself is the spec a `--catch-up` run was given, the end of
+  `/quick-implement`'s spec lifecycle.
 - **Automatic triggering.** It is explicit. The auto-triggered surface is
   [pipeline-suggest](./pipeline-suggest.md), which only points here.
 - **Parallel actuation.** Steps run one at a time, in the session, for the
@@ -75,12 +77,25 @@ correct: a reviser with no owner to delegate to has nothing to do.
 ### The skill
 
 `skills/pipeline-revise/`, a skill folder: a short body in `SKILL.md` and one
-flat supporting file per branch — `amend.md`, `insert.md`, `delete.md` and
-`reorder.md`. The body probes, splits the argument into items, resolves each
+flat supporting file per branch — `amend.md`, `insert.md`, `delete.md`,
+`reorder.md` and `catch-up.md`. The body probes, splits the argument into items, resolves each
 item's anchor, classifies each into one branch — amend, insert, delete or
 reorder — and loads the branch file of every kind its items need, each once.
 Each branch file carries the impact walk's direction rules, the owner sequence
 and the tier logic for its kind of change.
+
+**`--catch-up`, the fifth branch.** An editorial mode over code that has
+already landed, its input a `/quick-implement` spec path or a free-form
+description of the landed change, with no anchor. Its items are the points
+where a document lags the change; it walks impact as the other branches do
+and drives owner amend steps classified editorial — the code already does
+what the amended text will say, so no task is marked stale for a point the
+code settled. A point where the code breaks the design is a question at the
+gate: accept the code by amending the design, or keep the design and insert
+a task that brings the code back; the answer takes the ordinary amend or
+insert path. Where a context layer exists and the landed change touched files
+it describes, the plan's last step is `/context-update`. The run's one commit
+deletes the spec it was given.
 
 **A change set, not a change.** The argument is free-form text describing
 however many changes, or a numbered list in the shape `/follow-ups` prints,
@@ -197,6 +212,9 @@ is introduced.
   run with one item; anchor is `feature=<slug>`, `task=<N>` or
   `runbook=<id|name|id-name> step=<n>`, and an item's own text may name a
   roadmap milestone instead.
+- `/pipeline-revise --catch-up <spec-path | "<landed change>"> [--no-commit]
+  [--no-push]` — the editorial catch-up over landed code; a spec path that
+  does not exist stops the run, and the run's commit deletes the spec.
 - One gate, waiting unless the run is `unattended` and no question is open;
   steps sequential and in-session; per-step
   deferral to a runbook. Every owner step runs uncommitted; the revision lands
@@ -204,7 +222,8 @@ is introduced.
   `requires: skill:pipeline-engine, skill:architect, skill:task-engine,
   skill:runbook-run, skill:product-design, skill:production-plan,
   skill:product-roadmap`.
-- Hard contracts: it writes no line an owner owns; bodies are opened only
+- Hard contracts: it writes no line an owner owns, and removes no file but a
+  `--catch-up` run's spec; bodies are opened only
   within an item's scope; every decision an arm makes by a closed rule is made
   at plan time and stated at the gate in words, a headless step therefore
   asking nothing and a gated step announcing at the gate what it will ask; the editorial classification

@@ -13,7 +13,7 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
   not-invocable statement, as a two-line "read by path; not invoked" `#`
   header, for an agent that opened the file without reading frontmatter;
   that frontmatter carries `disable-model-invocation: true` ([feature-contract.md](./feature-contract.md) § Public API).
-  Nine files under `references/`, one authority each:
+  Seventeen files under `references/`, one authority each:
   `resolution.md` (`.claude/TASKS.md` schema and parsing — appearance
   order is the backlog's order and need not be numeric, since
   `/task-add --before`/`--after` insert mid-file under the next id — the
@@ -42,8 +42,31 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
   implement-anyway/stop protocol in a plain-language prompt, reconciliation
   classification),
   `tree.md` (the dirty-tree prompt protocol, four options, `DIRTY_FOLD` /
-  `DIRTY_FOLD_UNTRACKED` and the Step-7 fold), `commit.md` (pull-at-start,
-  per-task commit and push, `--no-commit` / `--no-push` gating), and
+  `DIRTY_FOLD_UNTRACKED` and the Step-7 fold; `/quick-implement` runs it once,
+  before its spec conversation), `commit.md` (pull-at-start,
+  per-task commit and push, `--no-commit` / `--no-push` gating),
+  `design-change.md` (the design-change check: the
+  owner table of paths another pipeline command owns, *settles* vs *diverges*,
+  the question, agreement and disagreement, the hard rules — `/task-add`,
+  `amend.md`, `routing.md` and `/quick-implement`'s drift check cite it),
+  `reconciliation.md` (applying reconciliation: classify every task the
+  feature generated per `stale.md`, a one-line reason each, apply the approved
+  plan and nothing beyond it), `orphan-question.md` (offering a free-form task
+  to a `[PLANNED]` feature; `/task-add`'s `--single` path in its note),
+  `testing-policy.md` (the
+  `Testing policy for /task-implement:` marker, wording unchanged, its three
+  values and the runner resolution — marker, project convention, inference,
+  no-test-suite branch — plus which tests count as affected; this skill's
+  frontmatter carries the marker's `project-policy: line:` declaration),
+  `test-runner.md` (the runner-inference heuristics, mirrored in
+  `/task-setup`'s TEST RUNNER INFERENCE), `no-test-suite.md` (the
+  scaffold-or-skip question and skip-tests mode), `tests-first.md` (Steps 2–5:
+  update tests, implement within the declared files, run the affected tests,
+  run the full suite — step labels kept so citations of "Step 3" still land),
+  `closing-report.md` (the two-group closing report, *For the record* and
+  one numbered *Follow-ups* list, the numbering as the reply handle;
+  `/task-implement`'s items, review-pair line and `P<n>` handles in its
+  note), and
   `review-budget.md` (review cost controls: the `--review-model` /
   `--review-effort` values, their `same` / `auto` reserved words, the
   deterministic three-row `auto` tier table keyed on lines/files/criteria
@@ -87,7 +110,8 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
   consumer cites the file by a path **relative to the citing body** and
   states only its own deviations. Installed like any other skill (`cp -R`
   of the folder) — see `../domain/features/shared-phase-engine.md`. Its
-  five consumers declare `requires: skill:task-engine`.
+  consumers — the five `task-*` readers and `/quick-implement` — declare
+  `requires: skill:task-engine`.
 
 ## Public API
 
@@ -108,7 +132,8 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
 - [task-suite.md](./task-suite.md) — the task-suite hub and its file list.
 - Consumers: [task-add.md](./task-add.md), [task-backlog.md](./task-backlog.md),
   [task-implement.md](./task-implement.md),
-  [task-review-iterate.md](./task-review-iterate.md).
+  [task-review-iterate.md](./task-review-iterate.md),
+  [quick-implement.md](./quick-implement.md).
 
 ## When to read the source
 

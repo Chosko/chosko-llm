@@ -24,8 +24,10 @@ entry point every stage shares:
   nothing, no output; `SKILL.md` is a MAP carrying no rule text, the
   not-invocable statement in its `#` header and
   `disable-model-invocation: true` in its frontmatter ([feature-contract.md](./feature-contract.md) § Public API). Four files under `references/`, one authority
-  each: `probes.md` (fixed set of cheap filesystem probes describing a
-  project's pipeline setup, the one-line verdict every consumer prints
+  each: `probes.md` (fixed set of nine cheap filesystem probes describing a
+  project's pipeline setup — `specs` counting the `*.md` files under
+  `.claude/specs/` that `/quick-implement` leaves for `/pipeline-revise
+  --catch-up`, the two writers that invalidate it — the one-line verdict every consumer prints
   identically, and the in-session reuse rule naming the writers whose runs
   invalidate a verdict; subagents re-probe), `graph.md` (how `FEATURES.md`,
   `TASKS.md`, `PLAN.md`, `RUNBOOKS.md` point at each other — each edge, its
@@ -38,9 +40,10 @@ entry point every stage shares:
   shape / Amend — runbook rows take `<id|name|id-name>` and read bodies at
   `File:` — the ownership authority the revision suite reads; owned BY
   LINE, no two rows claiming one line or value; every row verified against
-  the shipped body, never a design doc; agrees with `/task-add`'s
-  DESIGN-CHANGE CHECK table and is the one fixed if they diverge), `lint.md`
-  (closed catalogue of thirteen structural drift findings L1–L13, each with a
+  the shipped body, never a design doc; agrees with the owner table of
+  `task-engine`'s `references/design-change.md` and is the one fixed if they
+  diverge), `lint.md`
+  (closed catalogue of fourteen structural drift findings L1–L14, each with a
   detection rule over `graph.md`'s edges, severity `ERROR` or `WARNING` —
   two levels, deliberately clear of every status vocabulary — one fix command
   and a fixed output template written message first — `<SEVERITY>
@@ -49,8 +52,10 @@ entry point every stage shares:
   `messages.md`; two deliberate absences recorded: a `Tasks:`
   id absent from `TASKS.md` (archived, not drift) and a pending runbook step
   naming a finished task (needs a body read); absent index drops its
-  findings, malformed block is its own `ERROR`; no rule reads a body or
-  probes `.claude/tasks/archive/`). Consumers cite each file by a path
+  findings, malformed block is its own `ERROR`; no rule probes
+  `.claude/tasks/archive/`; L14 — a spec file still under `.claude/specs/`,
+  `WARNING`, fixed by `/pipeline-revise --catch-up <spec>` — lists that
+  directory and opens no spec). Consumers cite each file by a path
   relative to the citing body ([feature-contract.md](./feature-contract.md) § Internal patterns) and state only
   deviations. Two consumers: `/pipeline-check`, `pipeline-revise`. A third
   feature, `pipeline-suggest`, declares `requires: skill:pipeline-engine`

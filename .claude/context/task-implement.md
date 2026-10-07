@@ -17,11 +17,15 @@ The rest of the suite: [task-suite.md](./task-suite.md).
   backlog resolution and selectors reference
   `references/resolution.md`, implementable/terminal statuses `status.md`,
   `Target:` handling and the delegation guard `targets.md`, the STALE
-  protocol `stale.md`, the dirty-tree check `tree.md`, and PRE-FLIGHT step 5
-  plus Step 7 `commit.md`. Six supporting files are read only when their
-  branch fires — `test-runner.md` (runner must
-  be inferred; mirrors task-setup's table), `no-test-suite.md`,
-  `human-in-loop.md`, `body-schemas.md`
+  protocol `stale.md`, the dirty-tree check `tree.md`, PRE-FLIGHT step 5
+  plus Step 7 `commit.md`, and — read every run, as part of the common path
+  — RESOLVING THE TEST RUNNER `testing-policy.md`, Steps 2–5
+  `tests-first.md` (kept as one PER-TASK WORKFLOW heading citing it, with the
+  `claude+human` checkpoint hook at Step 3) and THE CLOSING REPORT
+  `closing-report.md`, each kept as a heading and a citation. `task-engine`'s
+  `test-runner.md` (runner must be inferred; mirrors task-setup's table) and
+  `no-test-suite.md` are read only when their branch fires, and so are four
+  supporting files of its own — `human-in-loop.md`, `body-schemas.md`
   (non-current body schema), `delegated-runs.md` (2+-task run user delegated to subagents),
   and `review-rounds.md` (`--review` passed; read once after argument
   parsing, before the first task, never otherwise) — plus `task-engine`'s
@@ -81,7 +85,8 @@ The rest of the suite: [task-suite.md](./task-suite.md).
   re-queries every outcome, a step the tool cannot perform falling back
   to the standard manual protocol. Honors `Testing policy for /task-implement:
   skip-tests|full-tdd|skip-tests-unattended` marker in project's
-  CLAUDE.md (checked before heuristic test-suite detection) so
+  CLAUDE.md (checked before heuristic test-suite detection; the rule and its
+  `project-policy:` declaration live in `task-engine`) so
   no-test-suite decision persists across runs instead of re-asked
   each time. In skip-tests mode, per-task "Proceed?" confirmation can
   be suppressed with `-y` flag for single run, or permanently via

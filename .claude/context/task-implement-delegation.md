@@ -63,7 +63,8 @@ suite: [task-suite.md](./task-suite.md).
   feature, one commit covers every flip approved; a `confirmation` gate, so
   under `unattended` every candidate flips unasked. A nested run (delegated
   agent, `/runbook-run` step) never proposes: names candidates in its closing report, outermost run
-  asks. THE CLOSING REPORT: two groups, **For the record** (one line each,
+  asks. THE CLOSING REPORT (rule in `task-engine`'s `closing-report.md`,
+  this skill's own items in its note): two groups, **For the record** (one line each,
   `<what deviated> — <why> — <resolved by whom>`) then **Follow-ups** — last,
   nearest the prompt — one numbered list, `1.`/`2.`/…, any length: the run's
   own items (unresolved `BLOCKING` finding, task left `[IN PROGRESS]`, owner

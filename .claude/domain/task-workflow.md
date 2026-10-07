@@ -7,7 +7,7 @@ Source of truth for task backlog schema and implementation model. Read when touc
 Everything below this section is a *rule* — schema, vocabulary, protocol —
 and every rule has exactly one home. That home is `skills/task-engine/`, a
 shipped skill that is a reference library and not a command: no arguments,
-no behaviour, nothing to invoke. Nine files under `references/`, one
+no behaviour, nothing to invoke. Seventeen files under `references/`, one
 authority each:
 
 | File | Owns |
@@ -19,6 +19,14 @@ authority each:
 | `tree.md` | The dirty-tree prompt protocol and the Step-7 fold. |
 | `commit.md` | Pull-at-start, commit and push per task, `--no-commit` / `--no-push` gating. |
 | `review-budget.md` | Review cost controls: the `--review-model` / `--review-effort` values, the deterministic `auto` tier table, the read budget behind the effort axis. |
+| `design-change.md` | The design-change check: the owner table of paths another pipeline command owns, *settles* vs *diverges*, the question a diverging point raises, agreement and disagreement, the hard rules. |
+| `reconciliation.md` | Applying reconciliation on a re-planning run: classify every task the feature generated (per `stale.md`), present each call with a reason, apply the approved plan and nothing beyond it. |
+| `orphan-question.md` | Offering a free-form task to a `[PLANNED]` feature, and what each answer does. |
+| `testing-policy.md` | The `Testing policy for /task-implement:` marker — wording kept, so every existing `CLAUDE.md` keeps working — its three values, how the test runner is resolved, which tests count as affected. |
+| `test-runner.md` | Test-runner inference heuristics, mirrored in `/task-setup`. |
+| `no-test-suite.md` | The scaffold-or-skip question and skip-tests mode. |
+| `tests-first.md` | The tests-first sequence, Steps 2–5. |
+| `closing-report.md` | The closing report's two groups, their shapes, the numbering as the reply handle. |
 | `amend.md` | Changing one existing task in place: the two checks before writing (not `[IN PROGRESS]`; no change to what its feature promises, else route to `/architect amend`), which body sections and summary-block fields may change, a dropped `Preconditions:` edge named in `## Decisions`, deleting a live task as `[SKIP]`, adding `Feature:` to an orphan, one gate, a closed write set. |
 | `parking.md` | Task parking under the `unattended` policy: the one event that parks, the prompts that take their default instead, the `## Parking handoff` section, the `park/task-<N>` branch, the park sequence, the transactional unpark, the answerer rule, the two refusals. Read by `/task-implement` only under `--unattended` or when a resolved task is `[PARKED]`. |
 
@@ -29,8 +37,14 @@ the vocabulary they key off is not. That is the whole discipline: if a
 statement is true of two `task-*` features, it belongs in the engine, and a
 consumer restating it has created a second copy to forget.
 
-Five features consume it: `/task-add`, `/task-list`, `/task-clean`,
-`/task-implement`, and `/task-review` — the last for two things only:
+Six features consume it: `/task-add`, `/task-list`, `/task-clean`,
+`/task-implement`, `/quick-implement` and `/task-review`. `/task-add` cites
+its design-change check, reconciliation and orphan question from here, and
+`/task-implement` its testing-policy resolution, tests-first sequence and
+closing report, because `/quick-implement` — a change taken from conversation
+to commit with no backlog entry ([`./product-workflow.md`](./product-workflow.md)
+§ Quick implement) — runs the same checks and a second copy would drift.
+`/task-review` reads it for two things only:
 `review-budget.md`, when a `--review` spawn hands it a budget block, and
 `resolution.md` § *The archive*, which keeps its weakest task-resolution
 fallback out of `.claude/tasks/archive/`. `/task-iterate` does not — it
@@ -58,7 +72,7 @@ survive installation.
 **Why `requires:` had to exist first.** A body reading a file inside another
 installed feature breaks when that feature is absent, and the failure surfaces
 as an agent following a dangling path mid-run rather than as anything the CLI
-said. All five consumers declare `requires: skill:task-engine`; `chosko-llm
+said. All six consumers declare `requires: skill:task-engine`; `chosko-llm
 add` installs the engine before the dependent, and `chosko-llm rm
 skill:task-engine` refuses while any dependent is installed.
 
@@ -360,7 +374,7 @@ This is the only write `/task-implement` makes to `FEATURES.md`, and the only st
 
 ## Closing report
 
-Every run of `/task-implement` ends with one closing report — at completion, at a failure halt and at a stop the user asked for alike — in two groups, in this order. **For the record**: one line per item, `<what deviated> — <why> — <resolved by whom>` — a criterion overshot, a wrong premise in the body, a consequential edit outside `Files:`, a prompt that took its default under `unattended`, the `--no-commit` reminder that nothing was committed. Nothing in that group is a question and nothing in it runs past one line; the one line in another shape is the round's resolved review pair. **Follow-ups**: one numbered list, `1.`, `2.`, …, each item at whatever length it needs, holding the run's own items — an unresolved `BLOCKING` finding, a task left `[IN PROGRESS]` and why, a follow-up naming an owner's command with its anchor and passages, a precondition that no longer held, a feature slug declined at the proposal, every task parked this run or skipped for want of an answer with its question verbatim — and the items `/follow-ups`' rules yield when applied to the run's reading, the command's body read by name and applied, never invoked, under the one numbering, two items naming the same action merged with the command form kept. An empty group prints its heading and `none`. Design: [`./features/unattended-parking.md`](./features/unattended-parking.md) § The closing report.
+Every run of `/task-implement` ends with one closing report — at completion, at a failure halt and at a stop the user asked for alike — in two groups, in this order. **For the record**: one line per item, `<what deviated> — <why> — <resolved by whom>` — a criterion overshot, a wrong premise in the body, a consequential edit outside `Files:`, a prompt that took its default under `unattended`, the `--no-commit` reminder that nothing was committed. Nothing in that group is a question and nothing in it runs past one line; the one line in another shape is the round's resolved review pair. **Follow-ups**: one numbered list, `1.`, `2.`, …, each item at whatever length it needs, holding the run's own items — an unresolved `BLOCKING` finding, a task left `[IN PROGRESS]` and why, a follow-up naming an owner's command with its anchor and passages, a precondition that no longer held, a feature slug declined at the proposal, every task parked this run or skipped for want of an answer with its question verbatim — and the items `/follow-ups`' rules yield when applied to the run's reading, the command's body read by name and applied, never invoked, under the one numbering, two items naming the same action merged with the command form kept. An empty group prints its heading and `none`. The shape lives in `task-engine`'s `closing-report.md`, which `/quick-implement` ends with too; the items above that only a backlog run has are `/task-implement`'s note there. Design: [`./features/unattended-parking.md`](./features/unattended-parking.md) § The closing report.
 
 **The number is the handle the user replies with**, the way `/follow-ups`' numbering is: it starts at 1 in every report, carries no meaning beyond that, and a report with a single item still numbers it; a number that names a parked task's question is that task's answer, and the next run unparks it. `/runbook-run` closes in the same two groups with one *For the record* line per step (see [`./features/runbook-suite.md`](./features/runbook-suite.md)); `/task-review`'s report closes on the same two groups in the same order, without applying `/follow-ups`' rules, since it reads a diff rather than a session.
 

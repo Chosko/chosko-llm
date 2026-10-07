@@ -81,9 +81,9 @@ comma-separated list of `line:<marker>=<v1>|<v2>` (a `CLAUDE.md` line and its
 values), `section:<claude-md feature>` and `vcs:<op>` (a git operation a
 `## VCS` mapping must translate) specs. No CLI verb acts on it. Declared by
 `skills/interaction-engine/` (the interaction-policy line),
-`skills/task-implement/` (the testing-policy line), `skills/doc-consolidate/`
-(`section:editing-discipline`), and for `vcs:` ops by `skills/task-engine/`
-(the commit and tree protocol's ops plus its own), `skills/task-clean/`,
+`skills/task-engine/` (the testing-policy line, beside its `vcs:` ops — the
+commit and tree protocol's plus its own), `skills/doc-consolidate/`
+(`section:editing-discipline`), and for `vcs:` ops by `skills/task-clean/`,
 `skills/context-convert/`, `commands/session-save.md`, `skills/task-review/`
 and `skills/task-iterate/`. `scripts/check-setup.sh` is its guard —
 repo-local, silent on success, one line per violation: a malformed spec, a

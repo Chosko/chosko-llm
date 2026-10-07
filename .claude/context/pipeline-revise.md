@@ -12,16 +12,32 @@ rest of the pipeline family: [pipeline.md](./pipeline.md).
   skill:pipeline-engine, skill:architect, skill:task-engine,
   skill:runbook-run, skill:product-design, skill:production-plan,
   skill:product-roadmap` — the engine plus every owner whose amend arm a step
-  may drive. `SKILL.md` carries the workflow; four flat supporting files, one
-  per branch — `amend.md`, `insert.md`, `delete.md`, `reorder.md` — read ON
-  DEMAND, one per kind a run's items classify into, each once, never one no
-  item needs; all four share one seven-section schema (*Applies when*,
+  may drive. `SKILL.md` carries the workflow; five flat supporting files, one
+  per branch — `amend.md`, `insert.md`, `delete.md`, `reorder.md`, and
+  `catch-up.md` for `--catch-up` — read ON DEMAND, one per kind a run's items
+  classify into, each once, never one no item needs; all five share one
+  seven-section schema (*Applies when*,
   *Impact walk*, *Owner sequence*, *Tier*, *Verification*, *Outcomes*,
   *Never*). **Argument is a change set**: `"<change set>"` — free-form text
   describing however many changes, or a numbered list in `/follow-ups`'
   output shape (one item per number); free-form splits into items at the
   changes it describes, the split said back at the gate for the user to
-  correct. `<anchor> "<change>"` is also accepted for a single item. Anchor,
+  correct. `<anchor> "<change>"` is also accepted for a single item.
+  **`--catch-up <spec-path | "<landed change>">`** is the fifth branch, an
+  editorial mode over code that has already landed: no anchor (an anchor
+  beside it stops), a spec path that does not exist stops; its items are the
+  points where a document lags the change — a spec's `## Drift` bullets plus
+  the documents its Hints and diff touch, or what the walk finds from a
+  description — each *settled* (editorial: `/architect amend` runs with
+  `editorial` carried in, no task staled; a task amend only where its Hints
+  cite a rewritten passage; a dated runbook `Context:` fact) or a **design
+  break** (asked at the gate: accept the code → `amend.md`'s path, or keep
+  the design → `insert.md`'s path, a task to bring the code back);
+  `/context-update --no-commit` is the plan's last step when a context layer
+  describes a touched file; a `CLAUDE.md` / README lag is a report
+  follow-up; the run's one commit `git rm`s the spec it was given (the one
+  write `WRITE SET` grants the skill itself), a stopped or uncommitted run
+  leaving it in place. Anchor,
   four forms: `feature=<slug>`, `task=<N>`,
   `runbook=<id|name|id-name> step=<n>` (resolved by `runbook-schema.md`'s
   rule), and a milestone named in an item's own text (`m3`, an exit criterion

@@ -75,13 +75,13 @@ Covers the pipeline's two read-only reporters, `/production-status` and
   `.claude/TASKS.md`, `.claude/PLAN.md`, `.claude/RUNBOOKS.md` that exists,
   evaluates `lint.md` over `graph.md`'s edges, prints findings in one fenced
   block grouped by artifact in fixed order (`FEATURES.md`, `PLAN.md`,
-  `TASKS.md`, `RUNBOOKS.md`), each line from its `lint.md` template with its
+  `TASKS.md`, `RUNBOOKS.md`, `.claude/specs/`), each line from its `lint.md` template with its
   fix verbatim, closing on a count of both severities; clean run prints
   exactly ONE line naming the indexes read. `feature=<slug>` keeps only the
   findings touching that feature — its entry, tasks whose `Feature:` names it
   or whose id is on its `Tasks:` with their precondition findings and
   cycles, plan lines naming it; no runbook finding in scope (`RUNBOOKS.md`
-  ties no runbook to a slug). Unknown slug, or no `FEATURES.md`, said in one
+  ties no runbook to a slug), and no L14 (a spec carries no `Feature:`). Unknown slug, or no `FEATURES.md`, said in one
   line and the unscoped report runs. Failure contract is degradation: absent
   index drops its findings, malformed block reported, unrecognised argument
   named and ignored; ONLY stop is a project with none of the four indexes,
@@ -95,7 +95,10 @@ Covers the pipeline's two read-only reporters, `/production-status` and
   heading; L13, a runbook whose `[P]` steps and index `Parked:` line disagree
   (`WARNING`, fix `/runbook-run <id>`), reading each non-`[DONE]` runbook's
   body for its markers, never a prompt block — and no branch probe; `feature=`
-  keeps L12 on a parked task in scope. The filesystem probe is
+  keeps L12 on a parked task in scope. When the probe's `specs` count is
+  above `0` it lists `.claude/specs/*.md` with the Glob tool for L14 — a spec
+  file still present, `WARNING`, fix `/pipeline-revise --catch-up
+  .claude/specs/<file>` — and opens no spec. The filesystem probe is
   its only shell use — the one stated departure from `/production-status`,
   which runs none. Runs only when invoked; no pipeline writer auto-runs it.
 

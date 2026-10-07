@@ -70,7 +70,8 @@ the other, invisibly, which is what the council gates once did.
 - **Probes** — the set of cheap filesystem probes that describe a project's
   pipeline setup: feature index present, backlog present, roadmap present and
   sliced, plan present, runbook index present, council skill installed, the
-  testing-policy marker in CLAUDE.md, and which pipeline features are
+  testing-policy marker in CLAUDE.md, how many spec files sit under
+  `.claude/specs/` (a listing, no spec read), and which pipeline features are
   installed — counted across **both** scopes Claude Code loads from, the
   project's `.claude/` and the user scope (`CLAUDE_HOME` when set, else
   `~/.claude`), with the `routing.md` row names unioned across the two so a
@@ -102,7 +103,7 @@ the other, invisibly, which is what the council gates once did.
 
 ### The findings
 
-The catalogue — thirteen findings, eleven derivable from indexes alone:
+The catalogue — fourteen findings, eleven derivable from indexes alone:
 
 - a task's `Feature:` slug absent from `FEATURES.md`;
 - a task with no `Feature:` line on a project whose `FEATURES.md` exists;
@@ -115,7 +116,10 @@ The catalogue — thirteen findings, eleven derivable from indexes alone:
 - a `[PLANNED]` feature whose every task is `[DONE]` or `[SKIP]` and which
   has not been flipped;
 - a `[PARKED]` task whose body has no `## Parking handoff`;
-- a runbook whose `[P]` steps and index `Parked:` line disagree.
+- a runbook whose `[P]` steps and index `Parked:` line disagree;
+- a spec file still under `.claude/specs/`, a `WARNING` — documentation still lags a
+  change `/quick-implement` landed — found by listing the directory, never by
+  reading a spec.
 
 A pending runbook step naming a task already `[DONE]` or `[SKIP]` is not in
 the shipped catalogue: detecting it means reading a step's prompt. The two
@@ -131,7 +135,8 @@ Each finding names its fix: `/task-add feature=<slug>` for the iterated
 feature, `/production-plan` for the missing slug, `flip to [DONE]` for the
 resolved feature, `/task-implement <N>` in an attended session for the
 parked task, `/runbook-run <id>` for the disagreeing runbook,
-`/pipeline-revise` for the rest.
+`/pipeline-revise --catch-up <spec>` for the leftover spec, `/pipeline-revise`
+for the rest.
 
 ### The command
 

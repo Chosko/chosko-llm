@@ -48,6 +48,7 @@ Canonical project docs live outside this folder, stay authoritative:
 | [claude-md-hook-statusline.md](./claude-md-hook-statusline.md) | The shipped claude-md artifacts (`tool-usage-policy`, `editing-discipline`, `git-commit-style`), the `remote-session-protocol` hook and the `session-statusline` statusline. |
 | [task-suite.md](./task-suite.md) | The `task-*` suite's family-wide contract and domain pointers; hub for `task-setup`, `task-add`, `task-list`, `task-clean`, `task-implement`, `task-review`, `task-iterate` and `task-engine`. |
 | [task-backlog.md](./task-backlog.md) | Backlog maintenance — `task-setup`, `task-clean`, `task-list`. |
+| [quick-implement.md](./quick-implement.md) | `quick-implement` — one change from conversation to commit with no backlog entry: spec conversation, drift check, one gate, tests first, one commit holding the change and its `.claude/specs/` spec file. |
 | [interaction-engine.md](./interaction-engine.md) | `interaction-engine`, the non-invocable reference engine for the interaction policy every interactive feature reads — `policy.md` (attended/unattended, flags, precedence), `gates.md` (the three gate classes), `messages.md` (output and question rules). |
 | [task-engine.md](./task-engine.md) | `task-engine`, the non-invocable reference engine the `task-*` suite reads, and its `references/` files. |
 | [task-add.md](./task-add.md) | `task-add`, the backlog's authoring command. |
@@ -68,7 +69,7 @@ Canonical project docs live outside this folder, stay authoritative:
 | [pipeline-planning.md](./pipeline-planning.md) | The two planning stages — `product-roadmap`, `production-plan`. |
 | [architect.md](./architect.md) | Stage 3, `architect`. |
 | [pipeline-readers.md](./pipeline-readers.md) | The pipeline's read-only reporters — `production-status`, `pipeline-check`. |
-| [pipeline-revise.md](./pipeline-revise.md) | `pipeline-revise`, the one revision surface — its change-set argument, its four branch files, classification, impact walk, lint bracket. |
+| [pipeline-revise.md](./pipeline-revise.md) | `pipeline-revise`, the one revision surface — its change-set argument, its five branch files (`--catch-up` the fifth), classification, impact walk, lint bracket. |
 | [pipeline-revise-plan.md](./pipeline-revise-plan.md) | `pipeline-revise` — merge and order, plan-time decisions, tiers, the one gate and its reply grammar, actuation and the branch owner sequences, the closing follow-up gate, failure contract, commit. |
 
 ## Domain

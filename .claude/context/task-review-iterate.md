@@ -17,15 +17,19 @@ suite: [task-suite.md](./task-suite.md).
   consumer that reads the engine for a single file:
   `references/review-budget.md`, and only when the invocation carried a
   budget block. Three input forms resolved from the argument after
-  stripping `task=<n>` and `base=<ref>`: empty → local (`git diff HEAD`), a
+  stripping `task=<n>`, `spec=<path>` and `base=<ref>`: empty → local (`git diff HEAD`), a
   branch name → branch (`git diff <base>...<branch>`, three dots), a bare
   integer or GitHub PR URL → pr (`gh pr diff <N>`). One supporting file,
   `remote-diffs.md`, read ON DEMAND — only when that remaining input is
   non-empty; a local run never opens it. Task resolved first-hit-wins from
-  `task=<n>`, a number in the branch name, the PR title, then the most
-  recently modified `.claude/tasks/*.md` (weakest signal, so the report says
-  which and why); **no resolution stops the run** rather than degrading into
-  a generic code review. Three gates before any finding is written:
+  `task=<n>` or `spec=<path>`, a number in the branch name, the PR title,
+  then the most recently modified `.claude/tasks/*.md` (weakest signal, so
+  the report says which and why); **no resolution stops the run** rather
+  than degrading into a generic code review. **`spec=<path>`** — the
+  `/quick-implement` spec, or any file with the task body's sections — is
+  read exactly as a task body, exclusive with `task=<n>` (both → argument
+  error), never falling back to the weaker steps; a missing path stops with
+  one line; the `Feature:` lookup a summary block would feed is skipped. Three gates before any finding is written:
   ≥80% confidence, the four-question Pre-Report Gate (exact line; concrete
   failure mode; callers/imports/tests read; severity defensible — any "no"
   or "unsure" demotes or drops), and BLOCKING-requires-proof (snippet,
@@ -60,7 +64,8 @@ suite: [task-suite.md](./task-suite.md).
   run's rules name, nothing else on disk — the result file for a relay child
   under `/runbook-run`'s RELAY CHILD RULES, the reply otherwise; invoked
   manually → asks once whether to also write
-  `.claude/reviews/<task>-R<round>.md`, chat-only being the default on
+  `.claude/reviews/<task>-R<round>.md` (`<spec-stem>-R<round>.md` on a
+  `spec=` run), chat-only being the default on
   silence or EOF. No `--rounds` flag — the loop belongs to
   `/task-implement`. Read-only contract: its only writes are that opted-into
   review file or a spawned run's named result file; no edit to any source/
@@ -70,7 +75,9 @@ suite: [task-suite.md](./task-suite.md).
   avoid).
 - `skills/task-iterate/` — triages findings it did NOT produce, applies what
   survives, records why the rest did not. Same three input forms and same
-  `task=` / `base=` parsing as `/task-review`, plus `--no-commit` /
+  `task=` / `spec=` / `base=` parsing and resolution as `/task-review` (a
+  spec run's review file and commit subject named by the spec's stem), plus
+  `--no-commit` /
   `--no-push`; fixes always land in the working tree in front of it (branch
   mode assumes that branch is checked out and stops rather than switching).
   **No supporting files** — everything including PR mode is in `SKILL.md`,

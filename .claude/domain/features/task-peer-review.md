@@ -92,7 +92,12 @@ stop. The raw argument is never interpolated into a command.
 explicit `task=<n>`, from the branch name, from the PR title, or from the most
 recently modified `.claude/tasks/*.md` — reads its body, and pulls out the
 acceptance criteria. This is the differentiator; without it the skill has no
-reason to exist alongside `/code-review`.
+reason to exist alongside `/code-review`. `spec=<path>` takes the criteria
+from a spec file instead — a `/quick-implement` spec, which carries the task
+body's sections and has no backlog entry. It ranks with `task=<n>`, the two
+are mutually exclusive, and a spec run never falls back to the branch name,
+the PR title or the most recently modified body; a missing spec path stops
+the run.
 
 **Tests are never run.** `/task-review` invokes no test command, in any
 mode. `/task-implement`'s tests-first sequence already ran the affected tests
@@ -154,7 +159,8 @@ report, carries no meaning beyond that, and a lone item is still numbered.
 
 ### `/task-iterate`
 
-Takes the same three input forms, plus findings from one of: the review
+Takes the same three input forms and the same `task=<n>` / `spec=<path>`
+resolution, plus findings from one of: the review
 subagent's structured output, a `.claude/reviews/` file, or — in PR mode —
 the PR's review comments read via `gh`.
 
@@ -386,9 +392,11 @@ becomes a task through the existing `/task-add`, not through a side channel.
 /task-review <branch>               review a branch against its base
 /task-review <pr-number|pr-url>     review a GitHub PR
 /task-review <args> task=<n>        pin the task explicitly
+/task-review <args> spec=<path>     criteria from a spec file; exclusive with task=<n>
 
 /task-iterate                       triage + fix findings for uncommitted changes
 /task-iterate <branch|pr>           same, for a branch or PR
+/task-iterate <args> spec=<path>    scope from a spec file; exclusive with task=<n>
 /task-iterate <args> --no-push      commit without pushing
 
 /task-implement <args> --review               review each task after implementing
@@ -408,7 +416,8 @@ Hard contracts:
   body, `TASKS.md` status or `FEATURES.md` entry, and no `git` or `gh` command
   that changes a file, an index, a ref, a remote or a pull request. The one
   exception is the report itself — a manual run may opt into
-  `.claude/reviews/<task>-R<round>.md`, and a run spawned by
+  `.claude/reviews/<task>-R<round>.md` (`<spec-stem>-R<round>.md` under
+  `spec=`), and a run spawned by
   `/task-implement --review` writes nothing at all. That file is a transient
   artifact the user owns and deletes; nothing reads it back automatically.
 - `/task-iterate` never invents findings; it only triages what it was given.
