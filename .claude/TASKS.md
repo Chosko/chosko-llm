@@ -788,7 +788,7 @@ Feature: orchestrate-mode
 ---
 ## 310. Add the `/objective-run` skill
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/objective-run/SKILL.md, skills/objective-run/references/log-schema.md, VERSION, CHANGELOG.md
 Preconditions: 281, 283, 303
