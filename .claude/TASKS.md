@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 309
+Last task number: 311
 
 ---
 
@@ -784,5 +784,23 @@ Target: claude
 Files: .claude/context/INDEX.md, .claude/context/features.md, .claude/context/orchestrate-mode.md, .claude/context/interaction-engine.md, .claude/context/task-implement-delegation.md, .claude/context/quick-implement.md, .claude/context/session-handoff.md, .claude/domain/features/session-continuity.md, .claude/domain/features/task-implement-launcher.md
 Preconditions: 306, 307, 308
 Feature: orchestrate-mode
+
+---
+## 310. Add the `/objective-run` skill
+
+Status: [MISSING]
+Target: claude
+Files: skills/objective-run/SKILL.md, skills/objective-run/references/log-schema.md, VERSION, CHANGELOG.md
+Preconditions: 281, 283, 303
+Feature: objective-run
+
+---
+## 311. Update documentation for feature `objective-run`
+
+Status: [MISSING]
+Target: claude
+Files: .claude/context/INDEX.md, .claude/context/features.md, .claude/context/objective-run.md, .claude/context/interaction-engine.md, .claude/context/runbook-run.md, .claude/domain/features/interaction-policy.md
+Preconditions: 310
+Feature: objective-run
 
 ---

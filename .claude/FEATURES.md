@@ -247,9 +247,9 @@ Tasks: 306, 307, 308, 309
 
 ## objective-run — `/objective-run`: worker and checker rounds toward checkable criteria, with a committed, resumable log
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/objective-run.md
 Source: prompt
-Tasks: none
+Tasks: 310, 311
 
 ---
