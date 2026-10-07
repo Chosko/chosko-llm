@@ -2,6 +2,13 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.85.0 — 2026-10-07
+
+- **`/project-setup` asks the testing policy on every project**, not only on Unity ones, offering `full-tdd`, `skip-tests`, `skip-tests-unattended` or no line (the default, where `/task-implement` detects the runner). A chosen value goes into a `## Tasks implementation` section of `CLAUDE.md`.
+- **`/project-setup` offers the interaction policy** (`attended` by default, no line written; `unattended` writes `Interaction policy: unattended`), **the shipped `CLAUDE.md` sections** (`editing-discipline`, which `/doc-consolidate` needs, `git-commit-style`, `tool-usage-policy`) **and the `remote-session-protocol` hook**, each installed with `chosko-llm add --local`.
+- **The Plastic SCM mapping covers more operations**: `git mv`, `git rm`, `git show` and `git branch` now have `cm` equivalents. When it writes that mapping, `/project-setup` tells you that a non-git VCS disables parking: `--unattended` is refused, and an unattended run stops at a question instead.
+- **`/project-setup`'s final report suggests `/product-design` and `/architect`** when it set up the domain layer.
+
 ## 1.84.1 — 2026-10-07
 
 - **`/task-setup` records the testing policy.** When you tell it the project has no test suite and choose stub wrappers, it asks whether `/task-implement` should use `skip-tests` or `skip-tests-unattended`, and writes the `Testing policy for /task-implement:` line into a `## Tasks implementation` section of `CLAUDE.md`, so `/task-implement` stops asking about tests.

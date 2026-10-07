@@ -1,6 +1,6 @@
 ---
 name: project-setup
-version: 0.9.0
+version: 0.10.0
 type: command
 description: Interactive first-time project initialization wizard — gathers every choice up front (VCS, CLAUDE.md content, AGENTS.md, task backlog, domain layer, context layer), confirms once, then runs /task-setup, /domain-setup and /context-build in a fixed order. Use it once, on a project the chosko-llm tooling has not been set up on yet.
 disable-model-invocation: true
@@ -16,9 +16,10 @@ requires: skill:interaction-engine
 # cross-reference domain docs), then /context-build in its default flat
 # layout — never nested; /context-convert restructures a layer later.
 # Injects a VCS-mapping section into CLAUDE.md for non-git projects (e.g.
-# Plastic SCM). On Unity projects also injects a "Tasks implementation"
-# section (editor dirty-tree noise handling, and the permanent skip-tests
-# testing-policy marker for /task-implement when there is no test suite).
+# Plastic SCM), and a "Tasks implementation" section carrying the
+# testing-policy line for /task-implement when one is chosen (plus editor
+# dirty-tree noise handling on Unity projects). Offers the interaction-policy
+# line, the shipped claude-md sections and the remote-session-protocol hook.
 # Authoring command — leaves all output uncommitted for one review pass
 # unless `--commit` is passed.
 # Usage: /project-setup
@@ -41,8 +42,10 @@ context layer.
 This command ORCHESTRATES existing features — it does not reimplement
 them. The `/context-build` SKILL, `/task-setup`, and `/domain-setup` remain
 independently usable; this
-wizard runs their logic on the user's behalf and adds two artifacts of its
-own (the CLAUDE.md project-info + VCS sections and AGENTS.md).
+wizard runs their logic on the user's behalf and adds artifacts of its own
+(the CLAUDE.md project-info, VCS, Tasks-implementation and interaction-policy
+lines and sections, and AGENTS.md), installing the claude-md sections and the
+hook the user picks through `chosko-llm add --local`.
 
 COMMIT POLICY — project-setup is an AUTHORING command. By DEFAULT (no
 `--commit`) it NEVER commits anything: every file it writes — and everything
@@ -80,8 +83,10 @@ honor that same `## VCS` mapping (including its push exemption). Without
 ORDERING PRINCIPLE — the wizard does its OWN fast, deterministic work first,
 THEN runs the heavy sub-commands last:
 
-- The wizard's own artifacts (CLAUDE.md seeding, VCS section, AGENTS.md) rely
-  only on what the user provides and are written before any sub-command runs.
+- The wizard's own artifacts (CLAUDE.md seeding, VCS section,
+  Tasks-implementation section, interaction-policy line, AGENTS.md, and the
+  `chosko-llm add --local` installs) rely only on what the user provides and
+  are written before any sub-command runs.
 - `/task-setup` runs next — it is mechanical and low-context. It leaves its
   scaffolding uncommitted by default; under `--commit` the wizard passes
   `--commit` (and `--no-push`, if set) through so it commits (and pushes)
@@ -90,9 +95,8 @@ THEN runs the heavy sub-commands last:
   also mechanical and low-context. The ordering is deliberate:
   `/context-build` emits DOMAIN DEPENDENCIES sections that link to domain
   files, so the domain index should already exist when it runs.
-- `/context-build` runs LAST. It is a SKILL (it was a command before
-  v0.46.0 — invoke it by name, `/context-build`, exactly as before). It is
-  the most context-hungry step and has
+- `/context-build` runs LAST. It is a SKILL, invoked by name,
+  `/context-build`. It is the most context-hungry step and has
   its own interactive STOP-and-approve gates, so it could otherwise capture
   the run and strand the wizard's later steps. Running it last guarantees the
   wizard's other steps have already executed before context-build starts. It
@@ -273,22 +277,57 @@ context file beside it), which is `/context-build`'s default; if the repo
 later outgrows a single index, `/context-convert` restructures the layer into
 per-unit leaves without rebuilding it.
 
-### 1g. Unity projects — tasks-implementation section
+### 1g. Testing policy
+
+Ask on every project:
+
+> Which testing policy should /task-implement record for this project?
+>
+> a. none — write no line; /task-implement detects the test runner itself
+>    (default)
+> b. `full-tdd` — the project has a test suite; always run the tests-first
+>    sequence
+> c. `skip-tests` — no test suite; implement without tests, confirming
+>    before each task
+> d. `skip-tests-unattended` — no test suite; implement without tests, no
+>    per-task confirmation
+
+A chosen value is written as the testing-policy line of a
+`## Tasks implementation` section (Step 3b).
+
+### 1h. Unity projects — editor noise
 
 Probe read-only for Unity: `ProjectSettings/ProjectVersion.txt` exists →
-Unity project. If it is NOT a Unity project, skip this subsection entirely
-and ask nothing.
+Unity project. If it is NOT a Unity project, skip this subsection entirely.
 
-If it IS a Unity project, tell the user a `## Tasks implementation` section
-will be added to CLAUDE.md — it teaches /task-implement how to handle
-Unity's editor dirty-tree noise; the noise guidance is generic and the
-project-specific list grows on its own as later sessions notice recurring
-noise files. Ask ONE thing:
+If it IS a Unity project, tell the user the `## Tasks implementation`
+section will carry guidance on Unity's editor dirty-tree noise; the noise
+guidance is generic and the project-specific list grows on its own as later
+sessions notice recurring noise files. Ask nothing.
 
-> Does this project have a test suite /task-implement should run? [y/N]
+### 1i. Interaction policy
 
-If **no**, the section will carry the permanent skip-tests
-testing-policy marker (see Step 3b).
+> Should interactive chosko-llm features wait for you at their gates
+> (`attended`, the default — no line is written) or pass confirmation gates
+> on their own and stop at real questions (`unattended`)? [attended /
+> unattended]
+
+`unattended` is written as the line `Interaction policy: unattended`
+(Step 3c); keeping `attended` writes nothing.
+
+### 1j. CLAUDE.md sections and hook
+
+Offer each shipped claude-md section and the hook, one yes/no each, every
+one installed with `chosko-llm add --local` (Step 4b):
+
+> Install these into this project?
+>
+> - `editing-discipline` — the editing rules for rules documents;
+>   `/doc-consolidate` requires it and stops without it [Y/n]
+> - `git-commit-style` — the commit-message style [y/N]
+> - `tool-usage-policy` — prefer the built-in file tools over shell [y/N]
+> - `remote-session-protocol` (hook) — in remote cloud sessions, Claude asks
+>   in one numbered text batch instead of a question dialog [y/N]
 
 That's the full set of questions. Keep it to these — do not improvise extra
 prompts. If $ARGUMENTS carried hints (e.g. "we use Plastic", "source under
@@ -312,7 +351,11 @@ Commit mode:    <off — leave everything for review | on (--commit) — commit 
 VCS:            <git | Plastic SCM | none>
 Seed CLAUDE.md: <yes, synthesizing N pasted source(s) | skip>
 VCS section:    <inject Plastic mapping into CLAUDE.md | none needed (git) | skip (none)>
-Unity section:  <inject Tasks-implementation section (skip-tests policy: yes/no) | n/a (not a Unity project)>
+Testing policy: <none (runner detected) | full-tdd | skip-tests | skip-tests-unattended>
+Tasks section:  <inject Tasks-implementation section (testing policy and/or Unity noise) | n/a>
+Interaction:    <attended (no line) | unattended (write the line)>
+CLAUDE.md sections: <list of claude-md sections to install --local | none>
+Hook:           <remote-session-protocol --local | skip>
 AGENTS.md:      <create | skip>
 Task backlog:   <initialize via /task-setup | skip>
 Domain layer:   <initialize via /domain-setup | index existing docs via /domain-setup | skip>
@@ -320,12 +363,14 @@ Context layer:  <build via /context-build, flat layout (runs last) | skip>
 
 Execution order:
   -- wizard's own artifacts --
-  1. CLAUDE.md skeleton    (only if CLAUDE.md missing AND step 2, 3, or 3b needs it)
+  1. CLAUDE.md skeleton    (only if CLAUDE.md missing AND step 2, 3, 3b, 3c or 4b needs it)
   2. Seed CLAUDE.md prose  (if requested; from pasted material only)
   3. Inject VCS section    (if non-git VCS)
-  3b. Tasks-implementation section (Unity projects only)
+  3b. Tasks-implementation section (if a testing policy was chosen, or a Unity project)
+  3c. Interaction-policy line (if unattended)
   4. AGENTS.md             (if requested)
-  4c. Commit and push own artifacts (only with --commit; commits steps 1-4)
+  4b. chosko-llm add --local  (claude-md sections and hook, if any picked)
+  4c. Commit and push own artifacts (only with --commit; commits steps 1-4b)
   -- heavy sub-commands, last --
   5. /task-setup           (if requested; --commit [--no-push] passed through when set)
   5b. /domain-setup        (if requested; before context-build; --commit [--no-push] passed through when set)
@@ -347,7 +392,7 @@ the full plan after any change.
 PHASE 3 — EXECUTE (only after the PHASE 2 gate is approved or passes on its own)
 
 Run the steps in this exact order. Skip any step the user opted out of.
-Report each step's result as you go. Steps 1-4 are the wizard's own work;
+Report each step's result as you go. Steps 1-4c are the wizard's own work;
 Steps 5-6 are the heavy sub-commands. Without `--commit`, nothing is
 committed at any step — everything is left in the working tree for the final
 review. With `--commit`, Step 4c commits (and pushes) the wizard's own
@@ -357,11 +402,13 @@ if set) so they commit (and push) their own output.
 ### Step 1 — CLAUDE.md skeleton
 
 Only when CLAUDE.md does not exist yet AND a later wizard step needs to write
-to it (seeding requested, a VCS section will be injected, or a Unity
-tasks-implementation section will be injected). Use the Write
+to it (seeding requested, a VCS section, a Tasks-implementation section or
+the interaction-policy line will be injected) or a claude-md section or the
+hook will be installed — `chosko-llm add --local` refuses without a
+`CLAUDE.md`. Use the Write
 tool to create a minimal CLAUDE.md containing just a title and a one-line
 "see AGENTS.md / the context layer" pointer. If CLAUDE.md already exists, do
-nothing here. If nothing in Steps 2-3 will write to CLAUDE.md and it is
+nothing here. If nothing in Steps 2-4b needs CLAUDE.md and it is
 missing, also do nothing — context-build (Step 6) will create it if the user
 asked for the context layer.
 
@@ -399,6 +446,10 @@ run `git` here.
 - `git rev-parse --short HEAD`-> report the changeset from `cm log --limit=1`
 - `git diff --name-only HEAD` -> `cm diff --format={path}`
 - `git log --after="<date>" --name-only --pretty=format:` -> `cm find revision "where date >= '<date>'" --format="{item}" | sort -u`
+- `git mv <src> <dst>`        -> `cm move <src> <dst>`
+- `git rm <paths>`            -> `cm remove <paths>`
+- `git show <rev>:<path>`     -> `cm cat <path>#cs:<changeset>`
+- `git branch <name>`         -> `cm branch create <name>`
 
 Stage and check in only the explicit paths a command names — never a
 catch-all. Plastic has no staging area, so the git "add then commit"
@@ -411,20 +462,23 @@ the changeset to the central server — commands never run a pull/re-sync/push
 cycle in this project. Perform the checkin above and stop there.
 ```
 
+After injecting it, tell the user in one line that a non-git VCS disables
+parking: `--unattended` is refused by the parking features, and an
+unattended run stops at a question instead of parking.
+
 For git, inject nothing — the commands already work as authored. For an
 unknown/"none" VCS, skip this step.
 
-### Step 3b — Inject the Tasks-implementation section (Unity projects only)
+### Step 3b — Inject the Tasks-implementation section
 
-Skip this step entirely when the project is not Unity (GATHER 1g). For a
-Unity project, append a `## Tasks implementation` section to CLAUDE.md (if
-one already exists, update it in place rather than duplicating). This
-section is the PERMANENT home for /task-implement guidance in this project
-— later notes such as the testing-policy marker belong here, not in a new
-section.
+Skip this step when GATHER 1g chose no testing policy and the project is
+not Unity (GATHER 1h). Otherwise append a `## Tasks implementation` section
+to CLAUDE.md (if one already exists, update it in place rather than
+duplicating). This section is the PERMANENT home for /task-implement
+guidance in this project — later notes belong here, not in a new section.
 
-Write the section from this template. The text is fixed — the only part
-to adapt is `<commit|checkin>`:
+On a Unity project, write the section from this template. The text is
+fixed — the only part to adapt is `<commit|checkin>`:
 
 ```
 ## Tasks implementation
@@ -459,19 +513,31 @@ git, "checkin" for Plastic SCM. Do not ask the user for noise files and do
 not pre-fill the list — it starts empty by design and is maintained by
 future sessions per the instruction embedded in the section itself.
 
-If the user answered **no test suite** in GATHER 1g, end the section with
-the testing-policy marker — the phrase must match EXACTLY what
-/task-implement scans for — followed by the human-readable sentence:
+On any other project the section is the `## Tasks implementation` heading
+alone, followed by the testing-policy line.
+
+When GATHER 1g chose a value, end the section with the testing-policy line —
+the phrase must match EXACTLY what /task-implement scans for — followed by
+the human-readable sentence for that value:
 
 ```
-Testing policy for /task-implement: skip-tests
+Testing policy for /task-implement: <full-tdd | skip-tests | skip-tests-unattended>
 
-This project has no test suite. Skip the test phases by default without
-asking for confirmation.
+<full-tdd:              This project has a test suite. Always run the tests-first sequence.>
+<skip-tests:            This project has no test suite. Skip the test phases, confirming before each task.>
+<skip-tests-unattended: This project has no test suite. Skip the test phases without asking for confirmation.>
 ```
 
-If the user answered yes (a test suite exists), write no testing-policy
-line — /task-implement will detect the runner as usual.
+When GATHER 1g chose none, write no testing-policy line — /task-implement
+detects the runner itself.
+
+### Step 3c — Interaction-policy line
+
+Only when GATHER 1i chose `unattended`: add the line
+`Interaction policy: unattended` to CLAUDE.md on its own line, where
+`../skills/interaction-engine/references/policy.md` says it is read; an
+existing `Interaction policy:` line is updated in place. For `attended`,
+write nothing.
 
 ### Step 4 — AGENTS.md
 
@@ -488,20 +554,31 @@ VCS rules.
 If AGENTS.md already exists, do not clobber it — report that it was left
 as-is.
 
+### Step 4b — Install the claude-md sections and the hook
+
+For each claude-md section picked at GATHER 1j, run
+`chosko-llm add claude-md:<name> --local`; for the hook,
+`chosko-llm add hook:remote-session-protocol --local`, and relay the
+`.claude/settings.json` wiring prompt the CLI prints for it to the user in
+the final report — the wizard does not edit `settings.json`. Run them from the
+project root, after Step 1 has made sure CLAUDE.md exists. A failed install
+is reported and the run continues.
+
 ### Step 4c — Commit and push the wizard's own artifacts (only with `--commit`)
 
 Run this step ONLY when `--commit` was passed (the pull-at-start from the
-ARGUMENT NOTE already ran). Stage EXACTLY the files Steps 1-4 wrote —
-CLAUDE.md (the skeleton, seeded prose, injected `## VCS` section, and/or
-Unity `## Tasks implementation` section) and AGENTS.md, as applicable — and
-make one commit:
+ARGUMENT NOTE already ran). Stage EXACTLY the files Steps 1-4b wrote —
+CLAUDE.md (the skeleton, seeded prose, injected `## VCS` section,
+`## Tasks implementation` section, interaction-policy line and installed
+claude-md sections), AGENTS.md, and the installed hook script, as
+applicable — and make one commit:
 
 ```
-git add -- <CLAUDE.md and/or AGENTS.md, only the files actually written>
+git add -- <only the files Steps 1-4b actually wrote>
 git commit -m "Initialize project with chosko-llm scaffolding"
 ```
 
-If Steps 1-4 wrote nothing (e.g. CLAUDE.md already complete, AGENTS.md
+If Steps 1-4b wrote nothing (e.g. CLAUDE.md already complete, AGENTS.md
 already present), make no commit (and no push). Stage only the explicit
 paths written — never a catch-all (`git add -A`/`.`/`-u`). On a non-git
 VCS, use the `## VCS` mapping (git→`cm`) and skip the push step entirely
@@ -519,7 +596,7 @@ If requested, run the `/task-setup` workflow. It creates the backlog
 scaffolding. Without `--commit` it leaves the scaffolding uncommitted with
 everything else; with `--commit`, invoke it as `/task-setup --commit`
 (plus `--no-push` if set) so it commits (and pushes) its own scaffolding.
-Because CLAUDE.md is already written (Steps 1-4), task-setup's convention
+Because CLAUDE.md is already written (Steps 1-4b), task-setup's convention
 reading sees the completed file.
 
 ### Step 5b — Domain layer (before context-build)
@@ -561,6 +638,11 @@ output if run). Then, depending on COMMIT:
   working tree is theirs to review and commit in one pass. Suggest next steps
   (e.g. review the synthesized CLAUDE.md prose, then commit; `/task-add` once
   the backlog is committed).
+- Either way, when the hook was installed, relay the `.claude/settings.json`
+  wiring prompt the CLI printed for it (Step 4b).
+- Either way, when the domain layer was set up, suggest the pipeline's entry
+  points: `/product-design` to design the product, `/architect` to turn
+  features into feature documents.
 - With `--commit`: list the commits made (Step 4c's own-artifacts commit, plus
   each sub-command's commit) with their short hashes, note whether each was
   pushed (or stayed local-only under `--no-push` / the non-git VCS
@@ -594,4 +676,4 @@ DO NOT:
 - Inject a VCS section for a git project.
 - Clobber an existing AGENTS.md or an existing CLAUDE.md project-info /
   VCS / Tasks-implementation section — update in place, never duplicate.
-- Inject the Tasks-implementation section into a non-Unity project.
+- Write the Unity editor-noise bullets into a non-Unity project.

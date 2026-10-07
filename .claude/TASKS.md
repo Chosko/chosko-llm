@@ -616,7 +616,7 @@ Feature: setup-sync
 
 ## 292. Bring `/project-setup`'s wizard in line with the features it sets up
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/project-setup.md, VERSION, CHANGELOG.md
 Preconditions: 286, 289
