@@ -303,7 +303,7 @@ Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:`
 
 Done: 2026-10-07, commits `ee9f674`, `9da2b1b`, `31f2c1d`, `06023a0` (18 files, +401/-73). /session-describe derives "objectives still open" from What we are building vs Exact next step (handoffs have no objectives section).
 
-## [ ] 15. Implement quick-implement
+## [x] 15. Implement quick-implement
 
 Depends on: 7, 14
 
@@ -313,6 +313,8 @@ Context:
 ```prompt
 Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:` line is `quick-implement`, in backlog order, as one invocation: /task-implement <ids> --review --unattended
 ```
+
+Done: 2026-10-07, commits `378ced5`, `73c5519`, `c4c5b4c`, `2016aac`, `6f28548`, `a050d14`, `bbb4253` (77 files, +1551/-512). /quick-implement carries its own short review loop (citing task-implement's review-rounds.md would need a requires: it should not have).
 
 ## [ ] 17. Implement orchestrate-mode
 
