@@ -275,7 +275,7 @@ Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:`
 
 Done: 2026-10-07, commits `6c815d0`, `a33adec`, `5767b01`, `0e440f6`, `90ce941`, `2152406`, `77cac87` (91 files, +1419/-474). Decision: task-engine and pipeline-engine take no `requires: skill:interaction-engine` (feature doc wins over task 282's wording).
 
-## [ ] 11. Implement the Unity removal, then setup sync
+## [x] 11. Implement the Unity removal, then setup sync
 
 Depends on: 7, 9, 10
 
@@ -287,6 +287,8 @@ Context:
 ```prompt
 Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:` line is `unity-mcp-removal`, then every one whose `Feature:` line is `setup-sync`, in that order (setup-sync edits project-setup's Unity branch after the removal), as one invocation: /task-implement <ids> --review --unattended
 ```
+
+Done: 2026-10-07, commits `0bb6f69`, `cb28c58`, `e4248c1`, `c1a3456`, `5b0a39b`, `8e0478e`, `ef6cd3e` (77 files, +992/-5071). 289 also installed interaction-engine locally under .claude/skills/ (required by the refreshed local copies).
 
 ## [ ] 13. Implement the session readers
 
@@ -357,7 +359,9 @@ Each feature lands as its own commit with a patch bump of its `version:` frontma
 
 Depends on: 20
 
-Context: none
+Context:
+- 2026-10-07 (from step 11): the repo's tracked `--local` install copies under `.claude/skills/` and `.claude/commands/` drift behind the sources as later tasks bump them (task-implement and task-engine were already one patch behind after task 293). Refresh every tracked local copy from its source as part of the sweep, staging only those paths.
+- 2026-10-07 (from step 11): /project-setup running /task-setup on a project with no tests can ask the testing-policy question twice (291 and 292 overlap); the end state is right. Report it as a follow-up; do not fix it here.
 
 ```prompt
 Run /pipeline-check and fix any finding it reports for the features this runbook added or changed (interaction-policy, unity-mcp-removal, setup-sync, session-readers, quick-implement, orchestrate-mode, objective-run). Then run /context-update. Then run `./scripts/check-changelog.sh`, `./scripts/check-home-paths.sh`, `./scripts/check-routing.sh` and `./scripts/check-setup.sh`; all must be silent. Report in a few lines what was fixed, if anything.
