@@ -1,6 +1,6 @@
 ---
 name: project-setup
-version: 0.10.1
+version: 0.10.2
 type: command
 description: Interactive first-time project initialization wizard — gathers every choice up front (VCS, CLAUDE.md content, AGENTS.md, task backlog, domain layer, context layer), confirms once, then runs /task-setup, /domain-setup and /context-build in a fixed order. Use it once, on a project the chosko-llm tooling has not been set up on yet.
 disable-model-invocation: true
@@ -32,200 +32,176 @@ requires: skill:interaction-engine
 #   (forwarded to the sub-commands too)
 
 GOAL
-Walk a first-time user through configuring this project: detect the VCS,
+Walk a first-time user through configuring this project: detect the VCS;
 optionally seed CLAUDE.md with project information (and an AGENTS.md
-pointer), inject a VCS-mapping section so the other chosko-llm commands work
-under non-git VCS, optionally initialize the task backlog, optionally
-initialize the domain knowledge layer, and optionally build the navigation
-context layer.
+pointer); inject a VCS-mapping section so the other chosko-llm commands work
+under a non-git VCS; optionally initialize the task backlog, the domain
+knowledge layer and the navigation context layer.
 
-This command ORCHESTRATES existing features — it does not reimplement
-them. The `/context-build` SKILL, `/task-setup`, and `/domain-setup` remain
-independently usable; this
-wizard runs their logic on the user's behalf and adds artifacts of its own
-(the CLAUDE.md project-info, VCS, Tasks-implementation and interaction-policy
-lines and sections, and AGENTS.md), installing the claude-md sections and the
+Orchestrate existing features; never reimplement them. The `/context-build`
+SKILL, `/task-setup` and `/domain-setup` stay independently usable — run
+their logic on the user's behalf. The wizard's own artifacts are the
+CLAUDE.md project-info, VCS, Tasks-implementation and interaction-policy
+lines and sections, and AGENTS.md; it installs the claude-md sections and the
 hook the user picks through `chosko-llm add --local`.
 
-COMMIT POLICY — project-setup is an AUTHORING command. By DEFAULT (no
-`--commit`) it NEVER commits anything: every file it writes — and everything
-the sub-commands it invokes write — is left UNCOMMITTED in the working tree
-for the user to review and commit in one pass at the end. This matches the
-other authoring features (`/context-build`, `/context-convert`,
-the `/refactor-*` commands), all of which leave their output
-for review. The generated CLAUDE.md prose in particular is synthesized from
-the user's pasted material and deserves a human read before it lands in
-history.
-
-With `--commit`, project-setup commits (and pushes) its OWN artifacts (the
-CLAUDE.md seeding + VCS section, AGENTS.md) first, then runs the nested
-commands WITH `--commit` so each commits (and pushes) its own output
-(`/task-setup --commit`, `/domain-setup --commit`, `/context-build
---commit`). The result is a small series of focused commits rather than one
-uncommitted working tree. `--commit` and `--no-commit` are mutually
-exclusive — if both appear, stop with:
-`--commit and --no-commit cannot be combined. Pick one.`
-
-`--no-push` (only meaningful alongside `--commit`) makes every commit in
-the run local-only: the wizard's own Step 4c commit skips the pull/re-sync/
-push cycle, and `--no-push` is forwarded to each nested command alongside
-`--commit` (`/task-setup --commit --no-push`, etc.) so their commits stay
-local too.
-
-VCS detection exists for ONE purpose only: deciding whether to inject the
-VCS-mapping section into CLAUDE.md (that section maps git→`cm` for the
-committing commands under a non-git VCS, and states that `cm checkin`
-already syncs to the server so no push cycle ever runs there). When
-`--commit` is used, the wizard's own commit — and the sub-commands' —
-honor that same `## VCS` mapping (including its push exemption). Without
-`--commit`, project-setup runs no VCS command at all.
-
-ORDERING PRINCIPLE — the wizard does its OWN fast, deterministic work first,
-THEN runs the heavy sub-commands last:
-
-- The wizard's own artifacts (CLAUDE.md seeding, VCS section,
-  Tasks-implementation section, interaction-policy line, AGENTS.md, and the
-  `chosko-llm add --local` installs) rely only on what the user provides and
-  are written before any sub-command runs.
-- `/task-setup` runs next — it is mechanical and low-context. It leaves its
-  scaffolding uncommitted by default; under `--commit` the wizard passes
-  `--commit` (and `--no-push`, if set) through so it commits (and pushes)
-  its own scaffolding (see Step 5).
-- `/domain-setup` runs after it and BEFORE `/context-build` (see Step 5b) —
-  also mechanical and low-context. The ordering is deliberate:
-  `/context-build` emits DOMAIN DEPENDENCIES sections that link to domain
-  files, so the domain index should already exist when it runs.
-- `/context-build` runs LAST. It is a SKILL, invoked by name,
-  `/context-build`. It is the most context-hungry step and has
-  its own interactive STOP-and-approve gates, so it could otherwise capture
-  the run and strand the wizard's later steps. Running it last guarantees the
-  wizard's other steps have already executed before context-build starts. It
-  leaves its output uncommitted by default; under `--commit` the wizard
-  passes `--commit` (and `--no-push`, if set) through so it commits (and
-  pushes) its own output (see Step 6).
-  The wizard ALWAYS builds the layer in its default FLAT layout. It does NOT
-  offer, ask about, or pass the `nested` argument — a first-time setup has no
-  basis for choosing unit seams, and the layer can be restructured later at
-  any time with `/context-convert`. Do not add a nested question to GATHER.
-
-CLAUDE.md seeding relies ONLY on material the user supplies — pasted docs,
-README excerpts, notes. The wizard does NOT read the codebase to synthesize
-project info; codebase-derived structure is context-build's job, and it runs
-later. If the user supplies nothing, the seeding step is a no-op.
-
-The flow is strictly: GATHER (ask everything) → CONFIRM (one approval) →
-EXECUTE (apply in order) → commit-or-review-reminder.
-
-Never write to any file before the user confirms the gathered plan.
+Flow, strictly: GATHER (ask everything) → CONFIRM (one approval) → EXECUTE
+(apply in order) → commit-or-review-reminder. Write no file before the user
+confirms the gathered plan.
 
 $ARGUMENTS
 
-ARGUMENT NOTE — scan $ARGUMENTS for the optional `--commit` flag. If present,
-set COMMIT = true and strip it (any remaining text is a structure/VCS hint).
-`--commit` and `--no-commit` are mutually exclusive — if both appear, stop
-with: `--commit and --no-commit cannot be combined. Pick one.` COMMIT drives
-the commit behavior described in COMMIT POLICY above and PHASE 3 below.
+ARGUMENT NOTE — scan $ARGUMENTS for flags, strip each one found; any
+remaining text is a structure/VCS hint.
+- `--commit` → set COMMIT = true. COMMIT drives COMMIT POLICY and PHASE 3
+  below.
+- `--commit` with `--no-commit` → stop with:
+  `--commit and --no-commit cannot be combined. Pick one.`
+- `--no-push` → set NO_PUSH = true. It matters only when COMMIT is true: it
+  skips the pull at start and Step 4c's pre-push re-sync and push, and is
+  forwarded to every nested command invoked with `--commit`.
+- Pull at start: when COMMIT is true, NO_PUSH is not set, and the chosen VCS
+  is git (not a non-git `## VCS` exemption), run `git pull` on the current
+  branch before PHASE 2 (EXECUTE) begins. On a conflict, stop the run there:
+  report the conflict output and tell the user to resolve manually and
+  re-run.
+- `--attended` / `--unattended` → resolve the run's interaction policy from
+  them, a policy handed down by a parent run and the project's `CLAUDE.md`,
+  per `../skills/interaction-engine/references/policy.md`, which holds their
+  argument errors. Hand the resolved policy down to every nested command, as
+  its flag.
+- Under `unattended`, read
+  `../skills/interaction-engine/references/gates.md` — this wizard has no
+  parking mechanism, its GATHER questions are real decisions, and a stopped
+  run writes nothing.
+- Before the first question, read
+  `../skills/interaction-engine/references/messages.md`; every question, the
+  PHASE 2 plan and the closing report follow it.
 
-Also scan for the optional `--no-push` flag; if present, set NO_PUSH = true
-and strip it. NO_PUSH only matters when COMMIT is true: it skips the pull
-at start below and Step 4c's pre-push re-sync and push, and is forwarded to
-every nested command invoked with `--commit` below. If COMMIT is true and
-the project's chosen VCS is git (not a non-git `## VCS` exemption), pull at
-start — run `git pull` on the current branch before PHASE 2 (EXECUTE) begins. A
-conflict stops the run here — report the conflict output and tell the
-user to resolve manually and re-run.
+COMMIT POLICY — project-setup is an AUTHORING command.
+- Default (no `--commit`): commit NOTHING. Leave every file the wizard writes
+  — and everything the sub-commands it invokes write — UNCOMMITTED in the
+  working tree for the user to review and commit in one pass at the end,
+  like the other authoring features (`/context-build`, `/context-convert`,
+  the `/refactor-*` commands). The generated CLAUDE.md prose in particular is
+  synthesized from the user's pasted material and deserves a human read
+  before it lands in history.
+- Shell out for exactly two things: read-only VCS detection in PHASE 1, and —
+  ONLY with `--commit` — the commit step in PHASE 3 (`git add -- <paths>` /
+  `git commit`, or the `## VCS`-mapped equivalents). Without `--commit`,
+  never stage, commit, or otherwise mutate VCS state, and run no other VCS
+  command at all.
+- With `--commit`: commit (and push) the wizard's OWN artifacts (the
+  CLAUDE.md seeding + VCS section, AGENTS.md) first, then run the nested
+  commands WITH `--commit` so each commits (and pushes) its own output — a
+  small series of focused commits (PHASE 3).
+- With `--commit --no-push`: every commit in the run is local-only. Step 4c
+  skips the pull/re-sync/push cycle, and `--no-push` is forwarded to each
+  nested command alongside `--commit` (`/task-setup --commit --no-push`,
+  etc.).
+- Under a non-git VCS, the wizard's own commit and the sub-commands' honor
+  the `## VCS` mapping (including its push exemption).
+- Commit only the explicit paths each step wrote — never a catch-all. Never
+  force-push, retry a failed push, branch, tag, or use hook-skipping flags.
 
-Also scan for the optional `--attended` and `--unattended` flags and strip
-whichever appear. The run's interaction policy resolves from them, a policy
-handed down by a parent run and the project's `CLAUDE.md`, per
-`../skills/interaction-engine/references/policy.md`, which holds their
-argument errors; under `unattended`, read
-`../skills/interaction-engine/references/gates.md` — this wizard has no
-parking mechanism, its GATHER questions are real decisions, and a stopped
-run writes nothing. Read
-`../skills/interaction-engine/references/messages.md` before the first
-question — every question, the PHASE 2 plan and the closing report follow
-it. The resolved policy is handed down to every nested command, as its flag.
+ORDERING PRINCIPLE — do the wizard's OWN fast, deterministic work first,
+THEN run the heavy sub-commands last:
+- The wizard's own artifacts (CLAUDE.md seeding, VCS section,
+  Tasks-implementation section, interaction-policy line, AGENTS.md, and the
+  `chosko-llm add --local` installs) rely only on what the user provides;
+  write them before any sub-command runs.
+- `/task-setup` runs next (Step 5) — mechanical and low-context.
+- `/domain-setup` runs after it and BEFORE `/context-build` (Step 5b) — also
+  mechanical and low-context. `/context-build` emits DOMAIN DEPENDENCIES
+  sections that link to domain files, so the domain index should already
+  exist when it runs.
+- `/context-build` runs LAST (Step 6). It is a SKILL, invoked by name,
+  `/context-build`. It is the most context-hungry step and has its own
+  interactive STOP-and-approve gates, so it could otherwise capture the run
+  and strand the wizard's later steps.
+- Always build the context layer in its default FLAT layout. Never offer,
+  ask about, or pass the `nested` argument — a first-time setup has no basis
+  for choosing unit seams, and `/context-convert` can restructure the layer
+  later at any time. Never run or offer `/context-convert` — there is no
+  layer to convert during a first-time setup.
 
 ---
 
 PHASE 1 — GATHER (conversational; no files written)
 
-This command shells out for exactly two things: read-only VCS detection in
-this phase, and — ONLY when `--commit` was passed — the commit step in
-PHASE 3 (`git add -- <paths>` / `git commit`, or the `## VCS`-mapped
-equivalents). Without `--commit`, it never stages, commits, or otherwise
-mutates VCS state.
+1. State this once, upfront, before asking anything — pick the variant that
+   matches the flag:
 
-State this once, upfront, before asking anything. Pick the variant that
-matches the flag:
+   - DEFAULT (no `--commit`):
 
-- DEFAULT (no `--commit`):
+     > Heads up: this wizard leaves everything it writes UNCOMMITTED. I'll set
+     > up the files (and run any sub-commands you choose), then hand the working
+     > tree back to you to review and commit in one pass. I won't make any
+     > commits myself — the sub-commands I run (task-setup, domain-setup,
+     > context-build) leave their output uncommitted too.
 
-  > Heads up: this wizard leaves everything it writes UNCOMMITTED. I'll set
-  > up the files (and run any sub-commands you choose), then hand the working
-  > tree back to you to review and commit in one pass. I won't make any
-  > commits myself — the sub-commands I run (task-setup, domain-setup,
-  > context-build) leave their output uncommitted too.
+   - WITH `--commit`:
 
-- WITH `--commit`:
+     > Heads up: you passed --commit, so I'll commit as I go — first my own
+     > artifacts (CLAUDE.md seeding, AGENTS.md), then each sub-command commits
+     > its own output (task-setup, domain-setup, context-build). You'll get a
+     > small series of
+     > focused commits rather than one working tree to review.
 
-  > Heads up: you passed --commit, so I'll commit as I go — first my own
-  > artifacts (CLAUDE.md seeding, AGENTS.md), then each sub-command commits
-  > its own output (task-setup, domain-setup, context-build). You'll get a
-  > small series of
-  > focused commits rather than one working tree to review.
-
-Then ask the questions below ONE AT A TIME — ask one, wait for the reply,
-then ask the next. Do not batch them into a single message or ask the user to
-answer them all in one go. Suggest the answer you'd pick so the user can
-confirm with a single word. Carry every answer forward into the CONFIRM
-summary — do NOT act on any answer yet.
+2. Ask the questions 1a–1j below ONE AT A TIME — ask one, wait for the
+   reply, then ask the next. Never batch them into one message or ask the
+   user to answer them all in one go.
+3. Suggest the answer you'd pick, so the user can confirm with a single word.
+4. If $ARGUMENTS carried hints (e.g. "we use Plastic", "source under lib/"),
+   pre-fill the relevant defaults from them and say so.
+5. Carry every answer forward into the CONFIRM summary — act on none yet.
+6. Ask only these questions — improvise no extra prompts.
 
 ### 1a. Detect the VCS
 
-Probe the working tree (read-only) to detect the version-control system:
-- `.git/` present, or `git rev-parse --is-inside-work-tree` succeeds → git.
-- `.plastic/` present, or a `cm` binary resolves and `cm status` succeeds
-  → Plastic SCM.
-- Neither → unknown.
+- Probe the working tree (read-only):
+  - `.git/` present, or `git rev-parse --is-inside-work-tree` succeeds → git.
+  - `.plastic/` present, or a `cm` binary resolves and `cm status` succeeds
+    → Plastic SCM.
+  - Neither → unknown.
+- Report what you found and ask which VCS to configure, with the
+  auto-detected one as the default:
 
-Report what you found and ask which VCS to configure, presenting the
-auto-detected one as the default:
+  > Detected VCS: <git | Plastic SCM | none>. Configure for this VCS?
+  > [Y / specify another]
 
-> Detected VCS: <git | Plastic SCM | none>. Configure for this VCS?
-> [Y / specify another]
-
-The chosen VCS drives ONE thing: whether a VCS-mapping section is injected
-into CLAUDE.md (injected for any non-git VCS; omitted for git, whose commands
-need no override). It does NOT affect committing — project-setup never
-commits. If the user picks "none", skip VCS-section injection.
+- The chosen VCS decides whether a VCS-mapping section is injected into
+  CLAUDE.md: injected for any non-git VCS, omitted for git (its commands need
+  no override), skipped for "none". It maps git→`cm` for the committing
+  commands and states that `cm checkin` already syncs to the server, so no
+  push cycle ever runs there. Detection serves no other purpose; it does not
+  decide whether the wizard commits.
 
 ### 1b. Seed CLAUDE.md (from user-provided material only)
 
 > Seed CLAUDE.md with project information? [Y/n]
 
-If **yes**, start an optional iterative input phase — this material is the
-ONLY input the seeding step uses; the wizard does not read the codebase to
-fill CLAUDE.md:
+- If **yes**, start an optional iterative input phase. This material is the
+  ONLY input the seeding step uses — never read the codebase to fill
+  CLAUDE.md (codebase-derived structure is context-build's job, and it runs
+  later):
 
-> Paste or type any documentation, README excerpts, or notes you'd like
-> folded into CLAUDE.md. (Whatever you provide is synthesized into concise
-> prose, never inserted verbatim.)
+  > Paste or type any documentation, README excerpts, or notes you'd like
+  > folded into CLAUDE.md. (Whatever you provide is synthesized into concise
+  > prose, never inserted verbatim.)
 
-After each entry, accumulate it and invite more:
+- After each entry, accumulate it and invite more:
 
-> Added. Keep pasting or typing more, or say "done" when you've finished.
+  > Added. Keep pasting or typing more, or say "done" when you've finished.
 
-Repeat until the user says "done". Accumulate everything they provided across
-the loop. If they say "done" without having provided anything, treat seeding
-as declined.
+- Repeat until the user says "done", accumulating everything across the loop.
+  "done" with nothing provided → treat seeding as declined.
 
 ### 1c. AGENTS.md
 
 > Create an AGENTS.md that points other agents at CLAUDE.md? [Y/n]
 
-This is independent of every other choice.
+Independent of every other choice.
 
 ### 1d. Task backlog
 
@@ -238,44 +214,41 @@ if set) so it commits (and pushes) its own scaffolding.
 
 ### 1e. Domain knowledge layer
 
-Probe read-only for an existing `.claude/domain/` (Glob
-`.claude/domain/**/*.md`). Ask the variant that matches:
+- Probe read-only for an existing `.claude/domain/` (Glob
+  `.claude/domain/**/*.md`) and ask the matching variant (default yes):
+  - Nothing there yet:
 
-- Nothing there yet:
+    > Initialize the domain knowledge layer now (runs /domain-setup)? [Y/n]
 
-  > Initialize the domain knowledge layer now (runs /domain-setup)? [Y/n]
+  - Documents already there:
 
-- Documents already there:
+    > You already have docs under `.claude/domain/`. Index the docs you
+    > already have, and add the missing scaffolding around them (runs
+    > /domain-setup)? [Y/n]
 
-  > You already have docs under `.claude/domain/`. Index the docs you
-  > already have, and add the missing scaffolding around them (runs
-  > /domain-setup)? [Y/n]
-
-Either way, explain it in one line: the domain layer holds what the product
-is and why it's built that way — the counterpart to the context layer's
-codebase structure — and `/product-design` and `/architect` both write into
-it, so they need it to exist. `/domain-setup` never touches existing
-documents; it indexes them.
-
-Default is yes. Note that it runs after the task backlog and BEFORE
-`/context-build`, and leaves its scaffolding uncommitted by default; under
-`--commit` the wizard runs `/domain-setup --commit` (plus `--no-push` if
-set) so it commits (and pushes) its own scaffolding.
+- Either way, explain in one line: the domain layer holds what the product
+  is and why it's built that way — the counterpart to the context layer's
+  codebase structure — and `/product-design` and `/architect` both write into
+  it, so they need it to exist. `/domain-setup` never touches existing
+  documents; it indexes them.
+- Note that it runs after the task backlog and BEFORE `/context-build`, and
+  leaves its scaffolding uncommitted by default; under `--commit` the wizard
+  runs `/domain-setup --commit` (plus `--no-push` if set) so it commits (and
+  pushes) its own scaffolding.
 
 ### 1f. Context layer
 
 > Build the navigation context layer now (runs /context-build)? [Y/n]
 
-Ask exactly that — one yes/no question, no layout sub-question.
-
-Note for the user: context-build runs LAST and has its own approval gates —
-it will pause for input during its phases, and it leaves its output
-uncommitted for you to review afterward. Under `--commit`, the wizard runs
-`/context-build --commit` (plus `--no-push` if set) so it commits (and
-pushes) its own output. It builds the FLAT layout (one `INDEX.md` with every
-context file beside it), which is `/context-build`'s default; if the repo
-later outgrows a single index, `/context-convert` restructures the layer into
-per-unit leaves without rebuilding it.
+- Ask exactly that — one yes/no question, no layout sub-question.
+- Note for the user: context-build runs LAST and has its own approval gates —
+  it will pause for input during its phases, and it leaves its output
+  uncommitted for you to review afterward. Under `--commit`, the wizard runs
+  `/context-build --commit` (plus `--no-push` if set) so it commits (and
+  pushes) its own output. It builds the FLAT layout (one `INDEX.md` with every
+  context file beside it), which is `/context-build`'s default; if the repo
+  later outgrows a single index, `/context-convert` restructures the layer
+  into per-unit leaves without rebuilding it.
 
 ### 1g. Testing policy
 
@@ -292,18 +265,17 @@ Ask on every project:
 > d. `skip-tests-unattended` — no test suite; implement without tests, no
 >    per-task confirmation
 
-A chosen value is written as the testing-policy line of a
-`## Tasks implementation` section (Step 3b).
+A chosen value becomes the testing-policy line of a `## Tasks
+implementation` section (Step 3b).
 
 ### 1h. Unity projects — editor noise
 
-Probe read-only for Unity: `ProjectSettings/ProjectVersion.txt` exists →
-Unity project. If it is NOT a Unity project, skip this subsection entirely.
-
-If it IS a Unity project, tell the user the `## Tasks implementation`
-section will carry guidance on Unity's editor dirty-tree noise; the noise
-guidance is generic and the project-specific list grows on its own as later
-sessions notice recurring noise files. Ask nothing.
+- Probe read-only for Unity: `ProjectSettings/ProjectVersion.txt` exists →
+  Unity project. Not Unity → skip this subsection entirely.
+- Unity → tell the user the `## Tasks implementation` section will carry
+  guidance on Unity's editor dirty-tree noise; the noise guidance is generic
+  and the project-specific list grows on its own as later sessions notice
+  recurring noise files. Ask nothing.
 
 ### 1i. Interaction policy
 
@@ -329,20 +301,18 @@ one installed with `chosko-llm add --local` (Step 4b):
 > - `remote-session-protocol` (hook) — in remote cloud sessions, Claude asks
 >   in one numbered text batch instead of a question dialog [y/N]
 
-That's the full set of questions. Keep it to these — do not improvise extra
-prompts. If $ARGUMENTS carried hints (e.g. "we use Plastic", "source under
-lib/"), apply them to pre-fill the relevant defaults and say so.
+That's the full set of questions.
 
 ---
 
 PHASE 2 — CONFIRM (present the full plan, one approval)
 
-Render every gathered choice and the exact EXECUTE order in one message:
-
-The header and closing line depend on COMMIT. Without `--commit` use the
-"nothing is committed" wording shown; with `--commit` say
-"commits as it goes" in the header and replace the closing line with
-"Each step commits its own output — you'll get a series of focused commits."
+1. Render every gathered choice and the exact EXECUTE order in one message,
+   using the block below. Header and closing line depend on COMMIT:
+   - Without `--commit`: use the "nothing is committed" wording shown.
+   - With `--commit`: say "commits as it goes" in the header and replace the
+     closing line with "Each step commits its own output — you'll get a
+     series of focused commits."
 
 ```
 PLAN — project setup     (nothing is committed; all output left for review)
@@ -380,54 +350,61 @@ All changes are left UNCOMMITTED for you to review and commit in one pass.
 (With --commit: each step commits its own output as a focused commit, then pushes unless --no-push.)
 ```
 
-End with: **"Approve and run?"** Gate class: `confirmation` — under
-`unattended` it passes on its own, and the closing report names the commits
-or, without `--commit`, the uncommitted files.
-
-Wait for explicit approval. Silence is not approval. Iterate and re-present
-the full plan after any change.
+2. End with: **"Approve and run?"** Gate class: `confirmation` — under
+   `unattended` it passes on its own, and the closing report names the
+   commits or, without `--commit`, the uncommitted files.
+3. Wait for explicit approval. Silence is not approval.
+4. After any change, iterate and re-present the full plan.
 
 ---
 
 PHASE 3 — EXECUTE (only after the PHASE 2 gate is approved or passes on its own)
 
-Run the steps in this exact order. Skip any step the user opted out of.
-Report each step's result as you go. Steps 1-4c are the wizard's own work;
-Steps 5-6 are the heavy sub-commands. Without `--commit`, nothing is
-committed at any step — everything is left in the working tree for the final
-review. With `--commit`, Step 4c commits (and pushes) the wizard's own
-artifacts and the sub-commands are invoked WITH `--commit` (and `--no-push`,
-if set) so they commit (and push) their own output.
+- Run the steps in this exact order; skip any step the user opted out of.
+- Report each step's result as you go.
+- Steps 1-4c are the wizard's own work; Steps 5-6 are the heavy
+  sub-commands.
+- Without `--commit`, commit nothing at any step — leave everything,
+  sub-command output included, in the working tree for the final review.
+- With `--commit`, Step 4c commits (and pushes) the wizard's own artifacts,
+  and each sub-command (Steps 5, 5b, 6) is invoked WITH `--commit` (plus
+  `--no-push` if set) — `/task-setup --commit`, `/domain-setup --commit`,
+  `/context-build --commit` — so it commits (and pushes) its own output.
 
 ### Step 1 — CLAUDE.md skeleton
 
-Only when CLAUDE.md does not exist yet AND a later wizard step needs to write
-to it (seeding requested, a VCS section, a Tasks-implementation section or
-the interaction-policy line will be injected) or a claude-md section or the
-hook will be installed — `chosko-llm add --local` refuses without a
-`CLAUDE.md`. Use the Write
-tool to create a minimal CLAUDE.md containing just a title and a one-line
-"see AGENTS.md / the context layer" pointer. If CLAUDE.md already exists, do
-nothing here. If nothing in Steps 2-4b needs CLAUDE.md and it is
-missing, also do nothing — context-build (Step 6) will create it if the user
-asked for the context layer.
+- Act only when CLAUDE.md does not exist yet AND a later wizard step needs
+  it: seeding requested, a VCS section, a Tasks-implementation section or
+  the interaction-policy line will be injected, or a claude-md section or
+  the hook will be installed (`chosko-llm add --local` refuses without a
+  `CLAUDE.md`).
+- Then use the Write tool to create a minimal CLAUDE.md containing just a
+  title and a one-line "see AGENTS.md / the context layer" pointer.
+- CLAUDE.md already exists → do nothing. Missing but nothing in Steps 2-4b
+  needs it → also do nothing; context-build (Step 6) will create it if the
+  user asked for the context layer.
 
 ### Step 2 — Seed CLAUDE.md with project info (user material only)
 
-If requested, synthesize ONLY the material the user pasted in GATHER 1b into
-a concise project-information section in CLAUDE.md — what the project is, its
-layout, its key conventions. Synthesize into prose; do NOT paste the source
-material verbatim, and do NOT read the codebase to invent content here
-(codebase structure is context-build's job in Step 6). If the user pasted
-nothing, skip this step.
+- If requested, synthesize ONLY the material the user pasted in GATHER 1b
+  into a concise project-information section in CLAUDE.md — what the
+  project is, its layout, its key conventions.
+- Synthesize into prose; never paste the source material verbatim, and
+  never read the codebase to invent content here (codebase structure is
+  context-build's job in Step 6).
+- An existing project-info section is updated in place — never clobbered,
+  never duplicated.
+- User pasted nothing → skip this step.
 
 ### Step 3 — Inject the VCS-mapping section
 
-If the chosen VCS is non-git (e.g. Plastic SCM), append a `## VCS` section
-to CLAUDE.md that tells any command to substitute the VCS's equivalents for
-git commands. For Plastic SCM, write exactly this section (adjust the
-heading prose only if a `## VCS` section already exists — then update it in
-place rather than duplicating):
+- Git → inject nothing; the commands already work as authored. Unknown /
+  "none" → skip this step.
+- Non-git VCS (e.g. Plastic SCM) → append a `## VCS` section to CLAUDE.md
+  that tells any command to substitute the VCS's equivalents for git
+  commands. For Plastic SCM, write exactly this section. If a `## VCS`
+  section already exists, update it in place rather than duplicating (adjust
+  the heading prose only then):
 
 ```
 ## VCS
@@ -462,23 +439,21 @@ the changeset to the central server — commands never run a pull/re-sync/push
 cycle in this project. Perform the checkin above and stop there.
 ```
 
-After injecting it, tell the user in one line that a non-git VCS disables
-parking: `--unattended` is refused by the parking features, and an
-unattended run stops at a question instead of parking.
-
-For git, inject nothing — the commands already work as authored. For an
-unknown/"none" VCS, skip this step.
+- After injecting it, tell the user in one line that a non-git VCS disables
+  parking: `--unattended` is refused by the parking features, and an
+  unattended run stops at a question instead of parking.
 
 ### Step 3b — Inject the Tasks-implementation section
 
-Skip this step when GATHER 1g chose no testing policy and the project is
-not Unity (GATHER 1h). Otherwise append a `## Tasks implementation` section
-to CLAUDE.md (if one already exists, update it in place rather than
-duplicating). This section is the PERMANENT home for /task-implement
-guidance in this project — later notes belong here, not in a new section.
-
-On a Unity project, write the section from this template. The text is
-fixed — the only part to adapt is `<commit|checkin>`:
+- Skip this step when GATHER 1g chose no testing policy and the project is
+  not Unity (GATHER 1h).
+- Otherwise append a `## Tasks implementation` section to CLAUDE.md; if one
+  already exists, update it in place rather than duplicating. This section
+  is the PERMANENT home for /task-implement guidance in this project — later
+  notes belong here, not in a new section.
+- Unity project → write the section from this template. The text is fixed;
+  adapt only `<commit|checkin>`, using the VCS vocabulary chosen in 1a —
+  "commit" for git, "checkin" for Plastic SCM:
 
 ```
 ## Tasks implementation
@@ -508,17 +483,15 @@ following:
   - (none recorded yet)
 ```
 
-Use the VCS vocabulary chosen in 1a for `<commit|checkin>` — "commit" for
-git, "checkin" for Plastic SCM. Do not ask the user for noise files and do
-not pre-fill the list — it starts empty by design and is maintained by
-future sessions per the instruction embedded in the section itself.
-
-On any other project the section is the `## Tasks implementation` heading
-alone, followed by the testing-policy line.
-
-When GATHER 1g chose a value, end the section with the testing-policy line —
-the phrase must match EXACTLY what /task-implement scans for — followed by
-the human-readable sentence for that value:
+- Never ask the user for noise files and never pre-fill the list — it starts
+  empty by design and future sessions maintain it per the instruction
+  embedded in the section itself. Never write the Unity editor-noise bullets
+  into a non-Unity project.
+- Any other project → the section is the `## Tasks implementation` heading
+  alone, followed by the testing-policy line.
+- GATHER 1g chose a value → end the section with the testing-policy line —
+  the phrase must match EXACTLY what /task-implement scans for — followed by
+  the human-readable sentence for that value:
 
 ```
 Testing policy for /task-implement: <full-tdd | skip-tests | skip-tests-unattended>
@@ -528,16 +501,16 @@ Testing policy for /task-implement: <full-tdd | skip-tests | skip-tests-unattend
 <skip-tests-unattended: This project has no test suite. Skip the test phases without asking for confirmation.>
 ```
 
-When GATHER 1g chose none, write no testing-policy line — /task-implement
-detects the runner itself.
+- GATHER 1g chose none → write no testing-policy line; /task-implement
+  detects the runner itself.
 
 ### Step 3c — Interaction-policy line
 
-Only when GATHER 1i chose `unattended`: add the line
-`Interaction policy: unattended` to CLAUDE.md on its own line, where
-`../skills/interaction-engine/references/policy.md` says it is read; an
-existing `Interaction policy:` line is updated in place. For `attended`,
-write nothing.
+- Only when GATHER 1i chose `unattended`: add the line
+  `Interaction policy: unattended` to CLAUDE.md on its own line, where
+  `../skills/interaction-engine/references/policy.md` says it is read;
+  update an existing `Interaction policy:` line in place.
+- `attended` → write nothing.
 
 ### Step 4 — AGENTS.md
 
@@ -556,124 +529,102 @@ as-is.
 
 ### Step 4b — Install the claude-md sections and the hook
 
-For each claude-md section picked at GATHER 1j, run
-`chosko-llm add claude-md:<name> --local`; for the hook,
-`chosko-llm add hook:remote-session-protocol --local`, and relay the
-`.claude/settings.json` wiring prompt the CLI prints for it to the user in
-the final report — the wizard does not edit `settings.json`. Run them from the
-project root, after Step 1 has made sure CLAUDE.md exists. A failed install
-is reported and the run continues.
+- Run from the project root, after Step 1 has made sure CLAUDE.md exists.
+- For each claude-md section picked at GATHER 1j, run
+  `chosko-llm add claude-md:<name> --local`.
+- For the hook, run `chosko-llm add hook:remote-session-protocol --local`,
+  and relay the `.claude/settings.json` wiring prompt the CLI prints for it
+  to the user in the final report. Never edit `settings.json` yourself.
+- A failed install → report it and continue the run.
 
 ### Step 4c — Commit and push the wizard's own artifacts (only with `--commit`)
 
-Run this step ONLY when `--commit` was passed (the pull-at-start from the
-ARGUMENT NOTE already ran). Stage EXACTLY the files Steps 1-4b wrote —
-CLAUDE.md (the skeleton, seeded prose, injected `## VCS` section,
-`## Tasks implementation` section, interaction-policy line and installed
-claude-md sections), AGENTS.md, and the installed hook script, as
-applicable — and make one commit:
+Without `--commit`, skip this step entirely. With it (the pull-at-start from
+the ARGUMENT NOTE has already run):
+
+1. Stage EXACTLY the files Steps 1-4b wrote — CLAUDE.md (the skeleton,
+   seeded prose, injected `## VCS` section, `## Tasks implementation`
+   section, interaction-policy line and installed claude-md sections),
+   AGENTS.md, and the installed hook script, as applicable — and make one
+   commit:
 
 ```
 git add -- <only the files Steps 1-4b actually wrote>
 git commit -m "Initialize project with chosko-llm scaffolding"
 ```
 
-If Steps 1-4b wrote nothing (e.g. CLAUDE.md already complete, AGENTS.md
-already present), make no commit (and no push). Stage only the explicit
-paths written — never a catch-all (`git add -A`/`.`/`-u`). On a non-git
-VCS, use the `## VCS` mapping (git→`cm`) and skip the push step entirely
-(per that section's push exemption). On commit success, unless NO_PUSH is
-true, re-sync with `git pull` immediately before pushing — other commits
-may have landed upstream during the run — then `git push`; on push failure or a pre-push conflict, surface
-the exact output, never retry or force-push — the commit exists locally
-and needs a manual sync + push. On commit failure (e.g. a pre-commit
-hook), surface the output; do NOT retry, amend, or use hook-skipping
-flags. Without `--commit`, skip this step entirely.
+2. Stage only the explicit paths written — never a catch-all
+   (`git add -A`/`.`/`-u`).
+3. Steps 1-4b wrote nothing (e.g. CLAUDE.md already complete, AGENTS.md
+   already present) → make no commit and no push.
+4. Non-git VCS → use the `## VCS` mapping (git→`cm`) and skip the push step
+   entirely (per that section's push exemption).
+5. On commit success, unless NO_PUSH is true: re-sync with `git pull`
+   immediately before pushing — other commits may have landed upstream
+   during the run — then `git push`.
+6. Push failure or a pre-push conflict → surface the exact output; never
+   retry or force-push. The commit exists locally and needs a manual sync +
+   push.
+7. Commit failure (e.g. a pre-commit hook) → surface the output; never
+   retry, amend, or use hook-skipping flags.
 
 ### Step 5 — Task backlog
 
-If requested, run the `/task-setup` workflow. It creates the backlog
-scaffolding. Without `--commit` it leaves the scaffolding uncommitted with
-everything else; with `--commit`, invoke it as `/task-setup --commit`
-(plus `--no-push` if set) so it commits (and pushes) its own scaffolding.
-Because CLAUDE.md is already written (Steps 1-4b), task-setup's convention
-reading sees the completed file.
+- If requested, run the `/task-setup` workflow; it creates the backlog
+  scaffolding.
+- CLAUDE.md is already written (Steps 1-4b), so task-setup's convention
+  reading sees the completed file.
 
 ### Step 5b — Domain layer (before context-build)
 
-If requested at GATHER 1e, run the `/domain-setup` workflow. It creates the
-domain-layer scaffolding — `.claude/domain/`, `.claude/domain/features/`, the
-domain `INDEX.md`, `.claude/FEATURES.md`, and a CLAUDE.md pointer — and, on a
-project that already has hand-written domain docs, indexes them instead of
-writing an empty index. It runs BEFORE Step 6 so that `/context-build` can
-cross-reference an existing domain index. Without `--commit` it leaves its
-scaffolding uncommitted with everything else; with `--commit`, invoke it as
-`/domain-setup --commit` (plus `--no-push` if set) so it commits (and
-pushes) its own scaffolding. This wizard holds no domain-layer logic of its
-own — it delegates entirely.
+- If requested at GATHER 1e, run the `/domain-setup` workflow. It creates
+  the domain-layer scaffolding — `.claude/domain/`,
+  `.claude/domain/features/`, the domain `INDEX.md`, `.claude/FEATURES.md`,
+  and a CLAUDE.md pointer — and, on a project that already has hand-written
+  domain docs, indexes them instead of writing an empty index.
+- Run it BEFORE Step 6, so that `/context-build` can cross-reference an
+  existing domain index — never after `/context-build`.
+- Delegate entirely: the wizard holds no domain-layer logic of its own and
+  writes no domain-layer artifact itself.
 
 ### Step 6 — Context build (LAST)
 
-If requested, run the `/context-build` skill. Invoke it with NO layout
-argument, so it builds its default flat layer and stamps `Layout: flat` into
-the `INDEX.md` it writes. Never pass `nested` / `nested=…` from this wizard.
-
-Run it LAST and treat its
-phases as authoritative — it has its own STOP-and-approve gates, which
-follow the policy this run hands it; honor them, do not flatten them. It creates CLAUDE.md if
-missing and adds its navigation instruction at the top (additive to anything
-Steps 1-2 wrote) — that instruction points at `.claude/context/INDEX.md`,
-which is the entry point in either layout, so a later `/context-convert` run
-will not need to revisit it. Without `--commit` its output stays
-uncommitted; with `--commit`, invoke it as `/context-build --commit` (plus
-`--no-push` if set) so it commits (and pushes) its own output.
+- If requested, run the `/context-build` skill — LAST, never before this
+  step.
+- Invoke it with NO layout argument, so it builds its default flat layer and
+  stamps `Layout: flat` into the `INDEX.md` it writes. Never pass `nested` /
+  `nested=…` from this wizard.
+- Treat its phases as authoritative — it has its own STOP-and-approve gates,
+  which follow the policy this run hands it; honor them, do not flatten
+  them.
+- It creates CLAUDE.md if missing and adds its navigation instruction at the
+  top (additive to anything Steps 1-2 wrote) — that instruction points at
+  `.claude/context/INDEX.md`, which is the entry point in either layout, so
+  a later `/context-convert` run will not need to revisit it.
 
 ### Final report
 
-Summarize every step's outcome and the files written by each (the wizard's
-own artifacts, task-setup's scaffolding if run, domain-setup's scaffolding if
-run — naming any pre-existing domain docs it indexed — and context-build's
-output if run). Then, depending on COMMIT:
-- Without `--commit`: remind the user that NOTHING was committed — the entire
-  working tree is theirs to review and commit in one pass. Suggest next steps
-  (e.g. review the synthesized CLAUDE.md prose, then commit; `/task-add` once
-  the backlog is committed).
+- Summarize every step's outcome and the files written by each: the
+  wizard's own artifacts, task-setup's scaffolding if run, domain-setup's
+  scaffolding if run — naming any pre-existing domain docs it indexed — and
+  context-build's output if run.
+- Without `--commit`: remind the user that NOTHING was committed — the
+  entire working tree is theirs to review and commit in one pass. Suggest
+  next steps (e.g. review the synthesized CLAUDE.md prose, then commit;
+  `/task-add` once the backlog is committed).
+- With `--commit`: list the commits made (Step 4c's own-artifacts commit,
+  plus each sub-command's commit) with their short hashes, note whether each
+  was pushed (or stayed local-only under `--no-push` / the non-git VCS
+  exemption), and note that the synthesized CLAUDE.md prose is worth a
+  post-hoc review even though it was committed.
 - Either way, when the hook was installed, relay the `.claude/settings.json`
   wiring prompt the CLI printed for it (Step 4b).
 - Either way, when the domain layer was set up, suggest the pipeline's entry
   points: `/product-design` to design the product, `/architect` to turn
   features into feature documents.
-- With `--commit`: list the commits made (Step 4c's own-artifacts commit, plus
-  each sub-command's commit) with their short hashes, note whether each was
-  pushed (or stayed local-only under `--no-push` / the non-git VCS
-  exemption), and note that the synthesized CLAUDE.md prose is worth a
-  post-hoc review even though it was committed.
 
 ---
 
 DO NOT:
-- Write to any file before PHASE 3 (after explicit approval).
-- Commit, stage, or otherwise mutate VCS state UNLESS `--commit` was passed.
-  By default project-setup makes NO commits; everything it and its
-  sub-commands write is left uncommitted. With `--commit`, commit only the
-  explicit paths each step wrote — never a catch-all — then push per the
-  commit-and-push protocol unless `--no-push` was passed (forwarded to every
-  nested `--commit` call too); never force-push, retry a failed push,
-  branch, tag, or use hook-skipping flags.
-- Reimplement `/context-build`, `/task-setup` or `/domain-setup` — invoke
-  their workflows.
-- Run `/context-build` before Step 6 — the heavy sub-commands run last.
-- Offer, ask about, or pass a `nested` layout argument to `/context-build`.
-  The wizard always builds the flat default; restructuring is
-  `/context-convert`'s job, run later and on purpose.
-- Run or offer `/context-convert` at all — there is no layer to convert
-  during a first-time setup.
-- Run `/domain-setup` after `/context-build`, or write any domain-layer
-  artifact yourself. It runs at Step 5b and owns all of that logic.
-- Read the codebase to seed CLAUDE.md — seeding uses ONLY user-pasted
-  material; codebase structure is context-build's job.
-- Paste user-provided documentation verbatim into CLAUDE.md — synthesize it.
-- Inject a VCS section for a git project.
 - Clobber an existing AGENTS.md or an existing CLAUDE.md project-info /
   VCS / Tasks-implementation section — update in place, never duplicate.
-- Write the Unity editor-noise bullets into a non-Unity project.
