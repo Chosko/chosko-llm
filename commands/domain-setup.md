@@ -1,6 +1,6 @@
 ---
 name: domain-setup
-version: 0.3.2
+version: 0.3.3
 type: command
 description: Initialize the project's domain knowledge layer — creates .claude/domain/ with its features/ folder and INDEX.md, the .claude/FEATURES.md feature index, and a CLAUDE.md pointer to the domain index. Run it once before any other pipeline command; stage 0 of the pipeline: scaffolds the layer every later stage writes into.
 disable-model-invocation: true
@@ -22,14 +22,12 @@ requires: skill:interaction-engine, skill:architect
 # Usage: /domain-setup <any of the above> --attended | --unattended
 
 GOAL
-Make the domain layer structural. `.claude/domain/` holds the project's
-product and rules knowledge — what the product is, how its features are
-designed, why the architecture is what it is. It is read by `/task-add`,
-deliberately never written by `/context-build` or
-`/context-update`, and until now created by nothing at all: every project
-that has one grew it by hand, with no index and no entry-point pointer.
-`/product-design` and `/architect` both write into it, so it must exist and
-be navigable first.
+
+`.claude/domain/` holds the project's product and rules knowledge — what the
+product is, how its features are designed, why the architecture is what it
+is. `/task-add` reads it; `/context-build` and `/context-update` never write
+it; `/product-design` and `/architect` both write into it, so it must exist
+and be navigable first. This command is their gate.
 
 Create the artifacts the rest of the product pipeline assumes:
 
@@ -39,27 +37,30 @@ Create the artifacts the rest of the product pipeline assumes:
 3. `.claude/domain/INDEX.md` — the domain-layer navigation index: a
    `| File | Covers |` table matching the shape of
    `.claude/context/INDEX.md`. On a project that already has hand-written
-   domain docs, they are indexed here.
-4. `.claude/FEATURES.md` — the feature index, a sibling of `TASKS.md`. It
-   indexes work items the way `TASKS.md` does, which is why it sits at the
-   `.claude/` root rather than inside `domain/`; the feature *documents* it
-   points at are knowledge, so those live under `.claude/domain/features/`.
+   domain docs, index them here.
+4. `.claude/FEATURES.md` — the feature index, a sibling of `TASKS.md` at the
+   `.claude/` root (it indexes work items the way `TASKS.md` does); the
+   feature *documents* it points at are knowledge and live under
+   `.claude/domain/features/`.
 5. A CLAUDE.md navigation pointer at `.claude/domain/INDEX.md`.
 
-This command is the gate for `/product-design` and `/architect`. It creates
-the layer and nothing in it: no feature entries, no design documents.
-
-By default this is a pure authoring command: it writes the scaffolding and
-leaves everything uncommitted in the working tree, matching `/task-setup`,
-`/context-build`, and `/project-setup`. The user reviews and commits when
-ready. Passing `--commit` opts in to committing exactly what this run wrote, then
-pushing (see PHASE — COMMIT below); `--commit --no-push` commits without
-pushing.
-
-This command shells out for exactly two things: filesystem prep (`mkdir -p`
-for `.claude/domain` and `.claude/domain/features`) and, ONLY when
-`--commit` is passed, the pull/commit/push sequence. Without `--commit`,
-it runs NO git/VCS command.
+Scope:
+- Create the layer and nothing in it: no feature entries in
+  `.claude/FEATURES.md` (entries are `/architect`'s), no design or feature
+  documents — no `product-design.md`, no `technical-direction.md`, no
+  `business-model.md`, no `features/<slug>.md`. Those belong to
+  `/product-design` and `/architect`.
+- Write nothing into `.claude/context/`. The context layer is
+  `/context-build`'s and `/context-update`'s; only cross-reference it.
+- By default, leave everything uncommitted in the working tree for the user
+  to review and commit, matching `/task-setup`, `/context-build`, and
+  `/project-setup`. `--commit` opts in to committing exactly what this run
+  wrote, then pushing (see PHASE — COMMIT below); `--commit --no-push`
+  commits without pushing.
+- Shell out for exactly two things: filesystem prep (`mkdir -p` for
+  `.claude/domain` and `.claude/domain/features`) and, ONLY when `--commit`
+  is passed, the pull/commit/push sequence. Without `--commit`, run NO
+  git/VCS command.
 
 $ARGUMENTS
 
@@ -67,39 +68,42 @@ $ARGUMENTS
 
 WORKFLOW
 
-Before anything else, parse $ARGUMENTS for the optional `--commit` flag.
-If present, set COMMIT = true. When COMMIT is false (the default), the run
-leaves its scaffolding uncommitted.
+Before anything else, parse $ARGUMENTS:
+- `--commit` — if present, set COMMIT = true. When COMMIT is false (the
+  default), the run leaves its scaffolding uncommitted.
+- `--attended` / `--unattended` — strip whichever appear. Resolve the run's
+  interaction policy from them, a policy handed down by a parent run and the
+  project's `CLAUDE.md`, per
+  `../skills/interaction-engine/references/policy.md`, which holds their
+  argument errors. Under `unattended`, read
+  `../skills/interaction-engine/references/gates.md` — this command has no
+  parking mechanism. Read
+  `../skills/interaction-engine/references/messages.md` before the first
+  question and before the step 4 report, which follows its output rules.
+- `--no-push` — if present, set NO_PUSH = true. NO_PUSH only matters when
+  COMMIT is true: it skips the pull at start, the pre-push re-sync and the
+  push while still committing as always.
 
-Also parse the optional `--attended` and `--unattended` flags and strip
-whichever appear. The run's interaction policy resolves from them, a policy
-handed down by a parent run and the project's `CLAUDE.md`, per
-`../skills/interaction-engine/references/policy.md`, which holds their
-argument errors; under `unattended`, read
-`../skills/interaction-engine/references/gates.md` — this command has no
-parking mechanism. Read
-`../skills/interaction-engine/references/messages.md` before the first
-question and before the step 4 report, which follows its output rules.
+Pull at start: if COMMIT is true, NO_PUSH is not set, and the project's
+CLAUDE.md does not carry a `## VCS` override (non-git), run `git pull` on the
+current branch before any artifact is checked. A conflict stops the run
+here — report the conflict output and tell the user to resolve manually and
+re-run.
 
-Also parse the optional `--no-push` flag; if present, set NO_PUSH = true.
-NO_PUSH only matters when COMMIT is true: it skips the pull at start, the
-pre-push re-sync and the push while still committing as always. If COMMIT is
-true and the project's CLAUDE.md does not carry a `## VCS` override
-(non-git), pull at start: run `git pull` on the current branch before any
-artifact is checked. A conflict stops the run here — report the conflict
-output and tell the user to resolve manually and re-run.
-
-Each artifact is checked individually and created only if missing. Never
-overwrite an existing artifact without explicit user confirmation (gate
-class: `design`) —
-re-running `/domain-setup` on a partially or fully initialized project must
-be idempotent.
-
-Throughout the run, maintain a `WRITTEN` list of paths actually written or
-overwritten this invocation. Each successful Write / `mkdir -p` (when the
-directory did not previously exist) appends to it; idempotent no-ops do
-not. `WRITTEN` drives the final report in step 4 and the optional commit in
-PHASE — COMMIT.
+Rules for the whole run:
+- Check each artifact individually and create it only if missing.
+  Re-running `/domain-setup` on a partially or fully initialized project
+  must be idempotent.
+- Never overwrite an existing artifact without explicit user confirmation
+  (gate class: `design`). Existing domain documents, an existing
+  `.claude/domain/INDEX.md` and an existing `.claude/FEATURES.md` are
+  hand-written knowledge: treat them as canonical — index them, never edit
+  or clobber them.
+- Maintain a `WRITTEN` list of paths actually written or overwritten this
+  invocation. Each successful Write / `mkdir -p` (when the directory did not
+  previously exist) appends to it; idempotent no-ops do not. `WRITTEN`
+  drives the final report in step 4 and the optional commit in
+  PHASE — COMMIT.
 
 1. **Probe every artifact:**
    - `.claude/domain/` — use Glob `.claude/domain/*` or list it.
@@ -110,12 +114,12 @@ PHASE — COMMIT.
    - `CLAUDE.md` — use the Read tool. Note whether it exists and whether it
      already carries a pointer at `.claude/domain/INDEX.md`.
 
-2. **Inventory any pre-existing domain docs.** Glob
-   `.claude/domain/**/*.md` (excluding `INDEX.md` itself). The near-term
-   users of this command are existing projects, so a non-empty result is
-   the expected case, not an edge case. For each file found, read its
-   heading and opening paragraph — enough for one "Covers" cell, no more.
-   Do not read them in full and do not modify them.
+2. **Inventory any pre-existing domain docs.**
+   - Glob `.claude/domain/**/*.md` (excluding `INDEX.md` itself). Expect a
+     non-empty result — it is the common case, not an edge case.
+   - For each file found, read its heading and opening paragraph — enough
+     for one "Covers" cell, no more. Do not read them in full and do not
+     modify them.
 
 3. **Create whichever artifacts are missing:**
    - If `.claude/domain/` is missing, create it
@@ -153,9 +157,8 @@ PHASE — COMMIT.
 
 DOMAIN INDEX TEMPLATE
 
-Write `.claude/domain/INDEX.md` in this shape. The `| File | Covers |`
-table matches `.claude/context/INDEX.md` so the two layers read the same
-way:
+Write `.claude/domain/INDEX.md` in this shape (the `| File | Covers |` table
+matches `.claude/context/INDEX.md`):
 
 ```
 # Domain index
@@ -181,10 +184,10 @@ feature, written by `/architect`. The feature index — status and generated
 task IDs per feature — is [../FEATURES.md](../FEATURES.md).
 ```
 
-One row per document found in step 2, in alphabetical order. Write the
-"Covers" cell from what the document actually says; if a file's subject
-cannot be summarized from its heading and opening paragraph, say so in the
-report rather than guessing in the table.
+- Write one row per document found in step 2, in alphabetical order.
+- Write the "Covers" cell from what the document actually says. If a file's
+  subject cannot be summarized from its heading and opening paragraph, say
+  so in the report rather than guessing in the table.
 
 ---
 
@@ -196,29 +199,30 @@ Write `.claude/FEATURES.md` with exactly this content:
 # Features
 ```
 
-No entries — a fresh `FEATURES.md` never has one. Entries are appended by
-`/architect`, one per feature; their shape, the `Status:` values and who
-writes each field are `../skills/architect/feature-doc-template.md`
-§ *`.claude/FEATURES.md` entry*.
+A fresh `FEATURES.md` never has an entry. `/architect` appends entries, one
+per feature; their shape, the `Status:` values and who writes each field are
+`../skills/architect/feature-doc-template.md` § *`.claude/FEATURES.md`
+entry*.
 
 ---
 
 CLAUDE.md POINTER
 
-The pointer must be explicit about when to read the layer:
+Use this pointer — it is explicit about when to read the layer:
 
 > For product and domain knowledge — what this product is, how its
 > features are designed, and why the architecture is what it is — read
 > `.claude/domain/INDEX.md`, then only the domain files relevant to your
 > task.
 
-Compose it with what is already there; do not duplicate or overwrite:
+Compose it with what is already there; never duplicate an existing
+navigation instruction or overwrite one:
 
 - If CLAUDE.md already has a navigation instruction from `/context-build`
   (pointing at `.claude/context/INDEX.md`), add the domain pointer
-  alongside it under the same navigation heading, and make the division of
-  labour explicit — context = codebase structure, domain = product and
-  rules.
+  alongside it under the same navigation heading — never replace it; both
+  pointers coexist — and make the division of labour explicit: context =
+  codebase structure, domain = product and rules.
 - If CLAUDE.md exists with no navigation section, add the pointer near the
   top, before project-specific detail.
 - If CLAUDE.md does not exist, create a minimal one containing only this
@@ -237,16 +241,20 @@ If COMMIT is true (the pull-at-start already ran in WORKFLOW):
 
 1. If `WRITTEN` is empty (a fully idempotent re-run that wrote nothing),
    make no commit (and no push). Say so and stop — no empty commit.
-2. Otherwise, stage EXACTLY the paths in `WRITTEN` and commit them:
+2. Otherwise, make exactly one commit: stage EXACTLY the paths in `WRITTEN`
+   and commit them:
 
    ```
    git add -- <path1> <path2> ...      # exactly the entries of WRITTEN
    git commit -m "Initialize domain knowledge layer"
    ```
 
-   Stage ONLY the entries of `WRITTEN`. Never use `git add -A`,
-   `git add .`, or `git add -u`. On a non-git VCS, use the project's
-   `## VCS` mapping in CLAUDE.md (git→`cm`).
+   - Stage ONLY the entries of `WRITTEN`. Never use `git add -A`,
+     `git add .`, or `git add -u`.
+   - Never branch or tag, and never use hook-skipping flags
+     (`--no-verify`, `--no-gpg-sign`, `--amend`).
+   - On a non-git VCS, use the project's `## VCS` mapping in CLAUDE.md
+     (git→`cm`).
 3. On commit success, report the commit hash (`git rev-parse --short
    HEAD`). Then, unless NO_PUSH is true or the non-git VCS exemption
    applies, re-sync with `git pull` immediately before pushing — other
@@ -257,31 +265,3 @@ If COMMIT is true (the pull-at-start already ran in WORKFLOW):
 5. On push failure (rejected, no upstream, no remote) or a pre-push
    conflict: surface the exact output. Never retry, never force-push. The
    commit exists locally; tell the user it needs a manual sync + push.
-
----
-
-DO NOT:
-- Create any feature entries in `.claude/FEATURES.md`. This command creates
-  the empty index; entries are `/architect`'s to write.
-- Create any design or feature documents — no `product-design.md`, no
-  `technical-direction.md`, no `business-model.md`, no `features/<slug>.md`.
-  Those belong to `/product-design` and `/architect`. `/domain-setup`
-  scaffolds the layer, never its contents.
-- Overwrite or edit an existing domain document, an existing
-  `.claude/domain/INDEX.md`, or an existing `.claude/FEATURES.md`. These
-  are hand-written knowledge; treat them as canonical. Index them, never
-  clobber them.
-- Duplicate an existing CLAUDE.md navigation instruction, or replace the
-  `/context-build` context-layer pointer with this one. The two layers are
-  separate and both pointers coexist.
-- Write anything into `.claude/context/`. The context layer is
-  `/context-build`'s and `/context-update`'s; this command only
-  cross-references it.
-- Run any git/VCS command UNLESS `--commit` was passed. By default
-  `/domain-setup` writes scaffolding and leaves everything uncommitted —
-  committing is the user's job. With `--commit`, make exactly one commit of
-  the `WRITTEN` paths, then push per the commit-and-push protocol unless
-  `--no-push` was passed; never force-push, retry a failed push, branch,
-  tag, or use hook-skipping flags (`--no-verify`, `--no-gpg-sign`,
-  `--amend`), and never stage with a catch-all (`git add -A` / `git add .` /
-  `git add -u`).
