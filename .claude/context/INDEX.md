@@ -50,6 +50,7 @@ Canonical project docs live outside this folder, stay authoritative:
 | [task-backlog.md](./task-backlog.md) | Backlog maintenance — `task-setup`, `task-clean`, `task-list`. |
 | [quick-implement.md](./quick-implement.md) | `quick-implement` — one change from conversation to commit with no backlog entry: spec conversation, drift check, one gate, tests first, one commit holding the change and its `.claude/specs/` spec file. |
 | [orchestrate-mode.md](./orchestrate-mode.md) | `orchestrate-mode` — conversation-scoped mode: per-area subagents with disjoint file ownership, the brief, area handoff files, check-in as one commit per area, the boundary with pipeline commands. |
+| [objective-run.md](./objective-run.md) | `objective-run` — rounds of a worker and a checker subagent toward one objective's success criteria (the one gate), stop conditions, parked questions, the committed `.claude/objectives/` log and resume, docs follow-ups. |
 | [interaction-engine.md](./interaction-engine.md) | `interaction-engine`, the non-invocable reference engine for the interaction policy every interactive feature reads — `policy.md` (attended/unattended, flags, precedence), `gates.md` (the three gate classes), `messages.md` (output and question rules), `mode.md` (is orchestrate mode on). |
 | [task-engine.md](./task-engine.md) | `task-engine`, the non-invocable reference engine the `task-*` suite reads, and its `references/` files. |
 | [task-add.md](./task-add.md) | `task-add`, the backlog's authoring command. |

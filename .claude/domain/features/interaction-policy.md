@@ -45,8 +45,9 @@ Deliberately out:
 - **Picking an option for the user.** No gate class and no "trivial
   question" exception changes the *Real decisions* rule below.
 - **A new parking mechanism.** Parking stays what each feature already owns
-  — task parking in `task-engine`, step parking in `runbook-run`, and later
-  objective runs. A feature with no mechanism stops instead of parking.
+  — task parking in `task-engine`, step parking in `runbook-run`, and
+  objective runs in `objective-run`. A feature with no mechanism stops
+  instead of parking.
 - **The testing policy.** `Testing policy for /task-implement: …`, including
   `skip-tests-unattended`, stays an independent marker with its own meaning;
   the interaction policy neither reads nor sets it.

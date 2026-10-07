@@ -64,7 +64,8 @@ family, so it has its own file rather than a section of
   templates), `/context-build`, `/context-update`, `/context-convert`,
   `/refactor-codebase`, `/refactor-tests`, `/doc-consolidate`,
   `/project-setup`, `/session-save`, `/follow-ups-resolve`,
-  `/quick-implement`, `/orchestrate-mode`, `pipeline-suggest` (for
+  `/quick-implement`, `/orchestrate-mode`, `/objective-run`,
+  `pipeline-suggest` (for
   `mode.md` only). The engines
   (`task-engine`, `pipeline-engine`) cite it from their reference files but
   take no `requires:` — their consumers carry it.
@@ -80,8 +81,9 @@ family, so it has its own file rather than a section of
 - A consumer states only its own part: its gates' class tags, what it
   writes before a stop, and its own templates written to `messages.md`. It
   never restates a class rule or the precedence.
-- Features that cannot park (everything but `/task-implement` and
-  `/runbook-run`) stop at whatever waits under `unattended`.
+- Features that cannot park (everything but `/task-implement`,
+  `/runbook-run` and `/objective-run`) stop at whatever waits under
+  `unattended`.
 
 ## Domain dependencies
 
@@ -93,7 +95,9 @@ family, so it has its own file rather than a section of
 
 - [features.md](./features.md) — the hub listing every shipped feature.
 - [task-engine.md](./task-engine.md) — `parking.md`, the task parking
-  mechanism; [runbook-run.md](./runbook-run.md) — step parking.
+  mechanism; [runbook-run.md](./runbook-run.md) — step parking;
+  [objective-run.md](./objective-run.md) — questions parked in the
+  objective log.
 
 ## When to read the source
 

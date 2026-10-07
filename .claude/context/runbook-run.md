@@ -48,7 +48,10 @@ skill's reference files and dependencies. The rest of its bullet:
   RELAY CHILD RULES carry a precedence line: `<RESULT>` is the child's return
   channel, overriding any instruction in `<PROMPT>` or a skill it invokes to
   reply in the turn or write nothing to disk), both cited by the other three
-  by a `./references/<f>.md` path relative to the citing body.
+  by a `./references/<f>.md` path relative to the citing body;
+  `/objective-run` cites `subagent-contract.md` (its worker and checker
+  briefs) and `parking.md` (its parked questions) as
+  `../runbook-run/references/<f>.md`.
   `references/inline-contract.md` holds the fixed inline rule set that replaces the OPERATING RULES under
   `--inline`, read only when that flag is passed. Both contracts carry, as
   fixed text, one unconditional rule — a step command's dirty-tree prompt
@@ -79,8 +82,8 @@ skill's reference files and dependencies. The rest of its bullet:
   mapping), is read ONLY by `/runbook-run` and `/runbook-create --append`, and
   only after the schema's one-sentence check finds a `File:` file name not
   beginning `<id>-`. No sweep, no migration script. It IS the dependency
-  the rest of the runbook suite declares — and declares two itself,
-  `requires: command:follow-ups, skill:follow-ups-resolve` (the second for
+  the rest of the runbook suite and `/objective-run` declare — and declares
+  two itself, `requires: command:follow-ups, skill:follow-ups-resolve` (the second for
   the mid-run follow-up protocol and the post-report execution of approved
   items): its CLOSING THE RUN section applies the first
   command's rules — body read by name, never invoked — as the *Follow-ups*

@@ -69,6 +69,9 @@ Currently shipped:
 - [orchestrate-mode.md](./orchestrate-mode.md) — `skills/orchestrate-mode/`,
   a conversation-scoped mode turning every change request into per-area
   subagents with disjoint file ownership.
+- [objective-run.md](./objective-run.md) — `skills/objective-run/`, rounds
+  of worker and checker subagents toward one objective's criteria, recorded
+  in a committed, resumable log under `.claude/objectives/`.
 - [interaction-engine.md](./interaction-engine.md) — `skills/interaction-engine/`,
   the non-invocable reference library for the interaction policy. Every
   interactive feature, in every family, declares
@@ -110,6 +113,7 @@ authoring patterns every feature follows: [feature-contract.md](./feature-contra
   [context-skills.md](./context-skills.md), [session-handoff.md](./session-handoff.md),
   [quick-implement.md](./quick-implement.md),
   [orchestrate-mode.md](./orchestrate-mode.md),
+  [objective-run.md](./objective-run.md),
   [refactor-doc-consolidate.md](./refactor-doc-consolidate.md),
   [claude-md-hook-statusline.md](./claude-md-hook-statusline.md) — the
   contract and the rest of the shipped inventory.

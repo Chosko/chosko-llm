@@ -797,7 +797,7 @@ Feature: objective-run
 ---
 ## 311. Update documentation for feature `objective-run`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: .claude/context/INDEX.md, .claude/context/features.md, .claude/context/objective-run.md, .claude/context/interaction-engine.md, .claude/context/runbook-run.md, .claude/domain/features/interaction-policy.md
 Preconditions: 310
