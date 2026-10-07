@@ -1,6 +1,6 @@
 ---
 name: session-save
-version: 0.3.1
+version: 0.3.2
 type: command
 description: Capture what this conversation knows — what was tried, what failed, what was left alone on purpose, which files are half-finished and the exact next step — into a timestamped handoff file under .claude/sessions/. Use it before a conversation ends with work in flight.
 requires: skill:interaction-engine
@@ -94,9 +94,10 @@ WHERE THE FILE GOES
   shell commands this command is allowed to run — it runs no `ls`, no `grep`,
   and no other `git`.
 - `<slug>` is a **two-or-three-word kebab-case summary of the work**, not a
-  random id and not a generic word like `session` or `handoff`. The directory
-  listing is the only way the user ever finds an old session, so the slug has
-  to say what the session was about: `ecc-import-architecture`,
+  random id and not a generic word like `session` or `handoff`. The slug is
+  how the user finds an old session — `/session-list` shows it and
+  `/session-resume <slug>` resumes by it — so it has to say what the session
+  was about: `ecc-import-architecture`,
   `upgrade-readout-bug`, `roadmap-milestones`.
 
 **Never update a session file in place.** A second `/session-save` in the same

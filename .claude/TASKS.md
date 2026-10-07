@@ -656,7 +656,7 @@ Feature: session-readers
 
 ## 296. Add `/session-list`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/session-list.md, VERSION, CHANGELOG.md
 Preconditions: none

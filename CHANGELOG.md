@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.88.0 — 2026-10-07
+
+- **New `/session-list` command.** Prints every saved handoff under `.claude/sessions/` one line each, newest first — when it was saved, its slug, what it was anchored to and the first sentence of its next step (or, for a pointer, the file it points at) — plus how many area handoffs an orchestrated session left beside it. It reads only those header lines, and writes nothing.
+
 ## 1.87.0 — 2026-10-07
 
 - **`/session-resume <slug>` resumes a session by name.** Type the human-readable part of a handoff's filename (`/session-resume ecc-import-architecture`) to resume the newest handoff carrying that slug. A slug that matches nothing exactly lists the nearest existing slugs and stops, rather than resuming a different session.
