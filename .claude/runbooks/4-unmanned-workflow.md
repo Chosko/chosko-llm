@@ -290,7 +290,7 @@ Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:`
 
 Done: 2026-10-07, commits `0bb6f69`, `cb28c58`, `e4248c1`, `c1a3456`, `5b0a39b`, `8e0478e`, `ef6cd3e` (77 files, +992/-5071). 289 also installed interaction-engine locally under .claude/skills/ (required by the refreshed local copies).
 
-## [ ] 13. Implement the session readers
+## [x] 13. Implement the session readers
 
 Depends on: 7, 12
 
@@ -300,6 +300,8 @@ Context:
 ```prompt
 Run /task-implement on every [MISSING] task in .claude/TASKS.md whose `Feature:` line is `session-readers`, in backlog order, as one invocation: /task-implement <ids> --review --unattended
 ```
+
+Done: 2026-10-07, commits `ee9f674`, `9da2b1b`, `31f2c1d`, `06023a0` (18 files, +401/-73). /session-describe derives "objectives still open" from What we are building vs Exact next step (handoffs have no objectives section).
 
 ## [ ] 15. Implement quick-implement
 

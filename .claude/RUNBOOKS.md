@@ -10,6 +10,6 @@ Status: [RUNNING]
 File: .claude/runbooks/4-unmanned-workflow.md
 Created: 2026-10-06
 Source: conversation (unmanned-workflow design)
-Steps: 14/20
+Steps: 15/20
 
 ---
