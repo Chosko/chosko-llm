@@ -346,7 +346,7 @@ This goes after quick-implement: objective-run's docs follow-ups use `/pipeline-
 
 Done: 2026-10-07, commits `9782036`, `3c38d31` (12 files, +522/-12). The worker brief always declares the run unattended so a worker question parks under either policy (an exception to the inherit-the-parent-policy rule).
 
-## [ ] 20. Full imperative rewrite (only if step 6 said go)
+## [x] 20. Full imperative rewrite (only if step 6 said go)
 
 Depends on: 6, 19
 
@@ -363,6 +363,8 @@ Process, one fresh agent per feature (a feature's files together), with the same
 Each feature lands as its own commit with a patch bump of its `version:` frontmatter; then one root VERSION patch bump with a CHANGELOG section ("Rewrite shipped bodies in imperative form; no behaviour change"); `./scripts/check-changelog.sh` passes. Record per-feature word counts before → after and rounds in your report.
 ```
 
+Done: 2026-10-07, 29 commits `cb98c14`…`b4e3c06` (43 files, +6213/-7248). 28 features rewritten (≤2 rounds each), 18 kept their text (no real gain; claude-council is vendored and left alone); about −8% words, not the pilot's −18%. Ran locally, so no relay cap applied; about 7M tokens.
+
 ## [ ] 21. Final consistency sweep
 
 Depends on: 20
@@ -370,6 +372,7 @@ Depends on: 20
 Context:
 - 2026-10-07 (from step 11): the repo's tracked `--local` install copies under `.claude/skills/` and `.claude/commands/` drift behind the sources as later tasks bump them (task-implement and task-engine were already one patch behind after task 293). Refresh every tracked local copy from its source as part of the sweep, staging only those paths.
 - 2026-10-07 (from step 11): /project-setup running /task-setup on a project with no tests can ask the testing-policy question twice (291 and 292 overlap); the end state is right. Report it as a follow-up; do not fix it here.
+- 2026-10-07 (from step 20): the 28 features rewritten at step 20 all got a patch bump, so every one of their tracked `--local` copies now lags its source.
 
 ```prompt
 Run /pipeline-check and fix any finding it reports for the features this runbook added or changed (interaction-policy, unity-mcp-removal, setup-sync, session-readers, quick-implement, orchestrate-mode, objective-run). Then run /context-update. Then run `./scripts/check-changelog.sh`, `./scripts/check-home-paths.sh`, `./scripts/check-routing.sh` and `./scripts/check-setup.sh`; all must be silent. Report in a few lines what was fixed, if anything.
