@@ -1,6 +1,6 @@
 ---
 name: context-build
-version: 0.6.0
+version: 0.6.1
 type: skill
 description: Build a navigation context layer under .claude/context/ — an INDEX.md plus one context file per area of the codebase — so future sessions read a map instead of the source. Use it once on a project with no layer yet; flat by default, nested on request. Restructuring a layer is /context-convert's job.
 replaces: command:context-build
@@ -21,56 +21,51 @@ requires: skill:interaction-engine
 # Usage without push: /context-build --commit --no-push (commit locally, skip the push)
 
 GOAL
-Reduce token cost in future Claude Code sessions on this repo by introducing a
-navigation layer of context files. The current cost driver is that Claude Code reads
-multiple full source files upfront to answer questions or plan changes. The navigation
-layer should let future Claude Code sessions decide which source files to read on
-demand, based on cheap summaries.
+Reduce token cost in future Claude Code sessions on this repo. Instead of
+reading multiple full source files upfront to answer questions or plan changes,
+future sessions use a navigation layer of context files — cheap summaries — to
+decide which source files to read on demand.
 
 $ARGUMENTS
 
-ARGUMENT NOTE — before Phase 1, scan $ARGUMENTS for the optional `--commit`
-flag. If present, set COMMIT = true and strip it (the remaining text, if
-any, is a structure hint). When COMMIT is false (the default), the run
-leaves all output uncommitted for review.
+ARGUMENT NOTE — before Phase 1, scan $ARGUMENTS and strip each flag and
+argument below. Whatever text remains afterwards is the structure hint.
 
-Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
-matters when COMMIT is true: it skips the pull-at-start / re-sync / push
-steps of the commit-and-push protocol while still committing as always.
-When COMMIT is true and the project's CLAUDE.md does not carry a `## VCS`
-override (non-git), pull at start — run `git pull` on the current branch
-before Phase 1 begins. A conflict stops the run here — report the conflict
-output and tell the user to resolve manually and re-run. (No pull happens
-when COMMIT is false — there is nothing this run will commit or push.)
+- `--commit` → COMMIT = true. Default COMMIT = false: the run leaves all
+  output uncommitted for review.
+- `--no-push` → NO_PUSH = true. It matters only when COMMIT is true: it skips
+  the pull-at-start / re-sync / push steps of the commit-and-push protocol;
+  the commit still happens.
+- `--attended` / `--unattended` → strip whichever appear.
+  - Resolve the run's interaction policy from them, a policy handed down by a
+    parent run and the project's `CLAUDE.md`, per
+    `../interaction-engine/references/policy.md`, which holds their argument
+    errors.
+  - Under `unattended`, read `../interaction-engine/references/gates.md`.
+  - Read `../interaction-engine/references/messages.md` before the first
+    gate, question or report — each of them follows it.
+  - A gate that passes on its own has the closing report name the Phase 4
+    commit or, without `--commit`, the uncommitted files.
+- Nested-layout argument (optional):
+  - `nested` → NESTED = true, NESTED_UNITS = unset. The skill proposes the
+    unit seams itself.
+  - `nested=<unit1>,<unit2>,…` → NESTED = true, NESTED_UNITS = that
+    comma-separated list. The user has named the units; the skill still
+    proposes which context file lands in which unit.
+  - Neither present → NESTED = false.
+  - Both forms compose freely with the structure hint, `--commit`, and
+    `--no-push`.
 
-Also scan for the optional `--attended` and `--unattended` flags and strip
-whichever appear. The run's interaction policy resolves from them, a policy
-handed down by a parent run and the project's `CLAUDE.md`, per
-`../interaction-engine/references/policy.md`, which holds their argument
-errors; under `unattended`, read
-`../interaction-engine/references/gates.md`. Read
-`../interaction-engine/references/messages.md` before the first gate,
-question or report — each of them follows it. A gate that passes on its
-own has the closing report name the Phase 4 commit or, without `--commit`,
-the uncommitted files.
-
-Finally, scan for the optional nested-layout argument and strip it:
-
-- `nested` — set NESTED = true and NESTED_UNITS = unset. The skill proposes
-  the unit seams itself.
-- `nested=<unit1>,<unit2>,…` — set NESTED = true and NESTED_UNITS to that
-  comma-separated list. The user has named the units; the skill still
-  proposes which context file lands in which unit.
-
-Neither present → NESTED = false. Both forms compose freely with the
-structure hint, `--commit`, and `--no-push`; strip the argument before
-treating whatever text remains as the structure hint.
+Pull at start: when COMMIT is true (and NO_PUSH is not set) and the project's
+CLAUDE.md does not carry a `## VCS` override (non-git), run `git pull` on the
+current branch before Phase 1 begins. On a conflict, stop the run here: report
+the conflict output and tell the user to resolve manually and re-run. When
+COMMIT is false, do not pull — there is nothing this run will commit or push.
 
 SUPPORTING FILES (read on demand — not up front)
 
-This skill's common path is the whole of SKILL.md: a flat context layer,
-one `INDEX.md` with every context file beside it. The nested path lives in
-a sibling file, so a flat run never pays for it.
+SKILL.md alone covers the common path: a flat context layer, one `INDEX.md`
+with every context file beside it. The nested path lives in a sibling file.
 
 | Read this file | Exactly when |
 | -------------- | ------------ |
@@ -79,19 +74,16 @@ a sibling file, so a flat run never pays for it.
 | `../interaction-engine/references/gates.md` | The policy resolved to `unattended`. |
 | `./nested.md`  | NESTED is true (the `nested` / `nested=` argument was passed), OR Phase 1 step 1.0 read `Layout: nested` from an existing index. |
 
-Do not read `./nested.md` speculatively. On a flat run the file is never
-opened.
+Do not read `./nested.md` speculatively; a flat run never opens it.
 
 CONSTRAINTS
 - Do not refactor any source code.
-- Do not modify CLAUDE.md until Phase 3 — that comes at the end as the entry-point update.
-- The new context files describe CODEBASE STRUCTURE only — not the project's business
+- Do not modify CLAUDE.md until Phase 3, the entry-point update at the end.
+- Context files describe CODEBASE STRUCTURE only — not the project's business
   domain or rules.
-- If domain knowledge files already exist (e.g. a .claude/ folder with .md files,
-  a docs/ folder, or similar), leave them untouched. Treat them as canonical and
-  cross-reference them from context files where relevant, but do not modify them.
-- If a CLAUDE.md or equivalent entry-point file does not exist, create a minimal one
-  as part of Phase 3.
+- Leave existing domain knowledge files (e.g. a .claude/ folder with .md
+  files, a docs/ folder, or similar) untouched. Treat them as canonical and
+  cross-reference them from context files where relevant.
 
 YOUR TASK — three phases. Stop at the end of each phase and report before continuing.
 
@@ -99,63 +91,61 @@ YOUR TASK — three phases. Stop at the end of each phase and report before cont
 
 PHASE 1 — Analysis (no files written yet)
 
-1.0 Detect the layout of any pre-existing context layer.
-    If `.claude/context/INDEX.md` (or the project's equivalent index) already
-    exists, read the `Layout:` line directly under its title:
-    - `Layout: flat`, or no `Layout:` line at all → LAYOUT = flat.
+1.0 Detect the layout of any pre-existing context layer. The `Layout:` line
+    directly under the title of `.claude/context/INDEX.md` (or the project's
+    equivalent index) is the only source of truth — never infer the layout
+    from folder counts, subdirectories, or file contents.
+    - No index at all → fresh build, LAYOUT = flat.
+    - `Layout: flat`, or no `Layout:` line → LAYOUT = flat.
     - `Layout: nested` → LAYOUT = nested.
-    If no index exists at all, this is a fresh build: LAYOUT = flat.
-    Never infer the layout from folder counts, subdirectories, or file
-    contents — the marker line is the only source of truth.
 
     Then resolve the layout this run will produce:
-
-    - LAYOUT is nested (the existing index declares `Layout: nested`) →
-      read `./nested.md` now and follow it for the rest of the run,
-      whether or not the `nested` argument was passed.
-    - LAYOUT is flat and NESTED is true → read `./nested.md` now and follow
-      it. It states how to handle a pre-existing flat layer.
-    - LAYOUT is flat and NESTED is false → continue with this file. This is
-      the common path; do not open `./nested.md`.
+    - LAYOUT nested → read `./nested.md` now and follow it for the rest of
+      the run, whether or not the `nested` argument was passed.
+    - LAYOUT flat, NESTED true → read `./nested.md` now and follow it; it
+      states how to handle a pre-existing flat layer.
+    - LAYOUT flat, NESTED false → continue with this file (the common path);
+      do not open `./nested.md`.
 
 1.1 Discover the project layout:
     - Identify the language(s) and primary source directories.
     - Identify any existing documentation, context, or knowledge folders
       (e.g. .claude/, docs/, context/, CLAUDE.md, README.md).
     - Identify the test layout and config files.
-    - If $ARGUMENTS provides hints about the project structure, apply them.
+    - Apply any project-structure hints from $ARGUMENTS.
 
 1.2 Read the entry-point file (CLAUDE.md or equivalent) if it exists, plus any
     existing context or domain files. Do not read full source files yet.
 
-1.3 Identify the natural seams in the codebase — modules, layers, or feature areas
-    that are cohesive internally but have clear interfaces to the rest of the system.
-    Infer seams from filenames, directory structure, and import relationships where
+1.3 Identify the natural seams — modules, layers, or feature areas cohesive
+    internally with clear interfaces to the rest of the system. Infer them
+    from filenames, directory structure, and import relationships where
     possible before opening full source files.
 
-1.4 For each seam, decide whether it warrants its own context file. The criterion:
-    would a future Claude Code session, asked to modify only that area, benefit from
-    reading a focused summary instead of opening every source file in the project?
+1.4 For each seam, decide whether it warrants its own context file. Criterion:
+    would a future Claude Code session, asked to modify only that area,
+    benefit from reading a focused summary instead of opening every source
+    file in the project?
 
-1.5 Decide on a folder layout. The default is .claude/context/<area>.md. Propose a
-    different structure only if the project's existing conventions make the default
-    a poor fit — and justify the alternative in one paragraph.
+1.5 Decide the folder layout. Default: .claude/context/<area>.md. Propose a
+    different structure only if the project's existing conventions make the
+    default a poor fit — and justify it in one paragraph.
 
-1.6 Decide a cross-reference convention. Each context file should link to related
-    context files and relevant domain files by relative path, so Claude Code can
-    chain reads without loading everything.
+1.6 Decide a cross-reference convention: each context file links to related
+    context files and relevant domain files by relative path, so Claude Code
+    can chain reads without loading everything.
 
-1.7 Decide on a top-level index file (default: .claude/context/INDEX.md) that lists
-    every context file with a one-line description. This is the cheapest possible
-    entry point for future sessions.
+1.7 Decide the top-level index file (default: .claude/context/INDEX.md),
+    listing every context file with a one-line description — the cheapest
+    possible entry point for future sessions.
 
 Report:
 - The detected layout (`flat`) and where the marker was read from (or that no
   index existed yet, so this is a fresh flat build).
-- Summary of discovered project layout (languages, source dirs, existing context files).
-- Proposed folder layout with rationale.
-- List of context files you intend to create, each with a one-line description.
-- Cross-reference convention you will use.
+- The discovered project layout (languages, source dirs, existing context files).
+- The proposed folder layout with rationale.
+- The context files you intend to create, each with a one-line description.
+- The cross-reference convention.
 - Estimated total size of the context layer in lines.
 - OPTIONAL — a nesting suggestion, only when the codebase has obvious unit
   seams (several self-contained subsystems, packages, or services) that
@@ -164,7 +154,7 @@ Report:
   cleanly into api / worker / shared — re-run with `nested` if you want a
   router + per-unit layout." Never switch layout on your own, and never
   turn this into a question that gates the flat run: the flat proposal
-  above stands as-is and the approval gate below is about the flat plan.
+  stands as-is and the approval gate below covers the flat plan.
 
 STOP and wait for user approval before Phase 2. Gate class: `confirmation`.
 
@@ -172,11 +162,9 @@ STOP and wait for user approval before Phase 2. Gate class: `confirmation`.
 
 PHASE 2 — Author the context files
 
-2.1 Create the context folder and the INDEX file first. INDEX must list every planned
-    context file even before they exist, so it can be used as a checklist.
-
-    The INDEX header must carry the layout marker on its own line, directly
-    under the title:
+2.1 Create the context folder and the INDEX file first. INDEX lists every
+    planned context file even before it exists, so it works as a checklist.
+    Put the layout marker on its own line directly under the title:
 
     ```
     # Context index
@@ -185,47 +173,48 @@ PHASE 2 — Author the context files
     Last updated: YYYY-MM-DD
     ```
 
-    Write `Layout: flat` verbatim. It is what /context-update and future runs
-    read to decide how to treat this layer; never omit it and never infer it.
+    Write `Layout: flat` verbatim — /context-update and future runs read it to
+    decide how to treat this layer; never omit it and never infer it.
 
 2.2 Create each context file. Every file must contain:
 
-    a) OVERVIEW — what this area covers and which source files implement it.
-       List files by relative path.
+    a) OVERVIEW — what this area covers and which source files implement it,
+       listed by relative path.
 
-    b) PUBLIC API — the functions, classes, or interfaces that other areas of the
-       codebase call into this one. For each: name, inputs, outputs, and side effects.
-       Reference by fully-qualified name (e.g. src/sheet.py::append_row).
-       Do not include implementation detail — only the contract.
+    b) PUBLIC API — the functions, classes, or interfaces other areas of the
+       codebase call into this one. For each: name, inputs, outputs, and side
+       effects. Reference by fully-qualified name (e.g.
+       src/sheet.py::append_row). Only the contract — no implementation
+       detail.
 
-    c) INTERNAL PATTERNS — non-obvious conventions, invariants, or constraints that
+    c) INTERNAL PATTERNS — non-obvious conventions, invariants, or constraints
        anyone modifying this area must know. Examples: "all writes go through X to
        enforce the tab-lock rule," "URL normalization happens here and nowhere else."
 
     d) DOMAIN DEPENDENCIES — links to domain knowledge files (e.g. .claude/*.md,
-       docs/) that define rules this area enforces. State which rule and which file.
+       docs/) defining rules this area enforces. State which rule and which file.
 
-    e) CROSS-REFERENCES — links to other context files this area interacts with,
-       with a one-line description of the interaction.
+    e) CROSS-REFERENCES — links to other context files this area interacts
+       with, each with a one-line description of the interaction.
 
-    f) WHEN TO READ THE SOURCE — a concrete list of tasks that would require opening
-       the actual source files, rather than stopping at this context file. Be specific:
-       "modifying the dedup normalization logic in is_duplicate()" rather than
-       "changing filters."
+    f) WHEN TO READ THE SOURCE — a concrete list of tasks that require opening
+       the actual source files rather than stopping at this context file. Be
+       specific: "modifying the dedup normalization logic in is_duplicate()"
+       rather than "changing filters."
 
-2.3 Each context file must be under 150 lines. If a file would exceed that, split it
+2.3 Keep each context file under 150 lines. Split a file that would exceed it
     into two focused files and update INDEX accordingly.
 
-2.4 Do not include code snippets longer than 10 lines. Reference source by path and
+2.4 Include no code snippet longer than 10 lines. Reference source by path and
     function name rather than reproducing implementation.
 
-2.5 Update INDEX to mark each file as complete as you go.
+2.5 Mark each file complete in INDEX as you go.
 
 Report:
 - Files created with line counts.
 - Confirmation that INDEX.md carries the `Layout: flat` marker.
-- Any area where the codebase resisted summarization (a signal for future refactoring,
-  but do not refactor now — flag only).
+- Any area where the codebase resisted summarization (flag only — a signal
+  for future refactoring; do not refactor now).
 
 STOP and wait for user approval before Phase 3. Gate class: `confirmation`.
 
@@ -233,25 +222,25 @@ STOP and wait for user approval before Phase 3. Gate class: `confirmation`.
 
 PHASE 3 — Wire the entry point
 
-3.1 Update CLAUDE.md (or the project's equivalent entry-point file) to add a
-    navigation instruction at the top. The instruction must be explicit:
+3.1 Add an explicit navigation instruction at the top of CLAUDE.md (or the
+    project's equivalent entry-point file):
 
     "For any task involving the codebase, start by reading .claude/context/INDEX.md
     (or the equivalent index path for this project). Then read only the context files
     relevant to your task. Open source files only when the relevant context file's
     'When to read the source' section indicates it is necessary."
 
-    If CLAUDE.md does not exist, create a minimal one containing only this instruction
-    plus the index path.
+    If no CLAUDE.md or equivalent entry-point file exists, create a minimal
+    one containing only this instruction plus the index path.
 
-3.2 Verify that every source file in the project is referenced from at least one
-    context file. If any source file is orphaned (not mentioned anywhere in the
-    context layer), flag it by name and suggest which context file should cover it.
-    Do not create new context files to cover orphans — flag only.
+3.2 Verify every source file in the project is referenced from at least one
+    context file. Flag each orphan (mentioned nowhere in the context layer) by
+    name and suggest which context file should cover it. Flag only — do not
+    create new context files for orphans.
 
-3.3 Verify that INDEX.md is complete and accurate: every context file exists, every
-    one-line description matches the file's actual content, and the `Layout: flat`
-    marker is present directly under the title.
+3.3 Verify INDEX.md is complete and accurate: every context file exists, every
+    one-line description matches the file's actual content, and the
+    `Layout: flat` marker sits directly under the title.
 
 Report:
 - What changed in CLAUDE.md, in plain words; the diff only on `show`.
@@ -267,15 +256,14 @@ Report:
 
 PHASE 4 — Commit and push (only when `--commit` was passed)
 
-If COMMIT is false (the default), do nothing here — the context layer is
-left uncommitted for the user to review. This is the default behavior and
-is unchanged.
+COMMIT false (the default) → do nothing; the context layer stays uncommitted
+for review.
 
-If COMMIT is true, after Phase 3 completes (the pull-at-start from the
-ARGUMENT NOTE already ran):
+COMMIT true → after Phase 3 completes (pull at start already ran, per the
+ARGUMENT NOTE):
 
 1. If the run wrote nothing (e.g. it was aborted before Phase 2), make no
-   commit (and no push). Say so and stop.
+   commit and no push. Say so and stop.
 2. Stage EXACTLY the files this run wrote — `.claude/context/INDEX.md`,
    every context file created in Phase 2, and CLAUDE.md (the Phase 3
    entry-point edit, or a newly created CLAUDE.md). Build the path list
