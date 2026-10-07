@@ -1,6 +1,6 @@
 ---
 name: pipeline-check
-version: 0.3.0
+version: 0.3.1
 type: command
 description: Report structural drift across the pipeline's indexes — FEATURES.md, TASKS.md, PLAN.md and RUNBOOKS.md — as findings grouped by artifact, each with its severity and the one command that fixes it. Use it when an index looks out of step with another, or before revising planned work.
 requires: skill:pipeline-engine, skill:interaction-engine
@@ -10,13 +10,7 @@ requires: skill:pipeline-engine, skill:interaction-engine
 # Global command: report drift across the pipeline's indexes — a reference
 # between them that does not resolve, or a state its owner has not acted on —
 # each finding with its ERROR or WARNING severity and the one command that
-# fixes it, closing on a count of both; a clean project prints one line. An
-# absent index drops its findings rather than failing the run. Read-only —
-# writes nothing, creates nothing, commits nothing, flips no status, never
-# opens a file under `.claude/tasks/archive/` or `.claude/domain/features/`,
-# opens a task body or a runbook body only where the two parking findings
-# need one, lists `.claude/specs/` without opening a spec, and runs no shell
-# beyond the probe.
+# fixes it. Read-only (see READ-ONLY).
 # Usage: /pipeline-check
 #        /pipeline-check feature=<slug>      (scope to that feature and the tasks and plan edges naming it)
 #        /pipeline-check <args> --attended | --unattended   (accepted; this command has no gate)
@@ -26,8 +20,7 @@ requires: skill:pipeline-engine, skill:interaction-engine
 GOAL
 Read the pipeline's indexes, evaluate the drift catalogue over the edges
 between them, and print every finding with its fix — or one line saying there
-is none. This command reports; every fix belongs to the owner the finding
-names, and nothing here applies one.
+is none. Apply no fix: every fix belongs to the owner the finding names.
 
 $ARGUMENTS
 
@@ -35,8 +28,7 @@ $ARGUMENTS
 
 THE ENGINE
 
-Everything this command evaluates is defined in `pipeline-engine` and read
-from it by path:
+Read everything this command evaluates from `pipeline-engine`, by path:
 
 - `../skills/pipeline-engine/references/probes.md`
   — the probe, its verdict line and the reuse rule;
@@ -48,26 +40,23 @@ from it by path:
 - `../skills/pipeline-engine/references/routing.md`
   — the owner each fix command routes to, and this command's own row.
 
-This command restates no probe, no edge and no finding. What follows is only
-what it does differently.
+This file restates no probe, no edge and no finding; it states only what this
+command does differently.
 
 ---
 
 ARGUMENT PARSING
 
-Scan `$ARGUMENTS` for `feature=<slug>`; set FEATURE to the slug and strip it.
-
-Also strip `--attended` and `--unattended`. The interaction policy has no
-effect here — this command has no gate and asks nothing — and both are
-accepted so a parent can hand its policy down without knowing that;
-`../skills/interaction-engine/references/policy.md` § *Argument errors*
-still applies to the pair. Of the interaction engine, only the
-plain-language rule reaches this command, and it reaches it through
-`lint.md`'s templates.
-
-Anything else in `$ARGUMENTS` is not a recognised argument. Say so in one
-line and carry on with the default report — this command never refuses over
-its own arguments.
+- Scan `$ARGUMENTS` for `feature=<slug>`; set FEATURE to the slug and strip it.
+- Strip `--attended` and `--unattended`. They have no effect here — this
+  command has no gate and asks nothing — and are accepted so a parent can hand
+  its policy down. `../skills/interaction-engine/references/policy.md`
+  § *Argument errors* still applies to the pair. The only interaction-engine
+  rule that reaches this command is the plain-language rule, through
+  `lint.md`'s templates.
+- Anything else in `$ARGUMENTS` is not a recognised argument: say so in one
+  line and carry on with the default report. Never refuse over this command's
+  own arguments.
 
 ---
 
@@ -79,14 +68,15 @@ WORKFLOW
    `/production-status`, which runs none at all.
 
 2. **Read the indexes the probe found**, with the Read tool, read-only — each
-   of the four that exists. `backlog=partial` does not say which half
-   exists: try `.claude/TASKS.md`, and count it absent when it is not there.
-   The only other files a run opens are the bodies `lint.md` § *What no rule
-   reads* names for L12 and L13 — each `[PARKED]` task's, each
-   non-`[DONE]` runbook's — read in step 5, when those findings are
-   evaluated, and only for the heading or the markers the finding checks.
-   When the probe's `specs` count is above `0`, list `.claude/specs/*.md`
-   with the Glob tool for L14 — a listing, never a read of a spec.
+   of the four that exists.
+   - `backlog=partial` does not say which half exists: try `.claude/TASKS.md`,
+     and count it absent when it is not there.
+   - The only other files a run opens are the bodies `lint.md` § *What no rule
+     reads* names for L12 and L13 — each `[PARKED]` task's, each
+     non-`[DONE]` runbook's. Read them in step 5, when those findings are
+     evaluated, and only for the heading or the markers the finding checks.
+   - When the probe's `specs` count is above `0`, list `.claude/specs/*.md`
+     with the Glob tool for L14 — a listing, never a read of a spec.
 
 3. **Stop only on a project with no index.** When step 2 read none of
    `.claude/FEATURES.md`, `.claude/TASKS.md`, `.claude/PLAN.md` and
@@ -95,7 +85,7 @@ WORKFLOW
    > No pipeline index in this project — nothing to check. `/task-setup`
    > creates the backlog; `/domain-setup` creates the feature index.
 
-   This is the command's only stop. Every other combination runs.
+   This is the command's only stop. Run every other combination.
 
 4. **Resolve FEATURE**, when set. A slug with no entry in
    `.claude/FEATURES.md` — or a project with no `FEATURES.md` — is never
@@ -107,11 +97,14 @@ WORKFLOW
    applying both of its failure rules: an absent index drops its findings, and
    a malformed block is reported while the run continues.
 
-   Under FEATURE, keep only the findings that touch the feature: its own entry
-   (L6, L8, L11); the tasks whose `Feature:` names it or whose id is on its
-   `Tasks:` line, with the precondition findings and cycles through them and
-   L12 on a parked one; and the plan lines that name the slug (L9). No
-   runbook finding is in scope: `RUNBOOKS.md` ties no runbook to a slug
+   Under FEATURE, keep only the findings that touch the feature:
+   - its own entry (L6, L8, L11);
+   - the tasks whose `Feature:` names it or whose id is on its `Tasks:` line,
+     with the precondition findings and cycles through them and L12 on a
+     parked one;
+   - the plan lines that name the slug (L9).
+
+   No runbook finding is in scope: `RUNBOOKS.md` ties no runbook to a slug
    (`graph.md` E7), and this command opens no runbook body to find one — L13
    reads a body for its markers, never for its prompt blocks. L14 is not in
    scope either: a spec carries no `Feature:` line to tie it to a slug.
@@ -126,8 +119,8 @@ OUTPUT
 No drift — read FEATURES.md, TASKS.md, RUNBOOKS.md.
 ```
 
-Under FEATURE it opens `No drift for feature <slug> —` instead. Nothing else
-is printed: no verdict echo, no empty group, no count of zero.
+Under FEATURE it opens `No drift for feature <slug> —` instead. Print nothing
+else: no verdict echo, no empty group, no count of zero.
 
 **Otherwise**, print inside one fenced code block, so the lines stay literal:
 
@@ -137,7 +130,9 @@ is printed: no verdict echo, no empty group, no count of zero.
 - within a group, in catalogue order, then in the order the offending line
   appears in its index;
 - each finding rendered from its `lint.md` output template exactly, its fix
-  command verbatim;
+  command verbatim — never a finding `lint.md` does not define, a reworded
+  template (each is already written message first, identifiers last) or a fix
+  other than the one it gives;
 - then one summary line counting both severities.
 
 ```
@@ -152,32 +147,22 @@ TASKS.md
 ```
 
 The counts are for a human's eye. There is no exit-code contract, no `--fix`
-and no `--quiet`: an exit code would invite a caller to gate on the report,
-and every fix is its owner's to apply.
+and no `--quiet`: every fix is its owner's to apply.
 
 ---
 
 READ-ONLY
 
-This command writes nothing, creates nothing, commits nothing and flips no
-status. It opens no file under `.claude/tasks/archive/` and none under
-`.claude/domain/features/`. Under `.claude/tasks/` and `.claude/runbooks/` it
-opens exactly the bodies `lint.md` § *What no rule reads* names for L12 and
-L13, and reads nothing else in them — never a prompt block, never a
-handoff's question. It lists `.claude/specs/` for L14 and opens no spec. It
-runs no shell command beyond the probe.
-
-It runs when the user invokes it, and at no other time.
-
-DO NOT:
-- Write, edit, create or commit anything — no status flip, no fix for a
+- Write, edit, create or commit nothing — no status flip, no fix for a
   finding this run reported, no cached report.
-- Open an archived body, a feature document or a design document, or a
-  task or runbook body beyond the two `lint.md` names. Every other finding
-  is derived from index lines.
-- Run any shell command other than the probe, `git` included.
-- Refuse over an absent index, a malformed block, an unknown `feature=` slug
-  or an unrecognised argument. Each is reported, and the run carries on.
-- Print a finding `lint.md` does not define, reword its template — each is
-  already written message first, identifiers last — or name a fix other
-  than the one it gives.
+- Open no file under `.claude/tasks/archive/` and none under
+  `.claude/domain/features/`, and no design document.
+- Under `.claude/tasks/` and `.claude/runbooks/`, open exactly the bodies
+  `lint.md` § *What no rule reads* names for L12 and L13, and read nothing
+  else in them — never a prompt block, never a handoff's question. Derive
+  every other finding from index lines.
+- List `.claude/specs/` for L14; open no spec.
+- Run no shell command beyond the probe, `git` included.
+- Never refuse over an absent index, a malformed block, an unknown `feature=`
+  slug or an unrecognised argument: report each and carry on.
+- Run only when the user invokes this command.
