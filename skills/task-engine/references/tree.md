@@ -111,9 +111,8 @@ task's own changes:
 
 ## Per-consumer notes
 
-- **`/task-implement`** — the only consumer today, and the source of every
-  word above. It runs the check twice: once in `PRE-FLIGHT CHECKS step 1`
-  before the first task, and again in `BETWEEN TASKS step 1` after each
+- **`/task-implement`** — the source of every word above. It runs the check
+  twice: once in `PRE-FLIGHT CHECKS step 1` before the first task, and again in `BETWEEN TASKS step 1` after each
   commit, where a non-empty result is "unusual — the previous task's Step 7
   should have committed everything it changed". Under `--no-commit` the
   between-tasks check is skipped entirely: "the previous task's changes are
@@ -128,3 +127,6 @@ task's own changes:
   stage only the explicit paths they wrote (`/task-list` writes nothing at
   all), so a dirty tree cannot reach their commits — see
   `./commit.md`.
+- **`/quick-implement`** — runs the check once, at its step 1, before the
+  spec conversation. Its commit step is its step 6, where DIRTY_FOLD folds as above. It has no
+  `--no-commit` variant: the three-option prompt never applies.

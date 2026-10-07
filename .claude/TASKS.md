@@ -712,7 +712,7 @@ Feature: quick-implement
 ---
 
 ## 302. Add the `/quick-implement` skill and its routing row
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/quick-implement/SKILL.md, skills/quick-implement/spec.md, skills/quick-implement/drift-check.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
 Preconditions: 281, 299, 300, 301

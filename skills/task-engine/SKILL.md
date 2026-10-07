@@ -1,22 +1,23 @@
 ---
 name: task-engine
-version: 0.8.4
+version: 0.8.5
 type: skill
-description: Reference library for the task-* features — one authority per rule they share, under references/; read by path by the task-* commands and skills and by the pipeline revision surface, never invoked.
+description: Reference library for the task-* features — one authority per rule they share, under references/; read by path by the task-* commands and skills, by /quick-implement and by the pipeline revision surface, never invoked.
 disable-model-invocation: true
 project-policy: line:Testing policy for /task-implement=skip-tests|full-tdd|skip-tests-unattended, vcs:add, vcs:commit, vcs:status, vcs:rev-parse, vcs:log, vcs:mv, vcs:show, vcs:branch
 ---
 
 # task-engine
 # Reference library, read by path by /task-add, /task-list, /task-clean,
-# /task-implement, /task-review and /pipeline-revise; not invoked.
+# /task-implement, /task-review, /quick-implement and /pipeline-revise; not
+# invoked.
 
 > **Not directly invocable.** This skill exists so that the rules the
 > `task-*` features share have exactly one home. It has no command, no
 > arguments and no behaviour of its own. Nothing invokes `/task-engine`;
 > nothing should suggest it. `/task-add`, `/task-list`, `/task-clean`,
-> `/task-implement` and `/task-review` cite the files below by path while they
-> run, the pipeline revision surface `/pipeline-revise` reads
+> `/task-implement`, `/task-review` and `/quick-implement` cite the files below
+> by path while they run, the pipeline revision surface `/pipeline-revise` reads
 > `references/amend.md` by path, and those files are the only content here.
 
 > **Install path assumption:** this skill installs beside the features that
