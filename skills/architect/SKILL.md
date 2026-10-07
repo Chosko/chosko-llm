@@ -1,6 +1,6 @@
 ---
 name: architect
-version: 0.14.0
+version: 0.14.1
 type: skill
 description: Turn high-level features into low-level feature documents under .claude/domain/features/, indexed in .claude/FEATURES.md and grounded in the technical direction or the existing code. Use it from a design section, named features or a bare prompt, or to amend an existing document; stage 3 of the pipeline: turns a design section into feature documents; its output is /task-add's input.
 requires: skill:interaction-engine
@@ -40,23 +40,19 @@ requires: skill:interaction-engine
 #        /architect <args> --attended | --unattended
 
 GOAL
-Take what a feature must do and decide how it will be built, grounded in the
-code that already exists — or, on a greenfield project, in a tech stack
-chosen with the user. Write the result as technical documentation of
-**low-level features**: one document per separately designable unit.
-
-One high-level feature may produce several low-level ones. That is normal,
-not a sign of over-decomposition: "accounts" as a product feature routinely
-becomes authentication, session handling, and profile management as
-architecture.
-
-The output level is **mid-to-high technical**: components and their
-responsibilities, data and state, interfaces and contracts, dependencies.
-No real code and no file-by-file plans — those are `/task-add`'s output,
-produced at planning time against the codebase as it then stands.
-
-Read [`.claude/domain/product-workflow.md`](../../.claude/domain/product-workflow.md)
-in the target project if it has one; this skill is its main implementation.
+- Decide how a feature will be built, grounded in the code that already
+  exists — or, on a greenfield project, in a tech stack chosen with the user.
+- Write the result as technical documentation of **low-level features**: one
+  document per separately designable unit. One high-level feature may
+  produce several low-level ones; that is normal ("accounts" routinely
+  becomes authentication, session handling and profile management).
+- Stay **mid-to-high technical**: components and their responsibilities,
+  data and state, interfaces and contracts, dependencies. No real code and
+  no file-by-file plans — those are `/task-add`'s output, produced at
+  planning time against the codebase as it then stands.
+- Design and document only; never edit source code.
+- Read [`.claude/domain/product-workflow.md`](../../.claude/domain/product-workflow.md)
+  in the target project if it has one; this skill is its main implementation.
 
 $ARGUMENTS
 
@@ -77,55 +73,57 @@ SUPPORTING FILES (read on demand — not up front)
 | `./feature-doc-template.md` | PHASE 3, always — the feature-document schema and the `FEATURES.md` entry format. |
 | `./council-gate.md` | PHASE 2 reaches a genuine design fork — a real trade-off with nameable stakes, expensive to reverse once tasks exist. Not on a fork settled by an existing stack, and not when the blocker is a missing fact (that is a PHASE 1 clarification). |
 
-Do not read a supporting file speculatively — in particular, the two
-input-resolution files are read per target, only once the PHASE 0 dispatch
-has decided which mode that target takes, and never both for the same
-target. The common path — a brownfield project with no roadmap, a feature
-architected for the first time — reads only `./sectioned-input.md` and
-`./feature-doc-template.md`. An `amend` run reads `./amend.md`, then
-`./iterating.md` and `./feature-doc-template.md` only where `./amend.md`
-cites them, and never an input-resolution file.
+- Never read a supporting file speculatively.
+- Read an input-resolution file per target, only once the PHASE 0 dispatch
+  has decided which mode that target takes, and never both for the same
+  target.
+- The common path — a brownfield project with no roadmap, a feature
+  architected for the first time — reads only `./sectioned-input.md` and
+  `./feature-doc-template.md`.
+- An `amend` run reads `./amend.md`, then `./iterating.md` and
+  `./feature-doc-template.md` only where `./amend.md` cites them, and never
+  an input-resolution file.
 
 ---
 
 ARGUMENT PARSING
 
-Scan `$ARGUMENTS` for the optional `--no-commit` flag. If present, set
-COMMIT = false and strip it; otherwise COMMIT is true — this skill commits
-and pushes what it wrote by default. `--no-commit` implies NO_PUSH: nothing
-is committed, so nothing is there to push. `--commit` is still accepted and
-stripped, and is a silent no-op naming the default. `--commit` and
-`--no-commit` are mutually exclusive — if both appear, stop with:
-`--commit and --no-commit cannot be combined. Pick one.`
+Scan `$ARGUMENTS` and strip each flag found:
 
-Also scan for the optional `--no-push` flag and strip it. NO_PUSH only
-matters when COMMIT is true: it skips the pull at start, the pre-push
-re-sync and the push while still committing as always.
+- `--no-commit` → COMMIT = false; otherwise COMMIT = true (this skill commits
+  and pushes what it wrote by default). `--no-commit` implies NO_PUSH:
+  nothing is committed, so nothing is there to push.
+- `--commit` → accepted and stripped; a silent no-op naming the default. If
+  both `--commit` and `--no-commit` appear, stop with:
+  `--commit and --no-commit cannot be combined. Pick one.`
+- `--no-push` → NO_PUSH = true. It only matters when COMMIT is true: skip the
+  pull at start, the pre-push re-sync and the push, still committing as
+  always.
+- `--attended` / `--unattended` → resolve the run's interaction policy from
+  them, a policy handed down by a parent run and the project's `CLAUDE.md`,
+  per `../interaction-engine/references/policy.md`, which holds their
+  argument errors. Each gate below carries its class tag
+  (`../interaction-engine/references/gates.md`). This skill cannot park: a
+  run that stops on what waits leaves only the PHASE 2 progress marker
+  written.
+- `--no-slices` → NO_SLICES = true: PHASE 0 skips the roadmap probe entirely
+  and every target resolves in traditional mode. On a project with no
+  roadmap it is a silent no-op — never warn about it.
 
-Also scan for the optional `--attended` and `--unattended` flags and strip
-whichever appear. The run's interaction policy resolves from them, a policy
-handed down by a parent run and the project's `CLAUDE.md`, per
-`../interaction-engine/references/policy.md`, which holds their argument
-errors. Each gate below carries its class tag
-(`../interaction-engine/references/gates.md`). This skill cannot park: a run
-that stops on what waits leaves only the PHASE 2 progress marker written.
+Then detect the amend form:
 
-Also scan for the optional `--no-slices` flag and strip it. If present, set
-NO_SLICES = true: PHASE 0 skips the roadmap probe entirely and every target
-resolves in traditional mode. On a project with no roadmap it is a silent
-no-op — never warn about it.
-
-Then check whether what remains opens with the literal token `amend`
-immediately followed by a `feature=` token. Only then set AMEND = true: the
-token's value is one or more slugs, comma-separated with no spaces, and the
-rest is the change, as one quoted string —
-`amend feature=<slug>[,<slug>...] "<change>"`. Input that opens with `amend`
-but not with `amend feature=` is not the amend form: it falls through to
-ordinary input resolution as a free-form description. An empty slug list, an
-empty slug inside it, or a missing change stops the run with:
-`amend needs feature=<slug>[,<slug>...] and the change to make, e.g. /architect amend feature=password-auth "Data and state: sessions expire after 30 days".`
-`--no-commit` and `--no-push` compose with it unchanged. `--no-slices` is
-accepted and has nothing to act on, since the amend path resolves no input.
+- Set AMEND = true only when what remains opens with the literal token
+  `amend` immediately followed by a `feature=` token. The token's value is
+  one or more slugs, comma-separated with no spaces; the rest is the change,
+  as one quoted string — `amend feature=<slug>[,<slug>...] "<change>"`.
+- Input that opens with `amend` but not with `amend feature=` is not the
+  amend form: it falls through to ordinary input resolution as a free-form
+  description.
+- An empty slug list, an empty slug inside it, or a missing change stops the
+  run with:
+  `amend needs feature=<slug>[,<slug>...] and the change to make, e.g. /architect amend feature=password-auth "Data and state: sessions expire after 30 days".`
+- `--no-commit` and `--no-push` compose with it unchanged. `--no-slices` is
+  accepted and has nothing to act on, since the amend path resolves no input.
 
 Otherwise what remains is the input, resolved in PHASE 0. Its forms — empty,
 one or more feature names, or a free-form description — and the rules that
@@ -138,8 +136,8 @@ final report and the optional commit.
 
 PHASE 0 — GATE + INPUT
 
-**Gate.** The domain layer must exist. Probe `.claude/domain/` (Glob) and
-`.claude/domain/INDEX.md` (Read). If either is missing, stop:
+**Gate.** Probe `.claude/domain/` (Glob) and `.claude/domain/INDEX.md`
+(Read). If either is missing, stop:
 
 > The domain knowledge layer hasn't been initialized in this project. Run
 > `/domain-setup` first — it creates `.claude/domain/`, the domain
@@ -147,10 +145,10 @@ PHASE 0 — GATE + INPUT
 
 Do not proceed and do not create the layer yourself. No exceptions.
 
-If COMMIT is true and the project's CLAUDE.md does not carry a `## VCS`
-override (non-git), pull at start per the commit-and-push protocol: run
-`git pull` on the current branch. A conflict stops the run here — report
-the conflict output and tell the user to resolve manually and re-run.
+**Pull at start.** If COMMIT is true and the project's CLAUDE.md does not
+carry a `## VCS` override (non-git), run `git pull` on the current branch,
+per the commit-and-push protocol. A conflict stops the run here — report the
+conflict output and tell the user to resolve manually and re-run.
 
 **Amend dispatch.** If AMEND is true, read `./amend.md` now and follow it for
 the rest of the run. It replaces everything below in PHASE 0, PHASE 0b,
@@ -170,19 +168,21 @@ other run does.
 4. `.claude/FEATURES.md` — existing features, their statuses, their `Tasks:`
    lines.
 5. `.claude/context/INDEX.md` and the context files relevant to the area
-   under design, if a context layer exists. This is the cheapest route to
-   the existing architecture — prefer it to reading source.
+   under design, if a context layer exists. Prefer this to reading source:
+   it is the cheapest route to the existing architecture.
 6. Source files, only where the context layer is thin or absent and the
    design genuinely depends on how something currently works.
 
-**Probe for a roadmap.** Unless NO_SLICES is true, Glob for
-`.claude/domain/product-roadmap.md`. If it exists, read it and note every
-milestone carrying a `Covers:` line and the slices under it. The presence of
-that document with at least one `Covers:` line is the whole of slice mode's
-activation — there is no flag file, no settings key and no frontmatter
-switch. If the document is absent, carries no `Covers:` line, or NO_SLICES
-is true, there are no slices and the probe says nothing: a project with no
-roadmap is the normal case, not a warning.
+**Probe for a roadmap.** Unless NO_SLICES is true:
+
+- Glob for `.claude/domain/product-roadmap.md`. If it exists, read it and
+  note every milestone carrying a `Covers:` line and the slices under it.
+- That document with at least one `Covers:` line is the whole of slice
+  mode's activation — there is no flag file, no settings key and no
+  frontmatter switch.
+- If the document is absent or carries no `Covers:` line (or NO_SLICES is
+  true), there are no slices and the probe says nothing: a project with no
+  roadmap is the normal case, not a warning.
 
 **Resolve the target feature(s) — dispatching per target, not per run.** One
 invocation may architect several targets, and a roadmap that slices
@@ -198,36 +198,37 @@ independently:
 Read each of the two files at most once per run, and never read a mode's
 file for a target that did not dispatch to it.
 
-**Detect whether a stack exists.** A present `technical-direction.md` counts
-as a stack that exists, exactly like an established codebase stack — note
-this and move on. Otherwise, note from what you read whether this project
-already has a technology stack (language, framework, storage, delivery).
-Either way, this decides whether PHASE 2 reads `./tech-stack-selection.md`:
-it does not, whenever a stack already exists in either form.
+**Detect whether a stack exists.**
+
+- A present `technical-direction.md` counts as a stack that exists, exactly
+  like an established codebase stack — note this and move on.
+- Otherwise note, from what you read, whether this project already has a
+  technology stack (language, framework, storage, delivery).
+- PHASE 2 reads `./tech-stack-selection.md` only when no stack exists in
+  either form.
 
 **Check for existing entries.** For each target feature, look for a
 `FEATURES.md` entry. If any target already has one, read `./iterating.md`
 and continue to PHASE 0b. If none do, skip PHASE 0b entirely.
 
-**Check for an interrupted session.** For each target, derive a
-`<target-slug>` — the kebab-case of the resolved feature name, or, for a
-free-form prompt with no named feature, a short kebab-case label drawn from
-the prompt's first few words. Glob for
-`.claude/domain/features/<target-slug>.architect-progress.md`. If it
-exists:
+**Check for an interrupted session.** For each target:
 
-- Read it and summarize, in a few lines, what the last session covered and
-  where it stopped — the same report-don't-guess spirit as
-  `skills/product-design/resuming.md`, at this skill's smaller scale.
-- Ask whether to resume (continue PHASE 2 treating the summarized ground as
-  already covered) or start fresh (delete the marker, begin PHASE 2 from the
-  top for this target). Wait for an explicit answer; do not guess. Gate
-  class: `design`.
+1. Derive a `<target-slug>` — the kebab-case of the resolved feature name,
+   or, for a free-form prompt with no named feature, a short kebab-case
+   label drawn from the prompt's first few words.
+2. Glob for `.claude/domain/features/<target-slug>.architect-progress.md`.
+   If it exists:
+   - Read it and summarize, in a few lines, what the last session covered
+     and where it stopped — the same report-don't-guess spirit as
+     `skills/product-design/resuming.md`, at this skill's smaller scale.
+   - Ask whether to resume (continue PHASE 2 treating the summarized ground
+     as already covered) or start fresh (delete the marker, begin PHASE 2
+     from the top for this target). Wait for an explicit answer; do not
+     guess. Gate class: `design`.
 
-This check is independent of the `FEATURES.md`-entry check above: the
-marker tracks this skill's own conversational progress, not the feature's
-write state, so a target can have a marker whether or not it already has a
-`FEATURES.md` entry (e.g. an iteration interrupted mid-PHASE-2 has both).
+Run this check independently of the `FEATURES.md`-entry check: the marker
+tracks this skill's own conversational progress, not the feature's write
+state, so a target can have both.
 
 ---
 
@@ -238,9 +239,11 @@ existing target feature:
 
 1. Read the entry's `Tasks:` IDs; look each up in `.claude/TASKS.md`.
 2. **Any `[IN PROGRESS]` task → REFUSE.** Report the task ID and title and
-   stop the run. There is no override and no flag: an implementation is
-   underway against the current design, and changing it underneath corrupts
-   both the task and the feature.
+   stop the run. There is no override — not on the user's insistence, not
+   with a flag: an implementation is underway against the current design,
+   and changing it underneath corrupts both the task and the feature. Tell
+   the user to finish or reset that task first. The same holds for the drop
+   a touched `[IN PROGRESS]` task causes in `./amend.md`.
 3. **Any other non-`[DONE]` task → ask.** List them with statuses and
    titles, state that re-architecting may invalidate them, and offer stop or
    proceed. Gate class: `design`.
@@ -249,13 +252,10 @@ existing target feature:
    `[PLANNED]` or `[DONE]`).
 5. **No resolvable tasks** (`Tasks: none`, or every listed ID resolving to
    nothing — the same case) → skip steps 2–4's task half: no list, no ask, no
-   `TASKS.md` write. The status is then decided by the entry's own `Status:`,
-   never by the `Tasks:` line: `[NEW]` stays `[NEW]`, `[ITERATED]` stays
+   `TASKS.md` write. Decide the status by the entry's own `Status:`, never by
+   the `Tasks:` line: `[NEW]` stays `[NEW]`, `[ITERATED]` stays
    `[ITERATED]`, and `[PLANNED]` or `[DONE]` flips to `[ITERATED]` and is
-   named in PHASE 3's report. `Status:`, not `Tasks:`, still decides: on a
-   backlog cleaned before task archiving, `/task-clean` dropped resolved IDs
-   from `Tasks:` and left `Status:` alone, so `Tasks: none` there cannot
-   tell a cleaned feature from a never-planned one.
+   named in PHASE 3's report.
 6. **IDs that resolve to no task** are ignored, not an error. An ID absent
    from `.claude/TASKS.md` is archived and terminal (`task-engine`'s
    `references/resolution.md` § *The archive*), so it has nothing to
@@ -264,30 +264,27 @@ existing target feature:
 
 `[DONE]` tasks are never touched, whatever the design does afterwards.
 
-This and `./amend.md`'s precision guard are the only circumstances in which
-this skill writes to `.claude/TASKS.md`, and both write nothing but
-`Status:` lines.
+Write to `.claude/TASKS.md` only here and under `./amend.md`'s precision
+guard, and in both cases write nothing but `Status:` lines flipped to
+`[STALE]`. Never create tasks, and never create, delete or reorder task
+entries.
 
 ---
 
 PHASE 1 — CLARIFY (skipped when everything is clear)
 
-Ask only what you cannot resolve from the design documents and the codebase.
-Cap it at a handful of focused questions, each with the answer you'd pick and
-why, so the user can confirm in a word.
-
-Under `unattended` these are real decisions
-(`../interaction-engine/references/gates.md` § *Real decisions*): the run
-stops with all of them asked together.
-
-If there are no open questions, say so in one line — "The feature is
-unambiguous as described; no questions." — and go straight to PHASE 2. Do
-not manufacture questions to fill the phase.
-
-When the feature came from `product-design.md` and an answer changes what
-that document says, write the answer back into `product-design.md` in
-PHASE 3. Clarifications belong upstream too; otherwise the next reader asks
-the same question.
+- Ask only what you cannot resolve from the design documents and the
+  codebase. Cap it at a handful of focused questions, each with the answer
+  you'd pick and why, so the user can confirm in a word.
+- Under `unattended` these are real decisions
+  (`../interaction-engine/references/gates.md` § *Real decisions*): the run
+  stops with all of them asked together.
+- If there are no open questions, say so in one line — "The feature is
+  unambiguous as described; no questions." — and go straight to PHASE 2. Do
+  not manufacture questions to fill the phase.
+- When the feature came from `product-design.md` and an answer changes what
+  that document says, write the answer back into `product-design.md` in
+  PHASE 3, so the next reader does not ask the same question.
 
 ---
 
@@ -300,15 +297,17 @@ let the user choose. Skip this step entirely whenever a stack already
 exists — a recorded `technical-direction.md`, or an established codebase
 stack — and adopt what is there. Say in one line that you are doing so.
 
-**2b. Architecture.** Work top-down, conversationally. When
-`technical-direction.md` exists, design within it and say so in one line,
-naming the document ("Designing within the recorded technical direction —
-see technical-direction.md"). Treat it exactly as an existing codebase
-stack: adopted, not re-argued. If the feature genuinely doesn't fit what it
-records, flag the mismatch once as a concern, then design around it anyway
-— never silently override the direction and never edit
-`technical-direction.md` to resolve the mismatch; the remedy is telling the
-user to re-run `/product-design`.
+**2b. Architecture.** Work top-down, conversationally.
+
+- When `technical-direction.md` exists, design within it and say so in one
+  line, naming the document ("Designing within the recorded technical
+  direction — see technical-direction.md"). Treat it exactly as an existing
+  codebase stack: adopted, not re-argued.
+- If the feature genuinely doesn't fit what it records, flag the mismatch
+  once as a concern, then design around it anyway. Never silently override
+  the direction, and never write or edit `technical-direction.md` — it is
+  `/product-design`'s document; the remedy is telling the user to re-run
+  `/product-design`.
 
 Then:
 
@@ -326,37 +325,43 @@ Then:
 4. Identify the seams: where does this feature end and the next begin? A
    high-level feature that will not fit in one document is where the
    low-level split comes from. Propose the split and let the user confirm
-   it — gate class `design`. Where the split could defensibly fall in more than one place and the
-   choice would shape every task generated from it, `./council-gate.md`
-   applies here too.
+   it — gate class `design`. Where the split could defensibly fall in more
+   than one place and the choice would shape every task generated from it,
+   `./council-gate.md` applies here too.
 5. Name the dependencies on other features, and the open questions you could
-   not close. Open questions go into the document rather than being
-   resolved by guesswork.
+   not close. Put open questions into the document rather than resolving
+   them by guesswork.
 
-**Stop at mid-to-high level.** Concretely: component names and
-responsibilities yes; class-by-class breakdowns no. Interface contracts in
-prose or signatures yes; implementations no. "State is persisted per user"
-yes; a migration script no. If you find yourself writing code or listing
-file paths to edit, you have gone one level too far — that is `/task-add`'s
-work, and doing it here freezes decisions that should be made against the
-codebase at planning time.
+**Stop at mid-to-high level.** Component names and responsibilities yes;
+class-by-class breakdowns no. Interface contracts in prose or signatures
+yes; implementations no. "State is persisted per user" yes; a migration
+script no. If you find yourself writing code or listing file paths to edit,
+you have gone one level too far — that is `/task-add`'s work, and doing it
+here freezes decisions that should be made against the codebase at planning
+time.
 
-**Progress marker.** This phase is the one exception to "nothing is written
-before PHASE 3": at each checkpoint above where real ground has been
+**Progress marker.** At each checkpoint above where real ground has been
 covered (stack chosen, shape proposed, data/interfaces/seams discussed,
 dependencies and open questions named) and whenever the conversation might
-end, write or rewrite `.claude/domain/features/<target-slug>.architect-progress.md`
-with a short recap — which of the steps above are covered, the decisions
-made so far as a few bullets, any open questions raised so far, and any
-council verdict already obtained (see `./council-gate.md` step 8 — recording
-it is what stops a resumed session from paying for the same run twice). Keep it
-short: this is a resume aid, not a second copy of the feature document, and
-it carries none of `FEATURES.md`'s or `TASKS.md`'s status vocabulary
-(no `[NEW]`/`[PLANNED]`/`[IN PROGRESS]`/etc.), so it can never be confused
-with either.
+end, write or rewrite
+`.claude/domain/features/<target-slug>.architect-progress.md` with a short
+recap:
 
-The user confirms the architecture before PHASE 3 writes the feature
-document(s) themselves. Gate class: `design`.
+- which of the steps above are covered;
+- the decisions made so far, as a few bullets;
+- any open questions raised so far;
+- any council verdict already obtained (see `./council-gate.md` step 8 —
+  recording it stops a resumed session from paying for the same run twice).
+
+Keep it short — a resume aid, not a second copy of the feature document —
+and keep out all of `FEATURES.md`'s and `TASKS.md`'s status vocabulary (no
+`[NEW]`/`[PLANNED]`/`[IN PROGRESS]`/etc.), so it can never be confused with
+either.
+
+**Confirm.** The user confirms the architecture before PHASE 3 writes the
+feature document(s). Gate class: `design`. A council verdict is an input to
+that confirmation, never a substitute for it, however confident it came
+back.
 
 ---
 
@@ -366,12 +371,12 @@ Read `./feature-doc-template.md` for both schemas below.
 
 1. **One document per low-level feature**, at
    `.claude/domain/features/<slug>.md`. Slugs are kebab-case and **stable**:
-   a re-architected feature keeps its slug forever, exactly like a task ID.
+   a re-architected feature keeps its slug forever, exactly like a task ID —
+   never rename a slug or reuse one for a different feature.
    Re-architecting updates the document in place.
 
 2. **One `FEATURES.md` entry per feature**, appended for a new feature or
-   updated in place for an existing one. This skill writes exactly four
-   fields:
+   updated in place for an existing one. Write exactly four fields:
 
    - `Status:` — `[NEW]` for a first write; `[ITERATED]` when PHASE 0b
      transitioned it; unchanged otherwise.
@@ -383,9 +388,11 @@ Read `./feature-doc-template.md` for both schemas below.
      belongs to `/task-add`; overwriting it destroys the link that makes
      reconciliation possible.
 
-   `[PLANNED]` is never written here — that is `/task-add`'s transition. And
-   `[PLANNED]` → `[NEW]` is illegal: tasks were generated from that feature,
-   which cannot be un-happened.
+   Never write `[PLANNED]` (`/task-add`'s transition) or `[DONE]`
+   (`/task-implement`'s field, proposed and user-confirmed, or a human's by
+   hand — this skill only reads it, to decide whether the iterate guard
+   applies). Never move a `[PLANNED]` or `[DONE]` feature back to `[NEW]`:
+   tasks were generated from that feature, which cannot be un-happened.
 
 3. **Register new documents in `.claude/domain/INDEX.md`** — one
    `| File | Covers |` row each. Leave existing rows alone.
@@ -397,8 +404,7 @@ Read `./feature-doc-template.md` for both schemas below.
 
 5. **Clear the progress marker.** For each target just written, delete its
    `.claude/domain/features/<target-slug>.architect-progress.md` if it
-   exists — a normally-completed PHASE 3 means there is nothing left to
-   resume, and a feature that finished writing must never still look
+   exists — a feature that finished writing must never still look
    interrupted. If COMMIT is true and the marker had previously been
    committed (an earlier, separately-committed interrupted run), add its
    path to `WRITTEN` so the deletion is staged and committed like any other
@@ -459,54 +465,21 @@ ran):
    conflict: surface the exact output. Never retry, never force-push. The
    commit exists locally; tell the user it needs a manual sync + push.
 
+Never branch, tag, or use `--amend` or a hook-skipping flag (`--no-verify`,
+`--no-gpg-sign`).
+
 ---
 
 DO NOT:
-- Write any file before PHASE 3, with exactly two exceptions: the PHASE 2
-  progress marker (`.claude/domain/features/<target-slug>.architect-progress.md`),
-  and the report and transcript claude-council writes for itself when the
-  PHASE 2 council gate is convened (`council-report-*.html`,
-  `council-transcript-*.md` — see `./council-gate.md`). The second carve-out
-  is narrow: it permits those two files and nothing else, and neither ever
-  enters `WRITTEN` or a staging list.
+- Write any file before PHASE 3, with exactly two exceptions:
+  - the PHASE 2 progress marker
+    (`.claude/domain/features/<target-slug>.architect-progress.md`);
+  - the report and transcript claude-council writes for itself when the
+    PHASE 2 council gate is convened (`council-report-*.html`,
+    `council-transcript-*.md` — see `./council-gate.md`). This carve-out is
+    narrow: it permits those two files and nothing else, and neither ever
+    enters `WRITTEN` or a staging list.
+
   Everything else — feature documents, `FEATURES.md`, `INDEX.md`,
-  `product-design.md` — is PHASE 3's job, not PHASE 2's. On the amend path
-  PHASE 3 never runs, and `./amend.md` § 5 is the write step instead.
-- Write implementation-level detail: real code, class-by-class breakdowns,
-  file-by-file plans, or lists of files to edit. `/task-add` produces those
-  against the codebase as it then stands; freezing them here makes them
-  stale before anyone reads them.
-- Create tasks, or touch `.claude/TASKS.md` for any reason other than
-  flipping a `Status:` line to `[STALE]` under PHASE 0b or `./amend.md`'s
-  precision guard. Never create,
-  delete, or reorder task entries.
-- Leave a target's progress marker in place once PHASE 3 has completed
-  normally for it. A written feature must never still look interrupted.
-- Write or overwrite the `Tasks:` line of an existing `FEATURES.md` entry.
-  It is `/task-add`'s field; this skill owns `Status:`, `Doc:`, and
-  `Source:` only.
-- Write `[PLANNED]` or `[DONE]`, or move a `[PLANNED]`/`[DONE]` feature back
-  to `[NEW]`. `[DONE]` is `/task-implement`'s field (proposed, user-
-  confirmed) or a human's by hand — this skill only ever reads it, to
-  decide whether the iterate guard applies.
-- Edit source code. This skill designs and documents; it implements nothing.
-- Write or edit `technical-direction.md`. It is `/product-design`'s
-  document; this skill reads and adopts it, and a genuine mismatch is a
-  flagged concern designed around, never a reason to change it. The remedy
-  is re-running `/product-design`.
-- Rename a slug, or reuse one for a different feature. Slugs are stable
-  identifiers, like task IDs.
-- Override the `[IN PROGRESS]` refusal in PHASE 0b, or the drop a touched
-  `[IN PROGRESS]` task causes in `./amend.md` — not on the user's
-  insistence, not with a flag. Tell them to finish or reset that task
-  first.
-- Advance past PHASE 2 without the user confirming the architecture — a
-  council verdict is an input to that confirmation, never a substitute for
-  it, however confident it came back.
-- Run any git/VCS command when `--no-commit` was passed; and otherwise, stage
-  only the explicit `WRITTEN` paths, never a catch-all, push per the
-  commit-and-push protocol unless `--no-push` was passed, and never
-  force-push, retry a failed push, branch, tag, or use hook-skipping flags
-  (`--no-verify`, `--no-gpg-sign`, `--amend`).
-- Create the domain layer yourself when PHASE 0's gate fails. Point at
-  `/domain-setup` and stop.
+  `product-design.md` — is PHASE 3's job. On the amend path PHASE 3 never
+  runs, and `./amend.md` § 5 is the write step instead.
