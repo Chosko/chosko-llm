@@ -29,9 +29,8 @@ chosko-llm promotes **deep-focused design and planning sessions** to prepare big
 
 ### Make it work overnight
 
-Design, planning and implementation all **draw tokens from the same 5h pool**. Use **your day to design and plan**, and **Claude's night to implement**. 
-chosko-llm allows for totally **unmanned cloud sessions** that you can run and check from your phone while **your PC is off**.
-When unexpected problems arise, unmanned sessions will **park problematic tasks** and go on with the rest of the work. You'll catch up when you have time.
+Design, planning and implementation all **draw tokens from the same 5h pool**. Spend **your day designing and planning**, and **Claude's night implementing**.
+Queue a cloud batch before bed and **turn your PC off**. A task that needs you gets **parked** instead of stalling the run; the rest gets done. You catch up over coffee.
 [Read how →](#run-it-overnight)
 
 
