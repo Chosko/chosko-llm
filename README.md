@@ -2,7 +2,7 @@
 
 # chosko-llm
 
-**An opinionated, document-driven workflow for building software with Claude**,
+**An opinionated, document-driven workflow for building software with Claude Code**,
 and the CLI that installs it anywhere.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -12,60 +12,27 @@ and the CLI that installs it anywhere.
 ### Keep your project's vision
 
 Claude Code is very good at the next step but **forgetful** about everything before it.
-This workflow allows Claude to pick up any stage cold **without drifting away from the big pitcure**.
+This workflow allows Claude to pick up any stage cold **without drifting away from the big picture**.
 
 ### Optimize token usage
 
-As your **project grows bigger**, Claude becomes **token-hungry** and even small tasks drain your subscription quick.
-Chosko-llm orients Claude within your codebase so that **reads are constrained** to what really matters.
+As your **project grows bigger**, Claude becomes **token-hungry** and even small tasks drain your subscription quickly.
+chosko-llm orients Claude within your codebase so that **reads are constrained** to what really matters.
 
-### Reduce human-in-loop bottlenecks
+### Reduce human-in-the-loop bottlenecks
 
 Claude sessions require your presence, but **you mostly wait in chat** while the agent works. Then the roles switch in an infinite **hiccup**.
-Chosko-llm promotes **deep-focused desing and planning sessions** to prepare big batches of work for a later moment.
+chosko-llm promotes **deep-focused design and planning sessions** to prepare big batches of work for a later moment.
 
 ### Make it work overnight
 
-Design, planning and implementation all **draw tokens from the same 5h pool**.  Use **your day to design and plan**, and **Claude's night to implement**. 
-Chosko-llm allows for totally **unmanned cloud sessions** that you can run and check from your phone while **your PC is off**.
+Design, planning and implementation all **draw tokens from the same 5h pool**. Use **your day to design and plan**, and **Claude's night to implement**. 
+chosko-llm allows for totally **unmanned cloud sessions** that you can run and check from your phone while **your PC is off**.
 When unexpected problems arise, unmanned sessions will **park problematic tasks** and go on with the rest of the work. You'll catch up when you have time.
 
 
 </div>
 
-
-## Why chosko-llm
-
-- **Three layers of documents, each with one job.** Where things are in the
-  code, what the product is and why, and what's done and what's next — kept
-  apart so each stays small and each changes for its own reason.
-  [How it works ↓](#how-it-works)
-- **Changing your mind is cheap.** Re-architect a feature after its tasks
-  exist and only the tasks the change touches are marked stale and
-  re-planned. Finished work is never touched, and nothing is deleted.
-- **Runs while you're away.** `--unattended` parks a task that hits a
-  question — the question saved, the work kept on a branch — and moves on.
-  You answer later, by handle, and the task resumes where it stopped.
-- **One reviewed commit per task.** Each task is built test-first against
-  acceptance criteria you approved. With `--review`, a fresh-context reviewer
-  checks the diff before it lands.
-- **You say when it's finished.** Every writing command stops for your
-  approval before changing anything that matters, and only a person marks a
-  feature `[DONE]` or a milestone `[SHIPPED]`.
-- **Start wherever your project is.** No stage requires an earlier one. An
-  existing codebase can skip design entirely and go straight to tasks.
-- **A small, boring installer.** Bash and git, nothing else. Features are
-  copied, not symlinked; `--local` installs them into one repository, so a
-  cloud agent gets them too.
-
-| Without it | With it |
-| --- | --- |
-| The plan lives in a chat that ends | The plan lives in `.claude/`, versioned with the code |
-| Each session re-reads the tree to find its way | Sessions read a short index and open only the files they need |
-| "Make it do X" — and the agent guesses the rest | Every gap is asked up front and written as acceptance criteria |
-| A design change means re-explaining everything | The feature document changes; only the affected tasks re-plan |
-| A blocked agent waits for you, or guesses | The task parks with its question; the run continues |
-| Work in flight dies with the session | `/session-save` writes a handoff; `/session-resume` picks it up |
 
 ## Quick start
 
