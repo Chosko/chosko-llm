@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.89.1 — 2026-10-07
+
+- **`/task-add`'s design-change check, reconciliation and orphan question now live in `task-engine`.** Each is one reference file `/task-add` cites, so other commands can share them. `/task-add` behaves exactly as before.
+
 ## 1.89.0 — 2026-10-07
 
 - **New `/session-describe` command.** Describes one saved handoff in about ten plain lines — what it is about, where it stopped and its next step, what is still open and blocked, and the area handoffs an orchestrated session left — without loading it into the conversation. It picks the handoff the way `/session-resume` does: by path, date, slug, or the newest when given nothing.

@@ -685,7 +685,7 @@ Feature: session-readers
 ---
 
 ## 299. Move `/task-add`'s design-change check, reconciliation and orphan question into `task-engine`
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-engine/references/design-change.md, skills/task-engine/references/reconciliation.md, skills/task-engine/references/orphan-question.md, skills/task-engine/SKILL.md, commands/task-add.md, skills/task-engine/references/amend.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
 Preconditions: 282

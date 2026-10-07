@@ -91,10 +91,10 @@ own `Target:` line.
 
 **Owned documents.** A change that adds a path owned by another pipeline
 command to `## Hints` or to `Files:`, or adds a point at which the task
-diverges from such a document, runs `/task-add`'s DESIGN-CHANGE CHECK for
-it — its owner table, its settles/diverges enumeration, its question and its
-hard rules, cited here and not restated — inside this file's gate, never at a
-second one. An agreement already recorded in `## Decisions` stands; a new
+diverges from such a document, runs the design-change check in
+`./design-change.md` for it — its owner table, its settles/diverges
+enumeration, its question and its hard rules, cited here and not restated —
+inside this file's gate, never at a second one. An agreement already recorded in `## Decisions` stands; a new
 diverging point is a new question.
 
 ### The summary block
@@ -211,4 +211,4 @@ The last optional clause stands for `[STALE]`; the identifiers go last, per
 - **`/task-add`** — the owner of the lines this file lets change: the body,
   the block's title, `Target:`, `Files:`, `Preconditions:` and `Feature:`,
   and `FEATURES.md` `Tasks:`. Its own body does not read this file. Its
-  DESIGN-CHANGE CHECK and its `--single` rule are cited above, not changed.
+  `--single` rule is cited above, not changed.

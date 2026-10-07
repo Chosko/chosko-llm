@@ -36,10 +36,11 @@ does not support is not written.
   revision surface routes an amendment through this column. An entry names
   only a file that exists, and is written in the change that ships it.
 
-## Agreement with `/task-add`
+## Agreement with the design-change check
 
-`/task-add`'s DESIGN-CHANGE CHECK table is the sole source of ownership for
-that check, and names four owned paths. This table agrees with it on each:
+The owner table in `task-engine`'s `references/design-change.md` is the sole
+source of ownership for the design-change check, and names four owned paths.
+This table agrees with it on each:
 `.claude/domain/features/*.md` is `/architect`'s; `product-design.md`,
 `technical-direction.md` and `business-model.md` are `/product-design`'s;
 `product-roadmap.md` is `/product-roadmap`'s; `.claude/PLAN.md` is

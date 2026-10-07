@@ -1,6 +1,6 @@
 ---
 name: task-engine
-version: 0.8.2
+version: 0.8.3
 type: skill
 description: Reference library for the task-* features — one authority per rule they share, under references/; read by path by the task-* commands and skills and by the pipeline revision surface, never invoked.
 disable-model-invocation: true
@@ -50,6 +50,9 @@ project-policy: vcs:add, vcs:commit, vcs:status, vcs:rev-parse, vcs:log, vcs:mv,
 | `references/tree.md` | The dirty-tree prompt protocol and the folding rules that follow from it. |
 | `references/commit.md` | Commit and push gating: `--no-commit` / `--no-push`, pull-at-start, what may be staged, one commit per unit of work, and commit/push failure handling. |
 | `references/review-budget.md` | Review cost controls: the `--review-model` / `--review-effort` values and their `same` / `auto` reserved words, the deterministic `auto` tier table, the read budget behind the effort axis, what is counted and what never is, and the cap-bound and resolved-pair reports. |
+| `references/design-change.md` | The design-change check: the owner table of paths another pipeline command owns, the *settles* / *diverges* enumeration of a drafted task's points, the question a diverging point raises, what agreement writes into the drafted body, what disagreement does, and the hard rules. |
+| `references/reconciliation.md` | Applying reconciliation on a re-planning run: classify every task the feature generated, present each call with a one-line reason, and apply the approved plan and nothing beyond it. |
+| `references/orphan-question.md` | The orphan question: when a free-form task is offered to a `[PLANNED]` feature, how the question is rendered, and what each answer does. |
 | `references/amend.md` | Changing one existing task: the two checks before writing (not `[IN PROGRESS]`, and no change to what its feature promises), which body sections and summary-block fields may change, rewriting a `Preconditions:` edge, deleting a live task as `[SKIP]`, adding `Feature:` to an orphan, the single gate (a `confirmation` gate under the interaction policy), the closed write set and the closing report line. |
 | `references/parking.md` | Task parking under the `unattended` policy: the one event that parks, which prompts take their default instead — two of them `confirmation` gates that pass on their own — the `## Parking handoff` section, the `park/task-<N>` branch, the park sequence, the unpark transaction, the answerer rule and the two refusals. Read by `/task-implement` only when UNATTENDED is true or a resolved task is `[PARKED]`; never on an attended run that meets no parked task. |
 

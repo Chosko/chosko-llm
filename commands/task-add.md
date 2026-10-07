@@ -1,6 +1,6 @@
 ---
 name: task-add
-version: 2.6.0
+version: 2.6.1
 type: command
 description: Plan one new task with the user and write it to the backlog — a summary block in TASKS.md plus a body file — from a prose description or from an /architect feature document. Use it for any new unit of work; stage 5 of the pipeline: turns a feature document into tasks; its output is /task-implement's input.
 requires: skill:task-engine, skill:interaction-engine
@@ -582,40 +582,10 @@ and the design-change question, and writes nothing.
 RECONCILIATION (only when FEATURE is set, SINGLE is false, and its `Tasks:`
 line is non-`none`)
 
-A re-planning run must not append blindly — that reliably produces
-overlapping work.
-
-The four-way classification itself, the standing preference for
-update-in-place over skip-and-replace, and the rule that `[DONE]` is
-untouchable are
-`../skills/task-engine/references/stale.md`
-§ *Clearing it*. This command is the only feature that applies them.
-
-What is this command's own is when and how they are applied: classify EVERY
-existing task read in PHASE 1b — not a sample, not the `[STALE]` ones only —
-and present the classification in PHASE 3 with a one-line reason each, so the
-user can overrule any call inside the same approval.
-
-Render it like this:
-
-```
-RECONCILIATION — feature <slug> has 5 existing tasks
-
-  12. [DONE]     <title>
-      → untouched. Completed work; the new design doesn't change it.
-  13. [MISSING]  <title>
-      → untouched. Still valid — the interface it builds is unchanged.
-  14. [STALE]    <title>
-      → body updated in place, back to [MISSING]. The goal survives; the
-        component it targets was renamed and its contract narrowed.
-  15. [MISSING]  <title>
-      → [SKIP] ("superseded: the design no longer has a separate cache
-        layer"), replaced by new task <N+2> below.
-  16. [PARKED]   <title>
-      → [SKIP] ("superseded: the endpoint it was parked on no longer
-        exists; branch park/task-16 deleted"), replaced by new task <N+3>
-        below. Its parked question is moot under the new design.
-```
+Which tasks are classified, how each call is presented and how the approved
+plan is applied are
+`../skills/task-engine/references/reconciliation.md`;
+its `/task-add` note carries where each happens in this command's phases.
 
 ---
 
@@ -753,135 +723,20 @@ That line is all this command does about the document.
 
 THE ORPHAN QUESTION (free-form runs, only when `.claude/FEATURES.md` exists)
 
-Asked only when FEATURE is unset, SHORT is false, and `.claude/FEATURES.md`
-exists; on a project without that file the question is not asked and nothing
-is said about it. It is not asked under `--short` either: its only non-`none`
-answer is the `--single` path, which `--short` cannot take.
-
-Just before **"Approve and write?"**, render:
-
-> These features are planned and could take this task:
->
->   <title> (`<slug-a>`)
->   <title> (`<slug-b>`)
->
-> Does the task belong to one of them — name it — or stay on its own (the
-> default)?
-
-listing every `[PLANNED]` entry in `.claude/FEATURES.md`, in index order —
-the only status an attached task leaves true. When no entry is `[PLANNED]`
-there is nothing to attach to, and the question is not asked.
-
-- **A slug** takes the `--single` path for that feature: read the entry's
-  `Doc:` as PHASE 1b's primary context, revise the draft against it (the
-  `Feature:` line, the Goal naming the feature, the document under Hints),
-  and re-present the plan at the same gate. From then on SINGLE-TASK
-  ATTACHMENT applies in full, the write-back line included. The question is
-  asked on every free-form run, a split included; on a split plan every part
-  is attached the same way, and the write-back line names every attached ID.
-- **none** — or an approval that does not address the question — writes
-  the task as a free-form task, with no `Feature:` line.
+When the question is asked, how it is rendered and what each answer does are
+`../skills/task-engine/references/orphan-question.md`;
+its `/task-add` note carries this command's conditions and the `--single`
+path a named slug takes.
 
 ---
 
 DESIGN-CHANGE CHECK
 
-Applies to **every task this run drafts** — the documentation task, a single
-free-form task, each part of a split, and any existing body rewritten during
-reconciliation. What it catches is a task whose implementation would change a
-design the user has not seen changed: the user agrees to the design change at
-the gate, or the task is redrawn. A document is never kept wrong on purpose,
-and a path is never marked read-only.
-
-**Detection.** These paths are owned by another command in this pipeline. This
-table is the sole source of ownership — do not try to derive it from a
-project's domain layer, which most projects do not carry:
-
-| Path | Owner |
-| --- | --- |
-| `.claude/domain/features/*.md` | `/architect` |
-| `.claude/domain/product-design.md`, `technical-direction.md`, `business-model.md` | `/product-design` |
-| `.claude/domain/product-roadmap.md` | `/product-roadmap` |
-| `.claude/PLAN.md` | `/production-plan` |
-
-`.claude/FEATURES.md` and `.claude/TASKS.md` are **excluded**: they are split by
-line rather than by file, and this command is itself one of their writers.
-
-Run the check against both the drafted `## Hints` and the summary block's
-`Files:` line, for every task drafted in this run. A path matching a row above
-is a *detected file*.
-
-**Enumeration.** For each detected file, list the points at which the task's
-implementation touches what the document says — numbered, one line or two
-each, each naming the passage it lands on. "Review this document for drift" is
-not a point. Every point is one of two kinds:
-
-- **settles** — the document leaves the matter open (an open question, an
-  unstated detail, a choice the design defers to implementation) and the task
-  decides it. No conflict with the design.
-- **diverges** — the document states one thing and the task will do another.
-  A design change.
-
-A detected file with no points is a path in `## Hints` like any other.
-
-**The question.** Asked only when at least one point diverges, at PHASE 3 —
-one block per task, every detected file's diverging points together, settling
-points listed beneath for the record:
-
-> The task to <title, in plain words>, as drafted, would change the design:
->
->   1. <what the design says now, what the task would do instead, and why>
->      (`<path>` § <section>)
->   2. …
->
-> It also settles, without conflict: <the point> (`<path>` § <section>).
->
-> Agree to these design changes? (task <N>)
-
-A task whose points all settle asks nothing; its settled points still go into
-the body below.
-
-**Agreement.** The design change is agreed as a whole, not passage by passage:
-the implementer updates every passage of the document that states the old
-design, the enumerated ones included, and introduces no meaning beyond the
-agreed change. The path stays in `## Hints` and joins `Files:`. Write it into
-the drafted body before PHASE 4 — `## Acceptance criteria`:
-
-> - `<path>` states the agreed design change — <the change in one line> — in
->   every passage that stated the old one, and settles <the settled points>.
->   Nothing else in the document changes.
-
-and `## Decisions`:
-
-> - **Design change agreed (user decision, `<YYYY-MM-DD>`):** <one line per
->   diverging point>. Settled here: <one line per settling point>. `<path>` is
->   normally `<owner>`'s; this task updates it for exactly this and for nothing
->   else. A further design decision met at implementation time is not
->   covered: leave that passage untouched and name it under *Follow-ups* as a
->   precise follow-up.
-
-`<YYYY-MM-DD>` is the date of this `/task-add` run. A task with settling
-points only records them the same way, without the user-decision marker.
-
-**Disagreement.** The task, not the document, is wrong: it is heading
-somewhere the user does not want. Return to PHASE 2 with the diverging points
-as the open questions, redraft, and re-present the plan at the same gate.
-
-**Hard rules.**
-
-- A diverging point is never written as agreed without an explicit answer.
-  Silence is not agreement, and neither is an approval that does not address
-  the question: re-ask and wait rather than assume.
-- PHASE 4 never writes a task with an unanswered diverging point. If it would,
-  stop the run and report — write nothing.
-- **Agreement does not make this command a writer.** `/task-add` never edits
-  an owned document itself; the agreement authorises the *implementer of the
-  task it drafts*, at implementation time. One writer per artifact holds for
-  the pipeline commands.
-- A body rewritten — reconciliation here, or an amendment under
-  `../skills/task-engine/references/amend.md` — re-runs the check only on
-  the points the rewrite adds; an agreement already recorded in
-  `## Decisions` stands.
+Applies to every task this run drafts. The owner table, the *settles* /
+*diverges* enumeration, the question, what agreement and disagreement do, and
+the hard rules are
+`../skills/task-engine/references/design-change.md`;
+its `/task-add` note carries where each happens in this command's phases.
 
 ---
 
@@ -934,19 +789,10 @@ Feature case (FEATURE is set) — in addition to the above:
    separately. It is an edit target only for what DESIGN-CHANGE CHECK
    recorded in the body.
 
-3. Apply the approved reconciliation, and nothing beyond it (under SINGLE
-   there is none, so this step does nothing):
-   - Rewrite the body of each task classified "update in place", and flip a
-     `[STALE]` one back to `[MISSING]` in TASKS.md. A `[PARKED]` one is
-     rewritten above its `## Parking handoff` and stays `[PARKED]`.
-   - Set each "substantially invalidated" task's `Status:` to `[SKIP]`, and
-     record the one-line reason from the plan in its body so a later reader
-     knows why. The replacement task is written as a new task. A `[PARKED]`
-     one's `park/task-<N>` branch is deleted, local and remote, as
-     `stale.md` § *Clearing it* says — the one git command this phase runs
-     before PHASE 5.
-   - Touch nothing on a task classified "untouched", and nothing at all on
-     a `[DONE]` task.
+3. Apply the approved reconciliation, per
+   `../skills/task-engine/references/reconciliation.md`
+   § *Applying the approved plan* (under SINGLE there is none, so this step
+   does nothing).
 
 4. Update the feature's entry in `.claude/FEATURES.md`, writing exactly two
    fields:
