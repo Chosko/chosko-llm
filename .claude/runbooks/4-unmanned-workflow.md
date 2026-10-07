@@ -238,7 +238,7 @@ Context: none
 
 Done: 2026-10-07, commit `f28f508` (9 files, +412/-3). Tasks 299–305; 300 also moves test-runner.md, no-test-suite.md and the testing-policy project-policy: declaration into task-engine (marker text unchanged).
 
-## [ ] 16. Task orchestrate-mode
+## [x] 16. Task orchestrate-mode
 
 Depends on: 3
 
@@ -247,6 +247,8 @@ Context: none
 ```prompt
 /task-add feature=orchestrate-mode
 ```
+
+Done: 2026-10-07, commit `49eb078` (6 files, +275/-3). Tasks 306–309; pipeline-suggest stays silent while the mode is on.
 
 ## [ ] 18. Task objective-run
 
