@@ -749,7 +749,7 @@ Feature: quick-implement
 
 ## 306. Add the `/orchestrate-mode` skill and `interaction-engine`'s mode check
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/orchestrate-mode/SKILL.md, skills/orchestrate-mode/brief.md, skills/orchestrate-mode/handoff.md, skills/orchestrate-mode/failures.md, skills/interaction-engine/SKILL.md, skills/interaction-engine/references/mode.md, VERSION, CHANGELOG.md
 Preconditions: 281

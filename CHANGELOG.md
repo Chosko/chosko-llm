@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.94.0 — 2026-10-07
+
+- **New `/orchestrate-mode` skill.** Switches a conversation into a mode where the session never edits code itself: each change request runs as a batch of subagents, one per area of the code, each owning its own files and carrying its state across agents in a handoff file under `.claude/sessions/`. The session reads only the navigation layer and the agents' short reports, and checks the work in as one commit per area at the end. `/orchestrate-mode --off` turns it off.
+
 ## 1.93.0 — 2026-10-07
 
 - **`/pipeline-check` reports leftover specs.** A spec file still under `.claude/specs/` means the documentation has not caught up with a change `/quick-implement` landed. Each one is now a warning that names the `/pipeline-revise --catch-up` run that fixes it. The pipeline verdict line gains a `specs=` count.

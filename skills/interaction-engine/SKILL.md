@@ -1,8 +1,8 @@
 ---
 name: interaction-engine
-version: 0.1.1
+version: 0.2.0
 type: skill
-description: Reference library for the interaction policy — the attended/unattended policy and its precedence, the three gate classes, and the output and question rules every interactive feature shares, under references/; read by path, never invoked.
+description: Reference library for the interaction policy — the attended/unattended policy and its precedence, the three gate classes, the output and question rules every interactive feature shares, and the orchestrate-mode check, under references/; read by path, never invoked.
 disable-model-invocation: true
 project-policy: line:Interaction policy=attended|unattended
 ---
@@ -47,6 +47,7 @@ project-policy: line:Interaction policy=attended|unattended
 | `references/policy.md` | The policy values, the `Interaction policy:` line, the `--attended` / `--unattended` flags, the precedence that resolves one value per run, how a parent hands its policy down, and the argument errors. | At argument parsing, by every interactive feature. |
 | `references/gates.md` | The three gate classes, what each does under `unattended`, the auto-pass summary and commit, runs that do not commit, and the park-else-stop rule for real decisions. | Only when the policy resolves to `unattended`. Under `attended` every gate waits and this file is never opened. |
 | `references/messages.md` | The output rules for gate summaries and closing reports, and the question rules. | Before the feature's first gate, question or closing report. |
+| `references/mode.md` | The check that says whether orchestrate mode is on in this conversation. | By a feature whose behaviour changes under orchestrate mode, at the point that behaviour applies. |
 
 Each file is the **single authority** for its rule. A consuming feature cites
 the file and states only what it does differently — its own gates' class
