@@ -1,10 +1,10 @@
 ---
 name: task-setup
-version: 2.1.0
+version: 2.1.1
 type: command
 description: Initialize the project's task backlog — creates .claude/TASKS.md, the .claude/tasks/ directory and the test-dispatch wrappers under .claude/external/. Run it once on a project before its first /task-add; a re-run only creates what is missing.
 disable-model-invocation: true
-requires: skill:interaction-engine
+requires: skill:interaction-engine, skill:task-engine, command:task-add
 ---
 
 # /task-setup
@@ -13,7 +13,9 @@ requires: skill:interaction-engine
 # per-task body files live, and the project's test-dispatch convention
 # under `.claude/external/` — two thin test-runner wrapper scripts
 # (`run-affected-tests.sh`, `run-full-tests.sh`) that give the project one
-# stable way to run its affected and full test suites. Idempotent: a re-run
+# stable way to run its affected and full test suites. On a project with no
+# test suite it can write `/task-implement`'s testing-policy line into
+# `CLAUDE.md`. Idempotent: a re-run
 # leaves existing artifacts untouched and only creates the missing ones.
 # Authoring command — leaves everything uncommitted for review unless
 # `--commit` is passed.
@@ -185,7 +187,7 @@ TEST RUNNER INFERENCE
 
 Determine how this project runs its tests, then write the two wrapper
 scripts. Inference uses the same heuristics as `/task-implement`'s
-LOCATING THE TEST RUNNER section. In order:
+RESOLVING THE TEST RUNNER section. In order:
 
 1. **Project convention beats heuristics.** If a `CLAUDE.md`, `README.md`,
    or `.claude/` context file specifies a test command, use it.
@@ -231,9 +233,26 @@ leaving the wrappers unwritten (`gates.md` § *Real decisions*).
 If the user picks **A**, do not write the wrapper scripts and report
 the artifacts left missing.
 
-If the user picks **B**, write both scripts as no-op stubs that exit 0
-with a clear message. The stubs MUST contain the literal sentinel
-comment line:
+If the user picks **B**, ask which testing policy `/task-implement` should
+record for the project — a real decision, stopping the run under
+`unattended` like the question above:
+
+> Which testing policy should `/task-implement` use here?
+>
+> a. `skip-tests` — implement without tests, confirming before each task.
+> b. `skip-tests-unattended` — implement without tests, no per-task
+>    confirmation.
+
+Write the answer into the project's `CLAUDE.md` as the line
+`Testing policy for /task-implement: <value>`, inside a
+`## Tasks implementation` section: the section is appended when missing
+(and `CLAUDE.md` created when missing), and an existing
+`Testing policy for /task-implement:` line in it is updated in place rather
+than duplicated. Append `CLAUDE.md` to `WRITTEN` and name the line in the
+step 3 report.
+
+Then write both scripts as no-op stubs that exit 0 with a clear message.
+The stubs MUST contain the literal sentinel comment line:
 
 ```
 # CHOSKO_TASK_IMPL_STUB
@@ -272,82 +291,14 @@ has a real wrapper, treat it as theirs to edit.
 
 ---
 
-INDEX FILE FORMAT (for reference — `/task-add` and `/task-clean` are
-the writers)
+FORMATS (for reference — `/task-setup` writes neither)
 
-```
-# Tasks
-
-Last task number: <N>
-
----
-
-## <N>. <Title>
-
-Status: [MISSING]
-Files: <comma-separated files>
-Preconditions: <comma-separated task numbers, or "none">
-Feature: <slug>          ← optional; only on feature-derived tasks
-
----
-
-## <M>. <Title>
-...
-```
-
-The `Last task number` line tracks the highest ID ever assigned. It only
-ever increases — `/task-clean` removes survivors but never decrements it.
-That guarantees task numbers are stable IDs across the project's lifetime.
-
-The `Feature:` line is optional and appears ONLY on tasks generated from a
-feature document by `/task-add feature=<slug>`. Free-form tasks carry no
-`Feature:` line at all — its absence is how the two are told apart.
-
-PER-TASK BODY FILE FORMAT (for reference — `/task-add` writes these and
-`/task-implement` reads them)
-
-`.claude/tasks/<N>.md`:
-
-```
-# Task <N> — <Title>
-
-Target: claude
-
-## Goal
-<One paragraph: what and why.>
-
-## Acceptance criteria
-- <Verifiable outcome.>
-- <…>
-
-## Decisions
-<Only present when non-obvious choices were made during authoring — by
-the user or by Claude. Each bullet: the choice and a brief why. Omit
-the section entirely when no contested calls exist; its absence is
-meaningful.>
-
-## Manual interventions
-<Only present when Target is claude+human or human — numbered
-checkpoints an agent must pause at for a human to perform in an
-external tool, each ending in a verifiable outcome. See
-commands/task-add.md's TARGET VALUES & MANUAL INTERVENTIONS section.>
-
-## Hints
-<Required. Always present. File paths the implementer should touch:
-edit targets, test files, documentation, collateral files. Write
-"none" explicitly only when nothing collateral genuinely exists.>
-- <path/to/file>
-- <…>
-```
-
-See commands/task-add.md for the full schema, including `--short` mode's
-reduced Goal-only body.
-
-The tracking metadata that DOES NOT live in the
-body is `Status:`, `Preconditions:`, and `Feature:` — those describe
-the task's place in the backlog, not its implementation, and live only
-in `TASKS.md`. `Files:` is intentionally duplicated inside `## Hints`
-because it's part of the implementation contract.
+The index file's format, and the `Last task number` counter that only ever
+increases, are `../skills/task-engine/references/resolution.md`
+§ *Index file format*. The per-task body format is `/task-add`'s,
+`./task-add.md` § PER-TASK BODY FILE FORMAT; the metadata that describes a
+task's place in the backlog — `Status:`, `Preconditions:` and
+`Feature:` — lives only in `TASKS.md`.
 
 ---
 

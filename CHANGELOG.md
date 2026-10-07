@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.84.1 — 2026-10-07
+
+- **`/task-setup` records the testing policy.** When you tell it the project has no test suite and choose stub wrappers, it asks whether `/task-implement` should use `skip-tests` or `skip-tests-unattended`, and writes the `Testing policy for /task-implement:` line into a `## Tasks implementation` section of `CLAUDE.md`, so `/task-implement` stops asking about tests.
+- **`/task-setup` and `/domain-setup` no longer carry their own copies of the backlog and feature-index formats.** They point to the formats `task-engine`, `/task-add` and `/architect` define, and install those features alongside them.
+
 ## 1.84.0 — 2026-10-07
 
 - **`/unity-mcp-setup` and `unity-mcp-skill` are removed**, superseded by Unity's official MCP. `/project-setup` no longer offers Unity MCP on Unity projects; its Unity detection, test-suite question and dirty-tree section are unchanged.

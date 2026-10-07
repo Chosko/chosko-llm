@@ -606,7 +606,7 @@ Feature: unity-mcp-removal
 
 ## 291. Replace `/task-setup`'s and `/domain-setup`'s schema copies with citations and fix `/task-setup`'s drift
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/task-setup.md, commands/domain-setup.md, VERSION, CHANGELOG.md
 Preconditions: 282, 284

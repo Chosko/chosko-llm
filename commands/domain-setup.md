@@ -1,10 +1,10 @@
 ---
 name: domain-setup
-version: 0.3.0
+version: 0.3.1
 type: command
 description: Initialize the project's domain knowledge layer — creates .claude/domain/ with its features/ folder and INDEX.md, the .claude/FEATURES.md feature index, and a CLAUDE.md pointer to the domain index. Run it once before any other pipeline command; stage 0 of the pipeline: scaffolds the layer every later stage writes into.
 disable-model-invocation: true
-requires: skill:interaction-engine
+requires: skill:interaction-engine, skill:architect
 ---
 
 # /domain-setup
@@ -196,28 +196,10 @@ Write `.claude/FEATURES.md` with exactly this content:
 # Features
 ```
 
-No entries. Entries are appended by `/architect`, one per feature, in this
-shape (documented here for reference — this command never writes one):
-
-```
----
-
-## <slug> — <one-line title>
-
-Status: [NEW]
-Doc: .claude/domain/features/<slug>.md
-Source: product-design.md § <section>
-Tasks: none
-
----
-```
-
-`Status:` is one of `[NEW]` / `[ITERATED]` / `[PLANNED]` / `[DONE]`. This
-command only ever writes the empty file above — a fresh `FEATURES.md` never
-has an entry, so `[DONE]` (written later by `/task-implement`, proposed and
-user-confirmed, or by a human editing the file by hand) never appears here.
-There is no `Last feature number` counter and no numeric IDs — slugs are
-the identifiers, so there is nothing to count.
+No entries — a fresh `FEATURES.md` never has one. Entries are appended by
+`/architect`, one per feature; their shape, the `Status:` values and who
+writes each field are `../skills/architect/feature-doc-template.md`
+§ *`.claude/FEATURES.md` entry*.
 
 ---
 
