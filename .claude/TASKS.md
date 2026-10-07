@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 305
+Last task number: 309
 
 ---
 
@@ -744,5 +744,45 @@ Target: claude
 Files: .claude/context/INDEX.md, .claude/context/quick-implement.md, .claude/context/features.md, .claude/context/task-engine.md, .claude/context/task-add.md, .claude/context/task-implement.md, .claude/context/task-review-iterate.md, .claude/context/pipeline.md, .claude/context/pipeline-revise.md, .claude/context/pipeline-readers.md, .claude/domain/product-workflow.md, .claude/domain/task-workflow.md, .claude/domain/features/task-peer-review.md, .claude/domain/features/pipeline-revision.md, .claude/domain/features/pipeline-engine.md
 Preconditions: 299, 300, 301, 302, 303, 304
 Feature: quick-implement
+
+---
+
+## 306. Add the `/orchestrate-mode` skill and `interaction-engine`'s mode check
+
+Status: [MISSING]
+Target: claude
+Files: skills/orchestrate-mode/SKILL.md, skills/orchestrate-mode/brief.md, skills/orchestrate-mode/handoff.md, skills/orchestrate-mode/failures.md, skills/interaction-engine/SKILL.md, skills/interaction-engine/references/mode.md, VERSION, CHANGELOG.md
+Preconditions: 281
+Feature: orchestrate-mode
+
+---
+
+## 307. Make `/task-implement`, `/quick-implement` and `pipeline-suggest` honour orchestrate mode
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, skills/quick-implement/SKILL.md, skills/pipeline-suggest/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: 300, 302, 306
+Feature: orchestrate-mode
+
+---
+
+## 308. Move area handoffs in `/session-save` and list them in `/session-resume`
+
+Status: [MISSING]
+Target: claude
+Files: commands/session-save.md, commands/session-resume.md, VERSION, CHANGELOG.md
+Preconditions: 286, 293, 295, 306
+Feature: orchestrate-mode
+
+---
+
+## 309. Update documentation for feature `orchestrate-mode`
+
+Status: [MISSING]
+Target: claude
+Files: .claude/context/INDEX.md, .claude/context/features.md, .claude/context/orchestrate-mode.md, .claude/context/interaction-engine.md, .claude/context/task-implement-delegation.md, .claude/context/quick-implement.md, .claude/context/session-handoff.md, .claude/domain/features/session-continuity.md, .claude/domain/features/task-implement-launcher.md
+Preconditions: 306, 307, 308
+Feature: orchestrate-mode
 
 ---

@@ -238,10 +238,10 @@ Tasks: 299, 300, 301, 302, 303, 304, 305
 
 ## orchestrate-mode — `/orchestrate-mode`: a conversation that delegates every change to per-area agents with handoff files
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/orchestrate-mode.md
 Source: prompt
-Tasks: none
+Tasks: 306, 307, 308, 309
 
 ---
 
