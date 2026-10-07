@@ -1,13 +1,15 @@
 # The subagent contract
 
-Fixed text. `OPERATING RULES` is pasted **verbatim** as the last section of
-every spawned step prompt, `RELAY CHILD RULES` **verbatim** ahead of it into a
-relay child's prompt only (THE SPAWN RELAY protocol step 1). Both are reference
-text rather than prose the orchestrator composes because each must be identical
-in every step of every runbook: a contract that is re-worded per spawn is a
-contract the agent can be talked out of.
+Fixed text, identical in every step of every runbook — a contract re-worded per
+spawn is one the agent can be talked out of.
 
-Five placeholders, and nothing else, are substituted:
+- Paste `OPERATING RULES` **verbatim** as the last section of every spawned
+  step prompt, after the step's own fenced prompt block, so the operating
+  rules are the final thing the agent reads.
+- Paste `RELAY CHILD RULES` **verbatim** ahead of it into a relay child's
+  prompt only (THE SPAWN RELAY protocol step 1).
+
+Substitute five placeholders, and nothing else:
 
 - `<RUNBOOK>` — the runbook's name, e.g. `implement-ecc-import`.
 - `<N>` — the step number being executed.
@@ -16,14 +18,11 @@ Five placeholders, and nothing else, are substituted:
 - `<PROMPT>`, `<RESULT>` — the `prompt:` and `result:` paths the `SPAWN REQUEST`
   named. `RELAY CHILD RULES` only.
 
-The relay rule below names no directory of its own: the subagent chooses one
-under the OS temp directory and reports it, and the file names are built from
-`<RUNBOOK>` and `<N>`. That is deliberate — a relay-path placeholder would be a
-path the orchestrator has to invent before it knows whether the relay will be
-used at all.
-
-It goes **last** in the assembled prompt, after the step's own fenced prompt
-block, so the operating rules are the final thing the agent reads.
+The relay rule names no directory of its own: the subagent chooses one under
+the OS temp directory and reports it, and the file names are built from
+`<RUNBOOK>` and `<N>`. There is no relay-path placeholder, because the
+orchestrator would have to invent the path before knowing whether the relay
+will be used at all.
 
 ---
 
@@ -115,106 +114,83 @@ RELAY CHILD RULES
 
 ## Why each rule is in there
 
-Not part of the pasted block — this section is for whoever maintains the
-contract, and is never sent to a subagent.
+Not part of the pasted block — for whoever maintains the contract; never sent
+to a subagent.
 
 - **"You cannot talk to the user."** A spawned agent has no interactive
-  channel. Without this line it asks a question into the void and either stalls
-  or, worse, answers the question itself and proceeds on its own invention.
+  channel; without this line it asks into the void and stalls, or answers the
+  question itself and proceeds on its own invention.
 - **`QUESTIONS FOR USER`.** The literal marker is what the orchestrator
   classifies on. Options and a recommendation are required because the relay
-  compresses but never answers — the user must be able to decide from the block
-  alone. At an approval gate the block carries a plain summary of the draft
-  and `show` fetches the draft itself, per the interaction engine's
+  compresses but never answers — the user must be able to decide from the
+  block alone. At an approval gate the block carries a plain summary of the
+  draft and `show` fetches the draft itself, per the interaction engine's
   `messages.md`; the orchestrator relays both and adds nothing. A
   `confirmation` gate passing on its own under `unattended` is the interaction
   engine's `gates.md` rule, so the agent does not stop at it there.
 - **The dirty-tree prompt answers itself.** The orchestrator writes `[~]` and
   `[RUNNING]` before it spawns, uncommitted by design, so the step's
-  `/task-implement` meets exactly those two dirty paths at pre-flight and would
-  otherwise end every step under `QUESTIONS FOR USER` on a question whose
-  answer is already known. The rule holds in every spawned step, under either
-  execution policy, because the prompt fires under both and its answer is the
-  same under both. `proceed`, never `include`, because folding the markers into
-  the task's commit would commit the in-flight state COMMIT CADENCE forbids;
-  anything else dirty is not this case and still reaches the user. The same
-  rule, word for word, is in `inline-contract.md` for the session that
-  executes a step itself.
-- **The two unattended rules, conditional on the preamble.** Under the
-  `unattended` policy the orchestrator does not relay a question: it parks the
-  step (`[P]`, the question in `Context:`) and the agent is never resumed —
-  the step re-runs from the start, in a fresh subagent, once the answer is
-  written. The condition is the preamble's one sentence and nothing else,
-  because the block is fixed text and the policy is per run; an attended
-  step's agent is non-interactive too, and that must not trigger them.
-  *Clean tree before asking* because the run goes on: the next step's agent
-  meets a dirty-tree prompt listing whatever this one left, on changes it
-  cannot know, and the re-run has no use for them either — the only
-  work-in-progress worth keeping is what a skill already put on
-  `park/task-<N>`, which is that task's, not this agent's. Saying so in the
-  block is what lets the orchestrator go on without looking, since it never
-  reviews. *Answer from `Context:`* because the step re-runs whole and the
-  invoked skill will ask its question again — `/task-implement`'s pre-ask on
-  a `[PARKED]` task, a gate, a prompt — and an agent that relayed it back
-  would park the step a second time on a question already answered, forever.
+  `/task-implement` meets exactly those two dirty paths at pre-flight. The
+  rule holds in every spawned step, under either execution policy, because
+  the prompt fires under both and its answer is the same. `proceed`, never
+  `include`, because folding the markers into the task's commit would commit
+  the in-flight state COMMIT CADENCE forbids; anything else dirty still
+  reaches the user. The same rule, word for word, is in `inline-contract.md`.
+- **The two unattended rules, conditional on the preamble.** Under
+  `unattended` the orchestrator parks the step instead of relaying, and the
+  agent is never resumed — the step re-runs from the start, in a fresh
+  subagent, once the answer is written. The condition is the preamble's one
+  sentence and nothing else, because the block is fixed text and the policy is
+  per run; an attended step's agent is non-interactive too, and that must not
+  trigger them. *Clean tree before asking* because the run goes on and the
+  next step's agent would meet this one's leftovers at its dirty-tree prompt;
+  the only work-in-progress worth keeping is what a skill already put on
+  `park/task-<N>`, which is that task's. Saying so in the block lets the
+  orchestrator go on without looking. *Answer from `Context:`* because the
+  re-run's invoked skill asks its question again — `/task-implement`'s
+  pre-ask on a `[PARKED]` task, a gate, a prompt — and relaying it back would
+  park the step again on an answered question, forever.
 - **Default commit behaviour, no invented flags.** A step's prompt is often a
-  bare slash-command invocation whose commit behaviour the user already chose
-  when they authored it. An agent that helpfully adds `--no-commit` (or drops
-  it) changes what the runbook does.
+  bare slash-command invocation whose commit behaviour the author already
+  chose; adding or dropping `--no-commit` changes what the runbook does.
 - **Never edit the runbook or the index.** The orchestrator writes exactly two
-  files and a subagent writes everything else. Two writers on the runbook is
-  how a `Done:` line gets lost. The body is named by `<FILE>` rather than built
-  from `<RUNBOOK>` because a body's file name is not derivable from its name —
-  it may be `<id>-<name>.md` or a legacy `<name>.md`, and only `File:` says
-  which. **`<FILE>` is an acceptable placeholder where a relay path was not**:
-  the orchestrator already holds `File:` from its *Resolve* step before it
-  spawns anything, so filling it invents nothing, whereas a relay path is one
-  it would have to make up before knowing whether the relay is used at all.
-  `<PROMPT>` and `<RESULT>` pass the same test: the `SPAWN REQUEST` names both.
+  files and a subagent writes everything else; two writers on the runbook is
+  how a `Done:` line gets lost. The body is named by `<FILE>`, not built from
+  `<RUNBOOK>`, because its file name may be `<id>-<name>.md` or a legacy
+  `<name>.md`, and only `File:` says which. `<FILE>`, `<PROMPT>` and
+  `<RESULT>` are acceptable placeholders where a relay path was not: the
+  orchestrator holds `File:` from its *Resolve* step before it spawns, and the
+  `SPAWN REQUEST` names the other two, so filling them invents nothing.
 - **No feature-flip question.** Relayed as `QUESTIONS FOR USER` it would block
   the run mid-step; the orchestrator's closing report asks once, after the run.
-- **Naming the runbook and step.** It orients the agent, it makes its report
-  attributable, and it is what lets a step's subagent call
-  `/runbook-create --append` with no name argument.
-- **`SPAWN REQUEST`.** In some environments — cloud sessions among them — a
-  subagent cannot spawn a subagent, so a step whose prompt invokes something
-  that wants a child agent (`/task-implement --review --rounds 2`) has nowhere
-  to put it. The two things an agent does instead are both bad: doing the
-  child's work inline destroys the fresh context that was the entire reason for
-  a child (an implementer reviewing its own diff is not a review), and dropping
-  it silently produces a `DONE` report for work that did not happen. So the
-  rule names a third option and makes it the required one. **Detection lives
-  here rather than in the orchestrator** because only the agent that needs the
-  tool can tell whether it has it; an orchestrator-side probe measures the
-  orchestrator's environment and costs a spawn per run to do it. The paths go
-  under `$TMPDIR` so no scratch file can ever land in a commit, and "one child
-  at a time" keeps the relay sequential, exactly like the question relay it is
-  modelled on. **The file names are dictated rather than left to the agent**
-  because two runs of different runbooks share one `$TMPDIR`, and two agents
-  each reaching for the obvious name would hand one runbook's child the other's
-  prompt — a collision the orchestrator cannot detect, since it never opens
-  either file. `<RUNBOOK>` and `<N>` are already substituted here, so naming
-  them costs no further placeholder.
+- **Naming the runbook and step.** It orients the agent, makes its report
+  attributable, and lets a step's subagent call `/runbook-create --append`
+  with no name argument.
+- **`SPAWN REQUEST`.** Where a subagent cannot spawn a subagent, an agent that
+  wants a child would otherwise do the child's work inline — destroying the
+  fresh context that was the reason for a child (an implementer reviewing its
+  own diff is not a review) — or drop it silently and report `DONE` for work
+  that did not happen. **Detection lives here, not in the orchestrator**,
+  because only the agent that needs the tool can tell whether it has it. The
+  paths go under `$TMPDIR` so no scratch file can land in a commit; "one child
+  at a time" keeps the relay sequential. **The file names are dictated**
+  because two runs of different runbooks share one `$TMPDIR`, and a name
+  collision would hand one runbook's child the other's prompt — undetectable,
+  since the orchestrator never opens either file.
 - **`DONE` plus the terse report.** `DONE` is the literal marker the
-  orchestrator classifies on. The sha and the diffstat are exactly what the
-  default `Done:` line records, and asking the agent for the diffstat is what
-  lets the orchestrator write that line without running git — a cheap
-  orchestrator is the thing being protected. Decisions and wrong premises are
-  conditional, as on the `Done:` line itself, and feed fact propagation into
-  later steps. The exclusion list names what agents were observed dumping into
-  the line — review tallies, touched files, restated prompts, resumption
-  narrative — until runbook bodies grew unreadable. "Say so plainly instead of `DONE`" exists because an agent that
-  fails and still writes `DONE` out of politeness produces a runbook that lies.
-- **`RELAY CHILD RULES`.** The child's obligations were orchestrator-composed
-  prose until 2026-09-20, when step 83 of `m3-tasks-implementation` returned its
+  orchestrator classifies on. The sha and diffstat are exactly what the
+  default `Done:` line records, so the orchestrator writes it without running
+  git. Decisions and wrong premises are conditional, as on the `Done:` line,
+  and feed fact propagation. The exclusion list names what agents were
+  observed dumping into the line. "Say so plainly instead of `DONE`" exists
+  because an agent that fails and still writes `DONE` produces a runbook that
+  lies.
+- **`RELAY CHILD RULES`.** Fixed text because a relay child once returned its
   report in its turn and wrote no result file, suspending its caller on a file
   that did not exist.
-- **The self-check and the bare `DONE`.** Step 85 of the same run wrote the file
-  but ended `Result file written: <path>`, a turn with no marker for the
-  orchestrator to classify on, which costs the step a re-prompt.
-- **`<RESULT>` as the return channel.** Step 101 of a later run was a reviewer
-  spawned for `/task-implement --review`, whose skill said to return its report
-  to the caller and write nothing to disk; it obeyed the more specific
-  instruction, gave the review in its turn, wrote no result file and never
-  ended with `DONE`. The precedence line settles the clash for every skill a
-  child invokes, not only that one.
+- **The self-check and the bare `DONE`.** A child that wrote the file but
+  ended without the marker left nothing to classify on, costing a re-prompt.
+- **`<RESULT>` as the return channel.** A reviewer child whose skill said to
+  return its report to the caller and write nothing to disk obeyed that more
+  specific instruction. The precedence line settles the clash for every skill
+  a child invokes.
