@@ -666,7 +666,7 @@ Feature: session-readers
 
 ## 297. Add `/session-describe`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/session-describe.md, VERSION, CHANGELOG.md
 Preconditions: 295

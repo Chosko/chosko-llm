@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.89.0 — 2026-10-07
+
+- **New `/session-describe` command.** Describes one saved handoff in about ten plain lines — what it is about, where it stopped and its next step, what is still open and blocked, and the area handoffs an orchestrated session left — without loading it into the conversation. It picks the handoff the way `/session-resume` does: by path, date, slug, or the newest when given nothing.
+
 ## 1.88.0 — 2026-10-07
 
 - **New `/session-list` command.** Prints every saved handoff under `.claude/sessions/` one line each, newest first — when it was saved, its slug, what it was anchored to and the first sentence of its next step (or, for a pointer, the file it points at) — plus how many area handoffs an orchestrated session left beside it. It reads only those header lines, and writes nothing.
