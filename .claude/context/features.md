@@ -51,8 +51,7 @@ is listed here.
 
 Currently shipped:
 - [setup-commands.md](./setup-commands.md) — `commands/project-setup.md`,
-  `commands/unity-mcp-setup.md`, `commands/domain-setup.md`,
-  `skills/unity-mcp-skill/`.
+  `commands/domain-setup.md`.
 - [context-skills.md](./context-skills.md) — `skills/context-build/`,
   `skills/context-update/`, `skills/context-convert/`.
 - [session-handoff.md](./session-handoff.md) — `commands/session-save.md`,

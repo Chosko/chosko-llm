@@ -596,7 +596,7 @@ Feature: unity-mcp-removal
 
 ## 290. Update documentation for feature `unity-mcp-removal`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: .claude/context/INDEX.md, .claude/context/setup-commands.md, .claude/context/task-implement.md, .claude/context/features.md, .claude/context/feature-contract.md, .claude/context/product-design.md, docs/authoring-guide.md, .claude/domain/technical-direction.md, .claude/domain/features/authoring-commit-default.md, .claude/domain/features/repo-local-audits.md
 Preconditions: 288, 289

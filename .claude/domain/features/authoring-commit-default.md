@@ -26,7 +26,7 @@ typed after the fact.
 
 The four commit-by-default; the remaining authoring commands do not. That
 asymmetry is the feature, not a defect of it: the scaffolding commands
-(`/task-setup`, `/domain-setup`, `/project-setup`, `/unity-mcp-setup`), the
+(`/task-setup`, `/domain-setup`, `/project-setup`), the
 context-layer builders (`/context-build`, `/context-convert`), the
 refactorers (`/refactor-codebase`, `/refactor-tests`) all produce output
 whose first read is a human's eyes on the diff, and they keep the old default
@@ -52,8 +52,7 @@ deliberately.
 **Non-goals**
 
 - **The other authoring commands.** `/task-setup`, `/domain-setup`,
-  `/project-setup`, `/unity-mcp-setup`, `/context-build`,
-  `/context-convert`, `/refactor-codebase` and `/refactor-tests` keep the old
+  `/project-setup`, `/context-build`, `/context-convert`, `/refactor-codebase` and `/refactor-tests` keep the old
   default. This is settled, not deferred: the authoring group in
   [`docs/authoring-guide.md`](../../../docs/authoring-guide.md) shrinks to
   those commands and goes on existing.

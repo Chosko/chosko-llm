@@ -18,11 +18,10 @@ The rest of the suite: [task-suite.md](./task-suite.md).
   `references/resolution.md`, implementable/terminal statuses `status.md`,
   `Target:` handling and the delegation guard `targets.md`, the STALE
   protocol `stale.md`, the dirty-tree check `tree.md`, and PRE-FLIGHT step 5
-  plus Step 7 `commit.md`. Seven supporting files are read only when their
+  plus Step 7 `commit.md`. Six supporting files are read only when their
   branch fires — `test-runner.md` (runner must
   be inferred; mirrors task-setup's table), `no-test-suite.md`,
-  `human-in-loop.md`, `unity-mcp-checkpoints.md` (Unity-MCP-driven
-  checkpoints), `body-schemas.md`
+  `human-in-loop.md`, `body-schemas.md`
   (non-current body schema), `delegated-runs.md` (2+-task run user delegated to subagents),
   and `review-rounds.md` (`--review` passed; read once after argument
   parsing, before the first task, never otherwise) — plus `task-engine`'s
@@ -73,13 +72,14 @@ The rest of the suite: [task-suite.md](./task-suite.md).
   checkpoint, walks user through manual step, independently
   verifies outcome before continuing; on `target: human` task runs
   as guided walkthrough (no production edits by Claude, bookkeeping
-  still Claude's). When project declares Unity MCP plugin
-  (`Unity MCP for /task-implement:` marker in CLAUDE.md) and
-  `mcp__UnityMCP__*` tools connected this session, `human-in-loop.md`'s
-  gate reads `unity-mcp-checkpoints.md` instead: Claude checks Unity
-  Console after compilation, performs editor actions itself, rewrites
-  each checkpoint into verification step — opt-outable per run, no-op
-  (standard manual protocol) when MCP not connected. Honors `Testing policy for /task-implement:
+  still Claude's). When a tool connected this session can perform a
+  checkpoint's manual step (discovered from the live tool set, no server
+  named), `human-in-loop.md` asks once per task whether Claude performs
+  the checkpoints (user verifies) or the user does (Claude verifies) — a
+  real decision under the interaction policy; under automatic Claude
+  reads the tool's console after a compile, waits out reloads, and
+  re-queries every outcome, a step the tool cannot perform falling back
+  to the standard manual protocol. Honors `Testing policy for /task-implement:
   skip-tests|full-tdd|skip-tests-unattended` marker in project's
   CLAUDE.md (checked before heuristic test-suite detection) so
   no-test-suite decision persists across runs instead of re-asked

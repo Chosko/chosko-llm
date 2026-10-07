@@ -2,7 +2,7 @@
 
 Layout: flat
 
-Last updated: 2026-10-02
+Last updated: 2026-10-07
 
 Nav layer for `chosko-llm`. How to read it: `../../CLAUDE.md` § Navigation.
 
@@ -40,8 +40,8 @@ Canonical project docs live outside this folder, stay authoritative:
 | [cmd-export.md](./cmd-export.md) | `scripts/cmd-export.sh` — package repo's Claude config into Markdown file or zip via `select_export_files`; output dir from `export_dir_path`. |
 | [cmd-help.md](./cmd-help.md) | `scripts/cmd-help.sh` — print `docs/cli-help.txt` or fallback help. |
 | [features.md](./features.md) | Shipped-artifact kinds under `commands/`, `skills/`, `claude-md/`, `statusline/`, `hooks/`, incl. the hook-only `event:` / `matcher:` keys; why this repo's `.claude/skills/` is not a kind; hub for the frontmatter contract, the three feature families and every other shipped feature. |
-| [feature-contract.md](./feature-contract.md) | The per-feature contract — frontmatter block incl. optional `replaces:` / `requires:`; the `description` contract (short what+when, flags in the body `#` header) and the loading-control keys `disable-model-invocation:` / `paths:` with the eleven hidden features and the one path-scoped skill that carry them; supporting-file conventions and the home-path guard (`scripts/check-home-paths.sh`); cross-refs to authoring guide. |
-| [setup-commands.md](./setup-commands.md) | Project-initialization commands and the Unity MCP pair — `project-setup`, `unity-mcp-setup`, `domain-setup`, `unity-mcp-skill`. |
+| [feature-contract.md](./feature-contract.md) | The per-feature contract — frontmatter block incl. optional `replaces:` / `requires:`; the `description` contract (short what+when, flags in the body `#` header) and the loading-control keys `disable-model-invocation:` / `paths:` with the eleven hidden features that carry the first; supporting-file conventions and the home-path guard (`scripts/check-home-paths.sh`); cross-refs to authoring guide. |
+| [setup-commands.md](./setup-commands.md) | Project-initialization commands — `project-setup`, `domain-setup`. |
 | [context-skills.md](./context-skills.md) | The navigation-context skills — `context-build`, `context-update`, `context-convert`. |
 | [session-handoff.md](./session-handoff.md) | The session-handoff pair — `session-save`, `session-resume`. |
 | [refactor-doc-consolidate.md](./refactor-doc-consolidate.md) | Behaviour-preserving rewrite tools — `refactor-codebase`, `refactor-tests`, `doc-consolidate`. |

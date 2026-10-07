@@ -80,8 +80,7 @@ The contract every shipped `description` follows:
   invokes by name.
 - **Auto-trigger skills: ≤ 150 words / 1,000 chars.** The skills Claude selects
   on its own — `claude-council`, `runbook-suggest`, `pipeline-suggest`,
-  `follow-ups-resolve`, `unity-mcp-skill`. Trigger phrases first; any "Not
-  for" list last.
+  `follow-ups-resolve`. Trigger phrases first; any "Not for" list last.
 - **Hard fail above 1,536 chars.** The harness cuts there; a description that
   long has already lost whatever it put at the end.
 - **Never ` --- ` inside a description.** The harness truncates the description
@@ -557,7 +556,7 @@ don't restyle its prose, and don't split it up.
 The copy is not verbatim. Three adaptations were applied at import and must be
 re-applied on every re-sync (the third — the `# /claude-council` header block
 that opens the body, per § The body header — is the same one every shipped body
-carries, and `skills/unity-mcp-skill/SKILL.md` carries it too):
+carries):
 
 1. **Frontmatter is pinned.** Upstream's `description:` is a `|` block scalar
    and it carries no `version:` or `type:` — `parse_frontmatter` would read
@@ -614,7 +613,7 @@ What that means concretely:
   a session in this repo, so a repo-local skill sharing a name with a shipped
   one would be ambiguous. Check the shipped catalogue before naming a new one.
 - **`/context-budget` is where the `description` contract gets checked.** It
-  flags a description over 60 words (150 for the five auto-trigger skills),
+  flags a description over 60 words (150 for the four auto-trigger skills),
   over the 1,536-char hard cap, or containing ` --- ` — an observation, not a
   gate; see § The `description` contract for the rule it measures against.
 
@@ -985,7 +984,7 @@ either kind unchanged:
 
 - **Uncommitted by default.** `/context-build`, `/context-convert`,
   `/refactor-codebase`, `/refactor-tests`, `/doc-consolidate`,
-  `/task-setup`, `/domain-setup`, `/unity-mcp-setup` and `/project-setup`
+  `/task-setup`, `/domain-setup` and `/project-setup`
   write their output and leave it in the working tree for review. They
   accept **`--commit`** to commit what they wrote at the end.
 - **Committed by default.** `/task-add`, `/task-clean`, `/task-implement`,
@@ -1036,8 +1035,8 @@ Commands that run other commands follow one of two orchestrator patterns:
 
 - **Each nested command commits its own output.** `/project-setup --commit`
   commits its own artifacts first, then invokes its nested commands with
-  `--commit` so each commits its own output (`/task-setup`, `/domain-setup`,
-  `/context-build`, and `/unity-mcp-setup`, in that order).
+  `--commit` so each commits its own output (`/task-setup`, `/domain-setup`
+  and `/context-build`, in that order).
 - **One commit at the end.** `/pipeline-revise` commits by default and owns
   the commit: every owner step runs with `--no-commit` (an arm executed by
   path, with no commit), and after the last step it stages the union of the

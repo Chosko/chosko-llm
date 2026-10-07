@@ -73,8 +73,7 @@ of the pipeline family: [pipeline.md](./pipeline.md).
   feature docs, or tasks. **Commits by default — stages exactly the documents
   written, `design-process.md` included, in one commit and pushes**; `--no-commit` runs no git command, `--no-push` skips the push;
   `--commit` accepted as a silent no-op.
-- `skills/claude-council/` — **vendored**, second of the two (see
-  `skills/unity-mcp-skill/` in [setup-commands.md](./setup-commands.md) § Overview). Copy of upstream
+- `skills/claude-council/` — **vendored**, the repo's one vendored skill. Copy of upstream
   `TorpedoD/claude-council`: structured LLM-council pressure test for one
   high-stakes decision — five thinking-lens advisors, anonymised peer
   review, forced debate on suspiciously clean consensus, dual-chairman

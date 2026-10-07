@@ -40,20 +40,18 @@ use; `parse_frontmatter` ignores unknown keys, so they pass through
 - `disable-model-invocation: true` (commands, skills) — description kept
   out of the model's context; only the user invokes it, by typing
   `/<name>`; stays listed and typeable. **Carried by eleven features:** the
-  two reference libraries `skills/task-engine/`, `skills/pipeline-engine/`,
-  the authoring skill `skills/doc-consolidate/`, and eight wizards /
-  housekeeping commands never worth suggesting unprompted —
-  `commands/project-setup.md`, `commands/task-setup.md`,
-  `commands/domain-setup.md`, `commands/unity-mcp-setup.md`,
-  `commands/refactor-codebase.md`, `commands/refactor-tests.md`,
+  three reference libraries `skills/task-engine/`, `skills/pipeline-engine/`,
+  `skills/interaction-engine/`, the authoring skill `skills/doc-consolidate/`,
+  and seven wizards / housekeeping commands never worth suggesting
+  unprompted — `commands/project-setup.md`, `commands/task-setup.md`,
+  `commands/domain-setup.md`, `commands/refactor-codebase.md`, `commands/refactor-tests.md`,
   `commands/runbook-prune.md`, `commands/runbook-clean.md`. `task-review` /
   `task-iterate` deliberately NOT hidden — `/task-implement --review` spawns
   them by name.
 - `user-invocable: false` (commands, skills) — hidden from the `/` menu;
   model-only. Carried by nothing.
 - `paths:` (skills only) — loads only when files matching its globs are in
-  play. **Carried by one:** `skills/unity-mcp-skill/` (`Assets/**`,
-  `ProjectSettings/**`, `Packages/**`), so it loads only in a Unity project.
+  play. Carried by nothing.
 
 `replaces:` is an optional key from the kind-migration path: set it when
 a feature changes kind (`commands/<n>.md` rewritten as `skills/<n>/SKILL.md`),

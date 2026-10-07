@@ -96,7 +96,8 @@ changed.
 - **CLI internals** — process exec. The proxy execs the subcommand script.
   No IPC, no daemon, no shared memory.
 - **Distribution** — git over HTTPS.
-- **External tools** — the Unity editor is driven over MCP.
+- **External tools** — whatever tool is connected to the session, driven
+  through its own tools; no integration for a particular one ships.
 - **The authoring half** — documents. The real protocol between the design
   pipeline, the backlog, and implementation is files with agreed schemas:
   feature document → task body → code. The schemas are specified in

@@ -8,9 +8,8 @@ pass that finds material repeated across features. Both live in the repo's own
 ## Purpose
 
 This repo ships prompts. Its product thesis is token-lean navigation, and it
-has no way to check its own bodies against that thesis: `unity-mcp-skill`
-carries a 2,109-line reference file, `task-add.md` is 879 lines, and nothing
-notices. Separately, the same rules are restated across the `task-*` suite —
+has no way to check its own bodies against that thesis: `task-add.md` is 879
+lines, and nothing notices. Separately, the same rules are restated across the `task-*` suite —
 the problem [shared-phase-engine](./shared-phase-engine.md) exists to fix, and
 which needs a way to find the next instance after that refactor lands.
 
@@ -115,9 +114,9 @@ rendered.
 item, and a total. No recommendations about what to cut; the numbers are the
 output, the judgement is the author's.
 
-The skill is explicitly *not* a gate. A 2,109-line reference file may be
-correct — `unity-mcp-skill` covers a large external surface. The audit's job is
-to make the cost visible, not to litigate it.
+The skill is explicitly *not* a gate. A 1,100-line skill body may be correct —
+`runbook-run` runs a whole execution loop. The audit's job is to make the cost
+visible, not to litigate it.
 
 ### `/rule-overlap`
 
@@ -141,9 +140,8 @@ escape hatch if the inline block proves unreliable.
 **Collection scope excludes three things**, each for a stated reason rather
 than left to inference:
 
-- **The two vendored skills** (`skills/unity-mcp-skill/`,
-  `skills/claude-council/`). They are re-synced from upstream, so a restatement
-  found in one cannot be extracted without breaking the vendoring contract —
+- **The one vendored skill** (`skills/claude-council/`). It is re-synced from
+  upstream, so a restatement found in it cannot be extracted without breaking the vendoring contract —
   surfacing it would be noise the reader can never act on.
 - **`hooks/*.sh` and `statusline/*.sh`** — shell scripts, carrying no normative
   prose to collect.
