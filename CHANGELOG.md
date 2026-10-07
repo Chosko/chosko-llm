@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.92.0 — 2026-10-07
+
+- **New `/pipeline-revise --catch-up` mode.** Brings the documentation up to date with code that has already landed, from a `/quick-implement` spec or a description of the change. Wording the code already settled is amended without marking any task stale. Where the code breaks the documented design, you are asked whether to accept the code or keep the design and add a task. The run's commit deletes the spec, and it ends with `/context-update` when the change touched files the context layer describes.
+
 ## 1.91.0 — 2026-10-07
 
 - **New `/quick-implement` skill.** Takes one small change from conversation to commit in a single run: it plans a spec with you, checks it against the project's documentation, asks once, then implements it tests first and commits the change together with a spec file under `.claude/specs/`. No backlog entry is written. A change too big for one commit is pointed to `/task-add`. The closing report names the documentation that now lags the code and the follow-up that fixes it.

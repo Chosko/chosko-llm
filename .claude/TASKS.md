@@ -721,7 +721,7 @@ Feature: quick-implement
 ---
 
 ## 303. Add `/pipeline-revise --catch-up`
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/pipeline-revise/SKILL.md, skills/pipeline-revise/catch-up.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
 Preconditions: 285, 302

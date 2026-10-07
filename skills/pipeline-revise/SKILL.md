@@ -1,6 +1,6 @@
 ---
 name: pipeline-revise
-version: 1.1.0
+version: 1.2.0
 type: skill
 description: Revise already-planned work — a set of changes to feature documents, tasks, plan edges and runbook steps — through the owners of every artifact they reach, as one numbered plan behind one gate. Use it for any change to work that is already planned, from one wording fix to a list of amendments, deletions, insertions and reorders.
 requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbook-run, skill:product-design, skill:production-plan, skill:product-roadmap, skill:interaction-engine
@@ -22,13 +22,17 @@ requires: skill:pipeline-engine, skill:architect, skill:task-engine, skill:runbo
 # printing failures only; what execution surfaces beyond the plan is put to
 # one closing follow-up gate in the same shape, never written on its own. Writes nothing itself. Removal is [SKIP] or a struck
 # step, never physical deletion. One commit at the end holds the whole
-# revision; a sequence that stops part-way commits nothing.
+# revision; a sequence that stops part-way commits nothing. --catch-up
+# amends the documentation to match code that has already landed, from a
+# /quick-implement spec or a description, and its commit deletes the spec.
 # Usage: /pipeline-revise "<change set>" [--no-commit] [--no-push] [--attended | --unattended]
 #        /pipeline-revise <anchor> "<change>" [--no-commit] [--no-push] [--attended | --unattended]
+#        /pipeline-revise --catch-up <spec-path | "<landed change>"> [--no-commit] [--no-push] [--attended | --unattended]
 #        anchor: feature=<slug> | task=<N> | runbook=<id|name|id-name> step=<n>
 # Examples: /pipeline-revise task=42 "Hints: point at the new loader"
 #           /pipeline-revise "drop the contact URL from the user-agent (source-inventory, line 178); delete task 214; strike runbook 3 step 9"
 #           /pipeline-revise "1. /architect amend feature=a,b: … 2. delete task 214 3. move exit criterion 160 to m3"
+#           /pipeline-revise --catch-up .claude/specs/2026-10-07-export-button.md
 
 GOAL
 A design decision or a planned task changes after planning, and it rarely
@@ -76,9 +80,10 @@ SUPPORTING FILES (read on demand — not up front)
 | `./insert.md` | An item makes a new task or runbook step exist at a position — with the scope its feature document must newly promise, when it must. |
 | `./delete.md` | An item ends a live task, a pending runbook step or a whole feature. |
 | `./reorder.md` | An item moves an existing task or runbook step to another position. |
+| `./catch-up.md` | The run was invoked with `--catch-up`. |
 
 A run reads the branch file of every kind its items classify into, each
-once, and never one no item needs. All four share one schema — the same
+once, and never one no item needs. All five share one schema — the same
 seven sections in the same order: *Applies when*, *Impact walk*, *Owner
 sequence*, *Tier*, *Verification*, *Outcomes*, *Never* — so this file refers
 to a section of "the branch file" without caring which one is open.
@@ -103,7 +108,18 @@ errors. The policy is handed down to every owner the run drives, as the
 flag. This skill cannot park: a gate that waits under `unattended` stops the
 run there, nothing written.
 
-Then scan for an anchor in one of three forms, and strip it:
+Then scan for `--catch-up` and strip it. CATCH_UP is true when present, and
+what follows it is its input: a path to a spec file, or a quoted description
+of a change that has already landed. An input that names a path — it ends in
+`.md` or sits under `.claude/specs/` — must exist: one that does not stops
+with `No spec file at <path>.` An empty input stops with
+`/pipeline-revise --catch-up needs a spec path or the landed change, e.g. /pipeline-revise --catch-up .claude/specs/<file>.md.`
+Under CATCH_UP there is no anchor and no change set: the items are the points
+`./catch-up.md` § *Applies when* derives, and that file replaces step 3's
+classification. An anchor beside `--catch-up` stops with
+`--catch-up takes no anchor.`
+
+Otherwise, scan for an anchor in one of three forms, and strip it:
 
 - `feature=<slug>`
 - `task=<N>`
@@ -129,7 +145,12 @@ WORKFLOW
 already in the conversation where that file's reuse rule allows. The
 verdict line is also where step 6 reads which owners are installed.
 
-**2. Resolve each item's anchor.** Per item, in order:
+**2. Resolve each item's anchor.** Under CATCH_UP, a point's anchor is the
+document it lags in, resolved as below by the feature, task, runbook or
+milestone that document belongs to; a point in a document no anchor form
+reaches — `CLAUDE.md`, `README.md`, a context file — has the context-layer
+step or the report as its owner (`./catch-up.md`). Otherwise, per item, in
+order:
 
 - `feature=<slug>` — an entry in `.claude/FEATURES.md`. None, or no feature
   index at all, stops: `No feature <slug> in .claude/FEATURES.md. Available: <slug>, <slug>.`
@@ -156,7 +177,9 @@ listing what exists. Never pick between two. A stop here writes nothing.
 for the whole run per COMMITTING — skipped under `--no-commit` or
 `--no-push`.
 
-**3. Classify each item.** Put each item into exactly one branch, testing
+**3. Classify each item.** Under CATCH_UP, every item is the catch-up
+branch's, and a design break's answer brings in `./amend.md` or `./insert.md`
+when it is given. Otherwise put each item into exactly one branch, testing
 in this order; the first that matches wins:
 
 1. **reorder** — an existing task or runbook step is to run at a different
@@ -277,7 +300,8 @@ run here, before the gate and before any write:
    decision says the decision in words (*wording only, no task to re-plan*);
 3. **step 5's findings in scope**, only when there are any;
 4. **the questions** — any architect question still open, in
-   `../architect/amend.md` § 4's ambiguous form, one per feature — last,
+   `../architect/amend.md` § 4's ambiguous form, one per feature, and under
+   CATCH_UP each design break's question, in `./catch-up.md`'s form — last,
    with at most a one-line hint of the reply shortcuts.
 
 The item split, the classification and tier per item, the touched and
@@ -302,7 +326,8 @@ written. Otherwise wait for the reply. The reply grammar:
   `/runbook-create` creates from the deferred steps; `all as runbook
   steps` defers the whole plan;
 - `<n> after <m>` — move step n below step m;
-- a letter for an open architect question (`a: A`), or an overruled
+- a letter for an open architect question (`a: A`) or a design break
+  (`2: a`), or an overruled
   touched/untouched call or tier, as the arm's own reply rules allow;
 - `stop` — write nothing.
 
@@ -401,7 +426,8 @@ Commit and push gating is `../task-engine/references/commit.md`.
   No owner step pulls or pushes.
 - **One commit.** After the closing follow-up gate, stage exactly the union
   of the paths the owner steps reported writing — a runbook `/runbook-create`
-  wrote for deferred steps included — by explicit path, and commit once, the
+  wrote for deferred steps included, and under CATCH_UP the deletion of the
+  spec it was given (`git rm -- <spec>`) — by explicit path, and commit once, the
   `Revised …` report line as the subject. Then re-sync and push per
   `commit.md`'s push protocol, the push skipped under `--no-push`. Report
   the hash.
@@ -415,10 +441,12 @@ Commit and push gating is `../task-engine/references/commit.md`.
 
 WRITE SET
 
-Closed, and empty: this skill writes no line any owner owns, and no file of
-its own — no index line, no body, no runbook, no report on disk. Every write
-in a run is an owner step's, through an arm or an owner command, after the
-gate. Its commit stages only those writes.
+Closed, and empty but for one deletion: this skill writes no line any owner
+owns, and no file of its own — no index line, no body, no runbook, no report
+on disk. Every write in a run is an owner step's, through an arm or an owner
+command, after the gate. The one exception is CATCH_UP's: its commit deletes
+the spec file it was given, the deletion `/quick-implement`'s spec lifecycle
+assigns to it. Its commit stages only those writes.
 
 ---
 
