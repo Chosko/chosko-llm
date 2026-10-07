@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.96.0 — 2026-10-07
+
+- **`/session-save` and `/session-resume` carry orchestrate-mode area handoffs.** `/session-save` moves the area handoffs from `.claude/sessions/pending/`, or from the previous save's folder, into a folder named after the new session file, and commits them with it. `/session-resume` lists each area and its handoff path after the briefing, so the next agent for each area can be given its file.
+
 ## 1.95.0 — 2026-10-07
 
 - **`/task-implement`, `/quick-implement` and route suggestions follow orchestrate mode.** While `/orchestrate-mode` is on, `/task-implement` runs every task in a fresh subagent, a single task included, without asking; `--no-agents` still keeps it in the conversation. `/quick-implement` holds its spec conversation in one fresh subagent, relaying its questions, and splits the implementation across per-area agents, still landing one commit. Route suggestions stay silent, since every change request is already a batch.

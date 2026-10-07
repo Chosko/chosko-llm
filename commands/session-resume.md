@@ -1,6 +1,6 @@
 ---
 name: session-resume
-version: 0.2.0
+version: 0.3.0
 type: command
 description: Brief this session from a handoff file under .claude/sessions/ — the newest, the newest from a given date or with a given slug, or a path you name — reporting what was being built, what must not be retried and the next step, then stop. Use it when picking up work /session-save recorded.
 ---
@@ -208,6 +208,21 @@ Then the file's own *Current state of files* table if it has one, and its
 blockers and environment notes if they carry anything. Everything else in the
 file is on disk and stays there — the user can read it, and re-narrating it
 costs tokens the handoff exists to save.
+
+**Then the areas, when the file has a folder.** When `.claude/sessions/` holds
+a folder named after the resolved file's stem (its filename without `.md`),
+list it with the file-listing tool and name each `agent-<area>.md` in it by
+area, with its path:
+
+```
+Area handoffs (give each area's next agent its file):
+  ui       .claude/sessions/2026-08-24-1430-ecc-import-architecture/agent-ui.md
+  storage  .claude/sessions/2026-08-24-1430-ecc-import-architecture/agent-storage.md
+```
+
+The list comes from filenames alone: a handoff's body is never read. Listing
+the areas does not turn orchestrate mode on. No folder, or no `agent-*.md` in
+it: say nothing about areas.
 
 **End by naming the file and handing over the deletion:**
 

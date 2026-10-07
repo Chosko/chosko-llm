@@ -1,6 +1,6 @@
 ---
 name: session-save
-version: 0.3.2
+version: 0.4.0
 type: command
 description: Capture what this conversation knows — what was tried, what failed, what was left alone on purpose, which files are half-finished and the exact next step — into a timestamped handoff file under .claude/sessions/. Use it before a conversation ends with work in flight.
 requires: skill:interaction-engine
@@ -85,12 +85,12 @@ WHERE THE FILE GOES
 ```
 
 - `.claude/sessions/` is created on the first save. Writing the file creates
-  the directory; no separate `mkdir` step.
+  the directory; the session file needs no separate `mkdir` step.
 - `YYYY-MM-DD-HHMM` is the local date and time now. Read the clock **once**:
   use the date and time the session context already carries if it has them,
-  otherwise run `date` a single time. That clock read and the git commands of
-  the commit-and-push protocol (ARGUMENT PARSING's pull at start, COMMIT AND
-  PUSH) are the only
+  otherwise run `date` a single time. That clock read, the `mkdir`, `mv` and
+  `rmdir` commands of HANDOFF MOVE, and the git commands of the commit-and-push
+  protocol (ARGUMENT PARSING's pull at start, COMMIT AND PUSH) are the only
   shell commands this command is allowed to run — it runs no `ls`, no `grep`,
   and no other `git`.
 - `<slug>` is a **two-or-three-word kebab-case summary of the work**, not a
@@ -285,12 +285,39 @@ must never coexist in the directory.
 
 ---
 
+HANDOFF MOVE
+
+Area handoffs — one `agent-<area>.md` per area of an orchestrate-mode
+conversation — live in `.claude/sessions/pending/` until the conversation's
+first save, and afterwards in the folder named after the newest session file's
+stem (its filename without `.md`). After the new file is written and any
+SUPERSESSION DELETE is done, bring them under the new stem:
+
+1. **Find them** with the Glob tool, never a shell listing:
+   `.claude/sessions/pending/agent-*.md`, and — when this conversation
+   already wrote a session file, or resumed from one — the same pattern in
+   that file's stem folder, `.claude/sessions/<previous-stem>/agent-*.md`.
+   None found: nothing changes, and this section ends.
+2. **Move each one** into `.claude/sessions/<new-stem>/`, keeping its
+   filename: create the folder once with
+   `mkdir -p -- .claude/sessions/<new-stem>`, then
+   `mv -- <old-path> <new-path>`, one per file. Its content is
+   never read or edited.
+3. **Remove each source folder left empty** — `pending/`, or the previous
+   stem's folder — with `rmdir -- <folder>`, which refuses a folder that is
+   not empty.
+
+The moves run under `--no-commit` too; only the staging is skipped there.
+
+---
+
 COMMIT AND PUSH (skipped under `--no-commit`)
 
 If COMMIT is false, do nothing here and run no git command.
 
-Otherwise (the default), after the file is written and any SUPERSESSION DELETE
-is done, follow the commit-and-push protocol — four steps, in this order:
+Otherwise (the default), after the file is written, any SUPERSESSION DELETE is
+done and HANDOFF MOVE has run, follow the commit-and-push protocol — four
+steps, in this order:
 
 1. **Pull at start.** Already run before anything was written, per ARGUMENT
    PARSING.
@@ -301,10 +328,13 @@ is done, follow the commit-and-push protocol — four steps, in this order:
    the deletion when git was tracking the file and does nothing when it was
    not — a handoff written by an earlier `--no-commit` save, say — so this
    command never needs to know which, and an untracked superseded path can
-   never abort staging of the new file. Make
-   one commit: `git commit -m "Save session <slug>"`. The new snapshot and the
-   removal of the one it replaces are one unit of work, so they ride in one
-   commit.
+   never abort staging of the new file. When HANDOFF MOVE moved handoffs,
+   stage each new path (`git add -- <new-path> …`) and each old path's
+   removal the same way as the superseded file's
+   (`git rm --cached --quiet --ignore-unmatch -- <old-path> …`). Make one
+   commit: `git commit -m "Save session <slug>"`. The new snapshot, the
+   removal of the one it replaces and the moved handoffs are one unit of
+   work, so they ride in one commit.
 3. **Pre-push re-sync.** Unless NO_PUSH is true, `git pull` again. A conflict:
    abort the merge, keep the local commit, do not push, and report that it
    needs a manual sync and push.
@@ -325,11 +355,13 @@ On success, report exactly this much:
 ```
 Wrote .claude/sessions/2026-08-24-1430-ecc-import-architecture.md (full form)
 Deleted .claude/sessions/2026-08-23-0915-ecc-import-architecture.md (superseded)
+Moved 3 area handoffs into .claude/sessions/2026-08-24-1430-ecc-import-architecture/
 Committed a1b2c3d — Save session ecc-import-architecture
 ```
 
 The deletion line appears only when SUPERSESSION DELETE actually removed a
-file. The last line carries the commit hash (`git rev-parse --short HEAD`),
+file, and the move line only when HANDOFF MOVE moved at least one handoff.
+The last line carries the commit hash (`git rev-parse --short HEAD`),
 with `(not pushed)` appended under `--no-push`. Under `--no-commit` it is
 instead one line — `Nothing committed — the session file is uncommitted.` —
 and is not repeated or expanded on.
@@ -338,8 +370,9 @@ and is not repeated or expanded on.
 
 DO NOT:
 - Stage with `git add -A`, `git add .` or `git add -u`, stage anything but the
-  new session file and the superseded file's deletion, commit twice, amend,
-  skip hooks, force-push, retry a failed push, branch, or tag.
+  new session file, the superseded file's deletion and HANDOFF MOVE's moved
+  handoffs, commit twice, amend, skip hooks, force-push, retry a failed push,
+  branch, or tag.
 - Run any git command under `--no-commit`.
 - Touch `.gitignore`, or write anything at all outside `.claude/sessions/`.
 - Update a previous session file in place, append to one, or reuse its
@@ -356,7 +389,8 @@ DO NOT:
 - Write to `TASKS.md`, `FEATURES.md`, `PLAN.md`, a feature document, or
   anything under `.claude/context/`, or copy their contents into a section
   instead of linking to them.
-- Run any shell command other than the single clock read and the git
-  commands of the commit-and-push protocol.
+- Run any shell command other than the single clock read, the `mkdir`, `mv`
+  and `rmdir` of HANDOFF MOVE, and the git commands of the commit-and-push
+  protocol.
 - Start, finish, or continue the work being handed off. Writing the file is
   where this command ends.

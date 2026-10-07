@@ -769,7 +769,7 @@ Feature: orchestrate-mode
 
 ## 308. Move area handoffs in `/session-save` and list them in `/session-resume`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/session-save.md, commands/session-resume.md, VERSION, CHANGELOG.md
 Preconditions: 286, 293, 295, 306
