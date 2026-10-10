@@ -59,6 +59,7 @@ Currently shipped:
   `commands/session-resume.md`.
 - [refactor-doc-consolidate.md](./refactor-doc-consolidate.md) —
   `commands/refactor-codebase.md`, `commands/refactor-tests.md`, `skills/doc-consolidate/`.
+- [pipeline-dashboard.md](./pipeline-dashboard.md) — `skills/pipeline-dashboard/`.
 - [claude-md-hook-statusline.md](./claude-md-hook-statusline.md) —
   `claude-md/tool-usage-policy.md`, `claude-md/editing-discipline.md`,
   `claude-md/git-commit-style.md`, `hooks/remote-session-protocol.sh`,

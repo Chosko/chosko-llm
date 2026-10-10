@@ -352,6 +352,12 @@ and options `a`, `b`, …, so a reply reads like `Unpark P1: Q1a, Q2b`.
 Every run ends with one closing report — *For the record*, then a numbered
 *Follow-ups* list whose numbers are the reply handle.
 
+Install **`pipeline-dashboard`** and every `/task-implement` or `/runbook-run`
+keeps a private web page live while it runs: the active milestone, the
+runbook's steps, every task, and a banner with the question the run is
+waiting on, so you can follow it from your phone. Ask "a che punto siamo"
+for the same picture as text in chat.
+
 Pass **`--review`** and each task is peer-reviewed before it's committed.
 **`/task-review`** audits the diff against the task's acceptance criteria in
 a fresh subagent and reports only findings it holds at 80% confidence or

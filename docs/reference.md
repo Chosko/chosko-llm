@@ -1092,6 +1092,33 @@ Commits and pushes by default (`--no-commit` / `--no-push`), as
 tasks`). It is a skill now (`skill:task-clean`); installing or updating it
 retires the old command copy.
 
+### `pipeline-dashboard`
+
+A live progress page for pipeline runs. While a `/task-implement` or a
+`/runbook-run` is in progress — or whenever you ask how things stand ("come
+siamo messi", "a che punto siamo", "dashboard") — the orchestrating session
+keeps one private claude.ai Artifact per project up to date. Subagents never
+touch it.
+
+The page shows the `[ACTIVE]` milestone of `PLAN.md` (every task when there
+is no plan), three meters — runbook steps, tasks done, features closed — the
+step in progress with its tasks, and the runbook's steps one row each, with a
+square per task and the step's `Done:` line. When the run waits for an answer,
+a banner and a dialog show the question, its options and the recommended one;
+you still answer in the terminal. The page refreshes at run start and end, on
+every task status change (watched every 10 seconds with the Monitor tool), on
+every step transition, when a question starts or stops waiting, and on
+request, each time with one short line in chat. Asking how things stand also
+prints a text snapshot in a code block.
+
+Its state lives in `~/.claude/pipeline-dashboard/<owner>-<repo>/` — the link,
+the generated page and data, the waiting question — never in the repository.
+The page is titled `Pipeline <repo>`, so a session on another machine finds
+the same artifact instead of creating a second one. Without the Artifact or
+Monitor tool, or when anything about the page fails, the run carries on with
+one warning line. `/task-implement` and `/runbook-run` cite it and work
+exactly as before when it is not installed.
+
 ### `task-engine`
 
 The rules the task features share (how a task is resolved from `TASKS.md`,

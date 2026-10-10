@@ -113,6 +113,9 @@ The rest of the suite: [task-suite.md](./task-suite.md).
   [task-implement-review.md](./task-implement-review.md) — the rest of
   `/task-implement`.
 - [task-engine.md](./task-engine.md) — the reference library it reads.
+- [pipeline-dashboard.md](./pipeline-dashboard.md) — the dashboard the
+  launching session follows when installed, cited in GOAL; never a delegated
+  agent.
 
 ## When to read the source
 

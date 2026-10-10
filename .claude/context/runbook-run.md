@@ -113,6 +113,9 @@ skill's reference files and dependencies. The rest of its bullet:
   ids, the step loop, parking and the spawn relay.
 - [runbook-run-contracts.md](./runbook-run-contracts.md) — chat contract,
   closing report, commit convention, Stop-hook reply and hard contracts.
+- [pipeline-dashboard.md](./pipeline-dashboard.md) — the dashboard the
+  orchestrator follows when installed, cited in WHAT THIS SKILL READS AND
+  WRITES and CHAT OUTPUT.
 
 ## When to read the source
 
