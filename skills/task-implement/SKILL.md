@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.10.7
+version: 1.11.0
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups
@@ -87,6 +87,9 @@ run — see FAILURE HANDLING. A completed task carrying a `Feature:` line may
 make its feature a completion candidate — see FEATURE COMPLETION. However the
 run ends, its last act is the closing report — see THE CLOSING REPORT and
 CLOSING THE RUN.
+
+While the run is in progress, the session launching it — never a delegated
+agent — follows the `pipeline-dashboard` skill when that skill is available.
 
 $ARGUMENTS
 

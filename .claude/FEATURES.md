@@ -190,3 +190,21 @@ Source: product-design.md § Task backlog
 Tasks: 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 275, 276
 
 ---
+
+## pipeline-statusline — Status line showing the session and the pipeline's runbook and task progress
+
+Status: [DONE]
+Doc: .claude/domain/features/pipeline-statusline.md
+Source: prompt
+Tasks: 281, 282, 283
+
+---
+
+## pipeline-dashboard — Always-on live Artifact dashboard of pipeline progress, with questions waiting for the user
+
+Status: [DONE]
+Doc: .claude/domain/features/pipeline-dashboard.md
+Source: prompt
+Tasks: 284, 285, 286, 287
+
+---

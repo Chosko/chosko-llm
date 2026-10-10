@@ -2,6 +2,23 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.79.0 — 2026-10-10
+
+- **New skill `pipeline-dashboard`.** While a `/runbook-run` or `/task-implement` runs, the orchestrating session keeps one private Artifact per project live with the milestone, the runbook steps and the tasks, and shows there any question waiting for your answer. Ask "a che punto siamo" for a text snapshot in chat.
+- **`/runbook-run` and `/task-implement` follow `pipeline-dashboard` when it is installed.** Without it, nothing changes.
+
+## 1.78.1 — 2026-10-10
+
+- **`pipeline-statusline` scopes tasks from a runbook's `Done:` lines.** A runbook whose step headings name no task now counts the tasks its steps' `Done:` lines name, instead of every task of the active milestone.
+
+## 1.78.0 — 2026-10-10
+
+- **New command `/pipeline-statusline`.** Wires the `pipeline-statusline` status line into your user `settings.json`, backing up any status line it replaces so `/pipeline-statusline uninstall` restores it exactly, refreshes it on a re-run, and ends with a timed test run. `--no-nerd-font` switches to plain Unicode glyphs. Install it with `chosko-llm add command:pipeline-statusline`.
+
+## 1.77.0 — 2026-10-10
+
+- **New statusline `pipeline-statusline`.** Shows the session on line 1 and, in a project with a backlog or runbooks, the current runbook and the progress of the tasks it covers, plus one line per task in progress. Runs as a single `awk` process, so it stays fast on Windows.
+
 ## 1.76.3 — 2026-10-06
 
 - **`/refactor-codebase`, `/refactor-tests` and `/context-build` state their uncommitted default as a plain rule.** Wording only; behaviour is unchanged.
