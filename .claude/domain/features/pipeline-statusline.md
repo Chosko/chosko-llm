@@ -93,10 +93,13 @@ Inside the awk program, five concerns:
   yellow < 80, red otherwise.
 - **Runbook reader** — picks the first `[RUNNING]` block in `RUNBOOKS.md`,
   else the last block; takes its name, title, status, `File:` and
-  `Steps: d/t`; reads that body's step headings up to `## Do not re-propose`.
+  `Steps: d/t`; reads that body's step headings and `Done:` lines up to
+  `## Do not re-propose`.
 - **Scope resolver** — decides which task ids count, first rule that
   applies: (a) a range in the runbook's title; (b) the union of ranges and
-  ids named in its step headings; (c) the tasks of the features listed by
+  ids named in its step headings or, when no heading names one, in its
+  steps' `Done:` lines — a step's prompt and `Context:` are never read, as
+  they cite tasks of other steps; (c) the tasks of the features listed by
   the `[ACTIVE]` milestone in `PLAN.md`, through each feature's `Tasks:` line
   in `FEATURES.md`; (d) every task in `TASKS.md`. Ranges accept an en dash or
   a hyphen.

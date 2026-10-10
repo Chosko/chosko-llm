@@ -2,7 +2,7 @@
 : <<'CHOSKO_FRONTMATTER'
 ---
 name: pipeline-statusline
-version: 0.1.0
+version: 0.1.1
 type: statusline
 description: Status line showing the session (model, folder, branch, context, cost, rate limits) and the project's pipeline progress — current runbook, tasks in scope, tasks in progress. Wire it with /pipeline-statusline.
 ---
@@ -309,6 +309,12 @@ END {
       if (BODY[i] ~ /^## Do not re-propose/) break
       if (BODY[i] ~ /^## \[.\] [0-9]+\./) scoped += ids_from(BODY[i], SC)
     }
+    # no id in any step heading: the Done: lines of the steps name them instead
+    for (i = 1; i <= nbody && !scoped; i++) {
+      if (BODY[i] ~ /^## Do not re-propose/) break
+      if (BODY[i] ~ /^Done: /) nd += ids_from(BODY[i], DSC)
+    }
+    if (!scoped && nd) { for (id in DSC) SC[id] = 1; scoped = nd }
   }
   if (!scoped) {
     npl = readfile(cl "/PLAN.md", PL); act = 0; feats = ""
