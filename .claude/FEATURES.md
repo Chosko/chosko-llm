@@ -190,3 +190,12 @@ Source: product-design.md § Task backlog
 Tasks: 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 275, 276
 
 ---
+
+## pipeline-statusline — Status line showing the session and the pipeline's runbook and task progress
+
+Status: [NEW]
+Doc: .claude/domain/features/pipeline-statusline.md
+Source: prompt
+Tasks: none
+
+---
