@@ -45,7 +45,7 @@ Canonical project docs live outside this folder, stay authoritative:
 | [context-skills.md](./context-skills.md) | The navigation-context skills — `context-build`, `context-update`, `context-convert`. |
 | [session-handoff.md](./session-handoff.md) | The session-handoff pair — `session-save`, `session-resume`. |
 | [refactor-doc-consolidate.md](./refactor-doc-consolidate.md) | Behaviour-preserving rewrite tools — `refactor-codebase`, `refactor-tests`, `doc-consolidate`. |
-| [claude-md-hook-statusline.md](./claude-md-hook-statusline.md) | The shipped claude-md artifacts (`tool-usage-policy`, `editing-discipline`, `git-commit-style`), the `remote-session-protocol` hook and the `session-statusline` statusline. |
+| [claude-md-hook-statusline.md](./claude-md-hook-statusline.md) | The shipped claude-md artifacts (`tool-usage-policy`, `editing-discipline`, `git-commit-style`), the `remote-session-protocol` hook, the `session-statusline` and `pipeline-statusline` statuslines, and the `/pipeline-statusline` command that wires the latter. |
 | [task-suite.md](./task-suite.md) | The `task-*` suite's family-wide contract and domain pointers; hub for `task-setup`, `task-add`, `task-list`, `task-clean`, `task-implement`, `task-review`, `task-iterate` and `task-engine`. |
 | [task-backlog.md](./task-backlog.md) | Backlog maintenance — `task-setup`, `task-clean`, `task-list`. |
 | [task-engine.md](./task-engine.md) | `task-engine`, the non-invocable reference engine the `task-*` suite reads, and its `references/` files. |

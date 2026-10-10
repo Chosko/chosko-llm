@@ -526,7 +526,7 @@ Feature: pipeline-statusline
 
 ## 283. Update documentation for feature `pipeline-statusline`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, .claude/context/claude-md-hook-statusline.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 281, 282

@@ -467,6 +467,11 @@ ends. Meaning-preserving, never a style compressor. Uncommitted by default.
   commands, and rules documents that supersede instead of stratify.
 - **`statusline:session-statusline`** shows model, directory, branch,
   context usage, cost and rate limits in the status bar. Global-only.
+- **`statusline:pipeline-statusline`** shows the same session line plus the
+  project's pipeline progress — the current runbook, the tasks it covers,
+  each task in progress. **`/pipeline-statusline`** wires it into
+  `settings.json`, backs up the status line it replaces and restores it on
+  `uninstall`. Global-only.
 
 [Details →](docs/reference.md#8-editor-and-shell-extras)
 

@@ -1829,6 +1829,42 @@ Claude Code session to wire that path into `settings.json`'s `statusLine`
 key, since the CLI never edits `settings.json` itself.
 Global-only: a status bar belongs to your terminal, not a repository.
 
+### `statusline:pipeline-statusline` and `/pipeline-statusline`
+
+A status-bar script for projects run through the pipeline. Line 1 is the
+session — model, folder, branch (or short SHA when detached), context, cost,
+5-hour usage with the time to its reset, 7-day usage. In a project with
+`.claude/RUNBOOKS.md` or `.claude/TASKS.md`, line 2 adds the current runbook
+(the first `[RUNNING]`, else the last) with its step progress, and the
+progress of the tasks in scope with how many are in progress; one more line
+follows per `[IN PROGRESS]` task in scope. The tasks in scope are, first
+match wins: a range in the runbook's title; the ids its step headings name,
+or, when none does, its steps' `Done:` lines; the tasks of the `[ACTIVE]`
+milestone's features in `PLAN.md`; every task. An archived task in scope
+counts as done. It runs as a single `awk` process with no other fork, so it
+renders in well under a second even on Windows, and anything missing is
+simply left out.
+
+`chosko-llm add command:pipeline-statusline` installs the command and the
+script it requires (the prefix is needed: the two share a name).
+`/pipeline-statusline` then sets `settings.json`'s `statusLine` to run the
+script — editing that key alone — and ends with a timed run in the current
+project and in a directory with no `.claude/`.
+
+- A different status line already configured is shown first, and replaced
+  only on your say-so, after it is backed up to
+  `~/.claude/statusline/pipeline-statusline.backup/`: its `statusLine` value
+  and a copy of the script it runs.
+- Re-running refreshes the script through `chosko-llm update` and reports
+  whether it changed.
+- `/pipeline-statusline --no-nerd-font` swaps the Nerd Font glyphs for
+  single-width Unicode.
+- `/pipeline-statusline uninstall` restores the backed-up status line exactly
+  and deletes the backup; the script stays installed until
+  `chosko-llm rm statusline:pipeline-statusline`.
+
+Global-only, like every status line.
+
 ---
 
 ## 9. The CLI
