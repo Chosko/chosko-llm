@@ -546,7 +546,7 @@ Feature: pipeline-dashboard
 
 ## 285. Add the pipeline-dashboard page
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/pipeline-dashboard/assets/index.html
 Preconditions: 284

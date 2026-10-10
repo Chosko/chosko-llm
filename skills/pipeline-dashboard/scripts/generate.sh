@@ -3,7 +3,9 @@
 # pass: the [ACTIVE] milestone of .claude/PLAN.md, its features and tasks, the
 # current runbook and its steps, and the question waiting in pending.json.
 # Run from the project root. Writes nothing in the project.
-# Usage: generate.sh                    write data.js into the state folder, print its path
+# Usage: generate.sh                    write index.html (from ../assets/index.html, titled
+#                                       "Pipeline <project>") and data.js into the state
+#                                       folder, print the data.js path
 #        generate.sh --text             print the text snapshot instead
 #        generate.sh --print-state-dir  print the project's state folder and exit
 # State folder: ${CLAUDE_HOME:-$HOME/.claude}/pipeline-dashboard/<slug>/, where
@@ -20,8 +22,9 @@ esac
 export LC_ALL=C
 home="${CLAUDE_HOME:-$HOME/.claude}"
 now=$(date '+%Y-%m-%d %H:%M')
+asset="${0%/*}/../assets/index.html"
 
-exec awk -v mode="$mode" -v root="$PWD" -v home="$home" -v now="$now" '
+exec awk -v mode="$mode" -v root="$PWD" -v home="$home" -v now="$now" -v asset="$asset" '
 
 # ---------- helpers ----------
 
@@ -276,8 +279,14 @@ BEGIN {
   exit 0
 }
 
-function data(   out, i, id, f, first, j, k, IDS, sep) {
+function data(   out, i, id, f, first, j, k, IDS, sep, line, name) {
   system("mkdir -p \"" state "\"")
+  name = project; gsub(/&/, "\\&amp;", name); gsub(/</, "\\&lt;", name); gsub(/>/, "\\&gt;", name)
+  while ((getline line < asset) > 0) {
+    if ((i = index(line, "__PROJECT__"))) line = substr(line, 1, i - 1) name substr(line, i + 11)
+    print line > (state "/index.html")
+  }
+  close(asset); close(state "/index.html")
   out = state "/data.js"
   printf "window.DASH = {\n" > out
   printf "  project: %s,\n  slug: %s,\n  generated: %s,\n", js(project), js(slug), js(now) > out
