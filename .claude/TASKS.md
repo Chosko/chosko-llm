@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 280
+Last task number: 283
 
 ---
 
@@ -501,5 +501,35 @@ Status: [DONE]
 Target: claude
 Files: commands/refactor-codebase.md, commands/refactor-tests.md, skills/context-build/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 278
+
+---
+
+## 281. Add the `pipeline-statusline` statusline renderer
+
+Status: [MISSING]
+Target: claude
+Files: statusline/pipeline-statusline.sh, VERSION, CHANGELOG.md
+Preconditions: none
+Feature: pipeline-statusline
+
+---
+
+## 282. Add the `/pipeline-statusline` command that wires, backs up, restores and verifies the status line
+
+Status: [MISSING]
+Target: claude+human
+Files: commands/pipeline-statusline.md, VERSION, CHANGELOG.md
+Preconditions: 281
+Feature: pipeline-statusline
+
+---
+
+## 283. Update documentation for feature `pipeline-statusline`
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/reference.md, .claude/context/claude-md-hook-statusline.md, .claude/context/features.md, .claude/context/INDEX.md
+Preconditions: 281, 282
+Feature: pipeline-statusline
 
 ---
