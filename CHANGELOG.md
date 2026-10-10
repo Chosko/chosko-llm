@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.77.0 — 2026-10-10
+
+- **New statusline `pipeline-statusline`.** Shows the session on line 1 and, in a project with a backlog or runbooks, the current runbook and the progress of the tasks it covers, plus one line per task in progress. Runs as a single `awk` process, so it stays fast on Windows.
+
 ## 1.76.3 — 2026-10-06
 
 - **`/refactor-codebase`, `/refactor-tests` and `/context-build` state their uncommitted default as a plain rule.** Wording only; behaviour is unchanged.

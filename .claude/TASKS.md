@@ -506,7 +506,7 @@ Preconditions: 278
 
 ## 281. Add the `pipeline-statusline` statusline renderer
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: statusline/pipeline-statusline.sh, VERSION, CHANGELOG.md
 Preconditions: none
