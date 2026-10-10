@@ -536,7 +536,7 @@ Feature: pipeline-statusline
 
 ## 284. Add the pipeline-dashboard generator and text snapshot
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/pipeline-dashboard/scripts/generate.sh
 Preconditions: none
