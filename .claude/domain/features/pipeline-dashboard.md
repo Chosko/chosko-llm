@@ -152,7 +152,9 @@ The line names the skill and restates none of its rules.
   plus the project label and the list of indexes that could not be read.
 - **Per-project state**, in `${CLAUDE_HOME:-$HOME/.claude}/pipeline-dashboard/<slug>/`:
   `url` (the artifact link), `index.html` and the data file (what is
-  published), `pending.json`. The slug comes from the `origin` remote
+  published, through a copy in the session scratchpad, since the Artifact
+  tool publishes only from the working directories or the scratchpad),
+  `pending.json`. The slug comes from the `origin` remote
   (`<owner>-<repo>`, lower case), else the repository folder's name.
 - **The artifact** — one per project. Its `<title>` is fixed per project
   (`Pipeline <repo>`), which is what lets another machine find it.

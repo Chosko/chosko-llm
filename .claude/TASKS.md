@@ -556,7 +556,7 @@ Feature: pipeline-dashboard
 
 ## 286. Add the pipeline-dashboard skill and cite it from the orchestrators
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/pipeline-dashboard/SKILL.md, skills/runbook-run/SKILL.md, skills/task-implement/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 284, 285
