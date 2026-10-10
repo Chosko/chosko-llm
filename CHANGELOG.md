@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.78.0 — 2026-10-10
+
+- **New command `/pipeline-statusline`.** Wires the `pipeline-statusline` status line into your user `settings.json`, backing up any status line it replaces so `/pipeline-statusline uninstall` restores it exactly, refreshes it on a re-run, and ends with a timed test run. `--no-nerd-font` switches to plain Unicode glyphs. Install it with `chosko-llm add command:pipeline-statusline`.
+
 ## 1.77.0 — 2026-10-10
 
 - **New statusline `pipeline-statusline`.** Shows the session on line 1 and, in a project with a backlog or runbooks, the current runbook and the progress of the tasks it covers, plus one line per task in progress. Runs as a single `awk` process, so it stays fast on Windows.

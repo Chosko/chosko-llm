@@ -516,7 +516,7 @@ Feature: pipeline-statusline
 
 ## 282. Add the `/pipeline-statusline` command that wires, backs up, restores and verifies the status line
 
-Status: [MISSING]
+Status: [IN PROGRESS]
 Target: claude+human
 Files: commands/pipeline-statusline.md, VERSION, CHANGELOG.md
 Preconditions: 281
