@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 294
+Last task number: 299
 
 ---
 
@@ -639,5 +639,54 @@ Target: claude
 Files: README.md, docs/reference.md, docs/cli-help.txt, .claude/context/task-implement.md, .claude/context/task-implement-delegation.md, .claude/context/task-engine.md, .claude/context/features.md, .claude/context/INDEX.md, .claude/domain/task-workflow.md
 Preconditions: 292, 293
 Feature: parallel-task-runs
+
+---
+## 295. Add Parallelism: to the runbook schema and the worktree rules to the subagent contract
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/references/runbook-schema.md, skills/runbook-run/references/subagent-contract.md, skills/runbook-run/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: 288
+Feature: parallel-runbooks
+
+---
+
+## 296. Add --parallel <N|max> and graph scheduling to /runbook-run
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/SKILL.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
+Preconditions: 295
+Feature: parallel-runbooks
+
+---
+
+## 297. Author parallel runbooks in /runbook-create
+
+Status: [MISSING]
+Target: claude
+Files: commands/runbook-create.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
+Preconditions: 295
+Feature: parallel-runbooks
+
+---
+
+## 298. Read parallel runbooks in /runbook-describe and lint them in /pipeline-check
+
+Status: [MISSING]
+Target: claude
+Files: commands/runbook-describe.md, skills/pipeline-engine/references/lint.md, skills/pipeline-engine/SKILL.md, commands/pipeline-check.md, VERSION, CHANGELOG.md
+Preconditions: 295
+Feature: parallel-runbooks
+
+---
+
+## 299. Update documentation for feature `parallel-runbooks`
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/reference.md, docs/cli-help.txt, .claude/context/runbook-suite.md, .claude/context/runbook-run.md, .claude/context/runbook-run-loop.md, .claude/context/runbook-run-contracts.md, .claude/context/runbook-create.md, .claude/context/runbook-readers.md, .claude/context/pipeline-readers.md, .claude/context/features.md, .claude/context/INDEX.md
+Preconditions: 295, 296, 297, 298
+Feature: parallel-runbooks
 
 ---

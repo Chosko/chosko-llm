@@ -229,9 +229,9 @@ Tasks: 292, 293, 294
 
 ## parallel-runbooks — Runbook steps scheduled by their `Depends on:` graph, under a `Parallelism:` header or `--parallel`
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/parallel-runbooks.md
 Source: product-design.md § Task backlog
-Tasks: none
+Tasks: 295, 296, 297, 298, 299
 
 ---
