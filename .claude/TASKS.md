@@ -653,7 +653,7 @@ Feature: parallel-runbooks
 
 ## 296. Add --parallel <N|max> and graph scheduling to /runbook-run
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/SKILL.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
 Preconditions: 295
