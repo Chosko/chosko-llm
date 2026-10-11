@@ -211,10 +211,10 @@ Tasks: 284, 285, 286, 287
 
 ## worktree-isolation — One git worktree per unit of work; the agent integrates, the orchestrator lands
 
-Status: [NEW]
+Status: [PLANNED]
 Doc: .claude/domain/features/worktree-isolation.md
 Source: product-design.md § Task backlog
-Tasks: none
+Tasks: 288, 289, 290, 291
 
 ---
 

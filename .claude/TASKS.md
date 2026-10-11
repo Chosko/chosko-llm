@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 287
+Last task number: 291
 
 ---
 
@@ -571,5 +571,44 @@ Target: claude
 Files: README.md, docs/reference.md, .claude/context/pipeline-dashboard.md, .claude/context/features.md, .claude/context/INDEX.md, .claude/context/runbook-run.md, .claude/context/task-implement.md
 Preconditions: 284, 285, 286
 Feature: pipeline-dashboard
+
+---
+## 288. Add the worktree protocol to task-engine and wire its consumers
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-engine/references/worktree.md, skills/task-engine/SKILL.md, skills/task-engine/references/commit.md, skills/task-engine/references/parking.md, skills/runbook-run/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: none
+Feature: worktree-isolation
+
+---
+
+## 289. Sweep finished units' worktrees in /task-clean and /runbook-clean
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-clean/SKILL.md, commands/runbook-clean.md, VERSION, CHANGELOG.md
+Preconditions: 288
+Feature: worktree-isolation
+
+---
+
+## 290. Show in-flight units from the worktree list in the statusline and the dashboard
+
+Status: [MISSING]
+Target: claude
+Files: statusline/pipeline-statusline.sh, skills/pipeline-dashboard/scripts/generate.sh, VERSION, CHANGELOG.md
+Preconditions: 288
+Feature: worktree-isolation
+
+---
+
+## 291. Update documentation for feature `worktree-isolation`
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/reference.md, .claude/context/task-engine.md, .claude/context/task-backlog.md, .claude/context/runbook-pruners.md, .claude/context/claude-md-hook-statusline.md, .claude/context/pipeline-dashboard.md, .claude/context/features.md, .claude/context/INDEX.md, .claude/domain/task-workflow.md
+Preconditions: 288, 289, 290
+Feature: worktree-isolation
 
 ---
