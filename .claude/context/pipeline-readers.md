@@ -87,12 +87,17 @@ Covers the pipeline's two read-only reporters, `/production-status` and
   nothing, commits nothing, flips no status; no exit-code contract, no
   `--fix`, no `--quiet`. Opens no file under `.claude/tasks/archive/` or
   `.claude/domain/features/`; under `.claude/tasks/` and `.claude/runbooks/`
-  it opens exactly the bodies `lint.md`'s two parking findings name — L12, a
-  `[PARKED]` task with no `## Parking handoff` (`ERROR`, fix
+  it opens exactly the bodies `lint.md`'s three body-reading findings name —
+  L12, a `[PARKED]` task with no `## Parking handoff` (`ERROR`, fix
   `/task-implement <N>` attended), reading each parked task's body for the
   heading; L13, a runbook whose `[P]` steps and index `Parked:` line disagree
   (`WARNING`, fix `/runbook-run <id>`), reading each non-`[DONE]` runbook's
-  body for its markers, never a prompt block — and no branch probe; `feature=`
+  body for its markers; L14, a runbook header carrying both `Parallelism:`
+  and `Sequencing:` (`ERROR`, fix `/pipeline-revise` — carry the constraint
+  into `Depends on:` and drop `Sequencing:`, or drop `Parallelism:`; one
+  finding per runbook), reading every runbook's body for its header lines —
+  never a prompt block — and no branch or worktree probe, git state differing
+  across machines; `feature=`
   keeps L12 on a parked task in scope. The filesystem probe is
   its only shell use — the one stated departure from `/production-status`,
   which runs none. Runs only when invoked; no pipeline writer auto-runs it.

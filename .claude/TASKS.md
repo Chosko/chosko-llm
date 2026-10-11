@@ -683,7 +683,7 @@ Feature: parallel-runbooks
 
 ## 299. Update documentation for feature `parallel-runbooks`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, docs/cli-help.txt, .claude/context/runbook-suite.md, .claude/context/runbook-run.md, .claude/context/runbook-run-loop.md, .claude/context/runbook-run-contracts.md, .claude/context/runbook-create.md, .claude/context/runbook-readers.md, .claude/context/pipeline-readers.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 295, 296, 297, 298

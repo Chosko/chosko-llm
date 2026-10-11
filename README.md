@@ -400,14 +400,27 @@ from step one's framing. **`/runbook-create`** captures them as an ordered
 list of self-contained prompts, each written for a fresh agent that has none
 of the conversation, and checks ten rules before it writes (self-contained,
 names its document, carries every decision that exists nowhere on disk and
-nothing that already does). **`/runbook-run`** executes it one step at a
+nothing that already does); asked for a parallel runbook, it writes the
+`Parallelism:` header line and asks which steps must precede which pair by
+pair, so every ordering constraint is a `Depends on:` edge and the gate
+approves the graph, not only the list. **`/runbook-run`** executes it one step at a
 time, by default one subagent per step, relaying each agent's questions to you
-and your answers back, committing after every step. It never runs steps in
-parallel, by default never does a step's work itself, and never reviews what a
-step did; that is `/task-review`'s job, invoked from inside the step.
-`--inline` is the one opt-in exception: it executes the selected steps in your
-own session, sharing one context, instead of spawning a subagent for each.
-Relay-and-wait is the default `attended` policy. Under **`--unattended`** — or
+and your answers back, committing after every step. It never does a step's
+work itself by default, and never reviews what a step did; that is
+`/task-review`'s job, invoked from inside the step. Two opt-ins change the
+default, and they never combine. `--inline` executes the selected steps in
+your own session, sharing one context, instead of spawning a subagent for
+each. **`--parallel <N|max>`** — or a runbook header line `Parallelism:
+<N|max>`, which the flag overrides for one run — runs the runbook as its
+`Depends on:` graph instead of its list order: up to N steps in flight at
+once, each in its own worktree, started as soon as what each waits on has
+landed and landed onto the branch one at a time; list order is only the
+priority among steps that may start together, and a step that needs a person
+present lets everything in flight land before it runs in the base tree. It
+is refused on a runbook whose header carries `Sequencing:` — a *why* for an
+order the graph does not carry, which a parallel run would violate silently —
+until that constraint is made an edge. Relay-and-wait is the default
+`attended` policy. Under **`--unattended`** — or
 a runbook header line `Execution policy: unattended`, which `--attended`
 overrides for one run — the step that asked is parked (`[P]`, its question
 recorded and printed under a `P<n>` handle) and the run goes on to the steps

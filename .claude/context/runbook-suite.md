@@ -12,7 +12,8 @@ Each feature's bullet lives in its own file:
 - [runbook-run.md](./runbook-run.md) — `skills/runbook-run/`: store,
   reference files and dependencies.
 - [runbook-run-loop.md](./runbook-run-loop.md) — `skills/runbook-run/`:
-  execution policy, handles, ids, the step loop, parking, the spawn relay.
+  execution policy, the parallelism, handles, ids, the step loop (selection,
+  barriers, the landing), parking, the spawn relay.
 - [runbook-run-contracts.md](./runbook-run-contracts.md) —
   `skills/runbook-run/`: chat contract, closing report, commits, Stop-hook
   reply, hard contracts, bounds.

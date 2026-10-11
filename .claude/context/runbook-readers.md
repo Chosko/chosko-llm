@@ -33,26 +33,37 @@ Covers the runbook suite's read side: `commands/runbook-list.md` and
   index heading line (`Failed at:` continuation for `[FAILED]` only, and a
   `↳ parked: steps <ids>` continuation for a block carrying `Parked:`, after
   `Failed at:` when both), one header
-  line (`Created:`/`Source:`/`Model:` — no `Sequencing:`, `Companion:`,
-  `Last step number:` or
+  line (`Created:`/`Source:`/`Model:`, plus `Parallelism:` last **only when
+  the body carries it**, the value as written — no `Sequencing:`,
+  `Companion:`, `Last step number:` or
   re-propose count), an `Archived: <ids>   (pruned; counted as done)` line
   directly under it **only when the body carries an `Archive:` line** (absent
-  renders nothing),
+  renders nothing), an `Independent: <k> of <n> steps (Depends on: none)`
+  line closing the header region **only when the body carries
+  `Parallelism:`** (steps present with no edge, out of steps present;
+  archived ids count in neither — under a parallelism above one an edgeless
+  step is independent of every other by the runbook's own declaration, and
+  the line is what lets a reader judge that declaration before a run; noise
+  on a sequential runbook, so never printed there),
   one line per step (marker as the body carries it, `[P]` included — printed
   with nothing of its `Context:`, the question staying in the body; `deps:`
   only when non-empty and printed verbatim even when it names an archived id —
   never annotated or cross-referenced against `Archived:`, `needs:` only for an
-  authored non-`agent` value), at most
+  authored non-`agent` value, `in flight` last on a `[~]` step and no other —
+  the tag reads the marker, which a parallel run commits for the steps still
+  running; the worktree behind it is never probed, this command running no
+  shell), at most
   one `done:` line per step (sha(s) + short summary, wrong premises as a count,
   `[!]` opens `FAILED —`), no `Context:` text, then a by-marker count **that
   counts every archived id as done and as present** (schema § *An archived id
   counts as `[x]`*, so the count agrees with the heading line's progress
-  figure; `[P]` named "parked"; a fully-pruned body renders heading + header +
-  `Archived:` + count,
+  figure; `[~]` named "in flight", `[P]` named "parked"; a fully-pruned body
+  renders heading + header + `Archived:` + count,
   not an error) and the
-  "need a person present" line. **Read budget (THE READ BUDGET section):** the
+  "need a person present" line. A body with no `Parallelism:` line renders
+  exactly as a sequential one, line for line. **Read budget (THE READ BUDGET section):** the
   index plus Grep line extraction from exactly one body — header fields
-  (`Created:`, `Source:`, `Model:`, `Archive:`), step
+  (`Created:`, `Source:`, `Model:`, `Parallelism:`, `Archive:`), step
   headings, `Depends on:`, `Needs:`, first line of `Done:`, prompt fences only
   to discard matches inside them. Never a full Read of the body, never prompt
   text, never `.claude/tasks/` (archive included), `.claude/domain/`,

@@ -20,7 +20,20 @@ relay and resolve. The rest of the bullet:
   Under `unattended` the spawned preamble carries ONE sentence declaring the
   run unattended (never *non-interactive*, which an attended step's agent is
   too) — what turns on the contract's two conditional rules and what
-  `/task-implement` reads as its own UNATTENDED. **Handles**: every parked
+  `/task-implement` reads as its own UNATTENDED. **The parallelism**, one
+  value per run beside the policy: `--parallel <N|max>` when passed (an
+  integer of 1 or more, or `max`; `--parallel 1` forces a sequential run
+  over a header saying otherwise), else the header `Parallelism:`, else 1;
+  resolved in step 1 once the body is read, never written back; at 1 nothing
+  in the body changes and `worktree.md` is never opened; above one that file
+  is read once in step 1 (unit `runbook-<id>-step-<n>`, base = the launch
+  branch, this session its one writer). Its three argument errors, all
+  caught in step 1 before anything is written: `--inline` beside a
+  parallelism above one (one executor, no silent fall-back); a parallelism
+  above one — flag or header — on a header carrying `Sequencing:` (an
+  ordering constraint the graph does not carry; the error names the line and
+  the two ways out, `/pipeline-revise` or `--parallel 1`); a flag or header
+  value outside the allowed set. **Handles**: every parked
   question printed carries a `P<n>` handle, its questions `Q1`, `Q2`, … and
   options `a`, `b`, … (`Unpark P1: Q1a, Q2b`, an example, not a grammar),
   one sequence per run (pre-ask from `P1`, later parks the next unused); a
@@ -60,13 +73,57 @@ relay and resolve. The rest of the bullet:
   unselectable, untouched, not parked), mark
   `[~]`, spawn ONE subagent, **wait for the result notification** (the single
   most dangerous point — the spawn's return value is not the result), classify,
-  commit. **Four** result cases: `QUESTIONS FOR USER` → relay to user, answer back
-  to the SAME subagent, repeat; `SPAWN REQUEST` → the spawn relay, below; `DONE` + report → `[x]`, write `Done:` (terse default
+  commit. **Under a parallelism above one** the re-read is a **scheduling
+  point** (run start and every landing) and selection takes EVERY step in
+  list order whose marker is `[ ]`/`[~]`/`[!]` and whose `Depends on:` are
+  all `[x]`, while fewer than N are in flight (no bound under `max`); a step
+  in flight is neither done nor selectable, its dependents wait for its
+  landing — landing writes the `[x]` the next re-read sees — and list order
+  is priority only; the bounds apply unchanged per re-read, `--steps N`
+  counts landed steps and nothing is spawned once landed + in flight reach
+  N. Two readings added to the `[~]` bullet: a `[~]` whose
+  `.claude/worktrees/runbook-<id>-step-<n>` exists and which this run did
+  not spawn is skipped with `worktree.md`'s one line (once per step per
+  run, re-examined at the next scheduling point); a `[~]` with no worktree
+  behind it is the interrupted step, re-run. The deadlock test, the end
+  branch and the out-of-range stop are taken only when nothing is in flight;
+  a selection that picks nothing with something in flight waits for the next
+  return. A `Needs: agent+human`/`human` step is a **barrier**: when next in
+  list order nothing more is spawned, every step in flight lands (steps 6–8
+  each, no scheduling point between), it runs in the base tree exactly as a
+  sequential step — no worktree, `<WORKTREE>` the base path — and spawning
+  resumes after its commit. Every selected step is marked `[~]` before the
+  first spawns; each gets its worktree BEFORE its spawn (`.git/info/exclude`
+  line once per run, then `git worktree add -b wt/runbook-<id>-step-<n>
+  .claude/worktrees/runbook-<id>-step-<n> <base>` from the current tip —
+  a path or branch that exists skips the step with one line naming the path)
+  and is spawned `run_in_background: true`, its preamble naming that
+  directory as repository root with the base branch beside it; step 6 waits
+  for the NEXT result, whichever step's, and handles it while the others run
+  on; returns are handled one at a time in arrival order. **Four** result cases: `QUESTIONS FOR USER` → relay to user, answer back
+  to the SAME subagent, repeat (under a parallelism above one a question
+  stops only its own step — other returns land meanwhile, each relay block
+  carries its step heading, each answer goes back by agent id, and after
+  every relay one line names the steps still waiting on the user); `SPAWN REQUEST` → the spawn relay, below; `DONE` + report → under a
+  parallelism above one, **land first** per `worktree.md` § *The
+  orchestrator lands* with the two bookkeeping files the only thing
+  uncommitted in the base: `git merge --ff-only wt/runbook-<id>-step-<n>`;
+  if the base tip moved, ONE rebase-again message to the same agent then
+  fast-forward again (refused twice = the step's failure); push per the
+  cadence unless `--no-push` (a push failure stops the run, commits local);
+  `git worktree remove` then the safe `git branch -d` (a refused delete = a
+  landing that did not happen, worktree kept) — then, as on any run, `[x]`, write `Done:` (terse default
   `Done: <date>, commit <sha> (<N> files, +X/-Y)` from the report's sha +
-  diffstat; decisions / wrong premises only if a re-reader would be misled),
+  diffstat, never from git; decisions / wrong premises only if a re-reader would be misled),
   propagate facts as dated `Context:` bullets,
   update `Steps:`, commit; **anything else, incl. ambiguous → `[!]`**, index
-  `[FAILED]` + `Failed at:`, halt. Under `unattended` a **fifth row replaces
+  `[FAILED]` + `Failed at:`, halt — under a parallelism above one the failure
+  halts SPAWNING, not the steps in flight: `[!]` + `Done:` committed, nothing
+  more spawned, each remaining return landed as it arrives (a second failure
+  marked `[!]` the same way), then with nothing in flight `[FAILED]` with
+  `Failed at:` naming the first failed step; the failed step keeps its
+  worktree and the report names the path, step 3's skip-while-present line
+  keeping the next run off it. Under `unattended` a **fifth row replaces
   the first**, the policy's only change to the table: `QUESTIONS FOR USER`
   (from the step's agent, a relay child, or the inline session's own written
   outcome) → `[P]` replacing `[~]`, `- <date> parked: <question>` into
@@ -75,7 +132,11 @@ relay and resolve. The rest of the bullet:
   under the next handle in a fixed `Parked (P<n>) — Step …` block, `Parked:`
   line written, `Status:` still `[RUNNING]`, `Steps:` unmoved, committed at
   step 8 like `[x]`/`[!]`, loop; no `Done:` line, the agent never resumed —
-  the step re-runs whole in a fresh subagent once answered. Selection with
+  the step re-runs whole in a fresh subagent once answered (under a
+  parallelism above one its worktree is removed with the park — `git
+  worktree remove` + safe `git branch -d`, the agent having left the tree
+  clean of its own changes before asking — so a `[P]` step keeps no worktree
+  and re-runs in a fresh one). Selection with
   steps remaining, none selectable and one `[P]` is the **end branch**, not a
   deadlock: index back to `[PENDING]` (`Parked:` stays), commit, closing
   report naming each `[P]` step's question and the steps waiting on it;
@@ -105,7 +166,13 @@ relay and resolve. The rest of the bullet:
   failure. A child that fails **fails the step** — never reported to its caller
   as finished, which would buy a `Done:` line for work that never happened.
   Classification runs on the child's returned marker, never on the result file,
-  which is what squares it with *opens neither file*. File names are **dictated
+  which is what squares it with *opens neither file*. A relay child's
+  `<WORKTREE>` is its caller's — the child works in the caller's tree — and
+  above a parallelism of 1 the agents at work are the steps' own, each idle
+  while its own child runs; never two children for one caller at once. A
+  step running `/task-implement --parallel` routes through the relay where
+  its agent cannot spawn, and nothing is promised about a relayed child's own
+  parallelism — it may run its tasks one at a time. File names are **dictated
   by the contract** (`<runbook>-step<n>-round<r>-prompt.md` / `-result.md`), not
   left to the agent: two runs share one `$TMPDIR` and the orchestrator, never
   opening either file, could not detect a collision. Relay files are never
