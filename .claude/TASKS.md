@@ -585,7 +585,7 @@ Feature: worktree-isolation
 
 ## 289. Sweep finished units' worktrees in /task-clean and /runbook-clean
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-clean/SKILL.md, commands/runbook-clean.md, VERSION, CHANGELOG.md
 Preconditions: 288

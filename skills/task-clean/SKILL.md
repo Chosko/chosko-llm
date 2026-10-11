@@ -1,6 +1,6 @@
 ---
 name: task-clean
-version: 0.10.2
+version: 0.11.0
 type: skill
 description: Prune tasks in a terminal status from the backlog by archiving them — each summary block leaves TASKS.md and the body moves to .claude/tasks/archive/<N>.md, never deleted. Use it when finished tasks clutter the backlog; a backfill mode recovers, from git history, bodies earlier runs deleted.
 replaces: command:task-clean
@@ -15,7 +15,8 @@ requires: skill:task-engine
 # the summary block it had. No body is deleted. Every prune also sweeps the
 # `park/task-<N>` branches, local and remote, whose task is neither [PARKED]
 # nor [IN PROGRESS] — a resumed task keeps its branch as rollback source
-# until its commit — at the same confirmation. Terminal means [DONE] and
+# until its commit — and the `wt/task-<N>` worktrees and branches whose task
+# is finished, at the same confirmation. Terminal means [DONE] and
 # [SKIP] only; [STALE] is live work awaiting reconciliation and [PARKED] is
 # live work awaiting an answer, and neither is ever pruned by default. A
 # prune never opens `.claude/FEATURES.md` — a feature
@@ -41,8 +42,9 @@ on work that still needs doing. Remove the summary block from
 `.claude/TASKS.md` and move the per-task body file into the archive, where
 it keeps the record of what the task was. Rewrite every `Preconditions:`
 reference in surviving summary blocks that pointed at an archived task.
-Delete the parking branches no parked or resumed task needs any more. Always confirm
-with the user before writing. Never renumber, and never delete a body.
+Delete the parking branches no parked or resumed task needs any more, and
+remove the worktrees finished tasks left behind. Always confirm with the
+user before writing. Never renumber, and never delete a body.
 
 $ARGUMENTS
 
@@ -147,6 +149,38 @@ No orphans means no plan section and nothing said about the sweep.
 
 ---
 
+THE WORKTREE SWEEP
+
+A run under worktree isolation gives each task its own worktree at
+`.claude/worktrees/task-<N>` on a branch `wt/task-<N>`, and a task that
+failed or was interrupted leaves both behind. The rule — what a leftover
+worktree means, why an unfinished task's is never removed, and how a
+finished one's goes — is `../task-engine/references/worktree.md` § *The
+sweep*; this skill applies it on the same **"Apply?"** gate as the
+park-branch sweep, and skips it under the same `## VCS` condition. Its own
+specifics:
+
+- **List.** Worktrees with `git worktree list --porcelain`, keeping the
+  entries whose path is `.claude/worktrees/task-<N>` or whose branch is
+  `wt/task-<N>`; branches with `git branch --list 'wt/task-*'`, so a branch
+  whose worktree was already removed by hand is still found. Nothing is
+  listed on the remote: a worktree and its branch are never pushed.
+- **Finished** means task N is `[DONE]` or `[SKIP]` in `.claude/TASKS.md`
+  as PHASE 1 read it, or has no summary block there — archived, and so
+  terminal (`resolution.md` § *The archive*). A task in any other status,
+  `[IN PROGRESS]` and `[PARKED]` included, keeps its worktree and is not
+  listed: that worktree may be the only copy of the work.
+- **Remove** each finished one in PHASE 2, only after approval: `git
+  worktree remove .claude/worktrees/task-<N>`, then `git branch -d
+  wt/task-<N>`; a branch with no worktree is deleted alone. A remove or
+  delete that fails is a *Follow-ups* item in PHASE 2's report naming the
+  path and the command that failed — neither fatal nor retried, and nothing
+  else of the sweep stops for it.
+
+No finished worktree means no plan section and nothing said about the sweep.
+
+---
+
 PHASE 1 — REPORT (no file writes, no moves)
 
 1. Read `.claude/TASKS.md` and parse it as `resolution.md` § *Parsing the
@@ -155,10 +189,12 @@ PHASE 1 — REPORT (no file writes, no moves)
    `Feature:`, and reads the `Last task number: N` header value for
    information only — it does not change.
 
-2. Identify the tasks whose status matches the prune set, and list the
-   orphaned park branches per THE PARK-BRANCH SWEEP. If there are neither,
-   tell the user "No tasks to prune." and stop. With orphans but no tasks,
-   steps 3 and 4 have nothing to plan and the plan holds only the sweep.
+2. Identify the tasks whose status matches the prune set, list the
+   orphaned park branches per THE PARK-BRANCH SWEEP and the finished
+   worktrees per THE WORKTREE SWEEP. If there are none of the three, tell
+   the user "No tasks to prune." and stop. With something to sweep but no
+   tasks, steps 3 and 4 have nothing to plan and the plan holds only the
+   sweeps.
 
 3. Plan each pruned task's move: `.claude/tasks/<N>.md` →
    `.claude/tasks/archive/<N>.md`. Probe both paths with an existence
@@ -211,6 +247,10 @@ PHASE 1 — REPORT (no file writes, no moves)
      park/task-17   remote           task 17 has no summary block
      (remote not checked — --no-push)            ← only under NO_PUSH
 
+   Worktrees to remove (W):                      (omit when none)
+     .claude/worktrees/task-42   wt/task-42   task 42 is [DONE]
+     (no worktree)               wt/task-17   task 17 has no summary block
+
    Anything in [IN PROGRESS]? <yes/no — if yes, list them as a heads-up
    so the user notices unfinished work before pruning around it>
    ```
@@ -255,7 +295,8 @@ PHASE 2 — APPLY (only after explicit approval)
    references remain.
 
 7. Delete each orphaned park branch the plan listed, local and remote as
-   it named, per THE PARK-BRANCH SWEEP.
+   it named, per THE PARK-BRANCH SWEEP; remove each worktree and delete
+   each `wt/task-<N>` branch the plan listed, per THE WORKTREE SWEEP.
 
 8. Report to the user:
    - Number of summary blocks removed from `TASKS.md`.
@@ -264,6 +305,9 @@ PHASE 2 — APPLY (only after explicit approval)
    - Number of `Preconditions:` lines rewritten.
    - Each park branch deleted, local and remote, and any delete that
      failed, with its output.
+   - Each worktree removed and each `wt/task-<N>` branch deleted; a remove
+     or delete that failed as a *Follow-ups* item naming the path and the
+     command.
    - Final task count.
    - The unchanged `Last task number:` value.
 
@@ -280,17 +324,18 @@ prune, the push protocol, and what to do when a commit or a push fails — is
 form, the exact path list PHASE 2 leaves to stage — `.claude/TASKS.md` plus
 each archived file, PHASE 2's `git mv` having already staged both halves of
 every move — that PHASE 3 is its only shell use apart
-from the `mkdir -p` / `git mv` in PHASE 2 and the park-branch sweep, and
-which of the sweep's operations run under which flag. Once PHASE 2
-completes successfully the commit happens automatically — PHASE 1's
-**"Apply?"** was the run's only gate, and no further prompt is asked here.
-A run that only swept branches changed no file and commits nothing.
+from the `mkdir -p` / `git mv` in PHASE 2 and the two sweeps, and which of
+the sweeps' operations run under which flag. Once PHASE 2 completes
+successfully the commit happens automatically — PHASE 1's **"Apply?"** was
+the run's only gate, and no further prompt is asked here. A run that only
+swept branches or worktrees changed no tracked file and commits nothing.
 
 Under `--no-commit` the move still happens — it is the prune's effect, not
-a commit step — so each rename sits in the working tree; the sweep deletes
-local branches only. Report what was changed — blocks removed, each body
+a commit step — so each rename sits in the working tree; the park-branch
+sweep deletes local branches only, and the worktree sweep, local
+throughout, runs whole. Report what was changed — blocks removed, each body
 moved and where it went, `Preconditions:` lines rewritten, branches
-deleted — and stop.
+deleted, worktrees removed — and stop.
 
 DO NOT:
 - Write to any file, or move one, during PHASE 1.

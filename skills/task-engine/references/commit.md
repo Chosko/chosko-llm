@@ -159,13 +159,16 @@ that follows it is steps 3 and 4, run once per landing unless NO_PUSH.
   it. Apart from the `mkdir -p` + `git mv` of the body
   files in PHASE 2 — which replace the old `rm`, and which still run under
   `--no-commit`, because the move is the prune's effect rather than a commit
-  step — and the park-branch sweep's listing and deletes, PHASE 3 is its
-  only shell use. The sweep's local listing and deletes are its effect too
-  and run under `--no-commit`; its remote listing
+  step — and the two sweeps' listing, removes and deletes, PHASE 3 is its
+  only shell use. The park-branch sweep's local listing and deletes are its
+  effect too and run under `--no-commit`; its remote listing
   (`git ls-remote`) and deletes (`git push origin --delete`) are remote
-  operations and are skipped under NO_PUSH, which `--no-commit` implies. A
-  branch delete changes no tracked file, so it adds nothing to the commit
-  and a run that only sweeps makes none.
+  operations and are skipped under NO_PUSH, which `--no-commit` implies. The
+  worktree sweep of `./worktree.md` § *The sweep* is local throughout —
+  nothing of it is listed on or deleted from the remote — so no flag skips
+  any of it. Neither a branch delete nor a worktree remove changes a tracked
+  file, so they add nothing to the commit and a run that only sweeps makes
+  none.
 
   Under `--backfill` it commits once, with
   `git commit -m "task-clean: backfill <N> archived tasks"`, `<N>` being the

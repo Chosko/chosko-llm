@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.80.1 — 2026-10-11
+
+- **`/task-clean` sweeps finished tasks' worktrees.** Every prune lists, beside the `park/task-*` branches, each `wt/task-<N>` worktree and branch whose task is `[DONE]`, `[SKIP]` or archived, and removes them on the same "Apply?". A worktree whose task is still live is never touched; a remove that fails is a Follow-ups item, never a halt.
+- **`/runbook-clean` sweeps finished steps' worktrees.** Each `wt/runbook-<id>-step-<n>` worktree and branch whose step is `[x]`, or whose runbook the run is removing, goes on the same confirmation; any other marker keeps its worktree. Both sweeps are local and run under `--no-commit` and `--no-push`.
+
 ## 1.80.0 — 2026-10-11
 
 - **`task-engine` gains `references/worktree.md`, the worktree-isolation protocol.** One git worktree and `wt/<unit>` branch per task or runbook step under `.claude/worktrees/`: the unit's agent commits there, rebases onto the base tip and re-verifies; the orchestrator lands it by fast-forward, pushes, and removes the worktree. Read by `/task-implement` and `/runbook-run` only when a run's parallelism is above one; nothing reads it yet, and a sequential run is unchanged.

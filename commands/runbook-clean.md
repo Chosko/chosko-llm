@@ -1,6 +1,6 @@
 ---
 name: runbook-clean
-version: 0.2.5
+version: 0.3.0
 type: command
 description: Prune finished runbooks — delete each [DONE] runbook's body under .claude/runbooks/ and remove its .claude/RUNBOOKS.md index block, every finished runbook by default or exactly the ones named. Use it once a runbook's work has landed and its record is no longer needed.
 disable-model-invocation: true
@@ -19,7 +19,9 @@ requires: skill:runbook-run
 # the whole run before anything is deleted; an empty plan says so and stops.
 # A body is deleted at whatever path its `File:` line holds and never
 # renamed; survivors are never renumbered and the counter never moves down.
-# Commits and pushes the removals by default.
+# Every run also sweeps the `wt/runbook-<id>-step-<n>` worktrees and
+# branches whose step is [x], or whose runbook it is removing, at the same
+# confirmation. Commits and pushes the removals by default.
 # Usage: /runbook-clean
 #        /runbook-clean <id|name|id-name> [<id|name|id-name> ...]
 #        /runbook-clean [<id|name|id-name> ...] --no-commit   (delete, skip the commit and push)
@@ -34,7 +36,8 @@ requires: skill:runbook-run
 GOAL
 Remove finished runbooks so the store stays useful for the one question it
 exists to answer — what is still to be done, and how far it got. Delete both
-the body file and the index block. Always confirm before writing.
+the body file and the index block, and remove the worktrees finished steps
+left behind. Always confirm before writing.
 
 Removal is an **explicit act, never a consequence of completion**. Reaching
 `[DONE]` deletes nothing on its own: the `Done:` lines are the record of what
@@ -103,6 +106,47 @@ in the runbook vocabulary at all.
 
 ---
 
+THE WORKTREE SWEEP
+
+A parallel `/runbook-run` gives each step its own worktree at
+`.claude/worktrees/runbook-<id>-step-<n>` on a branch
+`wt/runbook-<id>-step-<n>`, and a step that failed or was interrupted leaves
+both behind. The rule — what a leftover worktree means, why an unfinished
+step's is never removed, and how a finished one's goes — is
+`../skills/task-engine/references/worktree.md` § *The sweep*, reached
+through `/runbook-run`'s own requirement on the engine; this command applies
+it on the same **"Apply?"** gate as the removals, and skips it when the
+project's CLAUDE.md carries a `## VCS` section — there are no worktrees to
+sweep. Its own specifics:
+
+- **List.** Worktrees with `git worktree list --porcelain`, keeping the
+  entries whose path is `.claude/worktrees/runbook-<id>-step-<n>` or whose
+  branch is `wt/runbook-<id>-step-<n>`; branches with
+  `git branch --list 'wt/runbook-*'`, so a branch whose worktree was already
+  removed by hand is still found. Nothing is listed on the remote: a
+  worktree and its branch are never pushed.
+- **Finished** means runbook `<id>` is in the set STAGE 1 resolved for
+  removal, or its index block's `File:` body holds step `<n>` as `[x]` as
+  the schema reads it — an id on the header's `Archive:` line included.
+  Reading that body for the marker is the one reason this command opens a
+  body it is not deleting. A step with any other marker keeps its worktree
+  and is not listed: that worktree may be the only copy of the work. A
+  worktree whose runbook has no index block, or whose step the body does
+  not hold, is kept too, and named in STAGE 3's report as left in place.
+- **Remove** each finished one in STAGE 3, only after approval:
+  `git worktree remove .claude/worktrees/runbook-<id>-step-<n>`, then
+  `git branch -d wt/runbook-<id>-step-<n>`; a branch with no worktree is
+  deleted alone. A remove or delete that fails is a *Follow-ups* item in
+  STAGE 3's report naming the path and the command that failed — neither
+  fatal nor retried, and nothing else of the sweep stops for it.
+
+The sweep is local and changes no tracked file: it runs whole under
+`--no-commit` and `--no-push`, and a run that only sweeps commits nothing.
+No finished worktree means no plan section and nothing said about the
+sweep.
+
+---
+
 STAGE 1 — RESOLVE (no file writes, no deletions)
 
 1. Read `.claude/RUNBOOKS.md`. If it does not exist, or holds no blocks, that
@@ -116,9 +160,10 @@ STAGE 1 — RESOLVE (no file writes, no deletions)
    STAGE 3**, with the deletions, under the same **"Apply?"**. Say in the plan
    that the backfill will land.
 
-   It is written only on a run that reaches STAGE 3. An empty plan stops at
-   step 6 below without writing anything, backfill included — the schema gives
-   the backfill to the first command that *writes* the index, and a run that
+   It is written only on a run that deletes a runbook in STAGE 3. An empty
+   plan stops at step 7 below without writing anything, backfill included, and
+   a run that only sweeps writes nothing either — the schema gives the
+   backfill to the first command that *writes* the index, and a run that
    deletes nothing never does.
 
 2. Parse every block per `runbook-schema.md` § *The index block*: the id, the
@@ -161,10 +206,15 @@ STAGE 1 — RESOLVE (no file writes, no deletions)
    refusal, drop that runbook from the set, and carry on to STAGE 2 with what
    is left.
 
-6. **An empty plan says so and stops**, without asking anything — no
-   confirmation prompt for a no-op. With no argument: "No `[DONE]` runbooks to
+6. List the finished worktrees per THE WORKTREE SWEEP, the removal set now
+   known.
+
+7. **An empty plan says so and stops**, without asking anything — no
+   confirmation prompt for a no-op. A plan is empty when there is nothing
+   to remove and nothing to sweep. With no argument: "No `[DONE]` runbooks to
    prune." With names, where every one was refused: say that nothing remains
-   eligible after the refusals.
+   eligible after the refusals. With worktrees to sweep but no runbook to
+   remove, the plan holds only the sweep.
 
 ---
 
@@ -190,6 +240,10 @@ Runbooks to remove (2):
 Refused (1):
   2. cli-dependency-field  [FAILED] — only [DONE] is eligible
 
+Worktrees to remove (2):
+  .claude/worktrees/runbook-1-step-7   wt/runbook-1-step-7   runbook 1 is being removed
+  (no worktree)                        wt/runbook-3-step-2   step 2 of runbook 3 is [x]
+
 Nothing else in .claude/runbooks/ is touched.
 ```
 
@@ -205,7 +259,8 @@ Nothing else in .claude/runbooks/ is touched.
   is unexpectedly missing is **noted in the plan** — `(body file: … —
   MISSING)` — and does not error out; its index block is still removed, which
   is exactly the reconciliation the user wants.
-- Omit the `Refused` section entirely when nothing was refused.
+- Omit the `Refused` section entirely when nothing was refused, and the
+  `Worktrees to remove` section when there is nothing to sweep.
 
 End with a single explicit prompt: **"Apply?"**
 
@@ -249,12 +304,19 @@ STAGE 3 — REMOVE AND COMMIT (only after explicit approval)
 5. **Never edit a body file.** The only thing this command does to a body is
    delete it whole.
 
-6. Report:
+6. Remove each worktree and delete each `wt/runbook-<id>-step-<n>` branch
+   the plan listed, per THE WORKTREE SWEEP.
+
+7. Report:
    - Each runbook removed, by id and name, with its status and steps.
    - The body files deleted, and any that were already missing.
    - The index blocks removed.
    - Each runbook refused and why, repeated from the plan so the closing
      report is complete on its own.
+   - Each worktree removed and each branch deleted; a remove or delete that
+     failed as a *Follow-ups* item naming the path and the command; any
+     worktree the sweep left in place because it could not tell its step
+     was finished.
    - The number of runbooks remaining in the index.
 
 ### Commit and push
@@ -266,8 +328,9 @@ STAGE 2's **"Apply?"** has already served as the review pass that an authoring
 command's uncommitted output exists to allow. STAGE 2 is this run's only gate;
 no further prompt is asked here.
 
-Under `--no-commit`, the `rm` in STAGE 3 is this command's only shell use:
-report what was removed and stop.
+Under `--no-commit`, the `rm` in STAGE 3 and the worktree sweep's listing,
+removes and deletes are this command's only shell use: report what was
+removed and stop.
 
 Otherwise follow the commit-and-push protocol — four steps, in this order:
 
@@ -328,11 +391,12 @@ DO NOT:
   `../skills/runbook-run/references/runbook-schema.md`,
   cited and never copied.
 - Touch `.claude/TASKS.md`, `.claude/FEATURES.md`, or any file outside
-  `.claude/runbooks/` and `.claude/RUNBOOKS.md`. Runbooks carry no cross-store
+  `.claude/runbooks/`, `.claude/RUNBOOKS.md` and the worktrees under
+  `.claude/worktrees/` the sweep removes. Runbooks carry no cross-store
   references — nothing points at a runbook the way a task's `Preconditions:`
   line points at a task id — so there is nothing to rewrite after a removal,
   and names of removed runbooks are not reserved.
 - Run, resume, author or append to a runbook. Those are `/runbook-run` and
   `/runbook-create`.
-- Run any git command other than the protocol above; never force-push, retry a
-  failed push, branch, or tag.
+- Run any git command other than the protocol above and the worktree sweep's;
+  never force-push, retry a failed push, branch, or tag.

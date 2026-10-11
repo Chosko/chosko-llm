@@ -1064,7 +1064,12 @@ left behind. A resumed task keeps its branch until its commit, as the backup
 of its parked work. With none
 to sweep the plan says nothing about it; a delete that fails is reported, not
 fatal. Under `--no-push` remote branches are neither listed nor deleted, and a
-run that only sweeps commits nothing.
+run that only sweeps commits nothing. Beside the branches it **sweeps the
+worktrees of finished tasks**: each `wt/task-<N>` worktree and branch a
+parallel run left behind whose task is `[DONE]`, `[SKIP]` or archived is
+listed and removed on the same approval, locally — nothing of it was ever
+pushed — while a worktree whose task is still live is never touched, since it
+may be the only copy of the work. A remove that fails is a Follow-ups item.
 
 A prune never touches `.claude/FEATURES.md`. A feature keeps every task id it
 ever generated on its `Tasks:` line, so `Tasks: none` means the feature was
@@ -1331,7 +1336,10 @@ that has none of the conversation the prompts came out of.
   removing a runbook is `/runbook-clean`'s job.
 - `/runbook-clean` — delete finished runbooks, planning and confirming first.
   The pair to `/runbook-prune`: prune removes finished *steps* from a live
-  runbook, clean removes finished *runbooks*.
+  runbook, clean removes finished *runbooks*. On the same confirmation it
+  sweeps the `wt/runbook-<id>-step-<n>` worktrees and branches a parallel run
+  left behind whose step is `[x]`, or whose runbook it is removing; any other
+  marker keeps its worktree.
 - `runbook-suggest` — a skill nobody invokes. It fires on its own description
   (written to the auto-trigger budget: trigger phrases first, "Not for" list
   last, at most 150 words) when a conversation produces a list worth
