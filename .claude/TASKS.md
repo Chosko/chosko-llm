@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 291
+Last task number: 294
 
 ---
 
@@ -610,5 +610,34 @@ Target: claude
 Files: README.md, docs/reference.md, .claude/context/task-engine.md, .claude/context/task-backlog.md, .claude/context/runbook-pruners.md, .claude/context/claude-md-hook-statusline.md, .claude/context/pipeline-dashboard.md, .claude/context/features.md, .claude/context/INDEX.md, .claude/domain/task-workflow.md
 Preconditions: 288, 289, 290
 Feature: worktree-isolation
+
+---
+## 292. Add --parallel <N|max> to /task-implement with the scheduler, barriers and landing
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, skills/task-engine/references/resolution.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
+Preconditions: 288
+Feature: parallel-task-runs
+
+---
+
+## 293. Add the Files: overlap rule and the Parallel-safe files marker
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, CLAUDE.md, VERSION, CHANGELOG.md
+Preconditions: 292
+Feature: parallel-task-runs
+
+---
+
+## 294. Update documentation for feature `parallel-task-runs`
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/reference.md, docs/cli-help.txt, .claude/context/task-implement.md, .claude/context/task-implement-delegation.md, .claude/context/task-engine.md, .claude/context/features.md, .claude/context/INDEX.md, .claude/domain/task-workflow.md
+Preconditions: 292, 293
+Feature: parallel-task-runs
 
 ---
