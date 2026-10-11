@@ -52,7 +52,7 @@ Canonical project docs live outside this folder, stay authoritative:
 | [task-engine.md](./task-engine.md) | `task-engine`, the non-invocable reference engine the `task-*` suite and `/runbook-run` read, and its `references/` files — the worktree protocol among them. |
 | [task-add.md](./task-add.md) | `task-add`, the backlog's authoring command. |
 | [task-implement.md](./task-implement.md) | `task-implement` — common path, supporting files, unattended parking, body reading, human-in-the-loop tasks, testing policy, `[STALE]` handling, `Preconditions:`. |
-| [task-implement-delegation.md](./task-implement-delegation.md) | `task-implement` — delegated runs (`--agents`), per-task commits, the feature-completion proposal, the closing report. |
+| [task-implement-delegation.md](./task-implement-delegation.md) | `task-implement` — delegated runs (`--agents`; `--parallel <N\|max>` with its scheduler, overlap rule, barriers and landing), per-task commits, the feature-completion proposal, the closing report. |
 | [task-implement-review.md](./task-implement-review.md) | `task-implement --review` — the review/iterate loop, its flags, the reviewer spawn. |
 | [task-review-iterate.md](./task-review-iterate.md) | The review pair — `task-review`, `task-iterate`. |
 | [runbook-suite.md](./runbook-suite.md) | The runbook suite's family-wide contract and domain pointers; hub for `runbook-run`, `runbook-create`, `runbook-list`, `runbook-describe`, `runbook-clean`, `runbook-prune`, `runbook-suggest`, `follow-ups` and `follow-ups-resolve`. |

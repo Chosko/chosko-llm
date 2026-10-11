@@ -634,7 +634,7 @@ Feature: parallel-task-runs
 
 ## 294. Update documentation for feature `parallel-task-runs`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, docs/cli-help.txt, .claude/context/task-implement.md, .claude/context/task-implement-delegation.md, .claude/context/task-engine.md, .claude/context/features.md, .claude/context/INDEX.md, .claude/domain/task-workflow.md
 Preconditions: 292, 293
