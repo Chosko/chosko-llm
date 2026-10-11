@@ -13,7 +13,7 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
   not-invocable statement, as a two-line "read by path; not invoked" `#`
   header, for an agent that opened the file without reading frontmatter;
   that frontmatter carries `disable-model-invocation: true` ([feature-contract.md](./feature-contract.md) § Public API).
-  Nine files under `references/`, one authority each:
+  Ten files under `references/`, one authority each:
   `resolution.md` (`.claude/TASKS.md` schema and parsing — appearance
   order is the backlog's order and need not be numeric, since
   `/task-add --before`/`--after` insert mid-file under the next id — the
@@ -73,11 +73,29 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
   — after its Step 7 commit and push, best-effort, a failed delete a
   Follow-ups item (a delegated agent's fifth field) and never a halt, the
   branch kept under `--no-commit`; the answerer rule; the two
-  refusals, `--unattended` beside `--no-commit` and on a non-git VCS). A
+  refusals, `--unattended` beside `--no-commit` and on a non-git VCS), and
+  `worktree.md` (worktree isolation for a unit of work — `task-<N>` or
+  `runbook-<id>-step-<n>`, named by its orchestrator: the derived
+  `.claude/worktrees/<unit>` path and `wt/<unit>` branch, never recorded,
+  git's worktree list the registry; `git worktree add -b` from the base tip
+  right before the spawn, `.claude/worktrees/` added to `.git/info/exclude`
+  once; the agent's five integration steps — commit on `wt/<unit>`, rebase
+  onto the base tip, resolve a conflict by re-applying its own intent,
+  re-verify when the base moved, return naming the tip — never pushing, the
+  pull/re-sync/push skipped as under `--no-push`; the orchestrator's landing
+  — `git merge --ff-only`, one re-rebase round through the same agent when
+  the tip moved, push per `commit.md`, `git worktree remove` + `git branch
+  -d` whose refusal fails the unit; the two invariants, one writer and a
+  clean base tree at every landing; a worktree as the in-flight signal every
+  reader consults and the skip-while-present rule; failure keeping the
+  worktree; parking run inside it; § *The sweep*, which the two pruners cite.
+  Read by `/task-implement` and `/runbook-run` only when a run's parallelism
+  is above one; authored in the engine like `amend.md` and `parking.md`). A
   consumer cites the file by a path **relative to the citing body** and
   states only its own deviations. Installed like any other skill (`cp -R`
   of the folder) — see `../domain/features/shared-phase-engine.md`. Its
-  five consumers declare `requires: skill:task-engine`.
+  six consumers declare `requires: skill:task-engine`, `/runbook-run` for
+  `worktree.md` alone.
 
 ## Public API
 
@@ -98,7 +116,12 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
 - [task-suite.md](./task-suite.md) — the task-suite hub and its file list.
 - Consumers: [task-add.md](./task-add.md), [task-backlog.md](./task-backlog.md),
   [task-implement.md](./task-implement.md),
-  [task-review-iterate.md](./task-review-iterate.md).
+  [task-review-iterate.md](./task-review-iterate.md),
+  [runbook-run.md](./runbook-run.md) (`worktree.md` only).
+- Readers of the in-flight signal: [claude-md-hook-statusline.md](./claude-md-hook-statusline.md)
+  (`pipeline-statusline`), [pipeline-dashboard.md](./pipeline-dashboard.md);
+  the sweeps: [task-backlog.md](./task-backlog.md) (`task-clean`),
+  [runbook-pruners.md](./runbook-pruners.md) (`runbook-clean`).
 
 ## When to read the source
 

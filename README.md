@@ -354,7 +354,8 @@ Every run ends with one closing report — *For the record*, then a numbered
 
 Install **`pipeline-dashboard`** and every `/task-implement` or `/runbook-run`
 keeps a private web page live while it runs: the active milestone, the
-runbook's steps, every task, and a banner with the question the run is
+runbook's steps, every task — a task or step in flight in its own worktree
+shown in progress — and a banner with the question the run is
 waiting on, so you can follow it from your phone. Ask "a che punto siamo"
 for the same picture as text in chat.
 
@@ -372,8 +373,14 @@ it.
 Around them, **`/task-list`** shows the backlog (grouped by milestone when a
 plan exists, with blocked features flagged) and **`/task-clean`** archives
 finished tasks out of it, moving each body under `.claude/tasks/archive/`
-rather than deleting it. The rules they all share live once, in the **`task-engine`**
-skill, which installs automatically alongside the commands that read it.
+rather than deleting it, and sweeps away the worktree and branch a parallel
+run left behind for each of them. The rules they all share live once, in the **`task-engine`**
+skill, which installs automatically alongside the commands that read it —
+among them the worktree protocol a run follows when it has more than one
+task in flight: each task works in its own git worktree under
+`.claude/worktrees/` on its own branch, rebases onto the base branch itself,
+and is landed by a fast-forward, so a task still makes exactly one commit and
+the worktree's presence is what marks it in flight.
 
 The build commands commit and push by default (`--no-commit`, `--no-push`).
 [Details →](docs/reference.md#5-building-and-reviewing)
@@ -408,7 +415,8 @@ or after the closing report unparks a step too.
 `/runbook-describe`, `/runbook-prune` and `/runbook-clean` round out the set —
 prune removes the finished **steps** from one live runbook, recording their ids
 on an `Archive:` line so a surviving `Depends on:` still resolves, while clean
-removes finished **runbooks** — and `runbook-suggest` fires on its own when a
+removes finished **runbooks** and sweeps the worktrees a parallel run left
+behind for finished steps — and `runbook-suggest` fires on its own when a
 conversation produces a list worth capturing.
 
 **`/follow-ups`** is for what the conversation is about to lose. It reads the
@@ -475,7 +483,8 @@ ends. Meaning-preserving, never a style compressor. Uncommitted by default.
   context usage, cost and rate limits in the status bar. Global-only.
 - **`statusline:pipeline-statusline`** shows the same session line plus the
   project's pipeline progress — the current runbook, the tasks it covers,
-  each task in progress. **`/pipeline-statusline`** wires it into
+  each task in progress, whether flipped in the backlog or in flight in its
+  own worktree. **`/pipeline-statusline`** wires it into
   `settings.json`, backs up the status line it replaces and restores it on
   `uninstall`. Global-only.
 

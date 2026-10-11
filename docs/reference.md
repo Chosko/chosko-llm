@@ -1108,7 +1108,11 @@ touch it.
 The page shows the `[ACTIVE]` milestone of `PLAN.md` (every task when there
 is no plan), three meters — runbook steps, tasks done, features closed — the
 step in progress with its tasks, and the runbook's steps one row each, with a
-square per task and the step's `Done:` line. When the run waits for an answer,
+square per task and the step's `Done:` line. A task working in a
+`wt/task-<N>` worktree shows as in progress and a step working in a
+`wt/runbook-<id>-step-<n>` worktree as the running step, read from git's own
+worktree registry under the repository's git dir — the generator runs no git
+command for it. When the run waits for an answer,
 a banner and a dialog show the question, its options and the recommended one;
 you still answer in the terminal. The page refreshes at run start and end, on
 every task status change (watched every 10 seconds with the Monitor tool), on
@@ -1130,8 +1134,9 @@ The rules the task features share (how a task is resolved from `TASKS.md`,
 where an archived task lives and what an id missing from `TASKS.md` means,
 what each status means, what `Target:` gates, how `[STALE]` is handled, the
 dirty-tree prompt, how commits and pushes are gated, the review cost
-controls behind `--review-model` / `--review-effort`, and how a task is
-parked and unparked under `--unattended`) live once, in the
+controls behind `--review-model` / `--review-effort`, how a task is
+parked and unparked under `--unattended`, and how a unit of work is isolated
+in a worktree of its own) live once, in the
 `task-engine` skill, and each feature references them instead of restating
 them. `task-engine` is not a command you invoke; it is a reference library
 the others read while they run, and it carries
@@ -1139,7 +1144,7 @@ the others read while they run, and it carries
 model and it is never suggested — it stays listed and typeable, and its
 body opens with a two-line "read by path; not invoked" header, which is
 what `chosko-llm show task-engine` prints. `/task-add`, `/task-list`, `/task-clean`,
-`/task-implement` and `/task-review` all declare
+`/task-implement`, `/task-review` and `/runbook-run` all declare
 `requires: skill:task-engine`, so installing any one of them installs the
 engine too, and `chosko-llm rm skill:task-engine` refuses while any of them
 is still installed.
@@ -1160,6 +1165,22 @@ take their default instead, the `## Parking handoff` section, the
 unpark is attempted and the two refusals. `/task-implement` reads it only
 under `--unattended` or when a task in its list is `[PARKED]`; an attended
 run that meets no parked task never opens it.
+
+A tenth, `references/worktree.md`, holds the worktree protocol under which a
+unit of work — a task under `/task-implement`, a step under `/runbook-run` —
+runs in a git worktree of its own: the worktree at `.claude/worktrees/<unit>`
+and the branch `wt/<unit>`, both derived from the unit's name and never
+recorded; the worktree created from the base branch's tip right before the
+unit's agent is spawned; the agent committing there, rebasing onto the base
+tip, re-verifying when the base had moved, and never pushing; the
+orchestrating session landing the branch by fast-forward only, as the base
+branch's one writer, pushing, then removing the worktree and its branch. A
+worktree exists exactly while its unit is in flight or after it failed, which
+is what the status line, the dashboard and the two sweeps read. Both
+orchestrators read it only when a run has more than one unit in flight; a
+sequential run never opens it and works in the base tree as it always has. It
+is the one file `/runbook-run` takes from the engine, and the reason it
+declares `requires: skill:task-engine`.
 
 ### `pipeline-engine`
 
@@ -1431,7 +1452,9 @@ anything, the closing report's **Follow-ups** group comes in two sections,
 **Approved** then **Awaiting approval**, and the approved items start running
 right after the report, without another reply, unless one depends on an item
 you haven't approved yet. `/runbook-run` requires `follow-ups-resolve`, so the
-two install together.
+two install together; it requires `task-engine` as well, for the worktree
+protocol a run with more than one step in flight follows
+([`task-engine`](#task-engine)).
 
 **When a step needs a subagent of its own.** In some environments, cloud
 sessions among them, a subagent can't spawn a subagent, which breaks any step
@@ -1872,11 +1895,16 @@ session — model, folder, branch (or short SHA when detached), context, cost,
 `.claude/RUNBOOKS.md` or `.claude/TASKS.md`, line 2 adds the current runbook
 (the first `[RUNNING]`, else the last) with its step progress, and the
 progress of the tasks in scope with how many are in progress; one more line
-follows per `[IN PROGRESS]` task in scope. The tasks in scope are, first
+follows per task in scope that is `[IN PROGRESS]` or working in a
+`wt/task-<N>` worktree — such a task counts as in progress whatever its
+`TASKS.md` status, since the flip it made lives in the worktree's copy. The
+tasks in scope are, first
 match wins: a range in the runbook's title; the ids its step headings name,
 or, when none does, its steps' `Done:` lines; the tasks of the `[ACTIVE]`
 milestone's features in `PLAN.md`; every task. An archived task in scope
-counts as done. It runs as a single `awk` process with no other fork, so it
+counts as done. It runs as a single `awk` process with no other fork — the
+worktrees are read from git's registry under the repository's git dir, never
+through the git binary — so it
 renders in well under a second even on Windows, and anything missing is
 simply left out.
 

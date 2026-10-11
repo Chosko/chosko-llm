@@ -2,7 +2,7 @@
 
 Layout: flat
 
-Last updated: 2026-10-02
+Last updated: 2026-10-11
 
 Nav layer for `chosko-llm`. How to read it: `../../CLAUDE.md` § Navigation.
 
@@ -45,11 +45,11 @@ Canonical project docs live outside this folder, stay authoritative:
 | [context-skills.md](./context-skills.md) | The navigation-context skills — `context-build`, `context-update`, `context-convert`. |
 | [session-handoff.md](./session-handoff.md) | The session-handoff pair — `session-save`, `session-resume`. |
 | [refactor-doc-consolidate.md](./refactor-doc-consolidate.md) | Behaviour-preserving rewrite tools — `refactor-codebase`, `refactor-tests`, `doc-consolidate`. |
-| [pipeline-dashboard.md](./pipeline-dashboard.md) | `skills/pipeline-dashboard/` — the always-on progress dashboard: the main-session protocol, the single-awk generator, the status watcher, the page asset, per-project state outside the tree. |
-| [claude-md-hook-statusline.md](./claude-md-hook-statusline.md) | The shipped claude-md artifacts (`tool-usage-policy`, `editing-discipline`, `git-commit-style`), the `remote-session-protocol` hook, the `session-statusline` and `pipeline-statusline` statuslines, and the `/pipeline-statusline` command that wires the latter. |
+| [pipeline-dashboard.md](./pipeline-dashboard.md) | `skills/pipeline-dashboard/` — the always-on progress dashboard: the main-session protocol, the single-awk generator and its worktree in-flight probe, the status watcher, the page asset, per-project state outside the tree. |
+| [claude-md-hook-statusline.md](./claude-md-hook-statusline.md) | The shipped claude-md artifacts (`tool-usage-policy`, `editing-discipline`, `git-commit-style`), the `remote-session-protocol` hook, the `session-statusline` and `pipeline-statusline` statuslines (the latter with its worktree in-flight probe), and the `/pipeline-statusline` command that wires the latter. |
 | [task-suite.md](./task-suite.md) | The `task-*` suite's family-wide contract and domain pointers; hub for `task-setup`, `task-add`, `task-list`, `task-clean`, `task-implement`, `task-review`, `task-iterate` and `task-engine`. |
-| [task-backlog.md](./task-backlog.md) | Backlog maintenance — `task-setup`, `task-clean`, `task-list`. |
-| [task-engine.md](./task-engine.md) | `task-engine`, the non-invocable reference engine the `task-*` suite reads, and its `references/` files. |
+| [task-backlog.md](./task-backlog.md) | Backlog maintenance — `task-setup`, `task-clean` (the archive, the park-branch and worktree sweeps), `task-list`. |
+| [task-engine.md](./task-engine.md) | `task-engine`, the non-invocable reference engine the `task-*` suite and `/runbook-run` read, and its `references/` files — the worktree protocol among them. |
 | [task-add.md](./task-add.md) | `task-add`, the backlog's authoring command. |
 | [task-implement.md](./task-implement.md) | `task-implement` — common path, supporting files, unattended parking, body reading, human-in-the-loop tasks, testing policy, `[STALE]` handling, `Preconditions:`. |
 | [task-implement-delegation.md](./task-implement-delegation.md) | `task-implement` — delegated runs (`--agents`), per-task commits, the feature-completion proposal, the closing report. |
@@ -61,7 +61,7 @@ Canonical project docs live outside this folder, stay authoritative:
 | [runbook-run-contracts.md](./runbook-run-contracts.md) | `runbook-run` — chat contract, closing report, commit convention, Stop-hook reply, hard contracts, range bounds, depth budget. |
 | [runbook-create.md](./runbook-create.md) | `runbook-create`, the runbook author. |
 | [runbook-readers.md](./runbook-readers.md) | The runbook read side — `runbook-list`, `runbook-describe`. |
-| [runbook-pruners.md](./runbook-pruners.md) | The runbook pruners — `runbook-clean`, `runbook-prune`. |
+| [runbook-pruners.md](./runbook-pruners.md) | The runbook pruners — `runbook-clean` (with its worktree sweep), `runbook-prune`. |
 | [follow-ups.md](./follow-ups.md) | `runbook-suggest`, one of the two artifacts nobody invokes; `follow-ups` and `follow-ups-resolve`. |
 | [pipeline.md](./pipeline.md) | The product pipeline's family-wide contract; `pipeline-engine`, the non-invocable reference engine, and the routing guard; `pipeline-suggest`, the other artifact nobody invokes; hub for the stage, reader and revision files. |
 | [product-design.md](./product-design.md) | Stage 1, `product-design`, and the vendored `claude-council` its council gate delegates to. |
