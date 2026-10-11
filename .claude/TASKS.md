@@ -614,7 +614,7 @@ Feature: worktree-isolation
 ---
 ## 292. Add --parallel <N|max> to /task-implement with the scheduler, barriers and landing
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, skills/task-engine/references/resolution.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
 Preconditions: 288

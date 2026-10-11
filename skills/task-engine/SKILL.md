@@ -1,6 +1,6 @@
 ---
 name: task-engine
-version: 0.8.1
+version: 0.9.0
 type: skill
 description: Reference library for the task-* features — one authority per rule they share, under references/; read by path by the task-* commands and skills, by /runbook-run and by the pipeline revision surface, never invoked.
 disable-model-invocation: true
@@ -44,7 +44,7 @@ disable-model-invocation: true
 
 | Reference file | Owns |
 | -------------- | ---- |
-| `references/resolution.md` | Where the backlog lives, the `.claude/TASKS.md` summary-block schema, the not-initialised stop, when a per-task body file may be opened, the task archive (its location, the archived-file form and the archived-and-terminal rule), the `all` / `next` / explicit-list selectors, and the eligibility clause — implementable status plus satisfied `Preconditions:` — that the batch selectors honour. |
+| `references/resolution.md` | Where the backlog lives, the `.claude/TASKS.md` summary-block schema, the not-initialised stop, when a per-task body file may be opened, the task archive (its location, the archived-file form and the archived-and-terminal rule), the `all` / `next` / explicit-list selectors, and the eligibility clause — implementable status plus satisfied `Preconditions:`, a unit in flight neither done nor eligible under a parallelism above one — that the batch selectors honour. |
 | `references/status.md` | The nine status tags and what each means, which are terminal, which are implementable, how a status filter is accepted, and the legal transitions. |
 | `references/targets.md` | The three `Target:` values, the `## Manual interventions` pairing rule, what each target means at implementation time, and the delegation guard. |
 | `references/stale.md` | What `[STALE]` means, who sets and clears it, how the originating feature is found, and how each feature treats a stale task. |

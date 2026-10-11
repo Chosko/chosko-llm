@@ -1,8 +1,8 @@
 ---
 name: task-implement
-version: 1.11.0
+version: 1.12.0
 type: skill
-description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
+description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run; `--parallel <N|max>` keeps up to N delegated tasks in flight at once, each in its own worktree. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups
 ---
 
@@ -21,7 +21,10 @@ requires: skill:task-engine, command:follow-ups
 # `claude+human` pauses at declared Manual interventions checkpoints, target
 # `human` runs as a guided walkthrough; on a Unity project with the MCP
 # plugin connected those checkpoints can be driven in the editor. On 2+
-# tasks offers one fresh subagent per task, sequentially. Under `--review`
+# tasks offers one fresh subagent per task, sequentially; `--parallel <N|max>`
+# keeps up to N of them in flight at once — every eligible task under `max` —
+# each in its own worktree, scheduled by `Preconditions:` and landed onto
+# the base branch one at a time as they return. Under `--review`
 # each task is reviewed by `/task-review` in a subagent and corrected by
 # `/task-iterate` before its single commit; unresolved `BLOCKING` findings
 # after the last round stop the run with the task `[IN PROGRESS]`. When a
@@ -42,6 +45,8 @@ requires: skill:task-engine, command:follow-ups
 #        /task-implement <args> -y            (skip-tests mode: no per-task Proceed? prompt)
 #        /task-implement <args> --agents      (2+ tasks: one fresh subagent per task, sequentially)
 #        /task-implement <args> --no-agents   (2+ tasks: run everything in this conversation)
+#        /task-implement <args> --parallel <N>   (2+ tasks: up to N agents in flight at once, each in its own worktree; implies --agents)
+#        /task-implement <args> --parallel max   (every eligible task in flight at once)
 #        /task-implement <args> --review      (review each task before committing it)
 #        /task-implement <args> --review --rounds N  (up to N review/iterate rounds; default 1)
 #        /task-implement <args> --review --review-model <name>|same|auto   (reviewer's model; default auto)
@@ -56,6 +61,8 @@ requires: skill:task-engine, command:follow-ups
 #           /task-implement all --no-push
 #           /task-implement all -y
 #           /task-implement all -y --agents
+#           /task-implement all --parallel 3
+#           /task-implement all --parallel max --review --unattended
 #           /task-implement 12 --review
 #           /task-implement 12 --review --rounds 3
 #           /task-implement 12 --review --review-model sonnet
@@ -82,6 +89,11 @@ uncommitted tree, so its fixes ride in the task's own single commit — see
 Under UNATTENDED a question about the work parks the task instead of
 halting the run — see PARKED TASKS.
 
+Under PARALLEL the delegated tasks run several at a time, each in its own
+worktree, and the launcher lands each one onto the base branch as it
+returns — `./delegated-runs.md` § *The scheduler* and
+`../task-engine/references/worktree.md`. Without the flag nothing changes.
+
 A step that fails and cannot be resolved by fixing the code stops the whole
 run — see FAILURE HANDLING. A completed task carrying a `Feature:` line may
 make its feature a completion candidate — see FEATURE COMPLETION. However the
@@ -97,7 +109,7 @@ $ARGUMENTS
 
 SHARED RULES (the `task-engine`)
 
-Eight rules this skill shares with the rest of the `task-*` suite have exactly
+Nine rules this skill shares with the rest of the `task-*` suite have exactly
 one authority each, under
 `../task-engine/references/`:
 `resolution.md` (where the backlog lives and how a run resolves its task
@@ -105,8 +117,9 @@ list), `status.md` (the status vocabulary), `targets.md` (the `Target:`
 values and the delegation guard), `stale.md` (`[STALE]`), `tree.md` (the
 dirty-tree protocol), `commit.md` (commit and push gating),
 `review-budget.md` (the review cost controls behind `--review-model` /
-`--review-effort`) and `parking.md` (task parking under the `unattended`
-policy — read only on the condition SUPPORTING FILES gives). Every one of
+`--review-effort`), `parking.md` (task parking under the `unattended`
+policy) and `worktree.md` (one worktree per task under `--parallel`) — the
+last two read only on the conditions SUPPORTING FILES gives. Every one of
 them carries a `/task-implement` note holding this skill's own departures.
 
 The sections below cite those files where they apply and state only what is
@@ -128,7 +141,8 @@ tasks. Everything below is loaded only when its branch actually applies.
 | `./human-in-loop.md` | The current task's `Target:` is `claude+human` or `human`. |
 | `./unity-mcp-checkpoints.md` | A `claude+human`/`human` task where CLAUDE.md carries the `Unity MCP for /task-implement:` marker AND the `mcp__UnityMCP__*` tools are present this session (read after `./human-in-loop.md`, per its gate). |
 | `./body-schemas.md`  | The task body does NOT match the current schema (Goal / Acceptance criteria / Decisions / Hints). |
-| `./delegated-runs.md` | DELEGATE is true — the resolved list holds 2+ tasks and the user opted into per-task subagents (or passed `--agents`). Never on a single-task run, nor when the user declined. |
+| `./delegated-runs.md` | DELEGATE is true — the resolved list holds 2+ tasks and the user opted into per-task subagents (or passed `--agents`, or `--parallel`, which implies it). Never on a single-task run, nor when the user declined. |
+| `../task-engine/references/worktree.md` | PARALLEL is set and the resolved list holds 2+ tasks — read with `./delegated-runs.md`, before the first spawn. Never on a sequential run, which works in the base tree. |
 | `./review-rounds.md` | REVIEW is true — the run was invoked with `--review`. Read once, after ARGUMENT PARSING and before the first task. Never on a run without the flag. |
 | `../task-engine/references/parking.md` | UNATTENDED is true (read at ARGUMENT PARSING, where its refusals apply), OR any task in the resolved list is `[PARKED]` (read at PRE-FLIGHT step 2). Never otherwise — an attended run that meets no parked task never opens it. |
 
@@ -171,6 +185,30 @@ PRE-FLIGHT step 2b's delegation question: `--agents` sets DELEGATE = true,
 asked. With neither flag, DELEGATE is undecided here and step 2b resolves
 it. `--agents` on a run that resolves to fewer than 2 tasks is accepted and
 ignored — the run stays in-context — rather than being an error.
+
+Also scan for the optional `--parallel <N|max>` pair and strip it. `N` is
+an integer of 2 or more; `max` (case-insensitive) means no bound. It sets
+PARALLEL to that value in the run's resolved flags and sets DELEGATE = true
+— one conversation cannot implement two tasks at once, so the flag implies
+`--agents` and step 2b's question is not asked. It is refused, each with
+one line:
+
+- beside `--no-agents`: `--parallel and --no-agents cannot be combined.`
+- beside `--no-commit`: `--parallel and --no-commit cannot be combined.` — a
+  landing is made of commits, as parking is;
+- on a project whose `CLAUDE.md` maps git to another VCS (a `## VCS`
+  section, `commit.md`): `--parallel needs git — this project's CLAUDE.md
+  maps another VCS.` — there is no worktree there. Read `CLAUDE.md` here if
+  it has not been read yet;
+- `N` below 2, or not an integer and not `max`: `--parallel needs an
+  integer of 2 or more, or max.` — one is the sequential run and has no
+  flag.
+
+`--parallel` on a run that resolves to a single task is accepted and
+ignored, silently, like `--agents`: there is nothing to run beside it.
+Every other flag composes unchanged and rides through the agent prompt as
+it does today. What PARALLEL changes — the scheduler, the worktree per
+task, the landing — is `./delegated-runs.md` § *The scheduler*.
 
 Also scan for the optional `--review` flag and the optional `--rounds N`
 pair, and strip whichever appear:
@@ -490,12 +528,12 @@ PRE-FLIGHT CHECKS (before any task)
    tasks. With fewer than 2, DELEGATE is false, nothing is asked and the
    run stays in-context — skip this step entirely.
 
-   If `--agents` or `--no-agents` was passed, DELEGATE is already set;
-   don't ask. Otherwise ask once:
+   If `--agents`, `--no-agents` or `--parallel` was passed, DELEGATE is
+   already set; don't ask. Otherwise ask once:
 
    > This run covers <k> tasks. Implement each one in a fresh subagent, so
    > later tasks don't inherit the context of earlier ones? Agents run one
-   > after another, never in parallel.
+   > after another; `--parallel <N|max>` is how several run at once.
    >
    > A. **Yes** — one agent per task, sequentially.
    > B. **No** — implement everything in this conversation.
@@ -539,7 +577,10 @@ for its one task — the parent runs it directly only for the tasks
 explicitly requested `[STALE]` tasks). The steps are identical either way,
 so the delegated flow and the manual flow cannot drift apart, and Step 1's
 body read happens in whichever session is implementing the task, never in
-both.
+both. Under PARALLEL the agent runs them in its worktree, the repository
+root its prompt names, and only Step 7 changes — the agent commits and
+integrates, the launcher lands and pushes
+(`../task-engine/references/worktree.md` § *The agent integrates*).
 
 ### Parking at a question   [only when UNATTENDED is true]
 
@@ -697,6 +738,12 @@ is `tree.md` § *Folding in Step 7*.
 
 A task unparked from a branch ends with that branch's deletion, after this
 step's commit and push — `parking.md` § *The unpark transaction*, step 4.
+
+In a worktree — a delegated task under PARALLEL — this step is
+`../task-engine/references/worktree.md` § *The agent integrates*: the one
+commit is made on `wt/task-<N>`, rebased onto the base tip and re-verified
+when the base moved, and the re-sync and push are skipped as under
+`--no-push` because the push is the launcher's, made at the landing.
 
 ---
 
@@ -868,7 +915,9 @@ renders the report from the per-agent returns it holds: each agent's sixth
 field is its *For the record* lines, attributed to its task, its fifth field
 feeds the *Follow-ups* group attributed the same way, and each `[PARKED]`
 return is a *Follow-ups* item with the question the return carried
-(`./delegated-runs.md`).
+(`./delegated-runs.md`). Under PARALLEL a failed task's row names its
+worktree path, the record of the work it left behind
+(`../task-engine/references/worktree.md` § *Failure*).
 
 ---
 
@@ -947,8 +996,9 @@ If any step fails in a way you cannot resolve:
   CLOSING THE RUN.
 
 A failure inside a delegated task is not a special case: the parent stops
-the run without spawning the next agent, and reports as `./delegated-runs.md`
-§ *Failure* says.
+the run without spawning the next agent — under PARALLEL the tasks already
+in flight still land first — and reports as `./delegated-runs.md`
+§ *Failure* says, a failed task's row naming its worktree path.
 
 Unresolved `BLOCKING` findings at the end of a `--review` loop are an
 ordinary case of this: the task never reaches Step 6, so its status stays

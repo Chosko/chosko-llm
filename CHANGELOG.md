@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.81.0 — 2026-10-11
+
+- **`/task-implement --parallel <N|max>`.** A delegated run keeps up to N tasks in flight at once — every eligible task under `max` — each in its own `.claude/worktrees/task-<N>` worktree per `task-engine`'s `worktree.md`. The launcher re-reads `TASKS.md` at the start and after every landing and starts, in list order, each task whose `Preconditions:` are `[DONE]`/`[SKIP]` and not in flight; a task that is in flight is neither done nor eligible, so its dependents wait for it to land. Returns are landed one at a time by fast-forward, pushed, and bookkept on the base as before; the progress line names what is in flight. `human`, `claude+human` and explicitly requested `[STALE]` tasks are barriers: nothing is in flight while they run. The flag implies `--agents`; it refuses `--no-agents`, `--no-commit`, a non-git VCS and an N below 2, and is a silent no-op on a single-task run. Without the flag nothing changes.
+- **`task-engine`'s `resolution.md` states the in-flight reading of eligibility.** Under a parallelism above one, a unit in flight is neither done nor eligible until it lands.
+
 ## 1.80.2 — 2026-10-11
 
 - **`pipeline-statusline` shows tasks in flight in a worktree.** A task whose `wt/task-<N>` worktree exists counts and renders as `[IN PROGRESS]`, read from the git dir with no extra process; a task also flipped on disk is counted once. With no worktree the status line is unchanged.
