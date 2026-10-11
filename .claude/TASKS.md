@@ -663,7 +663,7 @@ Feature: parallel-runbooks
 
 ## 297. Author parallel runbooks in /runbook-create
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/runbook-create.md, skills/pipeline-engine/references/routing.md, VERSION, CHANGELOG.md
 Preconditions: 295
