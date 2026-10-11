@@ -673,7 +673,7 @@ Feature: parallel-runbooks
 
 ## 298. Read parallel runbooks in /runbook-describe and lint them in /pipeline-check
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: commands/runbook-describe.md, skills/pipeline-engine/references/lint.md, skills/pipeline-engine/SKILL.md, commands/pipeline-check.md, VERSION, CHANGELOG.md
 Preconditions: 295

@@ -24,14 +24,15 @@ catalogue's, and no finding here approximates it.
 Every detection rule reads **index lines** — `.claude/FEATURES.md`,
 `.claude/TASKS.md`, `.claude/PLAN.md`, `.claude/RUNBOOKS.md` — through the
 `graph.md` edge it names. **No rule opens a file under `.claude/domain/`, and
-only the two parking findings open one under `.claude/tasks/` or
-`.claude/runbooks/`:** L12 opens the body of each `[PARKED]` task, for its
-`## Parking handoff` heading; L13 opens the body of each runbook whose block
-is not `[DONE]`, for its step markers. Each read is bounded by the index that
-names the file, and neither reads a prompt block, a handoff's question or
-anything else in the body. Parking leaves state an index cannot summarise —
-a handoff lives in a body, `[P]` on a step heading — so a finding about it
-must look there; no other finding does.
+only three findings open one under `.claude/tasks/` or `.claude/runbooks/`:**
+L12 opens the body of each `[PARKED]` task, for its `## Parking handoff`
+heading; L13 opens the body of each runbook whose block is not `[DONE]`, for
+its step markers; L14 opens the body of each runbook, for its header lines.
+Each read is bounded by the index that names the file, and none reads a
+prompt block, a handoff's question or anything else in the body. The three
+look there because the state they check is one an index cannot summarise —
+a handoff lives in a body, `[P]` on a step heading, `Parallelism:` and
+`Sequencing:` in a header; no other finding does.
 
 **No rule probes `.claude/tasks/archive/`, opens an archived file, or reports
 on its contents.** The prohibition is stated once, here, and holds for the
@@ -73,7 +74,7 @@ verbatim.
 
 ## The catalogue
 
-Thirteen findings, and no others. The catalogue is closed: adding a finding
+Fourteen findings, and no others. The catalogue is closed: adding a finding
 is an edit to this file, so every consumer gains it at once and none can
 disagree about whether it exists.
 
@@ -246,8 +247,8 @@ ERROR   TASKS.md task <N> — [PARKED] with no ## Parking handoff in its body �
 
 ### L13 — a runbook's `[P]` steps and its `Parked:` line disagree · WARNING
 
-- **Walks.** E6, followed into the body — the one finding that does,
-  § *What no rule reads* — for its step markers only.
+- **Walks.** E6, followed into the body — § *What no rule reads* — for its
+  step markers only.
 - **Needs.** `RUNBOOKS.md`; the body at `File:` of each block whose
   `Status:` is not `[DONE]` — a done runbook has no step left to be parked.
 - **Fires when** the body marks a step `[P]` whose id the block's
@@ -263,6 +264,30 @@ ERROR   TASKS.md task <N> — [PARKED] with no ## Parking handoff in its body �
 
 ```
 WARNING RUNBOOKS.md runbook <id>. <name> — Parked: <ids | absent> but body marks [P] on <ids | none> → /runbook-run <id>
+```
+
+### L14 — a runbook header carrying both `Parallelism:` and `Sequencing:` · ERROR
+
+- **Walks.** E6, followed into the body — § *What no rule reads* — for its
+  header lines only.
+- **Needs.** `RUNBOOKS.md`; the header of the body at `File:` of each block.
+- **Fires when** a body's header carries a `Parallelism:` line and a
+  `Sequencing:` line together. The two are mutually exclusive by
+  `../../runbook-run/references/runbook-schema.md`
+  § *The header*: `Sequencing:` records an ordering constraint the
+  `Depends on:` graph does not carry, and a parallel run would violate it
+  silently. `ERROR` because the header is the run's instruction: a run
+  that honours `Parallelism:` schedules by the graph and breaks the order
+  `Sequencing:` protects, and one that refuses it (`/runbook-run` does, on
+  this pair) stops a runbook that was authored to run. The fix is
+  `/pipeline-revise`, with two ways out — carry the constraint into the
+  graph as `Depends on:` edges and drop `Sequencing:`, or drop
+  `Parallelism:`. One finding per runbook. Whether a step's worktree exists
+  is not checked, here or anywhere in the catalogue: git state differs
+  across machines, and the run that needs it reports its absence itself.
+
+```
+ERROR   RUNBOOKS.md runbook <id>. <name> — header carries both Parallelism: and Sequencing: (carry the constraint into Depends on: and drop Sequencing:, or drop Parallelism:) → /pipeline-revise
 ```
 
 ---
@@ -282,7 +307,7 @@ run against an archived backlog.
 
 **"A pending runbook step naming a task already `[DONE]` or `[SKIP]`" is not a
 finding.** Detecting it means reading a step's prompt block — which no rule
-here does, L13's marker scan included, and which is why `graph.md` E7 has no
+here does, L13's marker scan and L14's header scan included, and which is why `graph.md` E7 has no
 step-level index form. `/runbook-run` surfaces the same problem at
 the moment it matters: it prints each step before spawning it. A
 `RUNBOOKS.md` that carried per-step targets is what would make a cheap
@@ -295,9 +320,9 @@ index-only version possible; until it does, the finding stays out.
 **An absent index drops its findings.** A finding whose **Needs** names an
 index the project does not have is not evaluated and not reported — dropped
 from the run, never an error. A project with no `PLAN.md` has no plan
-findings; that is not drift. An absent **body**, by contrast, is what L12 and
-L13 exist to see: a `[PARKED]` task with no body is L12, and a non-`[DONE]`
-block whose `File:` names no file is a malformed block, below.
+findings; that is not drift. An absent **body**, by contrast, is what the
+three body-reading findings exist to see: a `[PARKED]` task with no body is
+L12, and a block whose `File:` names no file is a malformed block, below.
 
 **A malformed block is a finding of its own, never an abort.** A block missing
 a line some finding reads, or carrying a value outside that line's vocabulary
@@ -311,5 +336,5 @@ ERROR   <artifact> <identifier> — malformed: <the line missing or unreadable> 
 
 It is `ERROR` because a block that cannot be read will misdirect any command
 that acts on it. Its own findings are skipped for the run; as the far end of
-another block's edge it still exists. It is not a twelfth catalogue entry: it
-reports an index that cannot be read, not drift between indexes.
+another block's edge it still exists. It is not a fifteenth catalogue entry:
+it reports an index that cannot be read, not drift between indexes.

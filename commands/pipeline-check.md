@@ -1,6 +1,6 @@
 ---
 name: pipeline-check
-version: 0.1.4
+version: 0.1.5
 type: command
 description: Report structural drift across the pipeline's indexes — FEATURES.md, TASKS.md, PLAN.md and RUNBOOKS.md — as findings grouped by artifact, each with its severity and the one command that fixes it. Use it when an index looks out of step with another, or before revising planned work.
 requires: skill:pipeline-engine
@@ -14,8 +14,8 @@ requires: skill:pipeline-engine
 # absent index drops its findings rather than failing the run. Read-only —
 # writes nothing, creates nothing, commits nothing, flips no status, never
 # opens a file under `.claude/tasks/archive/` or `.claude/domain/features/`,
-# opens a task body or a runbook body only where the two parking findings
-# need one, and runs no shell beyond the probe.
+# opens a task body or a runbook body only where the three body-reading
+# findings need one, and runs no shell beyond the probe.
 # Usage: /pipeline-check
 #        /pipeline-check feature=<slug>      (scope to that feature and the tasks and plan edges naming it)
 # Examples: /pipeline-check
@@ -72,9 +72,10 @@ WORKFLOW
    of the four that exists. `backlog=partial` does not say which half
    exists: try `.claude/TASKS.md`, and count it absent when it is not there.
    The only other files a run opens are the bodies `lint.md` § *What no rule
-   reads* names for L12 and L13 — each `[PARKED]` task's, each
-   non-`[DONE]` runbook's — read in step 5, when those findings are
-   evaluated, and only for the heading or the markers the finding checks.
+   reads* names for its three body-reading findings — each `[PARKED]` task's
+   for L12, each runbook's for L13 (non-`[DONE]` only) and L14 — read in
+   step 5, when those findings are evaluated, and only for the heading, the
+   markers or the header lines the finding checks.
 
 3. **Stop only on a project with no index.** When step 2 read none of
    `.claude/FEATURES.md`, `.claude/TASKS.md`, `.claude/PLAN.md` and
@@ -101,7 +102,8 @@ WORKFLOW
    L12 on a parked one; and the plan lines that name the slug (L9). No
    runbook finding is in scope: `RUNBOOKS.md` ties no runbook to a slug
    (`graph.md` E7), and this command opens no runbook body to find one — L13
-   reads a body for its markers, never for its prompt blocks.
+   reads a body for its markers and L14 for its header, never for its prompt
+   blocks.
 
 ---
 
@@ -149,8 +151,8 @@ READ-ONLY
 This command writes nothing, creates nothing, commits nothing and flips no
 status. It opens no file under `.claude/tasks/archive/` and none under
 `.claude/domain/features/`. Under `.claude/tasks/` and `.claude/runbooks/` it
-opens exactly the bodies `lint.md` § *What no rule reads* names for L12 and
-L13, and reads nothing else in them — never a prompt block, never a
+opens exactly the bodies `lint.md` § *What no rule reads* names for L12, L13
+and L14, and reads nothing else in them — never a prompt block, never a
 handoff's question. It runs no shell command beyond the probe.
 
 It runs when the user invokes it, and at no other time.
@@ -159,7 +161,7 @@ DO NOT:
 - Write, edit, create or commit anything — no status flip, no fix for a
   finding this run reported, no cached report.
 - Open an archived body, a feature document or a design document, or a
-  task or runbook body beyond the two `lint.md` names. Every other finding
+  task or runbook body beyond the three `lint.md` names. Every other finding
   is derived from index lines.
 - Run any shell command other than the probe, `git` included.
 - Refuse over an absent index, a malformed block, an unknown `feature=` slug

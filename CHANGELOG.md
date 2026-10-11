@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.84.1 — 2026-10-11
+
+- **`/runbook-describe` reads a parallel runbook as one.** The header line ends with `Parallelism: <N|max>` when the body carries it, one `Independent: <n> of <total> steps (Depends on: none)` line closes the header region on such a runbook so the honesty of the graph can be judged without opening a prompt, and every `[~]` step is tagged `in flight` on its line — the closing count names the marker the same way. A runbook with no `Parallelism:` line renders exactly as before.
+- **`/pipeline-check` gains L14.** `ERROR` on a runbook whose header carries both `Parallelism:` and `Sequencing:`, the pair the schema forbids, fixed through `/pipeline-revise` by carrying the constraint into `Depends on:` and dropping `Sequencing:`, or by dropping `Parallelism:`. It reads each runbook body's header and nothing else of it; no worktree is probed, since git state differs across machines.
+
 ## 1.84.0 — 2026-10-11
 
 - **`/runbook-create` authors parallel runbooks.** Asked for one — by saying so, or by naming a parallelism — it writes `Parallelism: <N|max>` in the header where `Execution policy:` goes, never by default and never on an append, proposing `max` at the gate when no value was named. On such a runbook "which steps must precede which, and why" is asked exhaustively, pair by pair, in both modes: every ordering constraint becomes a `Depends on:` edge, a sequencing note the user offers is written as edges and said so in one line, and the header carries no `Sequencing:`. The gate shows the `Parallelism:` line and states that every step without an edge is independent of every step not reachable from it, so approval approves the graph and not only the list. `--append` onto a parallel runbook authors the new steps' edges under the same duty, against the existing steps; an existing step's `Depends on:` is still never rewritten. A runbook with no `Parallelism:` line is authored exactly as before.

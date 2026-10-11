@@ -1,15 +1,17 @@
 ---
 name: runbook-describe
-version: 0.3.4
+version: 0.4.0
 type: command
-description: Print a compact summary of one runbook — its index line, header, and one line per step with marker, title, dependencies and who it needs — without opening a step prompt. Use it to see where a runbook stands.
+description: Print a compact summary of one runbook — its index line, header (parallelism included), and one line per step with marker, title, dependencies, who it needs and whether it is in flight — without opening a step prompt. Use it to see where a runbook stands.
 requires: skill:runbook-run
 ---
 
 # /runbook-describe
 # Global command: print a compact summary of one runbook — heading, one header
-# line, one line per step with an optional one-line done: summary, and a
-# closing count. Read-only — never modifies any file. Reads the index and
+# line (with its `Parallelism:` when the body has one, and then one line
+# counting the steps with no dependency), one line per step with an optional
+# one-line done: summary, `[~]` steps tagged in flight, and a closing count.
+# Read-only — never modifies any file. Reads the index and
 # extracts lines from exactly one body, at its index block's `File:` path —
 # never a full read of the body, never a step prompt, never a task body,
 # never another runbook. Task ids in a `Done:` line are printed as written
@@ -55,7 +57,8 @@ for the runbook's index block. From the body at that block's `File:` path, the
 command pulls **only the lines it prints**, by targeted line extraction with
 the Grep tool (with line numbers) — never a full Read of the body:
 
-- the header fields `Created:`, `Source:`, `Model:` and `Archive:`;
+- the header fields `Created:`, `Source:`, `Model:`, `Parallelism:` and
+  `Archive:`;
 - the step headings — `##` lines carrying a marker and a number;
 - each step's `Depends on:` and `Needs:` lines;
 - the first line of each step's `Done:`;
@@ -66,11 +69,12 @@ the Grep tool (with line numbers) — never a full Read of the body:
 Attach each field to the nearest preceding step heading. The
 `## Do not re-propose` heading is not a step and its contents are not read.
 
-`Archive:` is optional and absent on every runbook never pruned, so the pass
-usually finds nothing for it. Its absence is the common case, not a malformed
-body: extract it when it is there, and print nothing for it when it is not.
-Adding it costs no extra pass — it is one more field of the same Grep over the
-same body.
+`Parallelism:` and `Archive:` are both optional — the first is authored only
+on a runbook meant to run in parallel (`runbook-schema.md` § *The header*),
+the second only once `/runbook-prune` has run — so the pass usually finds
+nothing for either. Absence is the common case, not a malformed body: extract
+each when it is there, and print nothing for it when it is not. Neither costs
+an extra pass — they are two more fields of the same Grep over the same body.
 
 A body whose extracted lines do not fit the schema — a step with no
 `Depends on:`, a heading without a number — is **reported as found**, in one
@@ -151,11 +155,12 @@ WORKFLOW
    a block carrying a `Parked:` line gets that continuation the same way,
    `↳ parked: steps <ids>`, after the `Failed at:` one when both are present.
 
-   **The header line.** One line: `Created:`, `Source:`, `Model:`. Nothing
-   else from the header on this line — no `Sequencing:`, no `Companion:`, no
-   `Last step number:` — and no count of `## Do not re-propose` items. The one
-   other header field that is ever printed, `Archive:`, gets its own line
-   below.
+   **The header line.** One line: `Created:`, `Source:`, `Model:`, and
+   `Parallelism:` **only when the body carries it** — the value as the body
+   holds it, last on the line. Nothing else from the header on this line — no
+   `Sequencing:`, no `Companion:`, no `Last step number:` — and no count of
+   `## Do not re-propose` items. The one other header field that is ever
+   printed, `Archive:`, gets its own line below.
 
    **The archived-ids line.** One further line, directly under the header
    line, **printed only when the body carries an `Archive:` line** — the ids
@@ -189,6 +194,37 @@ WORKFLOW
    count (`7 steps: 7 done.`) and nothing between them. Do not report it as
    an error, and do not render an empty step list with no explanation.
 
+   **The independent-steps line.** One further line, closing the header
+   region, **printed only when the body carries a `Parallelism:` line** —
+   the count of steps present whose `Depends on:` is `none`, out of the
+   steps present:
+
+   ```
+   3. implement-ecc-import   [RUNNING]   2/7   —   Land the ECC import architecture
+      Created: 2026-09-01   Source: /architect ecc-import   Model: sonnet   Parallelism: max
+      Independent: 4 of 7 steps (Depends on: none)
+
+      [x] 1. Add the requires: field to the frontmatter contract
+             done: a1b2c3d — added the field and its cmd-add resolution
+      [~] 2. Wire cmd-rm's dependents guard                        in flight
+      [~] 3. Update the authoring guide                 deps: 1   in flight
+      [ ] 4. Peer review the launcher change            deps: 2, 3
+
+      7 steps: 1 done, 2 in flight, 4 pending.
+   ```
+
+   Under a parallelism above one `Depends on:` is the only ordering
+   constraint (`runbook-schema.md` § *A step*), so a step with no edge is
+   independent of every other by the runbook's own declaration; this line
+   is what lets a reader judge whether that declaration is honest before
+   starting the run. An archived id has no `Depends on:` left and counts in
+   neither number. On a sequential runbook the same count would be noise —
+   list order carries the constraint there — so the line is never printed.
+
+   **A runbook whose header has no `Parallelism:` line renders exactly as it
+   does otherwise, line for line**: no `Parallelism:` on the header line and
+   no `Independent:` line, as a never-pruned one has no `Archived:` line.
+
    **The step lines.** One line per step, in body order:
 
    - the marker **as the body carries it** — `[ ]`, `[~]`, `[x]`, `[!]`,
@@ -203,7 +239,13 @@ WORKFLOW
      cross-reference it against the `Archived:` line. The two lines sitting
      in one render is the whole mechanism;
    - `needs:` on the same line, only when the step carries an authored `Needs:`
-     value that is not `agent`. A step without a `Needs:` line prints nothing.
+     value that is not `agent`. A step without a `Needs:` line prints nothing;
+   - `in flight`, last on the line, on a `[~]` step and on no other. The
+     marker alone reads as a leftover on a parallel runbook, where `[~]` is
+     committed for the steps still in flight when a landed step's `[x]` is
+     (`runbook-schema.md` § *The five step markers*); the tag says what the
+     marker means. Whether a worktree stands behind it is not checked — git
+     state differs across machines, and this command runs no shell.
 
    **The `done:` line.** At most one, under a step that has a `Done:` line: the
    commit sha(s) and a short summary of what was done. Wrong premises are shown
@@ -215,8 +257,8 @@ WORKFLOW
    whole or in part.
 
    **The closing lines.** One line counting the steps by marker — only the
-   non-zero counts, the singular for one step, `[~]` named "in progress",
-   `[P]` named "parked".
+   non-zero counts, the singular for one step, `[~]` named "in flight", as
+   on its step line, `[P]` named "parked".
    **Every id on the `Archive:` line counts as done and as present**, per
    `runbook-schema.md` § *An archived id counts as `[x]`* and the index's
    `Steps:` accounting one level down: the total is the steps present plus
@@ -248,7 +290,12 @@ DO NOT:
   is the opposite case and is printed for the opposite reason: without it the
   render is wrong, not merely less informative.
 - Print an `Archived:` line on a runbook whose body carries no `Archive:`
-  line, or an empty one. Absent is the common case and renders nothing.
+  line, or an empty one; print `Parallelism:` or an `Independent:` line on a
+  runbook whose body carries no `Parallelism:` line. Absent is the common
+  case and renders nothing.
+- Tag a step `in flight` on any marker but `[~]`, or probe for the worktree
+  behind one. The tag reads the marker; the worktree is `/runbook-run`'s
+  resume signal, not this command's.
 - Print more than one `done:` line per step, or the wrong premises themselves
   rather than their count.
 - Infer a `Needs:` value for a step that has none. A step without an authored
