@@ -148,6 +148,11 @@ does the work; the command body is the procedure.
   the 5h and 7d rate-limit percentages and the 5h `resets_at`.
 - **`.git/HEAD`** — the branch, or a detached SHA shown short; a worktree's
   `.git` file redirects through `gitdir:`.
+- **The worktree registry** — `worktrees/<unit>/HEAD` under the common git
+  dir (reached through `gitdir:` and `commondir` from inside a worktree),
+  probed for each task in scope and never listed through the git binary; a
+  `wt/task-<N>` entry makes the task `[IN PROGRESS]` in the counts and the
+  list ([worktree-isolation](./worktree-isolation.md)).
 - **The `statusLine` setting** — `type: command`, the command string
   `bash <absolute renderer path>` plus `--no-nerd-font` when chosen,
   `padding: 1`, `refreshInterval: 10`. The glyph choice lives here, never in

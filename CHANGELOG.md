@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.80.2 — 2026-10-11
+
+- **`pipeline-statusline` shows tasks in flight in a worktree.** A task whose `wt/task-<N>` worktree exists counts and renders as `[IN PROGRESS]`, read from the git dir with no extra process; a task also flipped on disk is counted once. With no worktree the status line is unchanged.
+- **`pipeline-dashboard` shows units in flight in a worktree.** The page data and the text snapshot render a task with a `wt/task-<N>` worktree as `in corso` and a step with a `wt/runbook-<id>-step-<n>` worktree as running. With no worktree both are unchanged.
+
 ## 1.80.1 — 2026-10-11
 
 - **`/task-clean` sweeps finished tasks' worktrees.** Every prune lists, beside the `park/task-*` branches, each `wt/task-<N>` worktree and branch whose task is `[DONE]`, `[SKIP]` or archived, and removes them on the same "Apply?". A worktree whose task is still live is never touched; a remove that fails is a Follow-ups item, never a halt.

@@ -595,7 +595,7 @@ Feature: worktree-isolation
 
 ## 290. Show in-flight units from the worktree list in the statusline and the dashboard
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: statusline/pipeline-statusline.sh, skills/pipeline-dashboard/scripts/generate.sh, VERSION, CHANGELOG.md
 Preconditions: 288

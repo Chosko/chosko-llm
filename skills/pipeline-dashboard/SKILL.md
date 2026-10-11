@@ -1,6 +1,6 @@
 ---
 name: pipeline-dashboard
-version: 0.1.0
+version: 0.2.0
 type: skill
 description: 'Keep a live, private Artifact dashboard of the pipeline progress — milestone, runbook steps, tasks — and show on it any question waiting for the user. Trigger whenever a /runbook-run, a /task-implement or any multi-task run starts or is in progress in a project with a .claude/TASKS.md or .claude/RUNBOOKS.md, and whenever the user asks how the work stands ("come siamo messi", "a che punto siamo", "dashboard"). Followed by the orchestrating session only, never by a subagent.'
 ---
