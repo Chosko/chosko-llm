@@ -7,12 +7,17 @@ text rather than prose the orchestrator composes because each must be identical
 in every step of every runbook: a contract that is re-worded per spawn is a
 contract the agent can be talked out of.
 
-Five placeholders, and nothing else, are substituted:
+Six placeholders, and nothing else, are substituted:
 
 - `<RUNBOOK>` — the runbook's name, e.g. `implement-ecc-import`.
 - `<N>` — the step number being executed.
 - `<FILE>` — the runbook body's path, exactly as its index block's `File:` line
   holds it, e.g. `.claude/runbooks/3-implement-ecc-import.md`.
+- `<WORKTREE>` — the absolute directory the step's work happens in, filled per
+  step: under a parallelism above one the step's worktree,
+  `<project>/.claude/worktrees/runbook-<id>-step-<n>`
+  (`../../task-engine/references/worktree.md`); on a sequential run the base
+  tree's own path.
 - `<PROMPT>`, `<RESULT>` — the `prompt:` and `result:` paths the `SPAWN REQUEST`
   named. `RELAY CHILD RULES` only.
 
@@ -58,6 +63,16 @@ OPERATING RULES
   `QUESTIONS FOR USER`.
 - Follow the invoked skill's default commit behaviour. Add no flag the user did
   not type.
+- Every path you touch is under <WORKTREE>, the repository root for this step:
+  read, write, run and commit there and nowhere else.
+- The remote is the orchestrator's. A skill you invoke makes its commits as
+  usual but skips its pull at start, its pre-push re-sync and its push exactly
+  as it does under `--no-push`, with no flag typed; say so once in your report.
+  Before `DONE`, integrate as the `task-engine` skill's `references/worktree.md`
+  § *The agent integrates* says: rebase the branch you committed on onto the
+  current tip of the base — the branch the main worktree has checked out —
+  re-verify when that tip had moved, and name it in your report. On the base
+  branch itself this is already so.
 - If the work needs a subagent and you CANNOT spawn one, do not do that
   subagent's work yourself in this context and do not silently drop it. Write
   the prompt you would have given it to a file under the OS temp directory
@@ -155,6 +170,24 @@ contract, and is never sent to a subagent.
   bare slash-command invocation whose commit behaviour the user already chose
   when they authored it. An agent that helpfully adds `--no-commit` (or drops
   it) changes what the runbook does.
+- **`<WORKTREE>` and the two rules under it.** Under a parallelism above one
+  the orchestrator runs each step in its own worktree
+  (`../../task-engine/references/worktree.md`), and two things must then hold
+  of the agent. *Work only there*, because the base tree is the orchestrator's,
+  with one writer, and a step that reached into it would race the landings. *The
+  remote is the orchestrator's*, because the base is checked out in the
+  orchestrator's tree: it lands the step's branch by fast-forward and pushes
+  once per landing, and a skill pushing from the worktree would race that too.
+  The rule says *skipped as under `--no-push`* instead of having the agent type
+  the flag because the rule above forbids adding one; a committing skill honours
+  the sentence from its conversation. Integration is the agent's and not the
+  orchestrator's because the agent that did the work is the one that knows its
+  intent when a rebase conflicts. The placeholder passes `<FILE>`'s test: the
+  orchestrator creates the worktree before it spawns, so filling it invents
+  nothing. On a sequential run it is the base tree's path, so both rules hold
+  there too — the agent works where it always did, the rebase is a no-op, and
+  the orchestrator's per-step push carries the step's commits — and the block
+  stays one text, which is the property that makes it a contract.
 - **Never edit the runbook or the index.** The orchestrator writes exactly two
   files and a subagent writes everything else. Two writers on the runbook is
   how a `Done:` line gets lost. The body is named by `<FILE>` rather than built

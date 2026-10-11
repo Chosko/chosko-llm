@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.82.0 — 2026-10-11
+
+- **The runbook schema gains the `Parallelism:` header line.** Optional, directly after `Execution policy:`: an integer of 2 or more, or `max`; absent means 1. Authored by `/runbook-create` only when asked, never rewritten by a run, any other value an argument error at run time, and never beside `Sequencing:`, which records an ordering constraint the graph does not carry. Under a parallelism above one `Depends on:` is the only ordering constraint and list position is priority among the steps selectable at the same moment; `[~]` may then be committed, and the resume signal is `[RUNNING]` in the index plus a `wt/runbook-<id>-step-<n>` worktree on this machine. A sequential run is unchanged.
+- **`/runbook-run`'s OPERATING RULES gain a `<WORKTREE>` placeholder and two rules.** Every path a step's agent touches is under `<WORKTREE>`, the step's repository root, and the remote is the orchestrator's: a skill the step invokes commits as usual but skips its pull, re-sync and push as under `--no-push`, and the agent integrates its branch onto the base per `task-engine`'s `worktree.md` before `DONE`. On a sequential run the placeholder is the base tree's path, so the block stays one text and the orchestrator's per-step push carries the step's commits. The orchestrator does not yet fill the placeholder or run steps in parallel.
+
 ## 1.81.1 — 2026-10-11
 
 - **`/task-implement --parallel` keeps two tasks that list the same file from running at once.** At every scheduling point a task whose `Files:` intersect those of a task in flight is held back, whatever N says, with one line naming the task it waits on, and re-examined at the next scheduling point; an empty or missing `Files:` never holds anything back. A safety net under `Preconditions:`, not a second graph.

@@ -643,7 +643,7 @@ Feature: parallel-task-runs
 ---
 ## 295. Add Parallelism: to the runbook schema and the worktree rules to the subagent contract
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/references/runbook-schema.md, skills/runbook-run/references/subagent-contract.md, skills/runbook-run/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 288

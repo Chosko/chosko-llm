@@ -142,7 +142,8 @@ Context: none
 | `Model:` | the model **every** step is spawned with. Header-only; there is no per-step model. `/runbook-run --model <model>` overrides it for a whole run. |
 | `Last step number:` | the **highest step id ever assigned** in this runbook — not the highest currently present — and it **only ever increases**. The next unused step id is this value plus one; it is **never derived with `max()`** over the step headings. This is `.claude/TASKS.md`'s `Last task number:` rule and the index's own `Last runbook number:` rule verbatim, and it holds for the same reason: once a step can be removed, a counter derived with `max()` drops and hands a removed step's id to the next step written — repointing every reference recorded before the removal (`Depends on:` lines, `Failed at: step <n>`, `Context:` bullets, commit messages) at the wrong step. |
 | `Execution policy:` | optional. `attended` or `unattended` — what a run does with a question nobody present can answer: under `attended` the question is relayed and the run waits; under `unattended` the step is parked (`[P]`) and the run goes on. **Absent means `attended`.** Authored by `/runbook-create` only when the user asks for it, never by default, and never rewritten by a run; `/runbook-run --attended` / `--unattended` overrides it for one run. Any value other than those two words is an **argument error at run time**. |
-| `Sequencing:` | optional, absent by default; **one line** when present. Its only job is **why** this is the order, in the cases list position and `Depends on:` cannot express — "1–4 all edit the same file". What the order *is* is list position and `Depends on:`, never this line. It is written at authoring time and never changed afterwards: an append or an amendment does not extend it, and a dated fact about an inserted or struck step goes in that step's `Context:`. The one-line cap is what stops the header growing without bound — an extendable field accumulated a full page of dated append narration in one real runbook. An existing longer line is left as it is. |
+| `Parallelism:` | optional, written directly after `Execution policy:`. An integer of 2 or more, or `max` — how many steps a run keeps in flight at once, each in its own worktree, scheduled by `Depends on:` (§ *A step*). **Absent means 1**: one step at a time, in list order. Authored by `/runbook-create` only when the user asks for a parallel runbook, never by default, and never rewritten by a run; `/runbook-run --parallel <N\|max>` overrides it for one run. Any other value is an **argument error at run time**. Mutually exclusive with `Sequencing:`, because that line records an ordering constraint the graph does not carry, which a parallel run would violate silently. |
+| `Sequencing:` | optional, absent by default; **one line** when present. Its only job is **why** this is the order, in the cases list position and `Depends on:` cannot express — "1–4 all edit the same file". What the order *is* is list position and `Depends on:`, never this line. Never present beside `Parallelism:` (that row says why). It is written at authoring time and never changed afterwards: an append or an amendment does not extend it, and a dated fact about an inserted or struck step goes in that step's `Context:`. The one-line cap is what stops the header growing without bound — an extendable field accumulated a full page of dated append narration in one real runbook. An existing longer line is left as it is. |
 | `Companion:` | optional. A background document offered to every step, inserted into every spawned prompt. |
 | `Archive:` | optional, last in the header, after `Companion:`. A comma-separated list of the step ids `/runbook-prune` has removed from this body, ascending. Absent on a runbook never pruned, and never written empty. **An id on this line counts as `[x]`** — see § *The five step markers*, which is where that rule is stated and why the line exists at all: it is what keeps a surviving `Depends on:` naming a pruned step resolvable, and what keeps the index's `Steps:` count honest once the steps it counted are gone. It is a bare id list and nothing more: no titles, no `Done:` lines, no commit shas. The record of what those steps did lives in the commits they made; the ids exist for dependency resolution and the count. |
 
@@ -160,7 +161,8 @@ afterwards — the same rule `.claude/TASKS.md` uses for task ids. **The next
 unused id is the header's `Last step number:` plus one**, never the highest
 existing step id: the counter is what survives a step being removed. **Order is
 list position**: a runbook is walked top to bottom, and the step that appears
-first comes first, whatever its number. A body may therefore legally carry
+first comes first, whatever its number — an ordering under a parallelism of 1,
+a priority above it (`Depends on:` below). A body may therefore legally carry
 step ids out of numeric order — a step inserted with `/runbook-create --append
 <name> --before 3` takes the next unused id and sits above step 3:
 
@@ -179,9 +181,14 @@ reference to a step is by id — `Depends on:`, `/runbook-run`'s `--from`,
 Under the heading, in this order:
 
 - **`Depends on:`** — a comma-separated list of step ids, or `none`. It
-  records the real constraint. It never causes anything to run in parallel:
-  steps are sequential, always. It exists so a deadlock is detectable and so
-  `--from`, `--to` and `--only` have something to check against.
+  records the real constraint. Under a parallelism of 1 (§ *The header*,
+  `Parallelism:`) steps run in list order and it exists so a deadlock is
+  detectable and so `--from`, `--to` and `--only` have something to check
+  against. Under a parallelism above one it is **the only ordering
+  constraint**: a step runs once every step it names is `[x]`, alongside
+  whatever else is selectable, and list position is priority among the steps
+  selectable at the same moment — a step with no edge to another is
+  independent of it by the runbook's own declaration.
 - **`Needs:`** — optional. Whether executing this step requires a person, and
   in what measure. Exactly three values, deliberately the same vocabulary as a
   task's `Target:` in `.claude/TASKS.md` so the two stores read alike:
@@ -242,9 +249,18 @@ turned down.
 A step is one marker at a time: `[P]` replaces the `[~]` the step carried
 while it ran, and the two never sit on the same step. `[P]` counts as **not
 done** in the index's `Steps:` count, and it is **committed**, like `[x]` and
-`[!]` — `[~]` is the one marker that is never committed. It is written under
-the `unattended` execution policy only (§ *The header*), and it is cleared to
-`[ ]` when the question is answered, with a second `Context:` bullet.
+`[!]`. It is written under the `unattended` execution policy only (§ *The
+header*), and it is cleared to `[ ]` when the question is answered, with a
+second `Context:` bullet.
+
+`[~]` is **never committed by a sequential run**: its presence in the tree,
+beside `[RUNNING]` in the index, is what tells a resuming run that this tree
+is the one that was interrupted. A run whose parallelism is above one (§ *The
+header*, `Parallelism:`) **may commit it** — the body carries `[~]` for the
+steps still in flight when a landed step's `[x]` is committed — and its resume
+signal is `[RUNNING]` in the index plus a `wt/runbook-<id>-step-<n>` worktree
+on this machine (`../../task-engine/references/worktree.md`). A `[~]` with no
+worktree behind it is a step an interrupted run left behind.
 
 ### An archived id counts as `[x]`
 
