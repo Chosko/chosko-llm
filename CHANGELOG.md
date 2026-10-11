@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.80.0 — 2026-10-11
+
+- **`task-engine` gains `references/worktree.md`, the worktree-isolation protocol.** One git worktree and `wt/<unit>` branch per task or runbook step under `.claude/worktrees/`: the unit's agent commits there, rebases onto the base tip and re-verifies; the orchestrator lands it by fast-forward, pushes, and removes the worktree. Read by `/task-implement` and `/runbook-run` only when a run's parallelism is above one; nothing reads it yet, and a sequential run is unchanged.
+- **`/runbook-run` requires `skill:task-engine`.** `chosko-llm add skill:runbook-run` installs the engine first; `rm skill:task-engine` refuses while `runbook-run` is installed.
+
 ## 1.79.0 — 2026-10-10
 
 - **New skill `pipeline-dashboard`.** While a `/runbook-run` or `/task-implement` runs, the orchestrating session keeps one private Artifact per project live with the milestone, the runbook steps and the tasks, and shows there any question waiting for your answer. Ask "a che punto siamo" for a text snapshot in chat.

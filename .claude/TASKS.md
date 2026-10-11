@@ -575,7 +575,7 @@ Feature: pipeline-dashboard
 ---
 ## 288. Add the worktree protocol to task-engine and wire its consumers
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-engine/references/worktree.md, skills/task-engine/SKILL.md, skills/task-engine/references/commit.md, skills/task-engine/references/parking.md, skills/runbook-run/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: none

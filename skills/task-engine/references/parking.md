@@ -133,6 +133,12 @@ in place.
 The base tree is clean afterwards, so the next task meets no dirty tree.
 Print the question in chat under the run's next `P<n>` handle, then continue.
 
+The park and unpark sequences run in whatever tree the task is running in.
+Inside a worktree (`./worktree.md`) the base of the bookkeeping commit is
+`wt/<unit>`: step 3 checks that branch back out, step 4 commits on it, and
+the commit lands onto the base like any other; the unpark cherry-picks onto
+the head of whatever tree the task is then running in.
+
 ## The unpark transaction
 
 Nothing destructive happens until the last step, and a failure rolls back to

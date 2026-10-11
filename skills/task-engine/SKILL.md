@@ -1,22 +1,24 @@
 ---
 name: task-engine
-version: 0.7.3
+version: 0.8.0
 type: skill
-description: Reference library for the task-* features — one authority per rule they share, under references/; read by path by the task-* commands and skills and by the pipeline revision surface, never invoked.
+description: Reference library for the task-* features — one authority per rule they share, under references/; read by path by the task-* commands and skills, by /runbook-run and by the pipeline revision surface, never invoked.
 disable-model-invocation: true
 ---
 
 # task-engine
 # Reference library, read by path by /task-add, /task-list, /task-clean,
-# /task-implement, /task-review and /pipeline-revise; not invoked.
+# /task-implement, /task-review, /runbook-run and /pipeline-revise; not
+# invoked.
 
 > **Not directly invocable.** This skill exists so that the rules the
 > `task-*` features share have exactly one home. It has no command, no
 > arguments and no behaviour of its own. Nothing invokes `/task-engine`;
 > nothing should suggest it. `/task-add`, `/task-list`, `/task-clean`,
 > `/task-implement` and `/task-review` cite the files below by path while they
-> run, the pipeline revision surface `/pipeline-revise` reads
-> `references/amend.md` by path, and those files are the only content here.
+> run, `/runbook-run` reads `references/worktree.md` by path, the pipeline
+> revision surface `/pipeline-revise` reads `references/amend.md` by path,
+> and those files are the only content here.
 
 > **Install path assumption:** this skill installs beside the features that
 > read it — `chosko-llm add skill:task-engine` writes it under the same home
@@ -51,6 +53,7 @@ disable-model-invocation: true
 | `references/review-budget.md` | Review cost controls: the `--review-model` / `--review-effort` values and their `same` / `auto` reserved words, the deterministic `auto` tier table, the read budget behind the effort axis, what is counted and what never is, and the cap-bound and resolved-pair reports. |
 | `references/amend.md` | Changing one existing task: the two checks before writing (not `[IN PROGRESS]`, and no change to what its feature promises), which body sections and summary-block fields may change, rewriting a `Preconditions:` edge, deleting a live task as `[SKIP]`, adding `Feature:` to an orphan, the single gate, the closed write set and the closing report line. |
 | `references/parking.md` | Task parking under the `unattended` policy: the one event that parks, which prompts take their default instead, the `## Parking handoff` section, the `park/task-<N>` branch, the park sequence, the unpark transaction, the answerer rule and the two refusals. Read by `/task-implement` only when UNATTENDED is true or a resolved task is `[PARKED]`; never on an attended run that meets no parked task. |
+| `references/worktree.md` | Worktree isolation for a unit of work — a task or a runbook step: the unit and its derived `.claude/worktrees/<unit>` path and `wt/<unit>` branch, creation from the base tip, the agent's integration by rebase and re-verify, the orchestrator's fast-forward landing and push, the two invariants, the worktree as the in-flight signal, failure, parking inside a worktree and the sweep. Read by `/task-implement` and `/runbook-run` only when the run's parallelism is above one; a sequential run never opens it. |
 
 Each file is the **single authority** for its rule. A consuming feature cites
 the file and states only what it does differently.
@@ -59,11 +62,11 @@ the file and states only what it does differently.
 
 ## How to read a reference file
 
-Every reference file but two was extracted **verbatim** from the feature
+Every reference file but three was extracted **verbatim** from the feature
 bodies that previously each carried their own copy of the rule. The
-exceptions are `references/amend.md` and `references/parking.md`, authored
-in the engine: no feature ever carried a copy of either, and each says so
-itself. Where those copies said
+exceptions are `references/amend.md`, `references/parking.md` and
+`references/worktree.md`, authored in the engine: no feature ever carried a
+copy of any of them, and each says so itself. Where those copies said
 the same thing in different words, the file carries the fuller statement
 unchanged and records the other copies' material divergences as explicit
 per-consumer notes. So a file reads as:

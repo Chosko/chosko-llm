@@ -71,8 +71,12 @@ invocation, and never bundles two units into one commit.
 Do NOT use `--no-verify`, `--amend`, `--no-gpg-sign`, or skip any hooks
 unless the user explicitly asked for it. If a pre-commit hook fails,
 investigate and fix the underlying issue, then create a NEW commit (do
-not amend). Never branch or tag — the one exception is `/task-implement`'s
-parking branch, `./parking.md`.
+not amend). Never branch, tag or rebase — the exceptions are
+`/task-implement`'s parking branch, `./parking.md`, and the `wt/<unit>`
+branch of `./worktree.md`, which the unit's agent rebases onto the base tip
+before the unit lands: that branch is private to the unit, unpushed and
+exists for one landing, so rebasing it is that protocol's own step and not
+a rewrite of anyone's history.
 
 ## The push protocol
 
@@ -96,6 +100,12 @@ On commit success, report the resulting commit hash to the user
 **Non-git VCS exemption.** When the project's CLAUDE.md defines a `## VCS`
 section overriding git (e.g. Plastic SCM), skip the entire pull → re-sync →
 push sequence unconditionally — only the commit (checkin) step runs.
+
+**Under worktree isolation** (`./worktree.md`) the unit's agent commits as
+step 2 says on `wt/<unit>` and skips steps 1, 3 and 4 as a run under
+`--no-push` does — the remote is the orchestrator's. The orchestrator's
+fast-forward landing of `wt/<unit>` onto the base is the merge, and the push
+that follows it is steps 3 and 4, run once per landing unless NO_PUSH.
 
 ## Failure
 
