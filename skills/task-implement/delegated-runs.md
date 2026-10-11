@@ -63,10 +63,10 @@ the launcher:
    first, once per run, and spawns the agent with `run_in_background:
    true`, the prompt of § *The agent prompt* carrying PARALLEL and the
    worktree path. On this read it skips a task that is not eligible, a task
-   already in flight, and a task whose worktree already exists — the
-   skip-while-present line of `worktree.md`, printed once per task per run.
-   A skipped task is not dropped: it is examined again at the next
-   scheduling point;
+   already in flight, a task the overlap rule holds back (below), and a
+   task whose worktree already exists — the skip-while-present line of
+   `worktree.md`, printed once per task per run. A skipped task is not
+   dropped: it is examined again at the next scheduling point;
 3. stops the walk at a barrier (below), and otherwise walks the whole list;
    then waits for the next return.
 
@@ -79,6 +79,33 @@ The run ends when nothing is in flight and nothing in the list can start:
 a scheduling point that starts nothing with no return left to wait for.
 The end-of-run steps — the feature-completion proposal, the closing
 report — follow as on any run.
+
+### The overlap rule
+
+Two tasks whose `Files:` lines intersect are never in flight at the same
+time. At each scheduling point, a task whose `Files:` paths intersect those
+of any task in flight is **held back**, whatever N says, with one line
+naming the task it waits on — `Task 24 waits on task 22 (both list
+skills/foo/SKILL.md).` — printed once per task it waits on, not at every
+scheduling point; it is re-examined at the next scheduling point, and may
+start once the task it waited on has landed. `Files:` is on the summary
+block PRE-FLIGHT step 2 already read, so the rule costs no read and opens
+no body. An empty or missing `Files:` holds nothing back and is never held
+back.
+
+The rule is a safety net under `Preconditions:`, not a second dependency
+graph: two tasks with no edge between them are independent by the
+backlog's own declaration, and the rule only keeps the common cause of a
+rebase conflict — two agents editing one file — from being paid for at
+the landing, where it would cost the integrating agent a resolution.
+
+Before the intersection is taken, every path the project's `CLAUDE.md`
+names on its `Parallel-safe files for /task-implement:` line (PARALLEL_SAFE,
+read once at PRE-FLIGHT step 3) is removed from every `Files:` line: those
+are the files whose conflicts the agent's rebase resolves mechanically — a
+version counter, a newest-first changelog — and whose presence on every
+task would otherwise serialise the whole run. No marker means no
+exemption.
 
 ### Barriers
 

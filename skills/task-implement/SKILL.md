@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.12.0
+version: 1.13.0
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run; `--parallel <N|max>` keeps up to N delegated tasks in flight at once, each in its own worktree. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups
@@ -13,8 +13,12 @@ requires: skill:task-engine, command:follow-ups
 # task separately. No mid-flow confirmation prompts when tests exist; if the
 # project has no test suite the flow becomes interactive. Honours a
 # `Testing policy for /task-implement: skip-tests|full-tdd|skip-tests-unattended`
-# marker in CLAUDE.md. On a dirty working tree prompts (proceed-uncommitted /
-# fold-into-commit / commit-first / abort) instead of aborting. `next` and
+# marker in CLAUDE.md, and under `--parallel` a
+# `Parallel-safe files for /task-implement: <path>, <path>` marker naming
+# the files two in-flight tasks may both list — a version counter, a
+# changelog — without being kept apart. On a dirty working tree prompts
+# (proceed-uncommitted / fold-into-commit / commit-first / abort) instead
+# of aborting. `next` and
 # `all` pick a task only once every task its `Preconditions:` names is
 # `[DONE]` or `[SKIP]`, and skip `[STALE]` tasks; a task named by number is
 # never blocked, and a `[STALE]` one is warned about first. Target
@@ -553,6 +557,17 @@ PRE-FLIGHT CHECKS (before any task)
    Defer reading the broader `.claude/context/` and `.claude/domain/`
    layers until per-task Step 1 indicates a need (see USING THE TASK
    BODY). Don't assume any of these exist.
+
+   **Parallel-safe files marker.** Only when PARALLEL is set, look in it,
+   once, for a line of the form
+   `Parallel-safe files for /task-implement: <path>, <path>` — the shape of
+   the testing-policy marker, RESOLVING THE TEST RUNNER step 0 — and set
+   PARALLEL_SAFE to its comma-separated paths, each relative to the
+   repository root as a `Files:` line writes them. It is the project's own
+   declaration of the files whose conflicts the rebase of
+   `../task-engine/references/worktree.md` resolves mechanically, and its
+   one reader is `./delegated-runs.md` § *The overlap rule*. No marker, or
+   PARALLEL not set, means PARALLEL_SAFE is empty and no file is exempt.
 
 4. Briefly tell the user what you're about to do — one line per task —
    then start. When DELEGATE is true, that summary also says which tasks

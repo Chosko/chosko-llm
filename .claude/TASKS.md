@@ -624,7 +624,7 @@ Feature: parallel-task-runs
 
 ## 293. Add the Files: overlap rule and the Parallel-safe files marker
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-implement/SKILL.md, skills/task-implement/delegated-runs.md, CLAUDE.md, VERSION, CHANGELOG.md
 Preconditions: 292

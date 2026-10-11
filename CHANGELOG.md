@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.81.1 — 2026-10-11
+
+- **`/task-implement --parallel` keeps two tasks that list the same file from running at once.** At every scheduling point a task whose `Files:` intersect those of a task in flight is held back, whatever N says, with one line naming the task it waits on, and re-examined at the next scheduling point; an empty or missing `Files:` never holds anything back. A safety net under `Preconditions:`, not a second graph.
+- **New `CLAUDE.md` marker `Parallel-safe files for /task-implement: <path>, <path>`.** Read once at pre-flight, under `--parallel` only, beside the testing-policy marker: the listed paths — a version counter, a newest-first changelog — are removed from every `Files:` line before the intersection is taken. No marker means no exemption. This repository declares `VERSION, CHANGELOG.md`.
+
 ## 1.81.0 — 2026-10-11
 
 - **`/task-implement --parallel <N|max>`.** A delegated run keeps up to N tasks in flight at once — every eligible task under `max` — each in its own `.claude/worktrees/task-<N>` worktree per `task-engine`'s `worktree.md`. The launcher re-reads `TASKS.md` at the start and after every landing and starts, in list order, each task whose `Preconditions:` are `[DONE]`/`[SKIP]` and not in flight; a task that is in flight is neither done nor eligible, so its dependents wait for it to land. Returns are landed one at a time by fast-forward, pushed, and bookkept on the base as before; the progress line names what is in flight. `human`, `claude+human` and explicitly requested `[STALE]` tasks are barriers: nothing is in flight while they run. The flag implies `--agents`; it refuses `--no-agents`, `--no-commit`, a non-git VCS and an N below 2, and is a silent no-op on a single-task run. Without the flag nothing changes.
