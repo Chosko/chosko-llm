@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 301
+Last task number: 303
 
 ---
 
@@ -705,5 +705,24 @@ Status: [DONE]
 Target: claude
 Files: skills/task-implement/delegated-runs.md, skills/task-implement/SKILL.md, .claude/domain/features/parallel-task-runs.md, VERSION, CHANGELOG.md
 Preconditions: none
+
+---
+## 302. Carry the park-branch exception in the subagent contract's remote rule
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/references/subagent-contract.md, skills/runbook-run/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: none
+Feature: parallel-runbooks
+
+---
+
+## 303. Update documentation for feature `parallel-runbooks`
+
+Status: [MISSING]
+Target: claude
+Files: docs/reference.md, .claude/context/runbook-run-contracts.md, .claude/context/INDEX.md
+Preconditions: 302
+Feature: parallel-runbooks
 
 ---
