@@ -57,7 +57,9 @@ skill's reference files and dependencies. The rest of its bullet:
   above one, the base tree's own path on a sequential run — carrying two
   fixed rules: every path touched is under it, and the remote is the
   orchestrator's, so an invoked skill commits as usual but skips its pull,
-  re-sync and push as under `--no-push` with no flag typed, and before
+  re-sync and push of the base as under `--no-push` with no flag typed —
+  its own `park/task-<N>` the one branch it still pushes when it parks, per
+  `task-engine`'s `parking.md` — and before
   `DONE` the agent rebases its branch onto the base tip per `task-engine`'s
   `worktree.md` § *The agent integrates*, a no-op on the base itself), plus
   `<PROMPT>`/`<RESULT>` on the child block alone,

@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.84.4 — 2026-10-12
+
+- **`/runbook-run`'s OPERATING RULES carry the park-branch exception.** The remote rule now names the base's pull, re-sync and push as what a skill the step's agent invokes skips as under `--no-push`, and `park/task-<N>` as the one branch it still pushes when it parks, per `task-engine`'s `parking.md` — so a step running `/task-implement --unattended` in a worktree reads one rule, not two that disagree. The block keeps its four placeholders and is otherwise unchanged.
+
 ## 1.84.3 — 2026-10-12
 
 - **A task parked inside a worktree pushes its `park/task-<N>` branch.** `task-engine`'s `worktree.md` names that branch as the one exception to its rule that a unit's agent never pushes: it is private to the task, touches no base branch and races with no other unit, and pushing it is what lets another machine unpark. `parking.md`'s park sequence therefore runs unchanged inside a worktree — the leftover delete, the push and the unpark's remote delete happen exactly as outside one, and `--no-push` alone suppresses them; the bookkeeping commit's push stays the launcher's, made at the landing.

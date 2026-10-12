@@ -709,7 +709,7 @@ Preconditions: none
 ---
 ## 302. Carry the park-branch exception in the subagent contract's remote rule
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/references/subagent-contract.md, skills/runbook-run/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: none
