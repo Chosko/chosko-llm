@@ -586,7 +586,7 @@ Feature: pipeline-dashboard
 
 ## 305. Add the dashboard opt-in to the orchestrators and to /project-setup
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/runbook-run/SKILL.md, skills/task-implement/SKILL.md, commands/project-setup.md
 Preconditions: 304

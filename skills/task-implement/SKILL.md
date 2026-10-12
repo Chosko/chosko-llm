@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.11.0
+version: 1.11.1
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups
@@ -48,6 +48,7 @@ requires: skill:task-engine, command:follow-ups
 #        /task-implement <args> --review --review-effort shallow|standard|deep|same|auto  (reviewer's read budget; default auto)
 #        /task-implement <args> --unattended  (park a task at a question instead of halting; pre-ask the list's parked tasks first)
 #        /task-implement <args> --unattended --skip-parked  (no pre-ask; a parked task with no answer is skipped)
+#        /task-implement <args> --dashboard | --no-dashboard  (live progress page on/off for this run)
 # Examples: /task-implement 12
 #           /task-implement 12 13 14
 #           /task-implement all
@@ -87,9 +88,6 @@ run — see FAILURE HANDLING. A completed task carrying a `Feature:` line may
 make its feature a completion candidate — see FEATURE COMPLETION. However the
 run ends, its last act is the closing report — see THE CLOSING REPORT and
 CLOSING THE RUN.
-
-While the run is in progress, the session launching it — never a delegated
-agent — follows the `pipeline-dashboard` skill when that skill is available.
 
 $ARGUMENTS
 
@@ -206,6 +204,13 @@ budget anywhere — a second copy is a copy that will drift. With REVIEW false,
 the default, neither value is ever resolved or used, `./review-rounds.md` is
 never opened, no loop runs, nothing new is asked, and the output says nothing
 about reviewing.
+
+Also scan for the optional `--dashboard` / `--no-dashboard` pair and strip
+whichever appears: the dashboard is on when `--dashboard` is passed, or when
+the project's `CLAUDE.md` has `Pipeline dashboard: on` and `--no-dashboard`
+is not passed, and then the launching session — never a delegated agent —
+follows the `pipeline-dashboard` skill for the run; off otherwise, and
+nothing in this skill changes.
 
 Also scan for the optional `--unattended` and `--skip-parked` flags and strip
 whichever appear. `--skip-parked` sets SKIP_PARKED = true and suppresses
