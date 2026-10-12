@@ -211,13 +211,16 @@ its unit failed. Nothing else records that:
   `.git/info/exclude`, never committed and never pushed.
 - **`wt/<unit>`** — the unit's branch, created from the base tip at spawn,
   rebased by the agent, deleted at landing with the safe delete. Local only.
-- **In memory only:** the base tip each in-flight unit was created from and
-  the tip its agent last rebased onto, held by the orchestrator for its
+- **In memory only:** the orchestrator's own in-flight set — the units it
+  spawned and has not yet landed — and, per unit, the base tip it was
+  created from and the tip its agent last rebased onto, held for the
   progress lines.
 
-The source of truth is git throughout: which units are in flight is the
-worktree list, whether a unit landed is reachability of `wt/<unit>` from the
-base, and no file of this product duplicates either.
+The source of truth is git throughout: a worktree's presence is what marks
+a unit in flight or failed for every reader, whether a unit landed is
+reachability of `wt/<unit>` from the base, and no file of this product
+duplicates either. Which of those units an orchestrator itself spawned and
+has not yet landed is its own run memory, the one thing git cannot tell it.
 
 ## Interfaces and contracts
 
@@ -231,7 +234,10 @@ rule that the push is not the agent's. The fixed-size agent prompt of
 per unit, like the task number.
 
 What it exposes: the worktree list as the in-flight signal, read by the status
-line, the dashboard and the skip-while-present rule.
+line, the dashboard and the skip-while-present rule. An orchestrator's own
+in-flight set — the units it spawned and has not yet landed — is run memory,
+and is what it counts against its parallelism and tests for the end of its
+run.
 
 Failure contract: a worktree that cannot be created (the path exists, the
 branch exists) skips the unit with one line naming the path; a rebase the

@@ -124,8 +124,11 @@ The orchestrator creates the step's worktree per `worktree-isolation` before
 it spawns, and the spawned prompt's preamble names the directory as the
 repository root. OPERATING RULES gains one placeholder and the two rules it
 carries: work only in that directory, and the remote is the orchestrator's,
-so an invoked skill's pull and push are skipped as under `--no-push` and the
-work is committed as usual; before `DONE`, integrate as the protocol says.
+so an invoked skill's pull and push of the base are skipped as under
+`--no-push` and the work is committed as usual, with the one exception
+`task-engine`'s `parking.md` states — a skill that parks pushes its own
+`park/task-<N>`, the branch another machine needs to unpark; before `DONE`,
+integrate as the protocol says.
 The rules are fixed text with a fourth placeholder, filled per step like the
 other three, so the contract stays a contract.
 
