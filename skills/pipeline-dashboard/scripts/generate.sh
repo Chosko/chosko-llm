@@ -330,15 +330,15 @@ function stepcount(i, D,   k, IDS, j, n) {
 }
 
 function text(   i, j, sd, sr, sdone, tdone, ttot, trun, mk, n, D, k, IDS, id, shown, cnt, line, last) {
-  if (!ntask && !pick && mid == "") { print project; print ""; print "Nessun dato della pipeline in .claude/."; return }
+  if (!ntask && !pick && mid == "") { print project; print ""; print "No pipeline data in .claude/."; return }
   print project (mid != "" ? " \302\267 milestone " mid (mtitle != "" ? EM_SEP mtitle : "") : "")
   if (pick) print "runbook " RBN[pick] " (" RBS[pick] ")"
   print ""
   sdone = 0; for (i = 1; i <= nst; i++) if (SM[i] == "x") sdone++
   tdone = 0; ttot = 0; trun = 0
   for (i = 1; i <= ntl; i++) if (TL[i] in SCOPE) { ttot++; if (isdone(T_S[TL[i]])) tdone++; else if (T_S[TL[i]] == "IN PROGRESS") trun++ }
-  if (pick) printf "passi  %s %d/%d\n", bar(sdone, nst, 20), sdone, nst
-  printf "task   %s %d/%d%s\n", bar(tdone, ttot, 20), tdone, ttot, (trun ? "  (" trun " in corso)" : "")
+  if (pick) printf "steps  %s %d/%d\n", bar(sdone, nst, 20), sdone, nst
+  printf "tasks  %s %d/%d%s\n", bar(tdone, ttot, 20), tdone, ttot, (trun ? "  (" trun " in progress)" : "")
   if (nst) {
     print ""
     last = 0; for (i = 1; i <= nst; i++) if (SM[i] == "x") last = i
@@ -352,12 +352,12 @@ function text(   i, j, sd, sr, sdone, tdone, ttot, trun, mk, n, D, k, IDS, id, s
       if (n) line = pad(line, 60) " " bar(D[1], n, 6) " " D[1] "/" n
       print line
       k = split(SI[i], IDS, /[ ,]/)
-      for (j = 1; j <= k; j++) { id = IDS[j] + 0; if (IDS[j] != "" && T_S[id] == "IN PROGRESS") print "      \342\206\263 #" id " " cut(T_T[id], 60) " (in corso)" }
+      for (j = 1; j <= k; j++) { id = IDS[j] + 0; if (IDS[j] != "" && T_S[id] == "IN PROGRESS") print "      \342\206\263 #" id " " cut(T_T[id], 60) " (in progress)" }
     }
   }
   line = ""; cnt = 0
   for (i = ntl; i >= 1 && cnt < 3; i--) if ((TL[i] in SCOPE) && isdone(T_S[TL[i]]) && !(TL[i] in T_GONE)) { cnt++; line = line (line != "" ? "\n" : "") "  #" TL[i] " " cut(T_T[TL[i]], 70) }
-  if (line != "") { print ""; print "ultimi task fatti:"; print line }
-  if (nun) { print ""; printf "non leggibili:"; for (i = 1; i <= nun; i++) printf " %s", UN[i]; print "" }
+  if (line != "") { print ""; print "last tasks done:"; print line }
+  if (nun) { print ""; printf "unreadable:"; for (i = 1; i <= nun; i++) printf " %s", UN[i]; print "" }
 }
 '

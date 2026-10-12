@@ -596,7 +596,7 @@ Feature: pipeline-dashboard
 
 ## 306. Switch the generator and the status line to English, and document the global-only home exception
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/pipeline-dashboard/scripts/generate.sh, statusline/pipeline-statusline.sh, docs/authoring-guide.md, CLAUDE.md, VERSION, CHANGELOG.md
 Preconditions: 304, 305

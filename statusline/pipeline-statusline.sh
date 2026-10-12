@@ -2,7 +2,7 @@
 : <<'CHOSKO_FRONTMATTER'
 ---
 name: pipeline-statusline
-version: 0.1.1
+version: 0.1.2
 type: statusline
 description: Status line showing the session (model, folder, branch, context, cost, rate limits) and the project's pipeline progress — current runbook, tasks in scope, tasks in progress. Wire it with /pipeline-statusline.
 ---
@@ -17,7 +17,7 @@ CHOSKO_FRONTMATTER
 L_CTX='ctx'
 L_RESET='until reset'
 L_TASK='task'
-L_INPROG='in corso'
+L_INPROG='in progress'
 L_5H='5h'
 L_7D='7d'
 

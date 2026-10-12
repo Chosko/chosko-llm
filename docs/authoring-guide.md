@@ -967,9 +967,17 @@ The two `council-gate.md` copies work this way, as does `/follow-ups` —
 path. There are no exemptions in the guard: a body that seems to need an
 absolute home is asking the installed question, and the answer is a name.
 
-The one place a home is derived is the probe in
-`skills/pipeline-engine/references/probes.md`, a shell snippet that checks
-both scopes; its own file carries the rule.
+A home is derived in two places, neither of them a citation:
+
+- the probe in `skills/pipeline-engine/references/probes.md`, a shell snippet
+  that checks both scopes; its own file carries the rule;
+- a body that writes or wires the state of a **global-only** kind resolves
+  the user scope, `${CLAUDE_HOME:-$HOME/.claude}`, with nothing joined onto
+  it but that state's own path: `/pipeline-statusline` locating the
+  statusline script and the user `settings.json`, `pipeline-dashboard`'s
+  state folder. A global-only kind has no `--local` copy for a relative path
+  to find, so the user scope is the only home there is. Citing another
+  shipped file from those bodies still follows the relative rule.
 
 The guard proves absence of that one shape and nothing more. Whether a
 relative citation resolves, and whether the probe's shell looks in the right

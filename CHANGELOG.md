@@ -2,6 +2,12 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.80.0 — 2026-10-12
+
+- **`pipeline-dashboard` is opt-in.** A run keeps the live page only with `--dashboard`, or when the project's `CLAUDE.md` has `Pipeline dashboard: on` (offered by `/project-setup`); `--no-dashboard` turns it off for a run. Without it, `/runbook-run` and `/task-implement` work exactly as before.
+- **`pipeline-dashboard` costs less while it runs.** Its protocol is read only when the dashboard is on, and the page is read once per session instead of before every update.
+- **`pipeline-dashboard` and `pipeline-statusline` speak English** — the page, the text snapshot, the chat line and the status line label.
+
 ## 1.79.0 — 2026-10-10
 
 - **New skill `pipeline-dashboard`.** While a `/runbook-run` or `/task-implement` runs, the orchestrating session keeps one private Artifact per project live with the milestone, the runbook steps and the tasks, and shows there any question waiting for your answer. Ask "a che punto siamo" for a text snapshot in chat.
