@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 287
+Last task number: 307
 
 ---
 
@@ -570,6 +570,46 @@ Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, .claude/context/pipeline-dashboard.md, .claude/context/features.md, .claude/context/INDEX.md, .claude/context/runbook-run.md, .claude/context/task-implement.md
 Preconditions: 284, 285, 286
+Feature: pipeline-dashboard
+
+---
+
+## 304. Make the pipeline-dashboard skill opt-in, with its protocol read on demand
+
+Status: [MISSING]
+Target: claude
+Files: skills/pipeline-dashboard/SKILL.md, skills/pipeline-dashboard/references/protocol.md, skills/pipeline-dashboard/assets/index.html
+Preconditions: none
+Feature: pipeline-dashboard
+
+---
+
+## 305. Add the dashboard opt-in to the orchestrators and to /project-setup
+
+Status: [MISSING]
+Target: claude
+Files: skills/runbook-run/SKILL.md, skills/task-implement/SKILL.md, commands/project-setup.md
+Preconditions: 304
+Feature: pipeline-dashboard
+
+---
+
+## 306. Switch the generator and the status line to English, and document the global-only home exception
+
+Status: [MISSING]
+Target: claude
+Files: skills/pipeline-dashboard/scripts/generate.sh, statusline/pipeline-statusline.sh, docs/authoring-guide.md, CLAUDE.md, VERSION, CHANGELOG.md
+Preconditions: 304, 305
+Feature: pipeline-dashboard
+
+---
+
+## 307. Update documentation for feature `pipeline-dashboard`
+
+Status: [MISSING]
+Target: claude
+Files: README.md, docs/reference.md, docs/authoring-guide.md, .claude/skills/context-budget/SKILL.md, .claude/context/pipeline-dashboard.md, .claude/context/runbook-run.md, .claude/context/runbook-run-contracts.md, .claude/context/task-implement.md, .claude/context/setup-commands.md, .claude/context/claude-md-hook-statusline.md, .claude/tasks/285.md, .claude/tasks/286.md, CHANGELOG.md, .claude/FEATURES.md
+Preconditions: 304, 305, 306
 Feature: pipeline-dashboard
 
 ---
