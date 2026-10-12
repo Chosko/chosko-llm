@@ -576,7 +576,7 @@ Feature: pipeline-dashboard
 
 ## 304. Make the pipeline-dashboard skill opt-in, with its protocol read on demand
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/pipeline-dashboard/SKILL.md, skills/pipeline-dashboard/references/protocol.md, skills/pipeline-dashboard/assets/index.html
 Preconditions: none
