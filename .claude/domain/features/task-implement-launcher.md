@@ -28,8 +28,10 @@ Deliberately out:
 
 - **Single-task runs.** `/task-implement 12` runs in the conversation and is
   untouched. There is no agent, no hand-off, nothing to shrink.
-- **Parallel agents.** Agents still run one at a time, in order. The existing
-  prohibition stands and is unrelated to this change.
+- **Parallel agents.** Agents run one at a time, in order, unless
+  `--parallel` is passed; that mode is
+  [parallel-task-runs](./parallel-task-runs.md)' and is unrelated to this
+  change.
 - **Changing the delegation guard.** `human`, `claude+human` and explicitly
   requested `[STALE]` tasks still stay in the parent conversation because they
   need the user present. Only the *cost of evaluating* the guard changes.
@@ -205,7 +207,9 @@ Hard contracts:
 
 - The parent reads no task body, on any path, ever.
 - Delegated and manual runs execute the same flow.
-- Agents run sequentially, never in parallel.
+- Agents run sequentially by default; `--parallel`
+  ([parallel-task-runs](./parallel-task-runs.md)) is the one exception, and
+  under it the launcher is still a launcher.
 - `human` / `claude+human` / requested `[STALE]` tasks never reach an agent.
 
 ## Dependencies

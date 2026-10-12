@@ -115,7 +115,8 @@ OPERATING RULES — with one change at the point where the unit would push:
 The agent never pushes, never touches the base branch and never leaves the
 worktree. Skills the unit invokes keep their default commit behaviour; their
 pull-at-start, pre-push re-sync and push are the orchestrator's, so the agent
-skips them as a run under `--no-push` does, and says so once.
+skips them as a run under `--no-push` does, and says so once — honoured from
+the sentence in its OPERATING RULES, with no flag typed.
 
 Rebasing `wt/<unit>` is not rewriting anyone else's history: the branch is
 private to the unit, unpushed, and exists for this one landing. `commit.md`
@@ -164,9 +165,13 @@ its unit failed. Nothing else records that:
   running it. A `[~]` step marker stays in the base body as the orchestrator
   writes it, since only the orchestrator writes that file.
 - The status line and the dashboard, which today read `[IN PROGRESS]` off the
-  working tree's `TASKS.md`, gain one probe each: the worktree list, read
-  with git's porcelain form, names every unit in flight. One line in each
-  renderer (`.claude/domain/features/pipeline-statusline.md`,
+  working tree's `TASKS.md`, gain one probe each: the worktree entries under
+  the common git dir (`worktrees/<unit>/HEAD`, resolved through a worktree's
+  `gitdir:` file), each naming a unit in flight by its `wt/<unit>` branch — a
+  direct read, since both renderers are one awk pass and fork no git. The
+  orchestrators and the pruners read the worktree list itself, with git's
+  porcelain form. One line in each renderer
+  (`.claude/domain/features/pipeline-statusline.md`,
   `.claude/domain/features/pipeline-dashboard.md`).
 - A run never starts a unit whose worktree already exists: it reports the
   path and skips the unit, under every selector. The two ways out are
@@ -253,12 +258,6 @@ remove a worktree leaves it and names it in *Follow-ups*, never halting.
 
 ## Open questions
 
-- **Skills that pull or push inside a unit.** The agent is told the remote is
-  the orchestrator's and skips those steps as under `--no-push`. Whether every
-  committing skill a unit can invoke honours that from a sentence in its
-  conversation, or whether one needs its `--no-push` flag typed — which the
-  subagent contract forbids adding — is to be confirmed when the OPERATING
-  RULES line is written.
 - **Test runners that scan the whole tree.** A full suite run in the base
   tree would collect files under `.claude/worktrees/`. The barrier rules of
   both orchestrators keep base-tree work and worktrees from coexisting, so
