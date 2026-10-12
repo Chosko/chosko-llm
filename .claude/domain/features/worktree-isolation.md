@@ -40,9 +40,10 @@ Deliberately out:
   document. This protocol takes a unit and a base and knows nothing about
   the other units in flight.
 - **Pushing from inside a worktree.** An agent never pushes to the base
-  branch. The base is checked out in the orchestrator's tree, so a push into
-  it from a worktree is refused by git under `--no-push` anyway; keeping the
-  push in the orchestrator makes the local and the remote path the same
+  branch; the one branch it pushes, its own `park/task-<N>`, is § *The agent
+  integrates*'. The base is checked out in the orchestrator's tree, so a push
+  into it from a worktree is refused by git under `--no-push` anyway; keeping
+  the push in the orchestrator makes the local and the remote path the same
   path.
 - **Merge commits.** A unit lands as a fast-forward of its rebased branch,
   so the history stays linear and a task still produces exactly one commit.
@@ -112,11 +113,13 @@ OPERATING RULES — with one change at the point where the unit would push:
    them on the new one;
 5. return, naming the base tip it rebased onto.
 
-The agent never pushes, never touches the base branch and never leaves the
-worktree. Skills the unit invokes keep their default commit behaviour; their
-pull-at-start, pre-push re-sync and push are the orchestrator's, so the agent
-skips them as a run under `--no-push` does, and says so once — honoured from
-the sentence in its OPERATING RULES, with no flag typed.
+The agent never pushes the base branch; the one branch it pushes is its own
+`park/task-<N>`, under `parking.md`. It never touches the base branch and
+never leaves the worktree. Skills the unit invokes keep their default commit
+behaviour; their pull-at-start, pre-push re-sync and push of the base are the
+orchestrator's, so the agent skips them as a run under `--no-push` does, and
+says so once — honoured from the sentence in its OPERATING RULES, with no
+flag typed.
 
 Rebasing `wt/<unit>` is not rewriting anyone else's history: the branch is
 private to the unit, unpushed, and exists for this one landing. `commit.md`

@@ -692,7 +692,7 @@ Feature: parallel-runbooks
 ---
 ## 300. Settle the park branch push inside a worktree
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-engine/references/parking.md, skills/task-engine/references/worktree.md, skills/task-engine/SKILL.md, .claude/domain/features/worktree-isolation.md, VERSION, CHANGELOG.md
 Preconditions: none

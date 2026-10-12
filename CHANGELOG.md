@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.84.3 — 2026-10-12
+
+- **A task parked inside a worktree pushes its `park/task-<N>` branch.** `task-engine`'s `worktree.md` names that branch as the one exception to its rule that a unit's agent never pushes: it is private to the task, touches no base branch and races with no other unit, and pushing it is what lets another machine unpark. `parking.md`'s park sequence therefore runs unchanged inside a worktree — the leftover delete, the push and the unpark's remote delete happen exactly as outside one, and `--no-push` alone suppresses them; the bookkeeping commit's push stays the launcher's, made at the landing.
+
 ## 1.84.2 — 2026-10-12
 
 - **`/task-implement --parallel` counts only what it spawned.** The scheduler's in-flight set is the tasks this run spawned and not yet landed, held in run memory: the count against N, the in-flight clause of eligibility, the overlap rule, a barrier's wait and the end-of-run test all read that set and nothing off git. The worktree list is what the skip-while-present rule reads — a worktree an earlier run left behind skips its task with one line, once per task per run, and counts toward nothing, so it no longer keeps a run open. `task-engine`'s `resolution.md` says the same of its in-flight clause.

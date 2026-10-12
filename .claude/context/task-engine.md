@@ -92,8 +92,9 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
   right before the spawn, `.claude/worktrees/` added to `.git/info/exclude`
   once; the agent's five integration steps — commit on `wt/<unit>`, rebase
   onto the base tip, resolve a conflict by re-applying its own intent,
-  re-verify when the base moved, return naming the tip — never pushing, the
-  pull/re-sync/push skipped as under `--no-push`; the orchestrator's landing
+  re-verify when the base moved, return naming the tip — never pushing the
+  base, its own `park/task-<N>` the one branch it pushes (`parking.md`), the
+  base's pull/re-sync/push skipped as under `--no-push`; the orchestrator's landing
   — `git merge --ff-only`, one re-rebase round through the same agent when
   the tip moved, push per `commit.md`, `git worktree remove` + `git branch
   -d` whose refusal fails the unit; the two invariants, one writer and a
