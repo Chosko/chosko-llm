@@ -719,7 +719,7 @@ Feature: parallel-runbooks
 
 ## 303. Update documentation for feature `parallel-runbooks`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: docs/reference.md, .claude/context/runbook-run-contracts.md, .claude/context/INDEX.md
 Preconditions: 302
