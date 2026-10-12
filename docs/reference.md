@@ -37,7 +37,9 @@ artifacts and forwards `--commit` (plus `--no-push`, if set) to the
 sub-commands it runs. On a non-git VCS (e.g. Plastic SCM), the injected
 `## VCS` section notes that `cm checkin` already syncs to the server, so no
 push cycle ever runs there. On a Unity project it offers to run
-[`/unity-mcp-setup`](#unity-mcp-setup-and-unity-mcp-skill).
+[`/unity-mcp-setup`](#unity-mcp-setup-and-unity-mcp-skill). It also offers the
+[`pipeline-dashboard`](#pipeline-dashboard) opt-in, default no, and on yes
+writes `Pipeline dashboard: on` into `CLAUDE.md`.
 
 ### `/task-setup`
 
@@ -973,6 +975,8 @@ returns it already holds. It adds no commit and flips no status; with
 `/follow-ups` not installed the list holds the run's own items only,
 silently.
 
+`--dashboard` / `--no-dashboard` switch the [`pipeline-dashboard`](#pipeline-dashboard) live page on or off for one run, overriding the project's `Pipeline dashboard: on` line; without either, and without that line, nothing changes.
+
 ### `/task-review`
 
 Audit a diff against the acceptance criteria of the task that produced it.
@@ -1094,11 +1098,14 @@ retires the old command copy.
 
 ### `pipeline-dashboard`
 
-A live progress page for pipeline runs. While a `/task-implement` or a
-`/runbook-run` is in progress — or whenever you ask how things stand ("come
-siamo messi", "a che punto siamo", "dashboard") — the orchestrating session
-keeps one private claude.ai Artifact per project up to date. Subagents never
-touch it.
+A live progress page for pipeline runs, **opt-in and off by default**. A
+`/task-implement` or `/runbook-run` keeps it only when you pass
+`--dashboard`, or when the project's `CLAUDE.md` has the line
+`Pipeline dashboard: on` (`/project-setup` offers to write it);
+`--no-dashboard` turns it off for one run. While it is on, the orchestrating
+session keeps one private claude.ai Artifact per project up to date;
+subagents never touch it. When it is off, the orchestrators behave exactly as
+without the skill, and its protocol file is never read.
 
 The page shows the `[ACTIVE]` milestone of `PLAN.md` (every task when there
 is no plan), three meters — runbook steps, tasks done, features closed — the
@@ -1108,16 +1115,19 @@ a banner and a dialog show the question, its options and the recommended one;
 you still answer in the terminal. The page refreshes at run start and end, on
 every task status change (watched every 10 seconds with the Monitor tool), on
 every step transition, when a question starts or stops waiting, and on
-request, each time with one short line in chat. Asking how things stand also
-prints a text snapshot in a code block.
+request, each time with one short line in chat. The artifact is read once per
+session, before that session's first update, not before every update.
+
+Asking how far along the work is ("how far along are we", "progress",
+"dashboard") prints a text snapshot in a code block, whether or not the
+dashboard is on.
 
 Its state lives in `~/.claude/pipeline-dashboard/<owner>-<repo>/` — the link,
 the generated page and data, the waiting question — never in the repository.
 The page is titled `Pipeline <repo>`, so a session on another machine finds
 the same artifact instead of creating a second one. Without the Artifact or
 Monitor tool, or when anything about the page fails, the run carries on with
-one warning line. `/task-implement` and `/runbook-run` cite it and work
-exactly as before when it is not installed.
+one warning line.
 
 ### `task-engine`
 
@@ -1269,7 +1279,10 @@ that has none of the conversation the prompts came out of.
   for a launch no human sees. `--attended` overrides a header
   `Execution policy: unattended` for one run: a question is relayed and the
   run waits, the default. The two together are an error, as is `--skip-parked`
-  without `--unattended`; all three compose with `--inline`. A reply by a
+  without `--unattended`; all three compose with `--inline`. `--dashboard` /
+  `--no-dashboard` switch the [`pipeline-dashboard`](#pipeline-dashboard)
+  live page on or off for one run, overriding the project's
+  `Pipeline dashboard: on` line. A reply by a
   parked question's number — mid-run, or after the closing report — unparks
   the step (`unparked with answer:` in its `Context:`, back to `[ ]`), and it
   is the next step selected. When steps remain, none is selectable and one is

@@ -10,7 +10,7 @@ User-facing changes per root `VERSION`, highest version first. Rules and schema:
 
 ## 1.79.0 — 2026-10-10
 
-- **New skill `pipeline-dashboard`.** While a `/runbook-run` or `/task-implement` runs, the orchestrating session keeps one private Artifact per project live with the milestone, the runbook steps and the tasks, and shows there any question waiting for your answer. Ask "a che punto siamo" for a text snapshot in chat.
+- **New skill `pipeline-dashboard`.** While a `/runbook-run` or `/task-implement` runs, the orchestrating session keeps one private Artifact per project live with the milestone, the runbook steps and the tasks, and shows there any question waiting for your answer. Ask how far along the work is for a text snapshot in chat.
 - **`/runbook-run` and `/task-implement` follow `pipeline-dashboard` when it is installed.** Without it, nothing changes.
 
 ## 1.78.1 — 2026-10-10

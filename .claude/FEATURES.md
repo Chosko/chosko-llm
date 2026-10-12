@@ -200,7 +200,7 @@ Tasks: 281, 282, 283
 
 ---
 
-## pipeline-dashboard — Always-on live Artifact dashboard of pipeline progress, with questions waiting for the user
+## pipeline-dashboard — Opt-in live Artifact dashboard of pipeline progress, with questions waiting for the user
 
 Status: [PLANNED]
 Doc: .claude/domain/features/pipeline-dashboard.md

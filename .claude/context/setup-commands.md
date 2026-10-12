@@ -9,14 +9,16 @@ them follows: [feature-contract.md](./feature-contract.md).
 - `commands/project-setup.md` — interactive first-time project init
   wizard. Two phases: GATHER phase collects every choice upfront (VCS
   detection, CLAUDE.md seeding from pasted source, AGENTS.md, task backlog,
-  domain layer, context layer), EXECUTE phase applies them in
+  domain layer, context layer, pipeline dashboard), EXECUTE phase applies them in
   fixed order.
   **Authoring command — makes NO commits by default.** Writes own
   artifacts (CLAUDE.md project-info section synthesized from user-pasted
   material only, `## VCS` section mapping git→`cm` for non-git VCS like
   Plastic SCM, `## Tasks implementation` section on Unity projects
   covering editor dirty-tree noise and optional skip-tests
-  testing-policy marker, and AGENTS.md), then runs heavy sub-commands last —
+  testing-policy marker, the opt-in `Pipeline dashboard: on` line when the
+  user accepts the dashboard question (default no), and AGENTS.md), then
+  runs heavy sub-commands last —
   `/task-setup` (leaves scaffolding uncommitted by default), then
   `/domain-setup` (Step 5b — deliberately BEFORE context layer, since
   `/context-build`'s DOMAIN DEPENDENCIES sections link to domain files; its

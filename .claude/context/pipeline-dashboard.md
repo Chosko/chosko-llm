@@ -2,21 +2,30 @@
 
 ## Overview
 
-Covers `skills/pipeline-dashboard/`, the always-on progress dashboard. The
+Covers `skills/pipeline-dashboard/`, the opt-in progress dashboard. The
 kinds: [features.md](./features.md); the design:
 `../domain/features/pipeline-dashboard.md`.
 
-- `skills/pipeline-dashboard/SKILL.md` — the protocol the **main session
-  only** follows while a run is in progress or when the user asks how things
-  stand (auto-triggered by its `description`; no `requires:`, and nothing
-  requires it). Regenerate only after every status marker of the event is
-  written; copy the state folder's page and data into
-  `<scratchpad>/pipeline-dashboard/<slug>/` (the Artifact tool publishes only
-  from working directories or the scratchpad) and publish that copy; with a
-  stored `url`, `read` it then republish to it; without, `list` for the title
-  `Pipeline <repo>` before creating one, then store the URL. Refresh triggers,
-  the Monitor watcher re-armed every 30 minutes, `pending.json` written then
-  cleared, one Italian chat line per republish, any failure one warning line.
+- `skills/pipeline-dashboard/SKILL.md` — short on purpose: the only part
+  read when the dashboard is off. An auto-trigger skill (one of six, 150-word
+  description budget): fires on progress questions and on runs with the
+  dashboard on; no `requires:`, and nothing requires it. Holds the opt-in rule
+  — `--dashboard` / `--no-dashboard` for a run, else `Pipeline dashboard: on`
+  in the project's `CLAUDE.md`, else off — the text snapshot on request, and
+  the pointer to `references/protocol.md`. The same rule is restated as one
+  line in `runbook-run` (an ARGUMENTS row) and `task-implement` (an ARGUMENT
+  PARSING paragraph), which cite the skill by name.
+- `skills/pipeline-dashboard/references/protocol.md` — read only when the
+  dashboard resolves on; the **main session only** follows it. Regenerate
+  only after every status marker of the event is written; copy the state
+  folder's page and data into `<scratchpad>/pipeline-dashboard/<slug>/` (the
+  Artifact tool publishes only from working directories or the scratchpad)
+  and publish that copy; with a stored `url`, `read` it once per session
+  before the first publish, then republish without reading; without, `list`
+  for the title `Pipeline <repo>` before creating one, then store the URL.
+  Refresh triggers, the Monitor watcher re-armed every 30 minutes,
+  `pending.json` written then cleared, one English chat line per republish,
+  any failure one warning line.
 - `skills/pipeline-dashboard/scripts/generate.sh` — one awk pass (plus one
   `date` and one `mkdir`): reads `PLAN.md` (first `[ACTIVE]`), `FEATURES.md`,
   `TASKS.md`, `RUNBOOKS.md` (first `[RUNNING]`, else last), the runbook body

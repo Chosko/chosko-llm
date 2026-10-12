@@ -606,7 +606,7 @@ Feature: pipeline-dashboard
 
 ## 307. Update documentation for feature `pipeline-dashboard`
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, docs/authoring-guide.md, .claude/skills/context-budget/SKILL.md, .claude/context/pipeline-dashboard.md, .claude/context/runbook-run.md, .claude/context/runbook-run-contracts.md, .claude/context/task-implement.md, .claude/context/setup-commands.md, .claude/context/claude-md-hook-statusline.md, .claude/tasks/285.md, .claude/tasks/286.md, CHANGELOG.md, .claude/FEATURES.md
 Preconditions: 304, 305, 306

@@ -19,8 +19,7 @@ The rest of the bullet: [runbook-run.md](./runbook-run.md) and
   narration of spawn/wait/classify/`Done:`/commit, the progress line the only
   status line on a forced mid-step turn, relayed questions,
   spawn-relay lines and the one-line `Follow-up: <item>` printed when a
-  follow-up arises mid-run (`follow-ups-resolve` § DURING A RUNBOOK RUN) and
-  the dashboard's one line per update (`pipeline-dashboard`, when in use) never
+  follow-up arises mid-run (`follow-ups-resolve` § DURING A RUNBOOK RUN) never
   suppressed — with the **closing report as the record of
   the run**, printed the same at completion, at a bound, at the end branch
   and at a failure halt; a parked step's question under its handle is never
@@ -79,9 +78,7 @@ The rest of the bullet: [runbook-run.md](./runbook-run.md) and
   itself, refused beside `--relay-spawns` or `--model` — see
   `.claude/domain/features/runbook-inline.md`): steps are **always sequential** (never parallel,
   even when declared independent — one question stream, and two agents would
-  race on `Done:` lines); it **writes exactly two files** — plus, through the
-  `pipeline-dashboard` skill when that skill is available, its state outside the
-  tree — and does none of the
+  race on `Done:` lines); it **writes exactly two files** and does none of the
   work itself; **no step is ticked before its subagent's result arrives**; it
   reads only `CLAUDE.md`, the runbook and the index — **never a step's task
   body or named document, not even to compose the prompt**, whose
