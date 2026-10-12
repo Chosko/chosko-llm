@@ -81,7 +81,7 @@ bytes so a multi-byte character is never split.
 Inside the awk program, five concerns:
 
 - **Label and glyph table** — every user-visible word (`ctx`, `until reset`,
-  `task`, `in corso`) and both glyph sets in one table at the top. The
+  `task`, `in progress`) and both glyph sets in one table at the top. The
   default set is Nerd Font (folder, git branch, git commit, hourglass, play,
   check, cog), all single-cell; `--no-nerd-font` selects single-width Unicode
   (`▶ ✔ ↳`). Never emoji, never `⚙`, whose ambiguous width breaks the column
@@ -116,9 +116,9 @@ A global command declaring `requires: statusline:pipeline-statusline`, so
 installing the command installs the renderer first. The executing agent
 does the work; the command body is the procedure.
 
-- **Locate** — resolves the renderer's absolute path from the command's own
-  installed location (a path relative to itself, per the home-path rule),
-  and the user `settings.json` beside it.
+- **Locate** — resolves the renderer's absolute path and the user
+  `settings.json` in the user scope, `${CLAUDE_HOME:-$HOME/.claude}`, as the
+  home-path guard's exception for global-only kinds allows.
 - **Install** — reads the current `statusLine`. Absent: writes the new value.
   Already ours: refreshes the script and reports. Anything else: shows it,
   asks replace or abort, and on replace backs it up before writing. The

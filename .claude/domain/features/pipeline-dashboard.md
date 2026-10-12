@@ -1,11 +1,12 @@
 # Pipeline dashboard
 
-A global skill that, while pipeline work runs or whenever the user asks how
-things stand, keeps a private claude.ai Artifact page showing the project's
-progress — milestone, runbook steps, tasks, features — live, and shows on it
-any question waiting for the user's answer; plus a compact text snapshot on
-request. Bundled with it: the page template, a generator that turns the
-project's indexes into the page's data, and the text renderer.
+An opt-in global skill that, while a pipeline run with the dashboard switched
+on is in progress, keeps a private claude.ai Artifact page showing the
+project's progress — milestone, runbook steps, tasks, features — live, and
+shows on it any question waiting for the user's answer; plus a compact text
+snapshot whenever the user asks how things stand. Bundled with it: the
+protocol the orchestrating session follows, the page template, a generator
+that turns the project's indexes into the page's data, and the text renderer.
 
 ## Purpose
 
@@ -18,20 +19,29 @@ one surface reachable from anywhere; the terminal stays the only place
 answers are given.
 
 The prototype built for one project was approved as a design; this feature
-generalises it so every value comes from the project's own indexes.
+generalises it so every value comes from the project's own indexes. Keeping
+the page live costs tokens on every event, so a project opts in; a project
+that does not pays nothing.
 
 ## Scope and non-goals
 
 In scope:
 
-- The skill body: activation, ownership, refresh triggers, publish protocol,
-  pending-question protocol, chat lines, degradation.
+- The skill body: activation, opt-in resolution, the text snapshot on
+  request, and the pointer to the protocol.
+- The protocol, in a supporting file: ownership, ordering, refresh triggers,
+  watcher, publish, pending question, chat lines, degradation.
 - The generator (data for the page, and the text snapshot) and the page.
 - Per-project state in the user scope.
-- One citation line in `runbook-run` and `task-implement`.
+- The opt-in: a `CLAUDE.md` clause, offered by `/project-setup`, and an
+  override flag pair on `runbook-run` and `task-implement`, each of which
+  carries a one-line pointer.
 
 Non-goals:
 
+- **A default-on dashboard.** Without the clause or the flag, the
+  orchestrators behave exactly as without the skill, and the protocol file is
+  never read.
 - **Collecting answers on the page.** The page never takes input; every
   answer is typed in the Claude Code terminal.
 - **Split panes or terminal side panels.** Tried and rejected by the user.
@@ -41,8 +51,9 @@ Non-goals:
 - **Subagents publishing.** Only the orchestrating session owns the
   dashboard.
 - **A second artifact for the same project**, on any machine.
-- **Hard dependency.** The orchestrators cite the skill by name; without it
-  they behave exactly as without the citation.
+- **Hard dependency.** The orchestrators name the skill; without it they
+  behave exactly as before.
+- **A localised interface.** Every user-visible string is English.
 - **New dependencies.** No jq or Python; the page loads only Google Fonts.
 
 ## Architecture
@@ -55,12 +66,23 @@ pipeline.
 
 ### Skill body — `skill:pipeline-dashboard`
 
-The protocol the orchestrating session follows.
+Short, and the only part read when the dashboard is off.
 
-- **Activation.** The `description` makes it load on its own whenever a
-  pipeline run starts or is in progress in a project with `.claude/TASKS.md`
-  or `.claude/RUNBOOKS.md`, and whenever the user asks about progress
-  ("come siamo messi", "a che punto siamo", "dashboard").
+- **Activation.** The `description` makes it load whenever the user asks how
+  the work stands ("how far along are we", "progress", "dashboard"), and
+  whenever a pipeline run with the dashboard switched on is in progress. It is
+  one of the auto-trigger skills, with their description budget.
+- **Opt-in resolution.** For a run: `--dashboard` turns it on and
+  `--no-dashboard` off; without either, the project's `CLAUDE.md` decides — a
+  `Pipeline dashboard: on` line turns it on, anything else leaves it off.
+- **Text snapshot.** On a progress question, whatever the opt-in.
+- **Pointer.** When the dashboard resolves on, read the protocol file and
+  follow it for the run.
+
+### Protocol — `references/protocol.md`
+
+Read only when the dashboard resolves on; the orchestrating session follows it.
+
 - **Ownership.** Only the main session regenerates and publishes; a
   subagent never writes the dashboard's state or calls the Artifact tool.
   Subagents still change the indexes, and the main session sees those
@@ -71,9 +93,9 @@ The protocol the orchestrating session follows.
 - **Refresh triggers.** Run start and run end (a failure stop included);
   every task status change, seen by the watcher; every runbook step
   transition; a question for the user, and again once answered; a request.
-  After each republish, one short line in chat in Italian naming what
-  changed ("Dashboard aggiornata: è partito il task 221."), with no version
-  or URL except on the first publish, which gives the link.
+  After each republish, one short line in chat naming what changed
+  ("Dashboard updated: task 221 started."), with no version or URL except on
+  the first publish, which gives the link.
 - **Watcher.** The Monitor tool (deferred, loaded by ToolSearch) runs a
   10-second snapshot of the in-scope task statuses and emits one line per
   change; each line is an event. Monitors expire after 30 minutes: re-armed
@@ -94,28 +116,28 @@ shows as such rather than as zero progress.
 
 ### Page
 
-The approved prototype's design, made generic: Italian UI, the "mixing desk"
+The approved prototype's design, made generic: English UI, the "mixing desk"
 look (Familjen Grotesk, IBM Plex Sans, IBM Plex Mono from Google Fonts),
 colour tokens on `:root` with the dark variant under
 `prefers-color-scheme` guarded by `:root:not([data-theme="light"])` and
 repeated under `[data-theme="dark"]`; done green, running amber with a pulse
 (off under `prefers-reduced-motion`), todo grey, failed red. Sections, top to
 bottom: header (eyebrow `<project> · milestone <id>`, h1
-`Avanzamento <milestone>`, a subtitle derived from the data); the pending
-banner; three VU meters ("Passi del runbook", "Task <milestone> completati"
-with segments capped near 47, "Feature <milestone> chiuse"); the "In corso"
-box; the "Tracklist del runbook" (per step: number, feature or label, task
-range and d/t, one square per task with a `#id title — STATUS` tooltip and
+`Progress <milestone>`, a subtitle derived from the data); the pending
+banner; three VU meters ("Runbook steps", "<milestone> tasks done" with
+segments capped near 47, "<milestone> features closed"); the "In progress"
+box; the "Runbook tracklist" (per step: number, feature or label, task range
+and d/t, one square per task with a `#id title — STATUS` tooltip and
 PARTIAL / INCORRECT / STALE in red, status chip, `Done:` line); legend;
-footer "Aggiornato <generated> · dati da TASKS.md, FEATURES.md e dal
+footer "Updated <generated> · data from TASKS.md, FEATURES.md and the
 runbook". Phone width with a 16 px gutter and no horizontal scroll; the DOM
 is built with `textContent`, never `innerHTML` from data. Without a milestone
 the eyebrow and h1 name the project and the meters drop the milestone label.
 
 The pending modal: where, title, question, options with the recommended one
-highlighted and marked "(consigliata)", "Perché la consiglio: …", and
-"Rispondi nel terminale di Claude Code con la lettera dell'opzione". It opens
-by itself once per question id (remembered in `localStorage` inside
+highlighted and marked "(recommended)", "Why I recommend it: …", and
+"Answer in the Claude Code terminal with the option's letter". It opens by
+itself once per question id (remembered in `localStorage` inside
 try/catch), reopens from the banner, closes on button, backdrop or Esc, with
 focus moved in and restored.
 
@@ -125,11 +147,15 @@ On a progress question in chat: a compact code block — header, step and task
 bars, the last two done steps and every remaining one with a mini bar per
 step, the running task under its step, the last three tasks done.
 
-### Citation in the orchestrators
+### Opt-in in the orchestrators and in `/project-setup`
 
-`runbook-run` and `task-implement` each gain one line: while orchestrating,
-the main session follows the `pipeline-dashboard` skill when it is available.
-The line names the skill and restates none of its rules.
+`runbook-run` and `task-implement` each take `--dashboard` and
+`--no-dashboard`, documented in their body headers only, and carry one line
+pointing at the skill: when the run's dashboard resolves on, the main session
+follows `pipeline-dashboard`. The line names the skill and restates none of
+its rules. `/project-setup` offers the dashboard among its choices and, when
+the user accepts, writes the `Pipeline dashboard: on` line into the
+project's `CLAUDE.md`.
 
 ## Data and state
 
@@ -147,11 +173,14 @@ The line names the skill and restates none of its rules.
     their `Done:` line, up to `## Do not re-propose`. A step's tasks come from
     `(task N)` / `(tasks N–M)` in its title, else from the tasks whose
     `Feature:` is the feature slug the title names.
+- **The opt-in** — the `Pipeline dashboard: on` line in the project's
+  `CLAUDE.md`, read at run start; a run flag overrides it for that run only.
 - **The data model** (generated, never hand-written): `milestone`,
   `features`, `tasks`, `runbook`, `pending`, `generated` (local timestamp),
   plus the project label and the list of indexes that could not be read.
-- **Per-project state**, in `${CLAUDE_HOME:-$HOME/.claude}/pipeline-dashboard/<slug>/`:
-  `url` (the artifact link), `index.html` and the data file (what is
+- **Per-project state**, in `${CLAUDE_HOME:-$HOME/.claude}/pipeline-dashboard/<slug>/`
+  — the user scope, as the home-path guard's exception for global-only kinds
+  allows: `url` (the artifact link), `index.html` and the data file (what is
   published, through a copy in the session scratchpad, since the Artifact
   tool publishes only from the working directories or the scratchpad),
   `pending.json`. The slug comes from the `origin` remote
@@ -164,10 +193,11 @@ The line names the skill and restates none of its rules.
 - **Publish.** First publish for a project on a machine with no stored `url`:
   list the user's artifacts and look for the project's fixed title; found →
   read it and republish to it; not found → publish the page with its data
-  file and icon `chart`. Either way, store the `url`. Every later update, in
-  any session: read the stored `url`, then republish to it. A publish that
-  is refused is one warning line; the stored `url` is kept.
-- **Pending question.** Written by the orchestrator, in Italian, when a
+  file and icon `chart`. Either way, store the `url`. With a stored `url`:
+  read it once per session, before that session's first publish to it, then
+  republish to it on every update. A publish that is refused is one warning
+  line; the stored `url` is kept.
+- **Pending question.** Written by the orchestrator, in English, when a
   question waits for the user, then the dashboard republishes; cleared to
   `null` once answered, then republishes again:
   `{"id", "where", "title", "question", "options": [{"key", "text"}], "recommended", "why"}`,
@@ -176,7 +206,7 @@ The line names the skill and restates none of its rules.
   state folder, or prints the text snapshot with its text flag; exit 0 with a
   partial model when indexes are missing; a non-zero exit only when it cannot
   write at all.
-- **Chat lines.** One per republish, Italian, naming the change; the link
+- **Chat lines.** One per republish, English, naming the change; the link
   only on the first publish or when asked.
 - **Failure contract.** No dashboard failure ever fails, pauses or delays a
   run; no data is invented — unreadable sources are named on the page.
@@ -187,6 +217,7 @@ The line names the skill and restates none of its rules.
   only, one warning.
 - **Monitor tool** (deferred): the status watcher. Absent → refresh only on
   the explicit triggers, one warning.
+- **`/project-setup`**: offers the opt-in and writes the `CLAUDE.md` line.
 - **runbook-suite**, **task-archive**, **production-plan**, **backlog
   ordering**: the formats read (`RUNBOOKS.md` blocks and step markers, the
   archive rule, the `PLAN.md` block, `TASKS.md` blocks and `Feature:`).
