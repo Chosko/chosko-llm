@@ -47,6 +47,19 @@ what changes is the list's role. It is not a queue walked in order but the
 **admissible set** — the tasks this run may start — and its order is the
 **priority** among the tasks eligible at the same moment.
 
+The **in-flight set** is the tasks this run spawned whose return it has
+not yet landed, held in run memory and nowhere else: a task enters it at
+its spawn and leaves it at its landing, and the launcher reads nothing off
+git to know it, because the one thing git cannot tell it is which worktrees
+are this run's own. Every "in flight" in this file — the count against N,
+the in-flight clause of eligibility, the overlap rule's "any task in
+flight", a barrier's wait, the end-of-run test — means membership in that
+set. The worktree list (`git worktree list --porcelain`) is what the
+skip-while-present rule and the other readers of `worktree.md` § *A
+worktree is a unit in flight* consult, never what counts: a worktree an
+earlier run left behind skips its task with that rule's one line, once per
+task per run, and counts toward nothing.
+
 At every **scheduling point** — the start of the run, and each landing —
 the launcher:
 
@@ -55,8 +68,7 @@ the launcher:
    § *Eligibility* exactly as written, its in-flight clause included: a
    task in flight is neither done nor eligible, so a task whose
    `Preconditions:` name one waits for it to **land**, since landing is
-   what writes the status this read sees. The in-flight set is the worktree
-   list (`git worktree list --porcelain`), not a count held in memory;
+   what writes the status this read sees;
 2. walks the list in order and, while fewer than N tasks are in flight — no
    bound under `max` — starts each task it may: it creates the worktree per
    `worktree.md` § *Creating the worktree*, the `.git/info/exclude` line
@@ -64,9 +76,9 @@ the launcher:
    true`, the prompt of § *The agent prompt* carrying PARALLEL and the
    worktree path. On this read it skips a task that is not eligible, a task
    already in flight, a task the overlap rule holds back (below), and a
-   task whose worktree already exists — the skip-while-present line of
-   `worktree.md`, printed once per task per run. A skipped task is not
-   dropped: it is examined again at the next scheduling point;
+   task not in flight whose worktree already exists — the skip-while-present
+   line of `worktree.md`, printed once per task per run. A skipped task is
+   not dropped: it is examined again at the next scheduling point;
 3. stops the walk at a barrier (below), and otherwise walks the whole list;
    then waits for the next return.
 

@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.84.2 — 2026-10-12
+
+- **`/task-implement --parallel` counts only what it spawned.** The scheduler's in-flight set is the tasks this run spawned and not yet landed, held in run memory: the count against N, the in-flight clause of eligibility, the overlap rule, a barrier's wait and the end-of-run test all read that set and nothing off git. The worktree list is what the skip-while-present rule reads — a worktree an earlier run left behind skips its task with one line, once per task per run, and counts toward nothing, so it no longer keeps a run open. `task-engine`'s `resolution.md` says the same of its in-flight clause.
+
 ## 1.84.1 — 2026-10-11
 
 - **`/runbook-describe` reads a parallel runbook as one.** The header line ends with `Parallelism: <N|max>` when the body carries it, one `Independent: <n> of <total> steps (Depends on: none)` line closes the header region on such a runbook so the honesty of the graph can be judged without opening a prompt, and every `[~]` step is tagged `in flight` on its line — the closing count names the marker the same way. A runbook with no `Parallelism:` line renders exactly as before.

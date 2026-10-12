@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.13.0
+version: 1.13.1
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run; `--parallel <N|max>` keeps up to N delegated tasks in flight at once, each in its own worktree. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, command:follow-ups

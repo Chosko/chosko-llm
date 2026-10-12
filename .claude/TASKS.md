@@ -701,7 +701,7 @@ Preconditions: none
 
 ## 301. Define the scheduler's in-flight set as the units this run spawned
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/task-implement/delegated-runs.md, skills/task-implement/SKILL.md, .claude/domain/features/parallel-task-runs.md, VERSION, CHANGELOG.md
 Preconditions: none

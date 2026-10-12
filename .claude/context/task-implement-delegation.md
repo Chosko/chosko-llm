@@ -33,14 +33,19 @@ suite: [task-suite.md](./task-suite.md).
   base `TASKS.md`, re-derives eligibility per `resolution.md` § Eligibility
   with its in-flight clause (a task in flight is neither done nor eligible;
   a dependent waits for it to **land**, since landing writes the status the
-  read sees; in-flight set = `git worktree list --porcelain`, no count in
-  memory), then walks the list in order while fewer than N in flight (no
+  read sees). The **in-flight set** = the tasks this run spawned and not
+  yet landed, run memory only, nothing read off git — every "in flight" in
+  the file (count against N, eligibility clause, overlap rule, barrier
+  wait, end-of-run test) means membership in it; the worktree list is what
+  the skip-while-present rule and the other readers consult, never what
+  counts. Then walks the list in order while fewer than N in flight (no
   bound under `max`), creating each worktree per `worktree.md` (the
   `.git/info/exclude` line once per run) and spawning with
   `run_in_background: true`; skips a task not eligible, in flight, held
-  back by the overlap rule, or whose worktree already exists
-  (skip-while-present line, once per task per run) — skipped is not
-  dropped, re-examined next point; stops the walk at a barrier. Explicit
+  back by the overlap rule, or not in flight with a worktree already there
+  (skip-while-present line, once per task per run, counts toward nothing)
+  — skipped is not dropped, re-examined next point; stops the walk at a
+  barrier. Explicit
   task never blocked by a precondition not in flight; one in flight is
   waited on. Run ends when nothing in flight and nothing can start.
   **Overlap rule** (§ *The overlap rule*): two tasks whose `Files:`
