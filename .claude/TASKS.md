@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 299
+Last task number: 301
 
 ---
 
@@ -688,5 +688,22 @@ Target: claude
 Files: README.md, docs/reference.md, docs/cli-help.txt, .claude/context/runbook-suite.md, .claude/context/runbook-run.md, .claude/context/runbook-run-loop.md, .claude/context/runbook-run-contracts.md, .claude/context/runbook-create.md, .claude/context/runbook-readers.md, .claude/context/pipeline-readers.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 295, 296, 297, 298
 Feature: parallel-runbooks
+
+---
+## 300. Settle the park branch push inside a worktree
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-engine/references/parking.md, skills/task-engine/references/worktree.md, skills/task-engine/SKILL.md, .claude/domain/features/worktree-isolation.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 301. Define the scheduler's in-flight set as the units this run spawned
+
+Status: [MISSING]
+Target: claude
+Files: skills/task-implement/delegated-runs.md, skills/task-implement/SKILL.md, .claude/domain/features/parallel-task-runs.md, VERSION, CHANGELOG.md
+Preconditions: none
 
 ---
