@@ -335,9 +335,10 @@ done; `all` works through the backlog in that same order. Both skip stale
 tasks so a batch run never guesses, and
 a multi-task run can hand each task to a fresh subagent so later tasks don't
 inherit earlier ones' context. On a human-in-the-loop task it pauses at each checkpoint,
-walks you through it, and verifies the outcome itself before moving on. On a
-Unity project set up with `/unity-mcp-setup` it can drive the editor over
-MCP instead and hand you a verification step in place of an instruction.
+walks you through it, and verifies the outcome itself before moving on. When
+a tool connected to the session can perform a checkpoint's manual step, it
+asks once per task whether to drive the tool itself, and then hands you a
+verification step in place of an instruction.
 
 By default a run is **attended**: a question about the work is put to you and
 the run waits. Pass **`--unattended`** for a run nobody is watching and the
@@ -464,9 +465,6 @@ ends. Meaning-preserving, never a style compressor. Uncommitted by default.
 
 ## 8. Editor and shell extras
 
-- **`/unity-mcp-setup`** wires a Unity project for MCP so `/task-implement`
-  can drive the editor itself; **`unity-mcp-skill`** is the operator guide
-  Claude leans on while doing so.
 - **`claude-md:git-commit-style`**, **`claude-md:tool-usage-policy`** and
   **`claude-md:editing-discipline`** inject a managed section into
   `CLAUDE.md` (global, or a project's with `--local`): scannable commit
@@ -543,7 +541,7 @@ Every feature requires YAML frontmatter (`name`, `version`, `type`, `description
 
 **The `description` is short by contract.** Claude Code injects every installed feature's `description` into the system prompt at session start and truncates each at 1,536 characters, so a description is a cost every session pays whether or not the feature is invoked. Each one says what the feature does and when to use it, front-loaded: at most 60 words / 400 characters for a feature you invoke by name, 150 words / 1,000 characters for the five skills Claude selects on its own (`claude-council`, `runbook-suggest`, `pipeline-suggest`, `follow-ups-resolve`, `pipeline-dashboard`), trigger phrases first and any "Not for" list last, never a literal ` --- `. Flags, refusals, read-only contracts and commit defaults live in the body's leading `#` header instead, which loads only when the feature runs and which `chosko-llm show` prints under the description. The full contract is in [docs/authoring-guide.md](docs/authoring-guide.md#the-description-contract).
 
-**Some features are hidden from the model by design.** Ten carry `disable-model-invocation: true` — the two reference libraries `task-engine` and `pipeline-engine`, and the wizards and housekeeping commands `/project-setup`, `/task-setup`, `/domain-setup`, `/unity-mcp-setup`, `/refactor-codebase`, `/refactor-tests`, `/runbook-prune`, `/runbook-clean`. Each stays listed and typeable, but its description never enters the model's context, since none is useful to suggest unprompted. `unity-mcp-skill` carries a `paths:` filter (`Assets/**`, `ProjectSettings/**`, `Packages/**`) so it loads only in a Unity project. `parse_frontmatter` ignores keys it does not know, so these pass through `add` / `update` untouched.
+**Some features are hidden from the model by design.** Eleven carry `disable-model-invocation: true` — the three reference libraries `task-engine`, `pipeline-engine` and `interaction-engine`, the authoring skill `doc-consolidate`, and the wizards and housekeeping commands `/project-setup`, `/task-setup`, `/domain-setup`, `/refactor-codebase`, `/refactor-tests`, `/runbook-prune`, `/runbook-clean`. Each stays listed and typeable, but its description never enters the model's context, since none is useful to suggest unprompted. `parse_frontmatter` ignores keys it does not know, so these pass through `add` / `update` untouched.
 
 **Versioning.** There are two version axes. The per-feature `version:` frontmatter versions a single command or skill (and gates `add` / `update`). The root `VERSION` file is the repo-level stamp that `install.sh` reports: bump it on every shipped change, patch for fixes, minor for a new feature, major for a breaking CLI change. A feature change bumps both.
 

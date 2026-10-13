@@ -36,8 +36,7 @@ everything uncommitted by default; `--commit` commits (and pushes) its own
 artifacts and forwards `--commit` (plus `--no-push`, if set) to the
 sub-commands it runs. On a non-git VCS (e.g. Plastic SCM), the injected
 `## VCS` section notes that `cm checkin` already syncs to the server, so no
-push cycle ever runs there. On a Unity project it offers to run
-[`/unity-mcp-setup`](#unity-mcp-setup-and-unity-mcp-skill). It also offers the
+push cycle ever runs there. It also offers the
 [`pipeline-dashboard`](#pipeline-dashboard) opt-in, default no, and on yes
 writes `Pipeline dashboard policy: on` into `CLAUDE.md`.
 
@@ -889,16 +888,15 @@ On a human-in-the-loop task it pauses at each checkpoint, walks you through
 the manual step, and verifies the outcome itself (the promised file exists,
 the project compiles) before moving on; saying "done" isn't enough.
 
-On a Unity project set up with
-[`/unity-mcp-setup`](#unity-mcp-setup-and-unity-mcp-skill), those
-checkpoints can flip around: when the `UnityMCP` server is connected,
-`/task-implement` makes the editor changes itself (checking the Console after
-compilation and creating GameObjects, components, and references via MCP),
-then hands you a *verification* step ("I created Foo under Bar — confirm you
-see it") instead of an instruction. It asks once per task whether you want it
-to drive Unity or pause for you to do the steps manually, and steps MCP
-genuinely can't perform stay manual. When the server isn't connected, the
-standard manual protocol runs unchanged.
+When a tool connected to the session can perform a checkpoint's manual step
+(an editor, a cloud console), those checkpoints can flip around: it asks once
+per task whether it drives the tool itself or you do the steps manually, reads
+the tool's console after a compile, waits out a reload before the next
+action, and re-queries the tool or the filesystem before a checkpoint counts
+as done — then hands you a *verification* step ("I created Foo under Bar —
+confirm you see it") instead of an instruction. A step the tool cannot
+perform stays manual, and with no such tool connected the standard manual
+protocol runs unchanged.
 
 Commits and pushes once per task (`--no-commit` to skip both, `--no-push` to
 commit without pushing).
@@ -1818,26 +1816,6 @@ the push).
 
 ## 8. Editor and shell extras
 
-### `/unity-mcp-setup` and `unity-mcp-skill`
-
-For Unity projects, wire up MCP so `/task-implement` can drive the editor
-itself instead of pausing for you at every manual step. Idempotent and
-re-runnable: it adds the `com.coplaydev.unity-mcp` package to
-`Packages/manifest.json` if missing, records a marker in `CLAUDE.md` (and a
-`.claude/context/mcp-tools.md` doc when the project has a context layer), and
-registers + verifies the `UnityMCP` server on your machine
-(`claude mcp add` / `claude mcp list`). The project-side artifacts are
-versioned and shared; the Claude-side registration is machine-local (in
-`~/.claude.json`) and stays per-machine. `/project-setup` offers to run it on
-Unity projects. Leaves its versioned artifacts uncommitted by default;
-`--commit` commits and pushes them (`--commit --no-push` to skip the push).
-
-The repo also ships a `unity-mcp-skill` skill: a Unity-MCP operator guide
-(resource-first workflow, tool categories, and reference files for tool
-schemas and extended workflows) that Claude can lean on when driving the
-editor over the `UnityMCP` server. Install it like any other feature with
-`chosko-llm add skill:unity-mcp-skill`.
-
 ### CLAUDE.md snippets
 
 claude-md features inject a managed section into `CLAUDE.md` (global with
@@ -1955,18 +1933,16 @@ flags without paying for them every session. `--content` prints the full
 body in place of the header; a body with no header (the two `.sh` kinds)
 prints nothing extra.
 
-Ten features are **hidden from the model by design**: they carry
+Eleven features are **hidden from the model by design**: they carry
 `disable-model-invocation: true`, so their descriptions never enter the
 model's context, though each stays listed here and typeable as `/<name>`.
-They are the two reference libraries, `task-engine` and `pipeline-engine`,
-which other features read by path and nobody invokes, and eight one-shot
-wizards and housekeeping commands nobody would want suggested unprompted:
-`/project-setup`, `/task-setup`, `/domain-setup`, `/unity-mcp-setup`,
-`/refactor-codebase`, `/refactor-tests`, `/runbook-prune` and
-`/runbook-clean`. One more is scoped rather than hidden: `unity-mcp-skill`
-carries a `paths:` filter (`Assets/**`, `ProjectSettings/**`,
-`Packages/**`), so it loads only in a Unity project. `ls` and `show` treat
-all of them like any other feature.
+They are the three reference libraries, `task-engine`, `pipeline-engine` and
+`interaction-engine`, which other features read by path and nobody invokes,
+the authoring skill `doc-consolidate`, and seven one-shot wizards and
+housekeeping commands nobody would want suggested unprompted:
+`/project-setup`, `/task-setup`, `/domain-setup`, `/refactor-codebase`,
+`/refactor-tests`, `/runbook-prune` and `/runbook-clean`. `ls` and `show`
+treat all of them like any other feature.
 
 ### Installing and removing
 
