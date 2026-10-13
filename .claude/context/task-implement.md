@@ -113,6 +113,10 @@ The rest of the suite: [task-suite.md](./task-suite.md).
   [task-implement-review.md](./task-implement-review.md) — the rest of
   `/task-implement`.
 - [task-engine.md](./task-engine.md) — the reference library it reads.
+- [pipeline-dashboard.md](./pipeline-dashboard.md) — the opt-in dashboard: the
+  ARGUMENT PARSING paragraph for `--dashboard` / `--no-dashboard` is the one
+  passage naming it; the launching session follows it, never a delegated
+  agent.
 
 ## When to read the source
 

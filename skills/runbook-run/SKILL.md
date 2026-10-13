@@ -1,6 +1,6 @@
 ---
 name: runbook-run
-version: 0.19.3
+version: 0.20.1
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user — or, under the `unattended` policy, parking the step that asked and going on — recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
 requires: command:follow-ups, skill:follow-ups-resolve
@@ -50,6 +50,7 @@ requires: command:follow-ups, skill:follow-ups-resolve
 #        /runbook-run <id|name|id-name> --unattended --skip-parked  (no pre-ask; a parked step stays parked)
 #        /runbook-run <id|name|id-name> --no-commit     (write the bookkeeping, commit nothing)
 #        /runbook-run <id|name|id-name> --no-push       (commit as usual, skip the push)
+#        /runbook-run <id|name|id-name> --dashboard | --no-dashboard  (live progress page on/off for this run)
 # Examples: /runbook-run implement-ecc-import
 #           /runbook-run 3-implement-ecc-import
 #           /runbook-run 3 --from 12
@@ -189,6 +190,7 @@ under `--inline`.
 | `--commit` | Accepted and stripped, a silent no-op: committing is the default. Refused beside `--no-commit` with `--commit and --no-commit cannot be combined. Pick one.` |
 | `--no-commit` | Do the work and write the bookkeeping, but commit nothing. Implies `--no-push`. |
 | `--no-push` | Commit each step as usual, skip the push. |
+| `--dashboard` \| `--no-dashboard` | On when `--dashboard` is passed, or when the project's `CLAUDE.md` has `Pipeline dashboard: on` and `--no-dashboard` is not passed: this session then follows the `pipeline-dashboard` skill for the run, whose state and one chat line per update sit outside the two-files and quiet-between-steps contracts. Off otherwise, and nothing in this body changes. |
 
 **The execution policy** is one value for the whole run, `attended` or
 `unattended`: `--attended` or `--unattended` when passed, else the header's

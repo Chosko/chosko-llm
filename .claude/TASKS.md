@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 280
+Last task number: 307
 
 ---
 
@@ -501,5 +501,115 @@ Status: [DONE]
 Target: claude
 Files: commands/refactor-codebase.md, commands/refactor-tests.md, skills/context-build/SKILL.md, VERSION, CHANGELOG.md
 Preconditions: 278
+
+---
+
+## 281. Add the `pipeline-statusline` statusline renderer
+
+Status: [DONE]
+Target: claude
+Files: statusline/pipeline-statusline.sh, VERSION, CHANGELOG.md
+Preconditions: none
+Feature: pipeline-statusline
+
+---
+
+## 282. Add the `/pipeline-statusline` command that wires, backs up, restores and verifies the status line
+
+Status: [DONE]
+Target: claude+human
+Files: commands/pipeline-statusline.md, VERSION, CHANGELOG.md
+Preconditions: 281
+Feature: pipeline-statusline
+
+---
+
+## 283. Update documentation for feature `pipeline-statusline`
+
+Status: [DONE]
+Target: claude
+Files: README.md, docs/reference.md, .claude/context/claude-md-hook-statusline.md, .claude/context/features.md, .claude/context/INDEX.md
+Preconditions: 281, 282
+Feature: pipeline-statusline
+
+---
+
+## 284. Add the pipeline-dashboard generator and text snapshot
+
+Status: [DONE]
+Target: claude
+Files: skills/pipeline-dashboard/scripts/generate.sh
+Preconditions: none
+Feature: pipeline-dashboard
+
+---
+
+## 285. Add the pipeline-dashboard page
+
+Status: [DONE]
+Target: claude
+Files: skills/pipeline-dashboard/assets/index.html
+Preconditions: 284
+Feature: pipeline-dashboard
+
+---
+
+## 286. Add the pipeline-dashboard skill and cite it from the orchestrators
+
+Status: [DONE]
+Target: claude
+Files: skills/pipeline-dashboard/SKILL.md, skills/runbook-run/SKILL.md, skills/task-implement/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: 284, 285
+Feature: pipeline-dashboard
+
+---
+
+## 287. Update documentation for feature `pipeline-dashboard`
+
+Status: [DONE]
+Target: claude
+Files: README.md, docs/reference.md, .claude/context/pipeline-dashboard.md, .claude/context/features.md, .claude/context/INDEX.md, .claude/context/runbook-run.md, .claude/context/task-implement.md
+Preconditions: 284, 285, 286
+Feature: pipeline-dashboard
+
+---
+
+## 304. Make the pipeline-dashboard skill opt-in, with its protocol read on demand
+
+Status: [DONE]
+Target: claude
+Files: skills/pipeline-dashboard/SKILL.md, skills/pipeline-dashboard/references/protocol.md, skills/pipeline-dashboard/assets/index.html
+Preconditions: none
+Feature: pipeline-dashboard
+
+---
+
+## 305. Add the dashboard opt-in to the orchestrators and to /project-setup
+
+Status: [DONE]
+Target: claude
+Files: skills/runbook-run/SKILL.md, skills/task-implement/SKILL.md, commands/project-setup.md
+Preconditions: 304
+Feature: pipeline-dashboard
+
+---
+
+## 306. Switch the generator and the status line to English, and document the global-only home exception
+
+Status: [DONE]
+Target: claude
+Files: skills/pipeline-dashboard/scripts/generate.sh, statusline/pipeline-statusline.sh, docs/authoring-guide.md, CLAUDE.md, VERSION, CHANGELOG.md
+Preconditions: 304, 305
+Feature: pipeline-dashboard
+
+---
+
+## 307. Update documentation for feature `pipeline-dashboard`
+
+Status: [DONE]
+Target: claude
+Files: README.md, docs/reference.md, docs/authoring-guide.md, .claude/skills/context-budget/SKILL.md, .claude/context/pipeline-dashboard.md, .claude/context/runbook-run.md, .claude/context/runbook-run-contracts.md, .claude/context/task-implement.md, .claude/context/setup-commands.md, .claude/context/claude-md-hook-statusline.md, .claude/tasks/285.md, .claude/tasks/286.md, CHANGELOG.md, .claude/FEATURES.md
+Preconditions: 304, 305, 306
+Feature: pipeline-dashboard
 
 ---

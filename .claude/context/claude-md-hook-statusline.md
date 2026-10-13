@@ -2,7 +2,8 @@
 
 ## Overview
 
-Covers the shipped artifacts of the three non-command, non-skill kinds. The
+Covers the shipped artifacts of the three non-command, non-skill kinds, plus
+`commands/pipeline-statusline.md`, the command that wires one of them. The
 kinds themselves: [features.md](./features.md); the frontmatter contract:
 [feature-contract.md](./feature-contract.md).
 
@@ -38,6 +39,30 @@ kinds themselves: [features.md](./features.md); the frontmatter contract:
   git branch · context% · cost · 5h/7d rate limits. Parses the session JSON with its own
   awk flattener (scalars to `dotted.path<TAB>value` lines, `null` dropped so
   missing and null read the same) — no `jq`, per the no-new-dependencies rule.
+- `statusline/pipeline-statusline.sh` — statusline artifact: the session
+  line, then runbook + task progress and one line per in-progress task in
+  scope, read from the project's `.claude/` indexes. Hard constraint: bash
+  only `exec`s ONE `awk` under `LC_ALL=C` — no other fork (git, grep, sed,
+  cygpath, date), since a late render is dropped by Claude Code and each fork
+  costs ~0.5 s on Windows. awk parses the JSON, reads `.git/HEAD` (following a
+  worktree's `gitdir:`), tests file existence by `getline`, takes the clock
+  from `srand()`. Task scope, first match: runbook title range → step-heading
+  ids → steps' `Done:` lines (only when no heading names one) → `[ACTIVE]`
+  milestone's features in `PLAN.md` → all of `TASKS.md`; archived ids in
+  scope count done. Labels and both glyph sets (Nerd Font octal escapes,
+  `--no-nerd-font` Unicode) sit in shell variables at the top, passed by `-v`.
+  The awk program is single-quoted: an apostrophe anywhere in it, comments
+  included, breaks the script.
+- `commands/pipeline-statusline.md` — command, `requires:
+  statusline:pipeline-statusline`: the agent edits only the `statusLine` key
+  of the user `settings.json` (no jq), resolving the user scope as
+  `${CLAUDE_HOME:-$HOME/.claude}` — the home-path guard's documented
+  exception for global-only kinds; backs up a replaced status line (value + script copy +
+  `script-path`) to `statusline/pipeline-statusline.backup/`, never
+  overwriting an existing backup; `uninstall` restores it; refresh goes
+  through `chosko-llm update`; ends with a timed run of the renderer on a
+  fixture. Shares its name with the statusline, so CLI calls need the kind
+  prefix.
 
 ## Public API
 

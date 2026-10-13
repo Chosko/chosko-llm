@@ -80,7 +80,7 @@ The contract every shipped `description` follows:
   invokes by name.
 - **Auto-trigger skills: ≤ 150 words / 1,000 chars.** The skills Claude selects
   on its own — `claude-council`, `runbook-suggest`, `pipeline-suggest`,
-  `follow-ups-resolve`, `unity-mcp-skill`. Trigger phrases first; any "Not
+  `follow-ups-resolve`, `unity-mcp-skill`, `pipeline-dashboard`. Trigger phrases first; any "Not
   for" list last.
 - **Hard fail above 1,536 chars.** The harness cuts there; a description that
   long has already lost whatever it put at the end.
@@ -96,7 +96,7 @@ The contract every shipped `description` follows:
 
 Budgets are in characters and words, not tokens: the repo forbids a tokenizer
 dependency, and characters are what the harness caps on anyway. `/context-budget`
-(repo-local, see below) flags a description over 60 words (150 for the five
+(repo-local, see below) flags a description over 60 words (150 for the six
 auto-trigger skills), over 1,536 chars, or containing ` --- `.
 
 ### <a id="the-body-header"></a>The body header — where the flags live
@@ -614,7 +614,7 @@ What that means concretely:
   a session in this repo, so a repo-local skill sharing a name with a shipped
   one would be ambiguous. Check the shipped catalogue before naming a new one.
 - **`/context-budget` is where the `description` contract gets checked.** It
-  flags a description over 60 words (150 for the five auto-trigger skills),
+  flags a description over 60 words (150 for the six auto-trigger skills),
   over the 1,536-char hard cap, or containing ` --- ` — an observation, not a
   gate; see § The `description` contract for the rule it measures against.
 
@@ -967,9 +967,17 @@ The two `council-gate.md` copies work this way, as does `/follow-ups` —
 path. There are no exemptions in the guard: a body that seems to need an
 absolute home is asking the installed question, and the answer is a name.
 
-The one place a home is derived is the probe in
-`skills/pipeline-engine/references/probes.md`, a shell snippet that checks
-both scopes; its own file carries the rule.
+A home is derived in two places, neither of them a citation:
+
+- the probe in `skills/pipeline-engine/references/probes.md`, a shell snippet
+  that checks both scopes; its own file carries the rule;
+- a body that writes or wires the state of a **global-only** kind resolves
+  the user scope, `${CLAUDE_HOME:-$HOME/.claude}`, with nothing joined onto
+  it but that state's own path: `/pipeline-statusline` locating the
+  statusline script and the user `settings.json`, `pipeline-dashboard`'s
+  state folder. A global-only kind has no `--local` copy for a relative path
+  to find, so the user scope is the only home there is. Citing another
+  shipped file from those bodies still follows the relative rule.
 
 The guard proves absence of that one shape and nothing more. Whether a
 relative citation resolves, and whether the probe's shell looks in the right

@@ -352,6 +352,13 @@ and options `a`, `b`, …, so a reply reads like `Unpark P1: Q1a, Q2b`.
 Every run ends with one closing report — *For the record*, then a numbered
 *Follow-ups* list whose numbers are the reply handle.
 
+Opt into **`pipeline-dashboard`** — `Pipeline dashboard: on` in `CLAUDE.md`,
+or `--dashboard` for one run — and `/task-implement` or `/runbook-run` keeps
+a private web page live while it runs: the active milestone, the runbook's
+steps, every task, and a banner with the question the run is waiting on, so
+you can follow it from your phone. Ask for the pipeline status for the same
+picture as text in chat.
+
 Pass **`--review`** and each task is peer-reviewed before it's committed.
 **`/task-review`** audits the diff against the task's acceptance criteria in
 a fresh subagent and reports only findings it holds at 80% confidence or
@@ -467,6 +474,11 @@ ends. Meaning-preserving, never a style compressor. Uncommitted by default.
   commands, and rules documents that supersede instead of stratify.
 - **`statusline:session-statusline`** shows model, directory, branch,
   context usage, cost and rate limits in the status bar. Global-only.
+- **`statusline:pipeline-statusline`** shows the same session line plus the
+  project's pipeline progress — the current runbook, the tasks it covers,
+  each task in progress. **`/pipeline-statusline`** wires it into
+  `settings.json`, backs up the status line it replaces and restores it on
+  `uninstall`. Global-only.
 
 [Details →](docs/reference.md#8-editor-and-shell-extras)
 
@@ -529,7 +541,7 @@ cd chosko-llm
 
 Every feature requires YAML frontmatter (`name`, `version`, `type`, `description`). `add` and `update` refuse to install a file missing a `version` field. Three keys are optional: `replaces: <kind>:<name>` on a feature that changed kind, `requires: <kind>:<name>[, …]` on a feature whose body reads a file inside another installed feature, and the hook-only `event:` (required there) / `matcher:` pair.
 
-**The `description` is short by contract.** Claude Code injects every installed feature's `description` into the system prompt at session start and truncates each at 1,536 characters, so a description is a cost every session pays whether or not the feature is invoked. Each one says what the feature does and when to use it, front-loaded: at most 60 words / 400 characters for a feature you invoke by name, 150 words / 1,000 characters for the five skills Claude selects on its own (`claude-council`, `runbook-suggest`, `pipeline-suggest`, `follow-ups-resolve`, `unity-mcp-skill`), trigger phrases first and any "Not for" list last, never a literal ` --- `. Flags, refusals, read-only contracts and commit defaults live in the body's leading `#` header instead, which loads only when the feature runs and which `chosko-llm show` prints under the description. The full contract is in [docs/authoring-guide.md](docs/authoring-guide.md#the-description-contract).
+**The `description` is short by contract.** Claude Code injects every installed feature's `description` into the system prompt at session start and truncates each at 1,536 characters, so a description is a cost every session pays whether or not the feature is invoked. Each one says what the feature does and when to use it, front-loaded: at most 60 words / 400 characters for a feature you invoke by name, 150 words / 1,000 characters for the six skills Claude selects on its own (`claude-council`, `runbook-suggest`, `pipeline-suggest`, `follow-ups-resolve`, `unity-mcp-skill`, `pipeline-dashboard`), trigger phrases first and any "Not for" list last, never a literal ` --- `. Flags, refusals, read-only contracts and commit defaults live in the body's leading `#` header instead, which loads only when the feature runs and which `chosko-llm show` prints under the description. The full contract is in [docs/authoring-guide.md](docs/authoring-guide.md#the-description-contract).
 
 **Some features are hidden from the model by design.** Ten carry `disable-model-invocation: true` — the two reference libraries `task-engine` and `pipeline-engine`, and the wizards and housekeeping commands `/project-setup`, `/task-setup`, `/domain-setup`, `/unity-mcp-setup`, `/refactor-codebase`, `/refactor-tests`, `/runbook-prune`, `/runbook-clean`. Each stays listed and typeable, but its description never enters the model's context, since none is useful to suggest unprompted. `unity-mcp-skill` carries a `paths:` filter (`Assets/**`, `ProjectSettings/**`, `Packages/**`) so it loads only in a Unity project. `parse_frontmatter` ignores keys it does not know, so these pass through `add` / `update` untouched.
 

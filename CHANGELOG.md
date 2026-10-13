@@ -2,6 +2,33 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.80.1 — 2026-10-13
+
+- **`pipeline-dashboard` triggers only on an explicit request for the pipeline's progress** ("how far along is the pipeline", "pipeline status", "show the dashboard"), no longer on any mention of progress; a run with the dashboard on reaches it through `/runbook-run` or `/task-implement` as before.
+
+## 1.80.0 — 2026-10-12
+
+- **`pipeline-dashboard` is opt-in.** A run keeps the live page only with `--dashboard`, or when the project's `CLAUDE.md` has `Pipeline dashboard: on` (offered by `/project-setup`); `--no-dashboard` turns it off for a run. Without it, `/runbook-run` and `/task-implement` work exactly as before.
+- **`pipeline-dashboard` costs less while it runs.** Its protocol is read only when the dashboard is on, and the page is read once per session instead of before every update.
+- **`pipeline-dashboard` and `pipeline-statusline` speak English** — the page, the text snapshot, the chat line and the status line label.
+
+## 1.79.0 — 2026-10-10
+
+- **New skill `pipeline-dashboard`.** While a `/runbook-run` or `/task-implement` runs, the orchestrating session keeps one private Artifact per project live with the milestone, the runbook steps and the tasks, and shows there any question waiting for your answer. Ask how far along the work is for a text snapshot in chat.
+- **`/runbook-run` and `/task-implement` follow `pipeline-dashboard` when it is installed.** Without it, nothing changes.
+
+## 1.78.1 — 2026-10-10
+
+- **`pipeline-statusline` scopes tasks from a runbook's `Done:` lines.** A runbook whose step headings name no task now counts the tasks its steps' `Done:` lines name, instead of every task of the active milestone.
+
+## 1.78.0 — 2026-10-10
+
+- **New command `/pipeline-statusline`.** Wires the `pipeline-statusline` status line into your user `settings.json`, backing up any status line it replaces so `/pipeline-statusline uninstall` restores it exactly, refreshes it on a re-run, and ends with a timed test run. `--no-nerd-font` switches to plain Unicode glyphs. Install it with `chosko-llm add command:pipeline-statusline`.
+
+## 1.77.0 — 2026-10-10
+
+- **New statusline `pipeline-statusline`.** Shows the session on line 1 and, in a project with a backlog or runbooks, the current runbook and the progress of the tasks it covers, plus one line per task in progress. Runs as a single `awk` process, so it stays fast on Windows.
+
 ## 1.76.3 — 2026-10-06
 
 - **`/refactor-codebase`, `/refactor-tests` and `/context-build` state their uncommitted default as a plain rule.** Wording only; behaviour is unchanged.

@@ -37,7 +37,9 @@ artifacts and forwards `--commit` (plus `--no-push`, if set) to the
 sub-commands it runs. On a non-git VCS (e.g. Plastic SCM), the injected
 `## VCS` section notes that `cm checkin` already syncs to the server, so no
 push cycle ever runs there. On a Unity project it offers to run
-[`/unity-mcp-setup`](#unity-mcp-setup-and-unity-mcp-skill).
+[`/unity-mcp-setup`](#unity-mcp-setup-and-unity-mcp-skill). It also offers the
+[`pipeline-dashboard`](#pipeline-dashboard) opt-in, default no, and on yes
+writes `Pipeline dashboard: on` into `CLAUDE.md`.
 
 ### `/task-setup`
 
@@ -973,6 +975,8 @@ returns it already holds. It adds no commit and flips no status; with
 `/follow-ups` not installed the list holds the run's own items only,
 silently.
 
+`--dashboard` / `--no-dashboard` switch the [`pipeline-dashboard`](#pipeline-dashboard) live page on or off for one run, overriding the project's `Pipeline dashboard: on` line; without either, and without that line, nothing changes.
+
 ### `/task-review`
 
 Audit a diff against the acceptance criteria of the task that produced it.
@@ -1091,6 +1095,39 @@ Commits and pushes by default (`--no-commit` / `--no-push`), as
 `task-clean: archive tasks <N>, …` (or `task-clean: backfill <N> archived
 tasks`). It is a skill now (`skill:task-clean`); installing or updating it
 retires the old command copy.
+
+### `pipeline-dashboard`
+
+A live progress page for pipeline runs, **opt-in and off by default**. A
+`/task-implement` or `/runbook-run` keeps it only when you pass
+`--dashboard`, or when the project's `CLAUDE.md` has the line
+`Pipeline dashboard: on` (`/project-setup` offers to write it);
+`--no-dashboard` turns it off for one run. While it is on, the orchestrating
+session keeps one private claude.ai Artifact per project up to date;
+subagents never touch it. When it is off, the orchestrators behave exactly as
+without the skill, and its protocol file is never read.
+
+The page shows the `[ACTIVE]` milestone of `PLAN.md` (every task when there
+is no plan), three meters — runbook steps, tasks done, features closed — the
+step in progress with its tasks, and the runbook's steps one row each, with a
+square per task and the step's `Done:` line. When the run waits for an answer,
+a banner and a dialog show the question, its options and the recommended one;
+you still answer in the terminal. The page refreshes at run start and end, on
+every task status change (watched every 10 seconds with the Monitor tool), on
+every step transition, when a question starts or stops waiting, and on
+request, each time with one short line in chat. The artifact is read once per
+session, before that session's first update, not before every update.
+
+Asking for an overview of the pipeline ("how far along is the pipeline",
+"pipeline status", "show the dashboard") prints a text snapshot in a code
+block, whether or not the dashboard is on.
+
+Its state lives in `~/.claude/pipeline-dashboard/<owner>-<repo>/` — the link,
+the generated page and data, the waiting question — never in the repository.
+The page is titled `Pipeline <repo>`, so a session on another machine finds
+the same artifact instead of creating a second one. Without the Artifact or
+Monitor tool, or when anything about the page fails, the run carries on with
+one warning line.
 
 ### `task-engine`
 
@@ -1242,7 +1279,10 @@ that has none of the conversation the prompts came out of.
   for a launch no human sees. `--attended` overrides a header
   `Execution policy: unattended` for one run: a question is relayed and the
   run waits, the default. The two together are an error, as is `--skip-parked`
-  without `--unattended`; all three compose with `--inline`. A reply by a
+  without `--unattended`; all three compose with `--inline`. `--dashboard` /
+  `--no-dashboard` switch the [`pipeline-dashboard`](#pipeline-dashboard)
+  live page on or off for one run, overriding the project's
+  `Pipeline dashboard: on` line. A reply by a
   parked question's number — mid-run, or after the closing report — unparks
   the step (`unparked with answer:` in its `Context:`, back to `[ ]`), and it
   is the next step selected. When steps remain, none is selectable and one is
@@ -1829,6 +1869,42 @@ Claude Code session to wire that path into `settings.json`'s `statusLine`
 key, since the CLI never edits `settings.json` itself.
 Global-only: a status bar belongs to your terminal, not a repository.
 
+### `statusline:pipeline-statusline` and `/pipeline-statusline`
+
+A status-bar script for projects run through the pipeline. Line 1 is the
+session — model, folder, branch (or short SHA when detached), context, cost,
+5-hour usage with the time to its reset, 7-day usage. In a project with
+`.claude/RUNBOOKS.md` or `.claude/TASKS.md`, line 2 adds the current runbook
+(the first `[RUNNING]`, else the last) with its step progress, and the
+progress of the tasks in scope with how many are in progress; one more line
+follows per `[IN PROGRESS]` task in scope. The tasks in scope are, first
+match wins: a range in the runbook's title; the ids its step headings name,
+or, when none does, its steps' `Done:` lines; the tasks of the `[ACTIVE]`
+milestone's features in `PLAN.md`; every task. An archived task in scope
+counts as done. It runs as a single `awk` process with no other fork, so it
+renders in well under a second even on Windows, and anything missing is
+simply left out.
+
+`chosko-llm add command:pipeline-statusline` installs the command and the
+script it requires (the prefix is needed: the two share a name).
+`/pipeline-statusline` then sets `settings.json`'s `statusLine` to run the
+script — editing that key alone — and ends with a timed run in the current
+project and in a directory with no `.claude/`.
+
+- A different status line already configured is shown first, and replaced
+  only on your say-so, after it is backed up to
+  `~/.claude/statusline/pipeline-statusline.backup/`: its `statusLine` value
+  and a copy of the script it runs.
+- Re-running refreshes the script through `chosko-llm update` and reports
+  whether it changed.
+- `/pipeline-statusline --no-nerd-font` swaps the Nerd Font glyphs for
+  single-width Unicode.
+- `/pipeline-statusline uninstall` restores the backed-up status line exactly
+  and deletes the backup; the script stays installed until
+  `chosko-llm rm statusline:pipeline-statusline`.
+
+Global-only, like every status line.
+
 ---
 
 ## 9. The CLI
@@ -1872,7 +1948,7 @@ contracts and commit defaults live, because the `description` is short by
 contract: Claude Code injects every installed description into the system
 prompt at session start and truncates each at 1,536 characters, so each one
 says what the feature does and when to use it in at most 60 words (150 for
-the five skills Claude selects on its own), and nothing else. The header
+the six skills Claude selects on its own), and nothing else. The header
 loads only when the feature is invoked, so `show` is how a human reads the
 flags without paying for them every session. `--content` prints the full
 body in place of the header; a body with no header (the two `.sh` kinds)

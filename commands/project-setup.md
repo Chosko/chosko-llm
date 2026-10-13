@@ -1,6 +1,6 @@
 ---
 name: project-setup
-version: 0.7.4
+version: 0.7.5
 type: command
 description: Interactive first-time project initialization wizard — gathers every choice up front (VCS, CLAUDE.md content, AGENTS.md, task backlog, domain layer, context layer), confirms once, then runs /task-setup, /domain-setup and /context-build in a fixed order. Use it once, on a project the chosko-llm tooling has not been set up on yet.
 disable-model-invocation: true
@@ -18,7 +18,8 @@ disable-model-invocation: true
 # Plastic SCM). On Unity projects also injects a "Tasks implementation"
 # section (editor dirty-tree noise handling, and the permanent skip-tests
 # testing-policy marker for /task-implement when there is no test suite)
-# and offers to run /unity-mcp-setup as the last step. Authoring command —
+# and offers to run /unity-mcp-setup as the last step. Offers the opt-in
+# `Pipeline dashboard: on` line for CLAUDE.md, default no. Authoring command —
 # leaves all output uncommitted for one review pass unless `--commit` is
 # passed.
 # Usage: /project-setup
@@ -289,6 +290,16 @@ layer, if you build one, so it can add a context doc), it's idempotent, and
 it will need the Unity Editor open to verify the connection. This wizard
 only offers and delegates — all the MCP logic lives in /unity-mcp-setup.
 
+### 1h. Pipeline dashboard
+
+> Keep a live progress page (a private claude.ai Artifact) during
+> /runbook-run and /task-implement runs, with any question waiting for you?
+> Costs tokens on every task status change while a run is in progress. [y/N]
+
+Default no. Yes writes the line `Pipeline dashboard: on` into CLAUDE.md
+(Step 4b); a run can still override it with `--dashboard` / `--no-dashboard`.
+The `pipeline-dashboard` skill must be installed for the line to do anything.
+
 That's the full set of questions. Keep it to these — do not improvise extra
 prompts. If $ARGUMENTS carried hints (e.g. "we use Plastic", "source under
 lib/"), apply them to pre-fill the relevant defaults and say so.
@@ -316,15 +327,17 @@ Unity MCP:      <set up via /unity-mcp-setup (runs last) | skip | n/a (not a Uni
 AGENTS.md:      <create | skip>
 Task backlog:   <initialize via /task-setup | skip>
 Domain layer:   <initialize via /domain-setup | index existing docs via /domain-setup | skip>
+Dashboard:      <write `Pipeline dashboard: on` into CLAUDE.md | skip>
 Context layer:  <build via /context-build, flat layout (runs last) | skip>
 
 Execution order:
   -- wizard's own artifacts --
-  1. CLAUDE.md skeleton    (only if CLAUDE.md missing AND step 2, 3, or 3b needs it)
+  1. CLAUDE.md skeleton    (only if CLAUDE.md missing AND step 2, 3, 3b or 4b needs it)
   2. Seed CLAUDE.md prose  (if requested; from pasted material only)
   3. Inject VCS section    (if non-git VCS)
   3b. Tasks-implementation section (Unity projects only)
   4. AGENTS.md             (if requested)
+  4b. Pipeline dashboard line in CLAUDE.md (if requested)
   4c. Commit and push own artifacts (only with --commit; commits steps 1-4)
   -- heavy sub-commands, last --
   5. /task-setup           (if requested; --commit [--no-push] passed through when set)
@@ -356,8 +369,9 @@ if set) so they commit (and push) their own output.
 ### Step 1 — CLAUDE.md skeleton
 
 Only when CLAUDE.md does not exist yet AND a later wizard step needs to write
-to it (seeding requested, a VCS section will be injected, or a Unity
-tasks-implementation section will be injected). Use the Write
+to it (seeding requested, a VCS section will be injected, a Unity
+tasks-implementation section will be injected, or the pipeline dashboard
+line will be written). Use the Write
 tool to create a minimal CLAUDE.md containing just a title and a one-line
 "see AGENTS.md / the context layer" pointer. If CLAUDE.md already exists, do
 nothing here. If nothing in Steps 2-3 will write to CLAUDE.md and it is
@@ -487,12 +501,19 @@ VCS rules.
 If AGENTS.md already exists, do not clobber it — report that it was left
 as-is.
 
+### Step 4b — Pipeline dashboard line (only if requested)
+
+Add the line `Pipeline dashboard: on` to CLAUDE.md, on its own line, beside
+the testing-policy marker when the file has one, else at the end. If the line
+is already there, leave it; never write it twice.
+
 ### Step 4c — Commit and push the wizard's own artifacts (only with `--commit`)
 
 Run this step ONLY when `--commit` was passed (the pull-at-start from the
 ARGUMENT NOTE already ran). Stage EXACTLY the files Steps 1-4 wrote —
-CLAUDE.md (the skeleton, seeded prose, injected `## VCS` section, and/or
-Unity `## Tasks implementation` section) and AGENTS.md, as applicable — and
+CLAUDE.md (the skeleton, seeded prose, injected `## VCS` section, Unity
+`## Tasks implementation` section and/or the pipeline dashboard line) and
+AGENTS.md, as applicable — and
 make one commit:
 
 ```
