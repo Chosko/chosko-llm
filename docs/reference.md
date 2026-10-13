@@ -1118,9 +1118,9 @@ every step transition, when a question starts or stops waiting, and on
 request, each time with one short line in chat. The artifact is read once per
 session, before that session's first update, not before every update.
 
-Asking how far along the work is ("how far along are we", "progress",
-"dashboard") prints a text snapshot in a code block, whether or not the
-dashboard is on.
+Asking for an overview of the pipeline ("how far along is the pipeline",
+"pipeline status", "show the dashboard") prints a text snapshot in a code
+block, whether or not the dashboard is on.
 
 Its state lives in `~/.claude/pipeline-dashboard/<owner>-<repo>/` — the link,
 the generated page and data, the waiting question — never in the repository.
@@ -1948,7 +1948,7 @@ contracts and commit defaults live, because the `description` is short by
 contract: Claude Code injects every installed description into the system
 prompt at session start and truncates each at 1,536 characters, so each one
 says what the feature does and when to use it in at most 60 words (150 for
-the five skills Claude selects on its own), and nothing else. The header
+the six skills Claude selects on its own), and nothing else. The header
 loads only when the feature is invoked, so `show` is how a human reads the
 flags without paying for them every session. `--content` prints the full
 body in place of the header; a body with no header (the two `.sh` kinds)

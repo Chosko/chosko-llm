@@ -68,14 +68,17 @@ pipeline.
 
 Short, and the only part read when the dashboard is off.
 
-- **Activation.** The `description` makes it load whenever the user asks how
-  the work stands ("how far along are we", "progress", "dashboard"), and
-  whenever a pipeline run with the dashboard switched on is in progress. It is
-  one of the auto-trigger skills, with their description budget.
+- **Activation.** The `description` makes it load only when the user
+  explicitly asks for an overview of the pipeline's progress ("how far along
+  is the pipeline", "pipeline status", "show the dashboard"), never on a
+  question about one task, feature or step, nor on git, CI or build status. A
+  run with the dashboard on reaches it through the orchestrator's own line,
+  not through the description. It is one of the auto-trigger skills, with
+  their description budget.
 - **Opt-in resolution.** For a run: `--dashboard` turns it on and
   `--no-dashboard` off; without either, the project's `CLAUDE.md` decides — a
   `Pipeline dashboard: on` line turns it on, anything else leaves it off.
-- **Text snapshot.** On a progress question, whatever the opt-in.
+- **Text snapshot.** On a request for that overview, whatever the opt-in.
 - **Pointer.** When the dashboard resolves on, read the protocol file and
   follow it for the run.
 
@@ -143,9 +146,9 @@ focus moved in and restored.
 
 ### Text snapshot
 
-On a progress question in chat: a compact code block — header, step and task
-bars, the last two done steps and every remaining one with a mini bar per
-step, the running task under its step, the last three tasks done.
+On a request for the overview in chat: a compact code block — header, step
+and task bars, the last two done steps and every remaining one with a mini
+bar per step, the running task under its step, the last three tasks done.
 
 ### Opt-in in the orchestrators and in `/project-setup`
 

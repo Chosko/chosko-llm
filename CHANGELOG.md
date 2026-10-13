@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.80.1 — 2026-10-13
+
+- **`pipeline-dashboard` triggers only on an explicit request for the pipeline's progress** ("how far along is the pipeline", "pipeline status", "show the dashboard"), no longer on any mention of progress; a run with the dashboard on reaches it through `/runbook-run` or `/task-implement` as before.
+
 ## 1.80.0 — 2026-10-12
 
 - **`pipeline-dashboard` is opt-in.** A run keeps the live page only with `--dashboard`, or when the project's `CLAUDE.md` has `Pipeline dashboard: on` (offered by `/project-setup`); `--no-dashboard` turns it off for a run. Without it, `/runbook-run` and `/task-implement` work exactly as before.
