@@ -9,7 +9,7 @@ WHO DOES THIS
 
 - Only the main session — the one orchestrating the run — follows this
   protocol.
-- A subagent, a delegated `/task-implement` agent or a runbook step's agent
+- A subagent, a delegated `/task-implement` agent or a runbook step's subagent
   never runs the generator, writes the state folder or calls the Artifact
   tool. It changes the indexes as its own work requires; the watcher below
   carries those changes to the main session.
@@ -85,7 +85,7 @@ WHEN TO REFRESH
 - A monitor expires after 30 minutes: re-arm it while the run is still in
   progress, and say so in one short line only when re-arming after a gap
   with no watch.
-- Stop it at run end.
+- Stop it before the run-end refresh.
 
 **After each republish.**
 - Print one short line in chat naming what changed — "Dashboard updated:

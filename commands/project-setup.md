@@ -36,8 +36,9 @@ GOAL
 Walk a first-time user through configuring this project: detect the VCS;
 optionally seed CLAUDE.md with project information (and an AGENTS.md
 pointer); inject a VCS-mapping section so the other chosko-llm commands work
-under a non-git VCS; optionally initialize the task backlog, the domain
-knowledge layer and the navigation context layer.
+under a non-git VCS; record the project policies and install the sections
+and hook the user picks (Steps 3b-4b); optionally initialize the task
+backlog, the domain knowledge layer and the navigation context layer.
 
 Orchestrate existing features; never reimplement them. The `/context-build`
 SKILL, `/task-setup` and `/domain-setup` stay independently usable — run
@@ -297,8 +298,8 @@ implementation` section (Step 3b).
 
 `off` is the default and writes nothing. `on` is written as the line
 `Pipeline dashboard policy: on` (Step 3d); a run can still override it with
-`--dashboard` / `--no-dashboard`. The `pipeline-dashboard` skill must be
-installed for the line to do anything.
+`--dashboard` / `--no-dashboard`. On `on`, tell the user in one line that the
+line does nothing unless the `pipeline-dashboard` skill is available.
 
 ### 1k. CLAUDE.md sections and hook
 
@@ -623,7 +624,7 @@ git commit -m "Initialize project with chosko-llm scaffolding"
   which follow the policy this run hands it; honor them, do not flatten
   them.
 - It creates CLAUDE.md if missing and adds its navigation instruction at the
-  top (additive to anything Steps 1-2 wrote) — that instruction points at
+  top (additive to anything Steps 1-4b wrote) — that instruction points at
   `.claude/context/INDEX.md`, which is the entry point in either layout, so
   a later `/context-convert` run will not need to revisit it.
 
@@ -649,7 +650,3 @@ git commit -m "Initialize project with chosko-llm scaffolding"
 - Either way, when the domain layer was set up, suggest the pipeline's entry
   points: `/product-design` to design the product, `/architect` to turn
   features into feature documents.
-
----
-
-DO NOT:

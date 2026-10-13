@@ -136,7 +136,7 @@ UNINSTALL
 
 VERIFY
 
-Run after every INSTALL, in Bash:
+Run after every INSTALL that did not abort, in Bash:
 
 1. **The payload.**
    - `statusline-last-input.json` exists beside SETTINGS → read it and use
@@ -154,7 +154,7 @@ Run after every INSTALL, in Bash:
      set to a second, empty `mktemp -d` directory with no `.claude/`;
    - set `rate_limits.five_hour.resets_at` to now plus 90 minutes
      (`date +%s`).
-2. **The runs.** For each copy, run the command string OURS just wrote,
+2. **The runs.** For each copy, run the `statusLine` command now in SETTINGS,
    timed with the bash `time` keyword (`TIMEFORMAT=%3R`, portable to the
    bash 3.2 that macOS ships), stdin from the copy, stdout to a file, and
    print the output followed by the elapsed seconds.

@@ -166,8 +166,7 @@ lines sit outside the body's output rules and whose run-end refresh comes
 after feature completion and before the closing report; when the skill is
 not installed, one line and off. A delegated agent, any subagent and a
 `/task-implement` a runbook step launched, `--inline` included, resolve no
-dashboard: the runbook run's, if any, already covers it, and the flags are
-never handed down. `/project-setup` offers the line among its choices, with
+dashboard. `/project-setup` offers the line among its choices, with
 `off` as the default, and writes `Pipeline dashboard policy: on` into the
 project's `CLAUDE.md` on `on`.
 

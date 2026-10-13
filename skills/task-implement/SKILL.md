@@ -234,22 +234,19 @@ When UNATTENDED is true:
   § *Parking at a question*).
 
 **Dashboard flags.** Scan for the optional `--dashboard` and
-`--no-dashboard` flags and strip whichever appears. Both together stop the
+`--no-dashboard` flags and strip whichever appears; both together stop the
 run with: `--dashboard and --no-dashboard cannot be combined. Pick one.`
 
-- A delegated agent, any subagent and a run a `/runbook-run` step launched,
-  `--inline` included, resolve no dashboard: the flags are stripped, never
-  handed down, and nothing in this skill changes.
-- Otherwise `--dashboard` turns the dashboard on for the run and
-  `--no-dashboard` turns it off; with neither, it is on only when the
-  project's `CLAUDE.md` carries the line `Pipeline dashboard policy: on`.
-- On → the launching session follows the `pipeline-dashboard` skill for the
-  run: its refreshes and the protocol's chat lines sit outside BETWEEN TASKS'
-  one progress line per task, and its run-end refresh comes after FEATURE
-  COMPLETION and before the closing report, which stays the run's last act
-  (CLOSING THE RUN). On but the skill is not available → say so in one line
-  and go on as off.
-- Off → nothing in this skill changes.
+- A delegated agent, any subagent and a run launched under a runbook step's
+  OPERATING RULES or INLINE RULES resolve no dashboard.
+- Otherwise it is on with `--dashboard`, off with `--no-dashboard`, and with
+  neither on only when the project's `CLAUDE.md` carries
+  `Pipeline dashboard policy: on`.
+- On → the launching session follows the `pipeline-dashboard` skill: its
+  scripts sit outside SUPPORTING FILES' Bash rule and its chat lines outside
+  BETWEEN TASKS' progress line, and its run-end refresh comes after FEATURE
+  COMPLETION and before the closing report (CLOSING THE RUN). Skill not
+  available → one line, then as off. Off → nothing in this skill changes.
 
 **Selectors.**
 - After stripping the flags, `$ARGUMENTS` is a whitespace-separated list of
