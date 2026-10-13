@@ -234,15 +234,19 @@ When UNATTENDED is true:
   § *Parking at a question*).
 
 **Dashboard flags.** Scan for the optional `--dashboard` and
-`--no-dashboard` flags and strip whichever appears.
+`--no-dashboard` flags and strip whichever appears. Both together stop the
+run with: `--dashboard and --no-dashboard cannot be combined. Pick one.`
 
-- The dashboard is on when `--dashboard` was passed, or when the project's
-  `CLAUDE.md` has the line `Pipeline dashboard policy: on` and
-  `--no-dashboard` was not passed; off otherwise. Both flags together stop
-  the run with: `--dashboard and --no-dashboard cannot be combined. Pick one.`
-- On → the session launching the run — never a delegated agent — follows
-  the `pipeline-dashboard` skill for the run. Off → nothing in this skill
-  changes.
+- `--dashboard` turns the dashboard on for the run and `--no-dashboard`
+  turns it off; with neither, it is on only when the project's `CLAUDE.md`
+  carries the line `Pipeline dashboard policy: on`.
+- On → the session launching the run — never a delegated agent or any
+  subagent — follows the `pipeline-dashboard` skill for the run: its
+  refreshes and their one chat line per update sit outside this skill's
+  output rules, and its run-end refresh comes before the closing report,
+  which stays the run's last act. On but the skill is not available → say
+  so in one line and go on as off.
+- Off → nothing in this skill changes.
 
 **Selectors.**
 - After stripping the flags, `$ARGUMENTS` is a whitespace-separated list of

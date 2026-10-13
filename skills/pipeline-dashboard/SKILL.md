@@ -34,22 +34,19 @@ A project that does not opt in pays nothing beyond this file.
 
 ---
 
-OPT-IN
+THE OPT-IN
 
-Resolve the opt-in once per run of `/runbook-run` or `/task-implement`:
-
-- `--dashboard` → on for that run, and `--no-dashboard` → off for that run;
-  either flag wins over the project.
-- Neither flag → the line `Pipeline dashboard policy: on` in the project's
-  `CLAUDE.md` turns it on; anything else, `Pipeline dashboard policy: off`
-  and no such line included, leaves it off.
-
-Then:
-
-- **On** → read `./references/protocol.md` and follow it for the rest of
-  the run, in the main session only.
-- **Off** → do nothing more for the run: no generator, no watcher, no
-  publish, no chat line.
+- `Pipeline dashboard policy: on` in the project's `CLAUDE.md` opts the
+  project in; `off`, any other value or no line leaves it out.
+  `/project-setup` offers the line.
+- `/runbook-run` and `/task-implement` resolve the opt-in at their own
+  argument parsing — their `--dashboard` / `--no-dashboard` flags override
+  the line for one run — and name this skill only when it resolved on. Never
+  resolve it again here.
+- Named for a run → read `./references/protocol.md` and follow it for the
+  rest of the run, in the main session only.
+- Not named → nothing of this skill runs for the run: no generator, no
+  watcher, no publish, no chat line.
 
 ---
 

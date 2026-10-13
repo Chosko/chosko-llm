@@ -118,6 +118,10 @@ User-facing changes per root `VERSION`, highest version first. Rules and schema:
 - **`/pipeline-revise` and `/pipeline-check` accept `--attended` and `--unattended`.** `/pipeline-revise` hands the policy to every owner it drives; `/pipeline-check` has no gate and only accepts the flags.
 - **Drift findings read message first.** Every `/pipeline-check` finding states the problem in plain words, then the index, identifier and evidence in parentheses, then the fix.
 
+## 1.80.1 — 2026-10-13
+
+- **`pipeline-dashboard` triggers only on an explicit request for the pipeline's progress** ("how far along is the pipeline", "pipeline status", "show the dashboard"), no longer on any mention of progress; a run with the dashboard on reaches it through `/runbook-run` or `/task-implement` as before.
+
 ## 1.80.0 — 2026-10-07
 
 - **The authoring stages follow the interaction policy.** `/architect`, `/product-design`, `/product-roadmap`, `/production-plan` and `/domain-setup` accept `--attended` and `--unattended` and read `Interaction policy:` from `CLAUDE.md`. Under `unattended`, every `amend` gate passes on its own and names its commit, and `/production-plan`'s approval does too when a re-run found nothing to reconcile. Design conversations, the roadmap's approval, questions and `/product-design`'s discard still wait, and the run stops at them.
@@ -129,6 +133,10 @@ User-facing changes per root `VERSION`, highest version first. Rules and schema:
 - **Every step is told its policy.** A spawned step's prompt says "This run is attended" as well as "This run is unattended", so a skill it invokes follows the run's policy rather than the project's `CLAUDE.md` line.
 - **Confirmation gates pass on their own in unattended runs.** Inside a step, and at `/runbook-create`'s approval and the step-amend gate, a gate tagged as a confirmation passes on its own under `unattended` and names its commit; `/runbook-clean` and `/runbook-prune` always wait.
 - **Summaries instead of full drafts.** A relayed approval shows a plain summary of the draft; reply `show` to see it whole. Parked-question lines and the "Amended …" line lead with what happened, step numbers last.
+
+## 1.78.1 — 2026-10-10
+
+- **`pipeline-statusline` scopes tasks from a runbook's `Done:` lines.** A runbook whose step headings name no task now counts the tasks its steps' `Done:` lines name, instead of every task of the active milestone.
 
 ## 1.78.0 — 2026-10-07
 
