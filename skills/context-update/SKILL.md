@@ -1,6 +1,6 @@
 ---
 name: context-update
-version: 1.6.1
+version: 1.7.0
 type: skill
 description: Update an existing navigation context layer after code changes — by default only the context files the commits since INDEX.md's Last updated date touched — then commit and push what it updated. Use it after landing code a context file describes.
 replaces: command:context-update
@@ -201,6 +201,9 @@ P.4 Report the parsed scope before doing any work:
     - Which git command was run and which source files it returned (Modes A and C).
     - Which context files are in scope for this update run.
     - Any unrecognized file= names or orphaned source files detected.
+    - When INDEX.md lists more than 40 context files, one line suggesting
+      `/context-convert` to nest the layer. It is a suggestion only: it
+      neither stops the run nor asks anything, and this run never acts on it.
     - If Mode A found no changes: state this clearly, note whether a marker
       backfill will still be written, and exit without proceeding further.
 
@@ -235,9 +238,20 @@ For each context file in scope:
     "CROSS-REFERENCES: new dependency on notifier.py not yet mentioned"
     etc.
 
+1.5 Predict each file's length once updated. A file that will exceed 150
+    lines — including one already past it, which `full` mode reaches — is
+    split in Phase 2 into two focused files. Plan the split now: the name of
+    the new file, which part of the subject each half covers, and the sibling
+    context files whose CROSS-REFERENCES point at content that moves. The
+    split is approved at this phase's gate and adds no gate of its own, so
+    under AUTO_CONFIRM it proceeds like every other update.
+
 Report:
 - Per-file diff summary for every file in scope.
-- Files where nothing changed (will be skipped in Phase 2).
+- Predicted splits: each file, its predicted length, the proposed division
+  and the new file's name.
+- Files where nothing changed and no split is planned (will be skipped in
+  Phase 2).
 - Any cross-reference breakage detected (a context file references another that
   no longer covers what it claims).
 
@@ -250,7 +264,7 @@ Then:
 
 PHASE 2 — Update the context files
 
-2.1 For each context file that has changes (from Phase 1):
+2.1 For each context file that has changes or a planned split (from Phase 1):
 
     a) Update each stale section in place. Preserve the existing structure and
        section headings; do not rewrite sections that are still accurate.
@@ -267,8 +281,19 @@ PHASE 2 — Update the context files
     e) WHEN TO READ THE SOURCE: add new tasks that are now relevant, remove
        tasks no longer meaningful given the code changes.
 
-    f) If a context file has grown beyond 150 lines after updates, flag it for
-       splitting with a suggestion for how to divide it — do not split it now.
+    f) A context file past 150 lines after updates is split into two focused
+       files, as Phase 1 planned:
+       - Each half carries all six sections and covers one part of the
+         subject; OVERVIEW lists only the source files that half describes.
+         A half still past 150 lines is split again on the same rule, so
+         every resulting file ends under the cap.
+       - The new file sits beside the original, named in the layer's
+         kebab-case convention.
+       - The two halves cross-reference each other, and every sibling
+         context file whose CROSS-REFERENCES pointed at content that moved
+         is repaired to name the half that holds it now.
+       - A split Phase 1 did not predict is made on the same rule and named
+         as unpredicted in this phase's report.
 
     g) A test context file — one whose subject is a test tree rather than
        source code (`<unit>-tests.md`) — carries two kinds of content and no
@@ -288,7 +313,8 @@ PHASE 2 — Update the context files
        - Describe the file's row in its index in the same terms, never as a
          list of the suites it covers.
 
-2.2 Do not touch context files where Phase 1 found no changes.
+2.2 Do not touch context files where Phase 1 found no changes and planned no
+    split, other than a sibling a split's cross-reference repair reaches.
 
 2.3 Do not modify any domain knowledge files (e.g. .claude/*.md outside the
     context folder, docs/, CLAUDE.md). If a code change implies a domain rule
@@ -303,8 +329,10 @@ PHASE 2 — Update the context files
       Phase 3 stages and commits it on its own. There is no separate
       migration command.
     - Update one-line descriptions for any files whose purpose has shifted.
-    - Add entries for any new context files (there should be none in an update
-      run — if a new file seems needed, flag it and ask the user).
+    - Add an entry for the new file each split created, and update the split
+      file's description to the half it kept. A split is the only source of
+      a new context file in an update run: if another new file seems needed,
+      flag it and ask the user.
     - Remove entries for any context files that were deleted (there should be
       none — flag if deletion seems warranted).
     - Update the "Last updated" timestamp to today's date in the format:
@@ -314,8 +342,10 @@ PHASE 2 — Update the context files
 Report:
 - List of files updated with a summary of what changed in each.
 - Whether the `Layout: flat` marker was backfilled into INDEX.md.
-- List of files skipped (no changes found).
-- Any files flagged for splitting.
+- List of files skipped (no changes found and no split planned).
+- Splits made: each original file and its new file, the line count of
+  both, the sibling files whose cross-references were repaired, and any
+  split Phase 1 did not predict.
 - Any domain knowledge files that may need manual review.
 - Any new context files suggested (but not created).
 - Confirm the new "Last updated" date written to INDEX.md.
@@ -342,9 +372,12 @@ The pull-at-start already ran in PREPARATION.
     stage and commit it as usual.
 
 3.2 Otherwise, stage EXACTLY the context-layer files this run wrote — the
-    updated context files plus INDEX.md (its bumped "Last updated" line, and
-    possibly its backfilled `Layout: flat` marker).
-    - Build the path list explicitly from the Phase 2 "files updated" report.
+    updated context files, both halves of every split and each sibling a
+    split's cross-reference repair touched, plus INDEX.md (its bumped "Last
+    updated" line, its new split entries, and possibly its backfilled
+    `Layout: flat` marker).
+    - Build the path list explicitly from the Phase 2 report: files updated
+      and splits made.
     - Never use a catch-all (`git add -A`, `git add .`, `git add -u`); never
       pull in unrelated dirty files.
     - Do NOT stage files Phase 2 skipped.

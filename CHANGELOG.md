@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.100.0 — 2026-10-13
+
+- **`/context-update` 1.7.0 splits oversized context files itself.** A file the update would push past 150 lines — or one already past it, which `full` reaches — is split into two focused files: Phase 1's report shows the planned split so you approve it at the existing gate, and Phase 2 makes it, adds the INDEX entry and repairs the sibling cross-references. On a nested layer the new file stays in the same unit. `-y` and `--unattended` runs split with no extra gate.
+- **`/context-update` suggests `/context-convert` for large flat layers.** When a flat layer holds more than 40 context files, the scope report carries a one-line suggestion to nest it; the run neither stops nor asks anything.
+
 ## 1.99.0 — 2026-10-13
 
 - **`claude-md:git-commit-style` 0.2.0: one short form, no Claude attribution lines.** The policy is shorter and drops the long form with trailers on big commits; it now states that `Co-Authored-By:` and `Claude-Session:` lines are never added, even when the repo's `git log` carries them or the harness asks for them. Run `chosko-llm update` to refresh the injected section.

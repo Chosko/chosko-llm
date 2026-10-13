@@ -8,7 +8,7 @@ resolution, the P.4 scope report, Phase 2 step 2.4, and Phase 3's staging
 list. Everything SKILL.md says that this file does not restate still
 applies — in particular the P.1 locate step, the `-y` / `--yes`,
 `--no-commit` and `--no-push` flags, the pull-at-start, all of Phase 1, the
-Phase 2 rules 2.1–2.3 (in-place section edits, the 150-line split flag, the
+Phase 2 rules 2.1–2.3 (in-place section edits, the 150-line split, the
 shape of a test context file, the hands-off rule for domain files), and the
 commit-and-push protocol of Phase 3.
 
@@ -163,6 +163,9 @@ Report before doing any work:
 - If Mode A found no changes anywhere: state it clearly and exit without
   proceeding further.
 
+P.4's `/context-convert` suggestion is never printed here: on a nested layer
+`/context-convert` could only flatten it.
+
 If AUTO_CONFIRM is false: STOP and wait for user confirmation (gate class:
 `confirmation`, `../interaction-engine/references/gates.md`).
 If AUTO_CONFIRM is true: proceed immediately to Phase 1.
@@ -177,7 +180,12 @@ adjustment is needed for them.
 
 ## PHASE 2 — Update the context files
 
-Steps 2.1–2.3 are unchanged. Step 2.4 is replaced by:
+Steps 2.1–2.3 are unchanged. A split (2.1 f) happens inside the owning
+leaf: the new file lands in the same unit folder and that leaf owns it. Its
+cross-reference repair writes only siblings in leaves in scope this run,
+keeping the same-unit / cross-unit link convention; a sibling in an
+out-of-scope leaf is not written — the Phase 2 report names it and the link
+to repair, for a run scoped to its unit. Step 2.4 is replaced by:
 
 **2.4 (nested) — Update the leaf indexes last, and only the ones this run
 actually wrote to.**
@@ -185,7 +193,8 @@ actually wrote to.**
 For each leaf that owns at least one context file Phase 2 wrote:
 
 - Update the one-line descriptions in that leaf's Files table for any of
-  its files whose purpose has shifted.
+  its files whose purpose has shifted, and add a row for the new file each
+  of its splits created.
 - Update that leaf's `Last updated` to today's date, format `YYYY-MM-DD`.
   This is the anchor for that unit's next Mode A scan.
 
@@ -199,8 +208,8 @@ The router is not a date holder. No code path in this run writes a
 the leaves.
 
 Adding or removing a context file edits its owning leaf's Files table only
-— never the router. (As in the flat path, an update run should not be
-adding or removing files: flag it and ask the user instead.) The router is
+— never the router. As in the flat path, a split is the only file an update
+run adds; any other addition or removal is a flag-and-ask. The router is
 edited only when a whole unit is added or retired, which likewise is a
 flag-and-ask in an update run, not something this skill decides on its own.
 
@@ -219,8 +228,8 @@ SKILL.md's Phase 3 applies unchanged (3.0 NO_COMMIT, 3.1 nothing-written,
 
 Stage EXACTLY:
 
-- every context file Phase 2 wrote, at its `.claude/context/<unit>/<area>.md`
-  path;
+- every context file Phase 2 wrote — both halves of every split included —
+  at its `.claude/context/<unit>/<area>.md` path;
 - every leaf index Phase 2 bumped, at `.claude/context/<unit>/INDEX.md`;
 - the router `.claude/context/INDEX.md` **only** if a whole unit was added
   or retired in this run. Otherwise the router is untouched and must not be

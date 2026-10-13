@@ -104,7 +104,12 @@ Each leaf carries its own `Last updated` date, so refreshing one unit does not
 make the others look fresher than they are; `/context-update unit=<name>`
 scopes a run to a single leaf. The per-file six-section schema, the 150-line
 file cap and the snippet cap are identical in both layouts; only *where the
-index files live* changes.
+index files live* changes. `/context-update` enforces the cap itself: a file
+the update would push past 150 lines is split into two focused files —
+the planned split is shown in its Phase 1 report, so you approve it there —
+and on a nested layer the new file stays in the same unit. On a flat layer
+of more than 40 context files, its scope report suggests `/context-convert`
+to nest it; nothing happens unless you run it.
 
 A layer declares its own shape with a `Layout: flat` / `Layout: nested` line
 directly under the title of `.claude/context/INDEX.md`. Detection is that line

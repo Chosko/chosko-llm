@@ -24,7 +24,9 @@ contract every one of them follows: [feature-contract.md](./feature-contract.md)
   § Commit-and-push convention. `--no-commit` leaves updates uncommitted. A test context file
   (`<unit>-tests.md`) holds only placement-and-running content and
   tripwire tests (rule 2.1 g) — never a catalogue of what each test
-  asserts. One supporting
+  asserts. A file the update pushes past 150 lines is split in two
+  (planned at the Phase 1 gate, rule 2.1 f); a flat INDEX past 40 files
+  gets a one-line `/context-convert` suggestion in the scope report. One supporting
   file, `nested.md`, read ON DEMAND when the layer's marker says
   `Layout: nested` — covers per-leaf `Last updated` (each leaf its own
   date authority, router has none), one-leaf-per-file ownership, and

@@ -15,7 +15,7 @@ Preconditions: none
 
 ## 324. `/context-update`: split oversized context files automatically and suggest `/context-convert` for large flat layers
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: skills/context-update/SKILL.md, skills/context-update/nested.md, VERSION, CHANGELOG.md, .claude/domain/context-workflow.md, .claude/context/
 Preconditions: none
