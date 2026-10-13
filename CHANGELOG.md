@@ -8,6 +8,7 @@ User-facing changes per root `VERSION`, highest version first. Rules and schema:
 - **New command `/pipeline-statusline`.** Wires that status line into your user `settings.json`, backing up any status line it replaces so `/pipeline-statusline uninstall` restores it exactly, refreshes it on a re-run, and ends with a timed test run. `--no-nerd-font` switches to plain Unicode glyphs. Install it with `chosko-llm add command:pipeline-statusline`.
 - **New skill `pipeline-dashboard`, opt-in.** With `Pipeline dashboard policy: on` in the project's `CLAUDE.md` (offered by `/project-setup`, default off) or `--dashboard` on a run (`--no-dashboard` turns it off), the session driving a `/runbook-run` or `/task-implement` keeps one private Artifact page per project live — milestone, runbook steps, tasks, any question waiting for your answer — loading its protocol only when on and reading the page once per session, while an explicit request for the pipeline's progress prints a text snapshot either way.
 - **`/runbook-run` and `/task-implement` accept `--dashboard` / `--no-dashboard`.** Without the opt-in they behave as before.
+- **The opt-in line is `Pipeline dashboard policy: on`.** A `Pipeline dashboard: on` line from the 1.79.0–1.80.1 branch releases no longer opts in; `/project-setup` writes the new one.
 
 ## 1.97.5 — 2026-10-07
 

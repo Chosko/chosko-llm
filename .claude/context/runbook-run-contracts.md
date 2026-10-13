@@ -76,7 +76,8 @@ The rest of the bullet: [runbook-run.md](./runbook-run.md) and
   does-no-work and subagent-result ones are **default-mode contracts**; `--inline`
   is their one opt-in exception, executing every selected step in the session
   itself, refused beside `--relay-spawns` or `--model` — see
-  `.claude/domain/features/runbook-inline.md`): steps are **always sequential** (never parallel,
+  `.claude/domain/features/runbook-inline.md`; the dashboard, when on, sits
+  outside the reads/writes and chat contracts — [pipeline-dashboard.md](./pipeline-dashboard.md)): steps are **always sequential** (never parallel,
   even when declared independent — one question stream, and two agents would
   race on `Done:` lines); it **writes exactly two files** and does none of the
   work itself; **no step is ticked before its subagent's result arrives**; it

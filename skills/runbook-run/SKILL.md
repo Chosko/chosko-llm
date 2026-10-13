@@ -84,8 +84,9 @@ everything else is unchanged — see THE INLINE MODE.
 - **Write two files.** The runbook and the index, nothing else. Every other
   change in the tree is made by a subagent. This is a hard contract.
 - **Never do a step's work.** One fresh subagent per step does it.
-- These three are **default-mode contracts**. Under `--inline` — their one
-  opt-in exception — they hold for the session's **bookkeeping phase** and
+- These three are **default-mode contracts** (the dashboard, when on, sits
+  outside them — ARGUMENTS). Under `--inline` — their one opt-in exception —
+  they hold for the session's **bookkeeping phase** and
   give way only in its **execution phase**, where the session reads what the
   step needs and makes the step's changes itself, but still never writes the
   runbook or the index. See THE INLINE MODE.

@@ -163,7 +163,7 @@ bar per step, the running task under its step, the last three tasks done.
 the project's `CLAUDE.md` carries `Pipeline dashboard policy: on`. When on,
 the main session follows `pipeline-dashboard`, whose refreshes and chat
 lines sit outside the body's output rules and whose run-end refresh comes
-after feature completion and before the closing report; when the skill is
+before the closing report (in `task-implement`, after feature completion); when the skill is
 not installed, one line and off. A delegated agent, any subagent and a
 `/task-implement` a runbook step launched, `--inline` included, resolve no
 dashboard. `/project-setup` offers the line among its choices, with
@@ -199,7 +199,8 @@ project's `CLAUDE.md` on `on`.
   `pending.json`. The slug comes from the `origin` remote
   (`<owner>-<repo>`, lower case), else the repository folder's name.
 - **The artifact** — one per project. Its `<title>` is fixed per project
-  (`Pipeline <repo>`), which is what lets another machine find it.
+  (`Pipeline <folder>`, the repository folder's name), which is what lets
+  another machine find it when its clone sits in a folder of the same name.
 
 ## Interfaces and contracts
 

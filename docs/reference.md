@@ -1123,7 +1123,8 @@ block, whether or not the dashboard is on.
 
 Its state lives in `~/.claude/pipeline-dashboard/<owner>-<repo>/` — the link,
 the generated page and data, the waiting question — never in the repository.
-The page is titled `Pipeline <repo>`, so a session on another machine finds
+The page is titled `Pipeline <folder>` after the repository folder, so a session
+on another machine whose clone sits in a folder of the same name finds
 the same artifact instead of creating a second one. Without the Artifact or
 Monitor tool, or when anything about the page fails, the run carries on with
 one warning line.

@@ -30,7 +30,7 @@ kinds: [features.md](./features.md); the design:
   Artifact tool publishes only from working directories or the scratchpad)
   and publish that copy; with a stored `url`, `read` it once per session
   before the first publish, then republish without reading; without, `list`
-  for the title `Pipeline <repo>` before creating one, then store the URL.
+  for the title `Pipeline <folder>` (the repository folder's name) before creating one, then store the URL.
   Refresh triggers, the Monitor watcher re-armed every 30 minutes,
   `pending.json` written then cleared, one English chat line per republish,
   any failure one warning line.
