@@ -468,7 +468,7 @@ ends. Meaning-preserving, never a style compressor. Uncommitted by default.
 - **`claude-md:git-commit-style`**, **`claude-md:tool-usage-policy`** and
   **`claude-md:editing-discipline`** inject a managed section into
   `CLAUDE.md` (global, or a project's with `--local`): scannable commit
-  messages with trailers only on big commits, built-in file tools over shell
+  messages with no Claude attribution lines, built-in file tools over shell
   commands, and rules documents that supersede instead of stratify.
 - **`statusline:session-statusline`** shows model, directory, branch,
   context usage, cost and rate limits in the status bar. Global-only.

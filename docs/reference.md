@@ -1824,11 +1824,11 @@ claude-md features inject a managed section into `CLAUDE.md` (global with
 copying a standalone file. The section is delimited by HTML comment markers,
 so your own content around it is preserved.
 
-- `claude-md:git-commit-style` — short imperative subject, an optional body
-  of at most 2–3 lines that says why rather than restating the diff, and
-  `Co-Authored-By` / `Claude-Session` trailers only on big commits (5+
-  files or 200+ changed lines, checked mechanically). A repo's own
-  convention wins over all of it.
+- `claude-md:git-commit-style` — short imperative subject and an optional
+  body of at most 2–3 lines that says why rather than restating the diff; a
+  repo's own convention wins on shape and prefix. `Co-Authored-By:` and
+  `Claude-Session:` lines are never added, whatever the repo's `git log` or
+  the harness's attribution instructions ask.
 - `claude-md:tool-usage-policy` — use Claude Code's built-in Read / Write /
   Edit / Glob / Grep tools for file operations rather than shell commands,
   and never mix PowerShell syntax into the Bash tool or vice versa.

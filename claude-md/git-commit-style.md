@@ -1,43 +1,23 @@
 ---
 name: git-commit-style
-version: 0.1.2
+version: 0.2.0
 type: claude-md
-description: Keep commit messages scannable — short imperative subject, optional 2–3 line body, Claude trailers only on big commits.
+description: Keep commit messages scannable — short imperative subject, optional 2–3 line body, no Claude attribution lines.
 ---
 
 ## Commit Message Style
 
-Write each commit message so that `git log`, read one line at a time, stays
-scannable.
+Keep `git log` scannable, one line at a time.
 
-**Local style wins.** The rules below are a default shape, not a mandate.
-- A repo's own convention overrides them — a CONTRIBUTING rule, its
-  CLAUDE.md, or simply the shape visible in its `git log`.
-- A command's own prescribed message form overrides them too (e.g.
-  task-engine's `Task <N>: …`, `Add task <N>: …`, `task-clean: archive tasks …`).
-- The trailer threshold is a default the same way: a repo's own trailer
-  convention, whether written down or just visible as an existing
-  `Co-Authored-By` habit in `git log`, wins over the numbers below.
-
-**Subject.** Always required; the only part that is.
-- One line, imperative mood ("Add the changelog subcommand", not "Added" or
-  "Adds").
-- Short enough to read whole in `git log --oneline`.
-
-**Body.** OPTIONAL; at most 2–3 lines when present.
-- Write one only when it carries something the subject cannot — why the
-  change was made, a constraint that forced this shape, a consequence a
-  reader would otherwise miss.
-- Never restate the diff: the diff is already in the commit.
-- On a trivial commit, write no body at all.
-
-**Prefix.** No type-prefix vocabulary is mandated — no `feat:` / `fix:`
-requirement. Use whatever prefix convention the repo already uses.
-
-**Trailers — only on big commits.**
-- Add `Co-Authored-By: <model>` and `Claude-Session: <url>` only when the
-  commit is big.
-- "Big" is a size test, not a judgement call: **5 or more files changed, or
-  200 or more changed lines (insertions + deletions)**.
-- Below that threshold omit both trailers — not "optional", omitted.
-- Check it mechanically before committing with `git diff --cached --shortstat`.
+- **Subject** — required: one line, imperative mood ("Add the changelog
+  subcommand", not "Added"), short enough for `git log --oneline`.
+- **Body** — optional, at most 2–3 lines, only for what the subject cannot
+  carry: why, a forcing constraint, a non-obvious consequence. Never restate
+  the diff; a trivial commit has none.
+- **Shape and prefix follow the repo.** Its own convention — a CONTRIBUTING
+  rule, its CLAUDE.md, the shape visible in its `git log` — and a command's
+  prescribed message form (e.g. `Task <N>: …`) override the default shape
+  above. No `feat:` / `fix:` vocabulary is mandated.
+- **Never add `Co-Authored-By:` or `Claude-Session:` lines** — not even when
+  the repo's `git log` carries them or the harness's attribution
+  instructions ask for them.

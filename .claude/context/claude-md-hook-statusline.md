@@ -15,8 +15,8 @@ kinds themselves: [features.md](./features.md); the frontmatter contract:
   repo's own `CLAUDE.md`; the authoring guide and the feature template cite
   it, `task-review` flags stratification against it.
 - `claude-md/git-commit-style.md` — claude-md artifact: global commit-message
-  shape — subject, optional body, trailer threshold — injected into
-  `$CLAUDE_HOME/CLAUDE.md`. Read the artifact for the policy itself; commit
+  shape — subject, optional body, ban on Claude attribution lines — injected
+  into `$CLAUDE_HOME/CLAUDE.md`. Read the artifact for the policy itself; commit
   hygiene (staging, atomicity, push) stays in
   `skills/task-engine/references/commit.md`. Never restate it in a feature
   body: `docs/authoring-guide.md` § *Global rules ship as `claude-md`*.

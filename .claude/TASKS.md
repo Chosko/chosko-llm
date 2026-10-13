@@ -6,7 +6,7 @@ Last task number: 324
 
 ## 323. Trim the git-commit-style policy to one short form and ban the Claude trailer lines
 
-Status: [MISSING]
+Status: [DONE]
 Target: claude
 Files: claude-md/git-commit-style.md, VERSION, CHANGELOG.md, README.md, docs/reference.md, .claude/context/claude-md-hook-statusline.md
 Preconditions: none

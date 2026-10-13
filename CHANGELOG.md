@@ -2,6 +2,10 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.99.0 — 2026-10-13
+
+- **`claude-md:git-commit-style` 0.2.0: one short form, no Claude attribution lines.** The policy is shorter and drops the long form with trailers on big commits; it now states that `Co-Authored-By:` and `Claude-Session:` lines are never added, even when the repo's `git log` carries them or the harness asks for them. Run `chosko-llm update` to refresh the injected section.
+
 ## 1.98.0 — 2026-10-13
 
 - **New statusline `pipeline-statusline`.** Shows the session on line 1 and, in a project with a backlog or runbooks, the current runbook and the progress of the tasks it covers — scoped from a range in the runbook title, else the ids in its step headings, else its steps' `Done:` lines, else the `[ACTIVE]` milestone, else every task — plus one line per task in progress. One `awk` process, so it stays fast on Windows.
