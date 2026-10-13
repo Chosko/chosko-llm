@@ -33,9 +33,10 @@ In scope:
   watcher, publish, pending question, chat lines, degradation.
 - The generator (data for the page, and the text snapshot) and the page.
 - Per-project state in the user scope.
-- The opt-in: a `CLAUDE.md` clause, offered by `/project-setup`, and an
+- The opt-in: a `CLAUDE.md` line, offered by `/project-setup`, and an
   override flag pair on `runbook-run` and `task-implement`, each of which
-  carries a one-line pointer.
+  resolves the opt-in and names the skill only when on (§ Opt-in in the
+  orchestrators).
 
 Non-goals:
 
@@ -52,7 +53,7 @@ Non-goals:
   dashboard.
 - **A second artifact for the same project**, on any machine.
 - **Hard dependency.** The orchestrators name the skill; without it they
-  behave exactly as before.
+  print one line and run as with the dashboard off.
 - **A localised interface.** Every user-visible string is English.
 - **New dependencies.** No jq or Python; the page loads only Google Fonts.
 
@@ -88,11 +89,14 @@ Short, and the only part read when the dashboard is off.
 Read only when the dashboard resolves on; the orchestrating session follows it.
 
 - **Ownership.** Only the main session regenerates and publishes; a
-  subagent never writes the dashboard's state or calls the Artifact tool.
+  subagent never writes the dashboard's state or calls the Artifact tool,
+  and an orchestrator that is itself a subagent follows the protocol no more
+  than its steps do.
   Subagents still change the indexes, and the main session sees those
   changes through the watcher.
 - **Ordering.** Regenerate only after every status marker of the event is
-  written — task status, step mark, `RUNBOOKS.md` — so the page never shows
+  written — task status, step mark, `RUNBOOKS.md`, a feature's `Status:` in
+  `FEATURES.md` — so the page never shows
   a state the files have already left.
 - **Refresh triggers.** Run start and run end (a failure stop included);
   every task status change, seen by the watcher; every runbook step
@@ -101,8 +105,8 @@ Read only when the dashboard resolves on; the orchestrating session follows it.
   ("Dashboard updated: task 221 started."), with no version or URL except on
   the first publish, which gives the link.
 - **Watcher.** The Monitor tool (deferred, loaded by ToolSearch) runs a
-  10-second snapshot of the in-scope task statuses and emits one line per
-  change; each line is an event. Monitors expire after 30 minutes: re-armed
+  10-second snapshot of every task status in `TASKS.md` and emits one line
+  per change; each line is an event. Monitors expire after 30 minutes: re-armed
   while the run is active, with one short line only when re-arming after a
   gap.
 - **Degradation.** Generator error, publish refused, Monitor or Artifact tool
@@ -160,9 +164,12 @@ the project's `CLAUDE.md` carries `Pipeline dashboard policy: on`. When on,
 the main session follows `pipeline-dashboard`, whose refreshes and chat
 lines sit outside the body's output rules and whose run-end refresh comes
 after feature completion and before the closing report; when the skill is
-not installed, one line and off. `/project-setup` offers the dashboard among its choices and, when
-the user accepts, writes the `Pipeline dashboard policy: on` line into the
-project's `CLAUDE.md`.
+not installed, one line and off. A delegated agent, any subagent and a
+`/task-implement` a runbook step launched, `--inline` included, resolve no
+dashboard: the runbook run's, if any, already covers it, and the flags are
+never handed down. `/project-setup` offers the line among its choices, with
+`off` as the default, and writes `Pipeline dashboard policy: on` into the
+project's `CLAUDE.md` on `on`.
 
 ## Data and state
 
@@ -220,10 +227,11 @@ project's `CLAUDE.md`.
 
 ## Dependencies
 
-- **Artifact tool** (claude.ai): publish, read, list. Absent → text snapshot
-  only, one warning.
-- **Monitor tool** (deferred): the status watcher. Absent → refresh only on
-  the explicit triggers, one warning.
+- **Artifact tool** (claude.ai): publish, read, list. Absent → one warning,
+  and the run goes on as if the dashboard were off; the text snapshot on
+  request still works.
+- **Monitor tool** (deferred): the status watcher. Absent → one warning, and
+  the run goes on as if the dashboard were off.
 - **`/project-setup`**: offers the opt-in and writes the `CLAUDE.md` line.
 - **runbook-suite**, **task-archive**, **production-plan**, **backlog
   ordering**: the formats read (`RUNBOOKS.md` blocks and step markers, the

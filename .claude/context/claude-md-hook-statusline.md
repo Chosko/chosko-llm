@@ -56,11 +56,12 @@ kinds themselves: [features.md](./features.md); the frontmatter contract:
 - `commands/pipeline-statusline.md` — command, `requires:
   statusline:pipeline-statusline`: the agent edits only the `statusLine` key
   of the user `settings.json` (no jq), resolving the user scope as
-  `${CLAUDE_HOME:-$HOME/.claude}` — the home-path guard's documented
-  exception for global-only kinds; backs up a replaced status line (value + script copy +
+  `${CLAUDE_HOME:-$HOME/.claude}` — the home-path guard's rule for state
+  living in the user scope by design; backs up a replaced status line (value + script copy +
   `script-path`) to `statusline/pipeline-statusline.backup/`, never
   overwriting an existing backup; `uninstall` restores it; refresh goes
-  through `chosko-llm update`; ends with a timed run of the renderer on a
+  through `chosko-llm update`; ends with a timed run of the renderer, in the project and in an empty
+  directory, on the shape of `statusline-last-input.json` when present, else a
   fixture. Shares its name with the statusline, so CLI calls need the kind
   prefix.
 

@@ -19,8 +19,10 @@ kinds: [features.md](./features.md); the design:
   `--dashboard` / `--no-dashboard` for a run, else the line — and name the
   skill only when it resolved on: `runbook-run` in an ARGUMENTS row,
   `task-implement` in an ARGUMENT PARSING block, both stating that the
-  dashboard's run-end refresh comes before the closing report and that an
-  unavailable skill means one line and off.
+  dashboard's run-end refresh comes before the closing report, that an
+  unavailable skill means one line and off, and that a delegated agent, a
+  subagent or a `/task-implement` a runbook step launched resolves no
+  dashboard.
 - `skills/pipeline-dashboard/references/protocol.md` — read only when the
   dashboard resolves on; the **main session only** follows it. Regenerate
   only after every status marker of the event is written; copy the state

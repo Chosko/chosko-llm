@@ -57,7 +57,7 @@ printf 'HOME_DIR=%s\nRENDERER=%s\nSETTINGS=%s\nBACKUP=%s\n' "$H" "$R" "$H/settin
 
 ARGUMENTS
 
-- `uninstall` selects UNINSTALL; anything else selects INSTALL.
+- `uninstall` selects UNINSTALL; no `uninstall` token selects INSTALL.
 - `--no-nerd-font` sets FLAG; it is meaningful only to INSTALL.
 - Any other token → stop with the usage lines above.
 
@@ -160,8 +160,9 @@ Run after every INSTALL, in Bash:
    print the output followed by the elapsed seconds.
 3. **Judge.**
    - The no-`.claude/` run prints one line.
-   - The project run prints a second line when the project has
-     `.claude/TASKS.md` or `.claude/RUNBOOKS.md`.
+   - The project run prints a second line, plus one per task in progress
+     in scope, when the project has `.claude/TASKS.md` or
+     `.claude/RUNBOOKS.md`.
    - Each run under one second; report a slower one as a warning, never
      retry it.
    - Remove both temporary directories.

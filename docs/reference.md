@@ -37,8 +37,8 @@ artifacts and forwards `--commit` (plus `--no-push`, if set) to the
 sub-commands it runs. On a non-git VCS (e.g. Plastic SCM), the injected
 `## VCS` section notes that `cm checkin` already syncs to the server, so no
 push cycle ever runs there. It also offers the
-[`pipeline-dashboard`](#pipeline-dashboard) opt-in, default no, and on yes
-writes `Pipeline dashboard policy: on` into `CLAUDE.md`.
+[`pipeline-dashboard`](#pipeline-dashboard) policy line, `off` by default, and
+on `on` writes `Pipeline dashboard policy: on` into `CLAUDE.md`.
 
 ### `/task-setup`
 

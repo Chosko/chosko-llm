@@ -39,11 +39,10 @@ Nothing is written in the working tree.
 
 PUBLISHING
 
-**Order.**
-- Regenerate only after every status marker of the event is written — the
-  task's `Status:`, the step's mark, the `RUNBOOKS.md` block, a feature's
-  `Status:` in `FEATURES.md`. A page
-  generated before the mark shows a state the files have already left.
+**Order.** Regenerate only after every status marker of the event is
+written — the task's `Status:`, the step's mark, the `RUNBOOKS.md` block, a
+feature's `Status:` in `FEATURES.md`. A page generated before the mark shows
+a state the files have already left.
 
 **Every update.**
 1. Run the generator.

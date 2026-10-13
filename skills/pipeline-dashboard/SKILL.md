@@ -31,7 +31,7 @@ Show the user where pipeline work stands whenever they ask, and — when the
 project or the run opts in — let them follow a long run from a live page that
 also shows the question the run is waiting on.
 
-A project that does not opt in pays nothing beyond this file.
+A project that does not opt in pays nothing beyond this skill's description.
 
 ---
 
@@ -39,15 +39,13 @@ THE OPT-IN
 
 - `Pipeline dashboard policy: on` in the project's `CLAUDE.md` opts the
   project in; `off`, any other value or no line leaves it out.
-  `/project-setup` offers the line.
 - `/runbook-run` and `/task-implement` resolve the opt-in at their own
-  argument parsing — their `--dashboard` / `--no-dashboard` flags override
-  the line for one run — and name this skill only when it resolved on. Never
+  argument parsing and name this skill only when it resolved on. Never
   resolve it again here.
 - Named for a run → read `./references/protocol.md` and follow it for the
   rest of the run, in the main session only.
-- Not named → nothing of this skill runs for the run: no generator, no
-  watcher, no publish, no chat line.
+- Not named → nothing of the protocol runs for the run: no data generation,
+  no watcher, no publish, no chat line. TEXT SNAPSHOT still applies.
 
 ---
 

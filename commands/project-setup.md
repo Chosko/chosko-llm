@@ -2,7 +2,7 @@
 name: project-setup
 version: 0.11.0
 type: command
-description: Interactive first-time project initialization wizard — gathers every choice up front (VCS, CLAUDE.md content, AGENTS.md, task backlog, domain layer, context layer), confirms once, then runs /task-setup, /domain-setup and /context-build in a fixed order. Use it once, on a project the chosko-llm tooling has not been set up on yet.
+description: Interactive first-time project initialization wizard — gathers every choice up front (VCS, CLAUDE.md content and policy lines, AGENTS.md, task backlog, domain layer, context layer), confirms once, then runs /task-setup, /domain-setup and /context-build in a fixed order. Use it once, on a project the chosko-llm tooling has not been set up on yet.
 disable-model-invocation: true
 requires: skill:interaction-engine
 ---
@@ -92,8 +92,8 @@ COMMIT POLICY — project-setup is an AUTHORING command.
   `git commit`, or the `## VCS`-mapped equivalents). Without `--commit`,
   never stage, commit, or otherwise mutate VCS state, and run no other VCS
   command at all.
-- With `--commit`: commit (and push) the wizard's OWN artifacts (the
-  CLAUDE.md seeding + VCS section, AGENTS.md) first, then run the nested
+- With `--commit`: commit (and push) the wizard's OWN artifacts (everything
+  Steps 1-4b wrote, committed by Step 4c) first, then run the nested
   commands WITH `--commit` so each commits (and pushes) its own output — a
   small series of focused commits (PHASE 3).
 - With `--commit --no-push`: every commit in the run is local-only. Step 4c
@@ -144,10 +144,10 @@ PHASE 1 — GATHER (conversational; no files written)
    - WITH `--commit`:
 
      > Heads up: you passed --commit, so I'll commit as I go — first my own
-     > artifacts (CLAUDE.md seeding, AGENTS.md), then each sub-command commits
-     > its own output (task-setup, domain-setup, context-build). You'll get a
-     > small series of
-     > focused commits rather than one working tree to review.
+     > artifacts (CLAUDE.md, AGENTS.md and any sections or hook you pick), then
+     > each sub-command commits its own output (task-setup, domain-setup,
+     > context-build). You'll get a small series of focused commits rather
+     > than one working tree to review.
 
 2. Ask the questions 1a–1k below ONE AT A TIME — ask one, wait for the
    reply, then ask the next. Never batch them into one message or ask the
@@ -531,8 +531,9 @@ Testing policy for /task-implement: <full-tdd | skip-tests | skip-tests-unattend
 
 - Only when GATHER 1j chose `on`: add the line
   `Pipeline dashboard policy: on` to CLAUDE.md on its own line, beside the
-  interaction-policy line when the file has one, else at the end; update an
-  existing `Pipeline dashboard policy:` line in place.
+  interaction-policy line when the file has one, else before the first `##`
+  section, else at the end; update an existing `Pipeline dashboard policy:`
+  line in place.
 - `off` → write nothing; an existing `Pipeline dashboard policy:` line is
   reported in the final report, never removed.
 
@@ -643,6 +644,8 @@ git commit -m "Initialize project with chosko-llm scaffolding"
   post-hoc review even though it was committed.
 - Either way, when the hook was installed, relay the `.claude/settings.json`
   wiring prompt the CLI printed for it (Step 4b).
+- Either way, when Step 3d left an existing `Pipeline dashboard policy:`
+  line in place, name it and its value.
 - Either way, when the domain layer was set up, suggest the pipeline's entry
   points: `/product-design` to design the product, `/architect` to turn
   features into feature documents.
@@ -650,5 +653,3 @@ git commit -m "Initialize project with chosko-llm scaffolding"
 ---
 
 DO NOT:
-- Clobber an existing AGENTS.md or an existing CLAUDE.md project-info /
-  VCS / Tasks-implementation section — update in place, never duplicate.

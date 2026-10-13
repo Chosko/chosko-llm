@@ -118,7 +118,7 @@ does the work; the command body is the procedure.
 
 - **Locate** — resolves the renderer's absolute path and the user
   `settings.json` in the user scope, `${CLAUDE_HOME:-$HOME/.claude}`, as the
-  home-path guard's exception for global-only kinds allows.
+  home-path guard's rule for state living in the user scope by design allows.
 - **Install** — reads the current `statusLine`. Absent: writes the new value.
   Already ours: refreshes the script and reports. Anything else: shows it,
   asks replace or abort, and on replace backs it up before writing. The
@@ -170,7 +170,7 @@ does the work; the command body is the procedure.
   refreshes; `/pipeline-statusline uninstall` restores. Reports one of:
   installed; already installed, script updated; already installed,
   unchanged; replaced (with the backup's location); aborted; restored;
-  nothing to uninstall. A `settings.json` that does not parse stops the run
+  removed; nothing to uninstall. A `settings.json` that does not parse stops the run
   with the file untouched. Re-running `--no-nerd-font` on an installed status
   line changes only the flag in the command string.
 - **Backup contract** — a second replace never overwrites an existing

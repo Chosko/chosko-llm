@@ -125,7 +125,7 @@ The rest of the suite: [task-suite.md](./task-suite.md).
 - [pipeline-dashboard.md](./pipeline-dashboard.md) — the opt-in dashboard: the
   ARGUMENT PARSING paragraph for `--dashboard` / `--no-dashboard` is the one
   passage naming it; the launching session follows it, never a delegated
-  agent.
+  agent, a subagent or a run a runbook step launched (`--inline` included).
 
 ## When to read the source
 
