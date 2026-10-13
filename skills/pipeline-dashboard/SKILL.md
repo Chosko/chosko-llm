@@ -12,11 +12,11 @@ description: 'Print a text snapshot of where the pipeline work stands — milest
 # on, keep one private claude.ai Artifact per project live with that progress
 # and any question waiting for the user. Opt-in, off by default: on for a run
 # with `--dashboard`, off with `--no-dashboard`, otherwise on only when the
-# project's `CLAUDE.md` carries `Pipeline dashboard policy: on`. When off, nothing
-# below the opt-in rule is read and nothing is published. Not invoked by the
-# user — selected from the description above, and named by `runbook-run` and
-# `task-implement`. State lives in the user scope, never in the working
-# tree; nothing is committed.
+# project's `CLAUDE.md` carries `Pipeline dashboard policy: on`. When off,
+# nothing below the opt-in rule is read and nothing is published. Not invoked
+# by the user — selected from the description above, and named by
+# `runbook-run` and `task-implement`. State lives in the user scope, never in
+# the working tree; nothing is committed.
 # Usage: Pipeline dashboard policy: on              (line in the project's CLAUDE.md)
 #        /runbook-run <runbook> --dashboard | --no-dashboard
 #        /task-implement <tasks> --dashboard | --no-dashboard
@@ -30,22 +30,19 @@ Show the user where pipeline work stands whenever they ask, and — when the
 project or the run opts in — let them follow a long run from a live page that
 also shows the question the run is waiting on.
 
-- A project that does not opt in pays nothing beyond this file.
-- Keep every state file in the user scope, never in the working tree; commit
-  nothing.
-- Follow this skill in the orchestrating session only, never in a subagent.
+A project that does not opt in pays nothing beyond this file.
 
 ---
 
 OPT-IN
 
-Resolve it once per run of `/runbook-run` or `/task-implement`:
+Resolve the opt-in once per run of `/runbook-run` or `/task-implement`:
 
-- `--dashboard` → on for that run; `--no-dashboard` → off for that run,
-  whatever the project says.
+- `--dashboard` → on for that run, and `--no-dashboard` → off for that run;
+  either flag wins over the project.
 - Neither flag → the line `Pipeline dashboard policy: on` in the project's
-  `CLAUDE.md` turns it on; `Pipeline dashboard policy: off`, or no such
-  line, leaves it off.
+  `CLAUDE.md` turns it on; anything else, `Pipeline dashboard policy: off`
+  and no such line included, leaves it off.
 
 Then:
 

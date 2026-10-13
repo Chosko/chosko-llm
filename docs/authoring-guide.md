@@ -97,7 +97,7 @@ The contract every shipped `description` follows:
 
 Budgets are in characters and words, not tokens: the repo forbids a tokenizer
 dependency, and characters are what the harness caps on anyway. `/context-budget`
-(repo-local, see below) flags a description over 60 words (150 for the six
+(repo-local, see below) flags a description over 60 words (150 for the five
 auto-trigger skills), over 1,536 chars, or containing ` --- `.
 
 ### <a id="the-body-header"></a>The body header — where the flags live

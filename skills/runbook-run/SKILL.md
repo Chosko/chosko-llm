@@ -171,7 +171,7 @@ failure line the halt already calls for.
 | `--commit` | Accepted and stripped, a silent no-op: committing is the default. Refused beside `--no-commit` with `--commit and --no-commit cannot be combined. Pick one.` |
 | `--no-commit` | Do the work and write the bookkeeping, but commit nothing. Implies `--no-push`. |
 | `--no-push` | Commit each step as usual, skip the push. |
-| `--dashboard` \| `--no-dashboard` | On when `--dashboard` is passed, or when the project's `CLAUDE.md` has `Pipeline dashboard policy: on` and `--no-dashboard` is not passed: this session then follows the `pipeline-dashboard` skill for the run, whose state and one chat line per update sit outside the two-files and quiet-between-steps contracts. Off otherwise, and nothing in this body changes. |
+| `--dashboard` \| `--no-dashboard` | On when `--dashboard` is passed, or when the project's `CLAUDE.md` has `Pipeline dashboard policy: on` and `--no-dashboard` is not passed: this session then follows the `pipeline-dashboard` skill for the run, whose state and one chat line per update sit outside the two-files and quiet-between-steps contracts. Off otherwise, and nothing in this body changes. Refused beside each other with `--dashboard and --no-dashboard cannot be combined. Pick one.` |
 
 **The execution policy** is the run's interaction policy, resolved per
 `../interaction-engine/references/policy.md` — the runbook header's

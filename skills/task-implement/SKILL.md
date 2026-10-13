@@ -211,17 +211,6 @@ appear:
   policy is not `unattended` stops the run with:
   `--skip-parked requires --unattended.`
 
-**Dashboard flags.** Scan for the optional `--dashboard` and
-`--no-dashboard` flags and strip whichever appears.
-
-- The dashboard is on when `--dashboard` was passed, or when the project's
-  `CLAUDE.md` has the line `Pipeline dashboard policy: on` and
-  `--no-dashboard` was not passed; off otherwise. Both flags together stop
-  the run with: `--dashboard and --no-dashboard cannot be combined. Pick one.`
-- On → the session launching the run — never a delegated agent — follows
-  the `pipeline-dashboard` skill for the run. Off → nothing in this skill
-  changes.
-
 When UNATTENDED is true:
 
 - read `../task-engine/references/parking.md` now and apply its
@@ -243,6 +232,17 @@ When UNATTENDED is true:
   (`testing-policy.md` step 2). Only a question about the work parks a
   task, and only inside the per-task workflow (PER-TASK WORKFLOW
   § *Parking at a question*).
+
+**Dashboard flags.** Scan for the optional `--dashboard` and
+`--no-dashboard` flags and strip whichever appears.
+
+- The dashboard is on when `--dashboard` was passed, or when the project's
+  `CLAUDE.md` has the line `Pipeline dashboard policy: on` and
+  `--no-dashboard` was not passed; off otherwise. Both flags together stop
+  the run with: `--dashboard and --no-dashboard cannot be combined. Pick one.`
+- On → the session launching the run — never a delegated agent — follows
+  the `pipeline-dashboard` skill for the run. Off → nothing in this skill
+  changes.
 
 **Selectors.**
 - After stripping the flags, `$ARGUMENTS` is a whitespace-separated list of

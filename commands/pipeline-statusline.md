@@ -27,12 +27,6 @@ GOAL
 Leave the user's status line running the pipeline renderer, with whatever it
 replaced recoverable byte for byte — or, under `uninstall`, put that back.
 
-- Edit the one `statusLine` key of the user `settings.json` and nothing else.
-- Never touch `statusline-progress.sh`, `statusline-combined.sh` (beyond
-  copying it into the backup) or `statusline/session-statusline.sh`; never
-  delete `statusline-last-input.json`.
-- Commit nothing.
-
 $ARGUMENTS
 
 ---
@@ -132,7 +126,7 @@ UNINSTALL
      verbatim, by the same surgical edit as INSTALL step 4;
    - when `BACKUP/script-path` exists and its path no longer holds a file
      identical to the copy (`cmp`), copy the script back there;
-   - delete BACKUP;
+   - then delete BACKUP;
    - report `restored`, with the restored value.
 3. **No BACKUP** → remove the `statusLine` key alone; report `removed`.
 4. Either way, end with: the renderer stays installed —
@@ -153,11 +147,12 @@ Run after every INSTALL, in Bash:
    {"session_id":"verify","model":{"id":"claude","display_name":"Claude"},"workspace":{"current_dir":"<DIR>","project_dir":"<DIR>"},"cwd":"<DIR>","cost":{"total_cost_usd":1.2345},"context_window":{"used_percentage":42},"rate_limits":{"five_hour":{"used_percentage":35,"resets_at":<RESET>},"seven_day":{"used_percentage":12}}}
    ```
 
-   - Write two copies to a fresh `mktemp -d` directory: one with every
+   Whichever the source, then:
+   - write two copies to a fresh `mktemp -d` directory: one with every
      current-directory field (`workspace.current_dir`,
      `workspace.project_dir`, `cwd`) set to the current project's path, one
-     set to a second, empty `mktemp -d` directory with no `.claude/`.
-   - Set `rate_limits.five_hour.resets_at` to now plus 90 minutes
+     set to a second, empty `mktemp -d` directory with no `.claude/`;
+   - set `rate_limits.five_hour.resets_at` to now plus 90 minutes
      (`date +%s`).
 2. **The runs.** For each copy, run the command string OURS just wrote,
    timed with the bash `time` keyword (`TIMEFORMAT=%3R`, portable to the

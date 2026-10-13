@@ -7,10 +7,12 @@ kinds: [features.md](./features.md); the design:
 `../domain/features/pipeline-dashboard.md`.
 
 - `skills/pipeline-dashboard/SKILL.md` — short on purpose: the only part
-  read when the dashboard is off. An auto-trigger skill (one of six, 150-word
+  read when the dashboard is off. An auto-trigger skill (one of five, 150-word
   description budget): fires only on an explicit request for an overview of
   the pipeline's progress — a run with the dashboard on reaches it through
-  the orchestrator's line instead; no `requires:`, and nothing requires it. Holds the opt-in rule
+  the orchestrator's line instead; no `requires:`, and nothing requires it; declares
+  `project-policy: line:Pipeline dashboard policy=on|off`, the line
+  `/project-setup` offers and `scripts/check-setup.sh` checks. Holds the opt-in rule
   — `--dashboard` / `--no-dashboard` for a run, else `Pipeline dashboard policy: on`
   in the project's `CLAUDE.md`, else off — the text snapshot on request, and
   the pointer to `references/protocol.md`. The same rule is restated as one

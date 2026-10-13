@@ -149,7 +149,7 @@ PHASE 1 — GATHER (conversational; no files written)
      > small series of
      > focused commits rather than one working tree to review.
 
-2. Ask the questions 1a–1j below ONE AT A TIME — ask one, wait for the
+2. Ask the questions 1a–1k below ONE AT A TIME — ask one, wait for the
    reply, then ask the next. Never batch them into one message or ask the
    user to answer them all in one go.
 3. Suggest the answer you'd pick, so the user can confirm with a single word.

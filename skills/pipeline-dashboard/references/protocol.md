@@ -31,8 +31,9 @@ Run every script from the project root, by its path in the skill's folder.
   source it cannot read is named on the page, never shown as zero progress.
 - `../scripts/watch.sh` prints one line per task status change in
   `TASKS.md`, every 10 seconds.
-- The state folder holds `url`, `index.html`, `data.js` and `pending.json`.
-  Write nothing in the working tree.
+
+The state folder holds `url`, `index.html`, `data.js` and `pending.json`.
+Nothing is written in the working tree.
 
 ---
 
@@ -107,7 +108,7 @@ When a question waits for the user — relayed from a step, asked by
 
 - Keep `id` stable and unique per question.
 - Once the user answers, write `null` to the file and refresh again.
-- Still ask the question in the terminal as the orchestrating skill
+- The question is still asked in the terminal as the orchestrating skill
   prescribes; the page only shows it.
 
 ---

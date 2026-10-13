@@ -82,7 +82,8 @@ values), `section:<claude-md feature>` and `vcs:<op>` (a git operation a
 `## VCS` mapping must translate) specs. No CLI verb acts on it. Declared by
 `skills/interaction-engine/` (the interaction-policy line),
 `skills/task-engine/` (the testing-policy line, beside its `vcs:` ops — the
-commit and tree protocol's plus its own), `skills/doc-consolidate/`
+commit and tree protocol's plus its own), `skills/pipeline-dashboard/` (the
+pipeline-dashboard policy line), `skills/doc-consolidate/`
 (`section:editing-discipline`), and for `vcs:` ops by `skills/task-clean/`,
 `skills/context-convert/`, `commands/session-save.md`, `skills/task-review/`
 and `skills/task-iterate/`. `scripts/check-setup.sh` is its guard —
