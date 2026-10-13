@@ -42,9 +42,9 @@ knowledge layer and the navigation context layer.
 Orchestrate existing features; never reimplement them. The `/context-build`
 SKILL, `/task-setup` and `/domain-setup` stay independently usable — run
 their logic on the user's behalf. The wizard's own artifacts are the
-CLAUDE.md project-info, VCS, Tasks-implementation and interaction-policy
-lines and sections, and AGENTS.md; it installs the claude-md sections and the
-hook the user picks through `chosko-llm add --local`.
+CLAUDE.md project-info, VCS, Tasks-implementation, interaction-policy and
+pipeline-dashboard policy lines and sections, and AGENTS.md; it installs the
+claude-md sections and the hook the user picks through `chosko-llm add --local`.
 
 Flow, strictly: GATHER (ask everything) → CONFIRM (one approval) → EXECUTE
 (apply in order) → commit-or-review-reminder. Write no file before the user
@@ -63,7 +63,7 @@ remaining text is a structure/VCS hint.
   forwarded to every nested command invoked with `--commit`.
 - Pull at start: when COMMIT is true, NO_PUSH is not set, and the chosen VCS
   is git (not a non-git `## VCS` exemption), run `git pull` on the current
-  branch before PHASE 2 (EXECUTE) begins. On a conflict, stop the run there:
+  branch before PHASE 3 (EXECUTE) begins. On a conflict, stop the run there:
   report the conflict output and tell the user to resolve manually and
   re-run.
 - `--attended` / `--unattended` → resolve the run's interaction policy from
@@ -108,9 +108,9 @@ COMMIT POLICY — project-setup is an AUTHORING command.
 ORDERING PRINCIPLE — do the wizard's OWN fast, deterministic work first,
 THEN run the heavy sub-commands last:
 - The wizard's own artifacts (CLAUDE.md seeding, VCS section,
-  Tasks-implementation section, interaction-policy line, AGENTS.md, and the
-  `chosko-llm add --local` installs) rely only on what the user provides;
-  write them before any sub-command runs.
+  Tasks-implementation section, interaction-policy line, pipeline-dashboard
+  policy line, AGENTS.md, and the `chosko-llm add --local` installs) rely
+  only on what the user provides; write them before any sub-command runs.
 - `/task-setup` runs next (Step 5) — mechanical and low-context.
 - `/domain-setup` runs after it and BEFORE `/context-build` (Step 5b) — also
   mechanical and low-context. `/context-build` emits DOMAIN DEPENDENCIES
@@ -292,7 +292,8 @@ implementation` section (Step 3b).
 
 > Should `/runbook-run` and `/task-implement` keep a live progress page (a
 > private claude.ai Artifact) while they run, with any question waiting for
-> you? It costs tokens on every task status change during a run. [on / off]
+> you? It costs tokens on every update during a run. [on / off — `off`, the
+> default, writes no line]
 
 `off` is the default and writes nothing. `on` is written as the line
 `Pipeline dashboard policy: on` (Step 3d); a run can still override it with
@@ -532,7 +533,8 @@ Testing policy for /task-implement: <full-tdd | skip-tests | skip-tests-unattend
   `Pipeline dashboard policy: on` to CLAUDE.md on its own line, beside the
   interaction-policy line when the file has one, else at the end; update an
   existing `Pipeline dashboard policy:` line in place.
-- `off` → write nothing.
+- `off` → write nothing; an existing `Pipeline dashboard policy:` line is
+  reported in the final report, never removed.
 
 ### Step 4 — AGENTS.md
 

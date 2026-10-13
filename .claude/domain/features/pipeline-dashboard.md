@@ -27,7 +27,7 @@ that does not pays nothing.
 
 In scope:
 
-- The skill body: activation, opt-in resolution, the text snapshot on
+- The skill body: activation, the opt-in line's values, the text snapshot on
   request, and the pointer to the protocol.
 - The protocol, in a supporting file: ownership, ordering, refresh triggers,
   watcher, publish, pending question, chat lines, degradation.
@@ -75,12 +75,13 @@ Short, and the only part read when the dashboard is off.
   run with the dashboard on reaches it through the orchestrator's own line,
   not through the description. It is one of the auto-trigger skills, with
   their description budget.
-- **Opt-in resolution.** For a run: `--dashboard` turns it on and
-  `--no-dashboard` off; without either, the project's `CLAUDE.md` decides — a
-  `Pipeline dashboard policy: on` line turns it on, anything else leaves it off.
+- **The opt-in line.** The skill declares `Pipeline dashboard policy` as a
+  project-policy and states its values: `on` opts the project in; `off`, any
+  other value or no line leaves it out. It never resolves the opt-in itself:
+  the orchestrators do, and name the skill only when the result is on.
 - **Text snapshot.** On a request for that overview, whatever the opt-in.
-- **Pointer.** When the dashboard resolves on, read the protocol file and
-  follow it for the run.
+- **Pointer.** When named for a run, read the protocol file and follow it
+  for the run.
 
 ### Protocol — `references/protocol.md`
 
@@ -152,11 +153,14 @@ bar per step, the running task under its step, the last three tasks done.
 
 ### Opt-in in the orchestrators and in `/project-setup`
 
-`runbook-run` and `task-implement` each take `--dashboard` and
-`--no-dashboard`, documented in their body headers only, and carry one line
-pointing at the skill: when the run's dashboard resolves on, the main session
-follows `pipeline-dashboard`. The line names the skill and restates none of
-its rules. `/project-setup` offers the dashboard among its choices and, when
+`runbook-run` and `task-implement` each own their `--dashboard` and
+`--no-dashboard` flags and resolve the opt-in at argument parsing:
+`--dashboard` on, `--no-dashboard` off, both refused, neither → on only when
+the project's `CLAUDE.md` carries `Pipeline dashboard policy: on`. When on,
+the main session follows `pipeline-dashboard`, whose refreshes and chat
+lines sit outside the body's output rules and whose run-end refresh comes
+after feature completion and before the closing report; when the skill is
+not installed, one line and off. `/project-setup` offers the dashboard among its choices and, when
 the user accepts, writes the `Pipeline dashboard policy: on` line into the
 project's `CLAUDE.md`.
 
@@ -182,7 +186,7 @@ project's `CLAUDE.md`.
   `features`, `tasks`, `runbook`, `pending`, `generated` (local timestamp),
   plus the project label and the list of indexes that could not be read.
 - **Per-project state**, in `${CLAUDE_HOME:-$HOME/.claude}/pipeline-dashboard/<slug>/`
-  — the user scope, as the home-path guard's exception for global-only kinds
+  — the user scope, as the home-path guard's rule for state living in the user scope by design
   allows: `url` (the artifact link), `index.html` and the data file (what is
   published, through a copy in the session scratchpad, since the Artifact
   tool publishes only from the working directories or the scratchpad),

@@ -10,13 +10,14 @@ description: 'Print a text snapshot of where the pipeline work stands — milest
 # Global skill: print a text snapshot of the pipeline's progress when the
 # user asks for an overview of it, and, for a run with the dashboard switched
 # on, keep one private claude.ai Artifact per project live with that progress
-# and any question waiting for the user. Opt-in, off by default: on for a run
-# with `--dashboard`, off with `--no-dashboard`, otherwise on only when the
-# project's `CLAUDE.md` carries `Pipeline dashboard policy: on`. When off,
-# nothing below the opt-in rule is read and nothing is published. Not invoked
-# by the user — selected from the description above, and named by
-# `runbook-run` and `task-implement`. State lives in the user scope, never in
-# the working tree; nothing is committed.
+# and any question waiting for the user. Opt-in, off by default: the project
+# opts in with `Pipeline dashboard policy: on` in its `CLAUDE.md` or a run
+# with `--dashboard` (`--no-dashboard` turns it off); `runbook-run` and
+# `task-implement` resolve that and name this skill only when on. Not named,
+# the protocol is never read and nothing is published; the text snapshot still
+# answers a progress question. Not invoked by the user — selected from the
+# description above, or named by those two orchestrators. State lives in the
+# user scope, never in the working tree; nothing is committed.
 # Usage: Pipeline dashboard policy: on              (line in the project's CLAUDE.md)
 #        /runbook-run <runbook> --dashboard | --no-dashboard
 #        /task-implement <tasks> --dashboard | --no-dashboard

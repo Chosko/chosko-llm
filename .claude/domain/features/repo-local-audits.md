@@ -89,7 +89,7 @@ precise number this repo cannot produce.
 | `SKILL.md` length | > 400 lines |
 | supporting reference file | > 500 lines |
 | command length | > 400 lines |
-| `description:` frontmatter | > 60 words (> 150 for the four auto-trigger skills), the contract's own budgets; > 1,536 chars (the harness's hard cap); contains ` --- ` (the harness truncates there) |
+| `description:` frontmatter | > 60 words (> 150 for the five auto-trigger skills), the contract's own budgets; > 1,536 chars (the harness's hard cap); contains ` --- ` (the harness truncates there) |
 | `CLAUDE.md` chain combined | > 300 lines |
 
 ECC's observation about `description:` is the one worth carrying deliberately:

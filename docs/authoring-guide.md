@@ -993,13 +993,14 @@ A home is derived in two places, neither of them a citation:
 
 - the probe in `skills/pipeline-engine/references/probes.md`, a shell snippet
   that checks both scopes; its own file carries the rule;
-- a body that writes or wires the state of a **global-only** kind resolves
-  the user scope, `${CLAUDE_HOME:-$HOME/.claude}`, with nothing joined onto
-  it but that state's own path: `/pipeline-statusline` locating the
-  statusline script and the user `settings.json`, `pipeline-dashboard`'s
-  state folder. A global-only kind has no `--local` copy for a relative path
-  to find, so the user scope is the only home there is. Citing another
-  shipped file from those bodies still follows the relative rule.
+- a body that writes or wires **state living in the user scope by design**
+  resolves it, `${CLAUDE_HOME:-$HOME/.claude}`, with nothing joined onto it
+  but that state's own path: `/pipeline-statusline` locating the statusline
+  script and the user `settings.json` (the statusline kind is global-only, so
+  no `--local` copy exists for a relative path to find), and
+  `pipeline-dashboard`'s per-project state folder (kept out of every working
+  tree, whichever scope the skill is installed in). Citing another shipped
+  file from those bodies still follows the relative rule.
 
 The guard proves absence of that one shape and nothing more. Whether a
 relative citation resolves, and whether the probe's shell looks in the right
