@@ -11,8 +11,8 @@ them follows: [feature-contract.md](./feature-contract.md).
   detection, CLAUDE.md seeding from pasted source, AGENTS.md, task backlog,
   domain layer, context layer, testing policy on every project — none /
   `full-tdd` / `skip-tests` / `skip-tests-unattended` — interaction policy,
-  claude-md sections and hook), EXECUTE phase applies them in
-  fixed order.
+  pipeline-dashboard policy, claude-md sections and hook), EXECUTE phase
+  applies them in fixed order.
   **Authoring command — makes NO commits by default.** Writes own
   artifacts (CLAUDE.md project-info section synthesized from user-pasted
   material only; `## VCS` section mapping git→`cm` for non-git VCS like
@@ -21,7 +21,8 @@ them follows: [feature-contract.md](./feature-contract.md).
   disables parking; `## Tasks implementation` section carrying the chosen
   testing-policy line, plus editor dirty-tree noise bullets on Unity
   projects; `Interaction policy: unattended` line when chosen, nothing for
-  the `attended` default; AGENTS.md), installs the picked claude-md
+  the `attended` default; `Pipeline dashboard policy: on` line when chosen,
+  nothing for the `off` default; AGENTS.md), installs the picked claude-md
   sections (`editing-discipline`, required by `/doc-consolidate`,
   `git-commit-style`, `tool-usage-policy`) and the
   `remote-session-protocol` hook with `chosko-llm add --local` — relaying

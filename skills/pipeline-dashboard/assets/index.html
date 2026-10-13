@@ -1,0 +1,334 @@
+<title>Pipeline __PROJECT__</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a mixing-desk readout — three meters on top, the runbook's "tracklist" of steps below, one row per step. */
+:root {
+  --bg: #f3f5f8;
+  --panel: #ffffff;
+  --ink: #16202e;
+  --muted: #5b6676;
+  --line: #d8dee7;
+  --done: #2f8a5b;
+  --run: #d9821e;
+  --todo: #c9d1dc;
+  --fail: #c2402f;
+  --on-run: #1b1206;
+  --shadow: rgba(0, 0, 0, .25);
+  --display: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f151e; --panel: #172030; --ink: #e6ebf2; --muted: #93a0b2; --line: #26324a;
+    --done: #4fbf84; --run: #f0a043; --todo: #34415a; --fail: #ef6a57; --on-run: #1b1206; --shadow: rgba(0, 0, 0, .55);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f151e; --panel: #172030; --ink: #e6ebf2; --muted: #93a0b2; --line: #26324a;
+  --done: #4fbf84; --run: #f0a043; --todo: #34415a; --fail: #ef6a57; --on-run: #1b1206; --shadow: rgba(0, 0, 0, .55);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 48px; display: grid; gap: 28px; }
+header { display: grid; gap: 6px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 5vw, 40px); line-height: 1.1; margin: 0; text-wrap: balance; overflow-wrap: anywhere; }
+.sub { color: var(--muted); margin: 0; max-width: 65ch; }
+.sub code { font-family: var(--mono); font-size: .92em; }
+
+.notice { border: 1px solid color-mix(in srgb, var(--fail) 55%, transparent); background: color-mix(in srgb, var(--fail) 10%, var(--panel)); border-radius: 10px; padding: 12px 16px; overflow-wrap: anywhere; }
+
+.meters { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.meter { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 10px; min-width: 0; }
+.meter .label { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.meter .value { font-family: var(--display); font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.meter .value small { font-size: 16px; color: var(--muted); font-weight: 500; }
+.meter .none { color: var(--muted); }
+.vu { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; height: 14px; }
+.vu i { border-radius: 2px; background: var(--todo); }
+.vu i.on { background: var(--done); }
+.vu i.hot { background: var(--run); animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .45; } }
+
+.now { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--run); border-radius: 10px; padding: 16px 18px; display: grid; gap: 10px; min-width: 0; }
+.now.idle { border-left-color: var(--line); }
+.now.complete { border-left-color: var(--done); }
+.now h2 { margin: 0; font-family: var(--display); font-size: 20px; overflow-wrap: anywhere; }
+.now ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.now li { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 10px; align-items: baseline; }
+.now li .id { font-family: var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.now li .t { min-width: 0; overflow-wrap: anywhere; }
+
+h2.sec { font-family: var(--display); font-size: 22px; margin: 0; }
+.tracklist { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.tracklist .empty { padding: 14px 16px; color: var(--muted); }
+.row { display: grid; grid-template-columns: 40px minmax(0, 1.4fr) minmax(0, 1fr) 96px; gap: 6px 14px; align-items: center; padding: 12px 16px; border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; }
+.row .n { font-family: var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.row .name { min-width: 0; }
+.row .name b { font-weight: 600; display: block; overflow-wrap: anywhere; }
+.row .name span { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.row.running { background: color-mix(in srgb, var(--run) 9%, transparent); }
+.bars { display: flex; gap: 3px; flex-wrap: wrap; min-width: 0; }
+.seg { display: inline-block; width: 14px; height: 14px; border-radius: 3px; background: var(--todo); }
+.seg.done { background: var(--done); }
+.seg.run { background: var(--run); animation: pulse 1.6s ease-in-out infinite; }
+.seg.fail { background: var(--fail); }
+.chip { justify-self: end; font-family: var(--mono); font-size: 11px; letter-spacing: .05em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.chip.done { color: var(--done); border-color: color-mix(in srgb, var(--done) 45%, transparent); }
+.chip.running { color: var(--run); border-color: color-mix(in srgb, var(--run) 55%, transparent); }
+.chip.failed { color: var(--fail); border-color: color-mix(in srgb, var(--fail) 55%, transparent); }
+.commit { font-family: var(--mono); font-size: 12px; color: var(--muted); grid-column: 2 / -1; overflow-wrap: anywhere; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 16px; color: var(--muted); font-size: 13px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+footer { color: var(--muted); font-size: 13px; font-family: var(--mono); overflow-wrap: anywhere; }
+
+.ask-banner { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; background: color-mix(in srgb, var(--run) 14%, var(--panel)); border: 1px solid color-mix(in srgb, var(--run) 50%, transparent); border-radius: 10px; padding: 12px 16px; }
+.ask-banner > span { min-width: 0; overflow-wrap: anywhere; }
+.ask-banner b { font-weight: 600; }
+button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 7px 14px; }
+button.primary { background: var(--run); border-color: var(--run); color: var(--on-run); font-weight: 600; }
+button:focus-visible { outline: 2px solid var(--run); outline-offset: 2px; }
+.modal-back { position: fixed; inset: 0; background: color-mix(in srgb, var(--ink) 45%, transparent); display: grid; place-items: center; padding: 16px; z-index: 10; }
+.modal { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-top: 5px solid var(--run); border-radius: 12px; width: min(620px, 100%); max-height: 88vh; overflow: auto; padding: 22px; display: grid; gap: 14px; box-shadow: 0 18px 60px var(--shadow); }
+.modal h2 { margin: 0; font-family: var(--display); font-size: 22px; text-wrap: balance; }
+.modal .q { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+.modal ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.modal li { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 8px; overflow-wrap: anywhere; }
+.modal li.rec { border-color: color-mix(in srgb, var(--run) 60%, transparent); background: color-mix(in srgb, var(--run) 8%, transparent); }
+.modal li .k { font-family: var(--mono); font-weight: 500; color: var(--run); }
+.modal .rec-note { color: var(--muted); font-size: 14px; margin: 0; }
+.modal .how { font-family: var(--mono); font-size: 12px; color: var(--muted); margin: 0; }
+.modal .actions { display: flex; justify-content: flex-end; }
+
+@media (prefers-reduced-motion: reduce) { .vu i.hot, .seg.run { animation: none; } }
+@media (max-width: 640px) {
+  .row { grid-template-columns: 32px minmax(0, 1fr) auto; }
+  .row .bars { grid-column: 2 / -1; grid-row: 2; }
+  .now li { grid-template-columns: 44px minmax(0, 1fr); }
+  .now li .chip { grid-column: 2; justify-self: start; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow" id="eyebrow"></div>
+    <h1 id="h1">Progress</h1>
+    <p class="sub" id="sub"></p>
+  </header>
+
+  <div class="notice" id="notice" hidden></div>
+
+  <div class="ask-banner" id="askBanner" hidden>
+    <span><b>A question is waiting for your answer</b> · <span id="askBannerTitle"></span></span>
+    <button class="primary" id="askOpen" type="button">Read the question</button>
+  </div>
+
+  <section class="meters" id="meters" aria-label="Summary"></section>
+  <section class="now" id="now" aria-live="polite"></section>
+
+  <section style="display:grid;gap:12px">
+    <h2 class="sec">Runbook tracklist</h2>
+    <div class="legend">
+      <span><i class="seg done"></i>task done</span>
+      <span><i class="seg run"></i>in progress</span>
+      <span><i class="seg"></i>to do</span>
+      <span><i class="seg fail"></i>problem</span>
+    </div>
+    <div class="tracklist" id="tracklist"></div>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+
+<div class="modal-back" id="askModal" hidden role="dialog" aria-modal="true" aria-labelledby="askTitle">
+  <div class="modal">
+    <div class="eyebrow" id="askWhere"></div>
+    <h2 id="askTitle"></h2>
+    <p class="q" id="askQuestion"></p>
+    <ol id="askOptions"></ol>
+    <p class="rec-note" id="askRec"></p>
+    <p class="how">Answer in the Claude Code terminal with the option's letter.</p>
+    <div class="actions"><button type="button" id="askClose">Close</button></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+(function () {
+  var D = window.DASH;
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function plain(s) { return String(s || '').replace(/`/g, ''); }
+
+  if (!D) {
+    $('h1').textContent = 'Data not available';
+    $('sub').textContent = 'The dashboard found no generated data (data.js). Regenerate it from the session running the pipeline.';
+    return;
+  }
+
+  var tasks = D.tasks || [], byId = {};
+  tasks.forEach(function (t) { byId[t.id] = t; });
+  var scope = tasks.filter(function (t) { return t.scope; });
+  var rb = D.runbook, steps = rb ? rb.steps : [];
+  var ms = D.milestone;
+  var mLabel = ms ? ms.id : '';
+
+  function isDone(s) { return s === 'DONE' || s === 'SKIP'; }
+  function segClass(s) {
+    if (isDone(s)) return 'seg done';
+    if (s === 'IN PROGRESS') return 'seg run';
+    if (s === 'PARTIAL' || s === 'INCORRECT' || s === 'STALE') return 'seg fail';
+    return 'seg';
+  }
+  function stepTasks(s) { return (s.tasks || []).map(function (id) { return byId[id]; }).filter(Boolean); }
+  function stepLabel(s) {
+    var ts = stepTasks(s), f = ts.length ? ts[0].feature : '';
+    if (f && ts.every(function (t) { return t.feature === f; })) return f;
+    return plain(s.title);
+  }
+  function range(ts) {
+    if (!ts.length) return '';
+    return ts.length > 1 ? 'task ' + ts[0].id + '–' + ts[ts.length - 1].id : 'task ' + ts[0].id;
+  }
+
+  var project = D.project || 'project';
+  document.title = 'Pipeline ' + project;
+  $('eyebrow').textContent = project + (ms ? ' · milestone ' + ms.id : '');
+  $('h1').textContent = 'Progress ' + (ms ? ms.id : project);
+
+  var stepsDone = steps.filter(function (s) { return s.mark === 'x'; }).length;
+  var running = steps.filter(function (s) { return s.mark === '~'; })[0];
+  var tasksDone = scope.filter(function (t) { return isDone(t.status); }).length;
+  var tasksRun = scope.filter(function (t) { return t.status === 'IN PROGRESS'; }).length;
+  var feats = Object.keys(D.features || {});
+  var featDone = feats.filter(function (f) { return D.features[f].status === 'DONE'; }).length;
+
+  var sub = $('sub');
+  if (rb) {
+    sub.appendChild(document.createTextNode('Runbook '));
+    sub.appendChild(el('code', null, rb.name));
+    sub.appendChild(document.createTextNode(': ' + stepsDone + ' of ' + steps.length + ' steps done' + (running ? ', step ' + running.n + ' in progress' : '') + '. '));
+  }
+  sub.appendChild(document.createTextNode(tasksDone + ' of ' + scope.length + ' tasks done' + (ms ? ' in milestone ' + ms.id : '') + (tasksRun ? ', ' + tasksRun + ' in progress' : '') + '.'));
+
+  if (D.unreadable && D.unreadable.length) {
+    var n = $('notice');
+    n.textContent = 'Could not read: ' + D.unreadable.join(', ') + '. Data from those sources is missing from this page.';
+    n.hidden = false;
+  }
+
+  function meter(label, done, total, run, segs) {
+    var box = el('div', 'meter');
+    box.appendChild(el('div', 'label', label));
+    if (!total) { box.appendChild(el('div', 'value none', '—')); return box; }
+    var v = el('div', 'value', String(done));
+    v.appendChild(el('small', null, ' / ' + total));
+    box.appendChild(v);
+    var vu = el('div', 'vu');
+    var cells = Math.min(total, segs);
+    var on = Math.round(done / total * cells), hot = run ? Math.max(1, Math.round(run / total * cells)) : 0;
+    if (done > 0 && on === 0) on = 1;
+    for (var i = 0; i < cells; i++) vu.appendChild(el('i', i < on ? 'on' : (i < on + hot ? 'hot' : '')));
+    box.appendChild(vu);
+    return box;
+  }
+  var M = $('meters');
+  if (rb) M.appendChild(meter('Runbook steps', stepsDone, steps.length, running ? 1 : 0, Math.max(steps.length, 1)));
+  else { var nb = el('div', 'meter'); nb.appendChild(el('div', 'label', 'Runbook steps')); nb.appendChild(el('div', 'value none', 'No runbook')); M.appendChild(nb); }
+  M.appendChild(meter(ms ? mLabel + ' tasks done' : 'Tasks done', tasksDone, scope.length, tasksRun, 47));
+  M.appendChild(meter(ms ? mLabel + ' features closed' : 'Features closed', featDone, feats.length, 0, Math.max(feats.length, 1)));
+
+  var now = $('now');
+  if (running) {
+    now.appendChild(el('div', 'eyebrow', 'In progress · step ' + running.n + ' of ' + steps.length));
+    now.appendChild(el('h2', null, stepLabel(running)));
+    var ul = el('ul');
+    stepTasks(running).forEach(function (t) {
+      var li = el('li');
+      li.appendChild(el('span', 'id', '#' + t.id));
+      li.appendChild(el('span', 't', plain(t.title)));
+      var cls = isDone(t.status) ? 'done' : (t.status === 'IN PROGRESS' ? 'running' : '');
+      li.appendChild(el('span', 'chip ' + cls, isDone(t.status) ? 'done' : (t.status === 'IN PROGRESS' ? 'in progress' : 'to do')));
+      ul.appendChild(li);
+    });
+    if (ul.childNodes.length) now.appendChild(ul);
+  } else if (rb) {
+    var complete = steps.length && stepsDone === steps.length;
+    now.className = 'now ' + (complete ? 'complete' : 'idle');
+    now.appendChild(el('div', 'eyebrow', 'Runbook ' + String(rb.status || '').toLowerCase()));
+    now.appendChild(el('h2', null, complete ? 'All steps done' : 'No step running'));
+  } else {
+    now.className = 'now idle';
+    now.appendChild(el('div', 'eyebrow', 'Runbook'));
+    now.appendChild(el('h2', null, 'No runbook in this project'));
+  }
+
+  var TL = $('tracklist');
+  if (!steps.length) TL.appendChild(el('div', 'empty', rb ? 'The runbook has no readable steps.' : 'No runbook to show.'));
+  steps.forEach(function (s) {
+    var row = el('div', 'row' + (s.mark === '~' ? ' running' : ''));
+    row.appendChild(el('div', 'n', String(s.n).padStart(2, '0')));
+    var ts = stepTasks(s);
+    var name = el('div', 'name');
+    name.appendChild(el('b', null, stepLabel(s)));
+    var d = ts.filter(function (t) { return isDone(t.status); }).length;
+    name.appendChild(el('span', null, range(ts) + (ts.length ? ' · ' + d + '/' + ts.length : '')));
+    row.appendChild(name);
+    var bars = el('div', 'bars');
+    ts.forEach(function (t) {
+      var g = el('i', segClass(t.status));
+      g.title = '#' + t.id + ' ' + plain(t.title) + ' — ' + t.status;
+      bars.appendChild(g);
+    });
+    row.appendChild(bars);
+    var cls = s.mark === 'x' ? 'done' : s.mark === '~' ? 'running' : s.mark === '!' ? 'failed' : '';
+    var txt = s.mark === 'x' ? 'done' : s.mark === '~' ? 'in progress' : s.mark === '!' ? 'failed' : s.mark === 'P' ? 'waiting' : 'to do';
+    row.appendChild(el('span', 'chip ' + cls, txt));
+    if (s.done) row.appendChild(el('div', 'commit', plain(s.done)));
+    TL.appendChild(row);
+  });
+
+  $('foot').textContent = 'Updated ' + D.generated + ' · data from TASKS.md, FEATURES.md and the runbook';
+
+  // A question waiting for the user: a banner, and a modal that opens by itself once per question.
+  var P = D.pending;
+  if (P && P.id) {
+    var modal = $('askModal'), opener = null;
+    $('askBannerTitle').textContent = P.title || '';
+    $('askWhere').textContent = P.where || '';
+    $('askTitle').textContent = P.title || 'Question waiting';
+    $('askQuestion').textContent = P.question || '';
+    var ol = $('askOptions');
+    (P.options || []).forEach(function (o) {
+      var rec = o.key === P.recommended;
+      var li = el('li', rec ? 'rec' : '');
+      li.appendChild(el('span', 'k', o.key + ')'));
+      li.appendChild(el('span', null, o.text + (rec ? ' (recommended)' : '')));
+      ol.appendChild(li);
+    });
+    $('askRec').textContent = P.why ? 'Why I recommend it: ' + P.why : '';
+    $('askBanner').hidden = false;
+    function open(from) { opener = from || document.activeElement; modal.hidden = false; $('askClose').focus(); }
+    function close() {
+      modal.hidden = true;
+      try { localStorage.setItem('seenAsk', P.id); } catch (e) {}
+      var back = opener && document.body.contains(opener) ? opener : $('askOpen');
+      back.focus();
+    }
+    $('askOpen').addEventListener('click', function () { open($('askOpen')); });
+    $('askClose').addEventListener('click', close);
+    modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !modal.hidden) close(); });
+    var seen = null;
+    try { seen = localStorage.getItem('seenAsk'); } catch (e) {}
+    if (seen !== P.id) open($('askOpen'));
+  }
+})();
+</script>

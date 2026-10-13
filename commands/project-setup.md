@@ -1,6 +1,6 @@
 ---
 name: project-setup
-version: 0.10.2
+version: 0.11.0
 type: command
 description: Interactive first-time project initialization wizard — gathers every choice up front (VCS, CLAUDE.md content, AGENTS.md, task backlog, domain layer, context layer), confirms once, then runs /task-setup, /domain-setup and /context-build in a fixed order. Use it once, on a project the chosko-llm tooling has not been set up on yet.
 disable-model-invocation: true
@@ -19,7 +19,8 @@ requires: skill:interaction-engine
 # Plastic SCM), and a "Tasks implementation" section carrying the
 # testing-policy line for /task-implement when one is chosen (plus editor
 # dirty-tree noise handling on Unity projects). Offers the interaction-policy
-# line, the shipped claude-md sections and the remote-session-protocol hook.
+# line, the pipeline-dashboard policy line (default off), the shipped
+# claude-md sections and the remote-session-protocol hook.
 # Authoring command — leaves all output uncommitted for one review pass
 # unless `--commit` is passed.
 # Usage: /project-setup
@@ -287,7 +288,18 @@ implementation` section (Step 3b).
 `unattended` is written as the line `Interaction policy: unattended`
 (Step 3c); keeping `attended` writes nothing.
 
-### 1j. CLAUDE.md sections and hook
+### 1j. Pipeline dashboard policy
+
+> Should `/runbook-run` and `/task-implement` keep a live progress page (a
+> private claude.ai Artifact) while they run, with any question waiting for
+> you? It costs tokens on every task status change during a run. [on / off]
+
+`off` is the default and writes nothing. `on` is written as the line
+`Pipeline dashboard policy: on` (Step 3d); a run can still override it with
+`--dashboard` / `--no-dashboard`. The `pipeline-dashboard` skill must be
+installed for the line to do anything.
+
+### 1k. CLAUDE.md sections and hook
 
 Offer each shipped claude-md section and the hook, one yes/no each, every
 one installed with `chosko-llm add --local` (Step 4b):
@@ -324,6 +336,7 @@ VCS section:    <inject Plastic mapping into CLAUDE.md | none needed (git) | ski
 Testing policy: <none (runner detected) | full-tdd | skip-tests | skip-tests-unattended>
 Tasks section:  <inject Tasks-implementation section (testing policy and/or Unity noise) | n/a>
 Interaction:    <attended (no line) | unattended (write the line)>
+Dashboard:      <off (no line) | on (write the line)>
 CLAUDE.md sections: <list of claude-md sections to install --local | none>
 Hook:           <remote-session-protocol --local | skip>
 AGENTS.md:      <create | skip>
@@ -333,11 +346,12 @@ Context layer:  <build via /context-build, flat layout (runs last) | skip>
 
 Execution order:
   -- wizard's own artifacts --
-  1. CLAUDE.md skeleton    (only if CLAUDE.md missing AND step 2, 3, 3b, 3c or 4b needs it)
+  1. CLAUDE.md skeleton    (only if CLAUDE.md missing AND step 2, 3, 3b, 3c, 3d or 4b needs it)
   2. Seed CLAUDE.md prose  (if requested; from pasted material only)
   3. Inject VCS section    (if non-git VCS)
   3b. Tasks-implementation section (if a testing policy was chosen, or a Unity project)
   3c. Interaction-policy line (if unattended)
+  3d. Pipeline-dashboard policy line (if on)
   4. AGENTS.md             (if requested)
   4b. chosko-llm add --local  (claude-md sections and hook, if any picked)
   4c. Commit and push own artifacts (only with --commit; commits steps 1-4b)
@@ -374,10 +388,10 @@ PHASE 3 — EXECUTE (only after the PHASE 2 gate is approved or passes on its ow
 ### Step 1 — CLAUDE.md skeleton
 
 - Act only when CLAUDE.md does not exist yet AND a later wizard step needs
-  it: seeding requested, a VCS section, a Tasks-implementation section or
-  the interaction-policy line will be injected, or a claude-md section or
-  the hook will be installed (`chosko-llm add --local` refuses without a
-  `CLAUDE.md`).
+  it: seeding requested, a VCS section, a Tasks-implementation section, the
+  interaction-policy line or the pipeline-dashboard policy line will be
+  injected, or a claude-md section or the hook will be installed
+  (`chosko-llm add --local` refuses without a `CLAUDE.md`).
 - Then use the Write tool to create a minimal CLAUDE.md containing just a
   title and a one-line "see AGENTS.md / the context layer" pointer.
 - CLAUDE.md already exists → do nothing. Missing but nothing in Steps 2-4b
@@ -512,6 +526,14 @@ Testing policy for /task-implement: <full-tdd | skip-tests | skip-tests-unattend
   update an existing `Interaction policy:` line in place.
 - `attended` → write nothing.
 
+### Step 3d — Pipeline-dashboard policy line
+
+- Only when GATHER 1j chose `on`: add the line
+  `Pipeline dashboard policy: on` to CLAUDE.md on its own line, beside the
+  interaction-policy line when the file has one, else at the end; update an
+  existing `Pipeline dashboard policy:` line in place.
+- `off` → write nothing.
+
 ### Step 4 — AGENTS.md
 
 If requested, use the Write tool to create AGENTS.md with a minimal pointer:
@@ -530,7 +552,7 @@ as-is.
 ### Step 4b — Install the claude-md sections and the hook
 
 - Run from the project root, after Step 1 has made sure CLAUDE.md exists.
-- For each claude-md section picked at GATHER 1j, run
+- For each claude-md section picked at GATHER 1k, run
   `chosko-llm add claude-md:<name> --local`.
 - For the hook, run `chosko-llm add hook:remote-session-protocol --local`,
   and relay the `.claude/settings.json` wiring prompt the CLI prints for it
@@ -544,9 +566,9 @@ the ARGUMENT NOTE has already run):
 
 1. Stage EXACTLY the files Steps 1-4b wrote — CLAUDE.md (the skeleton,
    seeded prose, injected `## VCS` section, `## Tasks implementation`
-   section, interaction-policy line and installed claude-md sections),
-   AGENTS.md, and the installed hook script, as applicable — and make one
-   commit:
+   section, interaction-policy line, pipeline-dashboard policy line and
+   installed claude-md sections), AGENTS.md, and the installed hook script,
+   as applicable — and make one commit:
 
 ```
 git add -- <only the files Steps 1-4b actually wrote>

@@ -253,3 +253,21 @@ Source: prompt
 Tasks: 310, 311
 
 ---
+
+## pipeline-statusline — Status line showing the session and the pipeline's runbook and task progress
+
+Status: [DONE]
+Doc: .claude/domain/features/pipeline-statusline.md
+Source: prompt
+Tasks: 312, 313, 314
+
+---
+
+## pipeline-dashboard — Opt-in live Artifact dashboard of pipeline progress, with questions waiting for the user
+
+Status: [DONE]
+Doc: .claude/domain/features/pipeline-dashboard.md
+Source: prompt
+Tasks: 315, 316, 317, 318, 319, 320, 321, 322
+
+---

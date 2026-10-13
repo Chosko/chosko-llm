@@ -1,6 +1,6 @@
 ---
 name: task-implement
-version: 1.13.1
+version: 1.14.0
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, skill:interaction-engine, command:follow-ups
@@ -28,6 +28,7 @@ requires: skill:task-engine, skill:interaction-engine, command:follow-ups
 #        /task-implement <args> --unattended  (park a task at a question instead of halting; pre-ask the list's parked tasks first)
 #        /task-implement <args> --unattended --skip-parked  (no pre-ask; a parked task with no answer is skipped)
 #        /task-implement <args> --attended    (every gate waits, whatever CLAUDE.md says)
+#        /task-implement <args> --dashboard | --no-dashboard  (live progress page on/off for this run)
 # Examples: /task-implement 12
 #           /task-implement 12 13 14
 #           /task-implement all
@@ -209,6 +210,17 @@ appear:
   orchestrator that is itself a subagent. `--skip-parked` on a run whose
   policy is not `unattended` stops the run with:
   `--skip-parked requires --unattended.`
+
+**Dashboard flags.** Scan for the optional `--dashboard` and
+`--no-dashboard` flags and strip whichever appears.
+
+- The dashboard is on when `--dashboard` was passed, or when the project's
+  `CLAUDE.md` has the line `Pipeline dashboard policy: on` and
+  `--no-dashboard` was not passed; off otherwise. Both flags together stop
+  the run with: `--dashboard and --no-dashboard cannot be combined. Pick one.`
+- On → the session launching the run — never a delegated agent — follows
+  the `pipeline-dashboard` skill for the run. Off → nothing in this skill
+  changes.
 
 When UNATTENDED is true:
 
