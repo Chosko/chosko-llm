@@ -1,6 +1,6 @@
 # Tasks
 
-Last task number: 336
+Last task number: 340
 
 ---
 
@@ -138,6 +138,44 @@ Status: [DONE]
 Target: claude
 Files: README.md, docs/reference.md, docs/cli-help.txt, .claude/context/runbook-suite.md, .claude/context/runbook-run.md, .claude/context/runbook-run-loop.md, .claude/context/runbook-run-contracts.md, .claude/context/runbook-create.md, .claude/context/runbook-readers.md, .claude/context/pipeline-readers.md, .claude/context/features.md, .claude/context/INDEX.md
 Preconditions: 332, 333, 334, 335
+Feature: parallel-runbooks
+
+---
+
+## 337. Settle the park branch push inside a worktree
+
+Status: [DONE]
+Target: claude
+Files: skills/task-engine/references/parking.md, skills/task-engine/references/worktree.md, skills/task-engine/SKILL.md, .claude/domain/features/worktree-isolation.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 338. Define the scheduler's in-flight set as the units this run spawned
+
+Status: [DONE]
+Target: claude
+Files: skills/task-implement/delegated-runs.md, skills/task-implement/SKILL.md, .claude/domain/features/parallel-task-runs.md, VERSION, CHANGELOG.md
+Preconditions: none
+
+---
+
+## 339. Carry the park-branch exception in the subagent contract's remote rule
+
+Status: [DONE]
+Target: claude
+Files: skills/runbook-run/references/subagent-contract.md, skills/runbook-run/SKILL.md, VERSION, CHANGELOG.md
+Preconditions: none
+Feature: parallel-runbooks
+
+---
+
+## 340. Update documentation for feature `parallel-runbooks`
+
+Status: [DONE]
+Target: claude
+Files: docs/reference.md, .claude/context/runbook-run-contracts.md, .claude/context/INDEX.md
+Preconditions: 339
 Feature: parallel-runbooks
 
 ---

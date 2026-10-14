@@ -237,10 +237,11 @@ once, each in its worktree per `./worktree.md` — a unit in flight is neither
 done nor eligible: it is not selected again, and a task whose
 `Preconditions:` name it stays blocked until it **lands**, not merely until
 it is spawned, because landing is what writes the status the next read
-sees. Nothing else in the clause changes, and nothing is stored: the
-in-flight set is the worktree list, and eligibility is still derived on
-every read of the index. The unit is the consumer's — a task here, a step
-for an orchestrator that reads its own index by the same rule.
+sees. Nothing else in the clause changes, and nothing is stored in the
+index: the in-flight set is the consumer's own — the units this run spawned
+and not yet landed, held in run memory — and eligibility is still derived
+on every read of the index. The unit is the consumer's — a task here, a
+step for an orchestrator that reads its own index by the same rule.
 
 **The blocked report.** The `all` resolution report names, by id, every
 implementable task left unselected because a precondition is unmet, each

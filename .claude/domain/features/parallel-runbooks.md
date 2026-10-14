@@ -124,8 +124,11 @@ The orchestrator creates the step's worktree per `worktree-isolation` before
 it spawns, and the spawned prompt's preamble names the directory as the
 repository root. OPERATING RULES gains one placeholder and the two rules it
 carries: work only in that directory, and the remote is the orchestrator's,
-so an invoked skill's pull and push are skipped as under `--no-push` and the
-work is committed as usual; before `DONE`, integrate as the protocol says.
+so an invoked skill's pull and push of the base are skipped as under
+`--no-push` and the work is committed as usual, with the one exception
+`task-engine`'s `parking.md` states — a skill that parks pushes its own
+`park/task-<N>`, the branch another machine needs to unpark; before `DONE`,
+integrate as the protocol says.
 The rules are fixed text with a fourth placeholder, filled per step like the
 other three, so the contract stays a contract.
 
@@ -169,7 +172,10 @@ bookkeeping commit, so they still sit beside it.
 ### Ripple
 
 Kept to a line each. `/runbook-describe` prints the `Parallelism:` line with
-the header and marks every `[~]` step as in flight; `/runbook-list` is
+the header, marks every `[~]` step as in flight and, on a runbook carrying
+`Parallelism:`, prints one line counting the steps with `Depends on: none`,
+so the assertion that the graph is honest can be judged without opening a
+prompt; `/runbook-list` is
 unchanged, since the index gains no line; `/runbook-clean` sweeps the
 worktrees of `[x]` steps and of the runbooks it archives; `/pipeline-check`
 gains one probe — a header carrying both `Parallelism:` and `Sequencing:` —
@@ -246,6 +252,5 @@ the ninth.
 - **Runbooks authored before this feature.** Their graphs were written with
   position doing part of the work. The `Sequencing:` refusal catches the
   authors who wrote the *why* down; for the rest, `--parallel` is the user's
-  assertion that the graph is honest. Whether `/runbook-describe` should say
-  in one line how many steps have no edges, to make that assertion easier to
-  judge, is a readability call.
+  assertion that the graph is honest, judged on `/runbook-describe`'s count
+  of edge-less steps.

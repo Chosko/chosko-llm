@@ -68,8 +68,10 @@ OPERATING RULES
 - Every path you touch is under <WORKTREE>, the repository root for this step:
   read, write, run and commit there and nowhere else.
 - The remote is the orchestrator's. A skill you invoke makes its commits as
-  usual but skips its pull at start, its pre-push re-sync and its push exactly
-  as it does under `--no-push`, with no flag typed; say so once in your report.
+  usual but skips its pull at start, its pre-push re-sync and its push of the
+  base exactly as it does under `--no-push`, with no flag typed; when it parks
+  it still pushes its own parking branch (`park/task-…`), as the `task-engine`
+  skill's `references/parking.md` says. Say so once in your report.
   Before `DONE`, integrate as the `task-engine` skill's `references/worktree.md`
   § *The agent integrates* says: rebase the branch you committed on onto the
   current tip of the base — the branch the main worktree has checked out —
@@ -176,6 +178,13 @@ to a subagent.
   remote is the orchestrator's*, because the base is checked out in the
   orchestrator's tree: it lands the step's branch by fast-forward and pushes
   once per landing, and a skill pushing from the worktree would race that too.
+  The one push the rule keeps is `park/task-<N>`: that branch is private to
+  the task, deterministic per task and touches no base, so it races no
+  landing, and pushing it is what lets another machine unpark — the exception
+  `parking.md` § *The park sequence* states, carried here because the contract
+  is what the agent reads and must not contradict the skill it invokes. The
+  block writes the name as `park/task-…` because `<N>` is the step number
+  there, substituted before the agent reads it.
   The rule says *skipped as under `--no-push`* instead of having the agent type
   the flag because the rule above forbids adding one; a committing skill honours
   the sentence from its conversation. Integration is the agent's and not the

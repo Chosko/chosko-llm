@@ -54,12 +54,12 @@ skips the unit with one line naming the path (§ *A worktree is a unit in
 flight*).
 
 The agent is handed the directory as the repository root for everything it
-does, and one rule beside it: the push is not the agent's. The orchestrator's
-prompt gains exactly that — one path per unit, like the unit's number. The
-four values the orchestrator already resolves — NO_PUSH, the testing mode,
-UNATTENDED and the dirty-tree decision — are handed on unchanged, and the
-dirty-tree decision in a fresh worktree is always *clean*: the agent never
-runs the prompt of `./tree.md` there.
+does, and one rule beside it: the base's push is not the agent's. The
+orchestrator's prompt gains exactly that — one path per unit, like the unit's
+number. The four values the orchestrator already resolves — NO_PUSH, the
+testing mode, UNATTENDED and the dirty-tree decision — are handed on
+unchanged, and the dirty-tree decision in a fresh worktree is always *clean*:
+the agent never runs the prompt of `./tree.md` there.
 
 ## The agent integrates
 
@@ -84,10 +84,14 @@ rules — with one change, at the point where the unit would push:
    on the new one.
 5. **Return, naming the base tip it rebased onto.**
 
-The agent never pushes, never touches the base branch and never leaves the
-worktree. A skill the unit invokes commits as it always does; its
-pull-at-start, pre-push re-sync and push are the orchestrator's, so the agent
-skips them exactly as a run under `--no-push` does, and says so once.
+The agent never pushes the base branch, never touches it and never leaves
+the worktree. The one branch it pushes is its own `park/task-<N>`, under
+`./parking.md` § *The park sequence*, unless NO_PUSH: that branch is private
+to the task, touches no base branch and races with no other unit, and its
+push is what lets another machine unpark. A skill the unit invokes commits
+as it always does; its pull-at-start, pre-push re-sync and push of the base
+are the orchestrator's, so the agent skips them exactly as a run under
+`--no-push` does — the park branch's push excepted — and says so once.
 
 Rebasing `wt/<unit>` rewrites nobody's history: the branch is private to the
 unit, unpushed, and exists for this one landing. `./commit.md` records it as
@@ -160,10 +164,12 @@ over it.
 ## Parking inside a worktree
 
 The park and unpark sequences of `./parking.md` run in the worktree unchanged:
-the `park/task-<N>` branch is made from the worktree's head, the bookkeeping
-commit is made on `wt/<unit>` and lands like any other commit, and the
-worktree is removed with that landing. The unpark cherry-picks in whatever
-tree the task is then running in.
+the `park/task-<N>` branch is made from the worktree's head and pushed by the
+agent unless NO_PUSH — the exception § *The agent integrates* names — the
+bookkeeping commit is made on `wt/<unit>` and lands like any other commit,
+and the worktree is removed with that landing. The unpark cherry-picks in
+whatever tree the task is then running in and deletes the branch, local and
+remote, as that file says.
 
 ## The sweep
 

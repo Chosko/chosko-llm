@@ -27,8 +27,10 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
   parallelism above one — a unit in flight, in its worktree, is neither
   done nor eligible: not selected again, and a task whose `Preconditions:`
   name it stays blocked until it lands, not merely until it is spawned,
-  since landing writes the status the next read sees; nothing stored, the
-  in-flight set the worktree list, eligibility still derived on every read,
+  since landing writes the status the next read sees; nothing stored in
+  the index, the in-flight set the consumer's own (the units this run
+  spawned and not yet landed, in run memory), eligibility still derived on
+  every read,
   the unit the consumer's (a task, or a step for an orchestrator reading
   its own index by the same rule); `/task-implement`'s between-tasks
   re-check subsumed under `--parallel` by the scheduling point's
@@ -120,8 +122,9 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
   right before the spawn, `.claude/worktrees/` added to `.git/info/exclude`
   once; the agent's five integration steps — commit on `wt/<unit>`, rebase
   onto the base tip, resolve a conflict by re-applying its own intent,
-  re-verify when the base moved, return naming the tip — never pushing, the
-  pull/re-sync/push skipped as under `--no-push`; the orchestrator's landing
+  re-verify when the base moved, return naming the tip — never pushing the
+  base, its own `park/task-<N>` the one branch it pushes (`parking.md`), the
+  base's pull/re-sync/push skipped as under `--no-push`; the orchestrator's landing
   — `git merge --ff-only`, one re-rebase round through the same agent when
   the tip moved, push per `commit.md`, `git worktree remove` + `git branch
   -d` whose refusal fails the unit; the two invariants, one writer and a

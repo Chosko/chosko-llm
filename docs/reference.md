@@ -1222,7 +1222,8 @@ runs in a git worktree of its own: the worktree at `.claude/worktrees/<unit>`
 and the branch `wt/<unit>`, both derived from the unit's name and never
 recorded; the worktree created from the base branch's tip right before the
 unit's agent is spawned; the agent committing there, rebasing onto the base
-tip, re-verifying when the base had moved, and never pushing; the
+tip, re-verifying when the base had moved, and never pushing the base — its
+own `park/task-<N>` is the one branch it pushes; the
 orchestrating session landing the branch by fast-forward only, as the base
 branch's one writer, pushing, then removing the worktree and its branch. A
 worktree exists exactly while its unit is in flight or after it failed, which

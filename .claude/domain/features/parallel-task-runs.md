@@ -87,12 +87,16 @@ At every **scheduling point** — the start of the run, and each landing — the
 launcher re-reads the base `TASKS.md`, as it already does between tasks, and
 re-derives eligibility with `resolution.md`'s clause exactly as written, with
 one reading added for concurrency: **a task in flight is neither done nor
-eligible**. It then starts tasks from the resolved list, in list order, while
-fewer than N are in flight (no bound under `max`), skipping each task that is
-not eligible on this read, that is in flight, that is held back by the
-overlap rule below, or whose worktree already exists. A task skipped here is
-not dropped: it is re-examined at the next scheduling point. The run ends
-when nothing is in flight and nothing in the list can start.
+eligible**. The in-flight set is the tasks this run spawned and not yet
+landed, in run memory; the worktree list is what the skip-while-present rule
+reads, so a worktree an earlier run left behind skips its task and counts
+toward nothing. It then starts tasks from the resolved list, in list order,
+while fewer than N are in flight (no bound under `max`), skipping each task
+that is not eligible on this read, that is in flight, that is held back by
+the overlap rule below, or that is not in flight and whose worktree already
+exists. A task skipped here is not dropped: it is re-examined at the next
+scheduling point. The run ends when nothing is in flight and nothing in the
+list can start.
 
 `Preconditions:` is therefore the whole graph. A task whose precondition is in
 flight waits for that task to land, not merely to be spawned, because landing
@@ -167,11 +171,13 @@ agent said, and which were never started.
 
 ## Data and state
 
-Nothing is added to any index. The in-flight set is the worktree list; the
-schedule is derived at every scheduling point from the base `TASKS.md` and
-held in memory only, with the resolved list, N, and the overlap exemptions
-read once from `CLAUDE.md` at pre-flight. `Files:` and `Preconditions:` keep
-their shape and gain a second reader each.
+Nothing is added to any index. The in-flight set is the tasks this run
+spawned and not yet landed, in run memory; the worktree list is what the
+skip-while-present rule reads. The schedule is derived at every scheduling
+point from the base `TASKS.md` and held in memory only, with the resolved
+list, N, and the overlap exemptions read once from `CLAUDE.md` at
+pre-flight. `Files:` and `Preconditions:` keep their shape and gain a second
+reader each.
 
 ## Interfaces and contracts
 

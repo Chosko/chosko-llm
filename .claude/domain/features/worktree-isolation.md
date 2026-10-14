@@ -40,9 +40,10 @@ Deliberately out:
   document. This protocol takes a unit and a base and knows nothing about
   the other units in flight.
 - **Pushing from inside a worktree.** An agent never pushes to the base
-  branch. The base is checked out in the orchestrator's tree, so a push into
-  it from a worktree is refused by git under `--no-push` anyway; keeping the
-  push in the orchestrator makes the local and the remote path the same
+  branch; the one branch it pushes, its own `park/task-<N>`, is § *The agent
+  integrates*'. The base is checked out in the orchestrator's tree, so a push
+  into it from a worktree is refused by git under `--no-push` anyway; keeping
+  the push in the orchestrator makes the local and the remote path the same
   path.
 - **Merge commits.** A unit lands as a fast-forward of its rebased branch,
   so the history stays linear and a task still produces exactly one commit.
@@ -112,10 +113,13 @@ OPERATING RULES — with one change at the point where the unit would push:
    them on the new one;
 5. return, naming the base tip it rebased onto.
 
-The agent never pushes, never touches the base branch and never leaves the
-worktree. Skills the unit invokes keep their default commit behaviour; their
-pull-at-start, pre-push re-sync and push are the orchestrator's, so the agent
-skips them as a run under `--no-push` does, and says so once.
+The agent never pushes the base branch; the one branch it pushes is its own
+`park/task-<N>`, under `parking.md`. It never touches the base branch and
+never leaves the worktree. Skills the unit invokes keep their default commit
+behaviour; their pull-at-start, pre-push re-sync and push of the base are the
+orchestrator's, so the agent skips them as a run under `--no-push` does, and
+says so once — honoured from the sentence in its OPERATING RULES, with no
+flag typed.
 
 Rebasing `wt/<unit>` is not rewriting anyone else's history: the branch is
 private to the unit, unpushed, and exists for this one landing. `commit.md`
@@ -164,9 +168,13 @@ its unit failed. Nothing else records that:
   running it. A `[~]` step marker stays in the base body as the orchestrator
   writes it, since only the orchestrator writes that file.
 - The status line and the dashboard, which today read `[IN PROGRESS]` off the
-  working tree's `TASKS.md`, gain one probe each: the worktree list, read
-  with git's porcelain form, names every unit in flight. One line in each
-  renderer (`.claude/domain/features/pipeline-statusline.md`,
+  working tree's `TASKS.md`, gain one probe each: the worktree entries under
+  the common git dir (`worktrees/<unit>/HEAD`, resolved through a worktree's
+  `gitdir:` file), each naming a unit in flight by its `wt/<unit>` branch — a
+  direct read, since both renderers are one awk pass and fork no git. The
+  orchestrators and the pruners read the worktree list itself, with git's
+  porcelain form. One line in each renderer
+  (`.claude/domain/features/pipeline-statusline.md`,
   `.claude/domain/features/pipeline-dashboard.md`).
 - A run never starts a unit whose worktree already exists: it reports the
   path and skips the unit, under every selector. The two ways out are
@@ -203,13 +211,16 @@ its unit failed. Nothing else records that:
   `.git/info/exclude`, never committed and never pushed.
 - **`wt/<unit>`** — the unit's branch, created from the base tip at spawn,
   rebased by the agent, deleted at landing with the safe delete. Local only.
-- **In memory only:** the base tip each in-flight unit was created from and
-  the tip its agent last rebased onto, held by the orchestrator for its
+- **In memory only:** the orchestrator's own in-flight set — the units it
+  spawned and has not yet landed — and, per unit, the base tip it was
+  created from and the tip its agent last rebased onto, held for the
   progress lines.
 
-The source of truth is git throughout: which units are in flight is the
-worktree list, whether a unit landed is reachability of `wt/<unit>` from the
-base, and no file of this product duplicates either.
+The source of truth is git throughout: a worktree's presence is what marks
+a unit in flight or failed for every reader, whether a unit landed is
+reachability of `wt/<unit>` from the base, and no file of this product
+duplicates either. Which of those units an orchestrator itself spawned and
+has not yet landed is its own run memory, the one thing git cannot tell it.
 
 ## Interfaces and contracts
 
@@ -223,7 +234,10 @@ rule that the push is not the agent's. The fixed-size agent prompt of
 per unit, like the task number.
 
 What it exposes: the worktree list as the in-flight signal, read by the status
-line, the dashboard and the skip-while-present rule.
+line, the dashboard and the skip-while-present rule. An orchestrator's own
+in-flight set — the units it spawned and has not yet landed — is run memory,
+and is what it counts against its parallelism and tests for the end of its
+run.
 
 Failure contract: a worktree that cannot be created (the path exists, the
 branch exists) skips the unit with one line naming the path; a rebase the
@@ -253,12 +267,6 @@ remove a worktree leaves it and names it in *Follow-ups*, never halting.
 
 ## Open questions
 
-- **Skills that pull or push inside a unit.** The agent is told the remote is
-  the orchestrator's and skips those steps as under `--no-push`. Whether every
-  committing skill a unit can invoke honours that from a sentence in its
-  conversation, or whether one needs its `--no-push` flag typed — which the
-  subagent contract forbids adding — is to be confirmed when the OPERATING
-  RULES line is written.
 - **Test runners that scan the whole tree.** A full suite run in the base
   tree would collect files under `.claude/worktrees/`. The barrier rules of
   both orchestrators keep base-tree work and worktrees from coexisting, so

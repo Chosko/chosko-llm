@@ -295,6 +295,6 @@ Tasks: 329, 330, 331
 Status: [DONE]
 Doc: .claude/domain/features/parallel-runbooks.md
 Source: product-design.md § Task backlog
-Tasks: 332, 333, 334, 335, 336
+Tasks: 332, 333, 334, 335, 336, 339, 340
 
 ---
