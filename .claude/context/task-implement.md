@@ -26,12 +26,31 @@ The rest of the suite: [task-suite.md](./task-suite.md).
   `test-runner.md` (runner must be inferred; mirrors task-setup's table) and
   `no-test-suite.md` are read only when their branch fires, and so are four
   supporting files of its own — `human-in-loop.md`, `body-schemas.md`
-  (non-current body schema), `delegated-runs.md` (2+-task run user delegated to subagents),
+  (non-current body schema), `delegated-runs.md` (2+-task run user delegated to subagents,
+  or `--agents` / `--parallel` passed),
   and `review-rounds.md` (`--review` passed; read once after argument
   parsing, before the first task, never otherwise) — plus `task-engine`'s
   `parking.md`, read at ARGUMENT PARSING when UNATTENDED is true or at
   PRE-FLIGHT step 2 when a resolved task is `[PARKED]`, never on an attended
-  run that meets no parked task.
+  run that meets no parked task, and `task-engine`'s `worktree.md`, read
+  with `delegated-runs.md` before the first spawn when PARALLEL is set on a
+  2+-task run, never on a sequential run. **`--parallel <N|max>`**
+  (ARGUMENT PARSING): `N` an integer of 2 or more, `max` case-insensitive
+  and unbounded; sets PARALLEL and DELEGATE = true, so step 2b's question
+  is not asked; refused with one line beside `--no-agents`, beside
+  `--no-commit` (a landing is made of commits), on a `CLAUDE.md` mapping
+  git to another VCS (no worktree there), and on an `N` below 2 or neither
+  integer nor `max`; silently ignored on a run resolving to one task; every
+  other flag composes and rides through the agent prompt. PRE-FLIGHT step 3
+  reads, under PARALLEL only, the `Parallel-safe files for /task-implement:
+  <path>, <path>` marker into PARALLEL_SAFE — repo-root-relative paths as a
+  `Files:` line writes them — whose one reader is `delegated-runs.md`'s
+  overlap rule; no marker or no PARALLEL means nothing exempt. What the
+  flag changes — scheduler, worktree per task, landing — is
+  [task-implement-delegation.md](./task-implement-delegation.md); in a
+  worktree Step 7 is `worktree.md` § *The agent integrates* (commit on
+  `wt/task-<N>`, rebase onto the base tip, re-verify when it moved, no
+  re-sync or push — the launcher lands and pushes).
   Also declares `requires: command:follow-ups`: its CLOSING THE RUN section
   applies that command's rules — the body read by name, never invoked — as
   the *Follow-ups* group of the closing report, once per run, after the
@@ -88,7 +107,8 @@ The rest of the suite: [task-suite.md](./task-suite.md).
   CLAUDE.md (checked before heuristic test-suite detection; the rule and its
   `project-policy:` declaration live in `task-engine`) so
   no-test-suite decision persists across runs instead of re-asked
-  each time. In skip-tests mode, per-task "Proceed?" confirmation can
+  each time; the `Parallel-safe files for /task-implement:` marker beside
+  it is read the same way, under `--parallel` only (above). In skip-tests mode, per-task "Proceed?" confirmation can
   be suppressed with `-y` flag for single run, or permanently via
   `skip-tests-unattended` marker value. On `[STALE]` task
   warns naming originating feature and offers implement-anyway or stop
@@ -99,7 +119,9 @@ The rest of the suite: [task-suite.md](./task-suite.md).
   `all`, BETWEEN TASKS step 2 (and `delegated-runs.md`'s between-agents
   re-read, which then spawns no agent for it) re-checks the upcoming task's
   `Preconditions:` and skips it with one line when they no longer hold,
-  adding no read; an explicit-number list is never re-checked.
+  adding no read; an explicit-number list is never re-checked. Under
+  `--parallel` that re-check is subsumed: the scheduler re-derives the whole
+  clause, in-flight reading included, on every read of the base `TASKS.md`.
 
 ## Public API
 

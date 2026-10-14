@@ -906,6 +906,38 @@ protocol runs unchanged.
 Commits and pushes once per task (`--no-commit` to skip both, `--no-push` to
 commit without pushing).
 
+**Delegated and parallel runs.** A run of two or more tasks offers to
+implement each one in a fresh subagent, so later tasks don't inherit earlier
+ones' context (`--agents` / `--no-agents` pre-answer the question). The
+parent is a launcher: it reads the summary blocks once, hands every agent
+the same fixed-size prompt and records what comes back, never opening a
+delegated task's body. By default the agents run one after another in the
+base tree. Pass **`--parallel <N>`** (N of 2 or more) or **`--parallel max`**
+to keep up to N of them — every eligible task, under `max` — in flight at
+once, each in its own worktree under the protocol
+[`task-engine`](#task-engine) owns. The resolved list is then the set of
+tasks the run may start, in priority order: at the start and after every
+landing the launcher re-reads `TASKS.md` and starts, in list order, each
+task whose `Preconditions:` are met and that is not already in flight, up
+to N. A task in flight is neither done nor eligible, so a task that waits on
+it starts only once it has landed. Two tasks whose `Files:` lines share a
+path are never in flight together: the later one is held back, with one line
+naming the task it waits on, and tried again at the next landing. Files
+whose conflicts an agent's rebase resolves mechanically — a version counter,
+a newest-first changelog — are exempted by one line in the project's
+`CLAUDE.md`, `Parallel-safe files for /task-implement: <path>, <path>`, read
+once at the start of a parallel run; without the line nothing is exempt.
+Tasks the launcher keeps for itself — human-in-the-loop tasks, a stale task
+you named — are barriers: they run in their list position with nothing in
+flight. Each agent's return is landed by fast-forward, pushed and bookkept
+one at a time, and the progress line names what is still in flight. A
+failure spawns nothing more and lets the tasks in flight land first; the
+report names the failed task's worktree, where its work remains. The flag
+implies `--agents` and is refused beside `--no-agents` or `--no-commit`, on
+a project whose `CLAUDE.md` maps git to another VCS, and with an N below 2;
+on a run that resolves to one task it is silently ignored. Every other flag
+composes with it unchanged.
+
 **Attended or unattended.** By default a run is *attended*: a question about
 the work — an acceptance criterion the body and the codebase can't settle, a
 review round's approval gate — is put to you and the run waits; in a
@@ -1195,7 +1227,9 @@ is what the status line, the dashboard and the two sweeps read. Both
 orchestrators read it only when a run has more than one unit in flight; a
 sequential run never opens it and works in the base tree as it always has. It
 is the one file `/runbook-run` takes from the engine, and the reason it
-declares `requires: skill:task-engine`.
+declares `requires: skill:task-engine`. The eligibility clause in
+`references/resolution.md` carries the one reading such a run adds: a unit
+in flight is neither done nor eligible until it lands.
 
 ### `pipeline-engine`
 

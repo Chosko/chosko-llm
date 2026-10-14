@@ -23,7 +23,16 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
   repeated, resolved once up front by simulating the repetition so the run
   keeps one resolution report and one delegation count; implementable tasks
   left blocked, a precondition cycle included, named by id in the report;
-  a task named by number never blocked; body-file location, the
+  a task named by number never blocked; **the in-flight clause** under a
+  parallelism above one — a unit in flight, in its worktree, is neither
+  done nor eligible: not selected again, and a task whose `Preconditions:`
+  name it stays blocked until it lands, not merely until it is spawned,
+  since landing writes the status the next read sees; nothing stored, the
+  in-flight set the worktree list, eligibility still derived on every read,
+  the unit the consumer's (a task, or a step for an orchestrator reading
+  its own index by the same rule); `/task-implement`'s between-tasks
+  re-check subsumed under `--parallel` by the scheduling point's
+  re-derivation; body-file location, the
   `/task-setup`-has-run gate, and § *The archive* —
   `.claude/tasks/archive/<N>.md`, the frozen-header form, and the
   archived-and-terminal rule every id reader cites: an id referenced but

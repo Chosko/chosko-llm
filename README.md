@@ -334,7 +334,11 @@ exactly one commit. `next` takes the first eligible task and follows
 done; `all` works through the backlog in that same order. Both skip stale
 tasks so a batch run never guesses, and
 a multi-task run can hand each task to a fresh subagent so later tasks don't
-inherit earlier ones' context. On a human-in-the-loop task it pauses at each checkpoint,
+inherit earlier ones' context — one agent after another by default, or up to
+N at once with **`--parallel <N|max>`**, each in its own worktree, started as
+soon as what it waits on has landed and landed onto the branch one at a time;
+two tasks that list the same file never run together unless the project's
+`CLAUDE.md` names the file as parallel-safe. On a human-in-the-loop task it pauses at each checkpoint,
 walks you through it, and verifies the outcome itself before moving on. When
 a tool connected to the session can perform a checkpoint's manual step, it
 asks once per task whether to drive the tool itself, and then hands you a

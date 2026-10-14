@@ -38,6 +38,7 @@ CLI is proxy: `~/bin/chosko-llm` parses subcommand, execs `~/.chosko-llm/scripts
 ## Testing
 
 Testing policy for /task-implement: skip-tests-unattended
+Parallel-safe files for /task-implement: VERSION, CHANGELOG.md
 
 No test suite by design. Ships markdown prompts + thin shell wrappers; changes verified by reading diff + running CLI against real clone.
 

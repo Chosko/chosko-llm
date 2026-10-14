@@ -280,3 +280,12 @@ Source: product-design.md § Task backlog
 Tasks: 325, 326, 327, 328
 
 ---
+
+## parallel-task-runs — `/task-implement --parallel <N|max>` keeps several tasks in flight, scheduled by `Preconditions:`
+
+Status: [DONE]
+Doc: .claude/domain/features/parallel-task-runs.md
+Source: product-design.md § Task backlog
+Tasks: 329, 330, 331
+
+---

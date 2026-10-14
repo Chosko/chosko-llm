@@ -11,15 +11,59 @@ suite: [task-suite.md](./task-suite.md).
 - `skills/task-implement/`, continued from [task-implement.md](./task-implement.md):
   On run resolving to 2+ tasks, offers
   to implement each task in fresh subagent so later tasks don't inherit
-  earlier ones' context; agents spawned one at a time, never
-  parallel (shared working tree, branch, `TASKS.md`), each owning own
-  task's status flips, commit, push, while `claude+human` / `human` /
+  earlier ones' context — the point is context; concurrency is a second
+  step on the same shape (`--parallel`, below) and changes nothing an agent
+  is handed or returns. Each agent owns its
+  task's status flips and commit, while `claude+human` / `human` /
   explicitly requested `[STALE]` tasks stay in parent conversation
   since need user present. `--agents` / `--no-agents`
   pre-answer prompt; single-task runs never see it. Under orchestrate mode
   (`interaction-engine`'s `mode.md`, checked at PRE-FLIGHT step 2b)
   DELEGATE is true for every run, one task included, nothing asked; only
-  `--no-agents` turns it off; the delegation guard unchanged. On such run parent
+  `--no-agents` turns it off; the delegation guard unchanged. `--parallel`
+  implies `--agents`.
+  **The scheduler** (`delegated-runs.md` § *The scheduler*): returns handled
+  one at a time, each followed by the launcher's bookkeeping on the base;
+  how many agents are in flight is PARALLEL's alone. Without it — the
+  default — one agent at a time, `run_in_background: false`, parent blocks
+  on each before spawning the next, every task in the base tree (shared
+  tree, branch, `TASKS.md` would race), each agent pushing its own commit.
+  Under PARALLEL, `task-engine`'s `worktree.md` read before the first spawn
+  (worktree, integration, landing are its; this section states scheduling
+  only): resolved list still resolved once up front, report and delegation
+  count printed from it, but it is the **admissible set**, its order the
+  **priority** among tasks eligible at the same moment. At every
+  **scheduling point** — run start, each landing — the launcher re-reads
+  base `TASKS.md`, re-derives eligibility per `resolution.md` § Eligibility
+  with its in-flight clause (a task in flight is neither done nor eligible;
+  a dependent waits for it to **land**, since landing writes the status the
+  read sees; in-flight set = `git worktree list --porcelain`, no count in
+  memory), then walks the list in order while fewer than N in flight (no
+  bound under `max`), creating each worktree per `worktree.md` (the
+  `.git/info/exclude` line once per run) and spawning with
+  `run_in_background: true`; skips a task not eligible, in flight, held
+  back by the overlap rule, or whose worktree already exists
+  (skip-while-present line, once per task per run) — skipped is not
+  dropped, re-examined next point; stops the walk at a barrier. Explicit
+  task never blocked by a precondition not in flight; one in flight is
+  waited on. Run ends when nothing in flight and nothing can start.
+  **Overlap rule** (§ *The overlap rule*): two tasks whose `Files:`
+  intersect are never in flight together — the later **held back** whatever
+  N says, one line naming the task it waits on (`Task 24 waits on task 22
+  (both list …)`), printed once per task waited on, re-examined next point;
+  `Files:` on the summary block, so no read; empty/missing `Files:` holds
+  nothing back and is never held back. Safety net under `Preconditions:`,
+  not a second graph. PARALLEL_SAFE paths (the `Parallel-safe files for
+  /task-implement:` marker, PRE-FLIGHT step 3) removed from every `Files:`
+  line before the intersection — version counter, newest-first changelog,
+  whose conflicts the rebase resolves mechanically; no marker, no exemption.
+  **Barriers** (§ *Barriers*): a parent-kept task dirties the base, which
+  must be clean at every landing, so when the walk reaches one the launcher
+  starts nothing more, waits for everything in flight to land (returns
+  handled, questions relayed), runs it in the base tree as an in-context run
+  would (BETWEEN TASKS step 2's skip included), and its commit/park/skip is
+  the next scheduling point — list position kept, never deferred to the
+  end, never spawned into a worktree. On such run parent
   is **launcher**, not orchestrator: evaluates delegation guard
   (`Target:`, `Status:`, `Feature:`) from `TASKS.md` summary blocks
   PRE-FLIGHT step 2 already read, so never opens `.claude/tasks/<N>.md`
@@ -33,12 +77,37 @@ suite: [task-suite.md](./task-suite.md).
   runbook's fixed block, an approval gate as a plain summary with `show`
   fetching the draft, answer sent back to the same agent; unattended: the agent
   parks and returns `[PARKED]` with its question, recorded, never a halt —
-  plus a held answer for a `[PARKED]` task) + instruction to read
+  plus a held answer for a `[PARKED]` task, and under PARALLEL the flag
+  plus the absolute worktree path named as the agent's repository root,
+  the base branch, the rule that the push is the launcher's — Step 7 is
+  `worktree.md` § *The agent integrates* — and *clean* in place of
+  DIRTY_FOLD; the held answer and the worktree path are the two one-line
+  per-task values, prompt still O(1)) + instruction to read
   body, CLAUDE.md, context layer itself; keeps exactly six values per
   return, the last two optional (task number, terminal status, commit hash or
-  nothing-committed, one-line failure reason only on failure, at most
+  nothing-committed — under PARALLEL beside it the base tip rebased onto —
+  one-line failure reason only on failure, at most
   three follow-ups, omitted when empty, which is almost every task, and at
-  most three *For the record* lines). The
+  most three *For the record* lines). Under PARALLEL several agents can ask
+  at once; a relay stops only its own task — a return arriving while a
+  question is open is landed and bookkept, a second question gets its own
+  block, answers go back by agent id — and after every relay one line names
+  the agents still waiting (`Waiting on you: tasks 22 (round 1), …`); the
+  same channel carries a landing's rebase-again message. **Between
+  delegated tasks** under PARALLEL each return is **landed first** per
+  `worktree.md` § *The orchestrator lands* — `git merge --ff-only
+  wt/task-<N>`, one rebase-again round to the same agent when the base
+  moved, push unless NO_PUSH, `git worktree remove` + safe `git branch -d`;
+  a landing that fails (fast-forward refused twice, delete refused) is the
+  task's failure, worktree kept — then the base-tree steps: re-read
+  `TASKS.md` (the scheduling point's read, the `all` re-check subsumed by
+  it), confirm status and a clean base, chat replies by `P<n>`, progress
+  line naming what is in flight (`Task 20 landed (abc1234). In flight: 22,
+  23. Starting task 24.` / `Nothing more to start.`), skip-tests `Proceed?`
+  once per scheduling point that starts a task; then the scheduling point.
+  **Failure**: nothing more spawned, tasks in flight finish and land with no
+  scheduling point after, report once nothing is in flight, the failed
+  task's row naming its worktree path. The
   field applies `/follow-ups`' rules, **not a format of its own** — the agent
   reads that command's own body and applies what is there; what counts, what
   is excluded and how an item is written are that command's and are
