@@ -4,11 +4,10 @@
 # Markdown file by default, or a zip with --archive. Both shapes draw from
 # select_export_files so they can never disagree about what gets included.
 #
-# .sh is in the subset because a repo's Claude config now includes executables
-# that other selected files reference: .claude/hooks/*.sh, named by the hooks
-# key of .claude/settings.json, and .claude/external/run-*-tests.sh, named by
-# the task-setup wiring. Excluding them exported the reference without its
-# target.
+# .sh is in the subset for the repo's own hook scripts under .claude/hooks/.
+# Installed features (commands/, skills/, agents/), runbooks, the external-LLM
+# wiring, settings.json and the backlog indexes are not the repo's config and
+# never ship.
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib.sh
@@ -39,8 +38,11 @@ select_export_files() {
   done
   if [ -d "$repo_dir/.claude" ]; then
     ( cd "$repo_dir" && find .claude \
-        \( -path '.claude/projects' -o -path '.claude/history' -o -path '.claude/todos' -o -path '.claude/tasks' \) -prune -o \
-        -type f \( -name '*.md' -o -name '*.json' -o -name '*.toml' -o -name '*.sh' \) ! -name 'settings.local.json' ! -path '.claude/TASKS.md' -print \
+        \( -path '.claude/projects' -o -path '.claude/history' -o -path '.claude/todos' -o -path '.claude/tasks' \
+           -o -path '.claude/commands' -o -path '.claude/skills' -o -path '.claude/agents' \
+           -o -path '.claude/runbooks' -o -path '.claude/external' \) -prune -o \
+        -type f \( -name '*.md' -o -name '*.json' -o -name '*.toml' -o -name '*.sh' \) ! -name 'settings.local.json' \
+        ! -path '.claude/settings.json' ! -path '.claude/TASKS.md' ! -path '.claude/RUNBOOKS.md' -print \
       | sort )
   fi
   return 0
