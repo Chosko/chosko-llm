@@ -47,21 +47,23 @@ skill's reference files and dependencies. The rest of its bullet:
   line is backfilled in place — to the highest id present, counting steps about
   to be removed — by whichever of `/runbook-create --append` and
   `/runbook-prune` writes it first)
-  and `references/subagent-contract.md` (two fenced blocks: OPERATING RULES,
-  pasted verbatim into every spawned prompt, and RELAY CHILD RULES, pasted
-  verbatim ahead of it into a relay child's prompt only — six placeholders,
-  `<RUNBOOK>`, `<N>`, `<FILE>` (the body's `File:` path, for the never-edit
-  rule; relay file names stay built from `<RUNBOOK>`/`<N>`) and `<WORKTREE>`
-  (the absolute directory the step works in — its
-  `.claude/worktrees/runbook-<id>-step-<n>` worktree under a parallelism
-  above one, the base tree's own path on a sequential run — carrying two
-  fixed rules: every path touched is under it, and the remote is the
+  and `references/subagent-contract.md` (three fenced blocks: OPERATING
+  RULES, pasted verbatim into every spawned prompt; RELAY CHILD RULES, pasted
+  verbatim ahead of it into a relay child's prompt only; and WORKTREE RULES,
+  pasted after it only under a parallelism above one, into a step's prompt
+  and its relay children's — six placeholders, `<RUNBOOK>`, `<N>`, `<FILE>`
+  (the body's `File:` path, for the never-edit rule; relay file names stay
+  built from `<RUNBOOK>`/`<N>`) and `<WORKTREE>` (WORKTREE RULES only: the
+  step's absolute `.claude/worktrees/runbook-<id>-step-<n>`, a relay child
+  getting its caller's — carrying the fixed rules: every path touched is
+  under it, and the remote is the
   orchestrator's, so an invoked skill commits as usual but skips its pull,
   re-sync and push of the base as under `--no-push` with no flag typed —
   its own `park/task-<N>` the one branch it still pushes when it parks, per
   `task-engine`'s `parking.md` — and before
   `DONE` the agent rebases its branch onto the base tip per `task-engine`'s
-  `worktree.md` § *The agent integrates*, a no-op on the base itself), plus
+  `worktree.md` § *The agent integrates*; a sequential run's skills keep
+  their own pull and push), plus
   `<PROMPT>`/`<RESULT>` on the child block alone,
   and it carries the `SPAWN REQUEST` rule; OPERATING RULES make the literal
   `DONE` line mandatory — a finished turn without it is a hard failure however

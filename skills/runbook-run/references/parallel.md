@@ -50,8 +50,8 @@ order, spawn nothing more:
 1. land every step in flight — steps 6–8 for each return in turn, with no
    scheduling point after any of them;
 2. run the step in the base tree exactly as a sequential run does — marked,
-   spawned without a worktree with `<WORKTREE>` the base tree's path, awaited,
-   handled and committed;
+   spawned without a worktree and without `WORKTREE RULES`, awaited, handled
+   and committed;
 3. resume spawning at the scheduling point after its commit.
 
 ## Mark and spawn (steps 4–5)
@@ -62,7 +62,9 @@ order, spawn nothing more:
   § *Creating the worktree*, then spawn with `run_in_background: true`. Its
   preamble names the worktree's absolute path as the repository root, with
   the base branch's name beside it, and nothing about the other steps in
-  flight; the contract's `<WORKTREE>` is that path.
+  flight. After OPERATING RULES, paste `WORKTREE RULES` from
+  `./subagent-contract.md`, `<WORKTREE>` that path; a relay child the step
+  requests gets the same block with the same path.
 - A worktree that cannot be created skips its step with that section's one
   line, and the next selected step is spawned.
 - Up to N steps are then in flight, each writing in its own tree, while the

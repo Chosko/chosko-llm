@@ -124,15 +124,17 @@ exactly where `Execution policy:` is.
 
 The orchestrator creates the step's worktree per `worktree-isolation` before
 it spawns, and the spawned prompt's preamble names the directory as the
-repository root. OPERATING RULES gains one placeholder and the two rules it
-carries: work only in that directory, and the remote is the orchestrator's,
+repository root. A `WORKTREE RULES` block, pasted after OPERATING RULES only
+under a parallelism above one, carries a `<WORKTREE>` placeholder and the
+rules: work only in that directory, and the remote is the orchestrator's,
 so an invoked skill's pull and push of the base are skipped as under
 `--no-push` and the work is committed as usual, with the one exception
 `task-engine`'s `parking.md` states — a skill that parks pushes its own
 `park/task-<N>`, the branch another machine needs to unpark; before `DONE`,
 integrate as the protocol says.
-The rules are fixed text with a fourth placeholder, filled per step like the
-other three, so the contract stays a contract.
+The block is fixed text filled per step like the others, so the contract
+stays a contract, and a sequential run never pastes it: its prompts, and its
+skills' own pull and push, are those of a runbook with no `Parallelism:`.
 
 On `DONE` the orchestrator lands the step — fast-forward, the one
 rebase-again message to the same agent where needed, push, remove — and then

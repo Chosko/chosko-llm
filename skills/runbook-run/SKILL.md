@@ -607,10 +607,10 @@ agent reads.
    paraphrased, never trimmed, never merged with the surrounding material, and
    never "improved". A bare slash command is passed as a bare slash command.
 6. **OPERATING RULES.** Verbatim from `./references/subagent-contract.md`,
-   with only that block's four placeholders filled in: `<RUNBOOK>` with the
-   runbook's name, `<N>` with the step id, `<FILE>` with the resolved path
-   from step 1, and `<WORKTREE>` with this tree's absolute path (the step's
-   worktree under `./references/parallel.md`). It is fixed text and goes last.
+   with only that block's three placeholders filled in: `<RUNBOOK>` with the
+   runbook's name, `<N>` with the step id, and `<FILE>` with the resolved path
+   from step 1. It is fixed text and goes last — before `WORKTREE RULES`,
+   which only `./references/parallel.md` adds.
 
 ---
 
@@ -754,8 +754,7 @@ On a `SPAWN REQUEST` result, read only the marker and the three lines under it
    followed by the `OPERATING RULES` block, both **verbatim** from
    `./references/subagent-contract.md`, in the form THE SPAWNED PROMPT part 6
    uses: `<PROMPT>` and `<RESULT>` filled with the request's two paths, and
-   `<RUNBOOK>`, `<N>`, `<FILE>` and `<WORKTREE>` as for the caller's own
-   spawn — the child works in the caller's tree. Compose nothing else.
+   `<RUNBOOK>`, `<N>` and `<FILE>` as for any spawn. Compose nothing else.
 2. **Wait for the child's result**, exactly as for a step's own agent. The
    spawn call returns an id, not the result.
 3. **Classify the child's returned turn on its marker**, never on the result

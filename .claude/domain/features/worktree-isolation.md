@@ -118,8 +118,8 @@ The agent never pushes the base branch; the one branch it pushes is its own
 never leaves the worktree. Skills the unit invokes keep their default commit
 behaviour; their pull-at-start, pre-push re-sync and push of the base are the
 orchestrator's, so the agent skips them as a run under `--no-push` does, and
-says so once — honoured from the sentence in its OPERATING RULES, with no
-flag typed.
+says so once — honoured, for a runbook step, from the sentence in its
+`WORKTREE RULES`, with no flag typed.
 
 Rebasing `wt/<unit>` is not rewriting anyone else's history: the branch is
 private to the unit, unpushed, and exists for this one landing. `commit.md`

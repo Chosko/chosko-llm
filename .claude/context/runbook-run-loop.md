@@ -94,7 +94,7 @@ relay and resolve. The rest of the bullet:
   return. A `Needs: agent+human`/`human` step is a **barrier**: when next in
   list order nothing more is spawned, every step in flight lands (steps 6–8
   each, no scheduling point between), it runs in the base tree exactly as a
-  sequential step — no worktree, `<WORKTREE>` the base path — and spawning
+  sequential step — no worktree, no WORKTREE RULES — and spawning
   resumes after its commit. Every selected step is marked `[~]` before the
   first spawns; each gets its worktree BEFORE its spawn (`.git/info/exclude`
   line once per run, then `git worktree add -b wt/runbook-<id>-step-<n>
@@ -169,8 +169,8 @@ relay and resolve. The rest of the bullet:
   failure. A child that fails **fails the step** — never reported to its caller
   as finished, which would buy a `Done:` line for work that never happened.
   Classification runs on the child's returned marker, never on the result file,
-  which is what squares it with *opens neither file*. A relay child's
-  `<WORKTREE>` is its caller's — the child works in the caller's tree — and
+  which is what squares it with *opens neither file*. A relay child gets its
+  caller's WORKTREE RULES, if any — the child works in the caller's tree — and
   above a parallelism of 1 the agents at work are the steps' own, each idle
   while its own child runs; never two children for one caller at once. A
   step running `/task-implement --parallel` routes through the relay where
