@@ -1,6 +1,6 @@
 ---
 name: objective-run
-version: 0.1.0
+version: 0.1.1
 type: skill
 description: Work toward one stated objective in rounds — checkable success criteria first, then each round a fresh worker subagent does one piece of work and commits and a fresh checker marks every criterion met or not met with evidence — until all are met or a time or no-progress limit stops it, recorded in a committed log a later session resumes. Use it for an outcome, not a task list.
 requires: skill:interaction-engine, skill:runbook-run
@@ -176,7 +176,9 @@ Spawn a fresh subagent. Its prompt, in this order:
   change made stale, or `none`.
 - **OPERATING RULES**, verbatim from
   `../runbook-run/references/subagent-contract.md`, last, with `<RUNBOOK>` as
-  `objective-<id>`, `<N>` as the round number and `<FILE>` as the log path.
+  `objective-<id>`, `<N>` as the round number, `<FILE>` as the log path and
+  `<WORKTREE>` as this tree's absolute path — a round runs in the base tree,
+  so the contract's worktree rules hold there as written.
 
 Wait for its result — the spawn returns an id, never the result. Classify the
 returned turn on its marker:
