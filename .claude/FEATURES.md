@@ -271,3 +271,30 @@ Source: prompt
 Tasks: 315, 316, 317, 318, 319, 320, 321, 322
 
 ---
+
+## worktree-isolation — One git worktree per unit of work; the agent integrates, the orchestrator lands
+
+Status: [DONE]
+Doc: .claude/domain/features/worktree-isolation.md
+Source: product-design.md § Task backlog
+Tasks: 325, 326, 327, 328
+
+---
+
+## parallel-task-runs — `/task-implement --parallel <N|max>` keeps several tasks in flight, scheduled by `Preconditions:`
+
+Status: [DONE]
+Doc: .claude/domain/features/parallel-task-runs.md
+Source: product-design.md § Task backlog
+Tasks: 329, 330, 331
+
+---
+
+## parallel-runbooks — Runbook steps scheduled by their `Depends on:` graph, under a `Parallelism:` header or `--parallel`
+
+Status: [DONE]
+Doc: .claude/domain/features/parallel-runbooks.md
+Source: product-design.md § Task backlog
+Tasks: 332, 333, 334, 335, 336, 339, 340
+
+---

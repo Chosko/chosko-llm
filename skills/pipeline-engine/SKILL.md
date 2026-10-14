@@ -1,6 +1,6 @@
 ---
 name: pipeline-engine
-version: 0.4.1
+version: 0.4.4
 type: skill
 description: Reference library for the pipeline as a whole — one authority per rule the pipeline features share, under references/ (the project probe and verdict line, the index graph, the routing table, the drift catalogue); read by path by the pipeline-* features, never invoked.
 disable-model-invocation: true
@@ -67,7 +67,7 @@ disable-model-invocation: true
 | `references/probes.md` | The fixed set of cheap filesystem probes that describe a project's pipeline setup, the one verdict line every consumer prints, and the rule for reusing a verdict already in the conversation — including the writers whose runs invalidate it. |
 | `references/graph.md` | How the pipeline's indexes point at each other: each edge by the artifact and line it lives on, its direction, which side is authoritative, which command writes each side, what consumes it, and which edges vanish when an index is absent. |
 | `references/routing.md` | One row per pipeline feature — what it consumes, what it produces, which artifact lines it owns, its preconditions, its argument shape and the path to its amend entry, or why it has none — and the table's contract as the revision suite's ownership authority. |
-| `references/lint.md` | The closed catalogue of structural drift findings: each finding's detection rule over the graph, its severity, its one fixing command and its output template, plus the two failure rules. |
+| `references/lint.md` | The closed catalogue of structural drift findings — fifteen, L1–L15: each finding's detection rule over the graph, its severity, its one fixing command and its output template, plus the two failure rules. |
 
 Each file is the **single authority** for its rule; a consuming feature cites
 the file and states only what it does differently.

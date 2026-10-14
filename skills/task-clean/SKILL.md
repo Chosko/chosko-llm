@@ -1,6 +1,6 @@
 ---
 name: task-clean
-version: 0.11.2
+version: 0.12.0
 type: skill
 description: Prune tasks in a terminal status from the backlog by archiving them — each summary block leaves TASKS.md and the body moves to .claude/tasks/archive/<N>.md, never deleted. Use it when finished tasks clutter the backlog; a backfill mode recovers, from git history, bodies earlier runs deleted.
 replaces: command:task-clean
@@ -12,8 +12,10 @@ project-policy: vcs:mv, vcs:show, vcs:branch
 # Global skill: archive the backlog's tasks in a terminal status — remove
 # each matched summary block from `.claude/TASKS.md` and move its
 # `.claude/tasks/<N>.md` body to `.claude/tasks/archive/<N>.md` under a
-# frozen header recording the summary block it had. Every prune also sweeps orphaned `park/task-<N>` branches at the same
-# confirmation. Commits and pushes by default.
+# frozen header recording the summary block it had. Every prune also sweeps
+# orphaned `park/task-<N>` branches and the `wt/task-<N>` worktrees and
+# branches whose task is finished, at the same confirmation. Commits and
+# pushes by default.
 # Usage: /task-clean
 #        /task-clean <STATUS> [<STATUS> ...]
 #        /task-clean --backfill                   (recover bodies earlier runs deleted)
@@ -33,7 +35,8 @@ project-policy: vcs:mv, vcs:show, vcs:branch
   the body file moves into the archive, keeping the record of the task.
 - Rewrite every `Preconditions:` reference in surviving summary blocks that
   pointed at an archived task.
-- Delete the parking branches no parked or resumed task needs any more.
+- Delete the parking branches no parked or resumed task needs any more, and
+  remove the worktrees finished tasks left behind.
 - Always confirm with the user before writing. Never renumber, never reuse
   a pruned ID, and never delete a body.
 
@@ -147,6 +150,28 @@ replaced, leaves one behind.
 
 ---
 
+## THE WORKTREE SWEEP
+
+Remove the `.claude/worktrees/task-<N>` worktrees and `wt/task-<N>` branches
+a parallel run left behind for finished tasks. These bullets are the whole
+sweep — never open `../task-engine/references/worktree.md`, the rule's home.
+
+- **Skip it** unless `.claude/worktrees/` exists (one Glob, no shell), and
+  under the park-branch sweep's `## VCS` condition. Then add no plan section
+  and say nothing about it.
+- **List** `git worktree list --porcelain` entries whose path is
+  `.claude/worktrees/task-<N>` or whose branch is `wt/task-<N>`, and
+  `git branch --list 'wt/task-*'`. Nothing is on the remote.
+- **Finished** means task N is `[DONE]`, `[SKIP]` or archived as PHASE 1 read
+  `TASKS.md`. Any other task keeps its worktree, unlisted: it may hold the
+  only copy of the work.
+- **Remove** each finished one in PHASE 2, after the same **"Apply?"**:
+  `git worktree remove .claude/worktrees/task-<N>`, then
+  `git branch -d wt/task-<N>`. A failure is a *Follow-ups* item naming the
+  path and the command — never fatal, never retried.
+
+---
+
 ## PHASE 1 — REPORT (no file writes, no moves)
 
 1. Read `.claude/TASKS.md` and parse it as `resolution.md` § *Parsing the
@@ -155,11 +180,12 @@ replaced, leaves one behind.
    Read the `Last task number: N` header value for information only — it
    does not change.
 
-2. Identify the tasks whose status matches the prune set, and list the
-   orphaned park branches per THE PARK-BRANCH SWEEP.
-   - Neither → tell the user "No tasks to prune." and stop.
-   - Orphans but no tasks → steps 3 and 4 have nothing to plan; the plan
-     holds only the sweep.
+2. Identify the tasks whose status matches the prune set, list the
+   orphaned park branches per THE PARK-BRANCH SWEEP and the finished
+   worktrees per THE WORKTREE SWEEP.
+   - None of the three → tell the user "No tasks to prune." and stop.
+   - Something to sweep but no tasks → steps 3 and 4 have nothing to plan;
+     the plan holds only the sweeps.
 
 3. Plan each pruned task's move: `.claude/tasks/<N>.md` →
    `.claude/tasks/archive/<N>.md`. Probe both paths with an existence
@@ -212,6 +238,9 @@ replaced, leaves one behind.
      park/task-17   remote           task 17 has no summary block
      (remote not checked — --no-push)            ← only under NO_PUSH
 
+   Worktrees to remove (W):                      (omit when none)
+     .claude/worktrees/task-42   wt/task-42   task 42 is [DONE]
+
    Anything in [IN PROGRESS]? <yes/no — if yes, list them as a heads-up
    so the user notices unfinished work before pruning around it>
    ```
@@ -262,7 +291,8 @@ written into each archived body.
    reference to a now-archived task ID. Confirm no stale references remain.
 
 7. Delete each orphaned park branch the plan listed, local and remote as
-   it named, per THE PARK-BRANCH SWEEP.
+   it named, per THE PARK-BRANCH SWEEP; remove each worktree and delete
+   each `wt/task-<N>` branch the plan listed, per THE WORKTREE SWEEP.
 
 8. Report to the user:
    - Number of summary blocks removed from `TASKS.md`.
@@ -271,6 +301,7 @@ written into each archived body.
    - Number of `Preconditions:` lines rewritten.
    - Each park branch deleted, local and remote, and any delete that
      failed, with its output.
+   - What THE WORKTREE SWEEP removed or failed to remove.
    - Final task count.
    - The unchanged `Last task number:` value.
 
@@ -289,14 +320,17 @@ written into each archived body.
     each archived file, PHASE 2's `git mv` having already staged both
     halves of every move;
   - that PHASE 3 is its only shell use apart from the `mkdir -p` /
-    `git mv` in PHASE 2 and the park-branch sweep;
-  - which of the sweep's operations run under which flag.
+    `git mv` in PHASE 2 and the two sweeps;
+  - which of the sweeps' operations run under which flag.
 - Once PHASE 2 completes successfully, commit automatically — PHASE 1's
   **"Apply?"** was the run's only gate; ask no further prompt here.
-- A run that only swept branches changed no file and commits nothing.
+- A run that only swept branches or worktrees changed no tracked file and
+  commits nothing.
 - Under `--no-commit`:
   - The move still happens — it is the prune's effect, not a commit step —
     so each rename sits in the working tree.
-  - The sweep deletes local branches only.
+  - The park-branch sweep deletes local branches only; the worktree sweep,
+    local throughout, runs whole.
   - Report what was changed — blocks removed, each body moved and where it
-    went, `Preconditions:` lines rewritten, branches deleted — and stop.
+    went, `Preconditions:` lines rewritten, branches deleted, worktrees
+    removed — and stop.

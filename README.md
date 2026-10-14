@@ -334,7 +334,11 @@ exactly one commit. `next` takes the first eligible task and follows
 done; `all` works through the backlog in that same order. Both skip stale
 tasks so a batch run never guesses, and
 a multi-task run can hand each task to a fresh subagent so later tasks don't
-inherit earlier ones' context. On a human-in-the-loop task it pauses at each checkpoint,
+inherit earlier ones' context — one agent after another by default, or up to
+N at once with **`--parallel <N|max>`**, each in its own worktree, started as
+soon as what it waits on has landed and landed onto the branch one at a time;
+two tasks that list the same file never run together unless the project's
+`CLAUDE.md` names the file as parallel-safe. On a human-in-the-loop task it pauses at each checkpoint,
 walks you through it, and verifies the outcome itself before moving on. When
 a tool connected to the session can perform a checkpoint's manual step, it
 asks once per task whether to drive the tool itself, and then hands you a
@@ -356,9 +360,10 @@ Every run ends with one closing report — *For the record*, then a numbered
 Opt into **`pipeline-dashboard`** — `Pipeline dashboard policy: on` in `CLAUDE.md`,
 or `--dashboard` for one run — and `/task-implement` or `/runbook-run` keeps
 a private web page live while it runs: the active milestone, the runbook's
-steps, every task, and a banner with the question the run is waiting on, so
-you can follow it from your phone. Ask for the pipeline status for the same
-picture as text in chat.
+steps, every task — a task or step in flight in its own worktree shown in
+progress — and a banner with the question the run is waiting on, so you can
+follow it from your phone. Ask for the pipeline status for the same picture
+as text in chat.
 
 Pass **`--review`** and each task is peer-reviewed before it's committed.
 **`/task-review`** audits the diff against the task's acceptance criteria in
@@ -374,8 +379,14 @@ it.
 Around them, **`/task-list`** shows the backlog (grouped by milestone when a
 plan exists, with blocked features flagged) and **`/task-clean`** archives
 finished tasks out of it, moving each body under `.claude/tasks/archive/`
-rather than deleting it. The rules they all share live once, in the **`task-engine`**
-skill, which installs automatically alongside the commands that read it.
+rather than deleting it, and sweeps away the worktree and branch a parallel
+run left behind for each of them. The rules they all share live once, in the **`task-engine`**
+skill, which installs automatically alongside the commands that read it —
+among them the worktree protocol a run follows when it has more than one
+task in flight: each task works in its own git worktree under
+`.claude/worktrees/` on its own branch, rebases onto the base branch itself,
+and is landed by a fast-forward, so a task still makes exactly one commit and
+the worktree's presence is what marks it in flight.
 
 The build commands commit and push by default (`--no-commit`, `--no-push`).
 [Details →](docs/reference.md#5-building-and-reviewing)
@@ -391,14 +402,27 @@ from step one's framing. **`/runbook-create`** captures them as an ordered
 list of self-contained prompts, each written for a fresh agent that has none
 of the conversation, and checks ten rules before it writes (self-contained,
 names its document, carries every decision that exists nowhere on disk and
-nothing that already does). **`/runbook-run`** executes it one step at a
+nothing that already does); asked for a parallel runbook, it writes the
+`Parallelism:` header line and asks which steps must precede which pair by
+pair, so every ordering constraint is a `Depends on:` edge and the gate
+approves the graph, not only the list. **`/runbook-run`** executes it one step at a
 time, by default one subagent per step, relaying each agent's questions to you
-and your answers back, committing after every step. It never runs steps in
-parallel, by default never does a step's work itself, and never reviews what a
-step did; that is `/task-review`'s job, invoked from inside the step.
-`--inline` is the one opt-in exception: it executes the selected steps in your
-own session, sharing one context, instead of spawning a subagent for each.
-Relay-and-wait is the default `attended` policy. Under **`--unattended`** — or
+and your answers back, committing after every step. It never does a step's
+work itself by default, and never reviews what a step did; that is
+`/task-review`'s job, invoked from inside the step. Two opt-ins change the
+default, and they never combine. `--inline` executes the selected steps in
+your own session, sharing one context, instead of spawning a subagent for
+each. **`--parallel <N|max>`** — or a runbook header line `Parallelism:
+<N|max>`, which the flag overrides for one run — runs the runbook as its
+`Depends on:` graph instead of its list order: up to N steps in flight at
+once, each in its own worktree, started as soon as what each waits on has
+landed and landed onto the branch one at a time; list order is only the
+priority among steps that may start together, and a step that needs a person
+present lets everything in flight land before it runs in the base tree. It
+is refused on a runbook whose header carries `Sequencing:` — a *why* for an
+order the graph does not carry, which a parallel run would violate silently —
+until that constraint is made an edge. Relay-and-wait is the default
+`attended` policy. Under **`--unattended`** — or
 a runbook header line `Execution policy: unattended`, which `--attended`
 overrides for one run — the step that asked is parked (`[P]`, its question
 recorded and printed under a `P<n>` handle) and the run goes on to the steps
@@ -410,7 +434,8 @@ or after the closing report unparks a step too.
 `/runbook-describe`, `/runbook-prune` and `/runbook-clean` round out the set —
 prune removes the finished **steps** from one live runbook, recording their ids
 on an `Archive:` line so a surviving `Depends on:` still resolves, while clean
-removes finished **runbooks** — and `runbook-suggest` fires on its own when a
+removes finished **runbooks** and sweeps the worktrees a parallel run left
+behind for finished steps — and `runbook-suggest` fires on its own when a
 conversation produces a list worth capturing.
 
 **`/follow-ups`** is for what the conversation is about to lose. It reads the
@@ -474,7 +499,8 @@ ends. Meaning-preserving, never a style compressor. Uncommitted by default.
   context usage, cost and rate limits in the status bar. Global-only.
 - **`statusline:pipeline-statusline`** shows the same session line plus the
   project's pipeline progress — the current runbook, the tasks it covers,
-  each task in progress. **`/pipeline-statusline`** wires it into
+  each task in progress, whether flipped in the backlog or in flight in its
+  own worktree. **`/pipeline-statusline`** wires it into
   `settings.json`, backs up the status line it replaces and restores it on
   `uninstall`. Global-only.
 

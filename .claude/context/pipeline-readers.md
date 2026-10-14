@@ -89,8 +89,8 @@ Covers the pipeline's two read-only reporters, `/production-status` and
   nothing, commits nothing, flips no status; no exit-code contract, no
   `--fix`, no `--quiet`. Opens no file under `.claude/tasks/archive/` or
   `.claude/domain/features/`; under `.claude/tasks/` and `.claude/runbooks/`
-  it opens exactly the bodies `lint.md`'s two parking findings name — L12, a
-  `[PARKED]` task with no `## Parking handoff` (`ERROR`, fix
+  it opens exactly the bodies `lint.md`'s three body-reading findings name —
+  L12, a `[PARKED]` task with no `## Parking handoff` (`ERROR`, fix
   `/task-implement <N>` attended), reading each parked task's body for the
   heading; L13, a runbook whose `[P]` steps and index `Parked:` line disagree
   (`WARNING`, fix `/runbook-run <id>`), reading each non-`[DONE]` runbook's
@@ -98,7 +98,12 @@ Covers the pipeline's two read-only reporters, `/production-status` and
   keeps L12 on a parked task in scope. When the probe's `specs` count is
   above `0` it lists `.claude/specs/*.md` with the Glob tool for L14 — a spec
   file still present, `WARNING`, fix `/pipeline-revise --catch-up
-  .claude/specs/<file>` — and opens no spec. The filesystem probe is
+  .claude/specs/<file>` — and opens no spec. L15, a runbook header carrying
+  both `Parallelism:` and `Sequencing:` (`ERROR`, fix `/pipeline-revise` —
+  carry the constraint into `Depends on:` and drop `Sequencing:`, or drop
+  `Parallelism:`; one finding per runbook), reads every runbook's body for
+  its header lines — never a prompt block — and no worktree is probed, git
+  state differing across machines. The filesystem probe is
   its only shell use — the one stated departure from `/production-status`,
   which runs none. Runs only when invoked; no pipeline writer auto-runs it.
 

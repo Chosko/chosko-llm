@@ -1,9 +1,10 @@
 ---
 name: task-implement
-version: 1.14.0
+version: 1.15.1
 type: skill
-description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
+description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run; `--parallel <N|max>` runs several delegated tasks at once, each in its own worktree. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, skill:interaction-engine, command:follow-ups
+project-policy: line:Parallel-safe files for /task-implement=
 ---
 
 # /task-implement
@@ -21,6 +22,7 @@ requires: skill:task-engine, skill:interaction-engine, command:follow-ups
 #        /task-implement <args> -y            (skip-tests mode: no per-task Proceed? prompt)
 #        /task-implement <args> --agents      (2+ tasks: one fresh subagent per task, sequentially)
 #        /task-implement <args> --no-agents   (2+ tasks: run everything in this conversation)
+#        /task-implement <args> --parallel N|max  (2+ tasks: up to N agents at once, each in its own worktree)
 #        /task-implement <args> --review      (review each task before committing it)
 #        /task-implement <args> --review --rounds N  (up to N review/iterate rounds; default 1)
 #        /task-implement <args> --review --review-model <name>|same|auto   (reviewer's model; default auto)
@@ -61,6 +63,8 @@ For each requested task, in the order given:
   `./review-rounds.md`.
 - Under UNATTENDED, a question about the work parks the task instead of
   halting the run — see PARKED TASKS.
+- Under PARALLEL, delegated tasks run several at a time, each in its own
+  worktree — see `./parallel-runs.md`.
 - A step that fails and cannot be resolved by fixing the code stops the
   whole run — see FAILURE HANDLING.
 - A completed task carrying a `Feature:` line may make its feature a
@@ -120,7 +124,8 @@ SUPPORTING FILES (read on demand — not up front)
 | `./human-in-loop.md` | The current task's `Target:` is `claude+human` or `human`. |
 | `./body-schemas.md`  | The task body does NOT match the current schema (Goal / Acceptance criteria / Decisions / Hints). |
 | `../interaction-engine/references/mode.md` | Every run without `--no-agents`, at PRE-FLIGHT step 2b, to know whether orchestrate mode is on. |
-| `./delegated-runs.md` | DELEGATE is true — the resolved list holds 2+ tasks and the user opted into per-task subagents (or passed `--agents`), or orchestrate mode is on (PRE-FLIGHT step 2b). Never otherwise on a single-task run, nor when the user declined or passed `--no-agents`. |
+| `./delegated-runs.md` | DELEGATE is true — the resolved list holds 2+ tasks and the user opted into per-task subagents (or passed `--agents` or `--parallel`), or orchestrate mode is on (PRE-FLIGHT step 2b). Never otherwise on a single-task run, nor when the user declined or passed `--no-agents`. |
+| `./parallel-runs.md` | `--parallel` was passed — read at ARGUMENT PARSING, where its refusals apply. It names the `task-engine` skill's `worktree.md`, read before the first spawn. Never otherwise. |
 | `./review-rounds.md` | REVIEW is true — the run was invoked with `--review`. Read once, after ARGUMENT PARSING and before the first task. Never on a run without the flag. |
 | `../task-engine/references/parking.md` | UNATTENDED is true (read at ARGUMENT PARSING, where its refusals apply), OR any task in the resolved list is `[PARKED]` (read at PRE-FLIGHT step 2). Never otherwise — an attended run that meets no parked task never opens it. |
 
@@ -163,6 +168,9 @@ strip whichever appear; what is left is the task selector.
   step 2b resolves it.
 - Accept and ignore `--agents` on a run that resolves to fewer than 2 tasks
   — the run stays in-context, unless orchestrate mode is on (step 2b).
+
+**`--parallel <N|max>`.** Strip the pair, read `./parallel-runs.md` now and
+apply its § *The flag*: it sets PARALLEL and DELEGATE = true, or refuses.
 
 **Review flags.** Scan for the optional `--review` flag, the optional
 `--rounds N` pair and the two `--review-*` flags, and strip whichever
@@ -464,12 +472,12 @@ PRE-FLIGHT CHECKS (before any task)
    - With the mode off, this step runs only when the resolved list holds 2
      or more tasks. With fewer than 2, DELEGATE is false, nothing is asked
      and the run stays in-context — skip the rest of this step.
-   - If `--agents` was passed, DELEGATE is already set; don't ask.
-     Otherwise ask once:
+   - If `--agents` or `--parallel` was passed, DELEGATE is already set;
+     don't ask. Otherwise ask once:
 
      > This run covers <k> tasks. Implement each one in a fresh subagent, so
      > later tasks don't inherit the context of earlier ones? Agents run one
-     > after another, never in parallel.
+     > after another; `--parallel <N|max>` runs several at once.
      >
      > A. **Yes** — one agent per task, sequentially.
      > B. **No** — implement everything in this conversation.
@@ -625,6 +633,9 @@ task, never in both.
 - A task unparked from a branch ends with that branch's deletion, after
   this step's commit and push — `parking.md` § *The unpark transaction*,
   step 4.
+- In a worktree — a delegated task under PARALLEL, named by the agent
+  prompt — this step is `../task-engine/references/worktree.md` § *The
+  agent integrates*: the push is the launcher's.
 
 ---
 

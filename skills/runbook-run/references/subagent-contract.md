@@ -8,8 +8,11 @@ spawn is one the agent can be talked out of.
   rules are the final thing the agent reads.
 - Paste `RELAY CHILD RULES` **verbatim** ahead of it into a relay child's
   prompt only (THE SPAWN RELAY protocol step 1).
+- Paste `WORKTREE RULES` **verbatim** after `OPERATING RULES` only under a
+  parallelism above one (`./parallel.md`) — into a step's prompt and into its
+  relay children's. A sequential run never pastes it.
 
-Substitute five placeholders, and nothing else:
+Substitute six placeholders, and nothing else:
 
 - `<RUNBOOK>` — the runbook's name, e.g. `implement-ecc-import`.
 - `<N>` — the step number being executed.
@@ -17,6 +20,9 @@ Substitute five placeholders, and nothing else:
   holds it, e.g. `.claude/runbooks/3-implement-ecc-import.md`.
 - `<PROMPT>`, `<RESULT>` — the `prompt:` and `result:` paths the `SPAWN REQUEST`
   named. `RELAY CHILD RULES` only.
+- `<WORKTREE>` — the step's worktree,
+  `<project>/.claude/worktrees/runbook-<id>-step-<n>`, absolute; a relay child
+  gets its caller's. `WORKTREE RULES` only.
 
 The relay rule names no directory of its own: the subagent chooses one under
 the OS temp directory and reports it, and the file names are built from
@@ -112,6 +118,29 @@ RELAY CHILD RULES
 
 ---
 
+## WORKTREE RULES — paste from here, verbatim
+
+```
+WORKTREE RULES
+
+- Every path you touch is under <WORKTREE>, the repository root for this step:
+  read, write, run and commit there and nowhere else.
+- The remote is the orchestrator's. A skill you invoke makes its commits as
+  usual but skips its pull at start, its pre-push re-sync and its push of the
+  base exactly as it does under `--no-push`, with no flag typed; when it parks
+  it still pushes its own parking branch (`park/task-…`), as the `task-engine`
+  skill's `references/parking.md` says. Say so once in your report.
+- Before `DONE`, integrate as the `task-engine` skill's
+  `references/worktree.md` § *The agent integrates* says: rebase the branch
+  you committed on onto the current tip of the base — the branch the main
+  worktree has checked out — re-verify when that tip had moved, and name it
+  in your report.
+```
+
+## Paste ends
+
+---
+
 ## Why each rule is in there
 
 Not part of the pasted block — for whoever maintains the contract; never sent
@@ -194,3 +223,13 @@ to a subagent.
   return its report to the caller and write nothing to disk obeyed that more
   specific instruction. The precedence line settles the clash for every skill
   a child invokes.
+- **`WORKTREE RULES`, a block of its own.** Under a parallelism above one each
+  step runs in its own worktree (`../../task-engine/references/worktree.md`):
+  *work only there*, because the base tree has one writer and a step reaching
+  into it would race the landings; *the remote is the orchestrator's*,
+  because it lands each step's branch by fast-forward and pushes once per
+  landing. The rule names `--no-push` instead of having the agent type the
+  flag, because OPERATING RULES forbid adding one. Integration is the
+  agent's, since the agent that did the work knows its intent when a rebase
+  conflicts. A separate block keeps OPERATING RULES one text for every
+  sequential run, which pays nothing for it and keeps its skills' own push.

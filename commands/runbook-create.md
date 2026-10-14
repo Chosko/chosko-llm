@@ -1,8 +1,8 @@
 ---
 name: runbook-create
-version: 0.9.1
+version: 0.10.0
 type: command
-description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/, indexed in .claude/RUNBOOKS.md — from this conversation's follow-up list or a free-form description, or append steps to one. Use it to hand ordered work to later sessions that lack this conversation's context.
+description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/, indexed in .claude/RUNBOOKS.md — from this conversation's follow-up list or a free-form description, or append steps to one, sequential or parallel. Use it to hand ordered work to later sessions that lack this conversation's context.
 requires: skill:runbook-run, skill:interaction-engine
 ---
 
@@ -21,7 +21,9 @@ requires: skill:runbook-run, skill:interaction-engine
 # renumbered, and an append lands at the foot unless `--before` / `--after`
 # place it. Authors each step's optional `Needs:` line (agent / agent+human /
 # human) and calls out the steps that need a person at the confirmation
-# gate, which shows the proposed shape only, never the full prompts. Refuses
+# gate, which shows the proposed shape only, never the full prompts. Asked
+# for a parallel runbook, writes `Parallelism:` and authors every ordering
+# constraint as an edge. Refuses
 # a name already taken, or whose first kebab segment is all digits, with one
 # suggested alternative. Commits and pushes what it wrote by default.
 # Usage: /runbook-create
@@ -119,6 +121,7 @@ which is what makes appending safe while a run is in progress:
 | --- | --- | --- |
 | the header, `Last step number:`, `Sequencing:`, `Companion:` | yes | `Archive:`, which is `/runbook-prune`'s — an append never writes, normalises or drops it |
 | `Execution policy:` | only when the user asks for an unattended runbook | by default — absent, the project's `CLAUDE.md` policy decides, else `attended`; and never by a run, which overrides it per run with a flag instead |
+| `Parallelism:` | only when the user asks for a parallel runbook (§ *A parallel runbook*) | by default, absent meaning 1; on an append; beside `Sequencing:`; and by a run, which overrides it with `--parallel` |
 | a step's title and its ```prompt``` block | yes | — |
 | `Depends on:` | yes | — |
 | `Needs:` | `agent+human` and `human` only | `agent`, which is the default and is never written |
@@ -301,9 +304,18 @@ the batch, writing nothing.
    with one word.
 
 A seventh question — **the model** — is asked **only when the default `opus`
-is not wanted**. Do not ask it routinely. The header's `Execution policy:` is
-never asked at all, in either mode: it is written only when the user asked for
-an unattended runbook, and a runbook nobody asked that of carries no line.
+is not wanted**. Do not ask it routinely. The header's `Execution policy:` and
+`Parallelism:` are never asked at all, in either mode: each is written only
+when the user asked for it — an unattended runbook, a parallel one — and a
+runbook nobody asked that of carries no line.
+
+### A parallel runbook
+
+When the user asks for a parallel runbook, or the append's target already
+carries `Parallelism:`, read
+`../skills/runbook-run/references/parallel-authoring.md` before the interview
+and follow it: it sets the value, makes question 3 exhaustive, and adds one
+statement to the gate.
 
 ---
 
@@ -528,9 +540,9 @@ All of these apply to every append — at the foot or at a `--before` /
   The new steps' `Depends on:` lines are authored as part of the append, with
   the position in mind. **An existing step's `Depends on:` is never
   rewritten** — not to point at a step inserted above it, not for any reason.
-- **The `Sequencing:` header line is never touched** — not extended, not
-  replaced, not added to a runbook that has none. It is one line, fixed at
-  authoring time, per `runbook-schema.md` § *The header*. A dated fact an
+- **The `Sequencing:` and `Parallelism:` header lines are never touched** —
+  not extended, not replaced, not added to a runbook that has neither. Each is
+  fixed at authoring time, per `runbook-schema.md` § *The header*. A dated fact an
   appended step needs goes in its prompt, and a fact learned later goes in its
   `Context:`.
 - **Existing steps are never edited.** This is the invariant that makes an

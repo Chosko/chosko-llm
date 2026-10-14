@@ -232,6 +232,17 @@ An implementable task that fails clause 2 is **blocked**. Eligibility is
 derived on every read and stored nowhere; `Preconditions:` keeps its shape
 and becomes load-bearing rather than informational.
 
+**Under a parallelism above one** — several units of a run in flight at
+once, each in its worktree per `./worktree.md` — a unit in flight is neither
+done nor eligible: it is not selected again, and a task whose
+`Preconditions:` name it stays blocked until it **lands**, not merely until
+it is spawned, because landing is what writes the status the next read
+sees. Nothing else in the clause changes, and nothing is stored in the
+index: the in-flight set is the consumer's own — the units this run spawned
+and not yet landed, held in run memory — and eligibility is still derived
+on every read of the index. The unit is the consumer's — a task here, a
+step for an orchestrator that reads its own index by the same rule.
+
 **The blocked report.** The `all` resolution report names, by id, every
 implementable task left unselected because a precondition is unmet, each
 with the ids it waits on — "Blocked by unmet preconditions: 14 (waits on
@@ -298,7 +309,12 @@ requested task carries another one, is
   is a re-check: between tasks of an `all` run it re-reads TASKS.md anyway,
   and there it re-checks the upcoming task's `Preconditions:` against clause
   2 of *Eligibility*, skipping with a one-line report a task whose
-  preconditions no longer hold. It reads nothing new to do it. Its other
+  preconditions no longer hold. It reads nothing new to do it. Under
+  `--parallel` that re-check is subsumed: the launcher re-derives the whole
+  clause, in-flight reading included, on every read of the base `TASKS.md`
+  at each scheduling point (its `parallel-runs.md` § *The scheduler*), so
+  a precondition that no longer holds is a task that is not eligible on
+  that read. Its other
   departure is the pre-ask under `--unattended`: at pre-flight it opens each
   `[PARKED]` task's trailing `## Parking handoff`, that section only,
   because the question it lists verbatim lives nowhere else

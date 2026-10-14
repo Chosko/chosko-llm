@@ -139,6 +139,17 @@ line in plain words — what the task was doing and why it stopped — with the
 task number and date last, in parentheses, then the `Question:` as recorded,
 per `../../interaction-engine/references/messages.md` § *Questions*.
 
+The park and unpark sequences run in whatever tree the task is running in.
+Inside a worktree (`./worktree.md`) the base of the bookkeeping commit is
+`wt/<unit>`: step 3 checks that branch back out, step 4 commits on it, and
+that commit's push is the orchestrator's — it lands onto the base like any
+other and is pushed from there. `park/task-<N>` is the agent's own: steps 1
+and 2 above, and step 4 of § *The unpark transaction*, push and delete it on
+the remote exactly as outside a worktree — the one push a unit's agent makes,
+named as the exception in `./worktree.md` § *The agent integrates* — and
+NO_PUSH alone suppresses them. The unpark cherry-picks onto the head of
+whatever tree the task is then running in.
+
 ## The unpark transaction
 
 Nothing destructive happens until the last step, and a failure rolls back to

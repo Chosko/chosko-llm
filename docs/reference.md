@@ -472,7 +472,7 @@ two indexes that doesn't resolve, or an index state its owner hasn't acted on
 yet. Whether a feature document still describes what its tasks build is a
 judgement, not structure, and this command doesn't attempt it.
 
-The catalogue is closed. It has fourteen findings and no others:
+The catalogue is closed. It has fifteen findings and no others:
 
 | Severity | Finding | Fix it names |
 | --- | --- | --- |
@@ -490,6 +490,7 @@ The catalogue is closed. It has fourteen findings and no others:
 | `ERROR` | a `[PARKED]` task whose body has no `## Parking handoff` | `/task-implement <N>` in an attended session |
 | `WARNING` | a runbook whose `[P]` steps and index `Parked:` line disagree | `/runbook-run <id>` |
 | `WARNING` | a spec file still under `.claude/specs/`, whose documentation catch-up hasn't run | `/pipeline-revise --catch-up <spec>` |
+| `ERROR` | a runbook header carrying both `Parallelism:` and `Sequencing:` | `/pipeline-revise` |
 
 `ERROR` means something a pipeline command will act on wrongly if it's left;
 `WARNING` means a legal state that needs its owner's attention.
@@ -501,11 +502,13 @@ Two things are deliberately **not** findings. A feature's `Tasks:` id with no
 `/task-clean`), and a precondition on an archived id counts as satisfied. A
 pending runbook step naming a task that is already finished would need a
 runbook body's prompts read to detect, and no finding reads one; `/runbook-run`
-prints each step before running it, which is where that shows up. The two
-parking findings are the catalogue's only body reads, each bounded by the
-index — the bodies of the `[PARKED]` tasks, for the handoff heading, and of
-the runbooks not `[DONE]`, for their step markers — and neither probes
-whether a parking branch exists.
+prints each step before running it, which is where that shows up. Three
+findings are the catalogue's only body reads, each bounded by the index —
+the bodies of the `[PARKED]` tasks, for the handoff heading; of the runbooks
+not `[DONE]`, for their step markers; and of every runbook, for the two
+header lines — and none probes whether a parking branch or a step's
+worktree exists: git state differs across machines, and the run that needs
+it reports its absence itself.
 
 A clean project prints one line naming the indexes it read. Otherwise the
 findings print grouped by artifact (`FEATURES.md`, `PLAN.md`, `TASKS.md`,
@@ -906,6 +909,38 @@ protocol runs unchanged.
 Commits and pushes once per task (`--no-commit` to skip both, `--no-push` to
 commit without pushing).
 
+**Delegated and parallel runs.** A run of two or more tasks offers to
+implement each one in a fresh subagent, so later tasks don't inherit earlier
+ones' context (`--agents` / `--no-agents` pre-answer the question). The
+parent is a launcher: it reads the summary blocks once, hands every agent
+the same fixed-size prompt and records what comes back, never opening a
+delegated task's body. By default the agents run one after another in the
+base tree. Pass **`--parallel <N>`** (N of 2 or more) or **`--parallel max`**
+to keep up to N of them — every eligible task, under `max` — in flight at
+once, each in its own worktree under the protocol
+[`task-engine`](#task-engine) owns. The resolved list is then the set of
+tasks the run may start, in priority order: at the start and after every
+landing the launcher re-reads `TASKS.md` and starts, in list order, each
+task whose `Preconditions:` are met and that is not already in flight, up
+to N. A task in flight is neither done nor eligible, so a task that waits on
+it starts only once it has landed. Two tasks whose `Files:` lines share a
+path are never in flight together: the later one is held back, with one line
+naming the task it waits on, and tried again at the next landing. Files
+whose conflicts an agent's rebase resolves mechanically — a version counter,
+a newest-first changelog — are exempted by one line in the project's
+`CLAUDE.md`, `Parallel-safe files for /task-implement: <path>, <path>`, read
+once at the start of a parallel run; without the line nothing is exempt.
+Tasks the launcher keeps for itself — human-in-the-loop tasks, a stale task
+you named — are barriers: they run in their list position with nothing in
+flight. Each agent's return is landed by fast-forward, pushed and bookkept
+one at a time, and the progress line names what is still in flight. A
+failure spawns nothing more and lets the tasks in flight land first; the
+report names the failed task's worktree, where its work remains. The flag
+implies `--agents` and is refused beside `--no-agents` or `--no-commit`, on
+a project whose `CLAUDE.md` maps git to another VCS, and with an N below 2;
+on a run that resolves to one task it is silently ignored. Every other flag
+composes with it unchanged.
+
 **Attended or unattended.** By default a run is *attended*: a question about
 the work — an acceptance criterion the body and the codebase can't settle, a
 review round's approval gate — is put to you and the run waits; in a
@@ -1072,7 +1107,12 @@ left behind. A resumed task keeps its branch until its commit, as the backup
 of its parked work. With none
 to sweep the plan says nothing about it; a delete that fails is reported, not
 fatal. Under `--no-push` remote branches are neither listed nor deleted, and a
-run that only sweeps commits nothing.
+run that only sweeps commits nothing. Beside the branches it **sweeps the
+worktrees of finished tasks**: each `wt/task-<N>` worktree and branch a
+parallel run left behind whose task is `[DONE]`, `[SKIP]` or archived is
+listed and removed on the same approval, locally — nothing of it was ever
+pushed — while a worktree whose task is still live is never touched, since it
+may be the only copy of the work. A remove that fails is a Follow-ups item.
 
 A prune never touches `.claude/FEATURES.md`. A feature keeps every task id it
 ever generated on its `Tasks:` line, so `Tasks: none` means the feature was
@@ -1114,7 +1154,11 @@ without the skill, and its protocol file is never read.
 The page shows the `[ACTIVE]` milestone of `PLAN.md` (every task when there
 is no plan), three meters — runbook steps, tasks done, features closed — the
 step in progress with its tasks, and the runbook's steps one row each, with a
-square per task and the step's `Done:` line. When the run waits for an answer,
+square per task and the step's `Done:` line. A task working in a
+`wt/task-<N>` worktree shows as in progress and a step working in a
+`wt/runbook-<id>-step-<n>` worktree as the running step, read from git's own
+worktree registry under the repository's git dir — the generator runs no git
+command for it. When the run waits for an answer,
 a banner and a dialog show the question, its options and the recommended one;
 you still answer in the terminal. The page refreshes at run start and end, on
 every task status change (watched every 10 seconds with the Monitor tool), on
@@ -1140,8 +1184,9 @@ The rules the task features share (how a task is resolved from `TASKS.md`,
 where an archived task lives and what an id missing from `TASKS.md` means,
 what each status means, what `Target:` gates, how `[STALE]` is handled, the
 dirty-tree prompt, how commits and pushes are gated, the review cost
-controls behind `--review-model` / `--review-effort`, and how a task is
-parked and unparked under `--unattended`) live once, in the
+controls behind `--review-model` / `--review-effort`, how a task is
+parked and unparked under `--unattended`, and how a unit of work is isolated
+in a worktree of its own) live once, in the
 `task-engine` skill, and each feature references them instead of restating
 them. `task-engine` is not a command you invoke; it is a reference library
 the others read while they run, and it carries
@@ -1149,7 +1194,7 @@ the others read while they run, and it carries
 model and it is never suggested — it stays listed and typeable, and its
 body opens with a two-line "read by path; not invoked" header, which is
 what `chosko-llm show task-engine` prints. `/task-add`, `/task-list`, `/task-clean`,
-`/task-implement` and `/task-review` all declare
+`/task-implement`, `/task-review` and `/runbook-run` all declare
 `requires: skill:task-engine`, so installing any one of them installs the
 engine too, and `chosko-llm rm skill:task-engine` refuses while any of them
 is still installed.
@@ -1170,6 +1215,25 @@ take their default instead, the `## Parking handoff` section, the
 unpark is attempted and the two refusals. `/task-implement` reads it only
 under `--unattended` or when a task in its list is `[PARKED]`; an attended
 run that meets no parked task never opens it.
+
+A tenth, `references/worktree.md`, holds the worktree protocol under which a
+unit of work — a task under `/task-implement`, a step under `/runbook-run` —
+runs in a git worktree of its own: the worktree at `.claude/worktrees/<unit>`
+and the branch `wt/<unit>`, both derived from the unit's name and never
+recorded; the worktree created from the base branch's tip right before the
+unit's agent is spawned; the agent committing there, rebasing onto the base
+tip, re-verifying when the base had moved, and never pushing the base — its
+own `park/task-<N>` is the one branch it pushes; the
+orchestrating session landing the branch by fast-forward only, as the base
+branch's one writer, pushing, then removing the worktree and its branch. A
+worktree exists exactly while its unit is in flight or after it failed, which
+is what the status line, the dashboard and the two sweeps read. Both
+orchestrators read it only when a run has more than one unit in flight; a
+sequential run never opens it and works in the base tree as it always has. It
+is the one file `/runbook-run` takes from the engine, and the reason it
+declares `requires: skill:task-engine`. The eligibility clause in
+`references/resolution.md` carries the one reading such a run adds: a unit
+in flight is neither done nor eligible until it lands.
 
 ### `pipeline-engine`
 
@@ -1260,7 +1324,18 @@ that has none of the conversation the prompts came out of.
   header's optional one-line `Sequencing:` (why the order is what it is) is
   never extended. A header line `Execution policy: unattended` is written
   only when you ask for an unattended runbook, never by default — absent
-  means `attended`.
+  means `attended`. A header line `Parallelism: <N|max>` is written the same
+  way, only when you ask for a parallel runbook — by saying so or by naming a
+  parallelism — and absent means 1. On a parallel runbook `Depends on:` is
+  the only ordering constraint, so the question "which steps must precede
+  which, and why" is asked exhaustively, pair by pair, and every *why* is
+  written as an edge rather than as `Sequencing:`: the two lines never share
+  a header. The gate's step table then states that every step without an
+  edge is independent of every step not reachable from it, so approving it
+  approves the graph and not only the list. An append onto a parallel
+  runbook authors the new steps' edges under the same duty, against the
+  existing steps included; a runbook authored sequential becomes parallel
+  through `/pipeline-revise`, never through an append.
 - `/runbook-run <id|name|id-name>` — execute it, one step at a time, top to bottom in
   list order. `--from N`, `--to N`
   (they compose: `--from X --to Y` runs that range, inclusive), `--only N` and
@@ -1287,7 +1362,31 @@ that has none of the conversation the prompts came out of.
   without `--unattended`; all three compose with `--inline`. `--dashboard` /
   `--no-dashboard` switch the [`pipeline-dashboard`](#pipeline-dashboard)
   live page on or off for one run, overriding the project's
-  `Pipeline dashboard policy: on` line. A reply by a
+  `Pipeline dashboard policy: on` line. **`--parallel
+  <N|max>`** runs the runbook as its `Depends on:` graph for this one run,
+  whatever the header's `Parallelism:` says: N of 2 or more keeps up to N
+  steps in flight at once, `max` every step whose dependencies are done, and
+  `--parallel 1` forces a sequential run over a header saying otherwise.
+  Above one, selection takes every step in list order whose dependencies are
+  all done, up to N, instead of the first; each runs in its own worktree
+  under the protocol [`task-engine`](#task-engine) owns and is landed onto
+  the base branch by fast-forward, pushed and bookkept as it returns, one
+  return at a time; a step in flight is neither done nor selectable, so a
+  step that waits on it starts only once it has landed, and list order is
+  only the priority among steps that may start at the same moment. The
+  bounds apply unchanged and `--steps N` counts landed steps. A step with a
+  `Needs:` of `agent+human` or `human` is a **barrier**: when it is next in
+  list order nothing more starts, everything in flight lands, it runs in the
+  base tree with you present, and spawning resumes after its commit. A
+  failed step halts spawning and lets the steps in flight land before the
+  index goes `[FAILED]`; it keeps its worktree, and the report names the
+  path. Three refusals: `--parallel` beside `--inline` (the session is one
+  executor); a parallelism above one — the flag or the header — on a runbook
+  whose header carries `Sequencing:`, which records an ordering constraint
+  the graph does not carry (the error names the line and the two ways out:
+  carry the constraint into the graph with `/pipeline-revise`, or run
+  sequentially); and a value outside the allowed set, on the flag or in the
+  header. A reply by a
   parked question's number — mid-run, or after the closing report — unparks
   the step (`unparked with answer:` in its `Context:`, back to `[ ]`), and it
   is the next step selected. When steps remain, none is selectable and one is
@@ -1311,17 +1410,25 @@ that has none of the conversation the prompts came out of.
   runbook's halt reason and a runbook's parked steps (`↳ parked: steps
   <ids>`) each follow as a continuation line.
 - `/runbook-describe <id|name|id-name>` — a compact summary of one runbook: its index
-  line, one header line (created, source, model), an `Archived:` line printed
+  line, one header line (created, source, model, and the `Parallelism:`
+  value when the body carries one), an `Archived:` line printed
   only when the body carries an `Archive:` line (the pruned ids, ascending,
-  noted as counted done), the same `↳ parked: steps <ids>` continuation
-  `/runbook-list` prints when the runbook has one, one line per step with its
-  marker (`[P]` for a parked step, its question left in the body),
-  dependencies when it has any and an authored `Needs:` other than
-  `agent`, a one-line `done:` summary for each finished or failed step, and a
-  by-marker count — parked steps counted as "parked" — **that counts every
+  noted as counted done), an `Independent: <k> of <n> steps` line printed
+  only when the body carries a `Parallelism:` line (the steps whose
+  `Depends on:` is `none`, which is what lets you judge whether the graph is
+  honest before starting a parallel run), the same `↳ parked: steps <ids>`
+  continuation `/runbook-list` prints when the runbook has one, one line per
+  step with its marker (`[P]` for a parked step, its question left in the
+  body; a `[~]` step tagged `in flight`, since a parallel run commits that
+  marker for the steps still running — whether a worktree stands behind it
+  is not checked, as the command runs no shell), dependencies when it has
+  any and an authored `Needs:` other than `agent`, a one-line `done:` summary
+  for each finished or failed step, and a by-marker count — `[~]` steps
+  counted as "in flight", parked steps as "parked" — **that counts every
   archived id as done and as present**, so
   it agrees with the progress figure in the index line above it. A runbook
-  never pruned renders exactly as before, line for line. It pulls only those
+  never pruned, or with no `Parallelism:` line, renders exactly as it does
+  otherwise, line for line. It pulls only those
   lines from exactly one body — never a
   full read, never a step prompt, never a task body — so its cost is roughly
   what it prints. `Last step number:` is deliberately not printed. For the
@@ -1349,7 +1456,10 @@ that has none of the conversation the prompts came out of.
   removing a runbook is `/runbook-clean`'s job.
 - `/runbook-clean` — delete finished runbooks, planning and confirming first.
   The pair to `/runbook-prune`: prune removes finished *steps* from a live
-  runbook, clean removes finished *runbooks*.
+  runbook, clean removes finished *runbooks*. On the same confirmation it
+  sweeps the `wt/runbook-<id>-step-<n>` worktrees and branches a parallel run
+  left behind whose step is `[x]`, or whose runbook it is removing; any other
+  marker keeps its worktree.
 - `runbook-suggest` — a skill nobody invokes. It fires on its own description
   (written to the auto-trigger budget: trigger phrases first, "Not for" list
   last, at most 150 words) when a conversation produces a list worth
@@ -1396,26 +1506,41 @@ runbooks are input to agents, never to tooling.
 **The execution loop.** `/runbook-run` re-reads the body at the start of
 *every* step, which is what reconciles a hand-edited body and what makes
 steps appended mid-run get picked up by the run already in progress. It
-selects the first step whose dependencies are all done, marks it `[~]`,
-spawns **one** subagent with a fixed prompt (a preamble telling it to orient
-from `CLAUDE.md`, the companion document, the runbook's
-`## Do not re-propose` section, the step's `Context:` bullets, the prompt
-block verbatim, then the operating rules), and then waits. What the
+selects the first step whose dependencies are all done — under a
+parallelism above one, every such step in list order up to N, the re-read
+being the scheduling point at the start of the run and after each landing —
+marks it `[~]`,
+spawns **one** subagent per selected step with a fixed prompt (a preamble
+telling it to orient from `CLAUDE.md` and, on a parallel run, naming the
+step's worktree as its repository root; the companion document, the
+runbook's `## Do not re-propose` section, the step's `Context:` bullets, the
+prompt block verbatim, then the operating rules, whose fourth placeholder is
+that same worktree path — the base tree's on a sequential run), and then
+waits. What the
 orchestrator writes around the prompt block stays minimal: it restates
 nothing the step will read for itself — a task body, a feature document,
 context files — and never opens those documents to write the prompt. It ticks nothing
 before that agent's result actually arrives. On `DONE` it writes a terse `Done:`
 line — the date, the commit sha and its diffstat, with a decision or wrong
 premise added only when a later reader would be misled without it — then commits the runbook and the index: one commit per
-completed step. The `[~]` marker is never committed, so finding one in your
-tree is the signal that this is the tree an interrupted run left behind.
+completed step. On a parallel run the step is landed first — fast-forward
+onto the base, one rebase-again message to the same agent when another step
+landed meanwhile, push, worktree removed — and then bookkept the same way.
+The `[~]` marker is never committed by a sequential run, so finding one in
+your tree is the signal that this is the tree an interrupted run left
+behind; a parallel run's landed-step commit may capture `[~]` for the steps
+still in flight, so there the signal is `[RUNNING]` in the index plus a
+`wt/runbook-<id>-step-<n>` worktree on this machine, and a `[~]` with no
+worktree behind it is a step an interrupted run left, re-run as before.
 Between steps it stays quiet — a progress line as each step starts, `Step 5
 running. Current run progress (2/4). Total runbook progress (5/9).` (first the
 steps this run has finished plus the one starting, out of every step in range
 it can reach — capped by `--steps N` and fixed at launch; then the runbook
 index's `Steps:` counter as it stood at launch, raised by this run's finished
-steps plus the one starting), and one
-line at its end, `Step 5 done (abc1234). Starting step 6.`, with relayed
+steps plus the one starting — on a parallel run printed once per spawn, the
+steps in flight counted with the one starting), and one
+line at its end, `Step 5 done (abc1234). Starting step 6.` — on a parallel
+run `Step 4 landed (abc1234). In flight: 5, 6. Starting step 7.` — with relayed
 questions, spawn-relay lines and a one-line `Follow-up: …` for each follow-up
 that arises still coming straight through; a turn forced
 mid-step prints nothing else — because the record of the run is the closing
@@ -1441,7 +1566,9 @@ anything, the closing report's **Follow-ups** group comes in two sections,
 **Approved** then **Awaiting approval**, and the approved items start running
 right after the report, without another reply, unless one depends on an item
 you haven't approved yet. `/runbook-run` requires `follow-ups-resolve`, so the
-two install together.
+two install together; it requires `task-engine` as well, for the worktree
+protocol a run with more than one step in flight follows
+([`task-engine`](#task-engine)).
 
 **When a step needs a subagent of its own.** In some environments, cloud
 sessions among them, a subagent can't spawn a subagent, which breaks any step
@@ -1466,14 +1593,18 @@ subagent, because only the agent that needs the tool can tell whether it has
 it. Where you already know the environment is flat, `--relay-spawns` skips
 the discovery.
 
-Three things it deliberately does not do. It **never runs steps in
-parallel**, even where the runbook says they're independent: you get one
-question stream instead of interleaved clarifications from three agents, and
-two agents writing `Done:` lines into one file would race. (A relayed child
-is the one exception, and a narrow one: its caller is suspended the whole
-time it runs, so only one agent is ever working.) It **does the work of no
-step itself**: it writes exactly two files, the runbook and the index, and
-every other change in the tree comes from a subagent. And it **doesn't
+Three things it deliberately does not do. It **runs no two steps at once
+unless asked**: at the default parallelism of 1 you get one question stream
+instead of interleaved clarifications from three agents, and two agents in
+one working tree would race on the same files — a relayed child is the one
+exception, and a narrow one, since its caller is suspended the whole time it
+runs. `--parallel` or a header `Parallelism:` is the asking, and it is what
+puts each step in a worktree of its own, keeps the body file the
+orchestrator's alone, and lets the relay carry several open questions at
+once, each block under its step heading. It **does the work of no
+step itself**: it writes exactly two files, the runbook and the index — the
+git of creating, landing and removing worktrees changes no tracked file —
+and every other change in the tree comes from a subagent. And it **doesn't
 review** what a step did: it reads three markers (`QUESTIONS FOR USER`,
 `SPAWN REQUEST` and `DONE`) and takes the report at its word. Review is
 `/task-review`'s job, invoked from inside a step's prompt when you want it.
@@ -1862,11 +1993,16 @@ session — model, folder, branch (or short SHA when detached), context, cost,
 `.claude/RUNBOOKS.md` or `.claude/TASKS.md`, line 2 adds the current runbook
 (the first `[RUNNING]`, else the last) with its step progress, and the
 progress of the tasks in scope with how many are in progress; one more line
-follows per `[IN PROGRESS]` task in scope. The tasks in scope are, first
+follows per task in scope that is `[IN PROGRESS]` or working in a
+`wt/task-<N>` worktree — such a task counts as in progress whatever its
+`TASKS.md` status, since the flip it made lives in the worktree's copy. The
+tasks in scope are, first
 match wins: a range in the runbook's title; the ids its step headings name,
 or, when none does, its steps' `Done:` lines; the tasks of the `[ACTIVE]`
 milestone's features in `PLAN.md`; every task. An archived task in scope
-counts as done. It runs as a single `awk` process with no other fork, so it
+counts as done. It runs as a single `awk` process with no other fork — the
+worktrees are read from git's registry under the repository's git dir, never
+through the git binary — so it
 renders in well under a second even on Windows, and anything missing is
 simply left out.
 

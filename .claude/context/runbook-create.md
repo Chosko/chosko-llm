@@ -25,7 +25,33 @@ Covers `commands/runbook-create.md`, the runbook author. The family hub:
   the only writer of the header `Execution policy:` line — written only when
   the user asks for an unattended runbook, never by default and never asked
   in either mode (absent means `attended`, as an absent `Needs:` means
-  `agent`); the gate's `Policy:` line shows it only then. Never writes `[P]`
+  `agent`); the gate's `Policy:` line shows it only then. Also the only
+  writer of the header `Parallelism: <N|max>` line, under the same rules —
+  written where `Execution policy:` goes, only when the user asks for a
+  parallel runbook (by saying so or by naming a parallelism; never inferred
+  from the shape of the work), never asked, never by default (absent means
+  1), never on an append (a sequential runbook becomes parallel through
+  `/pipeline-revise`), the value the one the user named or `max` proposed at
+  the gate; and **never beside `Sequencing:`** — a *why* offered as a
+  sequencing note is written as edges, said in one line, so a parallel
+  runbook has no `Sequencing:` line. Under a parallelism above one
+  `Depends on:` is the only ordering constraint, so the sequencing question
+  is asked **exhaustively, pair by pair**: for every pair the author might
+  order, an edge is written or the two are declared independent, nothing
+  left to position (from-scratch: question 3 put pair by pair; conversation
+  mode: settled edges harvested, open pairs put to the user in one batch
+  with a recommended answer each — the one interview question that mode
+  asks). The gate's step table then states that every step without an edge
+  is independent of every step not reachable from it, naming the steps that
+  may run at once, so approval approves the graph and not only the list. An
+  append onto a runbook carrying `Parallelism:` authors the new steps' edges
+  under the same duty against the existing steps included; an edge from an
+  existing step to a new one has nowhere to go (existing `Depends on:` never
+  rewritten) and is declined with one line. That parallel duty — the value,
+  the exhaustive question, the gate statement — is
+  `../skills/runbook-run/references/parallel-authoring.md`, read only for a
+  parallel runbook or an append onto one; the command body carries the
+  header row, one never-asked sentence and a pointer. Never writes `[P]`
   or the two parking `Context:` bullets, which are the run's.
   Command not skill:
   one pass with a confirmation gate, no supporting files of its own. Two
@@ -42,7 +68,7 @@ Covers `commands/runbook-create.md`, the runbook author. The family hub:
   contiguous block at that position — id is not position, so the foot need
   not carry the highest id, and the gate's `Position:` line says where they
   land; existing steps NEVER edited, moved or renumbered, their `Depends on:`
-  never rewritten, `Sequencing:` (optional, one line) never touched, `[DONE]` → back to `[PENDING]`, `[FAILED]` stays
+  never rewritten, `Sequencing:` (optional, one line) and `Parallelism:` never touched, `[DONE]` → back to `[PENDING]`, `[FAILED]` stays
   `[FAILED]`, `[RUNNING]` appendable **only from the running session itself**.
   Enforces ten prompt-quality rules before writing (self-contained; names the
   document to read first or carries evidence inline; carries every decision that

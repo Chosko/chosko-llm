@@ -71,8 +71,12 @@ invocation, and never bundles two units into one commit.
 Do NOT use `--no-verify`, `--amend`, `--no-gpg-sign`, or skip any hooks
 unless the user explicitly asked for it. If a pre-commit hook fails,
 investigate and fix the underlying issue, then create a NEW commit (do
-not amend). Never branch or tag — the one exception is `/task-implement`'s
-parking branch, `./parking.md`.
+not amend). Never branch, tag or rebase — the exceptions are
+`/task-implement`'s parking branch, `./parking.md`, and the `wt/<unit>`
+branch of `./worktree.md`, which the unit's agent rebases onto the base tip
+before the unit lands: that branch is private to the unit, unpushed and
+exists for one landing, so rebasing it is that protocol's own step and not
+a rewrite of anyone's history.
 
 ## The push protocol
 
@@ -96,6 +100,12 @@ On commit success, report the resulting commit hash to the user
 **Non-git VCS exemption.** When the project's CLAUDE.md defines a `## VCS`
 section overriding git (e.g. Plastic SCM), skip the entire pull → re-sync →
 push sequence unconditionally — only the commit (checkin) step runs.
+
+**Under worktree isolation** (`./worktree.md`), as the unit's agent, commit
+as step 2 says on `wt/<unit>` and skip steps 1, 3 and 4 as under `--no-push`
+— the remote is the orchestrator's. As the orchestrator, treat the
+fast-forward landing of `wt/<unit>` as the merge, and run steps 3 and 4 once
+per landing unless NO_PUSH.
 
 ## Failure
 
@@ -149,13 +159,16 @@ push sequence unconditionally — only the commit (checkin) step runs.
   it. Apart from the `mkdir -p` + `git mv` of the body
   files in PHASE 2 — which replace the old `rm`, and which still run under
   `--no-commit`, because the move is the prune's effect rather than a commit
-  step — and the park-branch sweep's listing and deletes, PHASE 3 is its
-  only shell use. The sweep's local listing and deletes are its effect too
-  and run under `--no-commit`; its remote listing
+  step — and the two sweeps' listing, removes and deletes, PHASE 3 is its
+  only shell use. The park-branch sweep's local listing and deletes are its
+  effect too and run under `--no-commit`; its remote listing
   (`git ls-remote`) and deletes (`git push origin --delete`) are remote
-  operations and are skipped under NO_PUSH, which `--no-commit` implies. A
-  branch delete changes no tracked file, so it adds nothing to the commit
-  and a run that only sweeps makes none.
+  operations and are skipped under NO_PUSH, which `--no-commit` implies. The
+  worktree sweep of `./worktree.md` § *The sweep* is local throughout —
+  nothing of it is listed on or deleted from the remote — so no flag skips
+  any of it. Neither a branch delete nor a worktree remove changes a tracked
+  file, so they add nothing to the commit and a run that only sweeps makes
+  none.
 
   Under `--backfill` it commits once, with
   `git commit -m "task-clean: backfill <N> archived tasks"`, `<N>` being the

@@ -1,23 +1,24 @@
 ---
 name: task-engine
-version: 0.8.6
+version: 0.10.1
 type: skill
-description: Reference library for the task-* features — one authority per rule they share, under references/; read by path by the task-* commands and skills, by /quick-implement and by the pipeline revision surface, never invoked.
+description: Reference library for the task-* features — one authority per rule they share, under references/; read by path by the task-* commands and skills, by /quick-implement, by /runbook-run and by the pipeline revision surface, never invoked.
 disable-model-invocation: true
 project-policy: line:Testing policy for /task-implement=skip-tests|full-tdd|skip-tests-unattended, vcs:add, vcs:commit, vcs:status, vcs:rev-parse, vcs:log, vcs:mv, vcs:show, vcs:branch
 ---
 
 # task-engine
 # Reference library, read by path by /task-add, /task-list, /task-clean,
-# /task-implement, /task-review, /quick-implement and /pipeline-revise; not
-# invoked.
+# /task-implement, /task-review, /quick-implement, /runbook-run and
+# /pipeline-revise; not invoked.
 
 > **Not directly invocable.** This skill exists so that the rules the
 > `task-*` features share have exactly one home. It has no command, no
 > arguments and no behaviour of its own. Nothing invokes `/task-engine`;
 > nothing should suggest it. `/task-add`, `/task-list`, `/task-clean`,
 > `/task-implement`, `/task-review` and `/quick-implement` cite the files below
-> by path while they run, the pipeline revision surface `/pipeline-revise` reads
+> by path while they run, `/runbook-run` reads `references/worktree.md` by
+> path, the pipeline revision surface `/pipeline-revise` reads
 > `references/amend.md` by path, and those files are the only content here.
 
 > **Install path assumption:** this skill installs beside the features that
@@ -44,7 +45,7 @@ project-policy: line:Testing policy for /task-implement=skip-tests|full-tdd|skip
 
 | Reference file | Owns |
 | -------------- | ---- |
-| `references/resolution.md` | Where the backlog lives, the `.claude/TASKS.md` summary-block schema, the not-initialised stop, when a per-task body file may be opened, the task archive (its location, the archived-file form and the archived-and-terminal rule), the `all` / `next` / explicit-list selectors, and the eligibility clause — implementable status plus satisfied `Preconditions:` — that the batch selectors honour. |
+| `references/resolution.md` | Where the backlog lives, the `.claude/TASKS.md` summary-block schema, the not-initialised stop, when a per-task body file may be opened, the task archive (its location, the archived-file form and the archived-and-terminal rule), the `all` / `next` / explicit-list selectors, and the eligibility clause — implementable status plus satisfied `Preconditions:`, a unit in flight neither done nor eligible under a parallelism above one — that the batch selectors honour. |
 | `references/status.md` | The nine status tags and what each means, which are terminal, which are implementable, how a status filter is accepted, and the legal transitions. |
 | `references/targets.md` | The three `Target:` values, the `## Manual interventions` pairing rule, what each target means at implementation time, and the delegation guard. |
 | `references/stale.md` | What `[STALE]` means, who sets and clears it, how the originating feature is found, and how each feature treats a stale task. |
@@ -61,6 +62,7 @@ project-policy: line:Testing policy for /task-implement=skip-tests|full-tdd|skip
 | `references/tests-first.md` | The tests-first sequence, Steps 2–5: update the tests, implement within the declared files, run the affected tests, run the full suite, and when a failing test stops the work. |
 | `references/closing-report.md` | The closing report: its *For the record* and *Follow-ups* groups and their shapes, the empty-group form, and the numbering as the reply handle. |
 | `references/parking.md` | Task parking under the `unattended` policy: the one event that parks, which prompts take their default instead — two of them `confirmation` gates that pass on their own — the `## Parking handoff` section, the `park/task-<N>` branch, the park sequence, the unpark transaction, the answerer rule and the two refusals. Read by `/task-implement` only when UNATTENDED is true or a resolved task is `[PARKED]`; never on an attended run that meets no parked task. |
+| `references/worktree.md` | Worktree isolation for a unit of work — a task or a runbook step: the unit and its derived `.claude/worktrees/<unit>` path and `wt/<unit>` branch, creation from the base tip, the agent's integration by rebase and re-verify, the orchestrator's fast-forward landing and push, the two invariants, the worktree as the in-flight signal, failure, parking inside a worktree and the sweep. Read by `/task-implement` and `/runbook-run` only when the run's parallelism is above one; a sequential run never opens it. |
 
 Each file is the **single authority** for its rule. A consuming feature cites
 the file and states only what it does differently.
@@ -69,11 +71,11 @@ the file and states only what it does differently.
 
 ## How to read a reference file
 
-Every reference file but two was extracted **verbatim** from the feature
+Every reference file but three was extracted **verbatim** from the feature
 bodies that previously each carried their own copy of the rule. The
-exceptions are `references/amend.md` and `references/parking.md`, authored
-in the engine: no feature ever carried a copy of either, and each says so
-itself. Where those copies said
+exceptions are `references/amend.md`, `references/parking.md` and
+`references/worktree.md`, authored in the engine: no feature ever carried a
+copy of any of them, and each says so itself. Where those copies said
 the same thing in different words, the file carries the fuller statement
 unchanged and records the other copies' material divergences as explicit
 per-consumer notes. So a file reads as:
