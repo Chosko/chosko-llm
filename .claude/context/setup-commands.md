@@ -20,7 +20,9 @@ them follows: [feature-contract.md](./feature-contract.md).
   branch rows — after which it warns in one line that a non-git VCS
   disables parking; `## Tasks implementation` section carrying the chosen
   testing-policy line, plus editor dirty-tree noise bullets on Unity
-  projects; `Interaction policy: unattended` line when chosen, nothing for
+  projects — the `Parallel-safe files for /task-implement:` line never
+  asked nor written, named in one closing-report line for a project to add
+  by hand; `Interaction policy: unattended` line when chosen, nothing for
   the `attended` default; `Pipeline dashboard policy: on` line when chosen,
   nothing for the `off` default; AGENTS.md), installs the picked claude-md
   sections (`editing-discipline`, required by `/doc-consolidate`,

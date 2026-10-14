@@ -1,6 +1,6 @@
 ---
 name: project-setup
-version: 0.11.0
+version: 0.11.1
 type: command
 description: Interactive first-time project initialization wizard — gathers every choice up front (VCS, CLAUDE.md content and policy lines, AGENTS.md, task backlog, domain layer, context layer), confirms once, then runs /task-setup, /domain-setup and /context-build in a fixed order. Use it once, on a project the chosko-llm tooling has not been set up on yet.
 disable-model-invocation: true
@@ -519,6 +519,12 @@ Testing policy for /task-implement: <full-tdd | skip-tests | skip-tests-unattend
 
 - GATHER 1g chose none → write no testing-policy line; /task-implement
   detects the runner itself.
+- Never ask about, and never write, the optional
+  `Parallel-safe files for /task-implement: <path>, <path>` line: it names
+  files two `/task-implement --parallel` tasks may both list — a version
+  counter, a newest-first changelog — and a project that runs `--parallel`
+  adds it by hand, beside the testing-policy line. In the closing report,
+  name it in one line when the section was written.
 
 ### Step 3c — Interaction-policy line
 

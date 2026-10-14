@@ -326,7 +326,7 @@ consumes the fact does not. The value is a comma-separated list of specs, each
 
 | Spec | Declares | Example |
 | --- | --- | --- |
-| `line:<marker>=<v1>\|<v2>\|…` | a `CLAUDE.md` line, the marker text without its trailing colon, and its allowed values | `line:Interaction policy=attended\|unattended` |
+| `line:<marker>=<v1>\|<v2>\|…` | a `CLAUDE.md` line, the marker text without its trailing colon, and its allowed values — none after the `=` for a free-form value such as a path list | `line:Interaction policy=attended\|unattended`, `line:Parallel-safe files for /task-implement=` |
 | `section:<claude-md feature>` | a claude-md section the feature reads or requires | `section:editing-discipline` |
 | `vcs:<op>` | a git operation the feature's own body runs, which a `## VCS` mapping must translate | `vcs:mv` |
 

@@ -103,7 +103,9 @@ The rest of the suite: [task-suite.md](./task-suite.md).
   `project-policy:` declaration live in `task-engine`) so
   no-test-suite decision persists across runs instead of re-asked
   each time; the `Parallel-safe files for /task-implement:` marker beside
-  it is read the same way, under `--parallel` only (above). In skip-tests mode, per-task "Proceed?" confirmation can
+  it is read the same way, under `--parallel` only (above), and declared
+  in this skill's own frontmatter as `project-policy: line:Parallel-safe
+  files for /task-implement=` — free-form, so no values. In skip-tests mode, per-task "Proceed?" confirmation can
   be suppressed with `-y` flag for single run, or permanently via
   `skip-tests-unattended` marker value. On `[STALE]` task
   warns naming originating feature and offers implement-anyway or stop

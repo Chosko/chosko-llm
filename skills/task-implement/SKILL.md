@@ -4,6 +4,7 @@ version: 1.15.1
 type: skill
 description: Implement one or more tasks from the project's backlog end-to-end — tests first, status flipped in TASKS.md, one commit and one push per task, with optional review rounds and per-task subagents; `--unattended` parks a task at a question instead of halting the run; `--parallel <N|max>` runs several delegated tasks at once, each in its own worktree. Use it once a task is written; stage 6 of the pipeline: turns a task body into code, the last stage.
 requires: skill:task-engine, skill:interaction-engine, command:follow-ups
+project-policy: line:Parallel-safe files for /task-implement=
 ---
 
 # /task-implement
