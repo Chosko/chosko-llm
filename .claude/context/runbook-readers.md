@@ -49,15 +49,17 @@ Covers the runbook suite's read side: `commands/runbook-list.md` and
   with nothing of its `Context:`, the question staying in the body; `deps:`
   only when non-empty and printed verbatim even when it names an archived id —
   never annotated or cross-referenced against `Archived:`, `needs:` only for an
-  authored non-`agent` value, `in flight` last on a `[~]` step and no other —
-  the tag reads the marker, which a parallel run commits for the steps still
+  authored non-`agent` value, and — on a runbook carrying `Parallelism:`
+  only — `in flight` last on a `[~]` step and no other — the tag reads the
+  marker, which a parallel run commits for the steps still
   running; the worktree behind it is never probed, this command running no
   shell), at most
   one `done:` line per step (sha(s) + short summary, wrong premises as a count,
   `[!]` opens `FAILED —`), no `Context:` text, then a by-marker count **that
   counts every archived id as done and as present** (schema § *An archived id
   counts as `[x]`*, so the count agrees with the heading line's progress
-  figure; `[~]` named "in flight", `[P]` named "parked"; a fully-pruned body
+  figure; `[~]` named "in progress" — "in flight" on a parallel runbook —
+  `[P]` named "parked"; a fully-pruned body
   renders heading + header + `Archived:` + count,
   not an error) and the
   "need a person present" line. A body with no `Parallelism:` line renders
