@@ -156,11 +156,10 @@ A run under worktree isolation gives each task its own worktree at
 `.claude/worktrees/task-<N>` on a branch `wt/task-<N>`; a task that failed
 or was interrupted leaves both behind.
 
-- The rule — what a leftover worktree means, why an unfinished task's is
-  never removed, and how a finished one's goes — is
-  `../task-engine/references/worktree.md` § *The sweep*. Apply it on the
-  same **"Apply?"** gate as the park-branch sweep, and skip it under the
-  same `## VCS` condition.
+- The bullets below are the whole sweep; never open
+  `../task-engine/references/worktree.md`, whose § *The sweep* is the rule's
+  home. Run it on the same **"Apply?"** gate as the park-branch sweep, and
+  skip it under the same `## VCS` condition.
 - **List.** Worktrees with `git worktree list --porcelain`, keeping the
   entries whose path is `.claude/worktrees/task-<N>` or whose branch is
   `wt/task-<N>`; branches with `git branch --list 'wt/task-*'`, so a branch

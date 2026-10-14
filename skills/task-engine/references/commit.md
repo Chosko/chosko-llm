@@ -101,11 +101,11 @@ On commit success, report the resulting commit hash to the user
 section overriding git (e.g. Plastic SCM), skip the entire pull → re-sync →
 push sequence unconditionally — only the commit (checkin) step runs.
 
-**Under worktree isolation** (`./worktree.md`) the unit's agent commits as
-step 2 says on `wt/<unit>` and skips steps 1, 3 and 4 as a run under
-`--no-push` does — the remote is the orchestrator's. The orchestrator's
-fast-forward landing of `wt/<unit>` onto the base is the merge, and the push
-that follows it is steps 3 and 4, run once per landing unless NO_PUSH.
+**Under worktree isolation** (`./worktree.md`), as the unit's agent, commit
+as step 2 says on `wt/<unit>` and skip steps 1, 3 and 4 as under `--no-push`
+— the remote is the orchestrator's. As the orchestrator, treat the
+fast-forward landing of `wt/<unit>` as the merge, and run steps 3 and 4 once
+per landing unless NO_PUSH.
 
 ## Failure
 

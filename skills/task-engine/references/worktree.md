@@ -7,12 +7,12 @@ that make landings safe, a worktree as the in-flight signal, what a failure
 leaves behind, parking inside a worktree, and the sweep of finished units'
 worktrees.
 
-Authored in the engine — no feature ever carried a copy of it. Read by
-`/task-implement` and `/runbook-run` only when the run's parallelism is above
-one; a sequential run never opens this file and works in the base tree as
-it always has. What the always-read bodies carry is the commit forms in
-`./commit.md` and the in-worktree sentence in `./parking.md`, each citing
-here.
+Authored in the engine — no feature ever carried a copy of it. Read only
+through `/task-implement`'s `parallel-runs.md` and `/runbook-run`'s
+`references/parallel.md`, when a run's parallelism is above one; a
+sequential run never opens this file and works in the base tree. The
+always-read bodies carry only the commit forms in `./commit.md` and the
+in-worktree sentence in `./parking.md`, each citing here.
 
 A **base** is the branch the run was launched on, checked out in the
 orchestrator's own tree. A **unit** is one task or one runbook step. The
@@ -35,8 +35,8 @@ own worktree list is the registry; no file of this product duplicates it.
 
 ## Creating the worktree
 
-Immediately before it spawns the unit's agent, the orchestrator creates the
-worktree from the current tip of the base, on a fresh `wt/<unit>` branch:
+Immediately before spawning the unit's agent, create the worktree from the
+current tip of the base, on a fresh `wt/<unit>` branch:
 
 ```
 git worktree add -b wt/<unit> .claude/worktrees/<unit> <base>
@@ -49,23 +49,22 @@ this product. The directory sits under `.claude/` because per-project working
 state already lives there, a path inside the project needs no permission the
 agent lacks, and the worktree's `.git` file keeps git from recursing into it.
 
-A worktree that cannot be created — the path exists, or the branch exists —
-skips the unit with one line naming the path (§ *A worktree is a unit in
-flight*).
+When the worktree cannot be created — the path exists, or the branch
+exists — skip the unit with one line naming the path (§ *A worktree is a
+unit in flight*).
 
-The agent is handed the directory as the repository root for everything it
-does, and one rule beside it: the base's push is not the agent's. The
-orchestrator's prompt gains exactly that — one path per unit, like the unit's
-number. The four values the orchestrator already resolves — NO_PUSH, the
-testing mode, UNATTENDED and the dirty-tree decision — are handed on
-unchanged, and the dirty-tree decision in a fresh worktree is always *clean*:
-the agent never runs the prompt of `./tree.md` there.
+Hand the agent the directory as the repository root for everything it does,
+and one rule beside it: the base's push is not the agent's. That is all the
+prompt gains — one path per unit, like the unit's number. Hand on unchanged
+the values already resolved — NO_PUSH, the testing mode, UNATTENDED — and
+the dirty-tree decision as *clean*: the agent never runs the prompt of
+`./tree.md` in a fresh worktree.
 
 ## The agent integrates
 
-The agent executes the unit's work in the worktree exactly as it would in the
-base tree — a task's per-task workflow, a step's prompt under its operating
-rules — with one change, at the point where the unit would push:
+Execute the unit's work in the worktree exactly as in the base tree — a
+task's per-task workflow, a step's prompt under its operating rules — with
+one change, at the point where the unit would push:
 
 1. **Commit on `wt/<unit>`**, as many commits as the unit's own rules make:
    one for a task, whatever the step's prompt makes for a step.
@@ -89,7 +88,7 @@ the worktree. The one branch it pushes is its own `park/task-<N>`, under
 `./parking.md` § *The park sequence*, unless NO_PUSH: that branch is private
 to the task, touches no base branch and races with no other unit, and its
 push is what lets another machine unpark. A skill the unit invokes commits
-as it always does; its pull-at-start, pre-push re-sync and push of the base
+as usual; its pull-at-start, pre-push re-sync and push of the base
 are the orchestrator's, so the agent skips them exactly as a run under
 `--no-push` does — the park branch's push excepted — and says so once.
 
@@ -99,8 +98,8 @@ this protocol's departure from its no-rebase rule.
 
 ## The orchestrator lands
 
-On the agent's return the orchestrator, whose base tree is clean, lands the
-unit in this order:
+On the agent's return, with the base tree clean, land the unit in this
+order:
 
 1. **Fast-forward only.** Merge `wt/<unit>` into the base with
    `git merge --ff-only wt/<unit>`, no other strategy. It succeeds exactly
@@ -121,8 +120,8 @@ unit in this order:
    from the base, so a refusal here is a landing that did not happen: it
    fails the unit, worktree kept. It is the protocol's own consistency check.
 
-Then the orchestrator does its own bookkeeping for the unit, exactly as it
-does in a sequential run (§ *Per-consumer notes*).
+Then do the orchestrator's own bookkeeping for the unit, exactly as in a
+sequential run (§ *Per-consumer notes*).
 
 ## The two invariants
 

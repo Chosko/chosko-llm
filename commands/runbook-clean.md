@@ -97,11 +97,9 @@ THE WORKTREE SWEEP
   `.claude/worktrees/runbook-<id>-step-<n>` on a branch
   `wt/runbook-<id>-step-<n>`; a step that failed or was interrupted leaves
   both behind.
-- The rule — what a leftover worktree means, why an unfinished step's is
-  never removed, and how a finished one's goes — is
-  `../skills/task-engine/references/worktree.md` § *The sweep*, reached
-  through `/runbook-run`'s own requirement on the engine. Apply it on the
-  same **"Apply?"** gate as the removals.
+- The bullets below are the whole sweep; never open
+  `../skills/task-engine/references/worktree.md`, whose § *The sweep* is the
+  rule's home. Run it on the same **"Apply?"** gate as the removals.
 - Skip the sweep when the project's `CLAUDE.md` carries a `## VCS` section:
   there are no worktrees to sweep.
 
