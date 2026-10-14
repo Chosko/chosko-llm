@@ -87,7 +87,14 @@ skill's reference files and dependencies. The rest of its bullet:
   a `[P]` step), holds the fifth result row, the end branch, unparking, the
   pre-ask, mid-run answers, the rejections and the attended handling of a
   `[P]` step — bookkeeping in the two files only, never a task body, branch
-  or diff. `references/step-amend.md` (amending one pending step: strike it as `[x]` with a `Done:` line opening
+  or diff. `references/parallel.md`, read once in step 1 only when the
+  parallelism resolves above one (with `task-engine`'s `worktree.md`, which
+  it names), amends steps 2–8, the result cases, the resume signal, the
+  commit cadence and the closing report for that run — the body carries the
+  flag, the resolution, the three argument errors and one pointer line; the
+  loop it describes is in [runbook-run-loop.md](./runbook-run-loop.md).
+  `references/parallel-authoring.md` is `/runbook-create`'s, read only for a
+  parallel runbook. `references/step-amend.md` (amending one pending step: strike it as `[x]` with a `Done:` line opening
   `struck — <reason>` and no commit sha, never deleted or renumbered; insert
   through `/runbook-create --append --before`/`--after`; add dated `Context:`
   facts; the prompt block immutable, so a wrong prompt is struck and a

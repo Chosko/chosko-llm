@@ -55,8 +55,10 @@ Deliberately out:
 ## Architecture
 
 Built on the repo's existing shape per `technical-direction.md`. The change
-lands in `skills/task-implement/` — its argument parsing and
-`delegated-runs.md` (`.claude/context/task-implement-delegation.md`) — and in
+lands in `skills/task-implement/` — a hook in its argument parsing and in
+`delegated-runs.md`, and the scheduler itself in `parallel-runs.md`, read
+only when the flag is passed (`.claude/context/task-implement-delegation.md`)
+— and in
 `task-engine`'s `resolution.md`, which gains the scheduling reading of its own
 eligibility clause. It adds no CLI surface and no script.
 

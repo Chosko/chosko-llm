@@ -312,7 +312,7 @@ requested task carries another one, is
   preconditions no longer hold. It reads nothing new to do it. Under
   `--parallel` that re-check is subsumed: the launcher re-derives the whole
   clause, in-flight reading included, on every read of the base `TASKS.md`
-  at each scheduling point (its `delegated-runs.md` § *The scheduler*), so
+  at each scheduling point (its `parallel-runs.md` § *The scheduler*), so
   a precondition that no longer holds is a task that is not eligible on
   that read. Its other
   departure is the pre-ask under `--unattended`: at pre-flight it opens each

@@ -22,15 +22,17 @@ suite: [task-suite.md](./task-suite.md).
   DELEGATE is true for every run, one task included, nothing asked; only
   `--no-agents` turns it off; the delegation guard unchanged. `--parallel`
   implies `--agents`.
-  **The scheduler** (`delegated-runs.md` § *The scheduler*): returns handled
-  one at a time, each followed by the launcher's bookkeeping on the base;
-  how many agents are in flight is PARALLEL's alone. Without it — the
-  default — one agent at a time, `run_in_background: false`, parent blocks
-  on each before spawning the next, every task in the base tree (shared
-  tree, branch, `TASKS.md` would race), each agent pushing its own commit.
-  Under PARALLEL, `task-engine`'s `worktree.md` read before the first spawn
-  (worktree, integration, landing are its; this section states scheduling
-  only): resolved list still resolved once up front, report and delegation
+  **One agent at a time** (`delegated-runs.md` § *One agent at a time*), the
+  default: `run_in_background: false`, parent blocks on each before spawning
+  the next, every task in the base tree (shared tree, branch, `TASKS.md`
+  would race), each agent pushing its own commit. **Under PARALLEL**
+  everything below lives in `parallel-runs.md`, read only when `--parallel`
+  is passed — its § *The flag* at ARGUMENT PARSING, the parallel-safe marker
+  at PRE-FLIGHT step 3 — and amending `delegated-runs.md`, which carries one
+  hook line; a run without the flag loads none of it. **The scheduler**
+  (`parallel-runs.md` § *The scheduler*), `task-engine`'s `worktree.md` read
+  before the first spawn (worktree, integration, landing are its; the file
+  states scheduling only): resolved list still resolved once up front, report and delegation
   count printed from it, but it is the **admissible set**, its order the
   **priority** among tasks eligible at the same moment. At every
   **scheduling point** — run start, each landing — the launcher re-reads

@@ -59,10 +59,12 @@ Deliberately out:
 ## Architecture
 
 Built on the repo's existing shape per `technical-direction.md`. The change
-lands in `skills/runbook-run/` — its arguments, execution loop, spawned
-prompt, subagent contract and commit cadence (`.claude/context/runbook-run.md`
-and its two continuation files) — in `commands/runbook-create.md`, and in one
-line each of the readers. It adds no CLI surface and no script.
+lands in `skills/runbook-run/` — its arguments and subagent contract, and
+the scheduling itself in `references/parallel.md`, read only when the
+parallelism resolves above one (`.claude/context/runbook-run.md` and its two
+continuation files) — in `commands/runbook-create.md`, whose parallel duty is
+`references/parallel-authoring.md`, read only for a parallel runbook, and in
+one line each of the readers. A sequential run loads neither file. It adds no CLI surface and no script.
 
 ### The header line and the flag
 

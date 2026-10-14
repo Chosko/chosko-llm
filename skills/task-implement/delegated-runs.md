@@ -7,10 +7,8 @@ while orchestrate mode is on and
 `--no-agents` was not passed (PRE-FLIGHT step 2b). A single-task run with
 the mode off never reads this file.
 
-- Delegation is for context: each task gets its own agent and the full
-  window, and the parent keeps only the run-level bookkeeping. Concurrency
-  is a second step on the same shape — `--parallel`, § *The scheduler* — and
-  changes nothing about what an agent is handed or what it returns.
+- Delegation is for context, not concurrency: each task gets its own agent
+  and the full window, and the parent keeps only the run-level bookkeeping.
 - The parent is a **launcher**, not an orchestrator: it resolves the task
   list, evaluates the delegation guard from the `TASKS.md` summary blocks it
   has already read, hands every agent the same fixed-size prompt, and
@@ -19,116 +17,17 @@ the mode off never reads this file.
   itself, from a clean window, with the project's navigation layer in front
   of it.
 
-## The scheduler
+## One agent at a time
 
-- Spawn agents with the Agent tool, `subagent_type: "general-purpose"`.
-  Handle returns **one at a time**, each followed by the launcher's
-  bookkeeping on the base tree (§ *Between delegated tasks*); how many
-  agents may be in flight at once is PARALLEL's alone.
-- **Without PARALLEL — the default — one agent at a time.** Spawn with
-  `run_in_background: false`, block on the result, and do not spawn the
-  next agent until the previous one's result is in hand. Every task of such
-  a run shares one working tree, one branch and one `.claude/TASKS.md`, so
-  two agents would race on status flips, on staging paths and on push;
-  several at once is what `--parallel` is for, and the flag is the answer
-  to a user who asks for it.
-- **Under PARALLEL — up to N in flight, each in its own worktree.** Read
-  `../task-engine/references/worktree.md` before the first spawn: the
-  worktree, the agent's integration and the landing are that file's, and
-  this section states only the launcher's scheduling and its own
-  deviations.
-  - The task list is still resolved once, up front (`resolution.md`
-    § *Selectors*), and the resolution report and the delegation count are
-    printed from it.
-  - What changes is the list's role: it is not a queue walked in order but
-    the **admissible set** — the tasks this run may start — and its order
-    is the **priority** among the tasks eligible at the same moment.
-
-The **in-flight set** is the tasks this run spawned whose return it has
-not yet landed, held in run memory and nowhere else: a task enters it at
-its spawn and leaves it at its landing, and the launcher reads nothing off
-git to know it, because the one thing git cannot tell it is which worktrees
-are this run's own. Every "in flight" in this file — the count against N,
-the in-flight clause of eligibility, the overlap rule's "any task in
-flight", a barrier's wait, the end-of-run test — means membership in that
-set. The worktree list (`git worktree list --porcelain`) is what the
-skip-while-present rule and the other readers of `worktree.md` § *A
-worktree is a unit in flight* consult, never what counts: a worktree an
-earlier run left behind skips its task with that rule's one line, once per
-task per run, and counts toward nothing.
-
-At every **scheduling point** — the start of the run, and each landing —
-the launcher:
-
-1. re-reads the base `.claude/TASKS.md` with the Read tool and re-derives
-   eligibility for every task in the list with `resolution.md`
-   § *Eligibility* exactly as written, its in-flight clause included: a
-   task in flight is neither done nor eligible, so a task whose
-   `Preconditions:` name one waits for it to **land**, since landing is
-   what writes the status this read sees;
-2. walks the list in order and, while fewer than N tasks are in flight — no
-   bound under `max` — starts each task it may: it creates the worktree per
-   `worktree.md` § *Creating the worktree*, the `.git/info/exclude` line
-   first, once per run, and spawns the agent with `run_in_background:
-   true`, the prompt of § *The agent prompt* carrying PARALLEL and the
-   worktree path. On this read it skips a task that is not eligible, a task
-   already in flight, a task the overlap rule holds back (below), and a
-   task not in flight whose worktree already exists — the skip-while-present
-   line of `worktree.md`, printed once per task per run. A skipped task is
-   not dropped: it is examined again at the next scheduling point;
-3. stops the walk at a barrier (below), and otherwise walks the whole list;
-   then waits for the next return.
-
-- An explicit-list task is still never blocked by a precondition that is
-  not in flight (`resolution.md` § *Selectors*); one whose precondition is
-  in flight waits for it to land, because naming a task chooses that it
-  runs, not that it runs before what it depends on.
-- The run ends when nothing is in flight and nothing in the list can start:
-  a scheduling point that starts nothing with no return left to wait for.
-  The end-of-run steps — the feature-completion proposal, the closing
-  report — follow as on any run.
-
-### The overlap rule
-
-- Two tasks whose `Files:` lines intersect are never in flight at the same
-  time. At each scheduling point, a task whose `Files:` paths intersect
-  those of any task in flight is **held back**, whatever N says, with one
-  line naming the task it waits on — `Task 24 waits on task 22 (both list
-  skills/foo/SKILL.md).` — printed once per task it waits on, not at every
-  scheduling point. Re-examine it at the next scheduling point; it may
-  start once the task it waited on has landed.
-- `Files:` is on the summary block PRE-FLIGHT step 2 already read, so the
-  rule costs no read and opens no body. An empty or missing `Files:` holds
-  nothing back and is never held back.
-- The rule is a safety net under `Preconditions:`, not a second dependency
-  graph: two tasks with no edge between them are independent by the
-  backlog's own declaration, and the rule only keeps the common cause of a
-  rebase conflict — two agents editing one file — from being paid for at
-  the landing, where it would cost the integrating agent a resolution.
-- Before the intersection is taken, remove from every `Files:` line every
-  path the project's `CLAUDE.md` names on its `Parallel-safe files for
-  /task-implement:` line (PARALLEL_SAFE, read once at PRE-FLIGHT step 3):
-  those are the files whose conflicts the agent's rebase resolves
-  mechanically — a version counter, a newest-first changelog — and whose
-  presence on every task would otherwise serialise the whole run. No
-  marker means no exemption.
-
-### Barriers
-
-- A task the delegation guard keeps in the parent (§ *What stays in the
-  parent*) runs in the base tree, in this conversation, and dirties the
-  base while it runs; the base must be clean at every landing
-  (`worktree.md` § *The two invariants*). Such a task is a **barrier**.
-- When the walk reaches a parent-kept task not yet run this run, start
-  nothing more, wait for every task in flight to land — handling each
-  return as it arrives, questions relayed as usual — and then run the
-  parent-kept task exactly as an in-context run does, in the base tree,
-  including BETWEEN TASKS step 2's one-line skip when its preconditions do
-  not hold on that read. Its commit, park or skip is the next scheduling
-  point, and spawning resumes.
-- A parent-kept task therefore runs in its list position, never deferred
-  to the end, and one that is a precondition of delegated tasks unblocks
-  them when it lands `[DONE]`, as it does on a sequential run.
+- Spawn ONE agent at a time and wait for it to finish before spawning the
+  next. Every task in the run shares one working tree, one branch, and one
+  `.claude/TASKS.md`; concurrent agents would race on status flips, on
+  staging paths, and on push. Several at once, each in its own worktree, is
+  `--parallel`: under PARALLEL, `./parallel-runs.md` replaces this section
+  and amends the ones below.
+- Use the Agent tool with `subagent_type: "general-purpose"` and
+  `run_in_background: false` (the parent must block on the result). Do not
+  spawn the next agent until the previous one's result is in hand.
 
 ## What stays in the parent
 
@@ -140,8 +39,6 @@ the launcher:
   `claude+human` / `human` one, SKILL.md's STALE TASKS protocol for an
   explicitly requested `[STALE]` one. The parent reads such a task's body
   in Step 1, as usual.
-- Under PARALLEL each is a barrier (§ *The scheduler*): nothing is in flight
-  while it runs, and it is never spawned into a worktree.
 
 ## What the parent never reads
 
@@ -218,20 +115,11 @@ It carries four things:
      delegated tasks* step 2a): one answer, for the one task the prompt
      names, which the agent's Step 1 feeds to the unpark. Under attended
      no answer is held; the agent asks the handoff's question through the
-     relay;
-   - PARALLEL — only when set — and with it **the worktree path**: the
-     absolute path of `.claude/worktrees/task-<N>`, named as the agent's
-     repository root for everything it does, with the base branch's name
-     and the rule that the push is not the agent's — its Step 7 is
-     `../task-engine/references/worktree.md` § *The agent integrates*, and
-     it returns naming the base tip it rebased onto. The dirty-tree
-     decision in a fresh worktree is always *clean*, and the prompt says so
-     in place of DIRTY_FOLD.
+     relay.
 
    Every one of these is a run-level value, resolved once — the held answer
-   and the worktree path are the two per-task values, and each is one line
-   — so the flag list is O(1) in the size of the batch, like the rest of
-   the prompt.
+   is the one per-task value, and it is one line — so the flag list is O(1)
+   in the size of the batch, like the rest of the prompt.
 3. **The instruction to gather its own context**: read the task body,
    CLAUDE.md and `.claude/context/` itself, since it has been given none of
    them. Do not hand it a pre-chewed summary instead.
@@ -242,14 +130,7 @@ The whole thing reads roughly:
 > Implement task `<n>` from the backlog in `<absolute repo path>` by
 > following the `/task-implement` skill's per-task workflow (Steps 1–7) for
 > that one task: flip it `[IN PROGRESS]`, implement it, flip it `[DONE]`,
-> make its single commit and its single push. *(Under PARALLEL the first
-> sentence ends instead: … make its single commit on `wt/task-<n>` in the
-> worktree at `<absolute worktree path>` — your repository root for
-> everything you do, a checkout of that branch from the base branch
-> `<base>` — then rebase `wt/task-<n>` onto the current tip of `<base>`,
-> re-verify if the rebase changed anything, and return naming the tip you
-> rebased onto. Do not push, and do not pull: the launcher lands and
-> pushes.)*
+> make its single commit and its single push.
 >
 > Resolved flags for this run: `<the run's resolved flag list>`.
 >
@@ -339,8 +220,7 @@ before anything else:
    answer; the run waits.
 3. Send the answer to the **same** agent, by its id — never to a fresh one,
    which would have to be re-briefed and would answer differently — and
-   wait for its result as for any spawn: blocking on it without PARALLEL,
-   as one more return to arrive under it. That result is either another
+   block on its result as for any spawn. That result is either another
    question, which repeats this loop with the next round number, or the
    six-field return below.
 
@@ -351,16 +231,6 @@ before anything else:
   an earlier task's outcome that answers the question — and it says that
   it is doing so, so the user can see which part of the block came from
   the agent and which from the launcher.
-- Under PARALLEL several agents can ask at once, and a relayed question
-  stops nothing but its own task: the relay waits on the user, a landing
-  does not.
-  - Land and bookkeep as usual a return that arrives while a question is
-    open, and render a second question in its own block — each block
-    carries its task heading, and each answer goes back by agent id.
-  - After every relay, print one line naming the agents still waiting on
-    the user: `Waiting on you: tasks 22 (round 1), 25 (round 2).`
-  - The same channel carries the one rebase-again message of a landing
-    (`worktree.md` § *The orchestrator lands*, step 2).
 - Under UNATTENDED this case does not occur: the agent parks instead
   (§ *The agent prompt*) and its result is a return with `[PARKED]` as the
   terminal status. A `QUESTIONS FOR USER` result under UNATTENDED is an
@@ -379,9 +249,7 @@ The return contract is exactly six things, the last two optional:
    user from a subagent, so the return is how the question gets to the
    parent's handle print and to the closing report,
 3. the commit hash — or, under NO_COMMIT, that nothing was committed; for a
-   `[PARKED]` task, the bookkeeping commit's hash; under PARALLEL, beside
-   it, the base tip the agent rebased onto (`worktree.md` § *The agent
-   integrates*, step 5),
+   `[PARKED]` task, the bookkeeping commit's hash,
 4. a one-line failure reason, and only when it failed,
 5. **at most three one-line follow-ups**, and only when there are any — a
    parking branch whose delete failed among them, within the three
@@ -447,14 +315,7 @@ own.**
 
 ## Between delegated tasks
 
-After each agent returns, and before the next spawn — under PARALLEL,
-returns are handled one at a time in arrival order, and each is **landed
-first**, per `worktree.md` § *The orchestrator lands*: `git merge --ff-only
-wt/task-<N>` onto the base; when the base moved, one rebase-again message
-to the same agent and one more fast-forward; the push unless NO_PUSH; then
-`git worktree remove` and the safe `git branch -d`. A landing that fails —
-a fast-forward refused twice, a safe delete refused — is the task's
-failure, worktree kept (§ *Failure*). Then, on the base tree:
+After each agent returns, and before the next spawn:
 
 1. Re-read `.claude/TASKS.md` with the Read tool; the agent wrote a status
    there and the parent's copy is stale.
@@ -468,19 +329,17 @@ failure, worktree kept (§ *Failure*). Then, on the base tree:
      they no longer hold, skip that task with its one-line report and spawn
      no agent for it, then apply the check to the task after it.
      `Preconditions:` is on the summary block, so the re-check opens no
-     body and adds no read. Under PARALLEL this re-read is the scheduling
-     point's (§ *The scheduler*), and the re-check is subsumed by it:
-     eligibility is re-derived for the whole list on every read.
+     body and adds no read.
    - Likewise, under UNATTENDED a next task that is `[PARKED]` with no held
      answer is skipped here with `parking.md` § *The answerer rule*'s one
      line and gets no agent — `Status:` is on the summary block and the
      answers are in run memory, so this too opens no body.
 2. Confirm the agent actually did what it claims — the status it reports
    should match the file, and under the default (committing) mode
-   `git status --porcelain` should be clean on the base. A `[PARKED]`
-   status with a clean tree is consistent: the park sequence ends in a
-   bookkeeping commit, and the work-in-progress is on `park/task-<N>`, not
-   in the tree. A mismatch is a failure; see below.
+   `git status --porcelain` should be clean. A `[PARKED]` status with a
+   clean tree is consistent: the park sequence ends in a bookkeeping
+   commit, and the work-in-progress is on `park/task-<N>`, not in the
+   tree. A mismatch is a failure; see below.
 2a. Read any chat message that arrived while the agent ran, exactly as
    SKILL.md's BETWEEN TASKS step 2a says for an in-context run: a reply by
    `P<n>` handle to a question printed this run — at the pre-ask or at a
@@ -490,16 +349,10 @@ failure, worktree kept (§ *Failure*). Then, on the base tree:
    Step 1. Reject a reply the parent cannot match with one line, as there.
 3. Report one line of progress to the user: "Task 20 done (`abc1234`).
    Starting task 22." — or, for a `[PARKED]` return, "Task 20 parked
-   (question 3). Starting task 22." Under PARALLEL the line names what is
-   in flight: "Task 20 landed (`abc1234`). In flight: 22, 23. Starting task
-   24." — the tasks the scheduling point starts named last, or "Nothing
-   more to start." when it starts none.
+   (question 3). Starting task 22."
 4. In skip-tests mode, ask "Proceed?" before spawning the next agent,
    unless AUTO_CONFIRM is true or UNATTENDED is true. This prompt belongs
-   to the parent — the agent never asks it. Under PARALLEL ask it once per
-   scheduling point that starts at least one task, not once per task.
-
-Under PARALLEL the scheduling point follows (§ *The scheduler*).
+   to the parent — the agent never asks it.
 
 ## Failure
 
@@ -508,16 +361,8 @@ does: do not spawn the next agent, do not fix up the failed task's status
 behind the agent's back, and report
 
 - which tasks completed (with their commit hashes),
-- which task failed and what the agent said about it — under PARALLEL,
-  with its worktree path, the record of the work it left behind
-  (`worktree.md` § *Failure*),
+- which task failed and what the agent said about it,
 - which tasks were never started.
-
-Under PARALLEL the halt spawns nothing more, and the tasks already in
-flight are allowed to finish and land — each return handled as § *Between
-delegated tasks* says, with no scheduling point after it — because
-abandoning them would strand committed work in worktrees for no gain. Give
-the closing report once nothing is in flight.
 
 - An agent that returns something ambiguous — no status, no commit, an
   unclear report — counts as a failure. Verify rather than assume; the

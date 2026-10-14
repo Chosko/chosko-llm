@@ -47,7 +47,11 @@ Covers `commands/runbook-create.md`, the runbook author. The family hub:
   append onto a runbook carrying `Parallelism:` authors the new steps' edges
   under the same duty against the existing steps included; an edge from an
   existing step to a new one has nowhere to go (existing `Depends on:` never
-  rewritten) and is declined with one line. Never writes `[P]`
+  rewritten) and is declined with one line. That parallel duty — the value,
+  the exhaustive question, the gate statement — is
+  `../skills/runbook-run/references/parallel-authoring.md`, read only for a
+  parallel runbook or an append onto one; the command body carries the
+  header row, one never-asked sentence and a pointer. Never writes `[P]`
   or the two parking `Context:` bullets, which are the run's.
   Command not skill:
   one pass with a confirmation gate, no supporting files of its own. Two

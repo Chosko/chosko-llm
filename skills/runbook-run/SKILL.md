@@ -2,7 +2,7 @@
 name: runbook-run
 version: 0.23.1
 type: skill
-description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user — or, under the `unattended` policy, parking the step that asked and going on — recording what each did and committing after every step; `--parallel <N|max>`, or a header `Parallelism:`, keeps up to N steps in flight at once by their `Depends on:` graph, each in its own worktree. Use it to carry out a runbook, whole or a range of its steps.
+description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user — or, under the `unattended` policy, parking the step that asked and going on — recording what each did and committing after every step; `--parallel <N|max>`, or a header `Parallelism:`, runs independent steps at once, each in its own worktree. Use it to carry out a runbook, whole or a range of its steps.
 requires: command:follow-ups, skill:follow-ups-resolve, skill:interaction-engine, skill:task-engine
 ---
 
@@ -26,8 +26,7 @@ requires: command:follow-ups, skill:follow-ups-resolve, skill:interaction-engine
 #        /runbook-run <id|name|id-name> --model sonnet  (override the header model)
 #        /runbook-run <id|name|id-name> --inline        (execute the selected steps in this session)
 #        /runbook-run <id|name|id-name> --relay-spawns  (force the spawn relay for this run)
-#        /runbook-run <id|name|id-name> --parallel N    (up to N steps in flight at once, each in its own worktree, scheduled by Depends on:)
-#        /runbook-run <id|name|id-name> --parallel max  (every selectable step in flight at once)
+#        /runbook-run <id|name|id-name> --parallel N|max  (up to N steps in flight at once, scheduled by Depends on:)
 #        /runbook-run <id|name|id-name> --parallel 1    (sequential, overriding a header Parallelism:)
 #        /runbook-run <id|name|id-name> --unattended    (park a step at a question instead of waiting; pre-ask the parked steps in range first)
 #        /runbook-run <id|name|id-name> --attended      (relay and wait, overriding a header `Execution policy: unattended`)
@@ -45,8 +44,6 @@ requires: command:follow-ups, skill:follow-ups-resolve, skill:interaction-engine
 #           /runbook-run 3 --unattended
 #           /runbook-run 3 --unattended --skip-parked
 #           /runbook-run 3 --inline --unattended
-#           /runbook-run 3 --parallel 3
-#           /runbook-run 3 --parallel max --unattended
 
 GOAL
 Execute a runbook. For each step, in order: spawn one subagent with a fresh
@@ -59,12 +56,8 @@ they never combine:
 - `--inline`: this session executes each selected step itself in place of
   the spawn-and-wait, and everything else is unchanged — see THE INLINE MODE.
 - A parallelism above one — `--parallel <N|max>`, or the header's
-  `Parallelism:` line — schedules the steps by their `Depends on:` graph
-  instead of their list position: up to N are in flight at once, each in its
-  own worktree per `../task-engine/references/worktree.md`, and each is
-  landed onto the base branch as it returns; the loop steps below each carry
-  that branch where it applies. At a parallelism of 1 nothing in this body
-  changes.
+  `Parallelism:` line: steps run by their `Depends on:` graph, up to N at
+  once, each in its own worktree — see `./references/parallel.md`.
 
 > **Install path assumption:** this skill installs beside the files it reads
 > (`chosko-llm add skill:runbook-run` writes it under the same home as those
@@ -85,7 +78,7 @@ they never combine:
 > | `../interaction-engine/references/messages.md` | Always — before the first relayed question, gate or closing report. |
 > | `../interaction-engine/references/gates.md` | **Only when the policy resolves to `unattended`**, in step 1. |
 > | `./references/body-migration.md` | **Only when the migration check fires** in step 1 — a legacy body to rename. A run with nothing to migrate never loads it. |
-> | `../task-engine/references/worktree.md` | **Only when the parallelism resolves above one**, once, in step 1. The one file of another skill this body reads: the worktree per step, the agent's integration and the landing. A sequential run never loads it. |
+> | `./references/parallel.md` | **Only when the parallelism resolves above one**, once, in step 1, with the `task-engine` skill's `../task-engine/references/worktree.md` it names. A sequential run never loads either. |
 > | `./references/step-amend.md` | **Never by this body.** It sits beside the others, holding the rules for amending one step, read by path by whatever amends one. |
 
 ---
@@ -94,17 +87,12 @@ they never combine:
 
 - **Read three files.** The project's `CLAUDE.md`, the runbook (the body at
   the path its index block's `File:` line holds) and the index
-  (`.claude/RUNBOOKS.md`) — plus the reference files above, which are part of
-  this skill, and one file of the `task-engine` skill it requires:
-  `../task-engine/references/worktree.md`, the worktree protocol, read only by
-  a run whose parallelism is above one. Do **not** open `.claude/context/`,
-  `.claude/domain/` or any source file: orienting in the codebase is each
-  step's subagent's job, and the spawned prompt tells it to.
+  (`.claude/RUNBOOKS.md`) — plus the reference files above, `worktree.md`
+  the one from another skill. Do **not** open `.claude/context/`, `.claude/domain/` or any
+  source file: orienting in the codebase is each step's subagent's job, and
+  the spawned prompt tells it to.
 - **Write two files.** The runbook and the index, nothing else. Every other
   change in the tree is made by a subagent. This is a hard contract.
-  Under a parallelism above one, also run the git of the worktree protocol —
-  creating, landing and removing each step's worktree — which changes no
-  tracked file of its own.
 - **Never do a step's work.** One fresh subagent per step does it.
 - These three are **default-mode contracts** (the dashboard, when on, sits
   outside them — ARGUMENTS). Under `--inline` — their one opt-in exception —
@@ -154,16 +142,8 @@ Step <n> running. Current run progress (<k>/<m>). Total runbook progress (<x>/<y
 - `y` — the total half of that counter at launch, archived ids included
   (`runbook-schema.md` § *The index block*).
 
-Under a parallelism above one, print the line once per spawn, `k` and `x`
-counting the steps landed plus every step in flight, the one now starting
-included — three spawns at one scheduling point print `k` as 1, 2, 3 — so
-each line still reads as the run's progress at the moment it is printed.
-
 **At that step's end** — `Step 4 done (abc1234). Starting step 5.`, or the
-failure line the halt already calls for; under a parallelism above one,
-`Step 4 landed (abc1234). In flight: 5, 6. Starting step 7.`, the steps the
-scheduling point starts named last, or `Nothing more to start.` when it
-starts none.
+failure line the halt already calls for.
 
 - Do not narrate spawning, waiting, classifying a result, writing a `Done:`
   line or committing.
@@ -196,7 +176,7 @@ starts none.
 | `--model <model>` | Override the runbook header's `Model:` for **this whole run**. There is no per-step model. |
 | `--inline` | Execute every selected step in **this session** instead of in a fresh subagent, for the whole run. Composes with `--from`, `--to`, `--only`, `--steps N`, `--no-commit`, `--no-push`, `--attended`, `--unattended` and `--skip-parked`, and changes nothing about selection, committing or the policy. Refused beside `--relay-spawns` or `--model`; the header `Model:` is not applied. See THE INLINE MODE. |
 | `--relay-spawns` | Force the spawn relay for the whole run, for an environment already known to be flat. Without it the relay still works — the step's own subagent triggers it when it finds it cannot spawn. See THE SPAWN RELAY. |
-| `--parallel <N\|max>` | Run under a parallelism of N for **this whole run**, whatever the header's `Parallelism:` says: N is an integer of 2 or more, or `max` (case-insensitive) for no bound; `--parallel 1` forces a sequential run over a header saying otherwise. Above one, selection takes every step whose dependencies are `[x]`, up to N (step 3), each runs in its own worktree per `../task-engine/references/worktree.md` (step 5), and returns are landed one at a time (steps 6–8). Composes with every bound, `--model`, `--relay-spawns`, the policy flags, `--no-commit` and `--no-push`. Refused beside `--inline`, and on a runbook whose header carries `Sequencing:`. |
+| `--parallel <N\|max>` | Run under that parallelism for the whole run, whatever the header's `Parallelism:` says: N an integer of 2 or more, `max` (case-insensitive) for no bound, `--parallel 1` a sequential run. See *The parallelism* below. |
 | `--unattended` | Run under the `unattended` policy for this whole run: a step that asks a question is parked and the run goes on (`./references/parking.md`). At launch, unless `--skip-parked`, the `[P]` steps in range are pre-asked. |
 | `--attended` | Run under the `attended` policy for this whole run: a question is relayed and the run waits. |
 | `--skip-parked` | No pre-ask at launch: a `[P]` step in range stays parked unless a reply in chat answers it. For a launch no human sees — a routine, a scheduler, an orchestrator that is itself a subagent. Requires the policy to resolve to `unattended`. |
@@ -219,19 +199,10 @@ and before the project's `CLAUDE.md` line.
   relaying it, the spawned preamble carries the one sentence that tells the
   step's agent so, and the launch pre-asks the parked steps in range.
 
-**The parallelism** is one value for the whole run, an integer of 1 or more
-or `max`: `--parallel` when passed, else the header's `Parallelism:` line,
-else 1.
-
-- Resolve it in step 1 beside the policy, once the body is read. Never write
-  it back to the header.
-- At 1, nothing in this body changes and
-  `../task-engine/references/worktree.md` is never opened.
-- Above one, selection takes every step whose dependencies are `[x]` up to N
-  instead of the first, each selected step runs in its own worktree, several
-  spawns are in flight at once and each return is landed onto the base
-  before it is bookkept — each stated at the loop step it changes (THE
-  EXECUTION LOOP) — and the worktree protocol is read once in step 1.
+**The parallelism** is one value for the whole run: `--parallel` when passed,
+else the header's `Parallelism:` line, else 1. Resolve it in step 1 beside the
+policy, and never write it back. At 1 nothing in this body changes; above one,
+`./references/parallel.md` amends the execution loop.
 
 **Bounds.**
 
@@ -296,22 +267,16 @@ Twelve argument errors — name the problem and stop, having run nothing:
   `unattended`, named in the error. It holds whether or not a flag was passed
   — a typo in the header is fixed, not routed around — and is caught in
   step 1, once the body is read, before anything is written.
-- `--inline` with a parallelism above one — `--parallel` above one, or a
-  header `Parallelism:` the flag does not override to 1. The inline session
-  is one executor, and a silent fall-back to a sequential run would hide the
-  header's promise from the user who launched the run.
-- A parallelism above one — `--parallel` above one, or a header
-  `Parallelism:` the flag does not override to 1 — on a runbook whose header
-  carries `Sequencing:`. That line records an ordering constraint the graph
-  does not carry, which a parallel run would violate silently. The error
-  names the `Sequencing:` line and the two ways out: carry the constraint
-  into the graph with `/pipeline-revise`, or run sequentially (`--parallel
-  1`). Caught in step 1, once the body is read.
-- A `--parallel` value that is missing, or not an integer of 1 or more and
-  not `max`; and a header `Parallelism:` value that is not an integer of 2
-  or more and not `max`, named in the error — the header's rule in
-  `runbook-schema.md` § *The header*, caught in step 1 like the
-  `Execution policy:` one.
+- A `--parallel` value that is not an integer of 1 or more and not `max`, or
+  a header `Parallelism:` value that is not an integer of 2 or more and not
+  `max` — caught in step 1 like the `Execution policy:` one.
+- `--inline` with a parallelism above one, from the flag or a header the flag
+  does not override to 1: the session is one executor, and a silent
+  fall-back would hide the header's promise.
+- A parallelism above one on a runbook whose header carries `Sequencing:`,
+  which records an ordering constraint the graph does not carry. Name the
+  line and the two ways out: carry the constraint into `Depends on:` with
+  `/pipeline-revise`, or run with `--parallel 1`.
 
 ---
 
@@ -325,6 +290,10 @@ here.
 ---
 
 ## THE EXECUTION LOOP
+
+Under a parallelism above one, `./references/parallel.md` amends steps 2–8,
+THE FOUR RESULT CASES, ONE RUN PER RUNBOOK, COMMIT CADENCE and THE CLOSING
+REPORT; where it speaks, it wins.
 
 ### 1. Resolve
 
@@ -379,23 +348,14 @@ here.
     `--skip-parked` was passed. The pre-ask is the one thing that writes to
     the body before step 4, and its commit is its own.
   - Under `attended`, nothing more happens here.
-- **Resolve the parallelism** beside it, per ARGUMENTS § *The parallelism*:
-  `--parallel` when passed, else the header's `Parallelism:` line, else 1.
-  Catch here, before anything is written, the three argument errors it can
-  raise — `--inline` beside a parallelism above one, a parallelism above one
-  on a header carrying `Sequencing:`, a value outside the allowed set.
-  - Above one, read `../task-engine/references/worktree.md` here, once: the
-    unit there is `runbook-<id>-step-<n>`, the base is the branch this run
-    was launched on, checked out in this tree, and this session is its one
-    writer.
-  - At 1, never open that file.
+- **Resolve the parallelism** beside it, per ARGUMENTS § *The parallelism*,
+  and catch its three argument errors here. Above one, read
+  `./references/parallel.md` now and follow it for the whole run.
 
 ### 2. Re-read the body
 
 **At the start of every step, not once per run**, re-open the body at the
-resolved path from step 1 and re-parse it. Under a parallelism above one
-this is the start of every **scheduling point** — the start of the run and
-each landing — and the body it returns is what step 3 selects from.
+resolved path from step 1 and re-parse it.
 
 - This re-read is the reconciliation of a body edited by hand between steps
   (the body is the source of truth, the index a summary); there is no separate
@@ -446,50 +406,14 @@ marker is `[ ]`, `[~]` or `[!]`, and whose every `Depends on:` step is `[x]`.
   to step 8's `--to` branch, not the completion branch and not the deadlock
   branch. Nothing is blocked; the range simply ran out.
 
-**Under a parallelism above one** selection takes not the first such step
-but **every** step in list order — whatever its id — whose marker is `[ ]`,
-`[~]` or `[!]` and whose every `Depends on:` step is `[x]`, while fewer than
-N steps are in flight, with no bound under `max`. A step **in flight** — one
-this run spawned whose result has not landed — is neither done nor
-selectable, and a step depending on it waits for it to land: landing is what
-writes the `[x]` the next re-read sees. List order keeps one job, priority
-among the steps selectable at the same moment. Every bullet above holds —
-the `Archive:` rule, `[!]` re-run with its failure kept, `[P]` passed over or
-asked — with two readings added: a `[~]` step whose worktree
-`.claude/worktrees/runbook-<id>-step-<n>` exists and which this run did not
-spawn is skipped with the one line `worktree.md` § *A worktree is a unit in
-flight* gives, naming the path, printed once per step per run and examined
-again at the next scheduling point; a `[~]` with no worktree behind it is the
-interrupted step the bullet describes, reported and re-run. The deadlock
-test — steps remain, none selectable, none `[P]` — is taken **only when
-nothing is in flight**, and so are the end branch and the out-of-range stop;
-a selection that picks nothing while something is in flight waits for the
-next return (step 6). The bounds `--from`, `--to` and `--only` apply
-unchanged, against each re-read; `--steps N` counts landed steps, and no
-step is spawned once the landed and in-flight steps together number N, so
-the N-th landing ends the run (step 8).
-
-**A barrier.** A `Needs: agent+human` or `Needs: human` step is work with the
-user present, in the base tree. When it is the next selectable step in list
-order, nothing more is spawned: every step in flight lands first — steps 6–8
-for each return in turn, with no scheduling point after any of them — then
-the step runs in the base tree exactly as a sequential run runs it, marked,
-spawned without a worktree, `<WORKTREE>` the base tree's path, awaited,
-handled and committed, and spawning resumes at the scheduling point after
-its commit. The base is clean at every landing, and a step a person watches
-never sees a worktree.
-
 ### 4. Mark
 
 - Set the selected step's marker to `[~]` in the body, and the index `Status:`
   to `[RUNNING]`.
 - Write both to disk now, before spawning — or, under `--inline`, before the
-  execution phase begins. Under a parallelism above one, mark every step the
-  scheduling point selected before the first of them is spawned.
-- `[~]` is in-run working state. On a sequential run it is never committed
-  and is the resume signal; under a parallelism above one it may be committed
-  and the step's worktree is the signal — see COMMIT CADENCE and ONE RUN PER
-  RUNBOOK.
+  execution phase begins.
+- `[~]` is in-run working state: never committed, and the resume signal — see
+  COMMIT CADENCE and ONE RUN PER RUNBOOK.
 
 ### 5. Spawn
 
@@ -500,29 +424,14 @@ never sees a worktree.
   orchestration it duplicates, not for the depth it costs. (`/runbook-create`
   rejects such a step at authoring time; this check stops a hand-written
   runbook smuggling one in.)
-- Spawn **one** subagent per selected step with fresh context, the assembled
-  prompt (see THE SPAWNED PROMPT), and the model from the runbook header — or
-  from `--model`, which overrides it for the whole run — and print the step's
-  progress line (CHAT OUTPUT).
-- **How many are in flight at once is the parallelism's.**
-  - At 1, one at a time, never two — THE SPAWN RELAY holds the one
-    exception, a relayed child running while its caller is suspended: the
-    user gets one question stream, and two agents in one working tree would
-    race on the same files.
-  - Above one, give each selected step its own worktree **before** its
-    spawn, per `worktree.md` § *Creating the worktree* — the
-    `.git/info/exclude` line first, once per run, then
-    `git worktree add -b wt/runbook-<id>-step-<n> .claude/worktrees/runbook-<id>-step-<n> <base>`
-    from the current base tip — and spawn it with `run_in_background: true`,
-    its preamble naming that directory as the repository root and the
-    contract's `<WORKTREE>` filled with it (THE SPAWNED PROMPT). Up to N are
-    then in flight, each writing in its own tree, and the body file stays
-    this session's alone, which is what makes several at once safe.
-  - A worktree that cannot be created — the path or the branch exists —
-    skips the step with the one line naming the path, and the next selected
-    step is spawned.
-  - On a sequential run `<WORKTREE>` is the base tree's path and nothing
-    else changes.
+- Spawn **one** subagent with fresh context, the assembled prompt (see THE
+  SPAWNED PROMPT), and the model from the runbook header — or from `--model`,
+  which overrides it for the whole run — and print the step's progress line
+  (CHAT OUTPUT).
+- One at a time, never two — THE SPAWN RELAY holds the one exception, a
+  relayed child running while its caller is suspended. At a parallelism of 1
+  steps are sequential even where the runbook declares them independent;
+  only `./references/parallel.md` runs several at once.
 - **Under `--inline`**, spawn nothing. The **execution phase** takes the place
   of this step and step 6: the session assembles the step's brief and executes
   it itself, under the inline contract (THE INLINE MODE), printing the
@@ -540,12 +449,6 @@ never sees a worktree.
 - Until the result actually arrives, do nothing: do not mark, do not write a
   `Done:` line, do not commit, do not select the next step. **No step is
   ticked before its subagent's result has actually arrived.**
-- **Under a parallelism above one** several spawns are in flight and the
-  rule holds for each of them: wait for the **next** result to arrive,
-  whichever step's it is, and handle that one (step 7) while the others run
-  on. A spawn's return value, a progress notification and another step's
-  result are none of them this step's result, and no step is ticked before
-  its own has arrived.
 - **Under `--inline`** there is no spawn and no notification. The execution
   phase instead ends with the session **writing out its own outcome as a
   separate act**, before any bookkeeping is written — see THE INLINE MODE
@@ -560,9 +463,7 @@ Classify by the four cases, and only four — see THE FOUR RESULT CASES — plus
 under `unattended` and only then, the fifth row that parks the step at a
 `QUESTIONS FOR USER` result (`./references/parking.md` § *The fifth result
 row*). Under `--inline`, classify the outcome the execution phase wrote out by
-those same cases. Under a parallelism above one, handle returns **one at a
-time**, in arrival order, and **land a `DONE` before marking it** (THE FOUR
-RESULT CASES § *On `DONE`*).
+those same cases.
 
 ### 8. Commit and loop
 
@@ -572,11 +473,6 @@ RESULT CASES § *On `DONE`*).
 - When `./references/parking.md` has been read this run, apply its § *Mid-run
   answers* to any reply that arrived during the step.
 - Loop back to step 2 and re-read the body.
-- Under a parallelism above one that re-read is the next **scheduling
-  point**: step 3 selects from it every step that may now start, step 5
-  spawns them, and step 6 waits for the next return. The three branches
-  below are reached only when nothing is in flight; a scheduling point that
-  starts nothing with something in flight waits.
 
 Three branches end the loop:
 
@@ -590,9 +486,8 @@ Three branches end the loop:
   outside it as a *Follow-ups* item. `--only N` stops this way too; it is the
   bound `--to N` doing it.
 - **Reaching the `--steps` count is not completion either.** When the step
-  just committed is the N-th step executed in this run — under a parallelism
-  above one, the N-th landed, step 3 having spawned nothing past the count —
-  stop there instead of looping, exactly as at a `--to` bound: set the index back to `[PENDING]`
+  just committed is the N-th step executed in this run, stop there instead of
+  looping, exactly as at a `--to` bound: set the index back to `[PENDING]`
   unless every step in the whole runbook is now `[x]` (then it is `[DONE]` by
   the completion rule), and report how many steps ran, with the steps
   remaining as a *Follow-ups* item.
@@ -606,9 +501,7 @@ the run does — see CLOSING THE RUN.
 
 `--inline` is opt-in and a property of the **whole run**: every step the run
 selects is executed by this session, none by a subagent. There is no per-step
-mode and no mixing modes within one run. The session is one executor, so a
-parallelism above one beside it is an argument error (ARGUMENTS), not a
-fall-back to a sequential run.
+mode and no mixing modes within one run.
 
 ### The opening line
 
@@ -702,14 +595,6 @@ agent reads.
    The sentence says **attended** or **unattended** — never
    *non-interactive*, which an attended step's agent is too. The unattended
    one is what turns on the two conditional OPERATING RULES in part 6.
-
-   **Under a parallelism above one, the preamble also names the step's
-   worktree** — the absolute path of
-   `.claude/worktrees/runbook-<id>-step-<n>`, created in step 5 — as the
-   agent's repository root for everything it does, with the base branch's
-   name beside it. One path per step, like the step number, and nothing
-   about the other steps in flight. On a sequential run it names nothing of
-   the kind: the base tree is where the agent already is.
 2. **Background.** The `Companion:` document named in the runbook header, if
    there is one. Offer it as background to read if needed, not as required
    reading.
@@ -724,9 +609,8 @@ agent reads.
 6. **OPERATING RULES.** Verbatim from `./references/subagent-contract.md`,
    with only that block's four placeholders filled in: `<RUNBOOK>` with the
    runbook's name, `<N>` with the step id, `<FILE>` with the resolved path
-   from step 1, and `<WORKTREE>` with the step's worktree path under a
-   parallelism above one, the base tree's absolute path on a sequential run.
-   It is fixed text and goes last.
+   from step 1, and `<WORKTREE>` with this tree's absolute path (the step's
+   worktree under `./references/parallel.md`). It is fixed text and goes last.
 
 ---
 
@@ -736,26 +620,15 @@ agent reads.
 | --- | --- |
 | `QUESTIONS FOR USER` | Relay to the user, collect the answer, send it to the **same** subagent, repeat. |
 | `SPAWN REQUEST` | Spawn the child it asks for, and reply to the **same** subagent when the child is finished. See THE SPAWN RELAY. |
-| `DONE` + report | Under a parallelism above one, land the step first (§ *On `DONE`*). Mark `[x]`, write the `Done:` line, propagate facts, update `Steps:`, commit, continue. |
-| Anything else, or a report of failure | Mark `[!]`, write a `Done:` line opening with the reason, set the index to `[FAILED]` with `Failed at: step <n> — <reason>`, halt, report. Under a parallelism above one, spawn nothing more and let the steps in flight land first (§ *On failure*). |
+| `DONE` + report | Mark `[x]`, write the `Done:` line, propagate facts, update `Steps:`, commit, continue. |
+| Anything else, or a report of failure | Mark `[!]`, write a `Done:` line opening with the reason, set the index to `[FAILED]` with `Failed at: step <n> — <reason>`, halt, report. |
 
 - **Under the `unattended` policy a fifth row replaces the first**, and it is
   the only change the policy makes to this table: `QUESTIONS FOR USER` → park
   the step, per `./references/parking.md` § *The fifth result row* — `[P]`,
   the question into `Context:`, printed in chat under a `P<n>` handle,
   committed, and the run continues. The other three rows are unchanged under
-  either policy; an attended run never reaches the fifth. Under a parallelism
-  above one the fifth row is unchanged too, and the step's worktree goes with
-  it — `git worktree remove .claude/worktrees/runbook-<id>-step-<n>` and the
-  safe `git branch -d wt/runbook-<id>-step-<n>` — since OPERATING RULES had
-  the agent leave the tree clean of its own changes before asking; a `[P]`
-  step keeps no worktree, and re-runs whole in a fresh one once answered.
-- **Under a parallelism above one the first row stops nothing but its own
-  step**: land and bookkeep as usual a return that arrives while a question
-  is open; each relay block carries its step heading, each answer goes back
-  by agent id, and after every relay one line names the steps still waiting
-  on the user — `Waiting on you: steps 4 (round 1), 6 (round 2).` The same
-  channel carries the one rebase-again message of a landing (§ *On `DONE`*).
+  either policy; an attended run never reaches the fifth.
 - **An ambiguous report is a failure, not a success.** A report the
   orchestrator cannot confidently classify halts the run — never tick a step
   on a guess. A report with no `DONE` marker, no commit sha where one was
@@ -770,28 +643,6 @@ agent reads.
   than producing a `SPAWN REQUEST` — see the relays below.
 
 ### On `DONE`
-
-**Under a parallelism above one the step is landed before anything below**,
-per `worktree.md` § *The orchestrator lands*, with the base tree's own
-bookkeeping as the only thing uncommitted in it — the two files no step's
-agent touches (OPERATING RULES), so the fast-forward meets nothing it would
-overwrite, and the `[~]` markers they carry ride in this step's commit
-(COMMIT CADENCE):
-
-1. `git merge --ff-only wt/runbook-<id>-step-<n>` onto the base. It succeeds
-   exactly when the base tip is still the one the agent's report names.
-2. When it is not — another step landed while this agent was finishing — send
-   the **same** agent one message naming the new tip: rebase again and
-   return. Then fast-forward again. At most one round per landing; a
-   fast-forward refused twice is the step's failure (§ *On failure*).
-3. Push the base per COMMIT CADENCE steps 3 and 4 unless `--no-push`. A push
-   failure here is that protocol's: the commits exist locally and need a
-   manual sync, and the run stops.
-4. `git worktree remove .claude/worktrees/runbook-<id>-step-<n>`, then the
-   safe `git branch -d wt/runbook-<id>-step-<n>`. A refused safe delete is a
-   landing that did not happen: the step's failure, worktree kept.
-
-Then the bookkeeping, exactly as on a sequential run:
 
 1. Write the `Done:` line from the agent's report, in the terse default form
    `runbook-schema.md` § *The `Done:` line* gives, taking the sha and the
@@ -810,19 +661,6 @@ Then the bookkeeping, exactly as on a sequential run:
 Do not retry the step, do not attempt the work yourself, and do not continue
 to the next step. Give the closing report (THE CLOSING REPORT), its
 *Follow-ups* group included. See CLOSING THE RUN.
-
-**Under a parallelism above one** a failure halts spawning, not the steps
-already in flight: mark the failed step `[!]` with its `Done:` line and
-commit as usual, spawn nothing more, and land each remaining return as it
-arrives — steps 6–8 for each, with no scheduling point after any of them —
-since abandoning them would strand committed work in worktrees for no gain.
-A second failure among them is marked `[!]` the same way. When nothing is in
-flight, set the index to `[FAILED]` with `Failed at:` naming the first failed
-step, commit, halt and report; the closing report names each in-flight step
-that landed after the failure. The failed step keeps its worktree, with
-whatever it left unlanded inside, and the report names the path
-(`worktree.md` § *Failure*); the skip-while-present line of step 3 is what
-keeps the next run from executing over it.
 
 ---
 
@@ -954,13 +792,11 @@ the orchestrator's context.
 ### What is preserved
 
 - **Sequencing.** The caller is suspended for the entire time the child runs,
-  exactly as during a `QUESTIONS FOR USER` relay, so the relay adds no working
-  agent: at a parallelism of 1 only one agent is doing work at any moment —
-  the one stated exception to *one subagent at a time, never two*, two
-  existing with one of them idle — and above one the agents at work are the
-  steps' own, each idle while its own child runs. It is not a wider licence:
-  never spawn a child while its caller is still working, and never two
-  children for one caller at once.
+  exactly as during a `QUESTIONS FOR USER` relay, so only one agent is doing
+  work at any moment. This is the one stated exception to *one subagent at a
+  time, never two* — two exist, one of them idle — and it is not a wider
+  licence: never spawn a child while the caller is still working, and never
+  two children at once.
 - **The question relay.** Relay a child's own `QUESTIONS FOR USER` to the user
   exactly as a caller's, in the same fixed block, and send the answer back to
   the **child**. Say which agent is asking when a child is the one asking.
@@ -1029,24 +865,12 @@ file.
 
 - `[RUNNING]` in the index blocks a second `/runbook-run` of that name: report
   the runbook as already running and stop.
-- The single exception is resuming in the same working tree. The signal is
-  something present locally and never pushed, so its presence means **this
-  tree is the one that was interrupted**. A sequential run leaves an
-  uncommitted `[~]` marker (COMMIT CADENCE):
+- The single exception is resuming in the same working tree. The signal is a
+  `[~]` marker present in the tree — never committed (COMMIT CADENCE), so its
+  presence locally means **this tree is the one that was interrupted**.
 
-  > `[RUNNING]` in the index **plus** an uncommitted `[~]` in the tree is the
-  > whole resume signal.
-
-  A run whose parallelism was above one may have committed its `[~]`, and
-  leaves a worktree instead:
-
-  > `[RUNNING]` in the index **plus** a `wt/runbook-<id>-step-<n>` worktree
-  > on this machine is the whole resume signal.
-
-- Either signal admits the resuming run; a committed `[~]` with neither
-  behind it is a run in flight elsewhere, and `[RUNNING]` blocks. What the
-  resuming run then does with each `[~]` step is step 3's: skipped while its
-  worktree exists, re-run when nothing is behind it.
+> `[RUNNING]` in the index **plus** `[~]` in the tree is the whole resume
+> signal.
 
 There is no staleness heuristic, no timestamp, and no lock file.
 
@@ -1080,9 +904,9 @@ What remains true:
   subagent-position rule. The spawn relay works from that position too: the
   orchestrator spawns the child at its own level either way.
 - A step running `/task-implement --parallel` wants task agents under the
-  step's agent, and reviewers under those: where its agent cannot spawn it
-  routes through the relay like any child, and nothing is promised about a
-  relayed child's own parallelism — it may run its tasks one at a time.
+  step's agent, and reviewers under those: where its agent cannot spawn, it
+  routes through the relay like any child, and its tasks may then run one at
+  a time.
 - Nested runbooks are the one case that *is* refused, and the relay does not
   change that — see step 5.
 
@@ -1108,15 +932,9 @@ index — the body at the resolved path (its `File:` path) and
 - Never a catch-all (`git add -A` / `git add .` / `git add -u`).
 - A subagent that commits its own work produces a separate commit; the runbook
   commit is bookkeeping and is expected to sit beside it.
-- On a sequential run, never commit the `[~]` marker. By the time a step is
-  committed its marker is `[x]`, `[!]` or `[P]`; if a commit would capture
-  `[~]`, the step is not finished and must not be committed.
-- Under a parallelism above one, a landed step's commit **may capture `[~]`**
-  for the steps still in flight — the alternative is one commit at the end of
-  the run — and is still one commit per landed step, staging exactly the two
-  files; the resume signal is then the worktree (ONE RUN PER RUNBOOK), and
-  the step's own commits, landed just before, still sit beside its
-  bookkeeping commit.
+- Never commit the `[~]` marker. By the time a step is committed its marker is
+  `[x]`, `[!]` or `[P]`; if a commit would capture `[~]`, the step is not
+  finished and must not be committed.
 - A parked step's commit is the step's one commit for this run. An unpark — at
   the pre-ask or mid-run — is a bookkeeping commit of its own, staging the
   same two files, so the marker on disk never lags the answer
@@ -1162,9 +980,8 @@ tool call, no `git status`, no explanation: you already know what is dirty.
   ```
 
 - **Subagent WIP** — a spawned step is in flight: spawned in step 5, its result
-  not yet arrived (step 6) — under a parallelism above one, any of the several
-  spawns in flight. Whatever is dirty, since nothing but the steps' subagents
-  and the two bookkeeping files can have written the tree then:
+  not yet arrived (step 6). Whatever is dirty, since nothing but the step's
+  subagent and the two bookkeeping files can have written the tree then:
 
   ```
   stop hook ignored on subagent WIP
@@ -1201,11 +1018,8 @@ The two groups:
 - **For the record** — one line per step the run executed, in list order, in
   exactly this shape: `<step n> — <outcome, commit sha and diffstat> — <what
   changed in one line; decision or wrong premise flagged; questions relayed and
-  their answers>`. Any run-level deviation follows on one line of its own —
-  under a parallelism above one, a failed step's line names its worktree
-  path, and one run-level line names each in-flight step that landed after
-  the failure. No item in this group runs past one line, and none is a
-  question.
+  their answers>`. Any run-level deviation follows on one line of its own. No
+  item in this group runs past one line, and none is a question.
 - **Follow-ups** — one numbered list, `1.`, `2.`, …, each item as long as it
   needs to be, holding two kinds of item under the one numbering:
   - The run's own items:
@@ -1213,8 +1027,7 @@ The two groups:
       having all its tasks `[DONE]`/`[SKIP]`, with the one question, "Flip to
       `[DONE]` in FEATURES.md? Name the slugs, or say all / none.";
     - a failed step, with its reason and what the agent said;
-    - a step left `[~]`, to resume — with its worktree path when one exists,
-      to finish by hand or remove;
+    - a step left `[~]`, to resume;
     - every step left `[P]`, with its question verbatim and multi-line under
       its `P<n>` handle in place of an item number, options included, and the
       steps waiting on it;

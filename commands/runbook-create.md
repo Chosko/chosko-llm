@@ -2,7 +2,7 @@
 name: runbook-create
 version: 0.10.0
 type: command
-description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/, indexed in .claude/RUNBOOKS.md — from this conversation's follow-up list or a free-form description, or append steps to one; asked for a parallel runbook, writes its `Parallelism:` header line and authors every ordering constraint as an edge. Use it to hand ordered work to later sessions that lack this conversation's context.
+description: Author a runbook — an ordered list of self-contained prompts under .claude/runbooks/, indexed in .claude/RUNBOOKS.md — from this conversation's follow-up list or a free-form description, or append steps to one, sequential or parallel. Use it to hand ordered work to later sessions that lack this conversation's context.
 requires: skill:runbook-run, skill:interaction-engine
 ---
 
@@ -22,11 +22,8 @@ requires: skill:runbook-run, skill:interaction-engine
 # place it. Authors each step's optional `Needs:` line (agent / agent+human /
 # human) and calls out the steps that need a person at the confirmation
 # gate, which shows the proposed shape only, never the full prompts. Asked
-# for a parallel runbook — by saying so, or by naming a parallelism — writes
-# the header's `Parallelism: <N|max>` line, never beside `Sequencing:`, and
-# asks which steps must precede which exhaustively, so every pair is an edge
-# or a declared independence and the gate approves the graph, not only the
-# list. Refuses
+# for a parallel runbook, writes `Parallelism:` and authors every ordering
+# constraint as an edge. Refuses
 # a name already taken, or whose first kebab segment is all digits, with one
 # suggested alternative. Commits and pushes what it wrote by default.
 # Usage: /runbook-create
@@ -110,9 +107,8 @@ gives. **Nothing about the artifact is restated here** — a second copy is the
 copy that drifts.
 
 What is this command's own is everything below: how the target is resolved,
-where the material comes from, the sequencing duty a parallel runbook adds
-to it, the ten rules every prompt must pass, the confirmation gate, and the
-append rules.
+where the material comes from, the ten rules every prompt must pass, the
+confirmation gate, and the append rules.
 
 ---
 
@@ -125,9 +121,9 @@ which is what makes appending safe while a run is in progress:
 | --- | --- | --- |
 | the header, `Last step number:`, `Sequencing:`, `Companion:` | yes | `Archive:`, which is `/runbook-prune`'s — an append never writes, normalises or drops it |
 | `Execution policy:` | only when the user asks for an unattended runbook | by default — absent, the project's `CLAUDE.md` policy decides, else `attended`; and never by a run, which overrides it per run with a flag instead |
-| `Parallelism:` | only when the user asks for a parallel runbook (PHASE 2 § *A parallel runbook*), where `Execution policy:` goes | by default — absent means 1, as above; never beside `Sequencing:`, whose constraint a parallel runbook carries as edges instead; never on an append, like `Sequencing:` — a runbook authored sequential becomes parallel through `/pipeline-revise`, once its graph has been made complete; and never by a run, which overrides it per run with `--parallel` |
+| `Parallelism:` | only when the user asks for a parallel runbook (§ *A parallel runbook*) | by default, absent meaning 1; on an append; beside `Sequencing:`; and by a run, which overrides it with `--parallel` |
 | a step's title and its ```prompt``` block | yes | — |
-| `Depends on:` | yes — on a parallel runbook, every ordering constraint the runbook has | — |
+| `Depends on:` | yes | — |
 | `Needs:` | `agent+human` and `human` only | `agent`, which is the default and is never written |
 | `## Do not re-propose` | yes | — |
 | the step marker | `[ ]` only | `[~]`, `[x]`, `[!]`, `[P]` |
@@ -267,8 +263,7 @@ Then harvest, from the conversation and not from the files:
 - every decision that was settled here and written to no file,
 - every option that was assessed and rejected, with its reason,
 - every probe whose result is now a fact,
-- the ordering constraints, and **why** each one exists — on a parallel
-  runbook, every one of them, as § *A parallel runbook* below says,
+- the ordering constraints, and **why** each one exists,
 - **which actions in the list need a person** rather than an agent. A
   conversation that produced the follow-ups usually said so in passing ("then
   you flip it in the editor"); that is a step's `Needs:` line. Where the
@@ -293,9 +288,7 @@ the batch, writing nothing.
 3. **Which steps must precede which, and why?** The order is list position
    and the edges are `Depends on:`. A *why* those two cannot show — "1–4 all
    edit the same file" — is the optional one-line `Sequencing:`; when there is
-   none, the runbook has no `Sequencing:` line. On a parallel runbook the
-   question is asked exhaustively, pair by pair, and every *why* is an edge —
-   § *A parallel runbook*.
+   none, the runbook has no `Sequencing:` line.
 4. **For each step, which document should the agent read first?** A step with
    no such document needs its evidence carried inline instead, which is worth
    knowing now rather than at write time.
@@ -318,48 +311,11 @@ runbook nobody asked that of carries no line.
 
 ### A parallel runbook
 
-PARALLEL is set, in either mode, when the user asks for a parallel runbook —
-by saying so, or by naming a parallelism ("three at a time", "max") — and
-never inferred from the shape of the work. It applies to a new runbook, and
-to an append onto a runbook whose header already carries `Parallelism:`,
-whether or not the user says so again: the duty below is the runbook's, not
-the request's. The value written is the one the user named; a request that
-names none proposes `max` at the gate, where the user sets it.
-
-Under a parallelism above one `Depends on:` is the **only** ordering
-constraint — list position is priority among the steps selectable at the
-same moment, and a step with no edge to another is independent of it by the
-runbook's own declaration (`runbook-schema.md` § *A step*). So the question
-"which steps must precede which, and why" is asked **exhaustively** rather
-than as a check on the list: for **every pair** of steps the author might
-order — two that edit one file, one that reads what another writes, a review
-of an implementation — either an edge is written or the two are declared
-independent. Nothing is left to position. In from-scratch mode that is
-question 3, put pair by pair; in conversation mode the edges the
-conversation settled are harvested and the pairs it left open are put to the
-user in one batch, with a recommended answer for each, before the gate — the
-one interview question conversation mode asks, because an edge left to
-omission is exactly what a parallel run violates silently. On an append the pairs
-include every existing step the new ones might order against; an existing
-step's `Depends on:` is still never rewritten, so an edge from an existing
-step to a new one has nowhere to go and is **declined with one line** — the
-new step sits above it or the constraint is carried through
-`/pipeline-revise`.
-
-A *why* the user offers as a sequencing note — "1–4 all edit the same
-file" — is written as edges (`4` depends on `3`, `3` on `2`, `2` on `1`), not
-as `Sequencing:`, and the command says so in one line: a header never
-carries both, because `Sequencing:` records a constraint the graph does not
-carry and a parallel run would violate it silently (`runbook-schema.md`
-§ *The header*). A parallel runbook therefore has no `Sequencing:` line, and
-rule 4's "states its sequencing and why" is met inside the prompt and by
-the edge, as on any other runbook.
-
-The declaration lands at the gate: its step table states that every step
-without an edge is independent of every step not reachable from it, so
-approval approves the graph and not only the list (PHASE 4). A runbook with
-no `Parallelism:` line is authored exactly as today — question 3 as a check
-on the list, `Sequencing:` where position and edges cannot show the *why*.
+When the user asks for a parallel runbook, or the append's target already
+carries `Parallelism:`, read
+`../skills/runbook-run/references/parallel-authoring.md` before the interview
+and follow it: it sets the value, makes question 3 exhaustive, and adds one
+statement to the gate.
 
 ---
 
@@ -471,17 +427,13 @@ Position: before step 4 — <its title>   (appends only; or: after step <n> — 
 
 Header:     Created <YYYY-MM-DD> · Source <…> · Model opus
 Policy:     unattended   (only when the user asked for it; the line is absent otherwise)
-Parallelism: <N|max>     (only when the user asked for a parallel runbook; the line is absent otherwise)
-Sequencing: <one line: why this order, where position and Depends on: can't show it — or none; always none on a parallel runbook>
+Sequencing: <one line: why this order, where position and Depends on: can't show it — or none>
 Companion:  <path, or none>
 
 Steps:
   1. <title>                      depends on: none
   2. <title>                      depends on: 1     needs: agent+human
   3. <title>                      depends on: 1
-
-  Every step without an edge is independent of every step not reachable
-  from it: 2 and 3 may run at once.   (parallel runbooks only)
 
 Fixes applied:
   - step 2 was split from step 1 (rule 8: two unrelated deliverables)
@@ -510,16 +462,6 @@ in one line beneath the list that the run will need someone present at those
 steps. That is the one thing about the shape a user cannot infer from the
 titles, and it decides whether they can start the run and walk away.
 
-On a parallel runbook the plan carries the `Parallelism:` line and, beneath
-the step list, the one statement PHASE 2 § *A parallel runbook* promises:
-every step without an edge is independent of every step not reachable from
-it, naming the steps that may therefore run at once. Approval is the
-author's declaration of every independence the table shows — the user
-approves the graph, not only the list — so a pair the user would have
-ordered is corrected here, as an edge, before anything is written. On an
-append the statement covers the new steps against every step in the
-runbook.
-
 **Only the shape.** Full prompts are deliberately not shown back: they are a
 wall of text that gets skimmed, and they are in the file a moment later, where
 a fix is one `/pipeline-revise` or `--append` away; a `show` reply prints
@@ -545,10 +487,7 @@ Two cases.
    written, because the body's file name carries it. Nothing is written yet.
 3. Write `.claude/runbooks/<id>-<name>.md`: the header, then each step in
    order. The header's `Last step number:` is the last step id assigned in this
-   write — on a runbook authored whole, the number of steps. `Execution
-   policy:` and `Parallelism:` are written only when the gate showed them,
-   in the schema's order, and a header carrying `Parallelism:` carries no
-   `Sequencing:`.
+   write — on a runbook authored whole, the number of steps.
 4. Append the index block with `Status: [PENDING]`, `Steps: 0/<total>` and
    `File: .claude/runbooks/<id>-<name>.md`, in the heading and field shape
    `runbook-schema.md` § *The index block* gives, and advance the counter to
@@ -599,16 +538,13 @@ All of these apply to every append — at the foot or at a `--before` /
   `runbook-schema.md` § *A step*.
 - **`Depends on:` may reference existing steps**, including completed ones.
   The new steps' `Depends on:` lines are authored as part of the append, with
-  the position in mind — and, on a runbook whose header carries
-  `Parallelism:`, under PHASE 2 § *A parallel runbook*'s duty, against the
-  existing steps included. **An existing step's `Depends on:` is never
+  the position in mind. **An existing step's `Depends on:` is never
   rewritten** — not to point at a step inserted above it, not for any reason.
 - **The `Sequencing:` and `Parallelism:` header lines are never touched** —
-  not extended, not replaced, not added to a runbook that has neither. Each
-  is fixed at authoring time, per `runbook-schema.md` § *The header*, and an
-  append onto a parallel runbook writes no `Sequencing:` as no append does. A
-  dated fact an appended step needs goes in its prompt, and a fact learned
-  later goes in its `Context:`.
+  not extended, not replaced, not added to a runbook that has neither. Each is
+  fixed at authoring time, per `runbook-schema.md` § *The header*. A dated fact an
+  appended step needs goes in its prompt, and a fact learned later goes in its
+  `Context:`.
 - **Existing steps are never edited.** This is the invariant that makes an
   append safe during a run, and it holds wherever the new steps land: no
   existing step's heading, marker, `Depends on:`, `Needs:`, `Context:`, prompt

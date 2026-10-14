@@ -32,25 +32,20 @@ The rest of the suite: [task-suite.md](./task-suite.md).
   parsing, before the first task, never otherwise) — plus `task-engine`'s
   `parking.md`, read at ARGUMENT PARSING when UNATTENDED is true or at
   PRE-FLIGHT step 2 when a resolved task is `[PARKED]`, never on an attended
-  run that meets no parked task, and `task-engine`'s `worktree.md`, read
-  with `delegated-runs.md` before the first spawn when PARALLEL is set on a
-  2+-task run, never on a sequential run. **`--parallel <N|max>`**
-  (ARGUMENT PARSING): `N` an integer of 2 or more, `max` case-insensitive
-  and unbounded; sets PARALLEL and DELEGATE = true, so step 2b's question
-  is not asked; refused with one line beside `--no-agents`, beside
-  `--no-commit` (a landing is made of commits), on a `CLAUDE.md` mapping
-  git to another VCS (no worktree there), and on an `N` below 2 or neither
-  integer nor `max`; silently ignored on a run resolving to one task; every
-  other flag composes and rides through the agent prompt. PRE-FLIGHT step 3
-  reads, under PARALLEL only, the `Parallel-safe files for /task-implement:
-  <path>, <path>` marker into PARALLEL_SAFE — repo-root-relative paths as a
-  `Files:` line writes them — whose one reader is `delegated-runs.md`'s
-  overlap rule; no marker or no PARALLEL means nothing exempt. What the
-  flag changes — scheduler, worktree per task, landing — is
-  [task-implement-delegation.md](./task-implement-delegation.md); in a
-  worktree Step 7 is `worktree.md` § *The agent integrates* (commit on
-  `wt/task-<N>`, rebase onto the base tip, re-verify when it moved, no
-  re-sync or push — the launcher lands and pushes).
+  run that meets no parked task, and `parallel-runs.md`, read at ARGUMENT
+  PARSING only when `--parallel` is passed. **`--parallel <N|max>`**: the
+  body only strips the pair and reads `parallel-runs.md`, whose § *The flag*
+  holds the value rules (`N` ≥ 2, `max` case-insensitive and unbounded),
+  PARALLEL and DELEGATE = true (step 2b asks nothing), the four one-line
+  refusals (`--no-agents`, `--no-commit`, a `CLAUDE.md` mapping another VCS,
+  a bad `N`), the silent no-op on a one-task run, and the PRE-FLIGHT step 3
+  read of the `Parallel-safe files for /task-implement: <path>, <path>`
+  marker into PARALLEL_SAFE, whose one reader is its overlap rule. That file
+  names `task-engine`'s `worktree.md`, read before the first spawn; the rest
+  — scheduler, worktree per task, landing — is
+  [task-implement-delegation.md](./task-implement-delegation.md). In a
+  worktree Step 7 is `worktree.md` § *The agent integrates* — one bullet in
+  the body, read by the delegated agent the prompt names its worktree.
   Also declares `requires: command:follow-ups`: its CLOSING THE RUN section
   applies that command's rules — the body read by name, never invoked — as
   the *Follow-ups* group of the closing report, once per run, after the

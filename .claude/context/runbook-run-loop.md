@@ -75,7 +75,8 @@ relay and resolve. The rest of the bullet:
   unselectable, untouched, not parked), mark
   `[~]`, spawn ONE subagent, **wait for the result notification** (the single
   most dangerous point — the spawn's return value is not the result), classify,
-  commit. **Under a parallelism above one** the re-read is a **scheduling
+  commit. **Under a parallelism above one** (`references/parallel.md`, read
+  only then) the re-read is a **scheduling
   point** (run start and every landing) and selection takes EVERY step in
   list order whose marker is `[ ]`/`[~]`/`[!]` and whose `Depends on:` are
   all `[x]`, while fewer than N are in flight (no bound under `max`); a step
