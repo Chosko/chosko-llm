@@ -83,9 +83,13 @@ skill's reference files and dependencies. The rest of its bullet:
   only after the schema's one-sentence check finds a `File:` file name not
   beginning `<id>-`. No sweep, no migration script. It IS the dependency
   the rest of the runbook suite and `/objective-run` declare — and declares
-  two itself, `requires: command:follow-ups, skill:follow-ups-resolve` (the second for
-  the mid-run follow-up protocol and the post-report execution of approved
-  items): its CLOSING THE RUN section applies the first
+  three itself, `requires: command:follow-ups, skill:follow-ups-resolve,
+  skill:task-engine` (the second for the mid-run follow-up protocol and the
+  post-report execution of approved items; the third for one file alone,
+  `../task-engine/references/worktree.md`, the worktree protocol, which joins
+  the "reads three files" contract as a read made only by a run whose
+  parallelism is above one — [task-engine.md](./task-engine.md)): its
+  CLOSING THE RUN section applies the first
   command's rules — body read by name, never invoked — as the *Follow-ups*
   group of the closing report, once per run (completion, a `--to`/`--only`/
   `--steps` bound, the end branch, a user-requested stop after a step, or a

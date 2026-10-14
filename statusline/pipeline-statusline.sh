@@ -2,13 +2,14 @@
 : <<'CHOSKO_FRONTMATTER'
 ---
 name: pipeline-statusline
-version: 0.1.2
+version: 0.2.0
 type: statusline
 description: Status line showing the session (model, folder, branch, context, cost, rate limits) and the project's pipeline progress — current runbook, tasks in scope, tasks in progress. Wire it with /pipeline-statusline.
 ---
 CHOSKO_FRONTMATTER
 # Claude Code status line: session on line 1, runbook + task progress on line 2,
-# one line per [IN PROGRESS] task in scope after that.
+# one line per task in scope that is [IN PROGRESS] or in flight in a
+# wt/task-<N> worktree after that.
 # One awk process and no other fork: Claude Code drops a render that arrives
 # late, and every fork costs ~0.5 s on Windows under load.
 # Usage: pipeline-statusline.sh [--no-nerd-font]   (status JSON on stdin)
@@ -133,19 +134,27 @@ function cut(t, max,   s, i, b, lead, need) {
 
 # Branch name, or "@<short sha>" when detached; "" outside a repository.
 # Walks up from dir; the .git file of a worktree redirects through gitdir:.
-function git_head(dir,   d, line, gd, p) {
-  d = dir
+# Leaves the common git dir in GITDIR (through a worktree commondir file), ""
+# when none was found.
+function git_head(dir,   d, line, gd, p, rel) {
+  d = dir; GITDIR = ""
   while (d != "") {
     p = d "/.git/HEAD"
-    if ((getline line < p) > 0) { close(p); break }
+    if ((getline line < p) > 0) { close(p); GITDIR = d "/.git"; break }
     close(p)
     p = d "/.git"
     if ((getline line < p) > 0) {
       close(p); sub(/\r$/, "", line)
       if (line !~ /^gitdir: /) return ""
-      gd = join(d, substr(line, 9)) "/HEAD"
-      if ((getline line < gd) > 0) { close(gd); break }
-      close(gd)
+      gd = join(d, substr(line, 9)); p = gd "/HEAD"
+      if ((getline line < p) > 0) {
+        close(p); GITDIR = gd
+        p = gd "/commondir"
+        if ((getline rel < p) > 0) { sub(/\r$/, "", rel); GITDIR = join(gd, rel) }
+        close(p)
+        break
+      }
+      close(p)
       return ""
     }
     close(p)
@@ -157,6 +166,19 @@ function git_head(dir,   d, line, gd, p) {
   if (line ~ /^ref: refs\/heads\//) return substr(line, 17)
   if (line ~ /^[0-9a-f]+$/) return "@" substr(line, 1, 7)
   return ""
+}
+
+# 1 when the worktree of unit (task-<N>) exists: git keeps one entry per
+# worktree under <common git dir>/worktrees/, named after the directory
+# basename, which the protocol makes the unit name, and its HEAD names the
+# branch wt/<unit>.
+function inflight(unit,   p, line, r) {
+  if (GITDIR == "") return 0
+  p = GITDIR "/worktrees/" unit "/HEAD"
+  r = (getline line < p) > 0
+  close(p)
+  sub(/\r$/, "", line)
+  return r && line == "ref: refs/heads/wt/" unit
 }
 
 # ---------- JSON: flatten scalars into F["dotted.path"] ----------
@@ -335,6 +357,12 @@ END {
         }
       }
     }
+  }
+
+  # a task in flight in its worktree counts and renders as [IN PROGRESS]
+  for (i = 1; i <= nt; i++) {
+    id = ORDER[i]
+    if ((!scoped || (id in SC)) && inflight("task-" id)) TS[id] = "IN PROGRESS"
   }
 
   total = 0; done = 0; prog = 0

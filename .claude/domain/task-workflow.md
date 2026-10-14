@@ -7,7 +7,7 @@ Source of truth for task backlog schema and implementation model. Read when touc
 Everything below this section is a *rule* — schema, vocabulary, protocol —
 and every rule has exactly one home. That home is `skills/task-engine/`, a
 shipped skill that is a reference library and not a command: no arguments,
-no behaviour, nothing to invoke. Seventeen files under `references/`, one
+no behaviour, nothing to invoke. Eighteen files under `references/`, one
 authority each:
 
 | File | Owns |
@@ -29,6 +29,7 @@ authority each:
 | `closing-report.md` | The closing report's two groups, their shapes, the numbering as the reply handle. |
 | `amend.md` | Changing one existing task in place: the two checks before writing (not `[IN PROGRESS]`; no change to what its feature promises, else route to `/architect amend`), which body sections and summary-block fields may change, a dropped `Preconditions:` edge named in `## Decisions`, deleting a live task as `[SKIP]`, adding `Feature:` to an orphan, one gate, a closed write set. |
 | `parking.md` | Task parking under the `unattended` policy: the one event that parks, the prompts that take their default instead, the `## Parking handoff` section, the `park/task-<N>` branch, the park sequence, the transactional unpark, the answerer rule, the two refusals. Read by `/task-implement` only under `--unattended` or when a resolved task is `[PARKED]`. |
+| `worktree.md` | Worktree isolation for a unit of work — a task or a runbook step: the derived `.claude/worktrees/<unit>` path and `wt/<unit>` branch, creation from the base tip, the agent's integration by rebase and re-verify, the orchestrator's fast-forward landing and push, the two invariants, the worktree as the in-flight signal, failure, parking inside a worktree, the sweep. Read by `/task-implement` and `/runbook-run` only when the run's parallelism is above one. |
 
 A consumer cites the file by path and then **states only its own
 deviations** — `/task-clean`'s prune set is `status.md`'s terminal statuses
@@ -37,17 +38,20 @@ the vocabulary they key off is not. That is the whole discipline: if a
 statement is true of two `task-*` features, it belongs in the engine, and a
 consumer restating it has created a second copy to forget.
 
-Six features consume it: `/task-add`, `/task-list`, `/task-clean`,
-`/task-implement`, `/quick-implement` and `/task-review`. `/task-add` cites
-its design-change check, reconciliation and orphan question from here, and
-`/task-implement` its testing-policy resolution, tests-first sequence and
-closing report, because `/quick-implement` — a change taken from conversation
-to commit with no backlog entry ([`./product-workflow.md`](./product-workflow.md)
-§ Quick implement) — runs the same checks and a second copy would drift.
-`/task-review` reads it for two things only:
+Seven features consume it: `/task-add`, `/task-list`, `/task-clean`,
+`/task-implement`, `/quick-implement`, `/task-review` and `/runbook-run`.
+`/task-add` cites its design-change check, reconciliation and orphan
+question from here, and `/task-implement` its testing-policy resolution,
+tests-first sequence and closing report, because `/quick-implement` — a
+change taken from conversation to commit with no backlog entry
+([`./product-workflow.md`](./product-workflow.md) § Quick implement) — runs
+the same checks and a second copy would drift. `/task-review` reads it for
+two things only:
 `review-budget.md`, when a `--review` spawn hands it a budget block, and
 `resolution.md` § *The archive*, which keeps its weakest task-resolution
-fallback out of `.claude/tasks/archive/`. `/task-iterate` does not — it
+fallback out of `.claude/tasks/archive/`. `/runbook-run` reads one file only,
+`worktree.md` — the protocol both orchestrators share, which is why it lives
+in the engine rather than in either skill. `/task-iterate` does not — it
 operates on diffs and findings, not on the backlog's schema, and states its
 one-line archive exclusion inline. `/architect` and `/production-status` name
 § *The archive* as the rule's home without consuming the engine: neither
@@ -59,6 +63,8 @@ engine, since no consumer ever carried a copy, and it is read by path by
 whatever amends a single task — the pipeline revision surface,
 `/pipeline-revise` — which executes it but owns none of
 the lines it writes. See [§ Changing a planned task](#changing-a-planned-task-pipeline-revise).
+`worktree.md` was authored in the engine for the same reason, and its design
+is [`./features/worktree-isolation.md`](./features/worktree-isolation.md).
 
 **Why a skill and not a command.** `cmd-add` installs a skill by `cp -R` of
 the whole folder, so supporting files ride along; a command is a single `.md`
@@ -72,7 +78,7 @@ survive installation.
 **Why `requires:` had to exist first.** A body reading a file inside another
 installed feature breaks when that feature is absent, and the failure surfaces
 as an agent following a dangling path mid-run rather than as anything the CLI
-said. All six consumers declare `requires: skill:task-engine`; `chosko-llm
+said. All seven consumers declare `requires: skill:task-engine`; `chosko-llm
 add` installs the engine before the dependent, and `chosko-llm rm
 skill:task-engine` refuses while any dependent is installed.
 

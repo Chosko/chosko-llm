@@ -139,6 +139,12 @@ line in plain words — what the task was doing and why it stopped — with the
 task number and date last, in parentheses, then the `Question:` as recorded,
 per `../../interaction-engine/references/messages.md` § *Questions*.
 
+The park and unpark sequences run in whatever tree the task is running in.
+Inside a worktree (`./worktree.md`) the base of the bookkeeping commit is
+`wt/<unit>`: step 3 checks that branch back out, step 4 commits on it, and
+the commit lands onto the base like any other; the unpark cherry-picks onto
+the head of whatever tree the task is then running in.
+
 ## The unpark transaction
 
 Nothing destructive happens until the last step, and a failure rolls back to

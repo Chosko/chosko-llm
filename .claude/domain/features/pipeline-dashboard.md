@@ -186,6 +186,11 @@ project's `CLAUDE.md` on `on`.
     their `Done:` line, up to `## Do not re-propose`. A step's tasks come from
     `(task N)` / `(tasks N–M)` in its title, else from the tasks whose
     `Feature:` is the feature slug the title names.
+  - Units in flight: the worktree registry, `worktrees/<unit>/HEAD` under the
+    common git dir, probed per shown task and per step without a git call; a
+    `wt/task-<N>` entry renders the task `IN PROGRESS`, a
+    `wt/runbook-<id>-step-<n>` entry the step running
+    ([worktree-isolation](./worktree-isolation.md)).
 - **The opt-in** — the `Pipeline dashboard policy: on` line in the project's
   `CLAUDE.md`, read at run start; a run flag overrides it for that run only.
 - **The data model** (generated, never hand-written): `milestone`,

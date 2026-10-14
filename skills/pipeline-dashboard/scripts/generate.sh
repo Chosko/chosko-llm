@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Build the pipeline dashboard's data from the project's indexes, in one awk
 # pass: the [ACTIVE] milestone of .claude/PLAN.md, its features and tasks, the
-# current runbook and its steps, and the question waiting in pending.json.
-# Run from the project root. Writes nothing in the project.
+# current runbook and its steps, the units in flight in a wt/<unit> worktree
+# (read from the git dir, no git call), and the question waiting in
+# pending.json. Run from the project root. Writes nothing in the project.
 # Usage: generate.sh                    write index.html (from ../assets/index.html, titled
 #                                       "Pipeline <project>") and data.js into the state
 #                                       folder, print the data.js path
@@ -125,16 +126,34 @@ function pad(s, w,   c, i, b) {
 
 # ---------- project identity ----------
 
-function origin_slug(   gd, line, p, n, C, i, sect, url, parts, k) {
+# The common git dir: root/.git, or where the .git file of a worktree points
+# through its gitdir: line and commondir file.
+function gitdir(   gd, line, p) {
   gd = root "/.git"
-  if (!exists(gd "/config")) {
-    if ((getline line < gd) > 0 && line ~ /^gitdir: /) {
-      gd = join(root, trim(substr(line, 9)))
-      if ((getline p < (gd "/commondir")) > 0) gd = join(gd, trim(p))
-      close(gd "/commondir")
-    }
-    close(root "/.git")
+  if (exists(gd "/config")) return gd
+  if ((getline line < gd) > 0 && line ~ /^gitdir: /) {
+    gd = join(root, trim(substr(line, 9)))
+    p = gd "/commondir"
+    if ((getline line < p) > 0) gd = join(gd, trim(line))
+    close(p)
   }
+  close(root "/.git")
+  return gd
+}
+
+# 1 when the worktree of unit (task-<N>, runbook-<id>-step-<n>) exists: git
+# keeps one entry per worktree under <common git dir>/worktrees/, named after
+# the directory basename, which the protocol makes the unit name, and its
+# HEAD names the branch wt/<unit>.
+function inflight(unit,   p, line, r) {
+  p = GITD "/worktrees/" unit "/HEAD"
+  r = (getline line < p) > 0
+  close(p)
+  sub(/\r$/, "", line)
+  return r && line == "ref: refs/heads/wt/" unit
+}
+
+function origin_slug(gd,   line, n, C, i, sect, url, parts, k) {
   n = readfile(gd "/config", C); url = ""
   for (i = 1; i <= n; i++) {
     if (C[i] ~ /^\[/) sect = C[i]
@@ -158,7 +177,8 @@ BEGIN {
 
   gsub(/\\/, "/", root)
   project = root; sub(/\/+$/, "", project); sub(/.*\//, "", project)
-  slug = origin_slug()
+  GITD = gitdir()
+  slug = origin_slug(GITD)
   if (slug == "") slug = tolower(project)
   gsub(/[^a-z0-9._-]/, "-", slug)
   state = home "/pipeline-dashboard/" slug
@@ -219,7 +239,7 @@ BEGIN {
   nrb = readfile(cl "/RUNBOOKS.md", RB); nr = 0; pick = 0
   for (i = 1; i <= nrb; i++) {
     if (RB[i] ~ /^## [0-9]+\. /) {
-      nr++; h = RB[i]; sub(/^## [0-9]+\. /, "", h); p = index(h, EM_SEP)
+      nr++; h = RB[i]; sub(/^## /, "", h); RBI[nr] = h + 0; sub(/^[0-9]+\. /, "", h); p = index(h, EM_SEP)
       RBN[nr] = p ? substr(h, 1, p - 1) : h; RBT[nr] = p ? substr(h, p + length(EM_SEP)) : ""; RBS[nr] = ""; RBF[nr] = ""
     } else if (nr && RB[i] ~ /^Status: \[/) { s = RB[i]; sub(/^Status: \[/, "", s); sub(/\].*/, "", s); RBS[nr] = s }
     else if (nr && RB[i] ~ /^File: /) RBF[nr] = trim(substr(RB[i], 7))
@@ -250,6 +270,8 @@ BEGIN {
         SI[nst] = out
       } else if (nst && BODY[i] ~ /^Done: /) SD[nst] = substr(BODY[i], 7)
     }
+    # a step in flight in its worktree renders as running
+    for (i = 1; i <= nst; i++) if (inflight("runbook-" RBI[pick] "-step-" SN[i])) SM[i] = "~"
   }
 
   # ---- pending.json ----
@@ -259,10 +281,11 @@ BEGIN {
   if (pend !~ /^\{/) pend = "null"
 
   # ---- tasks shown: the scope plus every task a step names ----
+  # a task in flight in its worktree renders as IN PROGRESS
   ntl = sortkeys(WANT, TL)
   for (i = 1; i <= ntl; i++) {
     id = TL[i]
-    if (id in TT) { T_T[id] = TT[id]; T_S[id] = TS[id]; T_F[id] = TFE[id] != "" ? TFE[id] : TF[id] }
+    if (id in TT) { T_T[id] = TT[id]; T_S[id] = inflight("task-" id) ? "IN PROGRESS" : TS[id]; T_F[id] = TFE[id] != "" ? TFE[id] : TF[id] }
     else if (exists(cl "/tasks/archive/" id ".md")) {
       getline line < (cl "/tasks/archive/" id ".md"); close(cl "/tasks/archive/" id ".md")
       sub(/\r$/, "", line); sub(/^# Task [0-9]+ [^ ]+ /, "", line); sub(/^# /, "", line)

@@ -2,6 +2,16 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.101.0 — 2026-10-14
+
+- **`task-engine` gains `references/worktree.md`, the worktree-isolation protocol.** One git worktree and `wt/<unit>` branch per task or runbook step under `.claude/worktrees/`: the unit's agent commits there, rebases onto the base tip and re-verifies; the orchestrator lands it by fast-forward, pushes, and removes the worktree. Read by `/task-implement` and `/runbook-run` only when a run's parallelism is above one; a sequential run is unchanged.
+- **`/runbook-run` requires `skill:task-engine`.** `chosko-llm add skill:runbook-run` installs the engine first; `rm skill:task-engine` refuses while `runbook-run` is installed.
+- **`/task-clean` sweeps finished tasks' worktrees.** Every prune lists, beside the `park/task-*` branches, each `wt/task-<N>` worktree and branch whose task is `[DONE]`, `[SKIP]` or archived, and removes them on the same "Apply?". A worktree whose task is still live is never touched; a remove that fails is a Follow-ups item, never a halt.
+- **`/runbook-clean` sweeps finished steps' worktrees.** Each `wt/runbook-<id>-step-<n>` worktree and branch whose step is `[x]`, or whose runbook the run is removing, goes on the same confirmation; any other marker keeps its worktree. Both sweeps are local and run under `--no-commit` and `--no-push`.
+- **`pipeline-statusline` shows tasks in flight in a worktree.** A task whose `wt/task-<N>` worktree exists counts and renders as `[IN PROGRESS]`, read from the git dir with no extra process; a task also flipped on disk is counted once. With no worktree the status line is unchanged.
+- **`pipeline-dashboard` shows units in flight in a worktree.** The page data and the text snapshot render a task with a `wt/task-<N>` worktree as in progress and a step with a `wt/runbook-<id>-step-<n>` worktree as running. With no worktree both are unchanged.
+
+
 ## 1.100.0 — 2026-10-13
 
 - **`/context-update` 1.7.0 splits oversized context files itself.** A file the update would push past 150 lines — or one already past it, which `full` reaches — is split into two focused files: Phase 1's report shows the planned split so you approve it at the existing gate, and Phase 2 makes it, adds the INDEX entry and repairs the sibling cross-references. On a nested layer the new file stays in the same unit. `-y` and `--unattended` runs split with no extra gate.

@@ -37,12 +37,21 @@ kinds: [features.md](./features.md); the design:
 - `skills/pipeline-dashboard/scripts/generate.sh` — one awk pass (plus one
   `date` and one `mkdir`): reads `PLAN.md` (first `[ACTIVE]`), `FEATURES.md`,
   `TASKS.md`, `RUNBOOKS.md` (first `[RUNNING]`, else last), the runbook body
-  up to `## Do not re-propose`, the task archive and `pending.json`; writes
+  up to `## Do not re-propose`, the task archive, the git dir's worktree
+  registry and `pending.json`; writes
   `data.js` (`window.DASH`) and `index.html` (the asset with `__PROJECT__`
   replaced, HTML-escaped) into
-  `${CLAUDE_HOME:-$HOME/.claude}/pipeline-dashboard/<slug>/`. `<slug>` from
-  `.git/config`'s `origin` (worktree `gitdir:` → `commondir` followed), else
-  the folder name. Scope: the milestone features' tasks, else every task;
+  `${CLAUDE_HOME:-$HOME/.claude}/pipeline-dashboard/<slug>/`. `gitdir()`
+  resolves the common git dir once into `GITD` (root `.git`, or a worktree's
+  `gitdir:` → `commondir` followed); `<slug>` from its `config`'s `origin`,
+  else the folder name. THE IN-FLIGHT PROBE: `inflight(unit)` reads
+  `$GITD/worktrees/<unit>/HEAD` and is true when it names
+  `refs/heads/wt/<unit>` — no git call
+  (`skills/task-engine/references/worktree.md` § *A worktree is a unit in
+  flight*); a shown task with a `task-<id>` entry gets status `IN PROGRESS`
+  whatever `TASKS.md` says, a step of the picked runbook with a
+  `runbook-<id>-step-<n>` entry gets marker `~`, the runbook id read off the
+  index heading into `RBI`. Scope: the milestone features' tasks, else every task;
   tasks a step names join the list with `scope: false`. A step's `tasks` from
   ids in its title, else the tasks of a feature slug named as a word in it.
   `unreadable` lists only a runbook body the index points at but that cannot
@@ -77,7 +86,10 @@ kinds: [features.md](./features.md); the design:
 - [runbook-run.md](./runbook-run.md), [task-implement.md](./task-implement.md)
   — the orchestrators that cite it.
 - [claude-md-hook-statusline.md](./claude-md-hook-statusline.md) —
-  `pipeline-statusline`, which parses the same indexes with its own code.
+  `pipeline-statusline`, which parses the same indexes and probes the same
+  worktree registry with its own code.
+- [task-engine.md](./task-engine.md) — `references/worktree.md`, the rule
+  behind the in-flight probe.
 
 ## When to read the source
 

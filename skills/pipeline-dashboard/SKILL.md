@@ -1,6 +1,6 @@
 ---
 name: pipeline-dashboard
-version: 0.3.1
+version: 0.4.0
 type: skill
 project-policy: line:Pipeline dashboard policy=on|off
 description: 'Print a text snapshot of where the pipeline work stands — milestone, runbook steps, tasks — and, for a run with the dashboard switched on, keep a private Artifact page of it live with any question waiting for the user. Trigger only when the user explicitly asks for an overview of the pipeline''s progress ("how far along is the pipeline", "pipeline status", "show the dashboard") in a project with a .claude/TASKS.md or .claude/RUNBOOKS.md. Not for: a question about one task, feature or step; git, CI or build status; a run already in progress, which names this skill itself when its dashboard is on. Followed by the orchestrating session only, never by a subagent.'

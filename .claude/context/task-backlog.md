@@ -67,8 +67,16 @@ Covers the task suite's backlog-maintenance features: `task-setup`,
   `[IN PROGRESS]` as PHASE 1 read it (a resumed task keeps its branch as
   rollback source until its commit); orphans get a plan section (none → nothing said), are deleted in
   PHASE 2 step 7 on the same gate (`git branch -D` / `git push origin
-  --delete`), a failed delete reported, not fatal; "No tasks to prune." only
-  when there are neither tasks nor orphans; a sweep-only run commits nothing.
+  --delete`), a failed delete reported, not fatal. THE WORKTREE SWEEP runs
+  beside it, same gate and same `## VCS` skip: `git worktree list
+  --porcelain` + `git branch --list 'wt/task-*'`, finished = task `[DONE]`,
+  `[SKIP]` or without a summary block as PHASE 1 read it, any other status
+  keeps its worktree unlisted; `git worktree remove` then `git branch -d` in
+  PHASE 2 step 7, local throughout so no flag skips it, a failed remove or
+  delete a *Follow-ups* item naming path and command; rule home
+  `skills/task-engine/references/worktree.md` § *The sweep*, cited not
+  copied. "No tasks to prune." only when there are neither tasks, orphans
+  nor finished worktrees; a sweep-only run commits nothing.
   Commits automatically:
   `task-clean: archive tasks <N>, …` staging `.claude/TASKS.md` + each
   `.claude/tasks/archive/<N>.md` (`git mv` already staged both halves of the

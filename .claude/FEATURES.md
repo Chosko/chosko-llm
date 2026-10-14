@@ -271,3 +271,12 @@ Source: prompt
 Tasks: 315, 316, 317, 318, 319, 320, 321, 322
 
 ---
+
+## worktree-isolation — One git worktree per unit of work; the agent integrates, the orchestrator lands
+
+Status: [DONE]
+Doc: .claude/domain/features/worktree-isolation.md
+Source: product-design.md § Task backlog
+Tasks: 325, 326, 327, 328
+
+---

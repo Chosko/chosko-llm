@@ -1,9 +1,9 @@
 ---
 name: runbook-run
-version: 0.21.0
+version: 0.22.0
 type: skill
 description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user — or, under the `unattended` policy, parking the step that asked and going on — recording what each did and committing after every step. Use it to carry out a runbook, whole or a range of its steps.
-requires: command:follow-ups, skill:follow-ups-resolve, skill:interaction-engine
+requires: command:follow-ups, skill:follow-ups-resolve, skill:interaction-engine, skill:task-engine
 ---
 
 # /runbook-run
@@ -78,9 +78,11 @@ everything else is unchanged — see THE INLINE MODE.
 - **Read three files.** The project's `CLAUDE.md`, the runbook (the body at
   the path its index block's `File:` line holds) and the index
   (`.claude/RUNBOOKS.md`) — plus the reference files above, which are part of
-  this skill. Do **not** open `.claude/context/`, `.claude/domain/` or any
-  source file: orienting in the codebase is each step's subagent's job, and
-  the spawned prompt tells it to.
+  this skill, and one file of the `task-engine` skill it requires:
+  `../task-engine/references/worktree.md`, the worktree protocol, read only by
+  a run whose parallelism is above one. Do **not** open `.claude/context/`,
+  `.claude/domain/` or any source file: orienting in the codebase is each
+  step's subagent's job, and the spawned prompt tells it to.
 - **Write two files.** The runbook and the index, nothing else. Every other
   change in the tree is made by a subagent. This is a hard contract.
 - **Never do a step's work.** One fresh subagent per step does it.

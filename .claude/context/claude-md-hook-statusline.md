@@ -40,13 +40,22 @@ kinds themselves: [features.md](./features.md); the frontmatter contract:
   awk flattener (scalars to `dotted.path<TAB>value` lines, `null` dropped so
   missing and null read the same) — no `jq`, per the no-new-dependencies rule.
 - `statusline/pipeline-statusline.sh` — statusline artifact: the session
-  line, then runbook + task progress and one line per in-progress task in
-  scope, read from the project's `.claude/` indexes. Hard constraint: bash
+  line, then runbook + task progress and one line per task in scope that is
+  `[IN PROGRESS]` or in flight in a `wt/task-<N>` worktree, read from the
+  project's `.claude/` indexes and the git dir. Hard constraint: bash
   only `exec`s ONE `awk` under `LC_ALL=C` — no other fork (git, grep, sed,
   cygpath, date), since a late render is dropped by Claude Code and each fork
   costs ~0.5 s on Windows. awk parses the JSON, reads `.git/HEAD` (following a
-  worktree's `gitdir:`), tests file existence by `getline`, takes the clock
-  from `srand()`. Task scope, first match: runbook title range → step-heading
+  worktree's `gitdir:`, and leaving the common git dir — through its
+  `commondir` file — in `GITDIR`), tests file existence by `getline`, takes
+  the clock from `srand()`. THE IN-FLIGHT PROBE: `inflight(unit)` reads
+  `$GITDIR/worktrees/<unit>/HEAD` and is true when it names
+  `refs/heads/wt/<unit>` — git's registry entry for a linked worktree, named
+  after the directory basename the protocol makes the unit name
+  (`skills/task-engine/references/worktree.md` § *A worktree is a unit in
+  flight*); every task in scope with a `task-<N>` entry is set `IN PROGRESS`
+  before the counts, so the base tree's `TASKS.md`, which never sees the
+  worktree's flip, still renders it. Task scope, first match: runbook title range → step-heading
   ids → steps' `Done:` lines (only when no heading names one) → `[ACTIVE]`
   milestone's features in `PLAN.md` → all of `TASKS.md`; archived ids in
   scope count done. Labels and both glyph sets (Nerd Font octal escapes,
