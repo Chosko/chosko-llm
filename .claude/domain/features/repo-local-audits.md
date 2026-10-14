@@ -196,12 +196,11 @@ change" rule and should be recorded in `CLAUDE.md` when this lands, or the next
 session will bump `VERSION` for a file no user receives.
 
 One softer interaction, recorded so a later reader does not file it as a bug:
-`chosko-llm export` **does** carry both skills. `select_export_files` in
-`scripts/cmd-export.sh` selects `.claude/**/*.md`, and they were deliberately
-not excluded — an export packages a repository's Claude config, and repo-local
-tooling is part of that config. This does not weaken the hard contract above:
-neither appears in `chosko-llm ls --available`, and an exported bundle is not an
-install.
+`chosko-llm export` does **not** carry either skill. `select_export_files` in
+`scripts/cmd-export.sh` excludes `.claude/skills/` wholesale, so repo-local
+tooling never reaches an exported bundle. The hard contract above is unaffected:
+neither skill appears in `chosko-llm ls --available`, and an exported bundle is
+not an install.
 
 ## Dependencies
 
