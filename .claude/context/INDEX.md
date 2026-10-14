@@ -61,7 +61,7 @@ Canonical project docs live outside this folder, stay authoritative:
 | [task-review-iterate.md](./task-review-iterate.md) | The review pair — `task-review`, `task-iterate`. |
 | [runbook-suite.md](./runbook-suite.md) | The runbook suite's family-wide contract and domain pointers; hub for `runbook-run`, `runbook-create`, `runbook-list`, `runbook-describe`, `runbook-clean`, `runbook-prune`, `runbook-suggest`, `follow-ups` and `follow-ups-resolve`. |
 | [runbook-run.md](./runbook-run.md) | `runbook-run` — the runbook store, the skill's reference files and dependencies. |
-| [runbook-run-loop.md](./runbook-run-loop.md) | `runbook-run` — execution policy, parked-question handles, runbook ids, the step loop and its result cases, the end branch, the spawn relay, resolve. |
+| [runbook-run-loop.md](./runbook-run-loop.md) | `runbook-run` — execution policy, the parallelism (`--parallel <N\|max>` / header `Parallelism:`, graph selection, barriers, the landing), parked-question handles, runbook ids, the step loop and its result cases, the end branch, the spawn relay, resolve. |
 | [runbook-run-contracts.md](./runbook-run-contracts.md) | `runbook-run` — chat contract, closing report, commit convention, Stop-hook reply, hard contracts, range bounds, depth budget. |
 | [runbook-create.md](./runbook-create.md) | `runbook-create`, the runbook author. |
 | [runbook-readers.md](./runbook-readers.md) | The runbook read side — `runbook-list`, `runbook-describe`. |

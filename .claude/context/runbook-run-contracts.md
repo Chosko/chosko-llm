@@ -14,8 +14,12 @@ The rest of the bullet: [runbook-run.md](./runbook-run.md) and
   finished + the one starting, `m` = every selectable step in range capped by
   `--steps N`, fixed at launch, `x/y` = the index's `Steps:` counter at launch,
   `x` raised by this run's finished steps + the one starting; parked/failed
-  steps add nothing; full definitions in CHAT OUTPUT) and one line at its end
-  (`Step 4 done (abc1234). Starting step 5.`, or the failure line), no
+  steps add nothing; under a parallelism above one printed once per spawn,
+  `k` and `x` counting landed + every step in flight incl. the one starting;
+  full definitions in CHAT OUTPUT) and one line at its end
+  (`Step 4 done (abc1234). Starting step 5.`, or the failure line; above one
+  `Step 4 landed (abc1234). In flight: 5, 6. Starting step 7.` or `Nothing
+  more to start.`), no
   narration of spawn/wait/classify/`Done:`/commit, the progress line the only
   status line on a forced mid-step turn, relayed questions,
   spawn-relay lines and the one-line `Follow-up: <item>` printed when a
@@ -29,12 +33,15 @@ The rest of the bullet: [runbook-run.md](./runbook-run.md) and
   one line per executed step in list order,
   `<step n> — <outcome, commit sha and diffstat> — <what changed in one line;
   decision or wrong premise flagged; questions relayed and their answers>`,
-  then any run-level deviation on one line; each drawn from the `Done:` line
+  then any run-level deviation on one line (under a parallelism above one a
+  failed step's line names its worktree path, and one run-level line names
+  each in-flight step that landed after the failure); each drawn from the `Done:` line
   and the step report already in hand. **Follow-ups** (numbered `1.`/`2.`/…, any length — the reply handle,
   restarting at 1 per report, a number naming a parked step's question being
   its answer): the feature completion
   candidates the step reports named plus one flip question asked once after
-  the run, a failed step with its reason, a step left `[~]` to resume, every
+  the run, a failed step with its reason, a step left `[~]` to resume (with
+  its worktree path when one exists, to finish by hand or remove), every
   step left `[P]` with its question verbatim and the steps waiting on it, the
   steps outside the range / `--steps` count / never started, and what
   `/follow-ups`' rules yield applied to the run's reading, de-duplicated by
@@ -46,12 +53,21 @@ The rest of the bullet: [runbook-run.md](./runbook-run.md) and
   status flip of the report's own; a `FEATURES.md` flip is a delegated item.
   **Commit convention: one commit per completed step**, staging exactly the
   runbook (its `File:` path; both old and new path on the step that migrated
-  it) and the index, then push; `--no-commit`/`--no-push` usual meanings.
-  `[~]` is deliberately NEVER committed — its presence in a tree is the resume
-  signal and the same-tree exception to one-run-per-runbook (`[RUNNING]` in the
-  index blocks a second run otherwise; no lock file, no timestamp, no staleness
-  heuristic); by commit time a marker is `[x]`, `[!]` or `[P]`, a parked
-  step's commit its one commit for the run, an unpark a bookkeeping commit of
+  it) and the index, then push; `--no-commit`/`--no-push` usual meanings;
+  under a parallelism above one the step's own commits are landed by
+  fast-forward just before, so they still sit beside its bookkeeping commit.
+  On a sequential run `[~]` is deliberately NEVER committed — its uncommitted
+  presence in a tree is the resume signal and the same-tree exception to
+  one-run-per-runbook (`[RUNNING]` in the index blocks a second run
+  otherwise; no lock file, no timestamp, no staleness heuristic); by commit
+  time a marker is `[x]`, `[!]` or `[P]`. Under a parallelism above one a
+  landed step's commit MAY capture `[~]` for the steps still in flight (the
+  alternative is one commit at the end of the run), still one commit per
+  landed step staging the two files, and the resume signal is `[RUNNING]`
+  plus a `wt/runbook-<id>-step-<n>` worktree on this machine — either signal
+  admits the resuming run, a committed `[~]` with neither behind it is a run
+  in flight elsewhere and `[RUNNING]` blocks. A parked
+  step's commit is its one commit for the run, an unpark a bookkeeping commit of
   its own. **The Stop-hook reply** (under COMMIT CADENCE) is the cost of that
   choice, paid down: a cloud sandbox's Stop hook exits 2 on any dirty tree, and
   an in-flight step is dirty by design, so the block lands at every step start
@@ -66,7 +82,8 @@ The rest of the bullet: [runbook-run.md](./runbook-run.md) and
   the avoided tool call is the bigger saving, and anything else dirty falls
   through to normal handling, which preserves the real forgotten-commit check.
   Second case, spawned mode only: while a spawned step is in flight (spawned,
-  result not yet arrived) reply `stop hook ignored on subagent WIP` whatever is
+  result not yet arrived — any of the several in flight above a parallelism
+  of 1) reply `stop hook ignored on subagent WIP` whatever is
   dirty; `--inline` keeps the runbook-WIP case alone. `task-engine`'s
   `tree.md` itself knows nothing of runbooks.
   Lives in THIS body, not a global `claude-md`: `Stop` fires for the main
@@ -76,10 +93,15 @@ The rest of the bullet: [runbook-run.md](./runbook-run.md) and
   does-no-work and subagent-result ones are **default-mode contracts**; `--inline`
   is their one opt-in exception, executing every selected step in the session
   itself, refused beside `--relay-spawns` or `--model` — see
-  `.claude/domain/features/runbook-inline.md`; the dashboard, when on, sits
-  outside the reads/writes and chat contracts — [pipeline-dashboard.md](./pipeline-dashboard.md)): steps are **always sequential** (never parallel,
-  even when declared independent — one question stream, and two agents would
-  race on `Done:` lines); it **writes exactly two files** and does none of the
+  `.claude/domain/features/runbook-inline.md`; a parallelism above one is the
+  other opt-in, and the two never combine; the dashboard, when on, sits
+  outside the reads/writes and chat contracts — [pipeline-dashboard.md](./pipeline-dashboard.md)):
+  **how many steps are in flight at once is the parallelism's** — at the
+  default 1, one at a time, never two (one question stream, and two agents in
+  one tree would race on the same files); above one, up to N, each in its own
+  worktree so the body file stays the orchestrator's alone; it **writes
+  exactly two files** — plus the git of the worktree protocol, which changes
+  no tracked file — and does none of the
   work itself; **no step is ticked before its subagent's result arrives**; it
   reads only `CLAUDE.md`, the runbook and the index — **never a step's task
   body or named document, not even to compose the prompt**, whose
@@ -90,18 +112,20 @@ The rest of the bullet: [runbook-run.md](./runbook-run.md) and
   refused at spawn time). `--from N`/`--to N`/`--only N` narrow selection but
   never weaken `Depends on:` — one model, not three (`--only N` **is**
   `--from N --to N`; naming `--only` beside either bound is an error, as is a
-  `--to` naming a step listed above the `--from` step — nine argument errors
-  in all, the last three `--attended` with `--unattended` or a `CLAUDE.md`
+  `--to` naming a step listed above the `--from` step — twelve argument errors
+  in all: `--attended` with `--unattended` or a `CLAUDE.md`
   `Interaction policy:` value outside the two words (the engine's `policy.md`
-  errors), `--skip-parked` on a run not resolving to `unattended`, and a
-  header `Execution policy:` value outside the two words). The bounds name steps
+  errors), `--skip-parked` on a run not resolving to `unattended`, a header
+  `Execution policy:` value outside the two words, and the three of the
+  parallelism listed in [runbook-run-loop.md](./runbook-run-loop.md)). The bounds name steps
   **by id** and cut the list **at those steps' positions**, so a range is
   always the stretch of steps the run walks. Bounds are re-applied against the
   body re-read each step, so a step appended mid-run inside the range runs and
   a bound naming a step not yet in the body is not an error. Reaching a `--to` bound is **not** completion: the
   index goes back to `[PENDING]` unless the whole runbook is `[x]`.
   `--steps N` runs at most N steps **executed in this run** (a step counts once
-  its result reached step 8 as `DONE`; `[x]` steps never count), composes with
+  its result reached step 8 as `DONE` — landed, above a parallelism of 1;
+  `[x]` steps never count), composes with
   `--from` only (error beside `--to`/`--only`, or with a non-positive-integer
   value), never weakens `Depends on:`, and reaching the count stops the run
   exactly like a `--to` bound (back to `[PENDING]` unless all `[x]`). Depth
@@ -109,7 +133,8 @@ The rest of the bullet: [runbook-run.md](./runbook-run.md) and
   step agent leaves one confirmed level **where nesting works at all** (depth 3
   confirmed locally; a cloud subagent cannot spawn, and depth 4 was never
   probed anywhere) — with the spawn relay, a step wanting its own subagent
-  needs no third level.
+  needs no third level; a step running `/task-implement --parallel` is one
+  level past the verified bound and routes through the relay like any child.
 
 ## Public API
 

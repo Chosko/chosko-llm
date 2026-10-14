@@ -24,7 +24,18 @@ skill's reference files and dependencies. The rest of its bullet:
   `[PENDING]`/`[RUNNING]`/`[FAILED]`/`[DONE]` (a runbook waiting on a `[P]`
   step is `[PENDING]`), the optional header `Execution policy:
   attended|unattended` (absent = `attended`; any other value an argument
-  error at run time), the index `Parked: steps <ids>` line present only while
+  error at run time), the optional header `Parallelism: <N|max>` directly
+  after it (an integer of 2 or more, or `max`; absent = 1; authored by
+  `/runbook-create` only when asked for a parallel runbook, never rewritten
+  by a run, overridden for one run by `/runbook-run --parallel`; any other
+  value an argument error at run time; mutually exclusive with `Sequencing:`,
+  whose constraint the graph does not carry) — under a parallelism above one
+  `Depends on:` is the ONLY ordering constraint and list position is priority
+  among the steps selectable at the same moment, and `[~]` MAY be committed
+  (a landed step's commit carries it for the steps still in flight), the
+  resume signal being `[RUNNING]` plus a `wt/runbook-<id>-step-<n>` worktree
+  on this machine rather than an uncommitted `[~]` — the index
+  `Parked: steps <ids>` line present only while
   a step is `[P]` — `Failed at:`'s rule applied again — the optional
   per-step `Needs:` field, index block + its `Last runbook number:` counter and
   per-runbook **id**, plus two header fields of the body's own: the
@@ -38,9 +49,17 @@ skill's reference files and dependencies. The rest of its bullet:
   `/runbook-prune` writes it first)
   and `references/subagent-contract.md` (two fenced blocks: OPERATING RULES,
   pasted verbatim into every spawned prompt, and RELAY CHILD RULES, pasted
-  verbatim ahead of it into a relay child's prompt only — five placeholders,
-  `<RUNBOOK>`, `<N>` and `<FILE>` (the body's `File:` path, for the never-edit
-  rule; relay file names stay built from `<RUNBOOK>`/`<N>`), plus
+  verbatim ahead of it into a relay child's prompt only — six placeholders,
+  `<RUNBOOK>`, `<N>`, `<FILE>` (the body's `File:` path, for the never-edit
+  rule; relay file names stay built from `<RUNBOOK>`/`<N>`) and `<WORKTREE>`
+  (the absolute directory the step works in — its
+  `.claude/worktrees/runbook-<id>-step-<n>` worktree under a parallelism
+  above one, the base tree's own path on a sequential run — carrying two
+  fixed rules: every path touched is under it, and the remote is the
+  orchestrator's, so an invoked skill commits as usual but skips its pull,
+  re-sync and push as under `--no-push` with no flag typed, and before
+  `DONE` the agent rebases its branch onto the base tip per `task-engine`'s
+  `worktree.md` § *The agent integrates*, a no-op on the base itself), plus
   `<PROMPT>`/`<RESULT>` on the child block alone,
   and it carries the `SPAWN REQUEST` rule; OPERATING RULES make the literal
   `DONE` line mandatory — a finished turn without it is a hard failure however

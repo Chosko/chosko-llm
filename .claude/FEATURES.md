@@ -289,3 +289,12 @@ Source: product-design.md § Task backlog
 Tasks: 329, 330, 331
 
 ---
+
+## parallel-runbooks — Runbook steps scheduled by their `Depends on:` graph, under a `Parallelism:` header or `--parallel`
+
+Status: [DONE]
+Doc: .claude/domain/features/parallel-runbooks.md
+Source: product-design.md § Task backlog
+Tasks: 332, 333, 334, 335, 336
+
+---
