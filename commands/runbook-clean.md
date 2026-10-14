@@ -9,9 +9,8 @@ requires: skill:runbook-run, skill:interaction-engine
 
 # /runbook-clean
 # Global command: prune runbooks in the terminal status from the project's
-# runbook store. Every run also sweeps the `wt/runbook-<id>-step-<n>`
-# worktrees and branches whose step is [x], or whose runbook it is removing,
-# at the same confirmation. Commits and pushes the removals by default.
+# runbook store, and the worktrees finished steps left behind. Commits and
+# pushes the removals by default.
 # Usage: /runbook-clean
 #        /runbook-clean <id|name|id-name> [<id|name|id-name> ...]
 #        /runbook-clean [<id|name|id-name> ...] --no-commit   (delete, skip the commit and push)
@@ -93,43 +92,27 @@ is no `[SKIP]` in the runbook vocabulary at all.
 
 THE WORKTREE SWEEP
 
-- A parallel `/runbook-run` gives each step its own worktree at
-  `.claude/worktrees/runbook-<id>-step-<n>` on a branch
-  `wt/runbook-<id>-step-<n>`; a step that failed or was interrupted leaves
-  both behind.
-- The bullets below are the whole sweep; never open
-  `../skills/task-engine/references/worktree.md`, whose § *The sweep* is the
-  rule's home. Run it on the same **"Apply?"** gate as the removals.
-- Skip the sweep when the project's `CLAUDE.md` carries a `## VCS` section:
-  there are no worktrees to sweep.
+Remove the `.claude/worktrees/runbook-<id>-step-<n>` worktrees and
+`wt/runbook-<id>-step-<n>` branches a parallel `/runbook-run` left behind for
+finished steps. These bullets are the whole sweep — never open
+`../skills/task-engine/references/worktree.md`, the rule's home.
 
-Its own specifics:
-
-- **List.** Worktrees with `git worktree list --porcelain`, keeping the
-  entries whose path is `.claude/worktrees/runbook-<id>-step-<n>` or whose
-  branch is `wt/runbook-<id>-step-<n>`; branches with
-  `git branch --list 'wt/runbook-*'`, so a branch whose worktree was already
-  removed by hand is still found. List nothing on the remote: a worktree and
-  its branch are never pushed.
+- **Skip it** unless `.claude/worktrees/` exists (one Glob, no shell), and
+  when the project's `CLAUDE.md` carries a `## VCS` section. Then add no plan
+  section and say nothing about it.
+- **List** `git worktree list --porcelain` entries whose path or branch
+  matches, and `git branch --list 'wt/runbook-*'`. Nothing is on the remote.
 - **Finished** means runbook `<id>` is in the set STAGE 1 resolved for
-  removal, or its index block's `File:` body holds step `<n>` as `[x]` as
-  the schema reads it — an id on the header's `Archive:` line included.
-  - Reading that body for the marker is the one reason to open a body this
-    command is not deleting.
-  - A step with any other marker keeps its worktree and is not listed: that
-    worktree may be the only copy of the work.
-  - Keep too a worktree whose runbook has no index block, or whose step the
-    body does not hold, and name it in STAGE 3's report as left in place.
-- **Remove** each finished one in STAGE 3, only after approval:
-  `git worktree remove .claude/worktrees/runbook-<id>-step-<n>`, then
-  `git branch -d wt/runbook-<id>-step-<n>`; delete a branch with no worktree
-  alone. A remove or delete that fails is a *Follow-ups* item in STAGE 3's
-  report naming the path and the command that failed — neither fatal nor
-  retried, and nothing else of the sweep stops for it.
-- The sweep is local and changes no tracked file: run it whole under
-  `--no-commit` and `--no-push`; a run that only sweeps commits nothing.
-- No finished worktree means no plan section and nothing said about the
-  sweep.
+  removal, or its body holds step `<n>` as `[x]` (an `Archive:` id
+  included) — the one reason to open a body this command is not deleting.
+  Any other marker keeps its worktree, unlisted; so does a worktree whose
+  runbook or step no longer exists, named in STAGE 3's report as left in
+  place.
+- **Remove** each finished one in STAGE 3, after the same **"Apply?"**:
+  `git worktree remove`, then `git branch -d`. A failure is a *Follow-ups*
+  item naming the path and the command — never fatal, never retried.
+- The sweep is local and changes no tracked file: it runs whole under
+  `--no-commit` and `--no-push`, and a run that only sweeps commits nothing.
 
 ---
 
@@ -221,9 +204,8 @@ Runbooks to remove (2):
 Refused (1):
   2. cli-dependency-field  [FAILED] — only [DONE] is eligible
 
-Worktrees to remove (2):
+Worktrees to remove (1):
   .claude/worktrees/runbook-1-step-7   wt/runbook-1-step-7   runbook 1 is being removed
-  (no worktree)                        wt/runbook-3-step-2   step 2 of runbook 3 is [x]
 
 Nothing else in .claude/runbooks/ is touched.
 ```
@@ -291,10 +273,7 @@ STAGE 3 — REMOVE AND COMMIT (only after explicit approval)
    - The index blocks removed.
    - Each runbook refused and why, repeated from the plan so the closing
      report is complete on its own.
-   - Each worktree removed and each branch deleted; a remove or delete that
-     failed as a *Follow-ups* item naming the path and the command; any
-     worktree the sweep left in place because it could not tell its step
-     was finished.
+   - What THE WORKTREE SWEEP removed, failed or left in place.
    - The number of runbooks remaining in the index.
 
 ### Commit and push

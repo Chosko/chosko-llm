@@ -22,7 +22,8 @@ Covers the runbook suite's two pruners: `commands/runbook-clean.md` and
   runbooks have no second terminal status. No `--force`, no status argument
   widening the set: a `[FAILED]` runbook is flipped by hand first, one visible
   committed edit. THE WORKTREE SWEEP joins the plan on the same gate (skipped
-  under a `## VCS` section): `git worktree list --porcelain` + `git branch
+  under a `## VCS` section, and unless `.claude/worktrees/` exists — one
+  Glob, no git call otherwise): `git worktree list --porcelain` + `git branch
   --list 'wt/runbook-*'`; finished = runbook in the removal set, or its body
   holds the step `[x]` (an `Archive:` id included — the one read of a body it
   is not deleting); any other marker, an unknown runbook id or a step the
@@ -31,8 +32,8 @@ Covers the runbook suite's two pruners: `commands/runbook-clean.md` and
   so it runs whole under `--no-commit`/`--no-push`, a failure a *Follow-ups*
   item naming path and command, a sweep-only run commits nothing and writes
   no id backfill; rule home `skills/task-engine/references/worktree.md`
-  § *The sweep*, reached through `/runbook-run`'s `requires:` on the engine,
-  the command declaring none of its own. **Commit convention: cleanup** —
+  § *The sweep*, never opened — the sweep's bullets are complete on their
+  own. **Commit convention: cleanup** —
   commits and pushes by default (a deletion left uncommitted is the change
   most likely to be lost, and the confirm gate already served as the review
   pass); `--no-commit`/`--no-push` opt out.

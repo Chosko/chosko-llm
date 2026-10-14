@@ -152,32 +152,23 @@ replaced, leaves one behind.
 
 ## THE WORKTREE SWEEP
 
-A run under worktree isolation gives each task its own worktree at
-`.claude/worktrees/task-<N>` on a branch `wt/task-<N>`; a task that failed
-or was interrupted leaves both behind.
+Remove the `.claude/worktrees/task-<N>` worktrees and `wt/task-<N>` branches
+a parallel run left behind for finished tasks. These bullets are the whole
+sweep — never open `../task-engine/references/worktree.md`, the rule's home.
 
-- The bullets below are the whole sweep; never open
-  `../task-engine/references/worktree.md`, whose § *The sweep* is the rule's
-  home. Run it on the same **"Apply?"** gate as the park-branch sweep, and
-  skip it under the same `## VCS` condition.
-- **List.** Worktrees with `git worktree list --porcelain`, keeping the
-  entries whose path is `.claude/worktrees/task-<N>` or whose branch is
-  `wt/task-<N>`; branches with `git branch --list 'wt/task-*'`, so a branch
-  whose worktree was already removed by hand is still found. List nothing
-  on the remote: a worktree and its branch are never pushed.
-- **Finished** means task N is `[DONE]` or `[SKIP]` in `.claude/TASKS.md`
-  as PHASE 1 read it, or has no summary block there — archived, and so
-  terminal (`resolution.md` § *The archive*). A task in any other status,
-  `[IN PROGRESS]` and `[PARKED]` included, keeps its worktree and is not
-  listed: that worktree may be the only copy of the work.
-- **Remove** each finished one in PHASE 2, only after approval:
+- **Skip it** unless `.claude/worktrees/` exists (one Glob, no shell), and
+  under the park-branch sweep's `## VCS` condition. Then add no plan section
+  and say nothing about it.
+- **List** `git worktree list --porcelain` entries whose path is
+  `.claude/worktrees/task-<N>` or whose branch is `wt/task-<N>`, and
+  `git branch --list 'wt/task-*'`. Nothing is on the remote.
+- **Finished** means task N is `[DONE]`, `[SKIP]` or archived as PHASE 1 read
+  `TASKS.md`. Any other task keeps its worktree, unlisted: it may hold the
+  only copy of the work.
+- **Remove** each finished one in PHASE 2, after the same **"Apply?"**:
   `git worktree remove .claude/worktrees/task-<N>`, then
-  `git branch -d wt/task-<N>`; delete a branch with no worktree alone. A
-  remove or delete that fails is a *Follow-ups* item in PHASE 2's report
-  naming the path and the command that failed — neither fatal nor retried,
-  and nothing else of the sweep stops for it.
-- With no finished worktree, add no plan section and say nothing about the
-  sweep.
+  `git branch -d wt/task-<N>`. A failure is a *Follow-ups* item naming the
+  path and the command — never fatal, never retried.
 
 ---
 
@@ -249,7 +240,6 @@ or was interrupted leaves both behind.
 
    Worktrees to remove (W):                      (omit when none)
      .claude/worktrees/task-42   wt/task-42   task 42 is [DONE]
-     (no worktree)               wt/task-17   task 17 has no summary block
 
    Anything in [IN PROGRESS]? <yes/no — if yes, list them as a heads-up
    so the user notices unfinished work before pruning around it>
@@ -311,9 +301,7 @@ written into each archived body.
    - Number of `Preconditions:` lines rewritten.
    - Each park branch deleted, local and remote, and any delete that
      failed, with its output.
-   - Each worktree removed and each `wt/task-<N>` branch deleted; a remove
-     or delete that failed as a *Follow-ups* item naming the path and the
-     command.
+   - What THE WORKTREE SWEEP removed or failed to remove.
    - Final task count.
    - The unchanged `Last task number:` value.
 
