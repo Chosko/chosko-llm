@@ -2,7 +2,7 @@
 
 Layout: flat
 
-Last updated: 2026-10-13
+Last updated: 2026-10-14
 
 Nav layer for `chosko-llm`. How to read it: `../../CLAUDE.md` § Navigation.
 

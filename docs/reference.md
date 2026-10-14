@@ -2072,11 +2072,12 @@ merged and deleted upstream its `pull --ff-only` will fail; recover with
 
 ### Exporting a repo's Claude config
 
-`chosko-llm export` packages a repo's Claude config (`CLAUDE.md`,
-`AGENTS.md`, `README.md`, and the curated Markdown/JSON/TOML/shell subset of
-`.claude/`; the shell part covers hooks and the task-setup test runners,
-which `settings.json` and the backlog wiring reference) into a single
-hand-off artifact:
+`chosko-llm export` packages a repo's project knowledge for a claude.ai
+Project — `CLAUDE.md`, `AGENTS.md`, `README.md`, and the curated
+Markdown/JSON/TOML/shell subset of `.claude/`, the shell part being the repo's
+own `.claude/hooks/` scripts — into a single artifact. Installed commands,
+skills and agents, runbooks, the external-LLM wiring, `RUNBOOKS.md`,
+`TASKS.md` and the top-level `settings.json` are left out:
 
 ```sh
 chosko-llm export                 # writes ~/claude-exports/<repo>-claude-config.md
