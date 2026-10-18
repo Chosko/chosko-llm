@@ -181,11 +181,13 @@ copy-on-install decision.
 
 ### Config export
 
-Packages a repository's Claude configuration into a single markdown file or
-a zip, for use where the CLI is not: handing the configuration to someone
-who does not have the tool, feeding it to another agent, or recording what
-a project was configured with at a point in time. Serves the director and
-teammates, and does not depend on the install path.
+Packages a repository's project knowledge — its `CLAUDE.md`, `AGENTS.md`,
+`README.md` and its own Claude configuration — into a single markdown file or
+a zip, for loading into a claude.ai Project. It leaves out what is not the
+project's own knowledge: installed commands, skills and agents, runbooks, the
+external-LLM wiring, the runbook and backlog indexes, and the top-level
+`settings.json`. Serves the director and teammates, and does not depend on
+the install path.
 
 ### Project initialization
 

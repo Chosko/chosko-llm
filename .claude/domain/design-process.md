@@ -101,3 +101,6 @@ redesign, not a resume.
   nothing changes before the need is demonstrated. The same reasoning
   covers CI: the repo's authoring guards are written by Claude for Claude
   to invoke, and automating them was declined.
+- **What config export is for.** Export carries project knowledge into a
+  claude.ai Project, so it ships only what is the project's own — never the
+  installed features or the pipeline wiring around them.

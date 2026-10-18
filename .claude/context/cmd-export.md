@@ -30,16 +30,21 @@ CLI:
 Selection (`select_export_files <repo_dir>`, repo-relative paths on stdout):
 - Includes: `CLAUDE.md`, `AGENTS.md`, `README.md` at repo root, plus files
   under `.claude/` matching `*.md`, `*.json`, `*.toml`, `*.sh` (recursively).
-  `*.sh` is in the subset because a repo's Claude config contains
-  executables that other *selected* files point at: `.claude/hooks/*.sh`
-  (named by `settings.json`'s `hooks` key) and `.claude/external/run-*-tests.sh`
-  (named by the task-setup wiring).
-- Excludes: `.claude/projects/`, `.claude/history/`, `.claude/todos/`,
-  `.claude/tasks/` (all pruned, not just filtered — kept off `find`
-  traversal entirely so large `projects/` history or task backlog don't
-  slow scan), `.claude/TASKS.md`, and any `settings.local.json` anywhere
-  under `.claude/`. Task backlog is working-repo planning metadata, not
-  part of repo's Claude config, so never ships in export.
+  `*.sh` is in the subset for repo's own hook scripts under
+  `.claude/hooks/`.
+- Excludes, unconditionally (no flag restores them):
+  - Pruned — kept off `find` traversal entirely, not just filtered, so large
+    trees don't slow scan: `.claude/projects/`, `.claude/history/`,
+    `.claude/todos/`, `.claude/tasks/`, `.claude/commands/`,
+    `.claude/skills/`, `.claude/agents/`, `.claude/runbooks/`,
+    `.claude/external/`.
+  - Filtered: `.claude/TASKS.md`, `.claude/RUNBOOKS.md` and
+    `.claude/settings.json` (top-level only — a `settings.json` in a
+    subdirectory of `.claude/` still ships), plus any `settings.local.json`
+    anywhere under `.claude/`.
+  - Installed features, runbooks, external-LLM wiring, backlog and runbook
+    indexes and shared settings are not repo's own config, so never ship in
+    export.
 - Missing optional root files skipped silently. Empty selection hard
   error via `die` — nothing to export.
 

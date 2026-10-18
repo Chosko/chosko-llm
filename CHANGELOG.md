@@ -25,6 +25,10 @@ User-facing changes per root `VERSION`, highest version first. Rules and schema:
 - **`/project-setup` names the `Parallel-safe files for /task-implement:` line.** It is never asked nor written; the closing report names it once, for a project that runs `--parallel` to add by hand.
 
 
+## 1.100.1 — 2026-10-14
+
+- **`chosko-llm export` leaves out installed features and pipeline wiring.** `.claude/commands/`, `.claude/skills/`, `.claude/agents/`, `.claude/runbooks/`, `.claude/external/`, `.claude/RUNBOOKS.md` and `.claude/settings.json` no longer ship in either export shape.
+
 ## 1.100.0 — 2026-10-13
 
 - **`/context-update` 1.7.0 splits oversized context files itself.** A file the update would push past 150 lines — or one already past it, which `full` reaches — is split into two focused files: Phase 1's report shows the planned split so you approve it at the existing gate, and Phase 2 makes it, adds the INDEX entry and repairs the sibling cross-references. On a nested layer the new file stays in the same unit. `-y` and `--unattended` runs split with no extra gate.
