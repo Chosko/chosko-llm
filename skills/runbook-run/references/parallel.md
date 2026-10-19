@@ -7,9 +7,9 @@ speaks, it wins over the section it names, steps 2–8, THE FOUR RESULT CASES,
 ONE RUN PER RUNBOOK, COMMIT CADENCE and THE CLOSING REPORT included.
 
 Read `./parallel-schema.md` and `../../task-engine/references/worktree.md`
-beside it, once. The unit
-there is `runbook-<id>-step-<n>`, the base is the branch this run was launched
-on, checked out in this tree, and this session is its one writer. That file
+beside it, once. The unit there is `runbook-<id>-step-<n>`, the base is the
+branch this run was launched on, checked out in this tree, and this session
+is its one writer. That file
 owns the worktree, the agent's integration, the landing, the two invariants,
 the in-flight signal and failure; this file states only the scheduling and
 this skill's own departures.
@@ -37,9 +37,8 @@ worktree. It changes no tracked file.
   - `--parallel` beside `--no-parallel`: `--parallel and --no-parallel
     cannot be combined. Pick one.`
   - a `--parallel` value outside the set above, or a header `Parallelism:`
-    value outside `./parallel-schema.md` § *The header line* — the header
-    one holds whether or not a flag was passed, as `Execution policy:`'s
-    does;
+    value outside `./parallel-schema.md` § *The header line*, even when a
+    flag overrides it — a typo in the header is fixed, not routed around;
   - `--inline` with a parallelism above one: the session is one executor,
     and a silent fall-back would hide the header's promise;
   - a parallelism above one on a header carrying `Sequencing:`, which
