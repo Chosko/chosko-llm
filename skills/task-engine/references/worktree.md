@@ -3,16 +3,16 @@
 Authority for: the unit of work and the two names derived from it, how the
 orchestrator creates a unit's worktree, how the unit's agent integrates its
 work onto the base branch, how the orchestrator lands it, the two invariants
-that make landings safe, a worktree as the in-flight signal, what a failure
-leaves behind, parking inside a worktree, and the sweep of finished units'
-worktrees.
+that make landings safe, a worktree as the in-flight signal, eligibility
+while a unit is in flight, what a failure leaves behind, and parking inside a
+worktree.
 
 Authored in the engine — no feature ever carried a copy of it. Read only
 through `/task-implement`'s `parallel-runs.md` and `/runbook-run`'s
 `references/parallel.md`, when a run's parallelism is above one; a
-sequential run never opens this file and works in the base tree. The
-always-read bodies carry only the commit forms in `./commit.md` and the
-in-worktree sentence in `./parking.md`, each citing here.
+sequential run never opens this file and works in the base tree. The one
+always-read mention is the rebase exception in `./commit.md`, citing here.
+The sweep of finished units' worktrees is `./worktree-sweep.md`.
 
 A **base** is the branch the run was launched on, checked out in the
 orchestrator's own tree. A **unit** is one task or one runbook step. The
@@ -98,7 +98,7 @@ this protocol's departure from its no-rebase rule.
 
 ## The orchestrator lands
 
-On the agent's return, with the base tree clean, land the unit in this
+On the agent's return, under the second invariant below, land the unit in this
 order:
 
 1. **Fast-forward only.** Merge `wt/<unit>` into the base with
@@ -128,10 +128,11 @@ sequential run (§ *Per-consumer notes*).
 Two invariants are the whole safety argument:
 
 - **The base has one writer** — the orchestrator — so landings cannot race.
-- **The base tree is clean at every landing**, so a fast-forward never meets
-  a local change it would overwrite. An orchestrator whose own bookkeeping is
-  dirty when a unit touched the same files commits that bookkeeping first,
-  then lands.
+- **At every landing the base tree holds no change to a file the unit
+  touched**, so a fast-forward never meets a local change it would
+  overwrite. The orchestrator's own uncommitted bookkeeping in files no unit
+  touches — a runbook body and its index — may stay; bookkeeping in a file
+  the unit touched is committed first, then the unit lands.
 
 ## A worktree is a unit in flight
 
@@ -150,6 +151,18 @@ and the base copy never shows it. Worktrees are local to the machine and never
 pushed, so a worktree present on this machine means *this* tree is the one
 that was interrupted.
 
+## Eligibility while a unit is in flight
+
+A unit in flight is neither done nor eligible: it is not selected again, and
+a unit whose `Preconditions:` (or `Depends on:`) name it stays blocked until
+it **lands**, not merely until it is spawned, because landing is what writes
+the status the next read sees. Nothing else in `./resolution.md`
+§ *Eligibility* changes, and nothing is stored in an index: the in-flight set
+is the orchestrator's own — the units this run spawned and not yet landed,
+held in run memory — and eligibility is still derived on every read. Git's
+worktree list is what the skip-while-present rule above reads, never what
+counts toward the set.
+
 ## Failure
 
 A unit that fails — its own failure, a rebase it could not complete, a
@@ -162,21 +175,18 @@ over it.
 
 ## Parking inside a worktree
 
-The park and unpark sequences of `./parking.md` run in the worktree unchanged:
-the `park/task-<N>` branch is made from the worktree's head and pushed by the
-agent unless NO_PUSH — the exception § *The agent integrates* names — the
-bookkeeping commit is made on `wt/<unit>` and lands like any other commit,
-and the worktree is removed with that landing. The unpark cherry-picks in
-whatever tree the task is then running in and deletes the branch, local and
-remote, as that file says.
+The park and unpark sequences of `./parking.md` run in the worktree unchanged,
+with `wt/<unit>` as the base of the bookkeeping commit:
 
-## The sweep
-
-A `wt/<unit>` worktree and branch whose unit is finished — a task `[DONE]` or
-`[SKIP]`, a step `[x]` — may be removed, with `git worktree remove` and the
-safe branch delete. A worktree whose unit is not finished is never swept: it
-may be the only copy of the work. A sweep that cannot remove a worktree
-leaves it and names it in *Follow-ups*, never halting.
+- steps 1 and 2 make the `park/task-<N>` branch from the worktree's head; the
+  agent pushes it unless NO_PUSH — the exception § *The agent integrates*
+  names — and § *The unpark transaction*, step 4, deletes it local and remote
+  the same way;
+- step 3 checks `wt/<unit>` back out and step 4 commits the bookkeeping on
+  it; that commit lands like any other and is pushed from the base by the
+  orchestrator, and the worktree is removed with that landing;
+- the unpark cherry-picks onto the head of whatever tree the task is then
+  running in.
 
 ---
 
@@ -197,10 +207,3 @@ leaves it and names it in *Follow-ups*, never halting.
   marker, the `Done:` line and their commit. A step parked under `unattended`
   is bookkeeping in the base body only, its agent having left the worktree
   clean of its own changes.
-- **`/task-clean`** — sweeps every `wt/task-<N>` worktree and branch whose
-  task is `[DONE]` or `[SKIP]`, or has no summary block (archived and
-  terminal, `./resolution.md` § *The archive*), beside its `park/task-*`
-  sweep; it never opens this file.
-- **`/runbook-clean`** — sweeps every `wt/runbook-<id>-step-<n>` worktree
-  and branch whose step is `[x]`, or whose runbook it is archiving; it never
-  opens this file.

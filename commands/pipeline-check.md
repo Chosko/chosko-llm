@@ -1,6 +1,6 @@
 ---
 name: pipeline-check
-version: 0.3.2
+version: 0.3.1
 type: command
 description: Report structural drift across the pipeline's indexes — FEATURES.md, TASKS.md, PLAN.md and RUNBOOKS.md — as findings grouped by artifact, each with its severity and the one command that fixes it. Use it when an index looks out of step with another, or before revising planned work.
 requires: skill:pipeline-engine, skill:interaction-engine
@@ -72,10 +72,9 @@ WORKFLOW
    - `backlog=partial` does not say which half exists: try `.claude/TASKS.md`,
      and count it absent when it is not there.
    - The only other files a run opens are the bodies `lint.md` § *What no rule
-     reads* names for its three body-reading findings — each `[PARKED]`
-     task's for L12, each runbook's for L13 (non-`[DONE]` only) and L15. Read
-     them in step 5, when those findings are evaluated, and only for the
-     heading, the markers or the header lines the finding checks.
+     reads* names for L12 and L13 — each `[PARKED]` task's, each
+     non-`[DONE]` runbook's. Read them in step 5, when those findings are
+     evaluated, and only for the heading or the markers the finding checks.
    - When the probe's `specs` count is above `0`, list `.claude/specs/*.md`
      with the Glob tool for L14 — a listing, never a read of a spec.
 
@@ -107,9 +106,8 @@ WORKFLOW
 
    No runbook finding is in scope: `RUNBOOKS.md` ties no runbook to a slug
    (`graph.md` E7), and this command opens no runbook body to find one — L13
-   reads a body for its markers and L15 for its header, never for its prompt
-   blocks. L14 is not in scope either: a spec carries no `Feature:` line to
-   tie it to a slug.
+   reads a body for its markers, never for its prompt blocks. L14 is not in
+   scope either: a spec carries no `Feature:` line to tie it to a slug.
 
 ---
 
@@ -160,9 +158,9 @@ READ-ONLY
 - Open no file under `.claude/tasks/archive/` and none under
   `.claude/domain/features/`, and no design document.
 - Under `.claude/tasks/` and `.claude/runbooks/`, open exactly the bodies
-  `lint.md` § *What no rule reads* names for L12, L13 and L15, and read
-  nothing else in them — never a prompt block, never a handoff's question.
-  Derive every other finding from index lines.
+  `lint.md` § *What no rule reads* names for L12 and L13, and read nothing
+  else in them — never a prompt block, never a handoff's question. Derive
+  every other finding from index lines.
 - List `.claude/specs/` for L14; open no spec.
 - Run no shell command beyond the probe, `git` included.
 - Never refuse over an absent index, a malformed block, an unknown `feature=`

@@ -2,7 +2,7 @@
 name: runbook-run
 version: 0.23.1
 type: skill
-description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user — or, under the `unattended` policy, parking the step that asked and going on — recording what each did and committing after every step; `--parallel <N|max>`, or a header `Parallelism:`, runs independent steps at once, each in its own worktree. Use it to carry out a runbook, whole or a range of its steps.
+description: Execute a runbook under .claude/runbooks/ one step at a time, each in a fresh subagent by default, relaying its questions to the user — or, under the `unattended` policy, parking the step that asked and going on — recording what each did and committing after every step; `--parallel` runs independent steps at once, each in its own worktree. Use it to carry out a runbook, whole or a range of its steps.
 requires: command:follow-ups, skill:follow-ups-resolve, skill:interaction-engine, skill:task-engine
 ---
 
@@ -14,8 +14,6 @@ requires: command:follow-ups, skill:follow-ups-resolve, skill:interaction-engine
 # `references/` also holds the files the rest of the runbook suite and the
 # pipeline revision surface read by path: `runbook-schema.md`,
 # `subagent-contract.md`, `body-migration.md` and `step-amend.md`.
-# `--parallel <N|max>`, or the header's `Parallelism:` line, runs the
-# runbook as its `Depends on:` graph, each step in its own worktree.
 # Usage: /runbook-run <id|name|id-name>
 #        /runbook-run <id|name|id-name> --from N        (begin selection at step N)
 #        /runbook-run <id|name|id-name> --to N          (stop after step N)
@@ -26,8 +24,7 @@ requires: command:follow-ups, skill:follow-ups-resolve, skill:interaction-engine
 #        /runbook-run <id|name|id-name> --model sonnet  (override the header model)
 #        /runbook-run <id|name|id-name> --inline        (execute the selected steps in this session)
 #        /runbook-run <id|name|id-name> --relay-spawns  (force the spawn relay for this run)
-#        /runbook-run <id|name|id-name> --parallel N|max  (up to N steps in flight at once, scheduled by Depends on:)
-#        /runbook-run <id|name|id-name> --parallel 1    (sequential, overriding a header Parallelism:)
+#        /runbook-run <id|name|id-name> --parallel N|max | --no-parallel  (see references/parallel.md)
 #        /runbook-run <id|name|id-name> --unattended    (park a step at a question instead of waiting; pre-ask the parked steps in range first)
 #        /runbook-run <id|name|id-name> --attended      (relay and wait, overriding a header `Execution policy: unattended`)
 #        /runbook-run <id|name|id-name> --unattended --skip-parked  (no pre-ask; a parked step stays parked)
@@ -50,14 +47,10 @@ Execute a runbook. For each step, in order: spawn one subagent with a fresh
 context and the assembled prompt, wait for its result, relay any question it
 asks to the user and the answer back to it, then record what it did and commit.
 
-That is the default mode, at a parallelism of 1. Two opt-ins change it, and
-they never combine:
-
-- `--inline`: this session executes each selected step itself in place of
-  the spawn-and-wait, and everything else is unchanged — see THE INLINE MODE.
-- A parallelism above one — `--parallel <N|max>`, or the header's
-  `Parallelism:` line: steps run by their `Depends on:` graph, up to N at
-  once, each in its own worktree — see `./references/parallel.md`.
+That is the default mode. Its opt-in exceptions, which never combine, are
+`--inline`: this session executes each selected step itself in place of the
+spawn-and-wait, and everything else is unchanged — see THE INLINE MODE; and
+a parallelism above one — see `./references/parallel.md`.
 
 > **Install path assumption:** this skill installs beside the files it reads
 > (`chosko-llm add skill:runbook-run` writes it under the same home as those
@@ -78,7 +71,7 @@ they never combine:
 > | `../interaction-engine/references/messages.md` | Always — before the first relayed question, gate or closing report. |
 > | `../interaction-engine/references/gates.md` | **Only when the policy resolves to `unattended`**, in step 1. |
 > | `./references/body-migration.md` | **Only when the migration check fires** in step 1 — a legacy body to rename. A run with nothing to migrate never loads it. |
-> | `./references/parallel.md` | **Only when the parallelism resolves above one**, once, in step 1, with the `task-engine` skill's `../task-engine/references/worktree.md` it names. A sequential run never loads either. |
+> | `./references/parallel.md` | **Only when step 1's parallelism hook fires.** A sequential run never loads it, nor anything it names. |
 > | `./references/step-amend.md` | **Never by this body.** It sits beside the others, holding the rules for amending one step, read by path by whatever amends one. |
 
 ---
@@ -87,8 +80,8 @@ they never combine:
 
 - **Read three files.** The project's `CLAUDE.md`, the runbook (the body at
   the path its index block's `File:` line holds) and the index
-  (`.claude/RUNBOOKS.md`) — plus the reference files above, `worktree.md`
-  the one from another skill. Do **not** open `.claude/context/`, `.claude/domain/` or any
+  (`.claude/RUNBOOKS.md`) — plus the reference files above, which are part of
+  this skill. Do **not** open `.claude/context/`, `.claude/domain/` or any
   source file: orienting in the codebase is each step's subagent's job, and
   the spawned prompt tells it to.
 - **Write two files.** The runbook and the index, nothing else. Every other
@@ -175,8 +168,8 @@ failure line the halt already calls for.
 | `--steps N` | Run at most N steps in this run, then stop. N is a positive integer. Composes with `--from`; refused beside `--to` or `--only`. |
 | `--model <model>` | Override the runbook header's `Model:` for **this whole run**. There is no per-step model. |
 | `--inline` | Execute every selected step in **this session** instead of in a fresh subagent, for the whole run. Composes with `--from`, `--to`, `--only`, `--steps N`, `--no-commit`, `--no-push`, `--attended`, `--unattended` and `--skip-parked`, and changes nothing about selection, committing or the policy. Refused beside `--relay-spawns` or `--model`; the header `Model:` is not applied. See THE INLINE MODE. |
+| `--parallel <N\|max>` \| `--no-parallel` | The run's parallelism, against the header's `Parallelism:`: values, precedence and errors are `./references/parallel.md`, read per step 1. |
 | `--relay-spawns` | Force the spawn relay for the whole run, for an environment already known to be flat. Without it the relay still works — the step's own subagent triggers it when it finds it cannot spawn. See THE SPAWN RELAY. |
-| `--parallel <N\|max>` | Run under that parallelism for the whole run, whatever the header's `Parallelism:` says: N an integer of 2 or more, `max` (case-insensitive) for no bound, `--parallel 1` a sequential run. See *The parallelism* below. |
 | `--unattended` | Run under the `unattended` policy for this whole run: a step that asks a question is parked and the run goes on (`./references/parking.md`). At launch, unless `--skip-parked`, the `[P]` steps in range are pre-asked. |
 | `--attended` | Run under the `attended` policy for this whole run: a question is relayed and the run waits. |
 | `--skip-parked` | No pre-ask at launch: a `[P]` step in range stays parked unless a reply in chat answers it. For a launch no human sees — a routine, a scheduler, an orchestrator that is itself a subagent. Requires the policy to resolve to `unattended`. |
@@ -198,11 +191,6 @@ and before the project's `CLAUDE.md` line.
   three changes: the fifth result row parks a step at its question instead of
   relaying it, the spawned preamble carries the one sentence that tells the
   step's agent so, and the launch pre-asks the parked steps in range.
-
-**The parallelism** is one value for the whole run: `--parallel` when passed,
-else the header's `Parallelism:` line, else 1. Resolve it in step 1 beside the
-policy, and never write it back. At 1 nothing in this body changes; above one,
-`./references/parallel.md` amends the execution loop.
 
 **Bounds.**
 
@@ -245,7 +233,7 @@ policy, and never write it back. At 1 nothing in this body changes; above one,
   silent: say which range was asked for and that nothing in it remained, and
   stop.
 
-Twelve argument errors — name the problem and stop, having run nothing:
+Nine argument errors — name the problem and stop, having run nothing:
 
 - `--only` together with `--from` or `--to`. It is already both of them.
 - `--to Y` naming a step listed above step X of `--from X`.
@@ -267,16 +255,6 @@ Twelve argument errors — name the problem and stop, having run nothing:
   `unattended`, named in the error. It holds whether or not a flag was passed
   — a typo in the header is fixed, not routed around — and is caught in
   step 1, once the body is read, before anything is written.
-- A `--parallel` value that is not an integer of 1 or more and not `max`, or
-  a header `Parallelism:` value that is not an integer of 2 or more and not
-  `max` — caught in step 1 like the `Execution policy:` one.
-- `--inline` with a parallelism above one, from the flag or a header the flag
-  does not override to 1: the session is one executor, and a silent
-  fall-back would hide the header's promise.
-- A parallelism above one on a runbook whose header carries `Sequencing:`,
-  which records an ordering constraint the graph does not carry. Name the
-  line and the two ways out: carry the constraint into `Depends on:` with
-  `/pipeline-revise`, or run with `--parallel 1`.
 
 ---
 
@@ -290,10 +268,6 @@ here.
 ---
 
 ## THE EXECUTION LOOP
-
-Under a parallelism above one, `./references/parallel.md` amends steps 2–8,
-THE FOUR RESULT CASES, ONE RUN PER RUNBOOK, COMMIT CADENCE and THE CLOSING
-REPORT; where it speaks, it wins.
 
 ### 1. Resolve
 
@@ -348,9 +322,11 @@ REPORT; where it speaks, it wins.
     `--skip-parked` was passed. The pre-ask is the one thing that writes to
     the body before step 4, and its commit is its own.
   - Under `attended`, nothing more happens here.
-- **Resolve the parallelism** beside it, per ARGUMENTS § *The parallelism*,
-  and catch its three argument errors here. Above one, read
-  `./references/parallel.md` now and follow it for the whole run.
+- **The parallelism hook.** When `--parallel` was passed, or the header
+  carries `Parallelism:` and `--no-parallel` was not, read
+  `./references/parallel.md` now and follow it for the whole run; where it
+  speaks, it wins. Otherwise the run is sequential and nothing about
+  parallelism applies.
 
 ### 2. Re-read the body
 
@@ -429,9 +405,9 @@ marker is `[ ]`, `[~]` or `[!]`, and whose every `Depends on:` step is `[x]`.
   which overrides it for the whole run — and print the step's progress line
   (CHAT OUTPUT).
 - One at a time, never two — THE SPAWN RELAY holds the one exception, a
-  relayed child running while its caller is suspended. At a parallelism of 1
-  steps are sequential even where the runbook declares them independent;
-  only `./references/parallel.md` runs several at once.
+  relayed child running while its caller is suspended. Steps are sequential
+  always, even where the runbook declares them independent — the
+  parallelism hook of step 1 the one exception.
 - **Under `--inline`**, spawn nothing. The **execution phase** takes the place
   of this step and step 6: the session assembles the step's brief and executes
   it itself, under the inline contract (THE INLINE MODE), printing the
@@ -609,8 +585,7 @@ agent reads.
 6. **OPERATING RULES.** Verbatim from `./references/subagent-contract.md`,
    with only that block's three placeholders filled in: `<RUNBOOK>` with the
    runbook's name, `<N>` with the step id, and `<FILE>` with the resolved path
-   from step 1. It is fixed text and goes last — before `WORKTREE RULES`,
-   which only `./references/parallel.md` adds.
+   from step 1. It is fixed text and goes last.
 
 ---
 
@@ -902,10 +877,6 @@ What remains true:
   allows a runbook to be driven from a batch parent — see the question relay's
   subagent-position rule. The spawn relay works from that position too: the
   orchestrator spawns the child at its own level either way.
-- A step running `/task-implement --parallel` wants task agents under the
-  step's agent, and reviewers under those: where its agent cannot spawn, it
-  routes through the relay like any child, and its tasks may then run one at
-  a time.
 - Nested runbooks are the one case that *is* refused, and the relay does not
   change that — see step 5.
 

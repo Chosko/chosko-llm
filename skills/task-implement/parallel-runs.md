@@ -1,10 +1,11 @@
-# Parallel runs (`--parallel <N|max>`)
+# Parallel runs (`--parallel <N|max>`, `Parallel policy:`)
 
-Read at ARGUMENT PARSING when `--parallel` appears, for its refusals; follow
-the rest only when PARALLEL is set on a run that resolves to 2 or more tasks.
-A run without the flag never opens this file. It amends `./delegated-runs.md`
-for the whole run — where a section here speaks, it wins over the section it
-names.
+Read at ARGUMENT PARSING by SKILL.md's parallel hook — `--parallel` passed,
+or a `Parallel policy:` line other than `off` on a top-level run — to resolve
+PARALLEL and its refusals; follow the rest only when PARALLEL is set on a run
+that resolves to 2 or more tasks. A run the hook does not fire for never
+opens this file. It amends SKILL.md and `./delegated-runs.md` for the whole
+run — where a section here speaks, it wins over the section it names.
 
 Read `../task-engine/references/worktree.md` before the first spawn. The unit
 there is `task-<N>`; that file owns the worktree, the agent's integration, the
@@ -13,22 +14,35 @@ states only the launcher's scheduling and its own departures.
 
 ---
 
-## The flag
+## Resolving PARALLEL
 
-- `N` is an integer of 2 or more; `max` (case-insensitive) means no bound.
-  The flag sets PARALLEL to that value and DELEGATE = true: one conversation
-  cannot implement two tasks at once, so it implies `--agents` and PRE-FLIGHT
-  step 2b asks nothing.
-- Refuse it, each with one line:
+- **Sources, first match wins:** `--no-parallel` → off; `--parallel <N|max>`
+  → that value; the project's `CLAUDE.md` line `Parallel policy: <value>` —
+  `off`, an integer of 2 or more, or `max` (case-insensitive) — → that
+  value; nothing → off. `max` means no bound. The line is the project's
+  opt-in, offered by `/project-setup`, default off; a nested run reads only
+  the flag (SKILL.md's hook).
+- `--parallel` beside `--no-parallel` stops the run with:
+  `--parallel and --no-parallel cannot be combined. Pick one.`
+- On, PARALLEL is that value and DELEGATE = true: one conversation cannot
+  implement two tasks at once, so it implies `--agents` and PRE-FLIGHT step
+  2b asks nothing.
+- **A value from the flag** is refused, each with one line:
   - beside `--no-agents`: `--parallel and --no-agents cannot be combined.`
   - beside `--no-commit`: `--parallel and --no-commit cannot be combined.` —
     a landing is made of commits;
   - on a project whose `CLAUDE.md` maps git to another VCS (a `## VCS`
     section): `--parallel needs git — this project's CLAUDE.md maps another
-    VCS.` Read `CLAUDE.md` here if it has not been read yet;
+    VCS.`;
   - `N` below 2, or neither an integer nor `max`: `--parallel needs an
     integer of 2 or more, or max.`
-- Accept and ignore it, silently, on a run that resolves to a single task.
+- **A value from the line** is never refused: on any of the first three
+  conditions above the run stays sequential, with one line —
+  `Parallel policy ignored for this run: <condition>.` — and nothing else in
+  this file applies. A line value outside the set stops the run with:
+  `Parallel policy: in CLAUDE.md needs off, an integer of 2 or more, or max.`
+- Accept and ignore PARALLEL, silently, on a run that resolves to a single
+  task.
 - Every other flag composes unchanged and rides through the agent prompt.
 
 **The parallel-safe marker.** At PRE-FLIGHT step 3, look in `CLAUDE.md`, once,
@@ -55,7 +69,8 @@ At every **scheduling point** — the start of the run, and each landing:
 
 1. Re-read the base `.claude/TASKS.md` and re-derive eligibility for every
    task in the list per `../task-engine/references/resolution.md`
-   § *Eligibility*, its in-flight clause included. This subsumes BETWEEN
+   § *Eligibility*, read as `worktree.md` § *Eligibility while a unit is in
+   flight* says. This subsumes BETWEEN
    TASKS step 2's precondition re-check.
 2. Walk the list in order and, while fewer than N tasks are in flight — no
    bound under `max` — start each task you may: create its worktree per
@@ -90,8 +105,8 @@ At every **scheduling point** — the start of the run, and each landing:
 ### Barriers
 
 A task the delegation guard keeps in the parent runs in the base tree and
-dirties it, and the base must be clean at every landing (`worktree.md` § *The
-two invariants*). When the walk reaches one not yet run this run:
+dirties it, and at every landing the base may hold no change a fast-forward
+would overwrite (`worktree.md` § *The two invariants*). When the walk reaches one not yet run this run:
 
 1. start nothing more, and land every task in flight — handling each return
    as it arrives, questions relayed as usual;
@@ -117,7 +132,8 @@ The prompt's first sentence ends instead:
 > not pull: the launcher lands and pushes.
 
 The return's third field names, beside the commit hash, the base tip the agent
-rebased onto.
+rebased onto. In the agent, PER-TASK WORKFLOW Step 7 is `worktree.md`
+§ *The agent integrates*: its push is the launcher's.
 
 ## Returns, questions and landings
 

@@ -2,9 +2,8 @@
 
 Read this when DELEGATE is true — a run whose resolved task list holds 2 or
 more tasks and the user answered yes to PRE-FLIGHT's delegation question
-(or passed `--agents`, or `--parallel`, which implies it), or any run
-while orchestrate mode is on and
-`--no-agents` was not passed (PRE-FLIGHT step 2b). A single-task run with
+(or passed `--agents`), PARALLEL is set, or any run while orchestrate
+mode is on and `--no-agents` was not passed (PRE-FLIGHT step 2b). A single-task run with
 the mode off never reads this file.
 
 - Delegation is for context, not concurrency: each task gets its own agent
@@ -22,8 +21,8 @@ the mode off never reads this file.
 - Spawn ONE agent at a time and wait for it to finish before spawning the
   next. Every task in the run shares one working tree, one branch, and one
   `.claude/TASKS.md`; concurrent agents would race on status flips, on
-  staging paths, and on push. Several at once, each in its own worktree, is
-  `--parallel`: under PARALLEL, `./parallel-runs.md` replaces this section
+  staging paths, and on push. Under PARALLEL — several at once, each in its
+  own worktree — `./parallel-runs.md` replaces this section
   and amends the ones below.
 - Use the Agent tool with `subagent_type: "general-purpose"` and
   `run_in_background: false` (the parent must block on the result). Do not

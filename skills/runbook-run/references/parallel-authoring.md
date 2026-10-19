@@ -1,25 +1,26 @@
 # Authoring a parallel runbook
 
-Read by `/runbook-create` only when PARALLEL is set: the user asked for a
-parallel runbook — by saying so, or by naming a parallelism ("three at a
-time", "max") — or the run appends to a runbook whose header already carries
-`Parallelism:`, whether or not the user says so again. Never infer it from
-the shape of the work. A runbook with no `Parallelism:` line is authored
-without this file.
+Read by `/runbook-create` only for a parallel runbook, on one of three
+signals: the user asked for one — by saying so, or by naming a parallelism
+("three at a time", "max"); the run appends to a runbook whose header already
+carries `Parallelism:`, whether or not the user says so again; or the
+project's `CLAUDE.md` carries a `Parallel policy:` line other than `off` and
+the user did not ask for a sequential runbook. Never infer it from the shape
+of the work. A runbook with no `Parallelism:` line is authored without this
+file.
 
-Under a parallelism above one, `Depends on:` is the **only** ordering
-constraint: list position is priority among the steps selectable at the same
-moment, and a step with no edge to another is independent of it by the
-runbook's own declaration (`./runbook-schema.md` § *A step*). An edge left to
-omission is exactly what a parallel run violates silently, so this file adds
-one duty to each phase.
+Read `./parallel-schema.md` beside it: under a parallelism above one,
+`Depends on:` is the **only** ordering constraint, and a step with no edge to
+another is independent of it by the runbook's own declaration. An edge left
+to omission is exactly what a parallel run violates silently, so this file
+adds one duty to each phase.
 
 ## The value
 
-Write the value the user named. A request that names none proposes `max` at
-the gate, where the user sets it. Write `Parallelism:` directly after
-`Execution policy:`, on a new runbook only — never on an append, never
-beside `Sequencing:` (`./runbook-schema.md` § *The header*).
+Write the value the user named; else the `Parallel policy:` line's value;
+else propose `max` at the gate, where the user sets it. Write `Parallelism:`
+where `./parallel-schema.md` § *The header line* puts it, on a new runbook
+only — never on an append, never beside `Sequencing:`.
 
 ## PHASE 2 — every ordering constraint is an edge
 
