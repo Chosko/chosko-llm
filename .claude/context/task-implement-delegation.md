@@ -12,7 +12,7 @@ suite: [task-suite.md](./task-suite.md).
   On run resolving to 2+ tasks, offers
   to implement each task in fresh subagent so later tasks don't inherit
   earlier ones' context — the point is context; concurrency is a second
-  step on the same shape (`--parallel`, below) and changes nothing an agent
+  step on the same shape (PARALLEL, below) and changes nothing an agent
   is handed or returns. Each agent owns its
   task's status flips and commit, while `claude+human` / `human` /
   explicitly requested `[STALE]` tasks stay in parent conversation
@@ -20,16 +20,17 @@ suite: [task-suite.md](./task-suite.md).
   pre-answer prompt; single-task runs never see it. Under orchestrate mode
   (`interaction-engine`'s `mode.md`, checked at PRE-FLIGHT step 2b)
   DELEGATE is true for every run, one task included, nothing asked; only
-  `--no-agents` turns it off; the delegation guard unchanged. `--parallel`
+  `--no-agents` turns it off; the delegation guard unchanged. PARALLEL
   implies `--agents`.
   **One agent at a time** (`delegated-runs.md` § *One agent at a time*), the
   default: `run_in_background: false`, parent blocks on each before spawning
   the next, every task in the base tree (shared tree, branch, `TASKS.md`
   would race), each agent pushing its own commit. **Under PARALLEL**
-  everything below lives in `parallel-runs.md`, read only when `--parallel`
-  is passed — its § *The flag* at ARGUMENT PARSING, the parallel-safe marker
-  at PRE-FLIGHT step 3 — and amending `delegated-runs.md`, which carries one
-  hook line; a run without the flag loads none of it. **The scheduler**
+  everything below lives in `parallel-runs.md`, read only when SKILL.md's
+  parallel hook fires ([task-implement.md](./task-implement.md)) — its
+  § *Resolving PARALLEL* at ARGUMENT PARSING, the parallel-safe marker at
+  PRE-FLIGHT step 3 — and amending `delegated-runs.md`, which carries one
+  hook line; a run the hook does not fire for loads none of it. **The scheduler**
   (`parallel-runs.md` § *The scheduler*), `task-engine`'s `worktree.md` read
   before the first spawn (worktree, integration, landing are its; the file
   states scheduling only): resolved list still resolved once up front, report and delegation
@@ -37,7 +38,7 @@ suite: [task-suite.md](./task-suite.md).
   **priority** among tasks eligible at the same moment. At every
   **scheduling point** — run start, each landing — the launcher re-reads
   base `TASKS.md`, re-derives eligibility per `resolution.md` § Eligibility
-  with its in-flight clause (a task in flight is neither done nor eligible;
+  read as `worktree.md` § *Eligibility while a unit is in flight* says (a task in flight is neither done nor eligible;
   a dependent waits for it to **land**, since landing writes the status the
   read sees). The **in-flight set** = the tasks this run spawned and not
   yet landed, run memory only, nothing read off git — every "in flight" in
@@ -64,8 +65,9 @@ suite: [task-suite.md](./task-suite.md).
   /task-implement:` marker, PRE-FLIGHT step 3) removed from every `Files:`
   line before the intersection — version counter, newest-first changelog,
   whose conflicts the rebase resolves mechanically; no marker, no exemption.
-  **Barriers** (§ *Barriers*): a parent-kept task dirties the base, which
-  must be clean at every landing, so when the walk reaches one the launcher
+  **Barriers** (§ *Barriers*): a parent-kept task dirties the base, which at
+  every landing may hold no change a fast-forward would overwrite
+  (`worktree.md` § *The two invariants*), so when the walk reaches one the launcher
   starts nothing more, waits for everything in flight to land (returns
   handled, questions relayed), runs it in the base tree as an in-context run
   would (BETWEEN TASKS step 2's skip included), and its commit/park/skip is

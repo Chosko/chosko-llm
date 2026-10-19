@@ -22,20 +22,25 @@ relay and resolve. The rest of the bullet:
   both values — *This run is attended* / *This run is unattended*, never
   *non-interactive* — the handed-down policy a skill the step invokes
   resolves; the unattended sentence turns on the contract's two conditional
-  rules. **The parallelism**, one
-  value per run beside the policy: `--parallel <N|max>` when passed (an
-  integer of 1 or more, or `max`; `--parallel 1` forces a sequential run
-  over a header saying otherwise), else the header `Parallelism:`, else 1;
-  resolved in step 1 once the body is read, never written back; at 1 nothing
-  in the body changes and `worktree.md` is never opened; above one that file
-  is read once in step 1 (unit `runbook-<id>-step-<n>`, base = the launch
-  branch, this session its one writer). Its three argument errors, all
-  caught in step 1 before anything is written: `--inline` beside a
-  parallelism above one (one executor, no silent fall-back); a parallelism
-  above one — flag or header — on a header carrying `Sequencing:` (an
-  ordering constraint the graph does not carry; the error names the line and
-  the two ways out, `/pipeline-revise` or `--parallel 1`); a flag or header
-  value outside the allowed set. **Handles**: every parked
+  rules. **The parallelism hook** (step 1, once the body is read): when
+  `--parallel` was passed, or the header carries `Parallelism:` and
+  `--no-parallel` was not, read `references/parallel.md` and follow it for
+  the whole run; otherwise nothing in the body changes and no parallel file
+  is opened. That file resolves one value per run — `--no-parallel` → 1;
+  else `--parallel <N|max>` (an integer of 2 or more, or `max`); else the
+  header's `Parallelism:` — never written back, the project's
+  `Parallel policy:` line never a source (it is `/runbook-create`'s default
+  for a new runbook only); at 1 it stops and the run is sequential; above
+  one it reads `references/parallel-schema.md` and `task-engine`'s
+  `worktree.md` once (unit `runbook-<id>-step-<n>`, base = the launch
+  branch, this session its one writer). Its four argument errors, all
+  caught before anything is written: `--parallel` beside `--no-parallel`; a
+  flag or header value outside the allowed set (the header one whether or
+  not a flag was passed); `--inline` with a parallelism above one (one
+  executor, no silent fall-back); a parallelism above one — flag or header —
+  on a header carrying `Sequencing:` (an ordering constraint the graph does
+  not carry; the error names the line and the two ways out,
+  `/pipeline-revise` or `--no-parallel`). **Handles**: every parked
   question printed carries a `P<n>` handle, its questions `Q1`, `Q2`, … and
   options `a`, `b`, … (`Unpark P1: Q1a, Q2b`, an example, not a grammar),
   one sequence per run (pre-ask from `P1`, later parks the next unused); a
@@ -94,14 +99,16 @@ relay and resolve. The rest of the bullet:
   return. A `Needs: agent+human`/`human` step is a **barrier**: when next in
   list order nothing more is spawned, every step in flight lands (steps 6–8
   each, no scheduling point between), it runs in the base tree exactly as a
-  sequential step — no worktree, no WORKTREE RULES — and spawning
+  sequential step — no worktree, no `WORKTREE RULES` — and spawning
   resumes after its commit. Every selected step is marked `[~]` before the
   first spawns; each gets its worktree BEFORE its spawn (`.git/info/exclude`
   line once per run, then `git worktree add -b wt/runbook-<id>-step-<n>
   .claude/worktrees/runbook-<id>-step-<n> <base>` from the current tip —
   a path or branch that exists skips the step with one line naming the path)
   and is spawned `run_in_background: true`, its preamble naming that
-  directory as repository root with the base branch beside it; step 6 waits
+  directory as repository root with the base branch beside it and
+  `parallel.md`'s `WORKTREE RULES` block pasted after OPERATING RULES,
+  `<WORKTREE>` that path; step 6 waits
   for the NEXT result, whichever step's, and handles it while the others run
   on; returns are handled one at a time in arrival order. **Four** result cases: `QUESTIONS FOR USER` → relay to user, answer back
   to the SAME subagent, repeat (under a parallelism above one a question
@@ -170,7 +177,7 @@ relay and resolve. The rest of the bullet:
   as finished, which would buy a `Done:` line for work that never happened.
   Classification runs on the child's returned marker, never on the result file,
   which is what squares it with *opens neither file*. A relay child gets its
-  caller's WORKTREE RULES, if any — the child works in the caller's tree — and
+  caller's `WORKTREE RULES`, if any — the child works in the caller's tree — and
   above a parallelism of 1 the agents at work are the steps' own, each idle
   while its own child runs; never two children for one caller at once. A
   step running `/task-implement --parallel` routes through the relay where

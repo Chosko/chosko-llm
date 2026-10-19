@@ -1,11 +1,14 @@
 # Parallel task runs
 
-A `--parallel <N|max>` mode for `/task-implement`'s delegated runs, under
-which the launcher keeps up to N tasks in flight at once — or, under `max`,
-every task that is eligible — each in its own worktree per
+An opt-in parallel mode for `/task-implement`'s delegated runs, under which
+the launcher keeps up to N tasks in flight at once — or, under `max`, every
+task that is eligible — each in its own worktree per
 [worktree-isolation](./worktree-isolation.md), and lands them onto the base
-branch one at a time as they return. Without the flag nothing changes: one
-agent at a time, in the base tree, as today.
+branch one at a time as they return. A project opts in with a `CLAUDE.md`
+line `Parallel policy: <N|max>`; a run opts in or out with
+`--parallel <N|max>` / `--no-parallel`. A run that does not resolve parallel
+is one agent at a time, in the base tree, and loads none of this feature's
+rules.
 
 ## Purpose
 
@@ -26,16 +29,16 @@ the launcher stays a launcher, and the fixed-size prompt gains one path.
 
 ## Scope and non-goals
 
-In scope: the flag and its refusals; the scheduler — which task starts when,
-and how many; the overlap rule that keeps two tasks off the same files, with
+In scope: the policy line, the flags and their refusals; the scheduler —
+which task starts when, and how many; the overlap rule that keeps two tasks off the same files, with
 its project-level exemption; what the parent's own tasks do to the schedule;
 the landing, the progress lines and the closing report under concurrency.
 
 Deliberately out:
 
 - **Parallelism without `--agents`.** An in-context run is one conversation
-  and cannot implement two tasks at once. `--parallel` implies `--agents`,
-  and `--no-agents` beside it is an argument error.
+  and cannot implement two tasks at once. A parallel run implies `--agents`,
+  and `--no-agents` beside the flag is an argument error.
 - **Changing the delegation guard.** `human`, `claude+human` and explicitly
   requested `[STALE]` tasks still stay in the parent, for the reasons
   `targets.md` gives; this feature only says when they run.
@@ -47,34 +50,59 @@ Deliberately out:
   any path, ever — the launcher's hard contract. Everything the scheduler
   needs is on the summary block.
 - **Parallel `[STALE]`, human or parked-without-answer work.** Those tasks
-  take the outcome they take today — kept in the parent, skipped with one
-  line — and are never spawned into a worktree.
+  take the outcome they take on a sequential run — kept in the parent,
+  skipped with one line — and are never spawned into a worktree.
 - **A merge strategy.** How a task's work reaches the base is
   `worktree-isolation`'s, not this document's.
+- **Parallel by default.** A project that sets no `Parallel policy:` line is
+  sequential; nothing guesses parallelism from the shape of the backlog.
 
 ## Architecture
 
 Built on the repo's existing shape per `technical-direction.md`. The change
-lands in `skills/task-implement/` — a hook in its argument parsing and in
-`delegated-runs.md`, and the scheduler itself in `parallel-runs.md`, read
-only when the flag is passed (`.claude/context/task-implement-delegation.md`)
-— and in
-`task-engine`'s `resolution.md`, which gains the scheduling reading of its own
-eligibility clause. It adds no CLI surface and no script.
+lands in `skills/task-implement/`: a short "Parallel flags" hook in SKILL.md's
+argument parsing and one in `delegated-runs.md`, and everything else — the
+resolution of PARALLEL, its refusals, the scheduler — in `parallel-runs.md`
+(`.claude/context/task-implement-delegation.md`). The scheduling reading of
+eligibility lives in `task-engine`'s `worktree.md` § *Eligibility while a
+unit is in flight*, beside the rest of the protocol, so `resolution.md`
+carries nothing for it. `/project-setup` offers the policy line. It adds no
+CLI surface and no script.
 
-### The flag
+### What a sequential run pays
 
-`--parallel <N>` with N ≥ 2, or `--parallel max`, case-insensitive. It sets
-PARALLEL in the run's resolved flags and implies `--agents`, so the delegation
-question is never asked. Refused, each with one line: `--no-agents` (one
+A project that does not opt in pays for this feature only its words in the
+skill description and the hook lines; every protocol file — `parallel-runs.md`,
+`worktree.md` — is read on demand. The hook opens `parallel-runs.md` only
+when `--parallel` was passed, or when neither flag was, the run is top-level
+and the project's `Parallel policy:` line is other than `off`. That is why
+the opt-in is a project line and not a default: the cost of the rules falls
+only on the runs that use them.
+
+### Resolving PARALLEL
+
+One value per run, first match wins: `--no-parallel` → off;
+`--parallel <N|max>` → that value; the project's `CLAUDE.md` line
+`Parallel policy: off | <N> | max` (N ≥ 2, case-insensitive) → that value;
+nothing → off. `max` means no bound. A nested run — a delegated agent, a
+subagent, a run under OPERATING RULES or INLINE RULES — reads only the flag,
+so a project's opt-in never makes a step's or an agent's own run parallel.
+`--parallel` beside `--no-parallel` is an argument error.
+
+On, PARALLEL implies `--agents`, so the delegation question is never asked.
+**A value from the flag** is refused, each with one line: `--no-agents` (one
 conversation cannot run two tasks); `--no-commit` (a landing is made of
 commits, as parking is); a `CLAUDE.md` mapping git to another VCS (no
-worktree exists there); and N below 2, since one is the sequential run and
-has no flag. `--parallel` on a run that resolves to a single task is a silent
-no-op: there is nothing to run beside it.
+worktree exists there); and N below 2 or a value outside the set. **A value
+from the line** is never refused, because the project chose it once and a
+run that happens to pass `--no-commit` must not fail for it: under the first
+three conditions the run stays sequential with one line,
+`Parallel policy ignored for this run: <condition>.` A malformed line value
+stops the run. Parallelism on a run that resolves to a single task is a
+silent no-op: there is nothing to run beside it.
 
-Every other flag composes unchanged and rides through the agent prompt as it
-does today — `--review`, `--unattended`, `-y`, `--no-push`.
+Every other flag composes unchanged and rides through the agent prompt —
+`--review`, `--unattended`, `-y`, `--no-push`.
 
 ### The scheduler
 
@@ -87,9 +115,9 @@ the same moment.
 
 At every **scheduling point** — the start of the run, and each landing — the
 launcher re-reads the base `TASKS.md`, as it already does between tasks, and
-re-derives eligibility with `resolution.md`'s clause exactly as written, with
-one reading added for concurrency: **a task in flight is neither done nor
-eligible**. The in-flight set is the tasks this run spawned and not yet
+re-derives eligibility with `resolution.md`'s clause exactly as written, read
+as `worktree.md` § *Eligibility while a unit is in flight* says: **a task in
+flight is neither done nor eligible**. The in-flight set is the tasks this run spawned and not yet
 landed, in run memory; the worktree list is what the skip-while-present rule
 reads, so a worktree an earlier run left behind skips its task and counts
 toward nothing. It then starts tasks from the resolved list, in list order,
@@ -118,8 +146,9 @@ missing `Files:` holds nothing back.
 
 A project can exempt files whose conflicts the integrating agent resolves
 mechanically — a version counter, a newest-first changelog — with one marker
-in its `CLAUDE.md`, beside the existing
-`Testing policy for /task-implement:` marker and read the same way:
+in its `CLAUDE.md`, beside the `Testing policy for /task-implement:` marker
+and read the same way; `/project-setup` asks for it as a follow-up when the
+parallel policy it writes is not `off`:
 
 ```
 Parallel-safe files for /task-implement: VERSION, CHANGELOG.md
@@ -142,7 +171,7 @@ task in flight to land, runs the parent-kept task exactly as an in-context run
 does, and only then resumes spawning. Parent-kept tasks therefore run in
 their list position relative to what they wait on, never silently deferred
 to the end, and a `human` task that is a precondition of five delegated tasks
-unblocks them when it is done, as it does today.
+unblocks them when it is done.
 
 ### Landing and bookkeeping
 
@@ -161,14 +190,14 @@ flight: 22, 23. Starting task 24.* The six-field return contract is unchanged,
 the feature-completion proposal stays batched to the end of the run, and the
 closing report keeps its two groups; a failed task's row names its worktree
 path, and a run that ended with tasks still waiting on a failed one names
-them as never started, as today.
+them as never started.
 
 ### Failure
 
-A delegated task's failure halts the run as it does today: no further task is
+A delegated task's failure halts the run as on a sequential run: no further task is
 spawned. Tasks already in flight are allowed to finish and land — abandoning
 them would strand committed work in worktrees for no gain — and the closing
-report then names, as today, which tasks completed, which failed and what the
+report then names which tasks completed, which failed and what the
 agent said, and which were never started.
 
 ## Data and state
@@ -178,7 +207,8 @@ spawned and not yet landed, in run memory; the worktree list is what the
 skip-while-present rule reads. The schedule is derived at every scheduling
 point from the base `TASKS.md` and held in memory only, with the resolved
 list, N, and the overlap exemptions read once from `CLAUDE.md` at
-pre-flight. `Files:` and `Preconditions:` keep their shape and gain a second
+pre-flight. The project's opt-in is the `Parallel policy:` line, read at
+argument parsing. `Files:` and `Preconditions:` keep their shape and gain a second
 reader each.
 
 ## Interfaces and contracts
@@ -186,15 +216,19 @@ reader each.
 ```
 /task-implement all --parallel 3                 up to three agents in flight
 /task-implement all --parallel max               every eligible task at once
+/task-implement all                              the Parallel policy: line's value, else sequential
+/task-implement all --no-parallel                sequential, whatever the line says
 /task-implement 12 14 15 --parallel 2            an explicit list, same rules
 /task-implement all --parallel 3 --review --unattended
 /task-implement all --parallel 1                 argument error: N must be 2 or more
 /task-implement all --parallel 3 --no-agents     argument error
 /task-implement all --parallel 3 --no-commit     argument error
 /task-implement all --parallel 3                 argument error on a non-git VCS
+/task-implement all --parallel 3 --no-parallel   argument error
+/task-implement all --no-commit                  under Parallel policy: 3, sequential with one line
 ```
 
-| Contract today | Under `--parallel` |
+| Sequential run | Parallel run |
 |---|---|
 | Agents spawned one at a time, parent blocks on each | Up to N in flight; returns handled one at a time as they arrive |
 | Each agent works in the base tree | Each agent works in `.claude/worktrees/task-<N>` |
@@ -205,7 +239,7 @@ reader each.
 
 The agent prompt gains two run-level values — PARALLEL and the unit's
 worktree path — and stays O(1) in the batch. The explicit-list selector is
-never blocked by a precondition, as today; under `--parallel` an explicit
+never blocked by a precondition; under a parallel run an explicit
 task whose precondition is in flight still waits for it to land, because
 naming a task chooses that it runs, not that it runs before what it depends
 on.
@@ -223,15 +257,13 @@ on.
   concurrency is recorded and the next scheduling point runs; the pre-ask and
   the `P<n>` handles are unchanged.
 - [pipeline-engine](./pipeline-engine.md) — the `/task-implement` routing row
-  gains the flag, guarded by `check-routing.sh`.
+  carries the flags and the two markers, guarded by `check-routing.sh`.
+- `/project-setup` — offers the `Parallel policy:` line (default off) and,
+  when it is not off, the parallel-safe marker; the skill declares both under
+  `project-policy:`, guarded by `check-setup.sh`.
 
 ## Open questions
 
-- **The exemption marker's name.** `Parallel-safe files for /task-implement:`
-  is the proposal; the final wording is settled when the marker is written
-  beside the testing-policy one, so the two read alike.
-- **Interleaved questions under `attended`.** With several agents in flight,
-  two can ask at once; each relay block already carries its task heading and
-  the answer goes back by agent id, so nothing new is needed. Whether to
-  print a line naming the agents still waiting on the user is a readability
-  call for implementation.
+None. With several agents in flight under `attended`, each relay block
+carries its task heading, the answer goes back by agent id, and one line
+after every relay names the agents still waiting on the user.

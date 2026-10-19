@@ -30,10 +30,10 @@ Deliberately out:
   untouched. There is no agent, no hand-off, nothing to shrink — except under
   orchestrate mode, where `--agents` is on by default and a single task is
   delegated too ([orchestrate-mode](./orchestrate-mode.md)).
-- **Parallel agents.** Agents run one at a time, in order, unless
-  `--parallel` is passed; that mode is
-  [parallel-task-runs](./parallel-task-runs.md)' and is unrelated to this
-  change.
+- **Parallel agents.** Agents run one at a time, in order, unless the run
+  resolves parallel — `--parallel`, or the project's `Parallel policy:`
+  line; that mode is [parallel-task-runs](./parallel-task-runs.md)' and is
+  unrelated to this change.
 - **Changing the delegation guard.** `human`, `claude+human` and explicitly
   requested `[STALE]` tasks still stay in the parent conversation because they
   need the user present. Only the *cost of evaluating* the guard changes.
@@ -209,7 +209,7 @@ Hard contracts:
 
 - The parent reads no task body, on any path, ever.
 - Delegated and manual runs execute the same flow.
-- Agents run sequentially by default; `--parallel`
+- Agents run sequentially by default; a parallel run
   ([parallel-task-runs](./parallel-task-runs.md)) is the one exception, and
   under it the launcher is still a launcher.
 - `human` / `claude+human` / requested `[STALE]` tasks never reach an agent.

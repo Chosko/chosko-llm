@@ -23,7 +23,8 @@ It serves Claude as the operator of a long run, which gains throughput in
 proportion to how independent the work is, and the director, who sees the
 run finish in a fraction of the time with the same one-commit-per-unit
 record. It changes nothing about what a unit does: the per-task workflow and
-the step prompt execute exactly as they do today, in a different directory.
+the step prompt execute exactly as in the base tree, in a different
+directory.
 
 ## Scope and non-goals
 
@@ -51,8 +52,8 @@ Deliberately out:
 - **A lock, a registry or a state file.** The worktree is the record of a
   unit in flight; git's own worktree list is the registry.
 - **Worktrees for a sequential run.** A run with no concurrency works in the
-  base tree as it always has. The protocol is loaded only by a run that
-  asked for parallelism.
+  base tree. The protocol is loaded only by a run whose parallelism resolved
+  above one, so a project that never opts in pays no read for it.
 - **Non-git projects.** A project whose `CLAUDE.md` maps git to another VCS
   has no worktree to offer; a run asking for parallelism there is refused by
   the orchestrator, as `--unattended` already is.
@@ -61,10 +62,17 @@ Deliberately out:
 
 Built on the repo's existing shape per `technical-direction.md`: shipped
 markdown skills whose runtime is Claude Code, and git as the only mechanism.
-The protocol is one reference file under `skills/task-engine/references/`
-(`.claude/context/task-engine.md`), read by `/task-implement` and
-`/runbook-run` only when a run resolved to a parallelism above one, exactly
-the load discipline `parking.md` follows. `/runbook-run` declares
+The protocol is one reference file under `skills/task-engine/references/`,
+`worktree.md` (`.claude/context/task-engine.md`), read by `/task-implement`'s
+`parallel-runs.md` and `/runbook-run`'s `references/parallel.md` only when a
+run resolved to a parallelism above one, exactly the load discipline
+`parking.md` follows. Everything a parallel run adds to the engine lives
+there — the eligibility reading of a unit in flight, parking inside a
+worktree — so `resolution.md` and `parking.md` carry nothing for it and a
+sequential run reads them unchanged; the one always-read mention is the
+rebase exception in `commit.md`. The sweep of finished units' worktrees is a
+second file, `worktree-sweep.md`, read by the two pruners only when
+`.claude/worktrees/` exists. `/runbook-run` declares
 `requires: skill:task-engine` to read it, so `chosko-llm add` installs the
 engine first and `rm` refuses to remove it while the orchestrator is installed
 (`.claude/domain/features/shared-phase-engine.md`). No CLI surface and no
@@ -118,17 +126,18 @@ The agent never pushes the base branch; the one branch it pushes is its own
 never leaves the worktree. Skills the unit invokes keep their default commit
 behaviour; their pull-at-start, pre-push re-sync and push of the base are the
 orchestrator's, so the agent skips them as a run under `--no-push` does, and
-says so once — honoured, for a runbook step, from the sentence in its
-`WORKTREE RULES`, with no flag typed.
+says so once — honoured, for a runbook step, from the sentence in the
+`WORKTREE RULES` block `/runbook-run`'s `references/parallel.md` pastes, with
+no flag typed.
 
 Rebasing `wt/<unit>` is not rewriting anyone else's history: the branch is
 private to the unit, unpushed, and exists for this one landing. `commit.md`
-records that as this protocol's deviation from its never-rebase rule.
+records that, in its one clause naming the parking branch and the worktree
+branch, as this protocol's departure from its never-rebase rule.
 
 ### The orchestrator lands
 
-On the agent's return the orchestrator, whose base tree is clean, lands the
-unit in this order:
+On the agent's return the orchestrator lands the unit in this order:
 
 1. **Fast-forward only** — merge `wt/<unit>` into the base with no other merge
    strategy allowed. It succeeds exactly when the base tip is still the one
@@ -149,13 +158,15 @@ unit in this order:
 
 Then the orchestrator does its own bookkeeping for the unit — re-reading
 `TASKS.md`, or writing the step's marker and `Done:` line and committing
-them — exactly as it does today.
+them — exactly as on a sequential run.
 
 Two invariants follow and are the whole safety argument. **The base branch
-has one writer**, the orchestrator, so landings cannot race. **The base tree
-is clean at every landing**, so a fast-forward never meets a local change it
-would overwrite; an orchestrator whose own bookkeeping is dirty when a unit
-touched the same files commits that bookkeeping first, then lands.
+has one writer**, the orchestrator, so landings cannot race. **At every
+landing the base tree holds no change to a file the unit touched**, so a
+fast-forward never meets a local change it would overwrite. The
+orchestrator's own uncommitted bookkeeping in files no unit touches — a
+runbook body and its index — may stay; bookkeeping in a file the unit
+touched is committed first, then the unit lands.
 
 ### A worktree is a unit in flight
 
@@ -163,12 +174,12 @@ A `wt/<unit>` worktree exists exactly while its unit is in flight, or after
 its unit failed. Nothing else records that:
 
 - The `[IN PROGRESS]` flip a task makes in Step 1 is made in the worktree's
-  copy of `TASKS.md`, and the base copy never shows it — as today, where the
-  flip is never committed and lives only in the dirty tree of the machine
-  running it. A `[~]` step marker stays in the base body as the orchestrator
+  copy of `TASKS.md`, and the base copy never shows it — as on a sequential
+  run, where the flip is never committed and lives only in the dirty tree of
+  the machine running it. A `[~]` step marker stays in the base body as the orchestrator
   writes it, since only the orchestrator writes that file.
-- The status line and the dashboard, which today read `[IN PROGRESS]` off the
-  working tree's `TASKS.md`, gain one probe each: the worktree entries under
+- The status line and the dashboard, which read `[IN PROGRESS]` off the
+  working tree's `TASKS.md`, carry one probe each beside it: the worktree entries under
   the common git dir (`worktrees/<unit>/HEAD`, resolved through a worktree's
   `gitdir:` file), each naming a unit in flight by its `wt/<unit>` branch — a
   direct read, since both renderers are one awk pass and fork no git. The
@@ -179,30 +190,43 @@ its unit failed. Nothing else records that:
 - A run never starts a unit whose worktree already exists: it reports the
   path and skips the unit, under every selector. The two ways out are
   finishing the work in that worktree by hand or removing it.
+- **Eligibility.** A unit in flight is neither done nor eligible, and a unit
+  whose `Preconditions:` or `Depends on:` name it waits until it lands, since
+  landing writes the status the next read sees. The in-flight set is the
+  orchestrator's run memory; nothing in an index changes. The rule lives in
+  `worktree.md` § *Eligibility while a unit is in flight*, beside the rest of
+  the protocol, so `resolution.md`'s eligibility clause stays the sequential
+  one.
 
 ### Failure, parking and interruption
 
 - **Failure.** The worktree stays, with the unit's uncommitted or unlanded
   work and, for a task, its `[IN PROGRESS]` flip inside it. The run reports
-  the path. Nothing on the base records the failure, exactly as today nothing
-  committed records a task that stopped `[IN PROGRESS]`; the worktree's
+  the path. Nothing on the base records the failure, exactly as nothing
+  committed records a task that stopped `[IN PROGRESS]` on a sequential run; the worktree's
   presence is the record, and the skip-while-present rule above is what
   keeps the next run from re-implementing over it.
-- **Parking** (`parking.md`) composes unchanged, read in the worktree: the
+- **Parking** (`parking.md`) composes unchanged, run in the worktree: the
   `park/task-<N>` branch is made from the worktree's head with the one
   work-in-progress commit, the bookkeeping commit is made on `wt/<unit>` and
   lands like any other commit, and the worktree is removed with it. The
-  unpark cherry-picks in whatever tree the task is then running in.
+  unpark cherry-picks in whatever tree the task is then running in. The
+  reading lives only in `worktree.md` § *Parking inside a worktree*;
+  `parking.md` carries no worktree text.
 - **Interruption.** An orchestrator that dies leaves worktrees behind. They
   are local to the machine and never pushed, so a worktree present on this
   machine means *this* tree is the one that was interrupted — the property
   the runbook resume signal relies on
   ([parallel-runbooks](./parallel-runbooks.md)).
-- **Sweep.** `/task-clean` removes every `wt/task-<N>` worktree and branch
-  whose task is `[DONE]` or `[SKIP]`, beside its `park/task-*` sweep;
+- **Sweep.** `task-engine`'s `worktree-sweep.md` is the single authority:
+  `/task-clean` removes every `wt/task-<N>` worktree and branch whose task is
+  `[DONE]`, `[SKIP]` or archived, beside its `park/task-*` sweep;
   `/runbook-clean` removes every `wt/runbook-<id>-step-<n>` whose step is
-  `[x]`, or whose runbook it is archiving. A worktree whose unit is not
-  finished is never swept — it may be the only copy of the work.
+  `[x]`, or whose runbook it is removing. Each pruner carries only a short
+  hook that reads the file when `.claude/worktrees/` exists — one Glob, no
+  shell — so a project that never ran in parallel pays neither the read nor
+  a git call. A worktree whose unit is not finished is never swept — it may
+  be the only copy of the work.
 
 ## Data and state
 
@@ -224,8 +248,9 @@ has not yet landed is its own run memory, the one thing git cannot tell it.
 
 ## Interfaces and contracts
 
-What the protocol expects from an orchestrator: a unit name, a clean base
-tree at every landing, one landing at a time, and the four flags it already
+What the protocol expects from an orchestrator: a unit name, a base tree
+holding no change to a file the unit touched at every landing, one landing
+at a time, and the four flags it already
 resolves (NO_PUSH, the testing mode, UNATTENDED, and the dirty-tree decision,
 which in a fresh worktree is always *clean*). What the orchestrator's agent
 prompt gains is one line: the worktree path as the repository root, and the
@@ -255,11 +280,12 @@ remove a worktree leaves it and names it in *Follow-ups*, never halting.
 - [unattended-parking](./unattended-parking.md) — the park and unpark
   sequences, executed in a worktree unchanged.
 - [task-peer-review](./task-peer-review.md) — the review loop runs inside
-  the worktree, before the unit's commit, as before Step 7 today.
+  the worktree, before the unit's commit, as before Step 7 on a sequential
+  run.
 - [shared-phase-engine](./shared-phase-engine.md) — the reference file's
   home, and the `requires:` field `/runbook-run` gains.
-- [task-archive](./task-archive.md) — `/task-clean`'s sweep, which gains the
-  worktrees beside the branches.
+- [task-archive](./task-archive.md) — `/task-clean`'s sweep, which carries
+  the worktrees beside the branches.
 - [pipeline-statusline](./pipeline-statusline.md),
   [pipeline-dashboard](./pipeline-dashboard.md) — the in-flight probe.
 - git 2.5 or later, for linked worktrees — any git this product already runs

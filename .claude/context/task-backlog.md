@@ -67,18 +67,19 @@ Covers the task suite's backlog-maintenance features: `task-setup`,
   `[IN PROGRESS]` as PHASE 1 read it (a resumed task keeps its branch as
   rollback source until its commit); orphans get a plan section (none → nothing said), are deleted in
   PHASE 2 step 7 on the same gate (`git branch -D` / `git push origin
-  --delete`), a failed delete reported, not fatal. THE WORKTREE SWEEP runs
-  beside it, same gate and same `## VCS` skip, and only when
-  `.claude/worktrees/` exists (one Glob, so a project that never ran
-  `--parallel` pays no git call): `git worktree list
-  --porcelain` + `git branch --list 'wt/task-*'`, finished = task `[DONE]`,
-  `[SKIP]` or without a summary block as PHASE 1 read it, any other status
-  keeps its worktree unlisted; `git worktree remove` then `git branch -d` in
-  PHASE 2 step 7, local throughout so no flag skips it, a failed remove or
-  delete a *Follow-ups* item naming path and command; rule home
-  `skills/task-engine/references/worktree.md` § *The sweep*, never opened —
-  the sweep's bullets are complete on their own. "No tasks to prune." only when there are neither tasks, orphans
-  nor finished worktrees; a sweep-only run commits nothing.
+  --delete`), a failed delete reported, not fatal. THE WORKTREE SWEEP is a
+  short hook beside it: when `.claude/worktrees/` exists (one Glob, no
+  shell, so a project that never ran in parallel pays neither a read nor a
+  git call) it reads `../task-engine/references/worktree-sweep.md` in PHASE
+  1 and follows it — one plan section on the same gate, one removal, one
+  report line. That file owns the rest — the `## VCS` skip, the listing
+  (`git worktree list --porcelain` + `git branch --list 'wt/task-*'`), this
+  skill's finished rule (`[DONE]`, `[SKIP]` or no summary block as PHASE 1
+  read it; any other status keeps its worktree unlisted), the removal in
+  PHASE 2 step 7, local throughout so no flag skips it, a failure a
+  *Follow-ups* item; it never opens `worktree.md`. "No tasks to prune." only
+  when there are neither tasks, orphans nor finished worktrees; a sweep-only
+  run commits nothing.
   Commits automatically:
   `task-clean: archive tasks <N>, …` staging `.claude/TASKS.md` + each
   `.claude/tasks/archive/<N>.md` (`git mv` already staged both halves of the

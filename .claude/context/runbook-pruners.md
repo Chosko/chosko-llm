@@ -21,19 +21,20 @@ Covers the runbook suite's two pruners: `commands/runbook-clean.md` and
   `[DONE]` is eligible — narrower than `/task-clean`, which also takes `[SKIP]`;
   runbooks have no second terminal status. No `--force`, no status argument
   widening the set: a `[FAILED]` runbook is flipped by hand first, one visible
-  committed edit. THE WORKTREE SWEEP joins the plan on the same gate (skipped
-  under a `## VCS` section, and unless `.claude/worktrees/` exists — one
-  Glob, no git call otherwise): `git worktree list --porcelain` + `git branch
-  --list 'wt/runbook-*'`; finished = runbook in the removal set, or its body
-  holds the step `[x]` (an `Archive:` id included — the one read of a body it
-  is not deleting); any other marker, an unknown runbook id or a step the
-  body lacks keeps the worktree, the last two named in the report; `git
-  worktree remove` then `git branch -d` in STAGE 3 step 6, local throughout
-  so it runs whole under `--no-commit`/`--no-push`, a failure a *Follow-ups*
-  item naming path and command, a sweep-only run commits nothing and writes
-  no id backfill; rule home `skills/task-engine/references/worktree.md`
-  § *The sweep*, never opened — the sweep's bullets are complete on their
-  own. **Commit convention: cleanup** —
+  committed edit. THE WORKTREE SWEEP is a short hook: when
+  `.claude/worktrees/` exists (one Glob, no shell) it reads
+  `../skills/task-engine/references/worktree-sweep.md` in STAGE 1 and
+  follows it — one plan section on the same gate, one removal, one report
+  line, its git and removals outside DO NOT; otherwise nothing changes and no
+  git call is made. That file owns the rest — the `## VCS` skip, the listing
+  (`git worktree list --porcelain` + `git branch --list 'wt/runbook-*'`),
+  this command's finished rule (runbook in the removal set, or its body
+  holds the step `[x]`, an `Archive:` id included — the one read of a body
+  it is not deleting; an unknown runbook or step kept and named in the
+  report), the removal after the deletions in STAGE 3, local throughout
+  under `--no-commit`/`--no-push`, a failure a *Follow-ups* item, a
+  sweep-only run committing nothing and writing no id backfill; it never
+  opens `worktree.md`. **Commit convention: cleanup** —
   commits and pushes by default (a deletion left uncommitted is the change
   most likely to be lost, and the confirm gate already served as the review
   pass); `--no-commit`/`--no-push` opt out.

@@ -38,7 +38,13 @@ sub-commands it runs. On a non-git VCS (e.g. Plastic SCM), the injected
 `## VCS` section notes that `cm checkin` already syncs to the server, so no
 push cycle ever runs there. It also offers the
 [`pipeline-dashboard`](#pipeline-dashboard) policy line, `off` by default, and
-on `on` writes `Pipeline dashboard policy: on` into `CLAUDE.md`.
+on `on` writes `Pipeline dashboard policy: on` into `CLAUDE.md`, and the
+parallel policy line, `off` by default: on a git project, a value of 2 or
+more or `max` writes `Parallel policy: <N|max>`, which
+[`/task-implement`](#task-implement) reads as its default parallelism and
+[`/runbook-create`](#the-runbook--commands) as the default for a new runbook's
+`Parallelism:`, plus, when you name any, the
+`Parallel-safe files for /task-implement: <paths>` line beside it.
 
 ### `/task-setup`
 
@@ -472,7 +478,7 @@ two indexes that doesn't resolve, or an index state its owner hasn't acted on
 yet. Whether a feature document still describes what its tasks build is a
 judgement, not structure, and this command doesn't attempt it.
 
-The catalogue is closed. It has fifteen findings and no others:
+The catalogue is closed. It has fourteen findings and no others:
 
 | Severity | Finding | Fix it names |
 | --- | --- | --- |
@@ -490,7 +496,6 @@ The catalogue is closed. It has fifteen findings and no others:
 | `ERROR` | a `[PARKED]` task whose body has no `## Parking handoff` | `/task-implement <N>` in an attended session |
 | `WARNING` | a runbook whose `[P]` steps and index `Parked:` line disagree | `/runbook-run <id>` |
 | `WARNING` | a spec file still under `.claude/specs/`, whose documentation catch-up hasn't run | `/pipeline-revise --catch-up <spec>` |
-| `ERROR` | a runbook header carrying both `Parallelism:` and `Sequencing:` | `/pipeline-revise` |
 
 `ERROR` means something a pipeline command will act on wrongly if it's left;
 `WARNING` means a legal state that needs its owner's attention.
@@ -502,13 +507,11 @@ Two things are deliberately **not** findings. A feature's `Tasks:` id with no
 `/task-clean`), and a precondition on an archived id counts as satisfied. A
 pending runbook step naming a task that is already finished would need a
 runbook body's prompts read to detect, and no finding reads one; `/runbook-run`
-prints each step before running it, which is where that shows up. Three
-findings are the catalogue's only body reads, each bounded by the index —
-the bodies of the `[PARKED]` tasks, for the handoff heading; of the runbooks
-not `[DONE]`, for their step markers; and of every runbook, for the two
-header lines — and none probes whether a parking branch or a step's
-worktree exists: git state differs across machines, and the run that needs
-it reports its absence itself.
+prints each step before running it, which is where that shows up. The two
+parking findings are the catalogue's only body reads, each bounded by the
+index — the bodies of the `[PARKED]` tasks, for the handoff heading, and of
+the runbooks not `[DONE]`, for their step markers — and neither probes
+whether a parking branch exists.
 
 A clean project prints one line naming the indexes it read. Otherwise the
 findings print grouped by artifact (`FEATURES.md`, `PLAN.md`, `TASKS.md`,
@@ -915,10 +918,16 @@ ones' context (`--agents` / `--no-agents` pre-answer the question). The
 parent is a launcher: it reads the summary blocks once, hands every agent
 the same fixed-size prompt and records what comes back, never opening a
 delegated task's body. By default the agents run one after another in the
-base tree. Pass **`--parallel <N>`** (N of 2 or more) or **`--parallel max`**
-to keep up to N of them — every eligible task, under `max` — in flight at
-once, each in its own worktree under the protocol
-[`task-engine`](#task-engine) owns. The resolved list is then the set of
+base tree. A parallel run keeps up to N of them — every eligible task,
+under `max` — in flight at once, each in its own worktree under the protocol
+[`task-engine`](#task-engine) owns. It is opt-in, resolved once per run,
+first match wins: `--no-parallel` (off); **`--parallel <N>`** (N of 2 or
+more) or **`--parallel max`**; the project's `CLAUDE.md` line
+`Parallel policy: off | <N> | max`, which `/project-setup` offers; else off.
+A nested run — a delegated agent, a subagent — reads only the flag. The
+parallel rules live in a file the skill opens only when one of those sources
+turns the run parallel, so a project that never opts in pays nothing for
+them beyond one hook line. The resolved list is then the set of
 tasks the run may start, in priority order: at the start and after every
 landing the launcher re-reads `TASKS.md` and starts, in list order, each
 task whose `Preconditions:` are met and that is not already in flight, up
@@ -935,10 +944,14 @@ you named — are barriers: they run in their list position with nothing in
 flight. Each agent's return is landed by fast-forward, pushed and bookkept
 one at a time, and the progress line names what is still in flight. A
 failure spawns nothing more and lets the tasks in flight land first; the
-report names the failed task's worktree, where its work remains. The flag
-implies `--agents` and is refused beside `--no-agents` or `--no-commit`, on
-a project whose `CLAUDE.md` maps git to another VCS, and with an N below 2;
-on a run that resolves to one task it is silently ignored. Every other flag
+report names the failed task's worktree, where its work remains. A parallel
+run implies `--agents`. The flag is refused beside `--no-agents` or
+`--no-commit`, on a project whose `CLAUDE.md` maps git to another VCS, and
+with an N below 2, and `--parallel` beside `--no-parallel` is an error. A
+value from the policy line is never refused: under those same conditions the
+run stays sequential and says so in one line, `Parallel policy ignored for
+this run: <condition>.`; a malformed line value stops the run. On a run that
+resolves to one task parallelism is silently ignored. Every other flag
 composes with it unchanged.
 
 **Attended or unattended.** By default a run is *attended*: a question about
@@ -1227,13 +1240,19 @@ own `park/task-<N>` is the one branch it pushes; the
 orchestrating session landing the branch by fast-forward only, as the base
 branch's one writer, pushing, then removing the worktree and its branch. A
 worktree exists exactly while its unit is in flight or after it failed, which
-is what the status line, the dashboard and the two sweeps read. Both
-orchestrators read it only when a run has more than one unit in flight; a
-sequential run never opens it and works in the base tree as it always has. It
-is the one file `/runbook-run` takes from the engine, and the reason it
-declares `requires: skill:task-engine`. The eligibility clause in
-`references/resolution.md` carries the one reading such a run adds: a unit
-in flight is neither done nor eligible until it lands.
+is what the status line, the dashboard and the two sweeps read; a unit in
+flight is neither done nor eligible until it lands. Both orchestrators read
+it only when a run has more than one unit in flight; a sequential run never
+opens it and works in the base tree as it always has. It is the one file
+`/runbook-run` takes from the engine, and the reason it declares
+`requires: skill:task-engine`.
+
+An eleventh, `references/worktree-sweep.md`, holds the sweep of the
+worktrees and branches a parallel run left behind for finished units: when
+it runs, which units count as finished for each of its two consumers, its
+plan section, removal and report. `/task-clean` and `/runbook-clean` read it
+only when `.claude/worktrees/` exists, so a project that never ran in
+parallel pays neither the read nor a git call for it.
 
 ### `pipeline-engine`
 
@@ -1324,9 +1343,12 @@ that has none of the conversation the prompts came out of.
   header's optional one-line `Sequencing:` (why the order is what it is) is
   never extended. A header line `Execution policy: unattended` is written
   only when you ask for an unattended runbook, never by default — absent
-  means `attended`. A header line `Parallelism: <N|max>` is written the same
-  way, only when you ask for a parallel runbook — by saying so or by naming a
-  parallelism — and absent means 1. On a parallel runbook `Depends on:` is
+  means `attended`. A header line `Parallelism: <N|max>` is written on a new
+  runbook only, when you ask for a parallel runbook — by saying so or by
+  naming a parallelism — or when the project's `CLAUDE.md` line
+  `Parallel policy:` is not `off` and you did not ask for a sequential one;
+  its value is the one you named, else the policy line's, else `max`
+  proposed at the gate. Absent means 1. On a parallel runbook `Depends on:` is
   the only ordering constraint, so the question "which steps must precede
   which, and why" is asked exhaustively, pair by pair, and every *why* is
   written as an edge rather than as `Sequencing:`: the two lines never share
@@ -1365,9 +1387,14 @@ that has none of the conversation the prompts came out of.
   `Pipeline dashboard policy: on` line. **`--parallel
   <N|max>`** runs the runbook as its `Depends on:` graph for this one run,
   whatever the header's `Parallelism:` says: N of 2 or more keeps up to N
-  steps in flight at once, `max` every step whose dependencies are done, and
-  `--parallel 1` forces a sequential run over a header saying otherwise.
-  Above one, selection takes every step in list order whose dependencies are
+  steps in flight at once, `max` every step whose dependencies are done.
+  `--no-parallel` forces a sequential run over a header saying otherwise; the
+  two together are an error. The run's parallelism is `--no-parallel` (1),
+  else the flag's value, else the header's, else 1. The project's
+  `Parallel policy:` line is not a source: it decides only how
+  `/runbook-create` writes a new runbook, so an existing runbook never turns
+  parallel because the project opted in. A sequential run never opens the
+  parallel rules. Above one, selection takes every step in list order whose dependencies are
   all done, up to N, instead of the first; each runs in its own worktree
   under the protocol [`task-engine`](#task-engine) owns and is landed onto
   the base branch by fast-forward, pushed and bookkept as it returns, one
@@ -1380,7 +1407,7 @@ that has none of the conversation the prompts came out of.
   base tree with you present, and spawning resumes after its commit. A
   failed step halts spawning and lets the steps in flight land before the
   index goes `[FAILED]`; it keeps its worktree, and the report names the
-  path. Three refusals: `--parallel` beside `--inline` (the session is one
+  path. Three refusals besides the flag pair: `--inline` with a parallelism above one (the session is one
   executor); a parallelism above one — the flag or the header — on a runbook
   whose header carries `Sequencing:`, which records an ordering constraint
   the graph does not carry (the error names the line and the two ways out:
@@ -1514,8 +1541,8 @@ spawns **one** subagent per selected step with a fixed prompt (a preamble
 telling it to orient from `CLAUDE.md` and, on a parallel run, naming the
 step's worktree as its repository root; the companion document, the
 runbook's `## Do not re-propose` section, the step's `Context:` bullets, the
-prompt block verbatim, then the operating rules, whose fourth placeholder is
-that same worktree path — the base tree's on a sequential run), and then
+prompt block verbatim, then the operating rules and, on a parallel run only,
+a `WORKTREE RULES` block naming that same worktree path), and then
 waits. What the
 orchestrator writes around the prompt block stays minimal: it restates
 nothing the step will read for itself — a task body, a feature document,

@@ -11,7 +11,8 @@ them follows: [feature-contract.md](./feature-contract.md).
   detection, CLAUDE.md seeding from pasted source, AGENTS.md, task backlog,
   domain layer, context layer, testing policy on every project — none /
   `full-tdd` / `skip-tests` / `skip-tests-unattended` — interaction policy,
-  pipeline-dashboard policy, claude-md sections and hook), EXECUTE phase
+  pipeline-dashboard policy, parallel policy, claude-md sections and hook),
+  EXECUTE phase
   applies them in fixed order.
   **Authoring command — makes NO commits by default.** Writes own
   artifacts (CLAUDE.md project-info section synthesized from user-pasted
@@ -20,11 +21,15 @@ them follows: [feature-contract.md](./feature-contract.md).
   branch rows — after which it warns in one line that a non-git VCS
   disables parking; `## Tasks implementation` section carrying the chosen
   testing-policy line, plus editor dirty-tree noise bullets on Unity
-  projects — the `Parallel-safe files for /task-implement:` line never
-  asked nor written, named in one closing-report line for a project to add
-  by hand; `Interaction policy: unattended` line when chosen, nothing for
+  projects; `Interaction policy: unattended` line when chosen, nothing for
   the `attended` default; `Pipeline dashboard policy: on` line when chosen,
-  nothing for the `off` default; AGENTS.md), installs the picked claude-md
+  nothing for the `off` default; the parallel policy (GATHER 1k, default
+  `off`, skipped on a non-git VCS): `Parallel policy: <N|max>` when not
+  `off`, with a follow-up asking for the
+  `Parallel-safe files for /task-implement: <paths>` line (`none` writes
+  nothing), both written by EXECUTE Step 3e (an existing line of either
+  updated in place), nothing for `off` — an existing `Parallel policy:` line
+  then reported, never removed; AGENTS.md), installs the picked claude-md
   sections (`editing-discipline`, required by `/doc-consolidate`,
   `git-commit-style`, `tool-usage-policy`) and the
   `remote-session-protocol` hook with `chosko-llm add --local` — relaying

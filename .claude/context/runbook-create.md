@@ -26,13 +26,19 @@ Covers `commands/runbook-create.md`, the runbook author. The family hub:
   the user asks for an unattended runbook, never by default and never asked
   in either mode (absent means `attended`, as an absent `Needs:` means
   `agent`); the gate's `Policy:` line shows it only then. Also the only
-  writer of the header `Parallelism: <N|max>` line, under the same rules —
-  written where `Execution policy:` goes, only when the user asks for a
-  parallel runbook (by saying so or by naming a parallelism; never inferred
-  from the shape of the work), never asked, never by default (absent means
-  1), never on an append (a sequential runbook becomes parallel through
-  `/pipeline-revise`), the value the one the user named or `max` proposed at
-  the gate; and **never beside `Sequencing:`** — a *why* offered as a
+  writer of the header `Parallelism: <N|max>` line — written directly after
+  `Execution policy:`, on a new runbook only, on one of three signals: the
+  user asks for a parallel runbook (by saying so or by naming a
+  parallelism), the append's target already carries `Parallelism:` (whose
+  new steps then take the duty below, the line itself untouched), or the
+  project's `CLAUDE.md` carries a `Parallel policy:` line other than `off`
+  and the user did not ask for a sequential runbook — never inferred from
+  the shape of the work, never on an append (a sequential runbook becomes
+  parallel through `/pipeline-revise`), absent meaning 1; the value the one
+  the user named, else the policy line's, else `max` proposed at the gate;
+  declared as `project-policy: line:Parallel policy=off|max`, so
+  `check-setup.sh` holds `/project-setup` to offering it; and **never beside
+  `Sequencing:`** — a *why* offered as a
   sequencing note is written as edges, said in one line, so a parallel
   runbook has no `Sequencing:` line. Under a parallelism above one
   `Depends on:` is the only ordering constraint, so the sequencing question
@@ -49,9 +55,11 @@ Covers `commands/runbook-create.md`, the runbook author. The family hub:
   existing step to a new one has nowhere to go (existing `Depends on:` never
   rewritten) and is declined with one line. That parallel duty — the value,
   the exhaustive question, the gate statement — is
-  `../skills/runbook-run/references/parallel-authoring.md`, read only for a
-  parallel runbook or an append onto one; the command body carries the
-  header row, one never-asked sentence and a pointer. Never writes `[P]`
+  `../skills/runbook-run/references/parallel-authoring.md` (beside
+  `parallel-schema.md`, which it names), read before the interview on those
+  three signals only; the command body carries the header row and the short
+  § *A parallel runbook* hook naming them, so a project that never opts in
+  and asks for no parallel runbook reads none of it. Never writes `[P]`
   or the two parking `Context:` bullets, which are the run's.
   Command not skill:
   one pass with a confirmation gate, no supporting files of its own. Two

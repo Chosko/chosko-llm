@@ -62,14 +62,20 @@ Covers the runbook suite's read side: `commands/runbook-list.md` and
   `[P]` named "parked"; a fully-pruned body
   renders heading + header + `Archived:` + count,
   not an error) and the
-  "need a person present" line. A body with no `Parallelism:` line renders
-  exactly as a sequential one, line for line. **Read budget (THE READ BUDGET section):** the
+  "need a person present" line. The three parallel renderings — the
+  `Parallelism:` value, the `Independent:` line, the `in flight` tag and
+  count name — are `../skills/runbook-run/references/parallel-schema.md`
+  § *Per-consumer notes*, read only when the extracted header carries
+  `Parallelism:`; the body carries one pointer bullet. A body with no
+  `Parallelism:` line renders exactly as a sequential one, line for line,
+  and opens no other file. **Read budget (THE READ BUDGET section):** the
   index plus Grep line extraction from exactly one body — header fields
   (`Created:`, `Source:`, `Model:`, `Parallelism:`, `Archive:`), step
   headings, `Depends on:`, `Needs:`, first line of `Done:`, prompt fences only
   to discard matches inside them. Never a full Read of the body, never prompt
   text, never `.claude/tasks/` (archive included), `.claude/domain/`,
-  `.claude/context/` or another body; task ids in `Done:` printed as written.
+  `.claude/context/` or another body, the one other read being
+  `parallel-schema.md` on a parallel runbook; task ids in `Done:` printed as written.
   Malformed body reported as found, never compensated by reading more. No
   `Needs:` inference. Writes nothing, runs no shell,
   corrects no status, count, marker, `Failed at:` or `Parked:` line however

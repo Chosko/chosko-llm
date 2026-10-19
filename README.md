@@ -335,10 +335,13 @@ done; `all` works through the backlog in that same order. Both skip stale
 tasks so a batch run never guesses, and
 a multi-task run can hand each task to a fresh subagent so later tasks don't
 inherit earlier ones' context — one agent after another by default, or up to
-N at once with **`--parallel <N|max>`**, each in its own worktree, started as
-soon as what it waits on has landed and landed onto the branch one at a time;
-two tasks that list the same file never run together unless the project's
-`CLAUDE.md` names the file as parallel-safe. On a human-in-the-loop task it pauses at each checkpoint,
+N at once, each in its own worktree, started as soon as what it waits on has
+landed and landed onto the branch one at a time. Parallel runs are opt-in: a
+`CLAUDE.md` line `Parallel policy: <N|max>`, which `/project-setup` offers
+(default off), or **`--parallel <N|max>`** for one run, with `--no-parallel`
+overriding the line; a project that never opts in loads none of the parallel
+rules. Two tasks that list the same file never run together unless the
+project's `CLAUDE.md` names the file as parallel-safe. On a human-in-the-loop task it pauses at each checkpoint,
 walks you through it, and verifies the outcome itself before moving on. When
 a tool connected to the session can perform a checkpoint's manual step, it
 asks once per task whether to drive the tool itself, and then hands you a
@@ -405,7 +408,9 @@ names its document, carries every decision that exists nowhere on disk and
 nothing that already does); asked for a parallel runbook, it writes the
 `Parallelism:` header line and asks which steps must precede which pair by
 pair, so every ordering constraint is a `Depends on:` edge and the gate
-approves the graph, not only the list. **`/runbook-run`** executes it one step at a
+approves the graph, not only the list. On a project whose `Parallel policy:`
+line is not `off`, a new runbook is parallel unless you ask for a sequential
+one. **`/runbook-run`** executes it one step at a
 time, by default one subagent per step, relaying each agent's questions to you
 and your answers back, committing after every step. It never does a step's
 work itself by default, and never reviews what a step did; that is
@@ -413,7 +418,7 @@ work itself by default, and never reviews what a step did; that is
 default, and they never combine. `--inline` executes the selected steps in
 your own session, sharing one context, instead of spawning a subagent for
 each. **`--parallel <N|max>`** — or a runbook header line `Parallelism:
-<N|max>`, which the flag overrides for one run — runs the runbook as its
+<N|max>`, which the flag or `--no-parallel` overrides for one run — runs the runbook as its
 `Depends on:` graph instead of its list order: up to N steps in flight at
 once, each in its own worktree, started as soon as what each waits on has
 landed and landed onto the branch one at a time; list order is only the

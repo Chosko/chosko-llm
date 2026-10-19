@@ -27,25 +27,34 @@ The rest of the suite: [task-suite.md](./task-suite.md).
   `no-test-suite.md` are read only when their branch fires, and so are four
   supporting files of its own — `human-in-loop.md`, `body-schemas.md`
   (non-current body schema), `delegated-runs.md` (2+-task run user delegated to subagents,
-  or `--agents` / `--parallel` passed),
+  or `--agents` passed, or PARALLEL set),
   and `review-rounds.md` (`--review` passed; read once after argument
   parsing, before the first task, never otherwise) — plus `task-engine`'s
   `parking.md`, read at ARGUMENT PARSING when UNATTENDED is true or at
   PRE-FLIGHT step 2 when a resolved task is `[PARKED]`, never on an attended
   run that meets no parked task, and `parallel-runs.md`, read at ARGUMENT
-  PARSING only when `--parallel` is passed. **`--parallel <N|max>`**: the
-  body only strips the pair and reads `parallel-runs.md`, whose § *The flag*
-  holds the value rules (`N` ≥ 2, `max` case-insensitive and unbounded),
-  PARALLEL and DELEGATE = true (step 2b asks nothing), the four one-line
-  refusals (`--no-agents`, `--no-commit`, a `CLAUDE.md` mapping another VCS,
-  a bad `N`), the silent no-op on a one-task run, and the PRE-FLIGHT step 3
-  read of the `Parallel-safe files for /task-implement: <path>, <path>`
-  marker into PARALLEL_SAFE, whose one reader is its overlap rule. That file
-  names `task-engine`'s `worktree.md`, read before the first spawn; the rest
-  — scheduler, worktree per task, landing — is
-  [task-implement-delegation.md](./task-implement-delegation.md). In a
-  worktree Step 7 is `worktree.md` § *The agent integrates* — one bullet in
-  the body, read by the delegated agent the prompt names its worktree.
+  PARSING only when the parallel hook fires. **Parallel flags**
+  (`--parallel <N|max>` / `--no-parallel`): the body's one short hook strips
+  them and reads `parallel-runs.md` when `--parallel` was passed, or when
+  neither flag was, the run is not a delegated agent, a subagent or under
+  OPERATING RULES / INLINE RULES, and the project's `CLAUDE.md` carries a
+  `Parallel policy:` line other than `off`; otherwise PARALLEL is false and
+  nothing changes — a project that never opts in reads no parallel rule.
+  That file's § *Resolving PARALLEL* holds the precedence (`--no-parallel`,
+  then `--parallel`, then the line, then off), the pair error, PARALLEL and
+  DELEGATE = true (step 2b asks nothing), the flag's four one-line refusals
+  (`--no-agents`, `--no-commit`, a `CLAUDE.md` mapping another VCS, a bad
+  value), the line's never-refused fall-back (`Parallel policy ignored for
+  this run: <condition>.`) and its malformed-value stop, the silent no-op on
+  a one-task run, and the PRE-FLIGHT step 3 read of the
+  `Parallel-safe files for /task-implement: <path>, <path>` marker into
+  PARALLEL_SAFE, whose one reader is its overlap rule. That file names
+  `task-engine`'s `worktree.md`, read before the first spawn; the rest —
+  scheduler, worktree per task, landing — is
+  [task-implement-delegation.md](./task-implement-delegation.md). SKILL.md
+  carries no worktree text: a delegated agent in a worktree runs Step 7 as
+  `worktree.md` § *The agent integrates*, by the prompt `parallel-runs.md`
+  writes.
   Also declares `requires: command:follow-ups`: its CLOSING THE RUN section
   applies that command's rules — the body read by name, never invoked — as
   the *Follow-ups* group of the closing report, once per run, after the
@@ -102,10 +111,12 @@ The rest of the suite: [task-suite.md](./task-suite.md).
   CLAUDE.md (checked before heuristic test-suite detection; the rule and its
   `project-policy:` declaration live in `task-engine`) so
   no-test-suite decision persists across runs instead of re-asked
-  each time; the `Parallel-safe files for /task-implement:` marker beside
-  it is read the same way, under `--parallel` only (above), and declared
-  in this skill's own frontmatter as `project-policy: line:Parallel-safe
-  files for /task-implement=` — free-form, so no values. In skip-tests mode, per-task "Proceed?" confirmation can
+  each time; the `Parallel policy:` line, read by the parallel hook
+  (above), and the `Parallel-safe files for /task-implement:` marker beside
+  it, read on a parallel run only, are declared in this skill's own
+  frontmatter as `project-policy: line:Parallel policy=off|max,
+  line:Parallel-safe files for /task-implement=` — the second free-form, so
+  no values; `/project-setup` offers both. In skip-tests mode, per-task "Proceed?" confirmation can
   be suppressed with `-y` flag for single run, or permanently via
   `skip-tests-unattended` marker value. On `[STALE]` task
   warns naming originating feature and offers implement-anyway or stop
@@ -116,9 +127,10 @@ The rest of the suite: [task-suite.md](./task-suite.md).
   `all`, BETWEEN TASKS step 2 (and `delegated-runs.md`'s between-agents
   re-read, which then spawns no agent for it) re-checks the upcoming task's
   `Preconditions:` and skips it with one line when they no longer hold,
-  adding no read; an explicit-number list is never re-checked. Under
-  `--parallel` that re-check is subsumed: the scheduler re-derives the whole
-  clause, in-flight reading included, on every read of the base `TASKS.md`.
+  adding no read; an explicit-number list is never re-checked. On a
+  parallel run that re-check is subsumed: the scheduler re-derives the whole
+  clause, read as `worktree.md` § *Eligibility while a unit is in flight*
+  says, on every read of the base `TASKS.md`.
 
 ## Public API
 

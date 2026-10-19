@@ -112,12 +112,13 @@ The rest of the bullet: [runbook-run.md](./runbook-run.md) and
   refused at spawn time). `--from N`/`--to N`/`--only N` narrow selection but
   never weaken `Depends on:` — one model, not three (`--only N` **is**
   `--from N --to N`; naming `--only` beside either bound is an error, as is a
-  `--to` naming a step listed above the `--from` step — twelve argument errors
-  in all: `--attended` with `--unattended` or a `CLAUDE.md`
+  `--to` naming a step listed above the `--from` step — nine argument errors
+  in the body: `--attended` with `--unattended` or a `CLAUDE.md`
   `Interaction policy:` value outside the two words (the engine's `policy.md`
   errors), `--skip-parked` on a run not resolving to `unattended`, a header
-  `Execution policy:` value outside the two words, and the three of the
-  parallelism listed in [runbook-run-loop.md](./runbook-run-loop.md)). The bounds name steps
+  `Execution policy:` value outside the two words; the parallelism's four
+  more live in `references/parallel.md`, listed in
+  [runbook-run-loop.md](./runbook-run-loop.md)). The bounds name steps
   **by id** and cut the list **at those steps' positions**, so a range is
   always the stretch of steps the run walks. Bounds are re-applied against the
   body re-read each step, so a step appended mid-run inside the range runs and

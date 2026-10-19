@@ -43,7 +43,7 @@ entry point every stage shares:
   the shipped body, never a design doc; agrees with the owner table of
   `task-engine`'s `references/design-change.md` and is the one fixed if they
   diverge), `lint.md`
-  (closed catalogue of fifteen structural drift findings L1–L15, each with a
+  (closed catalogue of fourteen structural drift findings L1–L14, each with a
   detection rule over `graph.md`'s edges, severity `ERROR` or `WARNING` —
   two levels, deliberately clear of every status vocabulary — one fix command
   and a fixed output template written message first — `<SEVERITY>
@@ -52,12 +52,10 @@ entry point every stage shares:
   `messages.md`; two deliberate absences recorded: a `Tasks:`
   id absent from `TASKS.md` (archived, not drift) and a pending runbook step
   naming a finished task (needs a body read); absent index drops its
-  findings, malformed block is its own `ERROR`; only L12, L13 and L15 read a
-  body — a parked task's handoff heading, a runbook's markers, a runbook's
-  header — and no rule probes `.claude/tasks/archive/`; L14 — a spec file
-  still under `.claude/specs/`, `WARNING`, fixed by `/pipeline-revise
-  --catch-up <spec>` — lists that directory and opens no spec). Consumers
-  cite each file by a path
+  findings, malformed block is its own `ERROR`; no rule probes
+  `.claude/tasks/archive/`; L14 — a spec file still under `.claude/specs/`,
+  `WARNING`, fixed by `/pipeline-revise --catch-up <spec>` — lists that
+  directory and opens no spec). Consumers cite each file by a path
   relative to the citing body ([feature-contract.md](./feature-contract.md) § Internal patterns) and state only
   deviations. Two consumers: `/pipeline-check`, `pipeline-revise`. A third
   feature, `pipeline-suggest`, declares `requires: skill:pipeline-engine`

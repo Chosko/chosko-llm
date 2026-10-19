@@ -24,17 +24,10 @@ skill's reference files and dependencies. The rest of its bullet:
   `[PENDING]`/`[RUNNING]`/`[FAILED]`/`[DONE]` (a runbook waiting on a `[P]`
   step is `[PENDING]`), the optional header `Execution policy:
   attended|unattended` (absent = `attended`; any other value an argument
-  error at run time), the optional header `Parallelism: <N|max>` directly
-  after it (an integer of 2 or more, or `max`; absent = 1; authored by
-  `/runbook-create` only when asked for a parallel runbook, never rewritten
-  by a run, overridden for one run by `/runbook-run --parallel`; any other
-  value an argument error at run time; mutually exclusive with `Sequencing:`,
-  whose constraint the graph does not carry) — under a parallelism above one
-  `Depends on:` is the ONLY ordering constraint and list position is priority
-  among the steps selectable at the same moment, and `[~]` MAY be committed
-  (a landed step's commit carries it for the steps still in flight), the
-  resume signal being `[RUNNING]` plus a `wt/runbook-<id>-step-<n>` worktree
-  on this machine rather than an uncommitted `[~]` — the index
+  error at run time), the optional header `Parallelism:` directly after it
+  — one table row and two one-line pointers, every rule it changes being
+  `references/parallel-schema.md`'s, which a reader that does not find the
+  line never opens — the index
   `Parked: steps <ids>` line present only while
   a step is `[P]` — `Failed at:`'s rule applied again — the optional
   per-step `Needs:` field, index block + its `Last runbook number:` counter and
@@ -47,24 +40,13 @@ skill's reference files and dependencies. The rest of its bullet:
   line is backfilled in place — to the highest id present, counting steps about
   to be removed — by whichever of `/runbook-create --append` and
   `/runbook-prune` writes it first)
-  and `references/subagent-contract.md` (three fenced blocks: OPERATING
-  RULES, pasted verbatim into every spawned prompt; RELAY CHILD RULES, pasted
-  verbatim ahead of it into a relay child's prompt only; and WORKTREE RULES,
-  pasted after it only under a parallelism above one, into a step's prompt
-  and its relay children's — six placeholders, `<RUNBOOK>`, `<N>`, `<FILE>`
-  (the body's `File:` path, for the never-edit rule; relay file names stay
-  built from `<RUNBOOK>`/`<N>`) and `<WORKTREE>` (WORKTREE RULES only: the
-  step's absolute `.claude/worktrees/runbook-<id>-step-<n>`, a relay child
-  getting its caller's — carrying the fixed rules: every path touched is
-  under it, and the remote is the
-  orchestrator's, so an invoked skill commits as usual but skips its pull,
-  re-sync and push of the base as under `--no-push` with no flag typed —
-  its own `park/task-<N>` the one branch it still pushes when it parks, per
-  `task-engine`'s `parking.md` — and before
-  `DONE` the agent rebases its branch onto the base tip per `task-engine`'s
-  `worktree.md` § *The agent integrates*; a sequential run's skills keep
-  their own pull and push), plus
-  `<PROMPT>`/`<RESULT>` on the child block alone,
+  and `references/subagent-contract.md` (two fenced blocks: OPERATING RULES,
+  pasted verbatim into every spawned prompt, and RELAY CHILD RULES, pasted
+  verbatim ahead of it into a relay child's prompt only — five placeholders,
+  `<RUNBOOK>`, `<N>` and `<FILE>` (the body's `File:` path, for the never-edit
+  rule; relay file names stay built from `<RUNBOOK>`/`<N>`), plus
+  `<PROMPT>`/`<RESULT>` on the child block alone; no parallel text,
+  WORKTREE RULES being `references/parallel.md`'s,
   and it carries the `SPAWN REQUEST` rule; OPERATING RULES make the literal
   `DONE` line mandatory — a finished turn without it is a hard failure however
   complete the work, and work that made no commit omits the sha and diffstat;
@@ -90,13 +72,30 @@ skill's reference files and dependencies. The rest of its bullet:
   pre-ask, mid-run answers, the rejections and the attended handling of a
   `[P]` step — bookkeeping in the two files only, never a task body, branch
   or diff. `references/parallel.md`, read once in step 1 only when the
-  parallelism resolves above one (with `task-engine`'s `worktree.md`, which
-  it names), amends steps 2–8, the result cases, the resume signal, the
-  commit cadence and the closing report for that run — the body carries the
-  flag, the resolution, the three argument errors and one pointer line; the
-  loop it describes is in [runbook-run-loop.md](./runbook-run-loop.md).
-  `references/parallel-authoring.md` is `/runbook-create`'s, read only for a
-  parallel runbook. `references/step-amend.md` (amending one pending step: strike it as `[x]` with a `Done:` line opening
+  body's parallelism hook fires (`--parallel` passed, or a header
+  `Parallelism:` with no `--no-parallel`; a sequential run never opens it),
+  reads `references/parallel-schema.md` and `task-engine`'s `worktree.md`
+  beside it and owns the precedence (`--no-parallel` → 1, else the flag,
+  else the header; the project's `Parallel policy:` line NOT a source), the
+  four argument errors, the scheduling, the barriers, the landing, the
+  resume signal, the commit cadence, the closing report and the
+  `WORKTREE RULES` block (pasted after OPERATING RULES into a step's prompt
+  and its relay children's, one placeholder `<WORKTREE>`: work only there,
+  the remote is the orchestrator's — an invoked skill's pull, re-sync and
+  push of the base skipped as under `--no-push` with no flag typed, its own
+  `park/task-<N>` still pushed when it parks — and integrate per
+  `worktree.md` § *The agent integrates* before `DONE`) — the body carries
+  only the hook, a flag-table row and a usage line; the loop it describes is
+  in [runbook-run-loop.md](./runbook-run-loop.md).
+  `references/parallel-schema.md` is the schema of a runbook whose header
+  carries `Parallelism:` (the header line's values and placement, never
+  beside `Sequencing:`; `Depends on:` the ONLY ordering constraint; list
+  position priority among the steps selectable at the same moment; `[~]` MAY
+  be committed, the resume signal `[RUNNING]` plus a
+  `wt/runbook-<id>-step-<n>` worktree on this machine) and
+  `/runbook-describe`'s rendering of one; read only by a feature that finds
+  the line in a body. `references/parallel-authoring.md` is
+  `/runbook-create`'s, read only for a parallel runbook. `references/step-amend.md` (amending one pending step: strike it as `[x]` with a `Done:` line opening
   `struck — <reason>` and no commit sha, never deleted or renumbered; insert
   through `/runbook-create --append --before`/`--after`; add dated `Context:`
   facts; the prompt block immutable, so a wrong prompt is struck and a
@@ -117,8 +116,9 @@ skill's reference files and dependencies. The rest of its bullet:
   skill:task-engine` (the second for the mid-run follow-up protocol and the
   post-report execution of approved items; the third for one file alone,
   `../task-engine/references/worktree.md`, the worktree protocol, which joins
-  the "reads three files" contract as a read made only by a run whose
-  parallelism is above one — [task-engine.md](./task-engine.md)): its
+  the "reads three files" contract, with `parallel.md` and
+  `parallel-schema.md`, as a read made only by a run whose parallelism is
+  above one — [task-engine.md](./task-engine.md)): its
   CLOSING THE RUN section applies the first
   command's rules — body read by name, never invoked — as the *Follow-ups*
   group of the closing report, once per run (completion, a `--to`/`--only`/

@@ -13,7 +13,7 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
   not-invocable statement, as a two-line "read by path; not invoked" `#`
   header, for an agent that opened the file without reading frontmatter;
   that frontmatter carries `disable-model-invocation: true` ([feature-contract.md](./feature-contract.md) § Public API).
-  Eighteen files under `references/`, one authority each:
+  Nineteen files under `references/`, one authority each:
   `resolution.md` (`.claude/TASKS.md` schema and parsing — appearance
   order is the backlog's order and need not be numeric, since
   `/task-add --before`/`--after` insert mid-file under the next id — the
@@ -23,18 +23,8 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
   repeated, resolved once up front by simulating the repetition so the run
   keeps one resolution report and one delegation count; implementable tasks
   left blocked, a precondition cycle included, named by id in the report;
-  a task named by number never blocked; **the in-flight clause** under a
-  parallelism above one — a unit in flight, in its worktree, is neither
-  done nor eligible: not selected again, and a task whose `Preconditions:`
-  name it stays blocked until it lands, not merely until it is spawned,
-  since landing writes the status the next read sees; nothing stored in
-  the index, the in-flight set the consumer's own (the units this run
-  spawned and not yet landed, in run memory), eligibility still derived on
-  every read,
-  the unit the consumer's (a task, or a step for an orchestrator reading
-  its own index by the same rule); `/task-implement`'s between-tasks
-  re-check subsumed under `--parallel` by the scheduling point's
-  re-derivation; body-file location, the
+  a task named by number never blocked (a parallel run's in-flight reading
+  is `worktree.md`'s, not this file's); body-file location, the
   `/task-setup`-has-run gate, and § *The archive* —
   `.claude/tasks/archive/<N>.md`, the frozen-header form, and the
   archived-and-terminal rule every id reader cites: an id referenced but
@@ -55,7 +45,10 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
   `tree.md` (the dirty-tree prompt protocol, four options, `DIRTY_FOLD` /
   `DIRTY_FOLD_UNTRACKED` and the Step-7 fold; `/quick-implement` runs it once,
   before its spec conversation), `commit.md` (pull-at-start,
-  per-task commit and push, `--no-commit` / `--no-push` gating),
+  per-task commit and push, `--no-commit` / `--no-push` gating; never
+  branch, tag or rebase, the exceptions /task-implement's parking branch
+  (`parking.md`) and a parallel run's worktree branch (`worktree.md`) — the
+  one always-read mention of the worktree protocol),
   `design-change.md` (the design-change check: the
   owner table of paths another pipeline command owns, *settles* vs *diverges*,
   the question, agreement and disagreement, the hard rules — `/task-add`,
@@ -127,12 +120,30 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
   base's pull/re-sync/push skipped as under `--no-push`; the orchestrator's landing
   — `git merge --ff-only`, one re-rebase round through the same agent when
   the tip moved, push per `commit.md`, `git worktree remove` + `git branch
-  -d` whose refusal fails the unit; the two invariants, one writer and a
-  clean base tree at every landing; a worktree as the in-flight signal every
-  reader consults and the skip-while-present rule; failure keeping the
-  worktree; parking run inside it; § *The sweep*, which the two pruners cite.
-  Read by `/task-implement` and `/runbook-run` only when a run's parallelism
-  is above one; authored in the engine like `amend.md` and `parking.md`).
+  -d` whose refusal fails the unit; the two invariants, one writer and, at
+  every landing, no change in the base tree to a file the unit touched (a
+  runbook body and index the orchestrator keeps dirty may stay); a worktree
+  as the in-flight signal every reader consults and the skip-while-present
+  rule; § *Eligibility while a unit is in flight* — neither done nor
+  eligible, a unit whose `Preconditions:` / `Depends on:` name it blocked
+  until it lands, the in-flight set the orchestrator's run memory, nothing
+  in an index; failure keeping the worktree; § *Parking inside a worktree*,
+  the one home of that reading. Read only through `/task-implement`'s
+  `parallel-runs.md` and `/runbook-run`'s `references/parallel.md`, when a
+  run's parallelism is above one; authored in the engine like `amend.md`
+  and `parking.md`), and `worktree-sweep.md` (the single authority for the
+  worktree sweep: runs only when `.claude/worktrees/` exists — one Glob, no
+  shell — and never on a `## VCS` project; lists `git worktree list
+  --porcelain` entries and `wt/<prefix>*` branches of the consumer's units;
+  finished per consumer — `/task-clean`: task `[DONE]`/`[SKIP]` or archived;
+  `/runbook-clean`: runbook resolved for removal or step `[x]`, a vanished
+  runbook or step left in place and reported; a `Worktrees to remove (W):`
+  plan section that keeps "nothing to prune" from firing; removal after the
+  one "Apply?", `git worktree remove` + safe `git branch -d`, a failure a
+  Follow-ups item; local throughout, runs whole under `--no-commit` /
+  `--no-push`, adds nothing to a commit. Read by `/task-clean` and
+  `/runbook-clean` only when `.claude/worktrees/` exists, never with
+  `worktree.md`).
   The reference files cite [interaction-engine.md](./interaction-engine.md)'s
   files, but the engine itself takes no `requires:` — its consumers carry
   it. A
@@ -141,7 +152,8 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
   of the folder) — see `../domain/features/shared-phase-engine.md`. Its
   consumers — the five `task-*` readers, `/quick-implement` and
   `/runbook-run`, the last for `worktree.md` alone — declare
-  `requires: skill:task-engine`.
+  `requires: skill:task-engine`; `/runbook-clean` reads `worktree-sweep.md`
+  through its `requires: skill:runbook-run`.
 
 ## Public API
 
@@ -164,11 +176,12 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
   [task-implement.md](./task-implement.md),
   [task-review-iterate.md](./task-review-iterate.md),
   [quick-implement.md](./quick-implement.md),
-  [runbook-run.md](./runbook-run.md) (`worktree.md` only).
+  [runbook-run.md](./runbook-run.md) (`worktree.md` only),
+  [runbook-pruners.md](./runbook-pruners.md) (`worktree-sweep.md` only).
 - Readers of the in-flight signal: [claude-md-hook-statusline.md](./claude-md-hook-statusline.md)
   (`pipeline-statusline`), [pipeline-dashboard.md](./pipeline-dashboard.md);
-  the sweeps: [task-backlog.md](./task-backlog.md) (`task-clean`),
-  [runbook-pruners.md](./runbook-pruners.md) (`runbook-clean`).
+  the sweeps of `worktree-sweep.md`: [task-backlog.md](./task-backlog.md)
+  (`task-clean`), [runbook-pruners.md](./runbook-pruners.md) (`runbook-clean`).
 
 ## When to read the source
 
