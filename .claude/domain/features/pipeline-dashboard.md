@@ -243,7 +243,7 @@ project's `CLAUDE.md` on `on`.
   archive rule, the `PLAN.md` block, `TASKS.md` blocks and `Feature:`).
 - **unattended-parking**: a parked question is a pending question when the
   orchestrator relays it.
-- **pipeline-statusline**: none at run time; both read the same indexes with
+- **session-statusline**: none at run time; both read the same indexes with
   separate code (copy-on-install shares none), and their scopes differ — the
   status line follows the runbook, the dashboard the active milestone.
 - **Google Fonts**, for the page's three families.

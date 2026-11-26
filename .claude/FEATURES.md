@@ -254,10 +254,10 @@ Tasks: 310, 311
 
 ---
 
-## pipeline-statusline — Status line showing the session and the pipeline's runbook and task progress
+## session-statusline — Status line showing the session and the pipeline's runbook and task progress
 
 Status: [DONE]
-Doc: .claude/domain/features/pipeline-statusline.md
+Doc: .claude/domain/features/session-statusline.md
 Source: prompt
 Tasks: 312, 313, 314
 

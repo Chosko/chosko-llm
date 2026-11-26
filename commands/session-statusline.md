@@ -1,14 +1,14 @@
 ---
-name: pipeline-statusline
-version: 0.1.1
+name: session-statusline
+version: 0.2.0
 type: command
-description: Wire the pipeline-statusline status line into the user settings.json — backing up and later restoring any status line it replaces — refresh it, and verify it with a timed run. Use it to install, update or uninstall the pipeline status line.
-requires: statusline:pipeline-statusline
+description: Wire the session-statusline status line into the user settings.json — backing up and later restoring any status line it replaces — refresh it, and verify it with a timed run. Use it to install, update or uninstall the pipeline status line.
+requires: statusline:session-statusline
 ---
 
-# /pipeline-statusline
+# /session-statusline
 # Global command: set the user settings' `statusLine` to run the
-# `pipeline-statusline` renderer (padding 1, refresh every 10 s), editing that
+# `session-statusline` renderer (padding 1, refresh every 10 s), editing that
 # one key and nothing else. A different status line already configured is
 # shown and replaced only on the user's say-so, after it is backed up — its
 # value and the script it runs — so `uninstall` restores it exactly. A re-run
@@ -16,12 +16,11 @@ requires: statusline:pipeline-statusline
 # PATH. Every install ends with a verification: the renderer run on a status
 # payload in this project and in a directory with no `.claude/`, timed.
 # Global-only, as the statusline it requires. Never touches
-# `statusline-progress.sh`, `statusline-combined.sh` (beyond copying it into
-# the backup) or `statusline/session-statusline.sh`, and never deletes
-# `statusline-last-input.json`. Commits nothing.
-# Usage: /pipeline-statusline                  (install, or refresh when installed)
-#        /pipeline-statusline --no-nerd-font   (same, with single-width Unicode glyphs)
-#        /pipeline-statusline uninstall        (restore the previous status line)
+# `statusline-progress.sh` or `statusline-combined.sh` (beyond copying it into
+# the backup), and never deletes `statusline-last-input.json`. Commits nothing.
+# Usage: /session-statusline                  (install, or refresh when installed)
+#        /session-statusline --no-nerd-font   (same, with single-width Unicode glyphs)
+#        /session-statusline uninstall        (restore the previous status line)
 
 GOAL
 Leave the user's status line running the pipeline renderer, with whatever it
@@ -40,14 +39,14 @@ PATHS
 
 ```sh
 H="${CLAUDE_HOME:-$HOME/.claude}"
-R="$H/statusline/pipeline-statusline.sh"
+R="$H/statusline/session-statusline.sh"
 case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) command -v cygpath >/dev/null && R="$(cygpath -m "$R")" ;; esac
-printf 'HOME_DIR=%s\nRENDERER=%s\nSETTINGS=%s\nBACKUP=%s\n' "$H" "$R" "$H/settings.json" "$H/statusline/pipeline-statusline.backup"
-[ -f "$H/statusline/pipeline-statusline.sh" ] && echo present || echo missing
+printf 'HOME_DIR=%s\nRENDERER=%s\nSETTINGS=%s\nBACKUP=%s\n' "$H" "$R" "$H/settings.json" "$H/statusline/session-statusline.backup"
+[ -f "$H/statusline/session-statusline.sh" ] && echo present || echo missing
 ```
 
 - RENDERER missing → stop with:
-  `The renderer is not installed. Run chosko-llm add statusline:pipeline-statusline, then re-run /pipeline-statusline.`
+  `The renderer is not installed. Run chosko-llm add statusline:session-statusline, then re-run /session-statusline.`
 - OURS is the `statusLine` this command writes:
   `{"type": "command", "command": "bash <RENDERER>[ --no-nerd-font]", "padding": 1, "refreshInterval": 10}`.
 - A `statusLine` is *ours* when its `command` runs RENDERER, with or without
@@ -74,7 +73,7 @@ INSTALL
    - **ours** → go to step 3; if its flag differs from FLAG, rewrite only
      the `command` string (step 4).
    - **anything else** → print the current value verbatim and ask:
-     `A different status line is configured. Replace it (backed up, restored by /pipeline-statusline uninstall) or abort?`
+     `A different status line is configured. Replace it (backed up, restored by /session-statusline uninstall) or abort?`
      - Wait for an explicit answer; anything but replace is abort, which
        changes nothing.
      - On replace, write the backup (BACKUP below) first, then OURS
@@ -82,11 +81,11 @@ INSTALL
 
 3. **Refresh** (already ours).
    - `command -v chosko-llm` finds the CLI → take a checksum of the renderer
-     (`cksum`), run `chosko-llm update statusline:pipeline-statusline`,
+     (`cksum`), run `chosko-llm update statusline:session-statusline`,
      checksum again; report `already installed, script updated` when the two
      differ, else `already installed, unchanged`.
    - No CLI → report `already installed` with the renderer's `version:` line
-     and `run chosko-llm update statusline:pipeline-statusline to refresh it`.
+     and `run chosko-llm update statusline:session-statusline to refresh it`.
 
 4. **Write `statusLine`** with the Edit tool.
    - Replace the existing `"statusLine": …` value, or insert the key beside
@@ -119,7 +118,7 @@ BACKUP
 UNINSTALL
 
 1. Read SETTINGS. Its `statusLine` not ours → report
-   `nothing to uninstall: the status line is not pipeline-statusline's`,
+   `nothing to uninstall: the status line is not session-statusline's`,
    and change nothing — BACKUP included.
 2. **BACKUP exists** →
    - set `statusLine` back to the content of `BACKUP/statusLine.json`,
@@ -130,7 +129,7 @@ UNINSTALL
    - report `restored`, with the restored value.
 3. **No BACKUP** → remove the `statusLine` key alone; report `removed`.
 4. Either way, end with: the renderer stays installed —
-   `chosko-llm rm statusline:pipeline-statusline` removes it.
+   `chosko-llm rm statusline:session-statusline` removes it.
 
 ---
 

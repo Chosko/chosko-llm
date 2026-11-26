@@ -1,10 +1,10 @@
-# Pipeline status line
+# Session status line
 
 A Claude Code status line that shows the session on its first line and the
 progress of the project's pipeline — the current runbook, the task backlog
 in scope, and every task in flight — on the lines below it, packaged as a
 statusline feature (the renderer) plus a global command,
-`/pipeline-statusline`, that wires it into the user settings, backs up
+`/session-statusline`, that wires it into the user settings, backs up
 whatever it replaces, restores it on `uninstall`, and verifies the result.
 
 ## Purpose
@@ -35,17 +35,16 @@ In scope:
 
 Non-goals:
 
-- **Retiring `session-statusline`.** The two coexist; its line 1 is
-  duplicated here, not shared — copy-on-install leaves no way to share code
-  between features, and retiring it is a separate decision.
+- **A second status line.** The repo ships one renderer; outside a pipeline
+  project it prints the session line alone, so no session-only variant
+  exists beside it.
 - **Touching superseded or foreign files.** The command never modifies or
-  deletes `statusline-progress.sh`, `statusline-combined.sh`, the installed
-  `statusline/session-statusline.sh`, or the leftover debug capture
-  `statusline-last-input.json`, which it mentions to the user and may read as
-  a fixture shape.
+  deletes `statusline-progress.sh`, `statusline-combined.sh`, or the leftover
+  debug capture `statusline-last-input.json`, which it mentions to the user
+  and may read as a fixture shape.
 - **Removing the renderer on `uninstall`.** The script belongs to the CLI;
   `uninstall` restores the settings and points at
-  `chosko-llm rm statusline:pipeline-statusline`.
+  `chosko-llm rm statusline:session-statusline`.
 - **Project-scoped status lines.** The statusline kind is global-only, and
   the command inherits that: a `--local` install of it fails on its
   `requires:`.
@@ -61,7 +60,7 @@ through git-bash. The feature extends the statusline kind and the
 (`.claude/context/claude-md-hook-statusline.md`,
 `.claude/context/shared-lib-requires.md`); the CLI changes nothing.
 
-### Renderer — `statusline:pipeline-statusline`
+### Renderer — `statusline:session-statusline`
 
 A statusline feature, installed by the CLI beside the other status line
 scripts. It reads Claude Code's status JSON on stdin and prints up to N
@@ -110,9 +109,9 @@ Inside the awk program, five concerns:
   `[IN PROGRESS]` task in scope, its title cut to 90 bytes at a word
   boundary.
 
-### Wiring command — `/pipeline-statusline`
+### Wiring command — `/session-statusline`
 
-A global command declaring `requires: statusline:pipeline-statusline`, so
+A global command declaring `requires: statusline:session-statusline`, so
 installing the command installs the renderer first. The executing agent
 does the work; the command body is the procedure.
 
@@ -125,7 +124,7 @@ does the work; the command body is the procedure.
   edit is surgical — the `statusLine` key alone changes; every other key and
   the file's formatting survive.
 - **Refresh** — on a re-run, when `chosko-llm` is on the PATH it runs
-  `chosko-llm update statusline:pipeline-statusline` and reports `already
+  `chosko-llm update statusline:session-statusline` and reports `already
   installed, script updated` or `unchanged` from the outcome; without the CLI
   it reports the installed version and says how to update.
 - **Uninstall** — restores the backed-up `statusLine` value and script
@@ -166,13 +165,13 @@ does the work; the command body is the procedure.
 
 ## Interfaces and contracts
 
-- **Renderer** — `pipeline-statusline.sh [--no-nerd-font]`, status JSON on
+- **Renderer** — `session-statusline.sh [--no-nerd-font]`, status JSON on
   stdin, ANSI-coloured lines on stdout, exit 0. Any missing file, field or
   malformed block degrades by omission: no error text ever reaches the bar,
   and stderr stays silent. Target runtime under one second on Windows with a
   build running.
-- **Command** — `/pipeline-statusline [--no-nerd-font]` installs or
-  refreshes; `/pipeline-statusline uninstall` restores. Reports one of:
+- **Command** — `/session-statusline [--no-nerd-font]` installs or
+  refreshes; `/session-statusline uninstall` restores. Reports one of:
   installed; already installed, script updated; already installed,
   unchanged; replaced (with the backup's location); aborted; restored;
   removed; nothing to uninstall. A `settings.json` that does not parse stops the run
@@ -191,7 +190,5 @@ does the work; the command body is the procedure.
   renderer reads: the `RUNBOOKS.md` block and step markers, the archive's
   referenced-but-absent rule, the `PLAN.md` milestone block. A change to any
   of those formats is a change to this renderer.
-- **session-statusline** — none at run time; line 1 is a deliberate copy of
-  its behaviour.
 - **Nerd Font** in the user's terminal for the default glyph set; the
   `--no-nerd-font` set needs only Unicode.

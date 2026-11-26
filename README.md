@@ -501,11 +501,10 @@ ends. Meaning-preserving, never a style compressor. Uncommitted by default.
   messages with no Claude attribution lines, built-in file tools over shell
   commands, and rules documents that supersede instead of stratify.
 - **`statusline:session-statusline`** shows model, directory, branch,
-  context usage, cost and rate limits in the status bar. Global-only.
-- **`statusline:pipeline-statusline`** shows the same session line plus the
-  project's pipeline progress — the current runbook, the tasks it covers,
-  each task in progress, whether flipped in the backlog or in flight in its
-  own worktree. **`/pipeline-statusline`** wires it into
+  context usage, cost and rate limits in the status bar, plus, in a project
+  run through the pipeline, its progress — the current runbook, the tasks it
+  covers, each task in progress, whether flipped in the backlog or in flight
+  in its own worktree. **`/session-statusline`** wires it into
   `settings.json`, backs up the status line it replaces and restores it on
   `uninstall`. Global-only.
 

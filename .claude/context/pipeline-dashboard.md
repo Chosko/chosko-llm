@@ -86,7 +86,7 @@ kinds: [features.md](./features.md); the design:
 - [runbook-run.md](./runbook-run.md), [task-implement.md](./task-implement.md)
   — the orchestrators that cite it.
 - [claude-md-hook-statusline.md](./claude-md-hook-statusline.md) —
-  `pipeline-statusline`, which parses the same indexes and probes the same
+  `session-statusline`, which parses the same indexes and probes the same
   worktree registry with its own code.
 - [task-engine.md](./task-engine.md) — `references/worktree.md`, the rule
   behind the in-flight probe.

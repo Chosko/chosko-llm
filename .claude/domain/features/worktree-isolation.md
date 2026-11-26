@@ -185,7 +185,7 @@ its unit failed. Nothing else records that:
   direct read, since both renderers are one awk pass and fork no git. The
   orchestrators and the pruners read the worktree list itself, with git's
   porcelain form. One line in each renderer
-  (`.claude/domain/features/pipeline-statusline.md`,
+  (`.claude/domain/features/session-statusline.md`,
   `.claude/domain/features/pipeline-dashboard.md`).
 - A run never starts a unit whose worktree already exists: it reports the
   path and skips the unit, under every selector. The two ways out are
@@ -286,7 +286,7 @@ remove a worktree leaves it and names it in *Follow-ups*, never halting.
   home, and the `requires:` field `/runbook-run` gains.
 - [task-archive](./task-archive.md) — `/task-clean`'s sweep, which carries
   the worktrees beside the branches.
-- [pipeline-statusline](./pipeline-statusline.md),
+- [session-statusline](./session-statusline.md),
   [pipeline-dashboard](./pipeline-dashboard.md) — the in-flight probe.
 - git 2.5 or later, for linked worktrees — any git this product already runs
   on.

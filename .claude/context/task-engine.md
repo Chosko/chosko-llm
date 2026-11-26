@@ -179,7 +179,7 @@ suite reads. The rest of the suite: [task-suite.md](./task-suite.md).
   [runbook-run.md](./runbook-run.md) (`worktree.md` only),
   [runbook-pruners.md](./runbook-pruners.md) (`worktree-sweep.md` only).
 - Readers of the in-flight signal: [claude-md-hook-statusline.md](./claude-md-hook-statusline.md)
-  (`pipeline-statusline`), [pipeline-dashboard.md](./pipeline-dashboard.md);
+  (`session-statusline`), [pipeline-dashboard.md](./pipeline-dashboard.md);
   the sweeps of `worktree-sweep.md`: [task-backlog.md](./task-backlog.md)
   (`task-clean`), [runbook-pruners.md](./runbook-pruners.md) (`runbook-clean`).
 

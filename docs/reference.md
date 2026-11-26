@@ -2003,18 +2003,10 @@ so your own content around it is preserved.
   passage it makes stale, whoever owns the file. `/task-review` reports
   stratification against it.
 
-### `statusline:session-statusline`
+### `statusline:session-statusline` and `/session-statusline`
 
-A status-bar script showing model, working directory, git branch, context
-usage, session cost and the 5-hour / 7-day rate-limit usage. Installed to
-`~/.claude/statusline/session-statusline.sh`; `add` prints a prompt for a
-Claude Code session to wire that path into `settings.json`'s `statusLine`
-key, since the CLI never edits `settings.json` itself.
-Global-only: a status bar belongs to your terminal, not a repository.
-
-### `statusline:pipeline-statusline` and `/pipeline-statusline`
-
-A status-bar script for projects run through the pipeline. Line 1 is the
+The status-bar script, installed to
+`~/.claude/statusline/session-statusline.sh`. Line 1 is the
 session — model, folder, branch (or short SHA when detached), context, cost,
 5-hour usage with the time to its reset, 7-day usage. In a project with
 `.claude/RUNBOOKS.md` or `.claude/TASKS.md`, line 2 adds the current runbook
@@ -2033,23 +2025,23 @@ through the git binary — so it
 renders in well under a second even on Windows, and anything missing is
 simply left out.
 
-`chosko-llm add command:pipeline-statusline` installs the command and the
+`chosko-llm add command:session-statusline` installs the command and the
 script it requires (the prefix is needed: the two share a name).
-`/pipeline-statusline` then sets `settings.json`'s `statusLine` to run the
+`/session-statusline` then sets `settings.json`'s `statusLine` to run the
 script — editing that key alone — and ends with a timed run in the current
 project and in a directory with no `.claude/`.
 
 - A different status line already configured is shown first, and replaced
   only on your say-so, after it is backed up to
-  `~/.claude/statusline/pipeline-statusline.backup/`: its `statusLine` value
+  `~/.claude/statusline/session-statusline.backup/`: its `statusLine` value
   and a copy of the script it runs.
 - Re-running refreshes the script through `chosko-llm update` and reports
   whether it changed.
-- `/pipeline-statusline --no-nerd-font` swaps the Nerd Font glyphs for
+- `/session-statusline --no-nerd-font` swaps the Nerd Font glyphs for
   single-width Unicode.
-- `/pipeline-statusline uninstall` restores the backed-up status line exactly
+- `/session-statusline uninstall` restores the backed-up status line exactly
   and deletes the backup; the script stays installed until
-  `chosko-llm rm statusline:pipeline-statusline`.
+  `chosko-llm rm statusline:session-statusline`.
 
 Global-only, like every status line.
 

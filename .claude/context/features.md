@@ -63,8 +63,7 @@ Currently shipped:
 - [claude-md-hook-statusline.md](./claude-md-hook-statusline.md) —
   `claude-md/tool-usage-policy.md`, `claude-md/editing-discipline.md`,
   `claude-md/git-commit-style.md`, `hooks/remote-session-protocol.sh`,
-  `statusline/session-statusline.sh`, `statusline/pipeline-statusline.sh`,
-  `commands/pipeline-statusline.md`.
+  `statusline/session-statusline.sh`, `commands/session-statusline.md`.
 - [quick-implement.md](./quick-implement.md) — `skills/quick-implement/`,
   one change from conversation to commit with no backlog entry, reading
   `task-engine`'s shared checks.

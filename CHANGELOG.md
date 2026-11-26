@@ -2,6 +2,11 @@
 
 User-facing changes per root `VERSION`, highest version first. Rules and schema: `docs/authoring-guide.md` § Versioning.
 
+## 1.102.0 — 2026-11-26
+
+- **One status line: `session-statusline` 0.3.0.** It takes over the renderer that shipped as `pipeline-statusline`: the session line, plus the current runbook and task progress in a project with a backlog or runbooks, as a single `awk` process with no other fork. The fork-heavy session-only script is gone, which ends the leftover processes it caused on Windows. Run `chosko-llm update statusline:session-statusline` to get it.
+- **`/pipeline-statusline` is renamed `/session-statusline`**, and its backup folder is `statusline/session-statusline.backup/`. `statusline:pipeline-statusline` and `command:pipeline-statusline` no longer ship. If you installed them: run `/pipeline-statusline uninstall`, then `chosko-llm rm command:pipeline-statusline` and `chosko-llm rm statusline:pipeline-statusline`, then `chosko-llm add command:session-statusline` and `/session-statusline`.
+
 ## 1.101.0 — 2026-10-19
 
 - **Parallel runs, opt-in.** A project opts in with a `Parallel policy: <N|max>` line in its `CLAUDE.md`, offered by `/project-setup` with `off` as the default; no line means everything runs one at a time, as before. `--parallel <N|max>` and `--no-parallel` override it for one run. A project that does not opt in loads none of the parallel rules: each feature carries a short hook, and the protocol files are read only when a run is parallel.

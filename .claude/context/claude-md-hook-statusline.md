@@ -3,7 +3,7 @@
 ## Overview
 
 Covers the shipped artifacts of the three non-command, non-skill kinds, plus
-`commands/pipeline-statusline.md`, the command that wires one of them. The
+`commands/session-statusline.md`, the command that wires the statusline. The
 kinds themselves: [features.md](./features.md); the frontmatter contract:
 [feature-contract.md](./feature-contract.md).
 
@@ -35,12 +35,10 @@ kinds themselves: [features.md](./features.md); the frontmatter contract:
   call, so every path ends in explicit `exit 0`. Chosen over a `CLAUDE.md`
   section because a hook costs zero resident tokens in the sessions where it
   never fires, and denial is enforcement rather than guidance.
-- `statusline/session-statusline.sh` — statusline artifact: model · cwd ·
-  git branch · context% · cost · 5h/7d rate limits. Parses the session JSON with its own
-  awk flattener (scalars to `dotted.path<TAB>value` lines, `null` dropped so
-  missing and null read the same) — no `jq`, per the no-new-dependencies rule.
-- `statusline/pipeline-statusline.sh` — statusline artifact: the session
-  line, then runbook + task progress and one line per task in scope that is
+- `statusline/session-statusline.sh` — statusline artifact, the only one
+  shipped: the session line (model · cwd · git branch · context% · cost ·
+  5h/7d rate limits), then, in a project with `.claude/` indexes, runbook +
+  task progress and one line per task in scope that is
   `[IN PROGRESS]` or in flight in a `wt/task-<N>` worktree, read from the
   project's `.claude/` indexes and the git dir. Hard constraint: bash
   only `exec`s ONE `awk` under `LC_ALL=C` — no other fork (git, grep, sed,
@@ -62,12 +60,12 @@ kinds themselves: [features.md](./features.md); the frontmatter contract:
   `--no-nerd-font` Unicode) sit in shell variables at the top, passed by `-v`.
   The awk program is single-quoted: an apostrophe anywhere in it, comments
   included, breaks the script.
-- `commands/pipeline-statusline.md` — command, `requires:
-  statusline:pipeline-statusline`: the agent edits only the `statusLine` key
+- `commands/session-statusline.md` — command, `requires:
+  statusline:session-statusline`: the agent edits only the `statusLine` key
   of the user `settings.json` (no jq), resolving the user scope as
   `${CLAUDE_HOME:-$HOME/.claude}` — the home-path guard's rule for state
   living in the user scope by design; backs up a replaced status line (value + script copy +
-  `script-path`) to `statusline/pipeline-statusline.backup/`, never
+  `script-path`) to `statusline/session-statusline.backup/`, never
   overwriting an existing backup; `uninstall` restores it; refresh goes
   through `chosko-llm update`; ends with a timed run of the renderer, in the project and in an empty
   directory, on the shape of `statusline-last-input.json` when present, else a

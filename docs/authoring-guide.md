@@ -995,7 +995,7 @@ A home is derived in two places, neither of them a citation:
   that checks both scopes; its own file carries the rule;
 - a body that writes or wires **state living in the user scope by design**
   resolves it, `${CLAUDE_HOME:-$HOME/.claude}`, with nothing joined onto it
-  but that state's own path: `/pipeline-statusline` locating the statusline
+  but that state's own path: `/session-statusline` locating the statusline
   script and the user `settings.json` (the statusline kind is global-only, so
   no `--local` copy exists for a relative path to find), and
   `pipeline-dashboard`'s per-project state folder (kept out of every working
